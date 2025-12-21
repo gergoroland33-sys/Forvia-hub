@@ -1,1 +1,114 @@
-<!DOCTYPE html><html lang="hu"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>Forvia Pro Terminal v4.0</title><style>:root{--bg:#0a0f1e;--panel:#161e31;--accent:#3b82f6;--success:#10b981;--error:#ef4444;--text:#f8fafc;}body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);margin:0;padding:0;}.brand-header{font-size:0.65rem;color:#4a5568;text-align:center;padding:5px 0 2px 0;letter-spacing:1px;font-weight:300;}.monitor-frame{position:sticky;top:0;z-index:1000;background:var(--bg);border-bottom:2px solid var(--accent);padding:0 10px 10px 10px;box-shadow:0 10px 30px rgba(0,0,0,0.5);}.time-display{display:flex;gap:10px;margin-bottom:10px;}.time-box{flex:1;background:var(--panel);padding:10px;border-radius:12px;text-align:center;border:1px solid #2d3748;}.time-val{font-family:'Courier New',monospace;font-size:2.2rem;font-weight:900;display:block;}.label{font-size:0.6rem;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;}.eff-control{background:rgba(59,130,246,0.1);padding:8px;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:12px;}.eff-input{background:transparent;border:none;border-bottom:2px solid var(--success);color:var(--success);font-size:1.5rem;font-weight:900;width:60px;text-align:center;outline:none;}.table-header{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 40px;padding:10px 10px;background:#1a2234;font-size:0.55rem;font-weight:bold;color:#64748b;text-align:center;}.entry-list{padding:8px;}.entry-row{background:var(--panel);margin-bottom:12px;padding:12px;border-radius:12px;border:1px solid #2d3748;position:relative;}.input-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 40px;gap:5px;align-items:center;}.row-time-info{margin-top:10px;padding-top:8px;border-top:1px dashed #334155;display:flex;justify-content:space-between;align-items:center;font-size:0.9rem;color:var(--accent);font-weight:bold;}.row-time-val{font-size:1.5rem;font-family:'Courier New',monospace;}input{width:100%;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px 2px;color:#fff;font-size:0.95rem;text-align:center;box-sizing:border-box;font-weight:bold;}input:focus{border-color:var(--accent);background:#1e293b;}input.downtime{border-color:#4a5568;color:#fbbf24;}.btn-add{width:calc(100% - 16px);margin:8px;padding:16px;background:var(--accent);color:white;border:none;border-radius:12px;font-weight:bold;font-size:1rem;cursor:pointer;}.btn-del{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--error);width:32px;height:32px;border-radius:8px;font-size:1.2rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:0.2s;}.btn-del:active{background:var(--error);color:white;}</style></head><body><div class="brand-header">Napi jelentés segédlet G.R</div><div class="monitor-frame"><div class="time-display"><div class="time-box"><span class="label">Műszak / 12h</span><span class="time-val" id="totalTime" style="color:var(--success)">00:00</span></div><div class="time-box"><span class="label">Hiányzó</span><span class="time-val" id="missingTime" style="color:var(--text)">12:00</span></div></div><div class="eff-control"><span class="label" style="color:var(--success)">Hatékonyság:</span><input type="number" id="effInput" class="eff-input" value="87" oninput="saveAndCalc()" inputmode="decimal"><span style="color:var(--success);font-weight:bold;">%</span></div></div><div class="table-header"><div>TAKT (MP)</div><div>DARAB (DB)</div><div>SHEET/PANEL</div><div>ÁLLÁS (PERC)</div><div></div></div><div id="entryList" class="entry-list"></div><button class="btn-add" onclick="addRow();saveAndCalc()">+ ÚJ TÉTEL HOZZÁADÁSA</button><script>window.onload=function(){const d=localStorage.getItem('forviaReportData');const e=localStorage.getItem('forviaEff');if(e)document.getElementById('effInput').value=e;if(d){const j=JSON.parse(d);j.forEach(i=>addRow(i));}else{addRow();}calculate();};function addRow(v={takt:'',qty:'',panel:'1',down:''}){const c=document.getElementById('entryList');const r=document.createElement('div');r.className='entry-row';r.innerHTML=`<div class="input-grid"><input type="number" class="takt" placeholder="mp" value="${v.takt}" oninput="saveAndCalc()" inputmode="decimal"><input type="number" class="qty" placeholder="db" value="${v.qty}" oninput="saveAndCalc()" inputmode="decimal"><input type="number" class="panel" placeholder="1" value="${v.panel}" oninput="saveAndCalc()" inputmode="decimal"><input type="number" class="downtime" placeholder="perc" value="${v.down}" oninput="saveAndCalc()" inputmode="decimal"><button class="btn-del" onclick="this.closest('.entry-row').remove();saveAndCalc()">×</button></div><div class="row-time-info"><span>Tétel + Állás ideje:</span><span class="row-time-val">00:00</span></div>`;c.appendChild(r);}function saveAndCalc(){const rows=document.querySelectorAll('.entry-row');const d=[];rows.forEach(r=>{d.push({takt:r.querySelector('.takt').value,qty:r.querySelector('.qty').value,panel:r.querySelector('.panel').value,down:r.querySelector('.downtime').value});});localStorage.setItem('forviaReportData',JSON.stringify(d));localStorage.setItem('forviaEff',document.getElementById('effInput').value);calculate();}function calculate(){const rows=document.querySelectorAll('.entry-row');let tSec=0;const eff=(parseFloat(document.getElementById('effInput').value)||1)/100;rows.forEach(r=>{const t=parseFloat(r.querySelector('.takt').value)||0;const q=parseFloat(r.querySelector('.qty').value)||0;const p=parseFloat(r.querySelector('.panel').value)||1;const d=parseFloat(r.querySelector('.downtime').value)||0;const pSec=((t*q)/p)/eff;const dSec=d*60;const rSec=pSec+dSec;r.querySelector('.row-time-val').innerText=format(rSec);tSec+=rSec;});const sSec=12*3600;const rMiss=sSec-tSec;const mSec=Math.max(0,rMiss);document.getElementById('totalTime').innerText=format(tSec);document.getElementById('missingTime').innerText=format(mSec);document.getElementById('missingTime').style.color=rMiss<0?'#ef4444':'#f8fafc';document.getElementById('totalTime').style.color=tSec>sSec?'#ef4444':'#10b981';}function format(s){const tm=Math.round(Math.abs(s)/60);const h=Math.floor(tm/60).toString().padStart(2,'0');const m=(tm%60).toString().padStart(2,'0');return `${h}:${m}`;}<\/script></body></html>
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Napi Jelentés</title>
+<style>
+body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:white;margin:0;padding:10px;padding-bottom:100px;}
+.top-bar{background:#1e293b;padding:15px;border-radius:12px;margin-bottom:15px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #3b82f6;}
+.stat-box{text-align:center;}
+.stat-val{font-size:1.8rem;font-weight:bold;display:block;font-family:monospace;}
+.green{color:#10b981;} .red{color:#ef4444;}
+.input-row{display:grid;grid-template-columns:1fr 1fr 1fr 40px;gap:8px;margin-bottom:10px;background:#1e293b;padding:10px;border-radius:10px;}
+input{width:100%;padding:10px;background:#0f172a;border:1px solid #334155;color:white;border-radius:6px;text-align:center;box-sizing:border-box;font-size:1rem;}
+button.del{background:rgba(239,68,68,0.2);color:#ef4444;border:1px solid #ef4444;border-radius:6px;font-weight:bold;}
+button.add{width:100%;padding:15px;background:#3b82f6;color:white;border:none;border-radius:10px;font-size:1.1rem;font-weight:bold;margin-top:10px;}
+.eff-wrapper{display:flex;align-items:center;gap:5px;font-size:0.9rem;}
+#effInput{width:50px;padding:5px;border:none;border-bottom:2px solid #10b981;background:transparent;color:#10b981;font-weight:bold;}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+<div class="stat-box">
+<span class="stat-val green" id="totalTime">00:00</span>
+<small style="color:#94a3b8">ÖSSZES</small>
+</div>
+<div class="eff-wrapper">
+Hatékonyság: <input type="number" id="effInput" value="87" oninput="reCalc()"> %
+</div>
+<div class="stat-box">
+<span class="stat-val red" id="missingTime">12:00</span>
+<small style="color:#94a3b8">HIÁNYZÓ</small>
+</div>
+</div>
+
+<div id="list"></div>
+
+<button class="add" onclick="addRow()">+ ÚJ SOR HOZZÁADÁSA</button>
+
+<script>
+// Ez a függvény induláskor fut le
+window.onload = function() {
+// Megpróbáljuk betölteni a mentést, de ha nem megy, nem fagyunk le!
+try {
+const saved = localStorage.getItem('forvia_data');
+const eff = localStorage.getItem('forvia_eff');
+if(eff) document.getElementById('effInput').value = eff;
+
+if(saved) {
+JSON.parse(saved).forEach(item => addRow(item));
+} else {
+addRow(); // Ha nincs mentés, egy üres sor
+}
+} catch(e) {
+console.log("Mentés nem elérhető (Offline mód) - Folytatás...");
+addRow();
+}
+reCalc();
+};
+
+function addRow(data = {t:'', q:'', d:''}) {
+const div = document.createElement('div');
+div.className = 'input-row';
+div.innerHTML = `
+<input type="number" class="t" placeholder="mp" value="${data.t}" oninput="reCalc()">
+<input type="number" class="q" placeholder="db" value="${data.q}" oninput="reCalc()">
+<input type="number" class="d" placeholder="Állás" value="${data.d}" oninput="reCalc()">
+<button class="del" onclick="this.parentElement.remove(); reCalc()">X</button>
+`;
+document.getElementById('list').appendChild(div);
+}
+
+function reCalc() {
+let totalSeconds = 0;
+const eff = (parseFloat(document.getElementById('effInput').value) || 1) / 100;
+
+const rows = document.querySelectorAll('.input-row');
+const dataToSave = [];
+
+rows.forEach(r => {
+const t = parseFloat(r.querySelector('.t').value) || 0;
+const q = parseFloat(r.querySelector('.q').value) || 0;
+const d = parseFloat(r.querySelector('.d').value) || 0;
+
+// Számítás: (Takt * Db) / Hatékonyság + Állásidő
+totalSeconds += ((t * q) / eff) + (d * 60);
+
+// Adatok gyűjtése mentéshez
+dataToSave.push({t: r.querySelector('.t').value, q: r.querySelector('.q').value, d: r.querySelector('.d').value});
+});
+
+// Eredmények kiírása
+const h = Math.floor(totalSeconds / 3600);
+const m = Math.floor((totalSeconds % 3600) / 60);
+document.getElementById('totalTime').innerText = `${h}:${m.toString().padStart(2, '0')}`;
+
+const shiftSeconds = 12 * 3600;
+const missSeconds = Math.max(0, shiftSeconds - totalSeconds);
+const mh = Math.floor(missSeconds / 3600);
+const mm = Math.floor((missSeconds % 3600) / 60);
+document.getElementById('missingTime').innerText = `${mh}:${mm.toString().padStart(2, '0')}`;
+
+// Mentés megkísérlése (HIBA NÉLKÜL)
+try {
+localStorage.setItem('forvia_data', JSON.stringify(dataToSave));
+localStorage.setItem('forvia_eff', document.getElementById('effInput').value);
+} catch(e) {
+// Ha nem sikerül menteni, csendben maradunk, nem fagyasztjuk le a programot
+}
+}
+</script>
+</body>
+</html>
