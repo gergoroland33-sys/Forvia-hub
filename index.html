@@ -2,150 +2,136 @@
 <html lang="hu">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>FORVIA HUB - MASTER</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FORVIA SMT HUB</title>
 <style>
-:root {
---bg: #0b1120; --card: #161e2e; --accent: #3b82f6;
---text: #f3f4f6; --text-dim: #94a3b8; --border: #1f2937;
-}
+/* --- STÍLUS (Változatlan, csak a szövegek cserélődtek) --- */
+body, html { margin: 0; padding: 0; height: 100%; width: 100%; font-family: 'Segoe UI', sans-serif; background: #0f172a; overflow: hidden; }
+.layout { display: flex; height: 100vh; width: 100vw; position: relative; }
 
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-body {
-font-family: 'Inter', system-ui, sans-serif;
-background: var(--bg); color: var(--text);
-margin: 0; height: 100dvh; overflow: hidden;
-display: flex; flex-direction: column;
-}
-
-/* --- ÜDVÖZLŐ KÉPERNYŐ (FŐTARTALOM) --- */
-.main-display {
-flex-grow: 1;
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-text-align: center;
-background: radial-gradient(circle at center, #111827 0%, #0b1120 100%);
-padding: 20px;
-}
-
-.welcome-box h1 { font-size: 2.2rem; margin: 0; color: white; font-weight: 800; }
-.welcome-box p { font-size: 1rem; color: var(--accent); margin-top: 10px; font-weight: 500; }
-
-/* --- SIDEBAR (Oldalsáv) --- */
 .sidebar {
-position: fixed; left: 0; top: 0;
-width: 280px; height: 100%; background: var(--card);
-border-right: 1px solid var(--border);
-display: flex; flex-direction: column;
-transform: translateX(-100%);
-transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-z-index: 2000;
+width: 260px; background: #111827; border-right: 1px solid #374151;
+display: flex; flex-direction: column; flex-shrink: 0;
+position: relative; z-index: 20; transition: transform 0.3s ease;
 }
-.sidebar.open { transform: translateX(0); box-shadow: 20px 0 50px rgba(0,0,0,0.7); }
+.header { padding: 25px 20px; text-align: center; border-bottom: 1px solid #374151; }
+.header h1 { color: #3b82f6; margin: 0; font-size: 1.3rem; font-weight: 800; letter-spacing: 1px; }
+.header small { color: #6b7280; font-size: 0.65rem; display: block; margin-top: 5px; font-weight: bold; letter-spacing: 1px; }
 
-header { padding: 30px 25px; border-bottom: 1px solid var(--border); }
-header h1 { font-size: 1.4rem; margin: 0; color: var(--accent); letter-spacing: 2px; }
+.menu { flex: 1; padding: 15px 10px; overflow-y: auto; }
 
-.nav-list { padding: 20px 15px; flex-grow: 1; overflow-y: auto; }
-.nav-item {
-display: flex; align-items: center; padding: 14px 18px;
-margin-bottom: 8px; border-radius: 12px; text-decoration: none;
-color: var(--text-dim); font-weight: 500; transition: 0.2s;
+.btn {
+padding: 14px 15px; margin-bottom: 8px; color: #9ca3af; cursor: pointer;
+border-radius: 10px; font-weight: 500; display: flex; align-items: center;
+transition: all 0.2s; -webkit-tap-highlight-color: transparent;
 }
-.nav-item i { font-size: 1.2rem; margin-right: 15px; font-style: normal; }
-.nav-item:hover, .nav-item.active { background: var(--accent); color: white; }
+.btn:hover { background: #1f2937; color: white; }
+.btn.active { background: #3b82f6; color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+.btn span { margin-left: 12px; font-size: 0.95rem; }
 
-/* --- GLOBÁLIS MENÜ GOMB (Mindig látható) --- */
-.menu-fab {
-position: fixed; bottom: 35px; right: 30px;
-width: 65px; height: 65px; background: var(--accent);
-border-radius: 20px; display: flex; align-items: center; justify-content: center;
-box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4); cursor: pointer; z-index: 3000;
-transition: 0.3s;
+.footer { padding: 20px; color: #6b7280; text-align: center; font-size: 0.75rem; border-top: 1px solid #374151; }
+
+.main { flex: 1; position: relative; background: #0f172a; width: 100%; -webkit-overflow-scrolling: touch; }
+iframe { width: 100%; height: 100%; border: none; display: none; background: #0f172a; }
+
+#welcome {
+position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+display: flex; flex-direction: column; justify-content: center; align-items: center;
+color: white; padding: 20px; box-sizing: border-box; text-align: center;
 }
-.menu-fab:active { transform: scale(0.9); }
+#welcome h2 { font-size: 2.5rem; margin-bottom: 10px; }
+#welcome p { color: #94a3b8; font-size: 1.1rem; }
 
-.overlay {
-display: none; position: fixed; inset: 0;
-background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 1500;
+.mobile-toggle {
+display: none; position: fixed; bottom: 25px; right: 25px;
+width: 55px; height: 55px; background: #3b82f6;
+border-radius: 50%; z-index: 100; justify-content: center;
+align-items: center; color: white; font-size: 1.6rem;
+cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
 }
-.overlay.active { display: block; }
 
-footer { padding: 20px; border-top: 1px solid var(--border); text-align: center; }
-.creator { font-size: 0.75rem; color: var(--text-dim); }
-.creator b { color: white; text-transform: uppercase; letter-spacing: 1px; }
-
+@media (max-width: 768px) {
+.sidebar {
+position: fixed; top: 0; left: 0; height: 100%; width: 85%; max-width: 300px;
+transform: translateX(-100%); box-shadow: 5px 0 25px rgba(0,0,0,0.8);
+}
+.sidebar.open { transform: translateX(0); }
+.mobile-toggle { display: flex; }
+#overlay {
+display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+background: rgba(0,0,0,0.7); z-index: 15; backdrop-filter: blur(3px);
+}
+#overlay.show { display: block; }
+}
 </style>
 </head>
 <body>
 
-<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+<div id="overlay" onclick="closeMenu()"></div>
 
-<main class="main-display">
-<div class="welcome-box">
-<h1>Üdv, Felhasználó!</h1>
-<p>FORVIA HUB OFFLINE SYSTEM</p>
-<div style="margin-top: 30px; color: #475569; font-size: 0.8rem;">
-A modulok eléréséhez használd a menü gombot!
-</div>
-</div>
-</main>
-
-<aside class="sidebar" id="sidebar">
-<header>
+<div class="layout">
+<div class="sidebar" id="sidebar">
+<div class="header">
 <h1>FORVIA HUB</h1>
-</header>
-
-<nav class="nav-list">
-<a href="index.html" class="nav-item active"><i>🏠</i> Kezdőlap</a>
-<a href="1.html" class="nav-item"><i>🔍</i> Cikkszám Kereső</a>
-<a href="2.html" class="nav-item"><i>💰</i> Bérkalkulátor</a>
-<a href="3.html" class="nav-item"><i>📅</i> Műszaknaptár</a>
-<a href="4.html" class="nav-item"><i>📝</i> Napi Jelentés</a>
-<a href="5.html" class="nav-item"><i>🎭</i> Maszk Finder</a>
-<div onclick="openSecureLink()" class="nav-item" style="cursor:pointer;"><i>⚙️</i> Adatgeneráló</div>
-<a href="7.html" class="nav-item"><i>📈</i> Quality Analízis</a>
-</nav>
-
-<footer>
-<div class="creator">
-Szoftverfejlesztő:<br>
-<b>GERGŐ ROLAND</b><br>
-2026
+<small>OFFLINE/ONLINE MODE</small>
 </div>
-</footer>
-</aside>
-
-<div class="menu-fab" id="menuFab" onclick="toggleMenu()">
-<span id="menuIcon" style="font-size: 30px; color: white;">☰</span>
+<div class="menu">
+<div class="btn active" onclick="goHome(this)">🏠<span>Kezdőlap</span></div>
+<div class="btn" onclick="openFile('1.html', this)">🔍<span>Cikkszám Kereső</span></div>
+<div class="btn" onclick="openFile('2.html', this)">💰<span>Bérkalkulátor</span></div>
+<div class="btn" onclick="openFile('3.html', this)">📅<span>Műszaknaptár</span></div>
+<div class="btn" onclick="openFile('4.html', this)">📝<span>Napi Jelentés</span></div>
+<div class="btn" onclick="openFile('5.html', this)">🎭<span>Maszk Finder</span></div>
+<div class="btn" onclick="openFile('7.html', this)">📈<span>Quality Analízis</span></div>
 </div>
+<div class="footer">
+Szoftverfejlesztő:<br><b style="color:white">Gergő Roland</b><br>2026
+</div>
+</div>
+
+<div class="main">
+<div id="welcome">
+<h2>Üdv <span style="color:#3b82f6">Felhasználó!</span></h2>
+<p>Válassz egy modult a menüből.</p>
+</div>
+<iframe id="appFrame"></iframe>
+</div>
+</div>
+
+<div class="mobile-toggle" onclick="toggleMenu()">☰</div>
 
 <script>
+function goHome(el) {
+document.getElementById('appFrame').style.display = 'none';
+document.getElementById('welcome').style.display = 'flex';
+document.getElementById('appFrame').src = "";
+setActive(el);
+closeMenu();
+}
+
+function openFile(fileName, el) {
+document.getElementById('welcome').style.display = 'none';
+const iframe = document.getElementById('appFrame');
+iframe.src = fileName + "?v=" + Math.random();
+iframe.style.display = 'block';
+setActive(el);
+closeMenu();
+}
+
+function setActive(el) {
+document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+el.classList.add('active');
+}
+
 function toggleMenu() {
-const sidebar = document.getElementById('sidebar');
-const overlay = document.getElementById('overlay');
-const icon = document.getElementById('menuIcon');
-
-sidebar.classList.toggle('open');
-overlay.classList.toggle('active');
-
-icon.innerText = sidebar.classList.contains('open') ? '✕' : '☰';
+document.getElementById('sidebar').classList.toggle('open');
+document.getElementById('overlay').classList.toggle('show');
 }
 
-function openSecureLink() {
-let pin = prompt("Kérem a biztonsági kódot:");
-if (pin === "123456") {
-window.open("https://gergoroland33-sys.github.io/adatgeneralo/", "_blank");
-} else if (pin !== null) {
-alert("Hozzáférés megtagadva!");
+function closeMenu() {
+document.getElementById('sidebar').classList.remove('open');
+document.getElementById('overlay').classList.remove('show');
 }
-}
-
-// iPhone 12 iOS 18 fix
-document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
 </script>
 </body>
 </html>
