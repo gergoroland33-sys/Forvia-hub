@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>FORVIA HUB PRO</title>
+<title>FORVIA HUB - MASTER</title>
 <style>
 :root {
 --bg: #0b1120; --card: #161e2e; --accent: #3b82f6;
@@ -15,70 +15,88 @@
 body {
 font-family: 'Inter', system-ui, sans-serif;
 background: var(--bg); color: var(--text);
-margin: 0; display: flex; height: 100dvh; overflow: hidden;
+margin: 0; height: 100dvh; overflow: hidden;
+display: flex; flex-direction: column;
 }
 
-/* --- SIDEBAR --- */
-.sidebar {
-width: 280px; height: 100%; background: var(--card);
-border-right: 1px solid var(--border); display: flex; flex-direction: column;
-transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000;
+/* --- ÜDVÖZLŐ KÉPERNYŐ (FŐTARTALOM) --- */
+.main-display {
+flex-grow: 1;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+text-align: center;
+background: radial-gradient(circle at center, #111827 0%, #0b1120 100%);
+padding: 20px;
 }
+
+.welcome-box h1 { font-size: 2.2rem; margin: 0; color: white; font-weight: 800; }
+.welcome-box p { font-size: 1rem; color: var(--accent); margin-top: 10px; font-weight: 500; }
+
+/* --- SIDEBAR (Oldalsáv) --- */
+.sidebar {
+position: fixed; left: 0; top: 0;
+width: 280px; height: 100%; background: var(--card);
+border-right: 1px solid var(--border);
+display: flex; flex-direction: column;
+transform: translateX(-100%);
+transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+z-index: 2000;
+}
+.sidebar.open { transform: translateX(0); box-shadow: 20px 0 50px rgba(0,0,0,0.7); }
 
 header { padding: 30px 25px; border-bottom: 1px solid var(--border); }
-header h1 { font-size: 1.4rem; margin: 0; color: var(--accent); letter-spacing: 2px; font-weight: 800; }
-header p { font-size: 0.65rem; color: var(--text-dim); margin: 5px 0 0; text-transform: uppercase; }
+header h1 { font-size: 1.4rem; margin: 0; color: var(--accent); letter-spacing: 2px; }
 
 .nav-list { padding: 20px 15px; flex-grow: 1; overflow-y: auto; }
 .nav-item {
-display: flex; align-items: center; padding: 12px 15px;
+display: flex; align-items: center; padding: 14px 18px;
 margin-bottom: 8px; border-radius: 12px; text-decoration: none;
 color: var(--text-dim); font-weight: 500; transition: 0.2s;
 }
-.nav-item i { font-size: 1.2rem; margin-right: 15px; font-style: normal; width: 24px; text-align: center; }
+.nav-item i { font-size: 1.2rem; margin-right: 15px; font-style: normal; }
+.nav-item:hover, .nav-item.active { background: var(--accent); color: white; }
 
-/* Aktív és kijelölt állapot */
-.nav-item.active { background: var(--accent); color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
-.nav-item:hover:not(.active) { background: #1f2937; color: white; }
+/* --- GLOBÁLIS MENÜ GOMB (Mindig látható) --- */
+.menu-fab {
+position: fixed; bottom: 35px; right: 30px;
+width: 65px; height: 65px; background: var(--accent);
+border-radius: 20px; display: flex; align-items: center; justify-content: center;
+box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4); cursor: pointer; z-index: 3000;
+transition: 0.3s;
+}
+.menu-fab:active { transform: scale(0.9); }
+
+.overlay {
+display: none; position: fixed; inset: 0;
+background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 1500;
+}
+.overlay.active { display: block; }
 
 footer { padding: 20px; border-top: 1px solid var(--border); text-align: center; }
-.creator-info { font-size: 0.7rem; color: var(--text-dim); line-height: 1.4; }
-.creator-info b { color: white; text-transform: uppercase; letter-spacing: 1px; }
+.creator { font-size: 0.75rem; color: var(--text-dim); }
+.creator b { color: white; text-transform: uppercase; letter-spacing: 1px; }
 
-/* --- TARTALOM --- */
-.main-content { flex-grow: 1; position: relative; background: radial-gradient(circle at 50% 50%, #111827 0%, #0b1120 100%); }
-
-/* --- MOBIL ELRENDEZÉS (iPhone 12 Fix) --- */
-@media (max-width: 992px) {
-.sidebar { position: fixed; left: 0; transform: translateX(-100%); }
-.sidebar.open { transform: translateX(0); box-shadow: 20px 0 50px rgba(0,0,0,0.8); }
-.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 900; }
-.overlay.active { display: block; }
-}
-
-/* Lebegő Menü Gomb */
-.menu-fab {
-position: fixed; bottom: 30px; right: 30px;
-width: 60px; height: 60px; background: var(--accent);
-border-radius: 18px; display: flex; align-items: center; justify-content: center;
-box-shadow: 0 8px 24px rgba(0,0,0,0.4); cursor: pointer; z-index: 1100;
-}
-
-/* Laptopon elrejtjük a gombot, ha fix a menü */
-@media (min-width: 993px) {
-.menu-fab { display: none; }
-.sidebar { transform: translateX(0); }
-}
 </style>
 </head>
 <body>
 
 <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
+<main class="main-display">
+<div class="welcome-box">
+<h1>Üdv, Felhasználó!</h1>
+<p>FORVIA HUB OFFLINE SYSTEM</p>
+<div style="margin-top: 30px; color: #475569; font-size: 0.8rem;">
+A modulok eléréséhez használd a menü gombot!
+</div>
+</div>
+</main>
+
 <aside class="sidebar" id="sidebar">
 <header>
 <h1>FORVIA HUB</h1>
-<p>Offline Management System</p>
 </header>
 
 <nav class="nav-list">
@@ -93,7 +111,7 @@ box-shadow: 0 8px 24px rgba(0,0,0,0.4); cursor: pointer; z-index: 1100;
 </nav>
 
 <footer>
-<div class="creator-info">
+<div class="creator">
 Szoftverfejlesztő:<br>
 <b>GERGŐ ROLAND</b><br>
 2026
@@ -101,11 +119,8 @@ Szoftverfejlesztő:<br>
 </footer>
 </aside>
 
-<main class="main-content">
-</main>
-
-<div class="menu-fab" onclick="toggleMenu()">
-<span id="menuIcon" style="font-size: 28px; color: white;">☰</span>
+<div class="menu-fab" id="menuFab" onclick="toggleMenu()">
+<span id="menuIcon" style="font-size: 30px; color: white;">☰</span>
 </div>
 
 <script>
@@ -117,15 +132,11 @@ const icon = document.getElementById('menuIcon');
 sidebar.classList.toggle('open');
 overlay.classList.toggle('active');
 
-if(sidebar.classList.contains('open')) {
-icon.innerText = '✕';
-} else {
-icon.innerText = '☰';
-}
+icon.innerText = sidebar.classList.contains('open') ? '✕' : '☰';
 }
 
 function openSecureLink() {
-let pin = prompt("Kérem a biztonsági kódot (123456):");
+let pin = prompt("Kérem a biztonsági kódot:");
 if (pin === "123456") {
 window.open("https://gergoroland33-sys.github.io/adatgeneralo/", "_blank");
 } else if (pin !== null) {
@@ -133,10 +144,8 @@ alert("Hozzáférés megtagadva!");
 }
 }
 
-// iPhone 12/iOS 18 Safe Area fix
-document.addEventListener('touchmove', function (e) {
-if (e.scale !== 1) { e.preventDefault(); }
-}, { passive: false });
+// iPhone 12 iOS 18 fix
+document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
 </script>
 </body>
 </html>
