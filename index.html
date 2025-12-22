@@ -5,208 +5,90 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>FORVIA HUB - OFFLINE</title>
 <style>
-:root {
---bg: #0b0f1a;
---card: #161e2e;
---accent: #2563eb;
---text: #f3f4f6;
---border: #2d3748;
+:root { --bg: #0b1120; --card: #161e2e; --accent: #3b82f6; --text: #f3f4f6; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; overflow: hidden; height: 100dvh; }
+
+/* Sidebar stílus */
+.sidebar {
+width: 280px; height: 100%; background: var(--card);
+display: flex; flex-direction: column; padding: 30px 20px;
+border-right: 1px solid #1f2937; transition: 0.3s;
+position: fixed; left: -280px; z-index: 1000;
 }
+.sidebar.active { left: 0; }
 
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+header { margin-bottom: 40px; padding-left: 10px; }
+header h1 { font-size: 1.6rem; margin: 0; color: var(--accent); letter-spacing: 2px; }
+header p { font-size: 0.7rem; color: #64748b; margin-top: 5px; }
 
-body {
-font-family: 'Inter', 'Segoe UI', sans-serif;
-background: var(--bg);
-color: var(--text);
-margin: 0;
-padding: 20px env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-height: 100dvh;
-display: flex;
-flex-direction: column;
+.nav-list { list-style: none; padding: 0; margin: 0; flex: 1; }
+.nav-item {
+display: flex; align-items: center; padding: 12px 15px;
+margin-bottom: 10px; border-radius: 10px; text-decoration: none;
+color: #94a3b8; font-weight: 500; transition: 0.2s;
 }
+.nav-item i { font-size: 1.2rem; margin-right: 15px; }
+.nav-item.active { background: var(--accent); color: white; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
+.nav-item:hover:not(.active) { background: #1f2937; color: white; }
 
-header {
-padding: 10px 0 20px 5px;
-border-bottom: 2px solid var(--accent);
-margin-bottom: 20px;
+/* Lebegő Menü Gomb */
+.menu-fab {
+position: fixed; bottom: 30px; right: 30px;
+width: 60px; height: 60px; background: var(--accent);
+border-radius: 50%; display: flex; align-items: center; justify-content: center;
+box-shadow: 0 4px 20px rgba(0,0,0,0.4); cursor: pointer; z-index: 1100;
 }
+.menu-fab span { font-size: 2rem; color: white; }
 
-header h1 {
-margin: 0;
-font-size: 1.8rem;
-font-weight: 900;
-letter-spacing: -1px;
-color: #fff;
+.overlay {
+position: fixed; top:0; left:0; width:100%; height:100%;
+background: rgba(0,0,0,0.5); display:none; z-index: 900;
 }
+.overlay.active { display:block; }
 
-header span {
-font-size: 0.8rem;
-color: var(--accent);
-font-weight: bold;
-text-transform: uppercase;
-}
-
-.menu-container {
-flex: 1;
-overflow-y: auto;
-display: flex;
-flex-direction: column;
-gap: 12px;
-padding-bottom: 20px;
-}
-
-.module-card {
-background: var(--card);
-border: 1px solid var(--border);
-border-radius: 8px;
-display: flex;
-align-items: center;
-padding: 18px;
-text-decoration: none;
-color: var(--text);
-transition: 0.2s;
-position: relative;
-overflow: hidden;
-}
-
-.module-card:active {
-background: #1f2937;
-border-color: var(--accent);
-transform: scale(0.98);
-}
-
-/* Az ikonok stílusa a régi profi kinézethez */
-.icon-box {
-width: 45px;
-height: 45px;
-background: rgba(37, 99, 235, 0.1);
-border-radius: 6px;
-display: flex;
-align-items: center;
-justify-content: center;
-margin-right: 15px;
-font-size: 1.5rem;
-color: var(--accent);
-border: 1px solid rgba(37, 99, 235, 0.2);
-}
-
-.info {
-display: flex;
-flex-direction: column;
-}
-
-.info .name {
-font-size: 1.1rem;
-font-weight: 700;
-color: #fff;
-}
-
-.info .desc {
-font-size: 0.75rem;
-color: #6b7280;
-margin-top: 2px;
-}
-
-/* Jelszavas gomb extra jelzése */
-.secure-tag {
-position: absolute;
-right: 15px;
-font-size: 0.6rem;
-background: rgba(37, 99, 235, 0.1);
-color: var(--accent);
-padding: 2px 6px;
-border-radius: 4px;
-font-weight: bold;
-text-transform: uppercase;
-}
-
-footer {
-padding: 15px 0;
-border-top: 1px solid var(--border);
-text-align: center;
-font-size: 10px;
-color: #4b5563;
-font-weight: 900;
-letter-spacing: 2px;
-text-transform: uppercase;
-}
-
-/* iPhone Safari görgetés fix */
-.menu-container::-webkit-scrollbar { display: none; }
+footer { font-size: 0.7rem; text-align: center; color: #4b5563; border-top: 1px solid #1f2937; padding-top: 20px; }
 </style>
 </head>
 <body>
 
+<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+<div class="sidebar" id="sidebar">
 <header>
 <h1>FORVIA HUB</h1>
-<span>Szentlörinckáta - Offline Sytem</span>
+<p>OFFLINE/ONLINE MODE</p>
 </header>
 
-<div class="menu-container">
-
-<a href="1.html" class="module-card">
-<div class="icon-box">🔍</div>
-<div class="info">
-<span class="name">Cikkszám Kereső</span>
-<span class="desc">Központi cikkszám adatbázis</span>
-</div>
-</a>
-
-<a href="2.html" class="module-card">
-<div class="icon-box">🧮</div>
-<div class="info">
-<span class="name">Bérkalkulátor</span>
-<span class="desc">Műszakpótlék és fizetés számítás</span>
-</div>
-</a>
-
-<a href="3.html" class="module-card">
-<div class="icon-box">📅</div>
-<div class="info">
-<span class="name">Műszaknaptár</span>
-<span class="desc">Éves beosztás és rendkívüli napok</span>
-</div>
-</a>
-
-<a href="4.html" class="module-card">
-<div class="icon-box">📝</div>
-<div class="info">
-<span class="name">Napi Jelentés</span>
-<span class="desc">Taktidő és darabszám naplózás</span>
-</div>
-</a>
-
-<a href="5.html" class="module-card">
-<div class="icon-box">🎭</div>
-<div class="info">
-<span class="name">Maszk Finder</span>
-<span class="desc">Gyártási maszkok keresése</span>
-</div>
-</a>
-
-<div onclick="openSecureLink()" class="module-card" style="cursor: pointer;">
-<div class="icon-box">⚙️</div>
-<div class="info">
-<span class="name">Adatgeneráló</span>
-<span class="desc">SPI és CKD fájl sorozatgyártó</span>
-</div>
-<span class="secure-tag">Secure Access</span>
+<div class="nav-list">
+<a href="index.html" class="nav-item active"><i>🏠</i> Kezdőlap</a>
+<a href="1.html" class="nav-item"><i>🔍</i> Cikkszám Kereső</a>
+<a href="2.html" class="nav-item"><i>💰</i> Bérkalkulátor</a>
+<a href="3.html" class="nav-item"><i>📅</i> Műszaknaptár</a>
+<a href="4.html" class="nav-item"><i>📝</i> Napi Jelentés</a>
+<a href="5.html" class="nav-item"><i>🎭</i> Maszk Finder</a>
+<div onclick="openSecureLink()" class="nav-item" style="cursor:pointer;"><i>⚙️</i> Adatgeneráló</div>
+<a href="7.html" class="nav-item"><i>📈</i> Quality Analízis</a>
 </div>
 
-<a href="7.html" class="module-card">
-<div class="icon-box">📊</div>
-<div class="info">
-<span class="name">Quality Analízis</span>
-<span class="desc">Hibaarány és selejt statisztika</span>
-</div>
-</a>
-
+<footer>
+Szoftverfejlesztő:<br>
+<strong>Gergő Roland</strong><br>
+2026
+</footer>
 </div>
 
-<footer>GERGŐ ROLAND | 2026</footer>
+<div class="menu-fab" onclick="toggleMenu()">
+<span id="menuIcon">☰</span>
+</div>
 
 <script>
+function toggleMenu() {
+document.getElementById('sidebar').classList.toggle('active');
+document.getElementById('overlay').classList.toggle('active');
+const icon = document.getElementById('menuIcon');
+icon.innerText = icon.innerText === '☰' ? '✕' : '☰';
+}
+
 function openSecureLink() {
 let pin = prompt("Kérem a biztonsági kódot:");
 if (pin === "123456") {
@@ -216,6 +98,5 @@ alert("Hozzáférés megtagadva!");
 }
 }
 </script>
-
 </body>
 </html>
