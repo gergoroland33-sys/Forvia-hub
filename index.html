@@ -3,12 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>FORVIA HUB - PRO MASTER</title>
+<title>FORVIA HUB - MASTER</title>
 <style>
 :root {
 --bg: #0b1120; --card: #1e293b; --accent: #3b82f6;
 --text: #f3f4f6; --text-dim: #94a3b8; --border: #334155;
---glass: rgba(30, 41, 59, 0.7);
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -20,7 +19,7 @@ margin: 0; height: 100dvh; overflow: hidden;
 display: flex; flex-direction: column;
 }
 
-/* --- PRO ÜDVÖZLŐ KÉPERNYŐ (VÁLTOZATLAN) --- */
+/* --- PRO ÜDVÖZLŐ KÉPERNYŐ --- */
 .main-display {
 flex-grow: 1; display: flex; flex-direction: column;
 align-items: center; justify-content: center; text-align: center;
@@ -29,7 +28,6 @@ radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
 radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.1), transparent 40%),
 #0b1120;
 padding: 20px;
-position: relative;
 }
 
 .glass-card {
@@ -40,78 +38,71 @@ border: 1px solid rgba(255, 255, 255, 0.1);
 padding: 40px 30px;
 border-radius: 24px;
 box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-max-width: 400px;
-width: 100%;
+max-width: 400px; width: 100%;
 animation: fadeIn 0.8s ease-out;
 }
 
 .brand-title {
 font-size: 2.5rem; font-weight: 900; margin: 0;
 background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
--webkit-background-clip: text;
--webkit-text-fill-color: transparent;
-letter-spacing: -1px;
-margin-bottom: 10px;
-}
-
-.brand-subtitle {
-font-size: 0.9rem; color: var(--accent);
-text-transform: uppercase; letter-spacing: 2px; font-weight: 700;
-margin-bottom: 25px; display: block;
+-webkit-background-clip: text; -webkit-text-fill-color: transparent;
+letter-spacing: -1px; margin-bottom: 10px;
 }
 
 .status-badge {
 display: inline-flex; align-items: center; gap: 8px;
 background: rgba(16, 185, 129, 0.1); color: #34d399;
 padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;
-border: 1px solid rgba(16, 185, 129, 0.2);
+border: 1px solid rgba(16, 185, 129, 0.2); margin: 20px 0;
 }
-
 .status-dot { width: 8px; height: 8px; background: #34d399; border-radius: 50%; box-shadow: 0 0 10px #34d399; }
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-/* --- SIDEBAR (VÁLTOZATLAN) --- */
+/* --- SIDEBAR (Oldalsáv - Alapból rejtve mindenhol) --- */
 .sidebar {
 position: fixed; left: 0; top: 0;
 width: 280px; height: 100%; background: #111827;
 border-right: 1px solid var(--border);
 display: flex; flex-direction: column;
-transform: translateX(-100%);
+transform: translateX(-100%); /* Mindig elrejtve, amíg a gombot meg nem nyomod */
 transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-z-index: 2000;
+z-index: 2000; padding: 20px 0;
 }
 .sidebar.open { transform: translateX(0); box-shadow: 20px 0 50px rgba(0,0,0,0.8); }
 
-header { padding: 30px 25px; border-bottom: 1px solid var(--border); }
-header h1 { font-size: 1.4rem; margin: 0; color: var(--accent); letter-spacing: 2px; }
+.sidebar-header { padding: 0 20px 20px 20px; border-bottom: 1px solid var(--border); }
+.sidebar-header h2 { font-size: 1.4rem; margin: 0; color: var(--accent); }
 
-.nav-list { padding: 20px 15px; flex-grow: 1; overflow-y: auto; }
+.nav-list { padding: 20px; flex-grow: 1; overflow-y: auto; }
 .nav-item {
-display: flex; align-items: center; padding: 14px 18px;
+display: flex; align-items: center; padding: 14px 15px;
 margin-bottom: 8px; border-radius: 12px; text-decoration: none;
 color: var(--text-dim); font-weight: 500; transition: 0.2s; cursor: pointer;
 }
-.nav-item i { font-size: 1.2rem; margin-right: 15px; font-style: normal; text-align: center; width: 25px; }
+.nav-item i { width: 30px; font-style: normal; text-align: center; font-size: 1.2rem; }
 .nav-item:hover, .nav-item.active { background: var(--accent); color: white; }
 
-/* --- MENÜ GOMB (JAVÍTVA - MINDIG LÁTHATÓ) --- */
+/* --- MENÜ GOMB (FIX, KEREK, MINDIG LÁTHATÓ) --- */
 .menu-fab {
-display: flex !important; /* Kényszerített megjelenítés */
 position: fixed;
-bottom: 35px;
+bottom: 30px;
 right: 30px;
-width: 65px; height: 65px;
+width: 60px;
+height: 60px;
 background: var(--accent);
-border-radius: 20px;
-align-items: center; justify-content: center;
-box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5);
+border-radius: 50%; /* KEREK */
+display: flex !important; /* KÉNYSZERÍTETT MEGJELENÉS */
+align-items: center;
+justify-content: center;
+box-shadow: 0 10px 30px rgba(59, 130, 246, 0.6);
 cursor: pointer;
-z-index: 2147483647; /* Maximális prioritás */
-border: 1px solid rgba(255,255,255,0.1);
+z-index: 999999; /* LEGJOBBAN FELÜL */
+border: 2px solid rgba(255,255,255,0.1);
 transition: transform 0.2s;
 }
-.menu-fab:active { transform: scale(0.95); }
+.menu-fab:active { transform: scale(0.9); }
+.menu-fab span { font-size: 28px; color: white; line-height: 1; }
 
 .overlay {
 display: none; position: fixed; inset: 0;
@@ -119,9 +110,7 @@ background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 1500;
 }
 .overlay.active { display: block; }
 
-footer { padding: 20px; border-top: 1px solid var(--border); text-align: center; }
-.creator { font-size: 0.75rem; color: var(--text-dim); }
-.creator b { color: white; text-transform: uppercase; letter-spacing: 1px; }
+footer { padding: 20px; border-top: 1px solid var(--border); text-align: center; font-size: 0.75rem; color: var(--text-dim); }
 </style>
 </head>
 <body>
@@ -131,26 +120,24 @@ footer { padding: 20px; border-top: 1px solid var(--border); text-align: center;
 <main class="main-display">
 <div class="glass-card">
 <h1 class="brand-title">FORVIA HUB</h1>
-<span class="brand-subtitle">Industrial Management System</span>
+<span style="color:var(--accent); font-weight:bold; letter-spacing:2px; font-size:0.9rem;">OFFLINE SYSTEM</span>
 
-<div style="margin: 30px 0;">
 <div class="status-badge">
 <div class="status-dot"></div>
-SYSTEM ONLINE
-</div>
+ONLINE
 </div>
 
-<p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.5;">
-Üdvözöllek a rendszerben.<br>
-A modulok eléréséhez használd a <b style="color:white">Menü</b> gombot.
+<p style="color: #94a3b8; margin-top: 20px;">
+Válassz modult a jobb alsó sarokban található<br>
+<strong style="color:white">Menü Gomb</strong> segítségével.
 </p>
 </div>
 </main>
 
 <aside class="sidebar" id="sidebar">
-<header>
-<h1>FORVIA HUB</h1>
-</header>
+<div class="sidebar-header">
+<h2>FORVIA HUB</h2>
+</div>
 
 <nav class="nav-list">
 <a href="index.html" class="nav-item active"><i>🏠</i> Kezdőlap</a>
@@ -166,16 +153,14 @@ A modulok eléréséhez használd a <b style="color:white">Menü</b> gombot.
 </nav>
 
 <footer>
-<div class="creator">
 Szoftverfejlesztő:<br>
-<b>GERGŐ ROLAND</b><br>
+<strong style="color:white">GERGŐ ROLAND</strong><br>
 2026
-</div>
 </footer>
 </aside>
 
 <div class="menu-fab" id="menuFab" onclick="toggleMenu()">
-<span id="menuIcon" style="font-size: 30px; color: white;">☰</span>
+<span id="menuIcon">☰</span>
 </div>
 
 <script>
@@ -187,6 +172,7 @@ const icon = document.getElementById('menuIcon');
 sidebar.classList.toggle('open');
 overlay.classList.toggle('active');
 
+// Ikon csere X-re ha nyitva van
 icon.innerText = sidebar.classList.contains('open') ? '✕' : '☰';
 }
 
@@ -195,11 +181,13 @@ let pin = prompt("Kérem a biztonsági kódot:");
 if (pin === "123456") {
 window.open("https://gergoroland33-sys.github.io/adatgeneralo/", "_blank");
 } else if (pin !== null) {
-alert("Hibás kód! Hozzáférés megtagadva.");
+alert("Hibás kód!");
 }
 }
 
+// Tiltja a véletlen nagyítást iOS-en
 document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
 </script>
+
 </body>
 </html>
