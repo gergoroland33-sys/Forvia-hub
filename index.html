@@ -3,171 +3,218 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>FORVIA HUB - Offline Edition</title>
+<title>FORVIA HUB - OFFLINE</title>
 <style>
 :root {
---bg: #0f172a;
---card: #1e293b;
---accent: #3b82f6;
---text: #f8fafc;
---border: #334155;
+--bg: #0b0f1a;
+--card: #161e2e;
+--accent: #2563eb;
+--text: #f3f4f6;
+--border: #2d3748;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 body {
-font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+font-family: 'Inter', 'Segoe UI', sans-serif;
 background: var(--bg);
 color: var(--text);
 margin: 0;
-/* iPhone 12 fix: dinamikus magasság és biztonsági sáv */
+padding: 20px env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 height: 100dvh;
 display: flex;
 flex-direction: column;
-padding: env(safe-area-inset-top) 15px env(safe-area-inset-bottom) 15px;
 }
 
 header {
-text-align: center;
-padding: 20px 0;
+padding: 10px 0 20px 5px;
+border-bottom: 2px solid var(--accent);
+margin-bottom: 20px;
 }
 
 header h1 {
 margin: 0;
-font-size: 1.5rem;
-letter-spacing: 2px;
+font-size: 1.8rem;
+font-weight: 900;
+letter-spacing: -1px;
+color: #fff;
+}
+
+header span {
+font-size: 0.8rem;
 color: var(--accent);
+font-weight: bold;
 text-transform: uppercase;
 }
 
-header p {
-margin: 5px 0 0;
-font-size: 0.8rem;
-color: #64748b;
-}
-
-/* Rugalmas rácsrendszer, ami alkalmazkodik a képernyőhöz */
-.menu-grid {
-display: grid;
-grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-gap: 15px;
-flex-grow: 1;
-overflow-y: auto; /* Ha sok a gomb, görgethető lesz a terület */
-padding: 10px 0;
-}
-
-.module-btn {
-background: var(--card);
-border: 1px solid var(--border);
-border-radius: 15px;
+.menu-container {
+flex: 1;
+overflow-y: auto;
 display: flex;
 flex-direction: column;
+gap: 12px;
+padding-bottom: 20px;
+}
+
+.module-card {
+background: var(--card);
+border: 1px solid var(--border);
+border-radius: 8px;
+display: flex;
 align-items: center;
-justify-content: center;
+padding: 18px;
 text-decoration: none;
 color: var(--text);
-padding: 20px;
-transition: all 0.2s ease;
-box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+transition: 0.2s;
+position: relative;
+overflow: hidden;
 }
 
-.module-btn:active {
-transform: scale(0.95);
-background: #2d3a4f;
+.module-card:active {
+background: #1f2937;
 border-color: var(--accent);
+transform: scale(0.98);
 }
 
-.module-btn i {
-font-size: 2rem;
-margin-bottom: 10px;
+/* Az ikonok stílusa a régi profi kinézethez */
+.icon-box {
+width: 45px;
+height: 45px;
+background: rgba(37, 99, 235, 0.1);
+border-radius: 6px;
+display: flex;
+align-items: center;
+justify-content: center;
+margin-right: 15px;
+font-size: 1.5rem;
+color: var(--accent);
+border: 1px solid rgba(37, 99, 235, 0.2);
 }
 
-.module-btn span {
-font-weight: 600;
-font-size: 0.9rem;
-text-align: center;
+.info {
+display: flex;
+flex-direction: column;
 }
 
-/* Ikonok helyettesítése emoji-kkal vagy egyszerű karakterekkel */
-.icon { font-style: normal; font-size: 2.5rem; margin-bottom: 8px; }
+.info .name {
+font-size: 1.1rem;
+font-weight: 700;
+color: #fff;
+}
+
+.info .desc {
+font-size: 0.75rem;
+color: #6b7280;
+margin-top: 2px;
+}
+
+/* Jelszavas gomb extra jelzése */
+.secure-tag {
+position: absolute;
+right: 15px;
+font-size: 0.6rem;
+background: rgba(37, 99, 235, 0.1);
+color: var(--accent);
+padding: 2px 6px;
+border-radius: 4px;
+font-weight: bold;
+text-transform: uppercase;
+}
 
 footer {
-text-align: center;
 padding: 15px 0;
-font-size: 0.7rem;
-color: #475569;
-font-weight: bold;
-letter-spacing: 1px;
+border-top: 1px solid var(--border);
+text-align: center;
+font-size: 10px;
+color: #4b5563;
+font-weight: 900;
+letter-spacing: 2px;
+text-transform: uppercase;
 }
 
-/* Gomb specifikus színek */
-.btn-secure { border: 1px solid rgba(59, 130, 246, 0.5); }
+/* iPhone Safari görgetés fix */
+.menu-container::-webkit-scrollbar { display: none; }
 </style>
 </head>
 <body>
 
 <header>
 <h1>FORVIA HUB</h1>
-<p>Industrial Management Tools</p>
+<span>Szentlörinckáta - Offline Sytem</span>
 </header>
 
-<div class="menu-grid">
-<a href="1.html" class="module-btn">
-<i class="icon">🔍</i>
-<span>Cikkszám Kereső</span>
+<div class="menu-container">
+
+<a href="1.html" class="module-card">
+<div class="icon-box">🔍</div>
+<div class="info">
+<span class="name">Cikkszám Kereső</span>
+<span class="desc">Központi cikkszám adatbázis</span>
+</div>
 </a>
 
-<a href="2.html" class="module-btn">
-<i class="icon">🧮</i>
-<span>Bérkalkulátor</span>
+<a href="2.html" class="module-card">
+<div class="icon-box">🧮</div>
+<div class="info">
+<span class="name">Bérkalkulátor</span>
+<span class="desc">Műszakpótlék és fizetés számítás</span>
+</div>
 </a>
 
-<a href="3.html" class="module-btn">
-<i class="icon">📅</i>
-<span>Műszaknaptár</span>
+<a href="3.html" class="module-card">
+<div class="icon-box">📅</div>
+<div class="info">
+<span class="name">Műszaknaptár</span>
+<span class="desc">Éves beosztás és rendkívüli napok</span>
+</div>
 </a>
 
-<a href="4.html" class="module-btn">
-<i class="icon">📝</i>
-<span>Napi Jelentés</span>
+<a href="4.html" class="module-card">
+<div class="icon-box">📝</div>
+<div class="info">
+<span class="name">Napi Jelentés</span>
+<span class="desc">Taktidő és darabszám naplózás</span>
+</div>
 </a>
 
-<a href="5.html" class="module-btn">
-<i class="icon">🎭</i>
-<span>Maszk Finder</span>
+<a href="5.html" class="module-card">
+<div class="icon-box">🎭</div>
+<div class="info">
+<span class="name">Maszk Finder</span>
+<span class="desc">Gyártási maszkok keresése</span>
+</div>
 </a>
 
-<div onclick="openSecureLink()" class="module-btn btn-secure" style="cursor: pointer;">
-<i class="icon">⚙️</i>
-<span>Adatgeneráló</span>
+<div onclick="openSecureLink()" class="module-card" style="cursor: pointer;">
+<div class="icon-box">⚙️</div>
+<div class="info">
+<span class="name">Adatgeneráló</span>
+<span class="desc">SPI és CKD fájl sorozatgyártó</span>
+</div>
+<span class="secure-tag">Secure Access</span>
 </div>
 
-<a href="7.html" class="module-btn">
-<i class="icon">📊</i>
-<span>Quality Analízis</span>
+<a href="7.html" class="module-card">
+<div class="icon-box">📊</div>
+<div class="info">
+<span class="name">Quality Analízis</span>
+<span class="desc">Hibaarány és selejt statisztika</span>
+</div>
 </a>
+
 </div>
 
 <footer>GERGŐ ROLAND | 2026</footer>
 
 <script>
 function openSecureLink() {
-// Felugró ablak jelszó kéréshez
-let pin = prompt("A modul megnyitásához add meg a kódot:");
-
+let pin = prompt("Kérem a biztonsági kódot:");
 if (pin === "123456") {
-// Ha a kód jó, megnyitja az új ablakban
 window.open("https://gergoroland33-sys.github.io/adatgeneralo/", "_blank");
 } else if (pin !== null) {
-// Ha rossz a kód (és nem a Mégse gombra nyomott)
-alert("Helytelen kód! Hozzáférés megtagadva.");
+alert("Hozzáférés megtagadva!");
 }
 }
-
-// iPhone 12 Safari fix: Megakadályozza az ugrálást görgetéskor
-document.addEventListener('touchmove', function (e) {
-if (e.scale !== 1) { e.preventDefault(); }
-}, { passive: false });
 </script>
 
 </body>
