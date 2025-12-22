@@ -1,2 +1,345 @@
-<!DOCTYPE html><html lang="hu"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Forvia Quality Analysis Pro</title><style>:root{--primary:#3b82f6;--bg:#0f172a;--card-bg:#1e293b;--card-border:#334155;--text-main:#f1f5f9;--text-muted:#94a3b8;--error:#ef4444;--warning:#f59e0b;}body{font-family:'Inter',-apple-system,sans-serif;background-color:var(--bg);color:var(--text-main);margin:0;padding:20px;}.container{max-width:900px;margin:0 auto;}header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:25px;padding-bottom:15px;border-bottom:1px solid var(--card-border);}.logo h1{margin:0;font-size:1.4rem;font-weight:800;}.logo span{color:var(--primary);}.file-date{font-size:0.9rem;color:var(--text-muted);margin-top:5px;}.filter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;background:var(--card-bg);padding:15px;border-radius:12px;margin-bottom:20px;border:1px solid var(--card-border);}.filter-group label{display:block;font-size:0.7rem;text-transform:uppercase;margin-bottom:5px;color:var(--text-muted);}select{width:100%;background:var(--bg);color:white;border:1px solid var(--card-border);padding:8px;border-radius:6px;}.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;margin-bottom:20px;}.stat-card{background:var(--card-bg);padding:15px;border-radius:12px;border-left:4px solid var(--primary);}.stat-label{font-size:0.7rem;text-transform:uppercase;color:var(--text-muted);}.stat-value{font-size:1.4rem;font-weight:800;display:block;margin-top:5px;}.top-highlights{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:20px;}.high-card{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);padding:12px;border-radius:10px;}.high-card small{font-size:0.7rem;color:var(--error);font-weight:700;text-transform:uppercase;}.high-card div{font-weight:700;font-size:0.95rem;margin-top:3px;}.analysis-card{background:var(--card-bg);border-radius:15px;padding:20px;margin-bottom:20px;border:1px solid var(--card-border);}h3{font-size:0.9rem;margin:0 0 15px 0;text-transform:uppercase;letter-spacing:1px;}table{width:100%;border-collapse:collapse;font-size:0.85rem;}th{text-align:left;color:var(--text-muted);padding:10px;border-bottom:1px solid var(--card-border);font-size:0.75rem;}td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.05);}.rank{font-weight:800;color:var(--primary);}.badge{background:#0f172a;padding:2px 6px;border-radius:4px;font-size:0.75rem;}.upload-zone{background:var(--card-bg);border:2px dashed var(--card-border);padding:20px;text-align:center;border-radius:15px;margin-bottom:20px;cursor:pointer;}@media print{@page{size:A4 portrait;margin:10mm;}body{background:white;color:black;padding:0;}.container{max-width:100%;}.upload-zone,button,.filter-grid,select{display:none!important;}.analysis-card,.stat-card,.high-card{border:1px solid #eee;background:white!important;box-shadow:none;color:black!important;margin-bottom:10px;}.stat-value,.logo h1,.rank{color:black!important;}.date-header{display:block!important;}table{font-size:0.8rem;}}</style></head><body><div class="container"><header><div class="logo"><h1>FORVIA <span>QUALITY</span></h1><div id="fileDisplay" class="file-date">Töltsön be egy fájlt az elemzéshez</div></div><button onclick="window.print()" style="padding:8px 16px;background:var(--primary);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:700;">NYOMTATÁS / PDF</button></header><div class="upload-zone" onclick="document.getElementById('fileInput').click()"><strong>Kattintson a CSV fájl kiválasztásához</strong><input type="file" id="fileInput" accept=".csv,.txt" style="display:none"></div><div class="filter-grid"><div class="filter-group"><label>Gépsor (A)</label><select id="filterGepsorA" onchange="updateView()"><option value="mind">Mind</option></select></div><div class="filter-group"><label>Gép Megnevezés</label><select id="filterGepsor" onchange="updateView()"><option value="mind">Mind</option></select></div><div class="filter-group"><label>Top lista</label><select id="topLimit" onchange="updateView()"><option value="5">Top 5</option><option value="10" selected>Top 10</option></select></div></div><div class="stats-row"><div class="stat-card"><span class="stat-label">Összes Beültetés</span><span class="stat-value" id="totalBeult">0</span></div><div class="stat-card" style="border-left-color:var(--error);"><span class="stat-label">Felvételi Hiba</span><span class="stat-value" id="totalFelv">0</span></div><div class="stat-card" style="border-left-color:var(--warning);"><span class="stat-label">Kamera Hiba</span><span class="stat-value" id="totalKam">0</span></div></div><div class="top-highlights"><div class="high-card"><small>Kritikus Cikkszám (Felvétel)</small><div id="worstFelv">-</div></div><div class="high-card"><small>Kritikus Cikkszám (Kamera)</small><div id="worstKam">-</div></div></div><div class="analysis-card"><h3 style="color:var(--primary)">Top Felvételi Hibák Elemzése</h3><table id="tableFelv"><thead><tr><th>#</th><th>Cikkszám</th><th>Hiba db</th><th>Arány</th><th>Gépadat</th></tr></thead><tbody></tbody></table></div><div class="analysis-card"><h3 style="color:var(--warning)">Top Kamera Hibák Elemzése</h3><table id="tableKam"><thead><tr><th>#</th><th>Cikkszám</th><th>Hiba db</th><th>Arány</th><th>Gépadat</th></tr></thead><tbody></tbody></table></div></div><script>let allData=[];document.getElementById('fileInput').addEventListener('change',function(e){const f=e.target.files[0];if(!f)return;const dm=f.name.match(/\d{4}\.\d{2}\.\d{2}/g);document.getElementById('fileDisplay').innerText=`Riport: ${f.name} ${dm?'('+dm.join(' - ')+')':''}`;const r=new FileReader();r.onload=(ev)=>{const l=ev.target.result.split('\n').map(x=>x.trim()).filter(x=>x);allData=l.slice(1).map(line=>{const c=line.split(';');return{gA:c[0],g:c[1],cikk:c[2],b:parseInt(c[3])||0,f:parseInt(c[4])||0,k:parseInt(c[5])||0};});popF();upV();};r.readAsText(f);});function popF(){const gA=[...new Set(allData.map(d=>d.gA))].sort();const g=[...new Set(allData.map(d=>d.g))].sort();fillS('filterGepsorA',gA);fillS('filterGepsor',g);}function fillS(id,items){const s=document.getElementById(id);s.innerHTML='<option value="mind">Mind</option>';items.forEach(i=>s.innerHTML+=`<option value="${i}">${i}</option>`);}function upV(){updateView();}function updateView(){if(!allData.length)return;const fGA=document.getElementById('filterGepsorA').value;const fG=document.getElementById('filterGepsor').value;const lim=parseInt(document.getElementById('topLimit').value);const fil=allData.filter(d=>(fGA==='mind'||d.gA===fGA)&&(fG==='mind'||d.g===fG));let s={beult:0,felv:0,kam:0,dF:{},dK:{},dI:{}};fil.forEach(d=>{s.beult+=d.b;s.felv+=d.f;s.kam+=d.k;if(d.f>0)s.dF[d.cikk]=(s.dF[d.cikk]||0)+d.f;if(d.k>0)s.dK[d.cikk]=(s.dK[d.cikk]||0)+d.k;s.dI[d.cikk]=`${d.g} / ${d.gA}`;});document.getElementById('totalBeult').innerText=s.beult.toLocaleString();document.getElementById('totalFelv').innerText=s.felv.toLocaleString();document.getElementById('totalKam').innerText=s.kam.toLocaleString();rTab('tableFelv',s.dF,s.dI,s.felv,lim,'worstFelv');rTab('tableKam',s.dK,s.dI,s.kam,lim,'worstKam');}function rTab(tid,dict,info,tot,lim,wid){const tb=document.getElementById(tid).querySelector('tbody');tb.innerHTML="";const s=Object.entries(dict).sort((a,b)=>b[1]-a[1]);if(s.length>0){document.getElementById(wid).innerText=`${s[0][0]} (${s[0][1]} db)`;}s.slice(0,lim).forEach((i,idx)=>{const p=tot>0?((i[1]/tot)*100).toFixed(1):0;tb.innerHTML+=`<tr><td class="rank">${idx+1}</td><td><strong>${i[0]}</strong></td><td>${i[1].toLocaleString()}</td><td>${p}%</td><td><span class="badge">${info[i[0]]}</span></td></tr>`;});}<\/script></body></html>
-</textarea>
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Forvia Quality Analysis Pro</title>
+<style>
+:root {
+--primary: #3b82f6; --bg: #0f172a; --card-bg: #1e293b; --card-border: #334155;
+--text-main: #f1f5f9; --text-muted: #94a3b8; --error: #ef4444; --warning: #f59e0b;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: var(--text-main); margin: 0; padding: 20px; padding-bottom: 100px; }
+
+.container { max-width: 1000px; margin: 0 auto; }
+
+header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid var(--card-border); }
+.logo h1 { margin: 0; font-size: 1.4rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+.logo span { color: var(--primary); }
+.file-date { font-size: 0.9rem; color: var(--text-muted); margin-top: 5px; }
+
+.upload-zone {
+background: rgba(30, 41, 59, 0.5); border: 2px dashed var(--card-border);
+padding: 30px; text-align: center; border-radius: 15px; margin-bottom: 25px; cursor: pointer; transition: 0.3s;
+}
+.upload-zone:hover { border-color: var(--primary); background: rgba(59, 130, 246, 0.1); }
+
+.filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--card-border); }
+.filter-group label { display: block; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 5px; color: var(--text-muted); font-weight: bold; }
+select { width: 100%; background: var(--bg); color: white; border: 1px solid var(--card-border); padding: 10px; border-radius: 8px; outline: none; }
+
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+.stat-card { background: var(--card-bg); padding: 20px; border-radius: 12px; border-left: 5px solid var(--primary); box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+.stat-label { font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: bold; }
+.stat-value { font-size: 1.8rem; font-weight: 800; display: block; margin-top: 5px; }
+
+.top-highlights { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+.high-card { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 15px; border-radius: 12px; }
+.high-card small { font-size: 0.7rem; color: var(--error); font-weight: 800; text-transform: uppercase; }
+.high-card div { font-weight: 700; font-size: 1rem; margin-top: 5px; }
+
+.analysis-card { background: var(--card-bg); border-radius: 15px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--card-border); }
+h3 { font-size: 1rem; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+th { text-align: left; color: var(--text-muted); padding: 12px; border-bottom: 1px solid var(--card-border); font-size: 0.75rem; text-transform: uppercase; }
+td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.rank { font-weight: 800; color: var(--primary); }
+.badge { background: #0f172a; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; border: 1px solid var(--card-border); }
+
+@media (max-width: 600px) { .top-highlights { grid-template-columns: 1fr; } }
+@media print {
+.upload-zone, button, .filter-grid, .global-fab, .global-sidebar { display: none !important; }
+body { background: white; color: black; padding: 0; }
+.analysis-card, .stat-card { border: 1px solid #ccc; background: white !important; color: black !important; box-shadow: none; }
+.stat-value, h1, span { color: black !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+<header>
+<div class="logo">
+<h1>FORVIA <span>QUALITY</span></h1>
+<div id="fileDisplay" class="file-date">Töltsön be egy fájlt az elemzéshez</div>
+</div>
+<button onclick="window.print()" style="padding:10px 20px; background:var(--primary); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:700;">NYOMTATÁS / PDF</button>
+</header>
+
+<div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+<div style="font-size:1.2rem; font-weight:bold; margin-bottom:5px;">Kattintson a CSV fájl kiválasztásához</div>
+<div style="font-size:0.8rem; color:#94a3b8;">(Támogatott: pontosvesszővel vagy vesszővel tagolt .csv)</div>
+<input type="file" id="fileInput" accept=".csv,.txt" style="display:none">
+</div>
+
+<div class="filter-grid">
+<div class="filter-group">
+<label>Gépsor (A)</label>
+<select id="filterGepsorA" onchange="updateView()"><option value="mind">Mind</option></select>
+</div>
+<div class="filter-group">
+<label>Gép Megnevezés</label>
+<select id="filterGepsor" onchange="updateView()"><option value="mind">Mind</option></select>
+</div>
+<div class="filter-group">
+<label>Top lista</label>
+<select id="topLimit" onchange="updateView()">
+<option value="5">Top 5</option>
+<option value="10" selected>Top 10</option>
+<option value="20">Top 20</option>
+</select>
+</div>
+</div>
+
+<div class="stats-row">
+<div class="stat-card">
+<span class="stat-label">Összes Beültetés</span>
+<span class="stat-value" id="totalBeult">0</span>
+</div>
+<div class="stat-card" style="border-left-color:var(--error);">
+<span class="stat-label">Felvételi Hiba</span>
+<span class="stat-value" id="totalFelv" style="color:var(--error)">0</span>
+</div>
+<div class="stat-card" style="border-left-color:var(--warning);">
+<span class="stat-label">Kamera Hiba</span>
+<span class="stat-value" id="totalKam" style="color:var(--warning)">0</span>
+</div>
+</div>
+
+<div class="top-highlights">
+<div class="high-card">
+<small>Kritikus Cikkszám (Felvétel)</small>
+<div id="worstFelv">-</div>
+</div>
+<div class="high-card">
+<small>Kritikus Cikkszám (Kamera)</small>
+<div id="worstKam">-</div>
+</div>
+</div>
+
+<div class="analysis-card">
+<h3 style="color:var(--primary)">Top Felvételi Hibák Elemzése</h3>
+<table id="tableFelv">
+<thead><tr><th>#</th><th>Cikkszám</th><th>Hiba db</th><th>Arány</th><th>Gépadat</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+
+<div class="analysis-card">
+<h3 style="color:var(--warning)">Top Kamera Hibák Elemzése</h3>
+<table id="tableKam">
+<thead><tr><th>#</th><th>Cikkszám</th><th>Hiba db</th><th>Arány</th><th>Gépadat</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+</div>
+
+<script>
+let allData = [];
+
+document.getElementById('fileInput').addEventListener('change', function(e) {
+const file = e.target.files[0];
+if (!file) return;
+
+// Fájlnév kiírása
+document.getElementById('fileDisplay').innerText = `Betöltve: ${file.name}`;
+
+const reader = new FileReader();
+reader.onload = (ev) => {
+const content = ev.target.result;
+const lines = content.split('\n').map(x => x.trim()).filter(x => x);
+
+if (lines.length < 2) {
+alert("A fájl üres vagy hibás!");
+return;
+}
+
+// CSV elválasztó detektálás (vessző vagy pontosvessző)
+let separator = ';';
+if (lines[0].indexOf(';') === -1 && lines[0].indexOf(',') > -1) {
+separator = ',';
+}
+
+// Adatfeldolgozás
+// Feltételezett oszlopok: 0:Gépsor, 1:Gép, 2:Cikkszám, 3:Beültetés, 4:Felvételi, 5:Kamera
+allData = lines.slice(1).map(line => {
+const c = line.split(separator);
+if (c.length < 3) return null; // Hibás sor kihagyása
+return {
+gA: c[0] ? c[0].trim() : "Egyéb", // Gépsor
+g: c[1] ? c[1].trim() : "Egyéb", // Gép
+cikk: c[2] ? c[2].trim() : "Ismeretlen", // Cikkszám
+b: parseInt(c[3]) || 0, // Beültetés
+f: parseInt(c[4]) || 0, // Felvételi Hiba
+k: parseInt(c[5]) || 0 // Kamera Hiba
+};
+}).filter(item => item !== null); // Üres sorok szűrése
+
+populateFilters();
+updateView();
+};
+reader.readAsText(file);
+});
+
+function populateFilters() {
+const gA = [...new Set(allData.map(d => d.gA))].sort();
+const g = [...new Set(allData.map(d => d.g))].sort();
+
+fillSelect('filterGepsorA', gA);
+fillSelect('filterGepsor', g);
+}
+
+function fillSelect(id, items) {
+const s = document.getElementById(id);
+s.innerHTML = '<option value="mind">Mind</option>';
+items.forEach(i => s.innerHTML += `<option value="${i}">${i}</option>`);
+}
+
+function updateView() {
+if (!allData.length) return;
+
+const fGA = document.getElementById('filterGepsorA').value;
+const fG = document.getElementById('filterGepsor').value;
+const limit = parseInt(document.getElementById('topLimit').value);
+
+// Szűrés
+const filtered = allData.filter(d =>
+(fGA === 'mind' || d.gA === fGA) &&
+(fG === 'mind' || d.g === fG)
+);
+
+// Statisztika számolás
+let stats = { beult: 0, felv: 0, kam: 0, dF: {}, dK: {}, dInfo: {} };
+
+filtered.forEach(d => {
+stats.beult += d.b;
+stats.felv += d.f;
+stats.kam += d.k;
+
+// Hibák gyűjtése cikkszámonként
+if (d.f > 0) stats.dF[d.cikk] = (stats.dF[d.cikk] || 0) + d.f;
+if (d.k > 0) stats.dK[d.cikk] = (stats.dK[d.cikk] || 0) + d.k;
+
+stats.dInfo[d.cikk] = `${d.g} / ${d.gA}`;
+});
+
+// Kártyák frissítése
+document.getElementById('totalBeult').innerText = stats.beult.toLocaleString();
+document.getElementById('totalFelv').innerText = stats.felv.toLocaleString();
+document.getElementById('totalKam').innerText = stats.kam.toLocaleString();
+
+// Táblázatok renderelése
+renderTable('tableFelv', stats.dF, stats.dInfo, stats.felv, limit, 'worstFelv');
+renderTable('tableKam', stats.dK, stats.dInfo, stats.kam, limit, 'worstKam');
+}
+
+function renderTable(tableId, dataDict, infoDict, totalError, limit, worstId) {
+const tbody = document.getElementById(tableId).querySelector('tbody');
+tbody.innerHTML = "";
+
+const sorted = Object.entries(dataDict).sort((a, b) => b[1] - a[1]);
+
+// Legrosszabb kiírása a kártyára
+if (sorted.length > 0) {
+document.getElementById(worstId).innerText = `${sorted[0][0]} (${sorted[0][1]} db)`;
+} else {
+document.getElementById(worstId).innerText = "-";
+}
+
+sorted.slice(0, limit).forEach((item, idx) => {
+const percent = totalError > 0 ? ((item[1] / totalError) * 100).toFixed(1) : 0;
+const row = `
+<tr>
+<td class="rank">${idx + 1}.</td>
+<td><strong>${item[0]}</strong></td>
+<td>${item[1].toLocaleString()}</td>
+<td>${percent}%</td>
+<td><span class="badge">${infoDict[item[0]] || '-'}</span></td>
+</tr>
+`;
+tbody.innerHTML += row;
+});
+
+if (sorted.length === 0) {
+tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Nincs megjeleníthető adat</td></tr>';
+}
+}
+</script>
+
+<style>
+.global-sidebar {
+position: fixed; left: 0; top: 0;
+width: 280px; height: 100%; background: #161e2e;
+border-right: 1px solid #1f2937;
+display: flex; flex-direction: column;
+transform: translateX(-100%);
+transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+z-index: 2000; padding: 20px;
+}
+.global-sidebar.open { transform: translateX(0); box-shadow: 20px 0 50px rgba(0,0,0,0.7); }
+
+.global-overlay {
+display: none; position: fixed; inset: 0;
+background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 1500;
+}
+.global-overlay.active { display: block; }
+
+.global-fab {
+position: fixed; bottom: 35px; right: 30px;
+width: 65px; height: 65px; background: #3b82f6;
+border-radius: 20px; display: flex; align-items: center; justify-content: center;
+box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4); cursor: pointer; z-index: 3000;
+}
+
+.nav-link {
+display: flex; align-items: center; padding: 12px; margin-bottom: 5px;
+color: #94a3b8; text-decoration: none; font-weight: 500; border-radius: 10px;
+}
+.nav-link:hover { background: #3b82f6; color: white; }
+.nav-link i { width: 25px; margin-right: 10px; font-style: normal; }
+</style>
+
+<div class="global-overlay" id="gOverlay" onclick="toggleGlobalMenu()"></div>
+
+<aside class="global-sidebar" id="gSidebar">
+<h2 style="color:#3b82f6; margin:10px 0 30px 10px; font-size:1.4rem;">FORVIA HUB</h2>
+<nav style="flex:1; overflow-y:auto;">
+<a href="index.html" class="nav-link"><i>🏠</i> Kezdőlap</a>
+<a href="1.html" class="nav-link"><i>🔍</i> Cikkszám Kereső</a>
+<a href="2.html" class="nav-link"><i>💰</i> Bérkalkulátor</a>
+<a href="3.html" class="nav-link"><i>📅</i> Műszaknaptár</a>
+<a href="4.html" class="nav-link"><i>📝</i> Napi Jelentés</a>
+<a href="5.html" class="nav-link"><i>🎭</i> Maszk Finder</a>
+<div onclick="openSecureLink()" class="nav-link" style="cursor:pointer;"><i>⚙️</i> Adatgeneráló</div>
+<a href="7.html" class="nav-link" style="background:#3b82f6; color:white;"><i>📈</i> Quality Analízis</a>
+</nav>
+<div style="text-align:center; font-size:0.7rem; color:#64748b; margin-top:20px;">
+GERGŐ ROLAND | 2026
+</div>
+</aside>
+
+<div class="global-fab" onclick="toggleGlobalMenu()">
+<span id="gMenuIcon" style="font-size:30px; color:white;">☰</span>
+</div>
+
+<script>
+function toggleGlobalMenu() {
+const s = document.getElementById('gSidebar');
+const o = document.getElementById('gOverlay');
+const i = document.getElementById('gMenuIcon');
+
+s.classList.toggle('open');
+o.classList.toggle('active');
+i.innerText = s.classList.contains('open') ? '✕' : '☰';
+}
+
+function openSecureLink() {
+let pin = prompt("Kód:");
+if (pin === "123456") window.open("https://gergoroland33-sys.github.io/adatgeneralo/", "_blank");
+}
+</script>
+
+</body>
+</html>
