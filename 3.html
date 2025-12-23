@@ -109,11 +109,20 @@ const isToday=dObj&&dObj.toISOString().split('T')[0]===today;
 const hetvege=isHetvege(datum);
 html+=`<div class="day-group" id="${isToday?'today-marker':''}"><div class="date-header ${hetvege?'weekend':''}"><span>${datum.replace(/-/g,'. ')}${datum.endsWith('.')?'':'.'}</span><span class="day-name">${getNapNeve(datum)}</span></div>`;
 napok[datum].forEach(r=>{
-// CSAK AKKOR SZÍNEZÜNK, HA "Nappal" VAGY "Éjszaka" A SZÖVEG. "Otthon" MARAD FEHÉR.
-const szoveg = r.hely;
-const kellSzin = (szoveg === 'Nappal' || szoveg === 'Éjszaka' || szoveg === 'nappal' || szoveg === 'éjszaka');
 
-html+=`<div class="shift-card ${isToday?'today-highlight':''}">${isToday?'<div class="today-label">MAI NAP</div>':''}<div class="shift-info"><span class="shift-location" style="${kellSzin ? 'color:var(--color-'+r.muszak+')' : ''}">${r.hely}</span><div class="shift-leader">Vezető: <span class="leader-name">${vezetok[r.muszak]||'Nincs'}</span></div></div><div class="shift-badge muszak-${r.muszak}">${r.muszak}</div></div>`;
+// --- MÓDOSÍTÁS KEZDETE ---
+// Ellenőrizzük, hogy Nappal vagy Éjszaka-e a szöveg
+const helySzoveg = r.hely.toLowerCase();
+let stilus = "";
+
+if (helySzoveg.includes("nappal") || helySzoveg.includes("éjszaka")) {
+// Ha igen, akkor kapja meg a műszak színét
+stilus = `style="color: var(--color-${r.muszak})"`;
+}
+// Ha "Otthon" vagy más, marad üresen (tehát fehér)
+// --- MÓDOSÍTÁS VÉGE ---
+
+html+=`<div class="shift-card ${isToday?'today-highlight':''}">${isToday?'<div class="today-label">MAI NAP</div>':''}<div class="shift-info"><span class="shift-location" ${stilus}>${r.hely}</span><div class="shift-leader">Vezető: <span class="leader-name">${vezetok[r.muszak]||'Nincs'}</span></div></div><div class="shift-badge muszak-${r.muszak}">${r.muszak}</div></div>`;
 });
 html+=`</div>`;
 });
