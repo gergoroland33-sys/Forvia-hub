@@ -97,31 +97,32 @@ select {
 }
 .panel-title { font-size: 1rem; font-weight: 800; text-transform: uppercase; margin: 0; text-align: center; }
 
-/* --- ÚJ STÍLUS: ELEGÁNS KRITIKUS SÁV --- */
+/* --- ÚJ STÍLUS: LETISZTULT KRITIKUS SÁV --- */
 .critical-banner {
-    display: none; /* Alapból rejtve, JS hozza elő */
-    padding: 12px 15px;
-    margin: 10px;
-    border-radius: 6px;
-    font-size: 0.9rem;
+    display: none; /* Alapból rejtve */
+    padding: 15px;
+    margin: 15px;
+    border-radius: 8px;
+    font-size: 1rem;
     font-weight: 700;
     justify-content: space-between; 
     align-items: center;
-    background: var(--bg-sub); /* Fallback */
-    border-left: 5px solid transparent; /* Színes csík helye */
+    background: rgba(255,255,255,0.02); /* Nagyon finom belső háttér */
+    border: 1px solid transparent; /* Vékony keret */
+    transition: all 0.3s ease;
 }
 
-/* Külön osztályok a színeknek - így biztosan működik */
+/* Külön osztályok a színeknek */
 .critical-banner.red-style {
-    background: rgba(239, 68, 68, 0.1); /* Nagyon halvány piros */
-    color: #ef4444;
-    border-left-color: #ef4444;
+    border-color: var(--danger); /* Csak a keret színes */
+    color: var(--danger);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15); /* Finom ragyogás */
 }
 
 .critical-banner.yellow-style {
-    background: rgba(245, 158, 11, 0.1); /* Nagyon halvány narancs */
-    color: #f59e0b;
-    border-left-color: #f59e0b;
+    border-color: var(--warning); /* Csak a keret színes */
+    color: var(--warning);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15); /* Finom ragyogás */
 }
 
 table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
@@ -189,13 +190,13 @@ td { padding: 8px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
     .panel-header { background: #ddd !important; padding: 5px; color: black !important; border-bottom: 1px solid #000; }
     .panel-title { color: black !important; font-size: 0.9rem; }
     
-    /* Nyomtatásban egyszerű fekete-fehér */
+    /* Nyomtatásban egyszerű fekete-fehér, vékony kerettel */
     .critical-banner {
         border: 1px solid #000 !important;
         background: white !important;
         color: black !important;
-        border-left: 5px solid #000 !important; /* Fekete csík */
-        margin: 5px; padding: 5px; font-size: 0.85rem;
+        margin: 10px; padding: 8px; font-size: 0.9rem;
+        box-shadow: none !important;
     }
 
     table { font-size: 9pt; }
@@ -248,4 +249,210 @@ td { padding: 8px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
     </div>
 
     <div class="stats-grid">
-        <div class="stat-card
+        <div class="stat-card">
+            <div class="stat-title">Termelés</div>
+            <span class="stat-value" id="totalBeult" style="color:var(--primary)">0</span>
+            <div class="stat-sub">Összes Alkatrész beültetés</div>
+        </div>
+        <div class="stat-card danger">
+            <div class="stat-title">Felvételi Hiba</div>
+            <span class="stat-value" id="totalFelv" style="color:var(--danger)">0</span>
+            <div class="stat-sub" id="rateFelv" style="color:var(--danger)">0.00% arány (PPM)</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-title">Kamera Hiba</div>
+            <span class="stat-value" id="totalKam" style="color:var(--warning)">0</span>
+            <div class="stat-sub" id="rateKam" style="color:var(--warning)">0.00% arány (PPM)</div>
+        </div>
+    </div>
+
+    <div class="analysis-section">
+        <div class="panel">
+            <div class="panel-header">
+                <h3 class="panel-title" style="color:var(--danger)">Top Felvételi Hibák</h3>
+            </div>
+            
+            <div id="worstFelvBadge" class="critical-banner red-style">
+                </div>
+            
+            <table id="tableFelv">
+                <thead>
+                    <tr>
+                        <th style="width:30px">#</th>
+                        <th>Cikkszám / Gépadat</th>
+                        <th style="text-align:right">Hiba db</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <h3 class="panel-title" style="color:var(--warning)">Top Kamera Hibák</h3>
+            </div>
+            
+            <div id="worstKamBadge" class="critical-banner yellow-style">
+                 </div>
+            
+            <table id="tableKam">
+                <thead>
+                    <tr>
+                        <th style="width:30px">#</th>
+                        <th>Cikkszám / Gépadat</th>
+                        <th style="text-align:right">Hiba db</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+let allData = [];
+
+document.getElementById('fileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    document.getElementById('fileDisplay').innerText = `Adatfájl: ${file.name}`;
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        const content = ev.target.result;
+        const lines = content.split('\n').map(x => x.trim()).filter(x => x);
+
+        if (lines.length < 2) {
+            alert("A fájl üres vagy hibás!");
+            return;
+        }
+
+        let separator = ';';
+        if (lines[0].indexOf(';') === -1 && lines[0].indexOf(',') > -1) {
+            separator = ',';
+        }
+
+        allData = lines.slice(1).map(line => {
+            const c = line.split(separator);
+            if (c.length < 3) return null;
+            return {
+                gA: c[0] ? c[0].trim() : "Egyéb",
+                g: c[1] ? c[1].trim() : "Egyéb",
+                cikk: c[2] ? c[2].trim() : "Ismeretlen",
+                b: parseInt(c[3]) || 0,
+                f: parseInt(c[4]) || 0,
+                k: parseInt(c[5]) || 0
+            };
+        }).filter(item => item !== null);
+
+        populateFilters();
+        updateView();
+    };
+    reader.readAsText(file);
+});
+
+function populateFilters() {
+    const gA = [...new Set(allData.map(d => d.gA))].sort();
+    const g = [...new Set(allData.map(d => d.g))].sort();
+    fillSelect('filterGepsorA', gA);
+    fillSelect('filterGepsor', g);
+}
+
+function fillSelect(id, items) {
+    const s = document.getElementById(id);
+    s.innerHTML = '<option value="mind">Összes</option>';
+    items.forEach(i => s.innerHTML += `<option value="${i}">${i}</option>`);
+}
+
+function updateView() {
+    if (!allData.length) return;
+
+    const fGA = document.getElementById('filterGepsorA').value;
+    const fG = document.getElementById('filterGepsor').value;
+    const limit = parseInt(document.getElementById('topLimit').value);
+
+    const filtered = allData.filter(d =>
+        (fGA === 'mind' || d.gA === fGA) &&
+        (fG === 'mind' || d.g === fG)
+    );
+
+    let stats = { beult: 0, felv: 0, kam: 0, dF: {}, dK: {}, dInfo: {} };
+
+    filtered.forEach(d => {
+        stats.beult += d.b;
+        stats.felv += d.f;
+        stats.kam += d.k;
+
+        if (d.f > 0) stats.dF[d.cikk] = (stats.dF[d.cikk] || 0) + d.f;
+        if (d.k > 0) stats.dK[d.cikk] = (stats.dK[d.cikk] || 0) + d.k;
+        stats.dInfo[d.cikk] = `${d.g} / ${d.gA}`;
+    });
+
+    document.getElementById('totalBeult').innerText = stats.beult.toLocaleString();
+    
+    document.getElementById('totalFelv').innerText = stats.felv.toLocaleString();
+    const rateF = stats.beult > 0 ? ((stats.felv / stats.beult) * 100).toFixed(2) : "0.00";
+    document.getElementById('rateFelv').innerText = `${rateF}% arány`;
+
+    document.getElementById('totalKam').innerText = stats.kam.toLocaleString();
+    const rateK = stats.beult > 0 ? ((stats.kam / stats.beult) * 100).toFixed(2) : "0.00";
+    document.getElementById('rateKam').innerText = `${rateK}% arány`;
+
+    renderTable('tableFelv', stats.dF, stats.dInfo, stats.felv, limit, 'worstFelvBadge', 'red-style', 'var(--danger)');
+    renderTable('tableKam', stats.dK, stats.dInfo, stats.kam, limit, 'worstKamBadge', 'yellow-style', 'var(--warning)');
+}
+
+function renderTable(tableId, dataDict, infoDict, totalError, limit, badgeId, badgeClass, colorVar) {
+    const tbody = document.getElementById(tableId).querySelector('tbody');
+    tbody.innerHTML = "";
+
+    const sorted = Object.entries(dataDict).sort((a, b) => b[1] - a[1]);
+
+    const badgeEl = document.getElementById(badgeId);
+    if (sorted.length > 0) {
+        // Fix CSS osztály használata
+        badgeEl.className = `critical-banner ${badgeClass}`;
+        // Kicsit nagyobb betűméret a cikkszámnak
+        badgeEl.innerHTML = `<span style="font-size:1.1rem;">⚠️ ${sorted[0][0]}</span> <span style="font-weight:400; opacity:0.9">${sorted[0][1]} db hiba</span>`;
+        badgeEl.style.display = "flex";
+    } else {
+        badgeEl.style.display = "none";
+    }
+
+    const maxVal = sorted.length > 0 ? sorted[0][1] : 1;
+
+    sorted.slice(0, limit).forEach((item, idx) => {
+        const val = item[1];
+        const percentOfTotal = totalError > 0 ? ((val / totalError) * 100).toFixed(1) : 0;
+        const widthPercent = (val / maxVal) * 100;
+
+        const row = `
+        <tr>
+            <td class="rank-idx">${idx + 1}.</td>
+            <td>
+                <div class="part-num">${item[0]}</div>
+                <div style="font-size:0.7rem; color:var(--text-muted); margin-top:1px;">
+                    <span class="badge">${infoDict[item[0]] || '-'}</span> 
+                    <span style="margin-left:5px;">${percentOfTotal}% össz. hibából</span>
+                </div>
+                <div class="bar-container">
+                    <div class="bar-fill" style="width:${widthPercent}%; background:${colorVar};"></div>
+                </div>
+            </td>
+            <td style="text-align:right; font-weight:800; font-size:1.1rem;">
+                ${val.toLocaleString()}
+            </td>
+        </tr>
+        `;
+        tbody.innerHTML += row;
+    });
+
+    if (sorted.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:15px; color:var(--text-muted);">Nincs hiba adat</td></tr>';
+    }
+}
+</script>
+
+</body>
+</html>
