@@ -97,7 +97,7 @@ select {
 }
 .panel-title { font-size: 1rem; font-weight: 800; text-transform: uppercase; margin: 0; text-align: center; }
 
-/* --- ÚJ STÍLUS: LETISZTULT KRITIKUS SÁV --- */
+/* --- LETISZTULT KRITIKUS SÁV --- */
 .critical-banner {
     display: none; /* Alapból rejtve */
     padding: 15px;
@@ -107,22 +107,21 @@ select {
     font-weight: 700;
     justify-content: space-between; 
     align-items: center;
-    background: rgba(255,255,255,0.02); /* Nagyon finom belső háttér */
-    border: 1px solid transparent; /* Vékony keret */
+    background: rgba(255,255,255,0.02);
+    border: 1px solid transparent;
     transition: all 0.3s ease;
 }
 
-/* Külön osztályok a színeknek */
 .critical-banner.red-style {
-    border-color: var(--danger); /* Csak a keret színes */
+    border-color: var(--danger);
     color: var(--danger);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15); /* Finom ragyogás */
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
 }
 
 .critical-banner.yellow-style {
-    border-color: var(--warning); /* Csak a keret színes */
+    border-color: var(--warning);
     color: var(--warning);
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15); /* Finom ragyogás */
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
 }
 
 table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
@@ -142,7 +141,7 @@ td { padding: 8px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
 .rank-idx { font-weight: bold; color: var(--text-muted); width: 20px; }
 .part-num { font-weight: 700; color: var(--text-main); font-size: 0.95rem; }
 
-/* --- ⚡ NYOMTATÁS (1 OLDAL GARANCIA) ⚡ --- */
+/* --- ⚡ NYOMTATÁS (A4 1 OLDAL + RENDEZETT FEJLÉC) ⚡ --- */
 @media print {
     @page { 
         size: A4 portrait; 
@@ -151,18 +150,46 @@ td { padding: 8px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
     
     body { 
         background: white; color: black; margin: 0; padding: 0;
-        zoom: 65%; /* Kicsinyítés */
+        zoom: 65%;
         -webkit-print-color-adjust: exact; 
         print-color-adjust: exact;
     }
     
     .container { max-width: 100%; width: 100%; }
+    
+    /* Rejtsük el a felesleget */
     .upload-zone, .filter-bar, button, .meta-info button, .brand div { display: none !important; }
     
-    header { border: none; padding-bottom: 0; margin-bottom: 10px; justify-content: center; }
-    .brand h1 { font-size: 1.4rem; color: black; }
+    /* --- RENDEZETT FEJLÉC --- */
+    header { 
+        display: flex !important;
+        justify-content: space-between !important; /* Balra Cím, Jobbra Fájl */
+        align-items: flex-end !important; /* Alulra igazítva a vonalhoz */
+        border-bottom: 2px solid #000 !important; /* Vastagabb vonal */
+        padding-bottom: 10px !important;
+        margin-bottom: 15px !important;
+    }
+    
+    .brand h1 { 
+        font-size: 1.6rem; 
+        color: black; 
+        margin: 0;
+    }
     .brand span { color: black; }
     
+    .meta-info {
+        display: block !important;
+        text-align: right !important;
+    }
+    
+    #fileDisplay {
+        font-weight: bold;
+        color: black !important;
+        font-size: 1rem;
+        display: block;
+    }
+    
+    /* --- TARTALOM --- */
     .stats-grid { 
         gap: 10px; margin-bottom: 15px; 
         grid-template-columns: repeat(3, 1fr); 
@@ -190,7 +217,7 @@ td { padding: 8px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
     .panel-header { background: #ddd !important; padding: 5px; color: black !important; border-bottom: 1px solid #000; }
     .panel-title { color: black !important; font-size: 0.9rem; }
     
-    /* Nyomtatásban egyszerű fekete-fehér, vékony kerettel */
+    /* Szolid keretes kritikus sáv nyomtatáshoz */
     .critical-banner {
         border: 1px solid #000 !important;
         background: white !important;
@@ -411,9 +438,7 @@ function renderTable(tableId, dataDict, infoDict, totalError, limit, badgeId, ba
 
     const badgeEl = document.getElementById(badgeId);
     if (sorted.length > 0) {
-        // Fix CSS osztály használata
         badgeEl.className = `critical-banner ${badgeClass}`;
-        // Kicsit nagyobb betűméret a cikkszámnak
         badgeEl.innerHTML = `<span style="font-size:1.1rem;">⚠️ ${sorted[0][0]}</span> <span style="font-weight:400; opacity:0.9">${sorted[0][1]} db hiba</span>`;
         badgeEl.style.display = "flex";
     } else {
