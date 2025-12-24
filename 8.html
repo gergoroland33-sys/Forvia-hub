@@ -15,20 +15,19 @@
         .day-name { font-size: 7px; text-transform: uppercase; color: #64748b; font-weight: 800; display: block; }
         .weekend { background: #141b2d !important; color: #64748b; }
         .holiday { background: #4c0505 !important; color: #fca5a5 !important; }
-        .today-cell { border: 2px solid #3b82f6 !important; }
         
-        /* NAGYÍTÁS TELJESEN KIKAPCSOLVA */
-        .head-highlight { background: #3b82f6 !important; color: white !important; }
-        .col-highlight { background: rgba(59, 130, 246, 0.1) !important; }
-
-        /* FIX SZÍNEK */
-        .cell-S { background: #059669 !important; } /* Zöld */
-        .cell-BA { background: #ea580c !important; } /* Narancs */
-        .cell-IG { background: #7c3aed !important; } /* Lila */
-        .cell-TU { background: #2563eb !important; } /* Kék */
-        .cell-KE { background: #d97706 !important; } /* Arany */
+        /* FIX SZÍNEK - MOST MÁR MŰKÖDNI FOGNAK */
+        .cell-S { background-color: #059669 !important; color: white !important; } 
+        .cell-BA { background-color: #ea580c !important; color: white !important; } 
+        .cell-IG { background-color: #7c3aed !important; color: white !important; } 
+        .cell-TU { background-color: #2563eb !important; color: white !important; } 
+        .cell-KE { background-color: #d97706 !important; color: white !important; } 
 
         .input-cell { width: 100%; height: 100%; border: none; text-align: center; background: transparent; color: white; font-weight: 800; outline: none; }
+        
+        /* NAGYÍTÁS KIKAPCSOLVA */
+        input:focus { outline: none; background: rgba(59, 130, 246, 0.2); }
+        
         .shift-btn { transition: all 0.2s; border: 1px solid #334155; }
         .shift-btn.active { color: white; box-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
         .shift-A.active { background-color: #ef4444; }
@@ -126,20 +125,30 @@
             
             if(v === "") delete emp.data[key]; else emp.data[key] = v;
             
-            // Szín és levonás azonnali frissítése
-            inputEl.parentElement.className = inputEl.parentElement.className.replace(/cell-\S+/g, "").trim();
+            // Szín frissítése a TD cellán
+            const td = inputEl.parentElement;
+            td.className = td.className.replace(/cell-\S+/g, "").trim();
             const newClass = getCellClass(v);
-            if(newClass) inputEl.parentElement.classList.add(newClass);
+            if(newClass) td.classList.add(newClass);
             
-            // Kivonás újraszámolása
-            let sum = 0;
-            Object.values(emp.data).forEach(val => {
-                const n = parseFloat(val);
-                if(!isNaN(n)) sum += n;
-            });
-            document.getElementById(`rem-${id}`).innerText = (emp.yearlyQuota || 0) - sum;
-            
+            // Kivonás és rács frissítése
+            updateTotals(id);
             save();
+        }
+
+        function updateTotals(id) {
+            const emp = employees.find(e => e.id === id);
+            let sum = 0;
+            if(emp.data) {
+                Object.values(emp.data).forEach(val => {
+                    const n = parseFloat(val);
+                    if(!isNaN(n)) sum += n;
+                });
+            }
+            const remDisplay = document.getElementById(`rem-${id}`);
+            if(remDisplay) {
+                remDisplay.innerText = (emp.yearlyQuota || 0) - sum;
+            }
         }
 
         function render() {
@@ -147,7 +156,7 @@
             const daysInMonth = new Date(year, month + 1, 0).getDate();
             document.getElementById('currentMonthDisplay').innerText = monthNames[month];
 
-            let header = `<tr><th class="name-col">Munkatárs</th><th>Keret</th><th>Kiv.</th>`;
+            let header = `<tr><th class="name-col text-[10px] uppercase font-black">Dolgozó</th><th class="w-12 text-blue-400">Keret</th><th class="w-12 text-emerald-400">Kiv.</th>`;
             for(let d=1; d<=daysInMonth; d++) {
                 const day = new Date(year, month, d).getDay();
                 header += `<th class="${[0,6].includes(day)?'weekend':''}">${d}<span class="day-name">${dayNames[day]}</span></th>`;
