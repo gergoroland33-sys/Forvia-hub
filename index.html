@@ -54,13 +54,13 @@ color: white; letter-spacing: -1px; margin-bottom: 5px;
 color: var(--text-dim); font-size: 0.9rem; margin-bottom: 25px; font-weight: 500;
 }
 
-/* ÚJ STABIL SZÁMLÁLÓ STÍLUS */
+/* SZIKLASZILÁRD SZÁMLÁLÓ STÍLUS */
 .visitor-box {
 background: rgba(0,0,0,0.3); padding: 12px 20px; border-radius: 12px;
 display: inline-block; margin-bottom: 20px; border: 1px solid rgba(59, 130, 246, 0.3);
 }
-.visitor-label { font-size: 10px; text-transform: uppercase; color: var(--text-dim); letter-spacing: 1px; display: block; margin-bottom: 5px; }
-.visitor-img { height: 20px; filter: drop-shadow(0 0 5px rgba(16, 185, 129, 0.4)); }
+.visitor-label { font-size: 10px; text-transform: uppercase; color: var(--text-dim); letter-spacing: 1px; display: block; margin-bottom: 8px; }
+.visitor-img { height: 22px; border-radius: 4px; }
 
 .instruction-text {
 font-size: 1rem; line-height: 1.6; color: #e2e8f0; margin-bottom: 30px;
@@ -158,10 +158,8 @@ footer { padding: 20px; border-top: 1px solid var(--border); text-align: center;
 <div id="display-date" class="current-date">0000. 00. 00.</div>
 
 <div class="visitor-box">
-<span class="visitor-label">Mai látogatók</span>
-<div id="hit-container">
-    <img id="hit-img" class="visitor-img" src="" alt="loading...">
-</div>
+<span class="visitor-label">Mai látogatások száma</span>
+<img id="hit-img" class="visitor-img" src="https://img.shields.io/badge/betöltés-0F172A" alt="stat">
 </div>
 
 <p class="instruction-text">
@@ -211,24 +209,22 @@ Ez a verzió laptop és telefon kijelzőre lett optimalizálva.
 <script>
 function updateInfo() {
     const now = new Date();
-    // Dátum formázás
     const dateStr = now.getFullYear() + ". " + 
                     String(now.getMonth() + 1).padStart(2, '0') + ". " + 
                     String(now.getDate()).padStart(2, '0') + ".";
     document.getElementById('display-date').innerText = dateStr;
 
-    // STABIL SZÁMLÁLÓ: HITS API ( SVG alapú, azonnali frissülés )
-    const dailyKey = "forviahub_" + now.getFullYear() + (now.getMonth()+1) + now.getDate();
-    const cacheBuster = new Date().getTime();
+    // SHIELDS.IO + MOZILLA API (A leggyorsabb párosítás)
+    const dailyKey = "fh_" + now.getFullYear() + (now.getMonth()+1) + now.getDate();
+    const cacheBuster = Math.floor(Math.random() * 1000);
     
-    // Generálunk egy letisztult zöld számot mutató SVG-t
-    const hitUrl = `https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgergoroland_hub_${dailyKey}&count_bg=%230F172A&title_bg=%230F172A&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=true&t=${cacheBuster}`;
+    // Ez a link közvetlenül a statisztikát kéri le képként
+    const hitUrl = `https://img.shields.io/badge/dynamic/json?color=10b981&label=MAI&query=value&url=https%3A%2F%2Fapi.countapi.xyz%2Fhit%2Fgergoroland_forviahub%2F${dailyKey}%3Fcb%3D${cacheBuster}&style=flat-square`;
     
     document.getElementById('hit-img').src = hitUrl;
 }
 updateInfo();
 
-// Menü Nyitás/Zárás
 function toggleMenu() {
 const sidebar = document.getElementById('sidebar');
 const overlay = document.getElementById('overlay');
@@ -239,11 +235,9 @@ icon.innerText = sidebar.classList.contains('open') ? '✕' : '☰';
 }
 
 function loadModule(url) {
-const home = document.getElementById('home-screen');
-const frame = document.getElementById('content-frame');
-home.style.display = 'none';
-frame.style.display = 'block';
-frame.src = url;
+document.getElementById('home-screen').style.display = 'none';
+document.getElementById('content-frame').style.display = 'block';
+document.getElementById('content-frame').src = url;
 toggleMenu();
 }
 
