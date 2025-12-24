@@ -17,11 +17,10 @@
         .holiday { background: #4c0505 !important; color: #fca5a5 !important; border: 1px solid #7f1d1d !important; }
         .today-cell { border: 2px solid #3b82f6 !important; background: rgba(59, 130, 246, 0.15) !important; }
         
-        /* JAVÍTOTT: Nagyítás letiltva, csak kiemelés marad */
+        /* -- FIX: Cella kiemelés és színek -- */
         .col-highlight { background: rgba(59, 130, 246, 0.2) !important; transition: all 0.2s ease; }
         .head-highlight { background: #3b82f6 !important; color: white !important; z-index: 50; transition: all 0.2s ease; box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
         
-        /* JAVÍTOTT: Színek kényszerítése a TD elemre */
         .cell-S { background-color: #059669 !important; color: white !important; }
         .cell-BA { background-color: #ea580c !important; color: white !important; }
         .cell-IG { background-color: #7c3aed !important; color: white !important; }
@@ -30,6 +29,7 @@
         
         .input-cell { width: 100%; height: 100%; border: none; text-align: center; background: transparent; color: white; font-weight: 800; outline: none; }
         
+        /* Gombok stílusa */
         .shift-btn { transition: all 0.2s; border: 1px solid #334155; }
         .shift-btn.active { color: white; box-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
         .shift-A.active { background-color: #ef4444; border-color: #f87171; }
@@ -156,30 +156,6 @@
             } catch (e) { setSyncStatus('error'); }
         }
 
-        function scrollToToday() {
-            const todayCell = document.querySelector('.today-cell');
-            if(todayCell) {
-                setTimeout(() => {
-                    todayCell.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                }, 300);
-            }
-        }
-
-        function highlightCol(colIndex, day, active) {
-            const table = document.getElementById('mainMatrix');
-            if(!table) return;
-            const rows = table.rows;
-            for (let i = 0; i < rows.length; i++) {
-                const cell = rows[i].cells[colIndex];
-                if (cell) {
-                    if (i === 0) cell.classList.toggle('head-highlight', active);
-                    else cell.classList.toggle('col-highlight', active);
-                }
-            }
-        }
-
-        /* --- JAVÍTOTT RÉSZEK INNENTŐL --- */
-
         function getCellClass(v) {
             if (!v) return "";
             const val = String(v).toUpperCase().trim();
@@ -187,7 +163,7 @@
             if (val === 'IG') return "cell-IG";
             if (val === 'TU') return "cell-TU";
             if (val.startsWith('KÉ')) return "cell-KE";
-            if (!isNaN(parseFloat(val))) return "cell-S";
+            if (!isNaN(parseFloat(val.replace(',','.')))) return "cell-S";
             return "";
         }
 
@@ -197,7 +173,7 @@
             const v = val.trim().toUpperCase();
             if(v === "") delete emp.data[key]; else emp.data[key] = v;
             
-            // Itt a javítás: A TD elem osztályát cseréljük, nem az inputét!
+            // AZONNALI SZÍNEZÉS ÉS MENTÉS
             const td = inputElement.parentElement;
             td.className = td.className.replace(/cell-\S+/g, "").trim();
             const newClass = getCellClass(v);
@@ -213,8 +189,7 @@
             let sSum = 0;
             if(emp.data) {
                 Object.values(emp.data).forEach(v => {
-                    // Itt a javítás: Kényszerítjük, hogy szám legyen (parseFloat)
-                    const num = parseFloat(v);
+                    const num = parseFloat(String(v).replace(',','.'));
                     if(!isNaN(num)) sSum += num;
                 });
             }
@@ -233,12 +208,98 @@
                 const dateObj = new Date(year, month, d);
                 const isW = [0, 6].includes(dateObj.getDay());
                 const isToday = realToday.getFullYear() === year && realToday.getMonth() === month && realToday.getDate() === d;
-                header += `<th class="${isW ? 'weekend' : ''} ${holidays2026.includes(`${year}-${month+1}-${d}`) ? 'holiday' : ''} ${isToday ? 'today-cell' : ''}">${d}<span class="day-name">${dayNames[dateObj.getDay()]}</span></th>`;
+                header += `<th class="${isW ? 'weekend' : ''} ${holidays2026.includes(`${year}-${month+1}-${d}`) ? 'holiday' : ''} ${isToday ? 'today-cell' : ''}" onclick="highlightCol(${d+2}, ${d}, true)" onmouseleave="highlightCol(${d+2}, ${d}, false)">${d}<span class="day-name">${dayNames[dateObj.getDay()]}</span></th>`;
             }
             document.getElementById('tableHeader').innerHTML = header + "</tr>";
 
             let body = "";
             employees.forEach(emp => {
-                let sSum = 0; if(emp.data) Object.values(emp.data).forEach(v => { const num = parseFloat(v); if(!isNaN(num)) sSum += num; });
+                let sSum = 0; if(emp.data) Object.values(emp.data).forEach(v => { const num = parseFloat(String(v).replace(',','.')); if(!isNaN(num)) sSum += num; });
                 
-                body += `<tr><td class="name-col flex justify-between items-center"><span class="font-bold text-[11px]
+                body += `<tr><td class="name-col flex justify-between items-center"><span class="font-bold text-[11px] truncate">${emp.name}</span>
+                <div class="flex gap-1"><button onclick="removeEmp(${emp.id})" class="text-red-900/30 hover:text-red-500"><i class="fas fa-trash text-[10px]"></i></button></div></td>
+                <td><input type="number" value="${emp.yearlyQuota}" oninput="const e=employees.find(x=>x.id===${emp.id}); e.yearlyQuota=parseInt(this.value)||0; updateRowTotals(${emp.id}); save();" class="input-cell text-blue-400"></td>
+                <td id="rem-${emp.id}" class="text-emerald-500 font-black text-[11px]">${(emp.yearlyQuota||0)-sSum}</td>`;
+                
+                for(let d=1; d<=daysInMonth; d++) {
+                    const key = `${year}-${month+1}-${d}`;
+                    const v = (emp.data && emp.data[key]) ? emp.data[key] : "";
+                    body += `<td class="${getCellClass(v)}"><input type="text" value="${v}" onblur="updateCell(${emp.id}, '${key}', this.value, this)" class="input-cell"></td>`;
+                }
+                body += `</tr>`;
+            });
+            document.getElementById('tableBody').innerHTML = body;
+            scrollToToday();
+        }
+
+        function setView(view) {
+            document.getElementById('view-matrix').classList.toggle('hidden', view !== 'matrix');
+            document.getElementById('view-stats').classList.toggle('hidden', view !== 'stats');
+            document.getElementById('btn-matrix').classList.toggle('bg-blue-600', view === 'matrix');
+            document.getElementById('btn-stats').classList.toggle('bg-blue-600', view === 'stats');
+            if(view === 'stats') renderStats();
+        }
+
+        function renderStats() {
+            document.getElementById('view-stats').innerHTML = employees.map(emp => {
+                let s = { S:0, BA:0, IG:0, TU:0, KE:0 };
+                if(emp.data) Object.values(emp.data).forEach(v => { 
+                    const val = String(v).toUpperCase();
+                    const n = parseFloat(val.replace(',','.'));
+                    if(!isNaN(n)) s.S += n; 
+                    else if(val==='BÁ') s.BA++; 
+                    else if(val==='IG') s.IG++; 
+                    else if(val==='TU') s.TU++; 
+                    else if(val.startsWith('KÉ')) s.KE++;
+                });
+                return `<div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700 shadow-lg">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="font-black text-lg text-white">${emp.name}</h3>
+                        <span class="text-xs font-mono text-slate-500">#${emp.id.toString().slice(-4)}</span>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-xs border-b border-slate-700 pb-1"><span>Szabadság (kivett):</span><span class="text-emerald-400 font-bold">${s.S} óra</span></div>
+                        <div class="flex justify-between text-xs border-b border-slate-700 pb-1"><span>Betegállomány:</span><span class="text-orange-500 font-bold">${s.BA} nap</span></div>
+                        <div class="flex justify-between text-xs border-b border-slate-700 pb-1"><span>Igazolatlan:</span><span class="text-purple-500 font-bold">${s.IG} nap</span></div>
+                        <div class="flex justify-between text-xs border-b border-slate-700 pb-1"><span>Túlóra:</span><span class="text-blue-500 font-bold">${s.TU} nap</span></div>
+                        <div class="flex justify-between text-xs"><span>Késés:</span><span class="text-amber-500 font-bold">${s.KE} alk.</span></div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function addNewEmployee() { const n = prompt("Dolgozó neve:"); if(n) { employees.push({id:Date.now(), name:n, yearlyQuota:160, data:{}}); save(); render(); } }
+        function removeEmp(id) { if(confirm("Biztosan törlöd?")) { employees = employees.filter(e => e.id !== id); save(); render(); } }
+        function changeMonth(d) { currentDate.setMonth(currentDate.getMonth() + d); render(); }
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(employees));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", `shift_${currentShift}_backup.json`);
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+        
+        function highlightCol(colIndex, day, active) {
+            const table = document.getElementById('mainMatrix');
+            if(!table) return;
+            const rows = table.rows;
+            for (let i = 0; i < rows.length; i++) {
+                const cell = rows[i].cells[colIndex];
+                if (cell) {
+                    if (i === 0) {
+                        if(active) cell.classList.add('head-highlight');
+                        else cell.classList.remove('head-highlight');
+                    } else {
+                        if(active) cell.classList.add('col-highlight');
+                        else cell.classList.remove('col-highlight');
+                    }
+                }
+            }
+        }
+
+        window.onload = () => changeShift(currentShift);
+    </script>
+</body>
+</html>
