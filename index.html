@@ -22,7 +22,7 @@ display: flex; flex-direction: column;
 /* --- TARTALOM ABLAK (IFRAME) --- */
 #content-frame {
 border: none; width: 100%; height: 100%;
-display: none; /* Alapból rejtve, amíg nem választasz modult */
+display: none; 
 background: #0f172a;
 }
 
@@ -44,20 +44,30 @@ box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 max-width: 500px; width: 100%; animation: fadeIn 0.8s ease-out;
 }
 
-/* Főcím stílusa - Üdvözlet */
 .welcome-title {
 font-size: 2.2rem; font-weight: 800; margin: 0;
-color: white; letter-spacing: -1px; margin-bottom: 15px;
+color: white; letter-spacing: -1px; margin-bottom: 5px;
 }
 .highlight-blue { color: var(--accent); }
 
-/* Alcím stílusa */
+/* Dátum stílus */
+.current-date {
+color: var(--text-dim); font-size: 0.9rem; margin-bottom: 25px; font-weight: 500;
+}
+
 .instruction-text {
 font-size: 1rem; line-height: 1.6; color: #e2e8f0; margin-bottom: 30px;
 }
 .instruction-highlight { color: var(--accent); font-weight: 600; }
 
-/* Lábléc infó */
+/* Számláló stílus */
+.visitor-box {
+background: rgba(0,0,0,0.3); padding: 10px 20px; border-radius: 12px;
+display: inline-block; margin-bottom: 20px; border: 1px solid rgba(59, 130, 246, 0.3);
+}
+.visitor-label { font-size: 10px; text-transform: uppercase; color: var(--text-dim); letter-spacing: 1px; display: block; }
+.visitor-count { font-weight: 800; color: #10b981; font-size: 1.2rem; }
+
 .device-info {
 font-size: 0.8rem; color: #64748b;
 border-top: 1px solid rgba(255,255,255,0.1);
@@ -69,7 +79,6 @@ display: block; margin-top: 5px; color: #10b981; font-weight: 700; text-transfor
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-/* --- SIDEBAR (OLDALSÁV) --- */
 .sidebar {
 position: fixed; left: 0; top: 0;
 width: 280px; height: 100%; background: #111827;
@@ -81,14 +90,13 @@ z-index: 2000;
 }
 .sidebar.open { transform: translateX(0); box-shadow: 20px 0 50px rgba(0,0,0,0.8); }
 
-/* Módosított Fejléc */
 .sidebar-header {
 padding: 25px 20px;
 border-bottom: 1px solid var(--border);
-background: rgba(255,255,255,0.02); /* Nagyon enyhe kiemelés */
+background: rgba(255,255,255,0.02);
 }
 .sidebar-header h2 {
-font-size: 1.3rem; /* Kicsit szolidabb méret */
+font-size: 1.3rem;
 margin: 0;
 letter-spacing: 1px;
 font-weight: 700;
@@ -96,7 +104,6 @@ font-weight: 700;
 
 .nav-list { padding: 20px; flex-grow: 1; overflow-y: auto; }
 
-/* Gombok stílusa */
 .nav-item {
 display: flex; align-items: center; padding: 14px 15px;
 margin-bottom: 8px; border-radius: 12px; text-decoration: none;
@@ -105,24 +112,22 @@ color: var(--text-dim); font-weight: 500; transition: 0.2s; cursor: pointer;
 .nav-item i { width: 30px; font-style: normal; text-align: center; font-size: 1.2rem; }
 .nav-item:hover, .nav-item.active { background: var(--accent); color: white; }
 
-/* --- MENÜ GOMB (FIX, MINDIG LÁTHATÓ) --- */
 .menu-fab {
 position: fixed; bottom: 30px; right: 30px;
 width: 60px; height: 60px; background: var(--accent);
 border-radius: 50%; display: flex; align-items: center; justify-content: center;
 box-shadow: 0 10px 30px rgba(59, 130, 246, 0.6);
-cursor: pointer; z-index: 2147483647; /* Legfelső réteg */
+cursor: pointer; z-index: 2147483647; 
 border: 2px solid rgba(255,255,255,0.1);
 transition: transform 0.2s;
 }
 .menu-fab:active { transform: scale(0.9); }
 .menu-fab span { font-size: 28px; color: white; line-height: 1; }
 
-/* --- MÓDOSÍTOTT FRISSÍTÉS GOMB (A MENÜ FELETT) --- */
 .refresh-fab {
 position: fixed; 
-bottom: 110px; /* Menü (30px) + MenüMagasság (60px) + Helyköz (20px) */
-right: 37px;   /* Középre igazítva a 60px-es menügombhoz (30px + 7.5px) */
+bottom: 110px; 
+right: 37px; 
 width: 45px; height: 45px;
 background: rgba(30, 41, 59, 0.8);
 backdrop-filter: blur(5px);
@@ -151,6 +156,12 @@ footer { padding: 20px; border-top: 1px solid var(--border); text-align: center;
 <div id="home-screen">
 <div class="glass-card">
 <h1 class="welcome-title">Üdv <span class="highlight-blue">Felhasználó!</span></h1>
+<div id="display-date" class="current-date">0000. 00. 00.</div>
+
+<div class="visitor-box">
+<span class="visitor-label">Mai látogatók</span>
+<span id="visit-count" class="visitor-count">...</span>
+</div>
 
 <p class="instruction-text">
 Használd a jobb oldalon lévő <span class="instruction-highlight">menügombot</span><br>
@@ -176,15 +187,12 @@ Ez a verzió laptop és telefon kijelzőre lett optimalizálva.
 
 <nav class="nav-list">
 <div onclick="showHome()" class="nav-item active"><i>🏠</i> Kezdőlap</div>
-
 <div onclick="loadModule('1.html')" class="nav-item"><i>🔍</i> Alkatrész Kereső</div>
 <div onclick="loadModule('2.html')" class="nav-item"><i>💰</i> Bérkalkulátor</div>
 <div onclick="loadModule('3.html')" class="nav-item"><i>📅</i> Műszaknaptár</div>
 <div onclick="loadModule('4.html')" class="nav-item"><i>📝</i> Napi Jelentés segédlet</div>
 <div onclick="loadModule('5.html')" class="nav-item"><i>🎭</i> Maszk kereső</div>
-
 <div onclick="openSecureLink()" class="nav-item"><i>⚙️</i> Adatgeneráló</div>
-
 <div onclick="loadModule('7.html')" class="nav-item"><i>📈</i> Hiba Analízis</div>
 </nav>
 
@@ -200,6 +208,29 @@ Ez a verzió laptop és telefon kijelzőre lett optimalizálva.
 </div>
 
 <script>
+// --- ÚJ FUNKCIÓK: DÁTUM ÉS SZÁMLÁLÓ ---
+function updateInfo() {
+    // Mai dátum beállítása
+    const now = new Date();
+    const dateStr = now.getFullYear() + ". " + 
+                    String(now.getMonth() + 1).padStart(2, '0') + ". " + 
+                    String(now.getDate()).padStart(2, '0') + ".";
+    document.getElementById('display-date').innerText = dateStr;
+
+    // Napi számláló (CountAPI)
+    // A kulcs minden nap változik a dátum miatt, így naponta nullázódik
+    const dailyKey = "forviahub_" + now.getFullYear() + (now.getMonth()+1) + now.getDate();
+    fetch(`https://api.countapi.xyz/hit/gergoroland_hub/${dailyKey}`)
+        .then(res => res.json())
+        .then(res => {
+            document.getElementById('visit-count').innerText = res.value;
+        })
+        .catch(() => {
+            document.getElementById('visit-count').innerText = "1+";
+        });
+}
+updateInfo();
+
 // Menü Nyitás/Zárás
 function toggleMenu() {
 const sidebar = document.getElementById('sidebar');
@@ -214,15 +245,9 @@ icon.innerText = sidebar.classList.contains('open') ? '✕' : '☰';
 function loadModule(url) {
 const home = document.getElementById('home-screen');
 const frame = document.getElementById('content-frame');
-
-// UI Váltás
 home.style.display = 'none';
 frame.style.display = 'block';
-
-// Fájl betöltése
 frame.src = url;
-
-// Menü bezárása kattintás után
 toggleMenu();
 }
 
@@ -230,11 +255,11 @@ toggleMenu();
 function showHome() {
 document.getElementById('home-screen').style.display = 'flex';
 document.getElementById('content-frame').style.display = 'none';
-document.getElementById('content-frame').src = ""; // Kiürítjük
+document.getElementById('content-frame').src = ""; 
 toggleMenu();
 }
 
-// Jelszavas link (A megadott PIN kóddal)
+// Jelszavas link
 function openSecureLink() {
 let pin = prompt("Kérem a biztonsági kódot:");
 if (pin === "smtforvia2026") {
