@@ -10,19 +10,17 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         
-        /* 1. LAYOUT SZERKEZET: Fejléc - Tartalom - Lábléc */
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: #0b0f1a; 
             color: #e2e8f0; 
             margin: 0; 
-            height: 100vh; /* Teljes képernyő */
-            overflow: hidden; /* A főablak nem görög, csak a részei */
+            height: 100vh; 
+            overflow: hidden; 
             display: flex;
             flex-direction: column;
         }
         
-        /* FIX FEJLÉC */
         header { 
             flex: none; 
             background: linear-gradient(to bottom, #111827, #0f172a); 
@@ -30,7 +28,6 @@
             z-index: 60;
         }
         
-        /* GÖRGETHETŐ TARTALOM (A táblázat helye) */
         main { 
             flex-grow: 1; 
             position: relative; 
@@ -38,7 +35,6 @@
             background: #111827;
         }
 
-        /* FIX LÁBLÉC (Jelmagyarázat) */
         footer {
             flex: none;
             background: #0f172a;
@@ -47,52 +43,53 @@
             z-index: 60;
         }
 
-        /* TÁBLÁZAT KONTÉNER */
         .table-container { 
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            overflow: auto; /* Itt történik a görgetés */
+            overflow: auto; 
             -webkit-overflow-scrolling: touch;
         }
 
         .matrix-table { border-collapse: separate; border-spacing: 0; }
         
-        /* --- RÖGZÍTÉSEK (STICKY) --- */
+        /* --- JAVÍTOTT RÖGZÍTÉS (STICKY) --- */
 
         /* 1. Dátum sor (Függőlegesen ragad) */
         .matrix-table thead th {
             position: sticky;
             top: 0;
-            z-index: 30;
-            background: #1e293b; /* Fedés */
-            height: 40px;
+            z-index: 30; /* Alacsonyabb mint a név oszlop */
+            background: #1e293b; 
+            height: 45px; /* Kicsit magasabb a nap nevek miatt */
             box-shadow: 0 1px 0 #2d3748;
+            padding: 2px 0;
         }
 
-        /* 2. NÉV OSZLOP (Vízszintesen ragad - EZ VOLT A KÉRÉS) */
+        /* 2. NÉV OSZLOP (Vízszintesen ragad - KISZÉLESÍTVE) */
         .name-col { 
             position: sticky; 
             left: 0; 
-            background: #1e293b; /* FONTOS: Nem átlátszó, hogy takarja a számokat */
-            z-index: 40; /* Magasabb mint a sima cellák */
-            min-width: 140px; 
-            max-width: 140px;
+            background: #1e293b; 
+            z-index: 40; /* Magasabb mint a dátumok, hogy feléjük kerüljön görgetéskor */
+            min-width: 200px; /* JAVÍTVA: Szélesebb, hogy kiférjen a név */
+            max-width: 200px;
             border-right: 3px solid #3b82f6 !important; 
             cursor: grab;
-            padding: 0 5px !important;
+            padding: 0 8px !important;
+            box-shadow: 4px 0 8px rgba(0,0,0,0.3); /* Árnyék, hogy látszódjon a széle */
         }
 
-        /* 3. Bal felső sarok (Mindig felül) */
+        /* 3. Bal felső sarok (Mindig legfelül) */
         .matrix-table thead th.name-col { 
             z-index: 50 !important; 
             background: #1e293b; 
+            border-bottom: 1px solid #2d3748;
         }
 
-        /* Adat oszlopok */
         .data-col-fix { min-width: 60px !important; width: 60px !important; }
+        /* Adat oszlopok fejlécének z-indexe */
         .matrix-table thead th.data-col-fix { z-index: 30; }
 
-        /* Cella stílusok */
         .matrix-table th, .matrix-table td { 
             border: 1px solid #2d3748; 
             min-width: 42px; height: 48px; 
@@ -100,7 +97,6 @@
         }
         .matrix-table th { color: #94a3b8; font-weight: 700; text-transform: uppercase; font-size: 11px; }
 
-        /* Színek és Kiemelések */
         .row-highlight { background: rgba(59, 130, 246, 0.25) !important; }
         .col-highlight { background: rgba(59, 130, 246, 0.25) !important; }
 
@@ -113,12 +109,10 @@
         .input-cell { width: 100%; height: 100%; border: none; text-align: center; background: transparent; color: white; font-weight: 800; outline: none; font-size: 16px; }
         .quota-input { font-size: 15px !important; font-weight: 900 !important; color: #93c5fd !important; }
 
-        /* Hétvége és Ünnepnap */
         .weekend { background: #141b2d !important; color: #64748b; }
         .holiday-bg { background: #1f1515 !important; } 
         .holiday-text { color: #ef4444 !important; font-weight: 900 !important; font-size: 12px !important; }
 
-        /* Gombok */
         .shift-btn { transition: all 0.3s; border: 1px solid #334155; }
         .shift-btn.active { transform: scale(1.05); color: white; box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
         .shift-A.active { background: #ef4444; border-color: #f87171; }
@@ -222,7 +216,8 @@
         let date = new Date(2026, 0, 1);
         let employees = [];
         const monthNames = ["Január", "Február", "Március", "Április", "Május", "Június", "Július", "Augusztus", "Szeptember", "Október", "November", "December"];
-        
+        // Napok rövidítései
+        const dayNamesShort = ["V", "H", "K", "Sze", "Cs", "P", "Szo"];
         const holidays2026 = ["1-1", "3-15", "4-3", "4-6", "5-1", "5-25", "8-20", "10-23", "11-1", "12-25", "12-26"];
 
         async function changeShift(s) {
@@ -303,7 +298,11 @@
             for(let d=1; d<=days; d++) {
                 const isHoliday = holidays2026.includes(`${m+1}-${d}`);
                 const headerClass = isHoliday ? 'holiday-text' : '';
-                h += `<th class="${headerClass}">${d}</th>`;
+                // JAVÍTÁS: Nap nevének megjelenítése
+                const dayOfWeek = new Date(2026, m, d).getDay();
+                const dayName = dayNamesShort[dayOfWeek];
+                
+                h += `<th class="${headerClass} leading-tight">${d}<br><span class="text-[9px] font-normal text-slate-500">${dayName}</span></th>`;
             }
             document.getElementById('tHead').innerHTML = h + "</tr>";
 
@@ -311,8 +310,8 @@
                 let s = 0; if(e.data) Object.values(e.data).forEach(v => { let n=parseFloat(String(v).replace(',','.')); if(!isNaN(n)) s+=n; });
                 
                 let row = `<tr data-id="${e.id}"><td class="name-col flex justify-between items-center">
-                    <span class="font-black text-[12px] tracking-tight truncate uppercase text-white">${e.name}</span>
-                    <button onclick="delEmp(${e.id})" class="text-red-500/30 hover:text-red-500 transition-colors p-1"><i class="fas fa-times-circle"></i></button>
+                    <span class="font-black text-[12px] tracking-tight truncate uppercase text-white w-full text-left">${e.name}</span>
+                    <button onclick="delEmp(${e.id})" class="text-red-500/30 hover:text-red-500 transition-colors p-1 flex-shrink-0"><i class="fas fa-times-circle"></i></button>
                 </td>
                 <td class="data-col-fix bg-slate-800 border-r border-slate-700/50">
                     <input type="number" value="${e.yearlyQuota||160}" onchange="employees.find(x=>x.id==${e.id}).yearlyQuota=this.value; save(); render();" class="input-cell quota-input text-center">
