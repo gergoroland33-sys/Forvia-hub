@@ -3,197 +3,272 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FORVIA | Staff Pro 2026</title>
+    <title>FORVIA | Staff Pro 2026 - MultiShift</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #0b0f1a; color: #e2e8f0; margin: 0; }
-        .table-container { overflow-x: auto; border-radius: 8px; background: #111827; }
-        .name-col { position: sticky; left: 0; background: #1e293b; z-index: 40; min-width: 140px; border-right: 2px solid #3b82f6 !important; }
-        .matrix-table th, .matrix-table td { border: 1px solid #2d3748; min-width: 40px; height: 40px; text-align: center; }
+        .table-container { overflow-x: auto; border-radius: 8px; background: #111827; position: relative; scroll-behavior: smooth; }
+        .name-col { position: sticky; left: 0; background: #1e293b; z-index: 40; min-width: 160px; border-right: 2px solid #3b82f6 !important; padding: 0 8px !important; }
+        .matrix-table th, .matrix-table td { border: 1px solid #2d3748; min-width: 38px; height: 38px; text-align: center; font-size: 12px; position: relative; }
+        .day-name { font-size: 7px; text-transform: uppercase; color: #64748b; font-weight: 800; display: block; line-height: 1; }
         
         /* KERESZT KIJELÖLÉS */
-        .row-active { background-color: rgba(59, 130, 246, 0.15) !important; }
-        .col-active { background-color: rgba(59, 130, 246, 0.15) !important; }
+        .row-highlight { background: rgba(59, 130, 246, 0.2) !important; }
+        .col-highlight { background: rgba(59, 130, 246, 0.2) !important; }
+        .head-highlight { background: #3b82f6 !important; color: white !important; }
 
-        /* SZÍNEK */
-        .cell-S { background: #059669 !important; }
-        .cell-BA { background: #ea580c !important; }
-        .cell-IG { background: #7c3aed !important; }
-        .cell-TU { background: #2563eb !important; }
-        .cell-KE { background: #d97706 !important; }
+        .weekend { background: #141b2d !important; color: #64748b; }
+        .holiday { background: #4c0505 !important; color: #fca5a5 !important; border: 1px solid #7f1d1d !important; }
         
-        /* INPUT FIX: 16px megállítja a zoomot mobilfókuszkor */
-        .input-cell { width: 100%; height: 100%; border: none; text-align: center; background: transparent; color: white; font-weight: 800; outline: none; font-size: 16px; display: block; }
-        .weekend { background: #141b2d !important; }
+        /* SZÍNEK */
+        .cell-S { background: #059669 !important; color: white !important; }
+        .cell-BA { background: #ea580c !important; color: white !important; }
+        .cell-IG { background: #7c3aed !important; color: white !important; }
+        .cell-TU { background: #2563eb !important; color: white !important; }
+        .cell-KE { background: #d97706 !important; color: white !important; }
+        
+        /* FIX 16PX - NINCS ZOOM */
+        .input-cell { width: 100%; height: 100%; border: none; text-align: center; background: transparent; color: white; font-weight: 800; outline: none; font-size: 16px; }
+        
+        .shift-btn { transition: all 0.2s; border: 1px solid #334155; }
+        .shift-btn.active { color: white; box-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+        .shift-A.active { background-color: #ef4444; border-color: #f87171; }
+        .shift-B.active { background-color: #10b981; border-color: #34d399; }
+        .shift-C.active { background-color: #f59e0b; border-color: #fbbf24; }
+        .shift-D.active { background-color: #8b5cf6; border-color: #a78bfa; }
+
+        @media print {
+            .no-print { display: none !important; }
+            body, html { background: white !important; color: black !important; }
+            #print-area { display: block !important; background: white !important; color: black !important; padding: 20px; }
+            table { border-collapse: collapse; width: 100%; }
+            th, td { border: 1px solid black !important; color: black !important; padding: 5px; }
+        }
     </style>
 </head>
 <body class="pb-10">
     <div id="print-area" class="hidden"></div>
 
-    <header class="bg-[#111827] border-b border-slate-800 p-3 sticky top-0 z-50">
-        <div class="flex justify-between items-center gap-2">
-            <div class="flex items-center gap-2">
-                <span class="text-blue-500 font-black text-xl">FORVIA</span>
-                <div class="flex bg-slate-900 p-1 rounded border border-slate-700">
-                    <button onclick="changeShift('A')" id="btn-A" class="s-btn px-2 py-1 text-[10px] font-bold rounded">A</button>
-                    <button onclick="changeShift('B')" id="btn-B" class="s-btn px-2 py-1 text-[10px] font-bold rounded">B</button>
-                    <button onclick="changeShift('C')" id="btn-C" class="s-btn px-2 py-1 text-[10px] font-bold rounded">C</button>
-                    <button onclick="changeShift('D')" id="btn-D" class="s-btn px-2 py-1 text-[10px] font-bold rounded">D</button>
+    <header class="bg-[#111827] border-b border-slate-800 p-3 sticky top-0 z-50 no-print">
+        <div class="max-w-full mx-auto flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center gap-3">
+                <div class="flex flex-col">
+                    <span class="text-blue-500 font-black text-xl tracking-tighter leading-none">FORVIA</span>
+                    <span id="shiftTitle" class="text-[10px] text-slate-400 uppercase font-bold italic">MŰSZAK: A</span>
+                </div>
+                <div class="flex bg-slate-900 p-1 rounded-lg gap-1 border border-slate-700">
+                    <button onclick="changeShift('A')" id="btn-shift-A" class="shift-btn shift-A px-3 py-1 rounded text-[10px] font-black">A</button>
+                    <button onclick="changeShift('B')" id="btn-shift-B" class="shift-btn shift-B px-3 py-1 rounded text-[10px] font-black">B</button>
+                    <button onclick="changeShift('C')" id="btn-shift-C" class="shift-btn shift-C px-3 py-1 rounded text-[10px] font-black">C</button>
+                    <button onclick="changeShift('D')" id="btn-shift-D" class="shift-btn shift-D px-3 py-1 rounded text-[10px] font-black">D</button>
+                </div>
+                <nav class="flex bg-slate-900 p-1 rounded-lg">
+                    <button onclick="setView('matrix')" id="btn-matrix" class="px-3 py-1.5 rounded-md bg-blue-600 text-[10px] font-bold uppercase transition">Mátrix</button>
+                    <button onclick="setView('stats')" id="btn-stats" class="px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition ml-1">Adatlapok</button>
+                </nav>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div id="sync-indicator" class="text-emerald-500 flex items-center gap-1 text-[10px] font-bold">
+                    <i class="fas fa-cloud"></i> <span>OK</span>
+                </div>
+                <div class="flex items-center gap-2 bg-slate-900/80 border border-slate-700 px-3 py-1 rounded-lg">
+                    <button onclick="changeMonth(-1)" class="text-slate-400"><i class="fas fa-chevron-left text-xs"></i></button>
+                    <span id="currentMonthDisplay" class="font-black text-[10px] uppercase tracking-tighter w-32 text-center text-blue-400">Január</span>
+                    <button onclick="changeMonth(1)" class="text-slate-400"><i class="fas fa-chevron-right text-xs"></i></button>
                 </div>
             </div>
-            <div id="sync" class="text-emerald-500 text-[10px] font-bold"><i class="fas fa-check"></i></div>
-            <div class="flex items-center gap-2">
-                <button onclick="changeMonth(-1)" class="p-1 text-slate-400"><i class="fas fa-chevron-left"></i></button>
-                <span id="mDisplay" class="font-black text-[10px] uppercase w-20 text-center text-blue-400">Jan</span>
-                <button onclick="changeMonth(1)" class="p-1 text-slate-400"><i class="fas fa-chevron-right"></i></button>
-                <button onclick="addNew()" class="bg-blue-600 px-2 py-1 rounded text-[10px] font-bold">+ ÚJ</button>
-                <button onclick="setView('stats')" class="bg-slate-700 px-2 py-1 rounded text-[10px] font-bold">STAT</button>
-                <button onclick="setView('matrix')" class="bg-slate-700 px-2 py-1 rounded text-[10px] font-bold">MAT</button>
+
+            <div class="flex gap-2">
+                <button onclick="addNewEmployee()" class="bg-emerald-600 px-3 py-1.5 rounded text-[10px] font-black uppercase text-white">+ ÚJ DOLGOZÓ</button>
             </div>
         </div>
     </header>
 
-    <main class="p-2">
-        <div id="v-matrix" class="table-container shadow-2xl">
-            <table class="matrix-table w-full" id="mTable">
-                <thead id="tHead" class="bg-slate-800"></thead>
-                <tbody id="tBody"></tbody>
-            </table>
+    <main class="p-2 no-print">
+        <div id="view-matrix">
+            <div class="table-container shadow-2xl">
+                <table class="matrix-table w-full border-collapse" id="mainMatrix">
+                    <thead id="tableHeader" class="bg-slate-800 text-slate-400"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
         </div>
-        <div id="v-stats" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4"></div>
+        <div id="view-stats" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pt-4"></div>
     </main>
 
     <script>
-        let currentShift = localStorage.getItem('f_shift') || 'A';
-        const DB_URL = "https://forviastaff-default-rtdb.firebaseio.com/";
-        let date = new Date(2026, 0, 1);
+        let currentShift = localStorage.getItem('forvia_shift_2026') || 'A';
+        const BASE_DB_URL = "https://forviastaff-default-rtdb.firebaseio.com/";
+        let currentDate = new Date(2026, 0, 1);
         let employees = [];
+        const monthNames = ["Január", "Február", "Március", "Április", "Május", "Június", "Július", "Augusztus", "Szeptember", "Október", "November", "December"];
+        const dayShorts = ['V', 'H', 'K', 'Sze', 'Cs', 'P', 'Szo'];
 
         async function changeShift(s) {
             currentShift = s;
-            localStorage.setItem('f_shift', s);
-            document.querySelectorAll('.s-btn').forEach(b => b.className = "s-btn px-2 py-1 text-[10px] font-bold rounded");
-            document.getElementById('btn-'+s).className += " bg-blue-600 text-white";
+            localStorage.setItem('forvia_shift_2026', s);
+            document.querySelectorAll('.shift-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn-shift-${s}`).classList.add('active');
+            document.getElementById('shiftTitle').innerText = `MŰSZAK: ${s}`;
             await load();
         }
 
         async function load() {
             try {
-                const res = await fetch(`${DB_URL}shift_${currentShift}.json`);
+                const res = await fetch(`${BASE_DB_URL}shift_${currentShift}.json`);
                 const data = await res.json();
                 employees = Array.isArray(data) ? data : [];
                 render();
-            } catch(e) { console.error("Load hiba"); }
+            } catch(e) { console.error("Hiba a betöltéskor"); }
         }
 
         async function save() {
-            document.getElementById('sync').innerHTML = '<i class="fas fa-sync fa-spin"></i>';
+            document.getElementById('sync-indicator').innerHTML = '<i class="fas fa-sync fa-spin"></i>';
             try {
-                await fetch(`${DB_URL}shift_${currentShift}.json`, { method: 'PUT', body: JSON.stringify(employees) });
-                document.getElementById('sync').innerHTML = '<i class="fas fa-check"></i>';
-            } catch(e) { document.getElementById('sync').innerText = "!"; }
+                await fetch(`${BASE_DB_URL}shift_${currentShift}.json`, { method: 'PUT', body: JSON.stringify(employees) });
+                document.getElementById('sync-indicator').innerHTML = '<i class="fas fa-cloud"></i> OK';
+            } catch(e) { document.getElementById('sync-indicator').innerText = "HIBA"; }
         }
 
         function getCls(v) {
-            if(!v) return "";
+            if (!v) return "";
             const s = String(v).toUpperCase().replace(',', '.');
-            if(!isNaN(parseFloat(s))) return "cell-S";
-            const codes = { 'BÁ': 'cell-BA', 'IG': 'cell-IG', 'TU': 'cell-TU' };
-            if(codes[s]) return codes[s];
-            if(s.startsWith('KÉ')) return 'cell-KE';
+            if (!isNaN(parseFloat(s))) return "cell-S";
+            const map = { 'BÁ': 'cell-BA', 'IG': 'cell-IG', 'TU': 'cell-TU' };
+            if (map[s]) return map[s];
+            if (s.startsWith('KÉ')) return 'cell-KE';
             return "";
         }
 
-        function highlight(el, dIdx, on) {
+        function highlight(el, colIdx, active) {
             const tr = el.closest('tr');
-            tr.classList.toggle('row-active', on);
-            const rows = document.getElementById('mTable').rows;
-            for(let r of rows) {
-                if(r.cells[dIdx+2]) r.cells[dIdx+2].classList.toggle('col-active', on);
+            tr.classList.toggle('row-highlight', active);
+            const table = document.getElementById('mainMatrix');
+            for (let r of table.rows) {
+                if (r.cells[colIdx]) {
+                    if (r.rowIndex === 0) r.cells[colIdx].classList.toggle('head-highlight', active);
+                    else r.cells[colIdx].classList.toggle('col-highlight', active);
+                }
             }
         }
 
-        function updateCell(id, key, val, el) {
+        function update(id, key, val, el) {
             const emp = employees.find(e => e.id === id);
             if(!emp) return;
             const v = val.trim().toUpperCase();
             emp.data = emp.data || {};
             if(v === "") delete emp.data[key]; else emp.data[key] = v;
             
-            // Azonnali szín
-            const td = el.parentElement;
-            td.className = td.className.replace(/cell-\S+/g, "").trim();
+            el.parentElement.className = el.parentElement.className.replace(/cell-\S+/g, "").trim();
             const cls = getCls(v);
-            if(cls) td.classList.add(cls);
+            if(cls) el.parentElement.classList.add(cls);
             
-            // Számolás frissítése
-            let taken = 0;
-            Object.values(emp.data).forEach(x => { const n = parseFloat(String(x).replace(',','.')); if(!isNaN(n)) taken += n; });
-            document.getElementById('rem-'+id).innerText = (emp.yearlyQuota || 160) - taken;
+            let sSum = 0;
+            Object.values(emp.data).forEach(x => { const n = parseFloat(String(x).replace(',','.')); if(!isNaN(n)) sSum += n; });
+            document.getElementById(`rem-${id}`).innerText = (emp.yearlyQuota || 160) - sSum;
             save();
         }
 
         function render() {
-            const m = date.getMonth();
+            const m = currentDate.getMonth();
             const days = new Date(2026, m+1, 0).getDate();
-            const mNames = ["Január","Február","Március","Április","Május","Június","Július","Augusztus","Szeptember","Október","November","December"];
-            document.getElementById('mDisplay').innerText = mNames[m].substring(0,3);
+            document.getElementById('currentMonthDisplay').innerText = monthNames[m];
 
-            let h = `<tr><th class="name-col text-[10px]">NÉV</th><th class="text-[8px]">KERET</th><th class="text-[8px]">KIV.</th>`;
-            for(let d=1; d<=days; d++) h += `<th class="text-[10px]">${d}</th>`;
-            document.getElementById('tHead').innerHTML = h + "</tr>";
+            let h = `<tr><th class="name-col uppercase font-black">Munkatárs</th><th class="w-12 text-blue-400">Keret</th><th class="w-12 text-emerald-400">Kiv.</th>`;
+            for(let d=1; d<=days; d++) {
+                const isW = [0, 6].includes(new Date(2026, m, d).getDay());
+                h += `<th class="${isW ? 'weekend' : ''}">${d}<span class="day-name">${dayShorts[new Date(2026, m, d).getDay()]}</span></th>`;
+            }
+            document.getElementById('tableHeader').innerHTML = h + "</tr>";
 
             let b = "";
             employees.forEach(e => {
-                let taken = 0;
-                if(e.data) Object.values(e.data).forEach(v => { const n = parseFloat(String(v).replace(',','.')); if(!isNaN(n)) taken += n; });
-                b += `<tr><td class="name-col text-[11px] font-bold px-1">${e.name}</td>
+                let sSum = 0; if(e.data) Object.values(e.data).forEach(v => { const n = parseFloat(String(v).replace(',','.')); if(!isNaN(n)) sSum += n; });
+                b += `<tr><td class="name-col flex justify-between items-center"><span class="font-bold text-[11px] truncate">${e.name}</span>
+                <button onclick="removeEmp(${e.id})" class="text-red-900/30 hover:text-red-500 ml-1">×</button></td>
                 <td><input type="number" value="${e.yearlyQuota||160}" onchange="employees.find(x=>x.id===${e.id}).yearlyQuota=this.value; render(); save();" class="input-cell text-blue-400"></td>
-                <td id="rem-${e.id}" class="text-emerald-500 font-bold text-[11px]">${(e.yearlyQuota||160)-taken}</td>`;
+                <td id="rem-${e.id}" class="text-emerald-500 font-black">${(e.yearlyQuota||160)-sSum}</td>`;
                 for(let d=1; d<=days; d++) {
                     const k = `2026-${m+1}-${d}`;
                     const v = (e.data && e.data[k]) ? e.data[k] : "";
                     const isW = [0, 6].includes(new Date(2026, m, d).getDay());
                     b += `<td class="${isW ? 'weekend' : ''} ${getCls(v)}">
-                        <input type="text" value="${v}" 
-                            onfocus="this.select(); highlight(this, ${d}, true)" 
-                            onblur="highlight(this, ${d}, false); updateCell(${e.id}, '${k}', this.value, this)" 
-                            class="input-cell">
+                        <input type="text" value="${v}" onfocus="this.select(); highlight(this, ${d+2}, true)" onblur="highlight(this, ${d+2}, false); update(${e.id}, '${k}', this.value, this)" class="input-cell">
                     </td>`;
                 }
                 b += "</tr>";
             });
-            document.getElementById('tBody').innerHTML = b;
+            document.getElementById('tableBody').innerHTML = b;
         }
 
         function renderStats() {
-            document.getElementById('v-stats').innerHTML = employees.map(e => {
-                let s = 0; if(e.data) Object.values(e.data).forEach(v => { const n = parseFloat(String(v).replace(',','.')); if(!isNaN(n)) s += n; });
-                return `<div class="bg-slate-800 p-4 rounded-lg">
-                    <div class="font-black text-lg border-b border-slate-700 mb-2">${e.name}</div>
-                    <div class="flex justify-between"><span>Kivehető:</span><span class="text-emerald-500 font-bold">${(e.yearlyQuota||160)-s} óra</span></div>
-                    <button onclick="printRow('${e.name}', ${(e.yearlyQuota||160)-s})" class="w-full bg-blue-600 mt-2 py-1 rounded font-bold">NYOMTATÁS</button>
-                    <button onclick="delEmp(${e.id})" class="w-full bg-red-900/30 mt-1 py-1 rounded text-[10px]">Törlés</button>
+            document.getElementById('view-stats').innerHTML = employees.map(e => {
+                let s = { S:0, BA:0, IG:0, TU:0, KE:0 };
+                if(e.data) Object.values(e.data).forEach(v => {
+                    const n = parseFloat(String(v).replace(',','.'));
+                    if(!isNaN(n)) s.S+=n; else if(v==='BÁ') s.BA++; else if(v==='IG') s.IG++; else if(v==='TU') s.TU++; else if(String(v).startsWith('KÉ')) s.KE++;
+                });
+                return `<div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700">
+                    <h3 class="text-sm font-black mb-2">${e.name}</h3>
+                    <div class="grid grid-cols-2 gap-2 mb-3 text-center">
+                        <div class="bg-slate-900 p-2 rounded-lg"><p class="text-[8px] text-slate-500 uppercase">Kivehető</p><p class="text-sm font-black text-emerald-500">${(e.yearlyQuota||160)-s.S}</p></div>
+                        <div class="bg-slate-900 p-2 rounded-lg"><p class="text-[8px] text-slate-500 uppercase">Szabadság</p><p class="text-sm font-black text-white">${s.S}</p></div>
+                    </div>
+                    <div class="flex justify-between text-[9px] font-bold text-slate-400 bg-slate-900/50 p-2 rounded-lg mb-3">
+                        <div><span class="block text-orange-500">${s.BA}</span>BÁ</div><div><span class="block text-violet-500">${s.IG}</span>IG</div><div><span class="block text-blue-500">${s.TU}</span>TU</div><div><span class="block text-amber-500">${s.KE}</span>KÉ</div>
+                    </div>
+                    <button onclick="printA4(${e.id})" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-bold text-[10px] uppercase">Nyomtatás</button>
                 </div>`;
             }).join('');
         }
 
-        function printRow(name, rem) {
-            document.getElementById('print-area').innerHTML = `<h1>FORVIA ADATLAP</h1><p>Név: ${name}</p><p>Maradék szabadság: ${rem} óra</p>`;
+        function printA4(id) {
+            const emp = employees.find(x => x.id === id);
+            let s = { S:0, BA:0, IG:0, TU:0, KE:0 };
+            const mData = Array(12).fill(0).map(() => ({S:0, BA:0, IG:0, TU:0, KE:0}));
+            if(emp.data) Object.entries(emp.data).forEach(([key, v]) => {
+                const m = parseInt(key.split('-')[1]) - 1;
+                const n = parseFloat(String(v).replace(',','.'));
+                if(!isNaN(n)) { s.S += n; mData[m].S += n; }
+                else if(v==='BÁ') { s.BA++; mData[m].BA++; }
+                else if(v==='IG') { s.IG++; mData[m].IG++; }
+                else if(v==='TU') { s.TU++; mData[m].TU++; }
+                else if(String(v).startsWith('KÉ')) { s.KE++; mData[m].KE++; }
+            });
+
+            let rows = mData.map((m, i) => `<tr><td>${monthNames[i]}</td><td>${m.S}</td><td>${m.BA}</td><td>${m.IG}</td><td>${m.TU}</td><td>${m.KE}</td></tr>`).join('');
+
+            document.getElementById('print-area').innerHTML = `
+                <div style="color:black; background:white; font-family: sans-serif;">
+                    <h1 style="margin:0">FORVIA - 2026</h1>
+                    <h2 style="margin-bottom:20px">${emp.name} (Műszak: ${currentShift})</h2>
+                    <div style="display:flex; gap:20px; margin-bottom:20px; font-weight:bold">
+                        <div>Keret: ${emp.yearlyQuota || 160} óra</div>
+                        <div>Kivett: ${s.S} óra</div>
+                        <div>Maradék: ${(emp.yearlyQuota || 160) - s.S} óra</div>
+                    </div>
+                    <table style="width:100%; border-collapse:collapse; text-align:center">
+                        <thead><tr style="background:#eee"><th>Hónap</th><th>Szabadság</th><th>BÁ</th><th>IG</th><th>TU</th><th>KÉ</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>`;
             window.print();
         }
 
         function setView(v) {
-            document.getElementById('v-matrix').classList.toggle('hidden', v !== 'matrix');
-            document.getElementById('v-stats').classList.toggle('hidden', v !== 'stats');
+            document.getElementById('view-matrix').classList.toggle('hidden', v !== 'matrix');
+            document.getElementById('view-stats').classList.toggle('hidden', v !== 'stats');
+            document.getElementById('btn-matrix').classList.toggle('bg-blue-600', v === 'matrix');
+            document.getElementById('btn-stats').classList.toggle('bg-blue-600', v === 'stats');
             if(v === 'stats') renderStats();
         }
 
-        function changeMonth(v) { date.setMonth(date.getMonth() + v); render(); }
-        function addNew() { const n = prompt("Név:"); if(n) { employees.push({id:Date.now(), name:n, yearlyQuota:160, data:{}}); save(); render(); } }
-        function delEmp(id) { if(confirm("Törlés?")) { employees = employees.filter(x => x.id !== id); save(); render(); if(document.getElementById('v-matrix').classList.contains('hidden')) renderStats(); } }
+        function changeMonth(v) { currentDate.setMonth(currentDate.getMonth() + v); render(); }
+        function addNewEmployee() { const n = prompt("Név:"); if(n) { employees.push({id:Date.now(), name:n, yearlyQuota:160, data:{}}); save(); render(); } }
+        function removeEmp(id) { if(confirm("Törlés?")) { employees = employees.filter(x => x.id !== id); save(); render(); } }
 
         window.onload = () => changeShift(currentShift);
     </script>
