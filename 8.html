@@ -17,13 +17,13 @@
         .holiday { background: #4c0505 !important; color: #fca5a5 !important; border: 1px solid #7f1d1d !important; }
         .today-cell { border: 2px solid #3b82f6 !important; background: rgba(59, 130, 246, 0.15) !important; }
         
-        /* SZÍNEK - TD-RE ALKALMAZVA */
+        /* SZÍNEK KÉNYSZERÍTÉSE */
         .cell-S { background: #059669 !important; color: white !important; }
         .cell-BA { background: #ea580c !important; color: white !important; }
         .cell-IG { background: #7c3aed !important; color: white !important; }
         .cell-TU { background: #2563eb !important; color: white !important; }
         .cell-KE { background: #d97706 !important; color: white !important; }
-
+        
         .input-cell { width: 100%; height: 100%; border: none; text-align: center; background: transparent; color: white; font-weight: 800; outline: none; }
         .shift-btn { transition: all 0.2s; border: 1px solid #334155; }
         .shift-btn.active { color: white; box-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
@@ -31,10 +31,18 @@
         .shift-B.active { background-color: #10b981; border-color: #34d399; }
         .shift-C.active { background-color: #f59e0b; border-color: #fbbf24; }
         .shift-D.active { background-color: #8b5cf6; border-color: #a78bfa; }
+
+        @media print {
+            .no-print { display: none !important; }
+            body, html { background: white !important; color: black !important; }
+            #print-area { display: block !important; }
+        }
     </style>
 </head>
 <body class="pb-10">
-    <header class="bg-[#111827] border-b border-slate-800 p-3 sticky top-0 z-50">
+    <div id="print-area" class="hidden"></div>
+
+    <header class="bg-[#111827] border-b border-slate-800 p-3 sticky top-0 z-50 no-print">
         <div class="max-w-full mx-auto flex flex-wrap justify-between items-center gap-3">
             <div class="flex items-center gap-3">
                 <div class="flex flex-col">
@@ -47,26 +55,36 @@
                     <button onclick="changeShift('C')" id="btn-shift-C" class="shift-btn shift-C px-3 py-1 rounded text-[10px] font-black">C</button>
                     <button onclick="changeShift('D')" id="btn-shift-D" class="shift-btn shift-D px-3 py-1 rounded text-[10px] font-black">D</button>
                 </div>
+                <nav class="flex bg-slate-900 p-1 rounded-lg">
+                    <button onclick="setView('matrix')" id="btn-matrix" class="px-3 py-1.5 rounded-md bg-blue-600 text-[10px] font-bold uppercase transition">Mátrix</button>
+                    <button onclick="setView('stats')" id="btn-stats" class="px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition ml-1">Adatlapok</button>
+                </nav>
             </div>
-            <div id="sync-indicator" class="text-[10px] font-bold text-emerald-500">
-                <i class="fas fa-cloud"></i> <span>Kész</span>
+
+            <div id="sync-indicator" class="text-emerald-500 text-[10px] font-bold">
+                <i class="fas fa-cloud"></i> <span>Naprakész</span>
             </div>
+
             <div class="flex items-center gap-2">
-                <button onclick="changeMonth(-1)" class="text-slate-400"><i class="fas fa-chevron-left"></i></button>
-                <span id="currentMonthDisplay" class="font-black text-[10px] uppercase w-24 text-center">Január</span>
-                <button onclick="changeMonth(1)" class="text-slate-400"><i class="fas fa-chevron-right"></i></button>
-                <button onclick="addNewEmployee()" class="bg-emerald-600 px-3 py-1 rounded text-[10px] font-bold">+ ÚJ</button>
+                <button onclick="changeMonth(-1)" class="text-slate-400 p-2"><i class="fas fa-chevron-left"></i></button>
+                <span id="currentMonthDisplay" class="font-black text-[10px] uppercase w-24 text-center text-blue-400">Január</span>
+                <button onclick="changeMonth(1)" class="text-slate-400 p-2"><i class="fas fa-chevron-right"></i></button>
+                <button onclick="addNewEmployee()" class="bg-emerald-600 px-3 py-1.5 rounded text-[10px] font-black text-white">+ ÚJ</button>
+                <button onclick="exportData()" class="bg-slate-700 p-1.5 rounded text-white text-[10px]"><i class="fas fa-file-export"></i></button>
             </div>
         </div>
     </header>
 
-    <main class="p-2">
-        <div class="table-container shadow-2xl">
-            <table class="matrix-table w-full border-collapse" id="mainMatrix">
-                <thead id="tableHeader" class="bg-slate-800 text-slate-400"></thead>
-                <tbody id="tableBody"></tbody>
-            </table>
+    <main class="p-2 no-print">
+        <div id="view-matrix">
+            <div class="table-container shadow-2xl">
+                <table class="matrix-table w-full border-collapse" id="mainMatrix">
+                    <thead id="tableHeader" class="bg-slate-800 text-slate-400"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
         </div>
+        <div id="view-stats" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pt-4"></div>
     </main>
 
     <script>
@@ -87,15 +105,6 @@
             await loadFromCloud();
         }
 
-        async function loadFromCloud() {
-            try {
-                const response = await fetch(`${BASE_DB_URL}shift_${currentShift}.json`);
-                const data = await response.json();
-                employees = Array.isArray(data) ? data : [];
-                render();
-            } catch (e) { console.error("Hiba betöltéskor"); }
-        }
-
         async function save() {
             document.getElementById('sync-indicator').innerHTML = '<i class="fas fa-sync fa-spin"></i> Mentés...';
             try {
@@ -103,8 +112,17 @@
                     method: 'PUT',
                     body: JSON.stringify(employees)
                 });
-                document.getElementById('sync-indicator').innerHTML = '<i class="fas fa-cloud text-emerald-500"></i> Kész';
+                document.getElementById('sync-indicator').innerHTML = '<i class="fas fa-cloud"></i> Naprakész';
             } catch (e) { document.getElementById('sync-indicator').innerText = "Hiba!"; }
+        }
+
+        async function loadFromCloud() {
+            try {
+                const response = await fetch(`${BASE_DB_URL}shift_${currentShift}.json`);
+                const data = await response.json();
+                employees = Array.isArray(data) ? data : [];
+                render();
+            } catch (e) { console.error("Load error"); }
         }
 
         function getCellClass(v) {
@@ -143,41 +161,85 @@
                     if(!isNaN(n)) sum += n;
                 });
             }
-            document.getElementById(`rem-${id}`).innerText = (emp.yearlyQuota || 0) - sum;
+            const el = document.getElementById(`rem-${id}`);
+            if(el) el.innerText = (emp.yearlyQuota || 0) - sum;
         }
 
         function render() {
             const month = currentDate.getMonth();
             const daysInMonth = new Date(2026, month + 1, 0).getDate();
+            const realToday = new Date();
             document.getElementById('currentMonthDisplay').innerText = monthNames[month];
 
             let header = `<tr><th class="name-col text-[9px] uppercase font-black">Munkatárs</th><th class="w-12 text-blue-400 text-[8px] uppercase">Keret</th><th class="w-12 text-emerald-400 text-[8px] uppercase">Kiv.</th>`;
             for(let d=1; d<=daysInMonth; d++) {
                 const date = new Date(2026, month, d);
                 const isW = [0,6].includes(date.getDay());
-                header += `<th class="${isW ? 'weekend' : ''}">${d}<span class="day-name">${dayNames[date.getDay()]}</span></th>`;
+                const isToday = realToday.getDate() === d && realToday.getMonth() === month && realToday.getFullYear() === 2026;
+                header += `<th class="${isW ? 'weekend' : ''} ${isToday ? 'today-cell' : ''}">${d}<span class="day-name">${dayNames[date.getDay()]}</span></th>`;
             }
             document.getElementById('tableHeader').innerHTML = header + "</tr>";
 
             let body = "";
             employees.forEach(emp => {
                 let sum = 0; if(emp.data) Object.values(emp.data).forEach(v => { const n = parseFloat(String(v).replace(',','.')); if(!isNaN(n)) sum += n; });
-                body += `<tr><td class="name-col flex justify-between px-2"><span>${emp.name}</span><button onclick="removeEmp(${emp.id})" class="opacity-20 hover:opacity-100 text-red-500 text-[8px]">X</button></td>
+                body += `<tr><td class="name-col flex justify-between px-2 items-center"><span class="truncate font-bold text-[11px]">${emp.name}</span><button onclick="removeEmp(${emp.id})" class="text-red-500 opacity-30 hover:opacity-100">×</button></td>
                 <td><input type="number" value="${emp.yearlyQuota}" oninput="const e=employees.find(x=>x.id===${emp.id}); e.yearlyQuota=parseInt(this.value)||0; updateRowTotals(${emp.id}); save();" class="input-cell text-blue-400"></td>
                 <td id="rem-${emp.id}" class="text-emerald-500 font-bold">${(emp.yearlyQuota || 0) - sum}</td>`;
                 for(let d=1; d<=daysInMonth; d++) {
                     const key = `2026-${month+1}-${d}`;
-                    const v = emp.data[key] || "";
-                    body += `<td class="${getCellClass(v)}"><input type="text" value="${v}" onblur="updateCell(${emp.id}, '${key}', this.value, this)" class="input-cell"></td>`;
+                    const v = (emp.data && emp.data[key]) ? emp.data[key] : "";
+                    const date = new Date(2026, month, d);
+                    const isW = [0,6].includes(date.getDay());
+                    body += `<td class="${isW ? 'weekend' : ''} ${getCellClass(v)}"><input type="text" value="${v}" onblur="updateCell(${emp.id}, '${key}', this.value, this)" class="input-cell"></td>`;
                 }
                 body += `</tr>`;
             });
             document.getElementById('tableBody').innerHTML = body;
         }
 
+        function setView(view) {
+            document.getElementById('view-matrix').classList.toggle('hidden', view !== 'matrix');
+            document.getElementById('view-stats').classList.toggle('hidden', view !== 'stats');
+            document.getElementById('btn-matrix').classList.toggle('bg-blue-600', view === 'matrix');
+            document.getElementById('btn-stats').classList.toggle('bg-blue-600', view === 'stats');
+            if(view === 'stats') renderStats();
+        }
+
+        function renderStats() {
+            document.getElementById('view-stats').innerHTML = employees.map(emp => {
+                let s = { S:0, BA:0, IG:0, TU:0, KE:0 };
+                if(emp.data) Object.values(emp.data).forEach(v => {
+                    const n = parseFloat(String(v).replace(',','.'));
+                    if(!isNaN(n)) s.S+=n; else if(v==='BÁ') s.BA++; else if(v==='IG') s.IG++; else if(v==='TU') s.TU++; else if(String(v).startsWith('KÉ')) s.KE++;
+                });
+                return `<div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700">
+                    <h3 class="font-black mb-2 text-white">${emp.name}</h3>
+                    <div class="grid grid-cols-2 gap-2 text-center text-[10px] mb-3">
+                        <div class="bg-slate-900 p-2 rounded">KERET: ${emp.yearlyQuota}</div>
+                        <div class="bg-slate-900 p-2 rounded text-emerald-500">MARADÉK: ${emp.yearlyQuota - s.S}</div>
+                    </div>
+                    <button onclick="printA4(${emp.id})" class="w-full bg-blue-600 py-2 rounded font-bold text-xs uppercase">Nyomtatás</button>
+                </div>`;
+            }).join('');
+        }
+
+        function printA4(empId) {
+            const emp = employees.find(e => e.id === empId);
+            let rows = ""; let tS = 0;
+            for(let m=0; m<12; m++) {
+                let mS = 0;
+                if(emp.data) Object.keys(emp.data).forEach(k => { if(k.startsWith(`2026-${m+1}-`)) { const n = parseFloat(String(emp.data[k]).replace(',','.')); if(!isNaN(n)) mS += n; }});
+                rows += `<tr><td>${monthNames[m]}</td><td>${mS}</td></tr>`; tS += mS;
+            }
+            document.getElementById('print-area').innerHTML = `<div style="padding:40px; color:black; background:white;"><h1>${emp.name} - 2026</h1><table border="1" style="width:100%; text-align:center;"><tr><th>Hónap</th><th>Szabadság (óra)</th></tr>${rows}</table><h3>Összesen: ${tS} óra</h3></div>`;
+            window.print();
+        }
+
         function addNewEmployee() { const n = prompt("Név:"); if(n) { employees.push({id:Date.now(), name:n, yearlyQuota:160, data:{}}); save(); render(); } }
         function removeEmp(id) { if(confirm("Törlés?")) { employees = employees.filter(e => e.id !== id); save(); render(); } }
         function changeMonth(d) { currentDate.setMonth(currentDate.getMonth() + d); render(); }
+        function exportData() { const blob = new Blob([JSON.stringify(employees)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `forvia_${currentShift}.json`; a.click(); }
 
         window.onload = () => changeShift(currentShift);
     </script>
