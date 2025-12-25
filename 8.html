@@ -430,7 +430,16 @@
 
         function changeMonth(v) { date.setMonth(date.getMonth() + v); render(); }
         function addEmp() { const n = prompt("Munkatárs neve:"); if(n) { employees.push({id:Date.now(), name:n, yearlyQuota:160, data:{}}); save(); render(); } }
-        function delEmp(id) { if(confirm("Biztosan törlöd?")) { employees = employees.filter(x => x.id != id); save(); render(); } }
+        
+        // --- JAVÍTOTT TÖRLÉS FUNKCIÓ ---
+        function delEmp(id) { 
+            if(confirm("FIGYELEM!\n\nBiztosan törölni szeretnéd ezt a munkavállalót?\nAz adatok véglegesen elvesznek és nem állíthatók vissza!")) { 
+                employees = employees.filter(x => x.id != id); 
+                save(); 
+                render(); 
+            } 
+        }
+        // -------------------------------
 
         window.onload = () => changeShift(currentShift);
     </script>
