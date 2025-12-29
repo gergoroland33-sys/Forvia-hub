@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Forvia Bank Scan Mobil Ver4.7</title>
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+<style>
+/* --- GLOBÁLIS BEÁLLÍTÁSOK --- */
+* {
+    box-sizing: border-box; /* Ez akadályozza meg a szétcsúszást */
+    -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+    --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    --accent: #3b82f6;
+    --accent-glow: rgba(59, 130, 246, 0.5);
+    --glass: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --ok-color: #10b981;
+    --err-color: #ef4444;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg-gradient);
+    color: var(--text-main);
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    /* A trükk a mobil nézethez: */
+    height: 100vh; /* Régi böngészőknek */
+    height: 100dvh; /* Modern mobiloknak (Dynamic Viewport Height) */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Nincs görgetés az egész oldalon, csak a tartalomban */
+}
+
+/* --- FEJLÉC (JAVÍTVA) --- */
+.header {
+    flex-shrink: 0; /* SOHA nem nyomódhat össze */
+    width: 100%;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--glass-border);
+    padding: 15px 20px;
+    text-align: center;
+    z-index: 100;
+    /* Notch kezelés (iPhone sziget) */
+    padding-top: max(15px, env(safe-area-inset-top)); 
+}
+.header h1 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: white;
+}
+.header .credits {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-weight: 500;
+}
+.header .credits span { color: var(--accent); }
+
+/* --- FŐ TARTALOM --- */
+.main-content {
+    flex: 1; /* Kitölti a maradék helyet */
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    overflow-y: auto; /* Csak ez görgethető */
+    align-items: center;
+    width: 100%;
+    -webkit-overflow-scrolling: touch; /* Sima görgetés iOS-en */
+}
+
+/* --- KAMERA KONTÉNER --- */
+#reader {
+    width: 100%;
+    max-width: 300px;
+    aspect-ratio: 1 / 1; /* Kocka */
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 3px solid var(--accent);
+    display: none;
+    background: black;
+    flex-shrink: 0; /* Kamera ne torzuljon */
+}
+#reader video { width: 100% !important; height: 100% !important; object-fit: cover; }
+
+/* --- INPUT --- */
+.input-wrapper {
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    gap: 12px;
+    margin-bottom: 25px;
+    flex-shrink: 0;
+}
+
+input[type=text] {
+    flex: 1;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    padding: 16px 20px;
+    border-radius: 16px;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-align: center;
+    outline: none;
+    backdrop-filter: blur(5px);
+    min-width: 0; /* Flexbox bug fix */
+}
+
+.scan-btn {
+    width: 60px; height: 60px;
+    border-radius: 16px; border: none;
+    background: var(--accent); color: white;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 15px var(--accent-glow);
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+.scan-btn:active { transform: scale(0.92); }
+.scan-btn svg { width: 28px; height: 28px; fill: white; }
+.scan-btn.active { background: var(--err-color); }
+
+/* --- EREDMÉNYEK --- */
+#resultsWrapper { width: 100%; max-width: 500px; padding-bottom: 20px; }
+
+.result-card {
+    background: rgba(16, 185, 129, 0.15); border: 1px solid var(--ok-color);
+    border-radius: 20px; padding: 25px; text-align: center;
+    animation: popIn 0.3s ease-out; backdrop-filter: blur(10px);
+}
+.result-card.error { background: rgba(239, 68, 68, 0.15); border-color: var(--err-color); }
+@keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+.res-model { font-size: 1rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
+.res-main { font-size: 3rem; font-weight: 800; line-height: 1; color: white; margin: 10px 0; }
+.res-pos { font-size: 1.5rem; color: #fbbf24; font-weight: bold; margin-bottom: 20px; }
+.res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.res-item { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 12px; font-size: 0.9rem; color: var(--text-muted); }
+.res-item b { display: block; color: white; font-size: 1.1rem; margin-top: 3px; word-break: break-all; }
+.no-result { font-size: 1.5rem; font-weight: bold; color: var(--err-color); text-align: center; margin-top: 20px; }
+.load-msg { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px; }
+
+/* --- FOOTER --- */
+.footer-history {
+    background: rgba(15, 23, 42, 0.95);
+    border-top: 1px solid var(--glass-border);
+    height: 150px;
+    flex-shrink: 0; /* Ez se nyomódjon össze */
+    overflow-y: auto;
+    padding: 15px;
+    padding-bottom: max(15px, env(safe-area-inset-bottom)); /* iPhone Home Bar kezelés */
+}
+.history-title { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; font-weight: bold; }
+.h-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 15px; margin-bottom: 8px;
+    background: rgba(255,255,255,0.03); border-radius: 10px; font-size: 0.85rem;
+    border-left: 4px solid #555;
+}
+.h-ok { border-left-color: var(--ok-color); }
+.h-err { border-left-color: var(--err-color); }
+.h-time { font-size: 0.7rem; color: #64748b; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Forvia Cikkszám Scan Mobil Ver4.7</h1>
+    <div class="credits">Készítette: <span>Gergő Roland</span></div>
+</div>
+
+<div class="main-content" id="screen">
+    <div id="loadMsg" class="load-msg">Adatbázis betöltése...</div>
+
+    <div id="reader"></div>
+
+    <div class="input-wrapper">
+        <input type="text" id="barcodeInput" placeholder="Scan Barcode" autocomplete="off">
+        
+        <button class="scan-btn" onclick="handleCameraButton()" title="Kamera indítása">
+            <svg id="camIcon" viewBox="0 0 24 24">
+                <path d="M4 6h2v12H4zm14 0h2v12h-2zm-4 0h2v12h-2zm-4 0h2v12h-2zM2 4v16h20V4H2zm18 14H4V6h16v12z"/>
+                <path d="M0 0h24v24H0z" fill="none"/>
+            </svg>
+            <svg id="stopIcon" viewBox="0 0 24 24" style="display:none;">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+        </button>
+    </div>
+
+    <div id="resultsWrapper"></div>
+</div>
+
+<div class="footer-history">
+    <div class="history-title">Előzmények &middot; <span onclick="location.reload()" style="cursor:pointer; color:var(--accent);">Frissítés</span></div>
+    <div id="historyList"></div>
+</div>
+
+<audio id="sndOk" src="https://actions.google.com/sounds/v1/communication/notification_high_intensity.ogg"></audio>
+<audio id="sndError" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+
+<script>
+/* ========================================================
+   JAVASCRIPT LOGIKA - 100% VÁLTOZATLAN (V4.6 ALAPJÁN)
+   ======================================================== */
+const input = document.getElementById('barcodeInput');
+const resultsWrapper = document.getElementById('resultsWrapper');
+const historyList = document.getElementById('historyList');
+const loadMsg = document.getElementById('loadMsg');
+const camIcon = document.getElementById('camIcon');
+const stopIcon = document.getElementById('stopIcon');
+const scanBtn = document.querySelector('.scan-btn');
+const readerDiv = document.getElementById('reader');
+
+let html5QrCode = null;
+let isCameraRunning = false;
+let bankDB = [];
+
+async function init() {
+    await loadBankCSV();
+    if(bankDB.length > 0) {
+        loadMsg.innerText = `Adatbázis kész: ${bankDB.length} tétel`;
+        loadMsg.style.color = "#10b981";
+    }
+}
+
+async function loadBankCSV() {
+    try {
+        const res = await fetch('bank.csv');
+        const data = await res.text();
+        const lines = data.split('\n');
+        const headers = lines[0].split(';');
+        let modelIdx = headers.findIndex(h => h.trim().toLowerCase().includes('model'));
+
+        lines.slice(1).forEach(line => {
+            const cols = line.split(';');
+            if (cols.length < 2) return;
+            bankDB.push({
+                gep: cols[0]?.trim() || "N/A",
+                poz: cols[1]?.trim() || "N/A",
+                id: cols[2]?.trim().toUpperCase() || "",
+                msd: cols[4]?.trim() || "N/A",
+                model: (modelIdx !== -1 && cols[modelIdx]) ? cols[modelIdx].trim() : "BANK"
+            });
+        });
+    } catch (e) { 
+        loadMsg.innerText = "HIBA: bank.csv betöltése sikertelen!";
+        loadMsg.style.color = "#ef4444";
+    }
+}
+
+input.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        const code = input.value.trim().toUpperCase();
+        if (code) search(code);
+        input.value = '';
+        input.blur();
+    }
+});
+
+function search(code) {
+    resultsWrapper.innerHTML = '';
+    const matches = bankDB.filter(i => (code.includes(i.id) || i.id.includes(code)) && i.id.length > 2);
+
+    if (matches.length > 0) {
+        playSound(true);
+        matches.forEach(m => {
+            const card = document.createElement('div');
+            card.className = 'result-card';
+            card.innerHTML = `
+                <div class="res-model">${m.model}</div>
+                <div class="res-main">${m.gep}</div>
+                <div class="res-pos">POZ: ${m.poz}</div>
+                <div class="res-grid">
+                    <div class="res-item">MSD <b>${m.msd}</b></div>
+                    <div class="res-item">ID <b>${m.id}</b></div>
+                </div>
+            `;
+            resultsWrapper.appendChild(card);
+        });
+        addToHistory(code, matches[0].gep, true);
+    } else {
+        playSound(false);
+        resultsWrapper.innerHTML = '<div class="no-result">NINCS A LISTÁBAN</div>';
+        addToHistory(code, "Nincs találat", false);
+    }
+}
+
+function handleCameraButton() {
+    resultsWrapper.innerHTML = ''; 
+    input.value = '';
+
+    if (isCameraRunning) {
+        forceStopCamera();
+    } else {
+        setTimeout(() => {
+            startCamera();
+        }, 200); 
+    }
+}
+
+function startCamera() {
+    readerDiv.style.display = 'block';
+    camIcon.style.display = 'none';
+    stopIcon.style.display = 'block';
+    scanBtn.classList.add('active');
+
+    if (html5QrCode === null) {
+        html5QrCode = new Html5Qrcode("reader");
+    }
+
+    const config = { 
+        fps: 20, 
+        qrbox: { width: 200, height: 200 } 
+    };
+    
+    html5QrCode.start(
+        { facingMode: "environment" }, 
+        config,
+        (decodedText) => {
+            forceStopCamera().then(() => {
+                input.value = decodedText;
+                search(decodedText.trim().toUpperCase());
+            });
+        },
+        () => {}
+    ).then(() => {
+        isCameraRunning = true;
+    }).catch(err => {
+        console.error("Kamera start hiba:", err);
+        forceStopCamera();
+        alert("Kamera hiba! Frissítsd az oldalt.");
+    });
+}
+
+function forceStopCamera() {
+    return new Promise((resolve) => {
+        if (html5QrCode) {
+            html5QrCode.stop().then(() => {
+                html5QrCode.clear();
+                cleanupUI();
+                resolve();
+            }).catch(err => {
+                cleanupUI();
+                resolve();
+            });
+        } else {
+            cleanupUI();
+            resolve();
+        }
+    });
+}
+
+function cleanupUI() {
+    html5QrCode = null;
+    isCameraRunning = false;
+    readerDiv.style.display = 'none';
+    camIcon.style.display = 'block';
+    stopIcon.style.display = 'none';
+    scanBtn.classList.remove('active');
+}
+
+function playSound(ok) {
+    const snd = document.getElementById(ok ? 'sndOk' : 'sndError');
+    snd.currentTime = 0; snd.play().catch(()=>{});
+}
+
+function addToHistory(code, resText, ok) {
+    const div = document.createElement('div');
+    div.className = `h-item ${ok ? 'h-ok' : 'h-err'}`;
+    const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    div.innerHTML = `
+        <div><strong>${code}</strong></div>
+        <div style="text-align:right;">
+            <div style="font-weight:bold; color: ${ok ? '#fff' : '#ef4444'}">${resText}</div>
+            <div class="h-time">${time}</div>
+        </div>`;
+    historyList.prepend(div);
+}
+
+init();
+</script>
+</body>
+</html>
