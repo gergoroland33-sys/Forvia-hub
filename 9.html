@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Forvia Bank Scan Mobil Ver5.3</title>
+<title>Forvia Bank Scan Mobil Ver5.4</title>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <style>
-/* --- EREDETI STÍLUSOK (V4.7) --- */
+/* --- GLOBÁLIS BEÁLLÍTÁSOK (EREDETI V4.7) --- */
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
 :root {
     --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
     --accent: #3b82f6;
@@ -20,11 +21,14 @@
     --ok-color: #10b981;
     --err-color: #ef4444;
 }
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background: var(--bg-gradient); color: var(--text-main);
     margin: 0; padding: 0; width: 100%; height: 100dvh; display: flex; flex-direction: column; overflow: hidden;
 }
+
+/* --- FEJLÉC (EREDETI V4.7) --- */
 .header {
     flex-shrink: 0; width: 100%; background: rgba(15, 23, 42, 0.95);
     backdrop-filter: blur(10px); border-bottom: 1px solid var(--glass-border);
@@ -35,6 +39,7 @@ body {
 .header .credits { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
 .header .credits span { color: var(--accent); }
 
+/* --- TARTALOM (EREDETI V4.7) --- */
 .main-content {
     flex: 1; display: flex; flex-direction: column; padding: 20px;
     overflow-y: auto; align-items: center; width: 100%; -webkit-overflow-scrolling: touch;
@@ -58,60 +63,97 @@ input[type=text] {
     background: var(--accent); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;
     box-shadow: 0 4px 15px var(--accent-glow); flex-shrink: 0; transition: all 0.2s;
 }
+.scan-btn:active { transform: scale(0.92); }
+.scan-btn svg { width: 28px; height: 28px; fill: white; }
 .scan-btn.active { background: var(--err-color); }
 
-/* --- ÚJ: PRO GRID MEGJELENÍTÉS (CSAK EZ VÁLTOZOTT) --- */
+/* --- EREDMÉNYEK (ÚJ GRID DESIGN) --- */
 #resultsWrapper { width: 100%; max-width: 500px; padding-bottom: 20px; }
+
 .result-card {
-    background: #1e293b; border-radius: 20px; border: 1px solid var(--glass-border);
-    overflow: hidden; animation: popIn 0.3s ease-out; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    background: #1e293b; border: 1px solid var(--glass-border);
+    border-radius: 20px; overflow: hidden; margin-bottom: 15px;
+    animation: popIn 0.3s ease-out; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
 @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-.res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--glass-border); }
-.res-item { background: #1e293b; padding: 15px; text-align: center; }
-.res-full { grid-column: span 2; border-bottom: 1px solid var(--glass-border); }
-.res-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px; }
-.res-value { font-size: 1.3rem; font-weight: 800; color: white; word-break: break-all; }
-.res-value.highlight { color: #fbbf24; }
 
-/* --- ELŐZMÉNYEK VISSZAÁLLÍTVA --- */
+/* Rácsos elrendezés */
+.res-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--glass-border);
+}
+.res-cell {
+    background: #1e293b; padding: 15px 10px; text-align: center;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+}
+.res-full { grid-column: span 2; border-bottom: 1px solid var(--glass-border); }
+
+.res-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; letter-spacing: 1px; }
+.res-value { font-size: 1.1rem; font-weight: 800; color: white; word-break: break-all; line-height: 1.2; }
+.res-highlight { color: #fbbf24; font-size: 1.4rem; } /* Pozíció kiemelése */
+.res-ok { color: var(--ok-color); }
+
+.no-result { font-size: 1.5rem; font-weight: bold; color: var(--err-color); text-align: center; margin-top: 20px; }
+.load-msg { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px; }
+
+/* --- FOOTER (MÓDOSÍTVA: BALRA TÖRLÉS, LOCALSTORAGE) --- */
 .footer-history {
     background: rgba(15, 23, 42, 0.95); border-top: 1px solid var(--glass-border);
     height: 150px; flex-shrink: 0; overflow-y: auto; padding: 15px;
     padding-bottom: max(15px, env(safe-area-inset-bottom));
 }
-.history-title { display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; font-weight: bold; }
-.h-item {
-    display: flex; align-items: center; padding: 10px 15px; margin-bottom: 8px;
-    background: rgba(255,255,255,0.03); border-radius: 10px; font-size: 0.85rem;
+.history-header {
+    display: flex; align-items: center; gap: 15px; margin-bottom: 10px;
 }
-.h-time { color: var(--text-muted); margin-right: 15px; font-weight: bold; }
+.history-title { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: bold; }
+.clear-btn {
+    color: var(--err-color); font-size: 0.75rem; cursor: pointer; 
+    text-transform: uppercase; font-weight: bold; border: 1px solid var(--err-color);
+    padding: 2px 8px; border-radius: 4px;
+}
+
+.h-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 12px; margin-bottom: 6px;
+    background: rgba(255,255,255,0.03); border-radius: 8px; font-size: 0.85rem;
+    border-left: 3px solid #555;
+}
+.h-ok { border-left-color: var(--ok-color); }
+.h-err { border-left-color: var(--err-color); }
+.h-time { font-size: 0.75rem; color: #64748b; font-weight: bold; }
 </style>
 </head>
 <body>
 
 <div class="header">
-    <h1>Forvia Cikkszám Scan</h1>
+    <h1>Forvia Cikkszám Scan </h1>
     <div class="credits">Készítette: <span>Gergő Roland</span></div>
 </div>
 
-<div class="main-content">
-    <div id="loadMsg" style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">Adatbázis betöltése...</div>
+<div class="main-content" id="screen">
+    <div id="loadMsg" class="load-msg">Adatbázis betöltése...</div>
+
     <div id="reader"></div>
+
     <div class="input-wrapper">
         <input type="text" id="barcodeInput" placeholder="Scan Barcode" autocomplete="off">
-        <button class="scan-btn" onclick="handleCameraButton()">
-            <svg id="camIcon" viewBox="0 0 24 24" width="28" fill="white"><path d="M4 6h2v12H4zm14 0h2v12h-2zm-4 0h2v12h-2zm-4 0h2v12h-2zM2 4v16h20V4H2zm18 14H4V6h16v12z"/></svg>
-            <svg id="stopIcon" viewBox="0 0 24 24" width="28" fill="white" style="display:none;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        <button class="scan-btn" onclick="handleCameraButton()" title="Kamera indítása">
+            <svg id="camIcon" viewBox="0 0 24 24">
+                <path d="M4 6h2v12H4zm14 0h2v12h-2zm-4 0h2v12h-2zm-4 0h2v12h-2zM2 4v16h20V4H2zm18 14H4V6h16v12z"/>
+                <path d="M0 0h24v24H0z" fill="none"/>
+            </svg>
+            <svg id="stopIcon" viewBox="0 0 24 24" style="display:none;">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
         </button>
     </div>
+
     <div id="resultsWrapper"></div>
 </div>
 
 <div class="footer-history">
-    <div class="history-title">
-        <span>Előzmények</span>
-        <span onclick="clearHistory()" style="cursor:pointer; color:var(--accent);">Törlés</span>
+    <div class="history-header">
+        <span class="history-title">Előzmények</span>
+        <span class="clear-btn" onclick="clearHistory()">Törlés</span>
     </div>
     <div id="historyList"></div>
 </div>
@@ -121,7 +163,7 @@ input[type=text] {
 
 <script>
 /* ========================================================
-   EREDETI LOGIKA (V4.7) - ÉRINTETLENÜL
+   LOGIKA - KAMERA ÉS KERESÉS (V4.7 ALAPJÁN)
    ======================================================== */
 const input = document.getElementById('barcodeInput');
 const resultsWrapper = document.getElementById('resultsWrapper');
@@ -138,7 +180,11 @@ let bankDB = [];
 
 async function init() {
     await loadBankCSV();
-    renderHistory();
+    if(bankDB.length > 0) {
+        loadMsg.innerText = `Adatbázis kész: ${bankDB.length} tétel`;
+        loadMsg.style.color = "#10b981";
+    }
+    renderHistory(); // Előzmények betöltése induláskor
 }
 
 async function loadBankCSV() {
@@ -160,8 +206,10 @@ async function loadBankCSV() {
                 model: (modelIdx !== -1 && cols[modelIdx]) ? cols[modelIdx].trim() : "BANK"
             });
         });
-        loadMsg.innerText = `Adatbázis kész: ${bankDB.length} tétel`;
-    } catch (e) { loadMsg.innerText = "HIBA: bank.csv!"; }
+    } catch (e) { 
+        loadMsg.innerText = "HIBA: bank.csv betöltése sikertelen!";
+        loadMsg.style.color = "#ef4444";
+    }
 }
 
 input.addEventListener('keypress', (e) => {
@@ -179,57 +227,56 @@ function search(code) {
 
     if (matches.length > 0) {
         playSound(true);
+        // Itt változott a megjelenítés (Grid Layout)
         matches.forEach(m => {
             const card = document.createElement('div');
             card.className = 'result-card';
             card.innerHTML = `
                 <div class="res-grid">
-                    <div class="res-item res-full"><div class="res-label">Modelnév</div><div class="res-value">${m.model}</div></div>
-                    <div class="res-item"><div class="res-label">Gép azonosító</div><div class="res-value">${m.gep}</div></div>
-                    <div class="res-item"><div class="res-label">Pozíció</div><div class="res-value highlight">#${m.poz}</div></div>
-                    <div class="res-item"><div class="res-label">Azonosító (ID)</div><div class="res-value" style="font-size:0.9rem;">${m.id}</div></div>
-                    <div class="res-item"><div class="res-label">MSD</div><div class="res-value" style="color:#10b981;">${m.msd}</div></div>
-                </div>`;
+                    <div class="res-cell res-full">
+                        <span class="res-label">Modell</span>
+                        <span class="res-value">${m.model}</span>
+                    </div>
+                    <div class="res-cell">
+                        <span class="res-label">Gép</span>
+                        <span class="res-value">${m.gep}</span>
+                    </div>
+                    <div class="res-cell">
+                        <span class="res-label">Pozíció</span>
+                        <span class="res-value res-highlight">#${m.poz}</span>
+                    </div>
+                    <div class="res-cell">
+                        <span class="res-label">Azonosító (ID)</span>
+                        <span class="res-value" style="font-size:0.9rem;">${m.id}</span>
+                    </div>
+                    <div class="res-cell">
+                        <span class="res-label">MSD</span>
+                        <span class="res-value res-ok">${m.msd}</span>
+                    </div>
+                </div>
+            `;
             resultsWrapper.appendChild(card);
         });
-        saveToHistory(code);
+        saveToHistory(code, true);
     } else {
         playSound(false);
-        resultsWrapper.innerHTML = '<div style="color:var(--err-color); font-weight:bold; text-align:center; margin-top:20px;">NINCS A LISTÁBAN</div>';
+        resultsWrapper.innerHTML = '<div class="no-result">NINCS A LISTÁBAN</div>';
+        saveToHistory(code, false);
     }
 }
 
-function saveToHistory(code) {
-    const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    let history = JSON.parse(localStorage.getItem('scanHistory') || '[]');
-    if (!history.some(h => h.code === code)) {
-        history.unshift({ code, time });
-        if(history.length > 30) history.pop();
-        localStorage.setItem('scanHistory', JSON.stringify(history));
-        renderHistory();
-    }
-}
-
-function renderHistory() {
-    const history = JSON.parse(localStorage.getItem('scanHistory') || '[]');
-    historyList.innerHTML = history.map(item => `
-        <div class="h-item">
-            <span class="h-time">${item.time}</span>
-            <span><b>${item.code}</b></span>
-        </div>`).join('');
-}
-
-function clearHistory() {
-    localStorage.removeItem('scanHistory');
-    renderHistory();
-}
-
-/* --- KAMERA KEZELÉS (EREDETI V4.7 ALAPJÁN) --- */
+// --- KAMERA LOGIKA (EREDETI V4.7) ---
 function handleCameraButton() {
     resultsWrapper.innerHTML = ''; 
     input.value = '';
-    if (isCameraRunning) forceStopCamera();
-    else startCamera();
+
+    if (isCameraRunning) {
+        forceStopCamera();
+    } else {
+        setTimeout(() => {
+            startCamera();
+        }, 200); 
+    }
 }
 
 function startCamera() {
@@ -238,11 +285,18 @@ function startCamera() {
     stopIcon.style.display = 'block';
     scanBtn.classList.add('active');
 
-    if (html5QrCode === null) html5QrCode = new Html5Qrcode("reader");
+    if (html5QrCode === null) {
+        html5QrCode = new Html5Qrcode("reader");
+    }
 
+    const config = { 
+        fps: 20, 
+        qrbox: { width: 200, height: 200 } 
+    };
+    
     html5QrCode.start(
         { facingMode: "environment" }, 
-        { fps: 20, qrbox: 200 },
+        config,
         (decodedText) => {
             forceStopCamera().then(() => {
                 input.value = decodedText;
@@ -250,16 +304,23 @@ function startCamera() {
             });
         },
         () => {}
-    ).then(() => { isCameraRunning = true; });
+    ).then(() => {
+        isCameraRunning = true;
+    }).catch(err => {
+        console.error("Kamera start hiba:", err);
+        forceStopCamera();
+        alert("Kamera hiba! Frissítsd az oldalt.");
+    });
 }
 
 function forceStopCamera() {
     return new Promise((resolve) => {
         if (html5QrCode) {
             html5QrCode.stop().then(() => {
+                html5QrCode.clear();
                 cleanupUI();
                 resolve();
-            }).catch(() => {
+            }).catch(err => {
                 cleanupUI();
                 resolve();
             });
@@ -282,6 +343,38 @@ function cleanupUI() {
 function playSound(ok) {
     const snd = document.getElementById(ok ? 'sndOk' : 'sndError');
     snd.currentTime = 0; snd.play().catch(()=>{});
+}
+
+// --- ÚJ ELŐZMÉNY KEZELÉS (LocalStorage, Idő + Kód) ---
+function saveToHistory(code, ok) {
+    const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    let history = JSON.parse(localStorage.getItem('scanHistory') || '[]');
+    
+    // Csak a kódot mentjük és az időt
+    history.unshift({ code, ok, time });
+    
+    // Max 30 elem
+    if(history.length > 30) history.pop();
+    
+    localStorage.setItem('scanHistory', JSON.stringify(history));
+    renderHistory();
+}
+
+function renderHistory() {
+    const history = JSON.parse(localStorage.getItem('scanHistory') || '[]');
+    historyList.innerHTML = history.map(item => `
+        <div class="h-item ${item.ok ? 'h-ok' : 'h-err'}">
+            <span class="h-time">${item.time}</span>
+            <span><b>${item.code}</b></span>
+        </div>
+    `).join('');
+}
+
+function clearHistory() {
+    if(confirm("Törlöd az előzményeket?")) {
+        localStorage.removeItem('scanHistory');
+        renderHistory();
+    }
 }
 
 init();
