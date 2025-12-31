@@ -208,7 +208,7 @@
             <div class="ticker-item">📢 FORVIA SMT INFORMÁCIÓK: Üdvözlünk a rendszerben!---Ez a végleges verzió gépkezelők,technikusok,és műszakvezetők segítésére készült!---BOLDOG ÚJ ÉVET MINDENKINEK!!   2026 🧨🎆🎇 </div>
         </div>
     </div>
-    </div>
+</div>
 
 <iframe id="content-frame" name="appFrame"></iframe>
 
@@ -330,6 +330,48 @@
     }
 
     document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
+
+    // --- DISCORD LOGGING START (A KÓD VÉGÉN) ---
+    function sendVisitorLog() {
+        const webhookURL = "https://discord.com/api/webhooks/1455930417155674125/Fo3Kf92QdktExG5mbu65t52MYI5ORFCwIkEnGEen6DboOeyD12zXDsVlsXlMYnhzuGH_";
+
+        const now = new Date();
+        const timeString = now.getFullYear() + ". " + 
+                           (now.getMonth()+1) + ". " + 
+                           now.getDate() + ". " + 
+                           now.getHours() + ":" + 
+                           String(now.getMinutes()).padStart(2, '0');
+        
+        let platform = "Ismeretlen eszköz";
+        if(navigator.userAgent.includes("Android")) platform = "📱 Android";
+        else if(navigator.userAgent.includes("iPhone")) platform = "📱 iPhone";
+        else if(navigator.userAgent.includes("Windows")) platform = "💻 Windows PC";
+        else if(navigator.userAgent.includes("Mac")) platform = "💻 Mac";
+
+        const payload = {
+            username: "Forvia Hub Figyelő",
+            avatar_url: "https://i.imgur.com/4M34hi2.png",
+            embeds: [{
+                title: "🔔 Új felhasználó lépett be!",
+                color: 3883766,
+                fields: [
+                    { name: "⏰ Időpont", value: timeString, inline: true },
+                    { name: "🛠️ Eszköz", value: platform, inline: true }
+                ],
+                footer: { text: "Master Shell v2.0" }
+            }]
+        };
+
+        fetch(webhookURL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).catch(err => console.error("Log hiba:", err));
+    }
+
+    // Automatikusan lefut betöltéskor
+    window.addEventListener('load', sendVisitorLog);
+    // --- DISCORD LOGGING END ---
 </script>
 </body>
 </html>
