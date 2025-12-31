@@ -92,38 +92,63 @@ select{width:100%;padding:12px;background:#0b1120;border:1px solid var(--card-bo
 .shift-row {
     display: flex; align-items: center; justify-content: space-between;
     padding: 12px; border-radius: 12px; margin-bottom: 8px;
-    border: 1px solid rgba(255,255,255,0.05); /* Alap keret */
+    /* Alapállapot: Semleges sötét háttér és vékony keret (Otthon) */
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255,255,255,0.1);
     transition: all 0.3s ease-in-out;
-    position: relative;
+    position: relative; /* Fontos a futófényhez */
+    overflow: hidden;   /* Fontos a futófényhez */
+    z-index: 0;
 }
 .shift-row:last-child { margin-bottom: 0; }
 
-/* Alap szolid háttér minden műszaknak (ahogy kérted) */
-.row-muszak-A { background: linear-gradient(90deg, rgba(96, 165, 250, 0.15), rgba(96, 165, 250, 0.05)); border-left: 4px solid var(--color-A); }
-.row-muszak-B { background: linear-gradient(90deg, rgba(74, 222, 128, 0.15), rgba(74, 222, 128, 0.05)); border-left: 4px solid var(--color-B); }
-.row-muszak-C { background: linear-gradient(90deg, rgba(251, 191, 36, 0.15), rgba(251, 191, 36, 0.05)); border-left: 4px solid var(--color-C); }
-.row-muszak-D { background: linear-gradient(90deg, rgba(248, 113, 113, 0.15), rgba(248, 113, 113, 0.05)); border-left: 4px solid var(--color-D); }
+/* Csak a színváltozót definiáljuk, a hátteret még nem */
+.row-muszak-A { --shift-color: var(--color-A); }
+.row-muszak-B { --shift-color: var(--color-B); }
+.row-muszak-C { --shift-color: var(--color-C); }
+.row-muszak-D { --shift-color: var(--color-D); }
 
-/* --- ÚJ: AKTÍV MŰSZAK FUTÓFÉNY/LÜKTETÉS --- */
-/* Ha egy sor aktív, beállítjuk a színváltozót és elindítjuk az animációt */
-.shift-row.active-shift.row-muszak-A { --pulse-color: var(--color-A); animation: glowPulse 2s infinite alternate; }
-.shift-row.active-shift.row-muszak-B { --pulse-color: var(--color-B); animation: glowPulse 2s infinite alternate; }
-.shift-row.active-shift.row-muszak-C { --pulse-color: var(--color-C); animation: glowPulse 2s infinite alternate; }
-.shift-row.active-shift.row-muszak-D { --pulse-color: var(--color-D); animation: glowPulse 2s infinite alternate; }
+/* --- AKTÍV MŰSZAK STÍLUSOK (Nappal/Éjszaka) --- */
 
-/* A lüktető animáció a kereten és az árnyékon */
-@keyframes glowPulse {
-    from { border-color: rgba(255,255,255,0.1); box-shadow: 0 0 0 rgba(0,0,0,0); }
-    to   { border-color: var(--pulse-color); box-shadow: 0 0 15px var(--pulse-color), inset 0 0 5px rgba(255,255,255,0.1); }
+/* 1. Statikus háttér és bal oldali csík, ha aktív */
+.shift-row.active-shift {
+    background: linear-gradient(90deg, rgba(255,255,255,0.07), rgba(255,255,255,0));
+    border-left: 4px solid var(--shift-color);
+    border-color: transparent; /* Eltüntetjük az alap keretet, hogy a futófény látszódjon */
 }
 
-/* Ha aktív, a szöveg is legyen kicsit fényesebb */
-.active-shift .loc { text-shadow: 0 0 5px var(--pulse-color); }
+/* 2. A KÖRBEFUTÓ FÉNY (Snake effect) */
+/* Ez a réteg forog a háttérben */
+.shift-row.active-shift::before {
+    content: '';
+    position: absolute;
+    z-index: -2;
+    left: -50%; top: -50%; width: 200%; height: 200%;
+    /* Létrehozunk egy "fénycsóvát" a műszak színével */
+    background: conic-gradient(transparent, transparent, transparent, var(--shift-color) 30%, transparent 50%);
+    animation: rotateSnake 3s linear infinite;
+}
 
-.shift-details { display: flex; flex-direction: column; }
+/* Ez a réteg a maszk, ami kitakarja a közepet */
+.shift-row.active-shift::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    /* 2px vastag keretet hagyunk (inset) */
+    left: 2px; top: 2px; right: 2px; bottom: 2px;
+    border-radius: 10px; 
+    background: #1e293b; /* Ugyanolyan színű, mint a kártya háttere */
+}
+
+@keyframes rotateSnake {
+    100% { transform: rotate(360deg); }
+}
+
+
+.shift-details { display: flex; flex-direction: column; z-index: 1; }
 .loc { font-weight: 700; font-size: 1rem; color: white; }
 .leader { font-size: 0.75rem; color: rgba(255,255,255,0.7); }
-.badge { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; background: rgba(0,0,0,0.2); }
+.badge { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; background: rgba(0,0,0,0.3); z-index: 1; }
 .row-muszak-A .badge { color: var(--color-A); }
 .row-muszak-B .badge { color: var(--color-B); }
 .row-muszak-C .badge { color: var(--color-C); }
@@ -254,11 +279,9 @@ function showData(){
                 </div>`;
 
         napok[datum].forEach(r=>{
-            // Logika: Megnézzük, hogy nappal vagy éjszaka van-e
             const szovegLower = r.hely.trim().toLowerCase();
             const isActive = szovegLower === 'nappal' || szovegLower === 'éjszaka';
             
-            // Ha aktív, hozzáadjuk az 'active-shift' osztályt
             html+=`<div class="shift-row row-muszak-${r.muszak} ${isActive?'active-shift':''}">
                 <div class="shift-details">
                     <span class="loc">${r.hely}</span>
