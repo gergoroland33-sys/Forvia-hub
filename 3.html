@@ -92,58 +92,43 @@ select{width:100%;padding:12px;background:#0b1120;border:1px solid var(--card-bo
 .shift-row {
     display: flex; align-items: center; justify-content: space-between;
     padding: 12px; border-radius: 12px; margin-bottom: 8px;
-    /* Alapállapot: Semleges sötét háttér és vékony keret (Otthon) */
     background: rgba(15, 23, 42, 0.6);
     border: 1px solid rgba(255,255,255,0.1);
     transition: all 0.3s ease-in-out;
-    position: relative; /* Fontos a futófényhez */
-    overflow: hidden;   /* Fontos a futófényhez */
+    position: relative;
+    overflow: hidden;
     z-index: 0;
 }
 .shift-row:last-child { margin-bottom: 0; }
 
-/* Csak a színváltozót definiáljuk, a hátteret még nem */
 .row-muszak-A { --shift-color: var(--color-A); }
 .row-muszak-B { --shift-color: var(--color-B); }
 .row-muszak-C { --shift-color: var(--color-C); }
 .row-muszak-D { --shift-color: var(--color-D); }
 
 /* --- AKTÍV MŰSZAK STÍLUSOK (Nappal/Éjszaka) --- */
-
-/* 1. Statikus háttér és bal oldali csík, ha aktív */
 .shift-row.active-shift {
     background: linear-gradient(90deg, rgba(255,255,255,0.07), rgba(255,255,255,0));
     border-left: 4px solid var(--shift-color);
-    border-color: transparent; /* Eltüntetjük az alap keretet, hogy a futófény látszódjon */
+    border-color: transparent; 
 }
-
-/* 2. A KÖRBEFUTÓ FÉNY (Snake effect) */
-/* Ez a réteg forog a háttérben */
 .shift-row.active-shift::before {
     content: '';
     position: absolute;
     z-index: -2;
     left: -50%; top: -50%; width: 200%; height: 200%;
-    /* Létrehozunk egy "fénycsóvát" a műszak színével */
     background: conic-gradient(transparent, transparent, transparent, var(--shift-color) 30%, transparent 50%);
     animation: rotateSnake 3s linear infinite;
 }
-
-/* Ez a réteg a maszk, ami kitakarja a közepet */
 .shift-row.active-shift::after {
     content: '';
     position: absolute;
     z-index: -1;
-    /* 2px vastag keretet hagyunk (inset) */
     left: 2px; top: 2px; right: 2px; bottom: 2px;
     border-radius: 10px; 
-    background: #1e293b; /* Ugyanolyan színű, mint a kártya háttere */
+    background: #1e293b; 
 }
-
-@keyframes rotateSnake {
-    100% { transform: rotate(360deg); }
-}
-
+@keyframes rotateSnake { 100% { transform: rotate(360deg); } }
 
 .shift-details { display: flex; flex-direction: column; z-index: 1; }
 .loc { font-weight: 700; font-size: 1rem; color: white; }
@@ -166,7 +151,15 @@ select{width:100%;padding:12px;background:#0b1120;border:1px solid var(--card-bo
 .cal-cell { aspect-ratio: 1/1; background: #0f172a; border-radius: 8px; border: 1px solid #334155; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; cursor: pointer; transition: 0.2s;}
 .cal-cell:hover { border-color: var(--primary); background: #1e293b; }
 .cal-num { font-size: 0.9rem; font-weight: 600; color: #cbd5e1; }
-.cal-shift { font-size: 0.8rem; font-weight: 800; position: absolute; bottom: 4px; right: 6px; color: var(--text-muted); }
+
+/* Módosított stílus a több betűnek */
+.cal-shift { 
+    font-size: 0.7rem; font-weight: 800; 
+    position: absolute; bottom: 3px; right: 4px; 
+    color: var(--text-muted); 
+    display: flex; gap: 2px; /* Kicsi rés a betűk között */
+}
+
 .code-A { color: var(--color-A); } .code-B { color: var(--color-B); } .code-C { color: var(--color-C); } .code-D { color: var(--color-D); }
 .cal-today { border: 2px solid var(--primary); background: rgba(59,130,246,0.1); }
 .cal-empty { background: transparent; border: none; cursor: default; }
@@ -304,7 +297,7 @@ document.getElementById('maigomb').addEventListener('click',()=>{
 document.getElementById('honap').addEventListener('change',showData);
 document.getElementById('muszak').addEventListener('change',showData);
 
-// --- NAPTÁR LOGIKA JAVÍTOTT (MINDEN KARAKTERT TŰRŐ VERZIÓ) ---
+// --- NAPTÁR LOGIKA JAVÍTOTT (Space-Proof + ÖSSZES MŰSZAK) ---
 let calDate = new Date();
 document.getElementById('calendarBtn').addEventListener('click', () => {
     document.getElementById('calModal').style.display = 'flex';
@@ -343,35 +336,43 @@ function renderCalendar() {
     for(let i=1; i<=daysInMonth; i++) {
         const mm = String(month + 1).padStart(2, '0');
         const dd = String(i).padStart(2, '0');
-        
-        // JAVÍTÁS LÉNYEGE ITT VAN:
-        // Létrehozunk egy "csak szám" dátumot: pl. "20260101"
         const compareDate = `${year}${mm}${dd}`;
         
-        let shiftChar = '';
+        let shiftContent = ''; // Ebben gyűjtjük a HTML-t
 
-        // És a CSV-ből is kidobunk minden pontot és szóközt a kereséshez
+        // Szűrés a 'muszakok' tömbből (space-biztosan)
         const dayShifts = muszakok.filter(m => {
-            const cleanCSV = m.datum.replace(/[^0-9]/g, ''); // "2026. 01. 01." -> "20260101"
+            const cleanCSV = m.datum.replace(/[^0-9]/g, ''); 
             return cleanCSV.startsWith(compareDate);
         });
 
-        let visibleShift = null;
+        // ITT A VÁLTOZÁS A "MIND" ESETÉN:
         if (currentFilterShift === 'mind') {
-            if(dayShifts.length > 0) visibleShift = dayShifts[0].muszak;
+            // Megkeressük az összes EGYEDI műszak betűt aznapra
+            const uniqueShifts = [...new Set(dayShifts.map(m => m.muszak))].sort();
+            
+            // Mindegyiknek generálunk egy színes span-t
+            uniqueShifts.forEach(s => {
+                shiftContent += `<span class="code-${s}">${s}</span>`;
+            });
         } else {
+            // Ha van konkrét szűrő, csak azt keressük
             const match = dayShifts.find(m => m.muszak === currentFilterShift);
-            if(match) visibleShift = match.muszak;
+            if(match) {
+                shiftContent = `<span class="code-${match.muszak}">${match.muszak}</span>`;
+            }
         }
-        if(visibleShift) shiftChar = visibleShift;
 
         let isTodayClass = '';
         if(year === today.getFullYear() && month === today.getMonth() && i === today.getDate()) {
             isTodayClass = 'cal-today';
         }
+        
         const cell = document.createElement('div');
         cell.className = `cal-cell ${isTodayClass}`;
-        cell.innerHTML = `<span class="cal-num">${i}</span><span class="cal-shift code-${shiftChar}">${shiftChar}</span>`;
+        // A shiftContent-et tesszük a cellába
+        cell.innerHTML = `<span class="cal-num">${i}</span><span class="cal-shift">${shiftContent}</span>`;
+        
         cell.onclick = () => {
             closeCalendar(null);
             const targetId = `date-${year}${mm}${dd}`;
