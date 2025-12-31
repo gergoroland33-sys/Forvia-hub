@@ -5,78 +5,123 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Forvia SMT | Műszaknaptár Pro</title>
 <style>
-:root{--primary:#3b82f6;--bg:#0f172a;--card-bg:#1e293b;--card-border:#334155;--text-main:#f1f5f9;--text-muted:#94a3b8;--accent:#fbbf24;--color-A:#60a5fa;--color-B:#4ade80;--color-C:#fbbf24;--color-D:#f87171;}
-body{font-family:'Inter',-apple-system,sans-serif;background-color:var(--bg);background-image:radial-gradient(circle at top right,#1e293b,#0f172a);margin:0;padding:15px;color:var(--text-main);min-height:100vh;}
+:root{
+    --primary:#3b82f6;
+    --bg:#0f172a;
+    --card-bg:#1e293b;
+    --card-border:#334155;
+    --text-main:#f1f5f9;
+    --text-muted:#94a3b8;
+    --accent:#fbbf24;
+    --color-A:#60a5fa; --color-B:#4ade80; --color-C:#fbbf24; --color-D:#f87171;
+}
+
+body{
+    font-family:'Inter',-apple-system,sans-serif;
+    background-color:var(--bg);
+    background-image:radial-gradient(circle at top right,#1e293b,#0f172a);
+    margin:0; padding:15px; color:var(--text-main); min-height:100vh;
+}
 .container{max-width:550px;margin:0 auto;}
+
 header{text-align:center;margin-bottom:20px;padding-top:10px;}
 header h1{font-size:1.6rem;font-weight:800;margin:0;background:linear-gradient(to right,#60a5fa,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 
 /* FILTER PANEL */
-.filter-panel{background:var(--card-bg);padding:20px;border-radius:20px;border:1px solid var(--card-border);margin-bottom:25px;display:grid;grid-template-columns:1fr 1fr;gap:12px;box-shadow:0 10px 15px -3px rgba(0,0,0,0.3);}
+.filter-panel{
+    background:rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px);
+    padding:20px; border-radius:20px; border:1px solid rgba(255,255,255,0.1);
+    margin-bottom:25px; display:grid; grid-template-columns:1fr 1fr; gap:12px;
+    box-shadow:0 10px 30px -5px rgba(0,0,0,0.5);
+}
 label{display:block;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:6px;}
-select{width:100%;padding:12px;background:#0f172a;border:1px solid var(--card-border);border-radius:12px;color:white;font-size:15px;outline:none;}
+select{width:100%;padding:12px;background:#0b1120;border:1px solid var(--card-border);border-radius:12px;color:white;font-size:15px;outline:none;}
 
 /* GOMBOK */
 .btn-group { grid-column: span 2; display: flex; gap: 10px; }
 .gomb{flex: 1; padding:14px;background:rgba(59,130,246,0.1);color:var(--primary);border:1px solid var(--primary);border-radius:12px;font-weight:700;cursor:pointer;transition:0.2s;}
-.gomb:hover{background:var(--primary);color:white;}
+.gomb:hover{background:var(--primary);color:white; box-shadow: 0 0 15px rgba(59,130,246,0.5);}
 .icon-btn { flex: 0 0 50px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
 
-/* --- ÚJ: NAPOK KERETEZÉSE (PRO STYLE) --- */
-.day-group {
-    background: rgba(30, 41, 59, 0.4); /* Halvány háttér a napnak */
-    border: 1px solid rgba(255,255,255,0.08); /* Vékony keret */
-    border-radius: 24px; /* Nagyobb kerekítés */
-    padding: 20px; /* Belső térköz */
-    margin-bottom: 30px; /* Nagyobb térköz a napok között */
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2); /* Kiemelés árnyékkal */
+/* --- ÚJ: NAPOK "PRO" KÁRTYA STÍLUSA --- */
+
+.day-card {
+    /* Alap doboz kinézet */
+    background: #1e293b;
+    border-radius: 20px;
+    padding: 2px; /* Ez a keret vastagsága a futófényhez/gradienshez */
+    margin-bottom: 25px;
     position: relative;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
     overflow: hidden;
 }
 
-/* Külön stílus a MAI nap dobozának, hogy még jobban kitűnjön */
-.day-group.today-container {
-    border: 2px solid var(--primary);
-    background: rgba(59, 130, 246, 0.05);
-    box-shadow: 0 0 30px rgba(59, 130, 246, 0.15);
+/* A tartalom belső doboza */
+.day-card-content {
+    background: #1e293b; /* Ez takarja ki a hátteret középen */
+    border-radius: 18px; /* Kicsit kisebb mint a külső */
+    padding: 20px;
+    height: 100%;
 }
 
-.date-header{
-    font-size:1rem; font-weight:800; color:#ffffff; 
-    margin: 0 0 15px 0; /* A felső margót levettük, mert a doboz tartja */
-    display:flex; align-items:center; justify-content:space-between; 
-    background:rgba(255,255,255,0.03); padding:10px 15px; 
-    border-radius:12px; border-left:4px solid var(--primary);
+/* Átlagos nap kerete (Statikus, elegáns) */
+.day-card {
+    background: linear-gradient(145deg, #334155, #0f172a); 
 }
-.date-header.weekend{border-left-color:var(--accent);background:rgba(251,191,36,0.05);}
-.day-name{font-size:0.8rem;font-weight:500;color:var(--primary);text-transform:uppercase;}
-.weekend .day-name{color:var(--accent);}
 
-.shift-card{
-    background:var(--card-bg); /* Sötétebb kártya a dobozon belül */
-    border:1px solid var(--card-border);
-    padding:16px; border-radius:16px; margin-bottom:10px; 
-    display:flex; align-items:center; justify-content:space-between; position:relative;
+/* --- A FUTÓFÉNY EFFEKT (CSAK A MAI NAPRA) --- */
+@keyframes border-rotate {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
-.shift-card:last-child { margin-bottom: 0; } /* Az utolsó alatt ne legyen hézag */
 
-.shift-info{display:flex;flex-direction:column;gap:4px;}
-.shift-location{font-weight:700;font-size:1.05rem;}
-.shift-leader{font-size:0.8rem;color:var(--text-muted);}
-.leader-name{color:var(--text-main);font-weight:500;}
-.shift-badge{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.3rem;box-shadow:0 4px 12px rgba(0,0,0,0.3);}
-.muszak-A{background:rgba(96,165,250,0.15);color:var(--color-A);border:1px solid var(--color-A);}
-.muszak-B{background:rgba(74,222,128,0.15);color:var(--color-B);border:1px solid var(--color-B);}
-.muszak-C{background:rgba(251,191,36,0.15);color:var(--color-C);border:1px solid var(--color-C);}
-.muszak-D{background:rgba(248,113,113,0.15);color:var(--color-D);border:1px solid var(--color-D);}
-
-.today-label{
-    position:absolute; top:0; right:0; 
-    background:var(--primary); color:white; 
-    font-size:0.6rem; padding:4px 12px; 
-    border-bottom-left-radius:12px; font-weight:bold;
-    letter-spacing: 1px;
+.day-card.today-active {
+    /* Futófény háttér */
+    background: linear-gradient(90deg, #3b82f6, #fbbf24, #3b82f6, #10b981, #3b82f6);
+    background-size: 300% 300%;
+    animation: border-rotate 4s linear infinite;
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.4); /* Ragyogás */
 }
+
+.today-label {
+    position: absolute; top: 0; right: 0;
+    background: var(--primary); color: white;
+    font-size: 0.65rem; font-weight: 800;
+    padding: 5px 15px; border-bottom-left-radius: 15px;
+    z-index: 5; letter-spacing: 1px;
+}
+
+/* BELSŐ ELRENDEZÉS */
+.date-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 15px; padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.date-text { font-size: 1.1rem; font-weight: 800; color: white; }
+.day-name { font-size: 0.8rem; font-weight: 600; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; }
+.weekend .day-name { color: var(--accent); }
+
+.shift-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255,255,255,0.05);
+    padding: 12px; border-radius: 12px; margin-bottom: 8px;
+}
+.shift-row:last-child { margin-bottom: 0; }
+
+.shift-details { display: flex; flex-direction: column; }
+.loc { font-weight: 700; font-size: 1rem; }
+.leader { font-size: 0.75rem; color: var(--text-muted); }
+.badge {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 1.1rem;
+}
+
+.muszak-A{background:rgba(96,165,250,0.1);color:var(--color-A);border:1px solid var(--color-A);}
+.muszak-B{background:rgba(74,222,128,0.1);color:var(--color-B);border:1px solid var(--color-B);}
+.muszak-C{background:rgba(251,191,36,0.1);color:var(--color-C);border:1px solid var(--color-C);}
+.muszak-D{background:rgba(248,113,113,0.1);color:var(--color-D);border:1px solid var(--color-D);}
 
 /* NAPTÁR MODAL */
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 1000; align-items: center; justify-content: center; }
@@ -194,14 +239,15 @@ function showData(){
         const hetvege=isHetvege(datum);
         const cleanId = 'date-'+datum.replace(/[^0-9]/g, '');
 
-        // --- MÓDOSÍTÁS: Keretezett "day-group" ---
-        html+=`<div class="day-group ${isToday?'today-container':''}" id="${cleanId}">
+        // --- ÚJ KÁRTYA GENERÁLÁS: DAY-CARD ---
+        html+=`<div class="day-card ${isToday?'today-active':''}" id="${cleanId}">
             ${isToday?'<div class="today-label">MAI NAP</div>':''}
             
-            <div class="date-header ${hetvege?'weekend':''}">
-                <span>${datum.replace(/-/g,'. ')}${datum.endsWith('.')?'':'.'}</span>
-                <span class="day-name">${getNapNeve(datum)}</span>
-            </div>`;
+            <div class="day-card-content">
+                <div class="date-header ${hetvege?'weekend':''}">
+                    <span class="date-text">${datum.replace(/-/g,'. ')}${datum.endsWith('.')?'':'.'}</span>
+                    <span class="day-name">${getNapNeve(datum)}</span>
+                </div>`;
 
         napok[datum].forEach(r=>{
             let szinKod = '#ffffff';
@@ -209,22 +255,24 @@ function showData(){
             if (szovegLower === 'nappal' || szovegLower === 'éjszaka') {
                 szinKod = `var(--color-${r.muszak})`;
             }
-            html+=`<div class="shift-card">
-                <div class="shift-info">
-                    <span class="shift-location" style="color: ${szinKod}">${r.hely}</span>
-                    <div class="shift-leader">Vezető: <span class="leader-name">${vezetok[r.muszak]||'Nincs'}</span></div>
+            html+=`<div class="shift-row">
+                <div class="shift-details">
+                    <span class="loc" style="color: ${szinKod}">${r.hely}</span>
+                    <span class="leader">Vezető: ${vezetok[r.muszak]||'Nincs'}</span>
                 </div>
-                <div class="shift-badge muszak-${r.muszak}">${r.muszak}</div>
+                <div class="badge muszak-${r.muszak}">${r.muszak}</div>
             </div>`;
         });
-        html+=`</div>`;
+        html+=`</div></div>`; // content és card lezárása
     });
     document.getElementById('eredmeny').innerHTML=html||'<p style="text-align:center;opacity:0.5;">Nincs találat.</p>';
 }
 
 document.getElementById('maigomb').addEventListener('click',()=>{
-    // Most már a day-group-ot keressük, aminek van "today-container" osztálya
-    const t=document.querySelector('.today-container');
+    // Az ID alapján ugrunk, nem class alapján, biztosabb
+    const today=new Date().toISOString().split('T')[0];
+    // CSV formátum lehet trükkös, de próbáljuk meg a class alapján
+    const t=document.querySelector('.today-active');
     if(t)t.scrollIntoView({behavior:'smooth',block:'center'});
     else alert("A mai nap nem látható (ellenőrizd a szűrőket).");
 });
@@ -293,8 +341,8 @@ function renderCalendar() {
             const targetEl = document.getElementById(targetId);
             if(targetEl) {
                 targetEl.scrollIntoView({behavior: 'smooth', block: 'center'});
-                targetEl.style.transition = "transform 0.3s, background 0.5s";
-                targetEl.style.transform = "scale(1.02)";
+                targetEl.style.transition = "transform 0.3s";
+                targetEl.style.transform = "scale(1.05)";
                 setTimeout(() => { targetEl.style.transform = "scale(1)"; }, 500);
             } else {
                 const monthSelect = document.getElementById('honap');
