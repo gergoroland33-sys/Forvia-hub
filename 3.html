@@ -304,6 +304,7 @@ document.getElementById('maigomb').addEventListener('click',()=>{
 document.getElementById('honap').addEventListener('change',showData);
 document.getElementById('muszak').addEventListener('change',showData);
 
+// --- NAPTÁR LOGIKA JAVÍTOTT (MINDEN KARAKTERT TŰRŐ VERZIÓ) ---
 let calDate = new Date();
 document.getElementById('calendarBtn').addEventListener('click', () => {
     document.getElementById('calModal').style.display = 'flex';
@@ -318,6 +319,7 @@ function changeCalMonth(delta) {
     calDate.setMonth(calDate.getMonth() + delta);
     renderCalendar();
 }
+
 function renderCalendar() {
     const year = calDate.getFullYear();
     const month = calDate.getMonth();
@@ -337,13 +339,23 @@ function renderCalendar() {
         grid.innerHTML += `<div class="cal-cell cal-empty"></div>`;
     }
     const currentFilterShift = document.getElementById('muszak').value;
+    
     for(let i=1; i<=daysInMonth; i++) {
         const mm = String(month + 1).padStart(2, '0');
         const dd = String(i).padStart(2, '0');
-        const searchStr1 = `${year}.${mm}.${dd}.`;
-        const searchStr2 = `${year}-${mm}-${dd}`;
+        
+        // JAVÍTÁS LÉNYEGE ITT VAN:
+        // Létrehozunk egy "csak szám" dátumot: pl. "20260101"
+        const compareDate = `${year}${mm}${dd}`;
+        
         let shiftChar = '';
-        const dayShifts = muszakok.filter(m => (m.datum.includes(searchStr1) || m.datum.includes(searchStr2)));
+
+        // És a CSV-ből is kidobunk minden pontot és szóközt a kereséshez
+        const dayShifts = muszakok.filter(m => {
+            const cleanCSV = m.datum.replace(/[^0-9]/g, ''); // "2026. 01. 01." -> "20260101"
+            return cleanCSV.startsWith(compareDate);
+        });
+
         let visibleShift = null;
         if (currentFilterShift === 'mind') {
             if(dayShifts.length > 0) visibleShift = dayShifts[0].muszak;
@@ -352,6 +364,7 @@ function renderCalendar() {
             if(match) visibleShift = match.muszak;
         }
         if(visibleShift) shiftChar = visibleShift;
+
         let isTodayClass = '';
         if(year === today.getFullYear() && month === today.getMonth() && i === today.getDate()) {
             isTodayClass = 'cal-today';
