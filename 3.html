@@ -10,11 +10,19 @@ body{font-family:'Inter',-apple-system,sans-serif;background-color:var(--bg);bac
 .container{max-width:550px;margin:0 auto;}
 header{text-align:center;margin-bottom:20px;padding-top:10px;}
 header h1{font-size:1.6rem;font-weight:800;margin:0;background:linear-gradient(to right,#60a5fa,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+
+/* FILTER PANEL */
 .filter-panel{background:var(--card-bg);padding:20px;border-radius:20px;border:1px solid var(--card-border);margin-bottom:25px;display:grid;grid-template-columns:1fr 1fr;gap:12px;box-shadow:0 10px 15px -3px rgba(0,0,0,0.3);}
 label{display:block;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:6px;}
 select{width:100%;padding:12px;background:#0f172a;border:1px solid var(--card-border);border-radius:12px;color:white;font-size:15px;outline:none;}
-.gomb{grid-column:span 2;padding:14px;background:rgba(59,130,246,0.1);color:var(--primary);border:1px solid var(--primary);border-radius:12px;font-weight:700;cursor:pointer;transition:0.2s;}
+
+/* GOMBOK */
+.btn-group { grid-column: span 2; display: flex; gap: 10px; }
+.gomb{flex: 1; padding:14px;background:rgba(59,130,246,0.1);color:var(--primary);border:1px solid var(--primary);border-radius:12px;font-weight:700;cursor:pointer;transition:0.2s;}
 .gomb:hover{background:var(--primary);color:white;}
+.icon-btn { flex: 0 0 50px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+
+/* LISTA NÉZET */
 .date-header{font-size:1rem;font-weight:800;color:#ffffff;margin:25px 0 12px 0;display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);padding:10px 15px;border-radius:12px;border-left:4px solid var(--primary);}
 .date-header.weekend{border-left-color:var(--accent);background:rgba(251,191,36,0.05);}
 .day-name{font-size:0.8rem;font-weight:500;color:var(--primary);text-transform:uppercase;}
@@ -31,7 +39,37 @@ select{width:100%;padding:12px;background:#0f172a;border:1px solid var(--card-bo
 .muszak-D{background:rgba(248,113,113,0.15);color:var(--color-D);border:1px solid var(--color-D);}
 .today-highlight{border:2px solid var(--primary);background:linear-gradient(145deg,#1e293b,#1e3a8a);}
 .today-label{position:absolute;top:-8px;left:20px;background:var(--primary);color:white;font-size:0.65rem;padding:2px 10px;border-radius:20px;font-weight:800;}
-@media (max-width:480px){.filter-panel{grid-template-columns:1fr;}.gomb{grid-column:span 1;}}
+
+/* --- ÚJ: NAPTÁR MODAL STÍLUS (MINIMALISTA) --- */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 1000; align-items: center; justify-content: center; }
+.modal-content { background: #1e293b; width: 95%; max-width: 400px; border-radius: 20px; padding: 20px; border: 1px solid var(--card-border); box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+@keyframes popIn { from{transform: scale(0.8); opacity: 0;} to{transform: scale(1); opacity: 1;} }
+
+.cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.cal-title { font-weight: 800; font-size: 1.2rem; text-transform: uppercase; color: white; }
+.cal-nav { background: none; border: none; color: var(--primary); font-size: 1.5rem; cursor: pointer; padding: 0 10px; }
+
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.cal-day-name { text-align: center; font-size: 0.7rem; color: var(--text-muted); font-weight: bold; padding-bottom: 5px; }
+.cal-cell { 
+    aspect-ratio: 1/1; background: #0f172a; border-radius: 8px; border: 1px solid #334155; 
+    display: flex; flex-direction: column; align-items: center; justify-content: center; 
+    position: relative; cursor: pointer; transition: 0.2s;
+}
+.cal-cell:hover { border-color: var(--primary); background: #1e293b; }
+.cal-num { font-size: 0.9rem; font-weight: 600; color: #cbd5e1; }
+.cal-shift { font-size: 0.8rem; font-weight: 800; position: absolute; bottom: 4px; right: 6px; color: var(--text-muted); }
+
+/* Betűk színei a naptárban is */
+.code-A { color: var(--color-A); }
+.code-B { color: var(--color-B); }
+.code-C { color: var(--color-C); }
+.code-D { color: var(--color-D); }
+
+.cal-today { border: 2px solid var(--primary); background: rgba(59,130,246,0.1); }
+.cal-empty { background: transparent; border: none; cursor: default; }
+
+@media (max-width:480px){.filter-panel{grid-template-columns:1fr;}.btn-group{grid-column: span 1;}}
 </style>
 </head>
 <body>
@@ -69,67 +107,241 @@ select{width:100%;padding:12px;background:#0f172a;border:1px solid var(--card-bo
 <option value="D">D</option>
 </select>
 </div>
-<button class="gomb" id="maigomb">Ugrás a mai naphoz</button>
+<div class="btn-group">
+    <button class="gomb icon-btn" id="calendarBtn" title="Havi nézet">📅</button>
+    <button class="gomb" id="maigomb">Ugrás a mai naphoz</button>
+</div>
 </div>
 <div id="eredmeny"></div>
 </div>
+
+<div class="modal-overlay" id="calModal" onclick="closeCalendar(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="cal-header">
+            <button class="cal-nav" onclick="changeCalMonth(-1)">&#8249;</button>
+            <div class="cal-title" id="calTitle">2026 JANUÁR</div>
+            <button class="cal-nav" onclick="changeCalMonth(1)">&#8250;</button>
+        </div>
+        <div class="cal-grid" id="calGrid">
+            </div>
+        <div style="text-align:center; margin-top:15px;">
+            <button class="gomb" style="padding:10px 20px; font-size:0.8rem;" onclick="closeCalendar(null)">Bezárás</button>
+        </div>
+    </div>
+</div>
+
 <script>
 let muszakok=[];
 const vezetok={'A':'Czerovszki Zsolt','B':'Hajdu Zoltán','C':'Kamasz Ádám','D':'Komjáti István'};
+// A te eredeti segédfüggvényeid:
 function parseDatum(str){if(!str)return null;const isoStr=str.replace(/\./g,'-').replace(/\s/g,'').replace(/-$/,'');return new Date(isoStr);}
 function getNapNeve(ds){const d=parseDatum(ds);if(!d||isNaN(d.getTime()))return"Ismeretlen";const n=['Vasárnap','Hétfő','Kedd','Szerda','Csütörtök','Péntek','Szombat'];return n[d.getDay()];}
 function isHetvege(ds){const d=parseDatum(ds);if(!d||isNaN(d.getTime()))return false;return d.getDay()===0||d.getDay()===6;}
 
+// CSV Betöltése
 fetch('muszakok.csv').then(r=>r.text()).then(text=>{
-muszakok=[];
-text.split('\n').slice(1).forEach(line=>{
-if(!line.trim())return;
-let parts=line.split(';;').map(p=>p.trim()).filter(p=>p);
-parts.forEach(p=>{
-const col=p.split(';');
-if(col.length>=4)muszakok.push({datum:col[0],hely:col[1],muszak:col[3]});
-});
-});
-showData();
+    muszakok=[];
+    text.split('\n').slice(1).forEach(line=>{
+        if(!line.trim())return;
+        let parts=line.split(';;').map(p=>p.trim()).filter(p=>p);
+        parts.forEach(p=>{
+            const col=p.split(';');
+            if(col.length>=4)muszakok.push({datum:col[0],hely:col[1],muszak:col[3]});
+        });
+    });
+    showData();
 });
 
 function showData(){
-const hVal=document.getElementById('honap').value;
-const mVal=document.getElementById('muszak').value;
-const today=new Date().toISOString().split('T')[0];
-let talalatok=muszakok;
-if(hVal!=='mind')talalatok=talalatok.filter(r=>r.datum.includes("-"+hVal+"-")||r.datum.includes("."+hVal+"."));
-if(mVal!=='mind')talalatok=talalatok.filter(r=>r.muszak===mVal);
-const napok={};
-talalatok.forEach(r=>{if(!napok[r.datum])napok[r.datum]=[];napok[r.datum].push(r);});
-let html='';
-Object.keys(napok).sort().forEach(datum=>{
-const dObj=parseDatum(datum);
-const isToday=dObj&&dObj.toISOString().split('T')[0]===today;
-const hetvege=isHetvege(datum);
-html+=`<div class="day-group" id="${isToday?'today-marker':''}"><div class="date-header ${hetvege?'weekend':''}"><span>${datum.replace(/-/g,'. ')}${datum.endsWith('.')?'':'.'}</span><span class="day-name">${getNapNeve(datum)}</span></div>`;
+    const hVal=document.getElementById('honap').value;
+    const mVal=document.getElementById('muszak').value;
+    const today=new Date().toISOString().split('T')[0];
+    let talalatok=muszakok;
+    
+    // Szűrés
+    if(hVal!=='mind')talalatok=talalatok.filter(r=>r.datum.includes("-"+hVal+"-")||r.datum.includes("."+hVal+"."));
+    if(mVal!=='mind')talalatok=talalatok.filter(r=>r.muszak===mVal);
+    
+    const napok={};
+    talalatok.forEach(r=>{if(!napok[r.datum])napok[r.datum]=[];napok[r.datum].push(r);});
+    
+    let html='';
+    Object.keys(napok).sort().forEach(datum=>{
+        const dObj=parseDatum(datum);
+        const isoDate=dObj?dObj.toISOString().split('T')[0]:'';
+        const isToday=isoDate===today;
+        const hetvege=isHetvege(datum);
+        
+        // --- MÓDOSÍTÁS: ID HOZZÁADÁSA A NAPTÁR UGRÁSHOZ ---
+        // A 'datum' formátuma pl: 2026.05.12. ezt tisztítjuk ID-nak
+        const cleanId = 'date-'+datum.replace(/[^0-9]/g, '');
 
-napok[datum].forEach(r=>{
-// --- SZÍNEZÉSI LOGIKA ---
-// Alapértelmezetten minden FEHÉR (Otthon is)
-let szinKod = '#ffffff';
-const szovegLower = r.hely.trim().toLowerCase();
+        html+=`<div class="day-group" id="${cleanId}">
+            <div class="date-header ${hetvege?'weekend':''}">
+                <span>${datum.replace(/-/g,'. ')}${datum.endsWith('.')?'':'.'}</span>
+                <span class="day-name">${getNapNeve(datum)}</span>
+            </div>`;
 
-// Csak akkor váltunk színesre, ha konkrétan Nappal vagy Éjszaka
-if (szovegLower === 'nappal' || szovegLower === 'éjszaka') {
-szinKod = `var(--color-${r.muszak})`;
+        napok[datum].forEach(r=>{
+            let szinKod = '#ffffff';
+            const szovegLower = r.hely.trim().toLowerCase();
+            if (szovegLower === 'nappal' || szovegLower === 'éjszaka') {
+                szinKod = `var(--color-${r.muszak})`;
+            }
+            html+=`<div class="shift-card ${isToday?'today-highlight':''} ${isToday?'today-marker-class':''}">
+                ${isToday?'<div class="today-label">MAI NAP</div>':''}
+                <div class="shift-info">
+                    <span class="shift-location" style="color: ${szinKod}">${r.hely}</span>
+                    <div class="shift-leader">Vezető: <span class="leader-name">${vezetok[r.muszak]||'Nincs'}</span></div>
+                </div>
+                <div class="shift-badge muszak-${r.muszak}">${r.muszak}</div>
+            </div>`;
+        });
+        html+=`</div>`;
+    });
+    document.getElementById('eredmeny').innerHTML=html||'<p style="text-align:center;opacity:0.5;">Nincs találat.</p>';
 }
 
-html+=`<div class="shift-card ${isToday?'today-highlight':''}">${isToday?'<div class="today-label">MAI NAP</div>':''}<div class="shift-info"><span class="shift-location" style="color: ${szinKod}">${r.hely}</span><div class="shift-leader">Vezető: <span class="leader-name">${vezetok[r.muszak]||'Nincs'}</span></div></div><div class="shift-badge muszak-${r.muszak}">${r.muszak}</div></div>`;
+// Ugrás MAI napra
+document.getElementById('maigomb').addEventListener('click',()=>{
+    const t=document.querySelector('.today-marker-class');
+    if(t)t.scrollIntoView({behavior:'smooth',block:'center'});
+    else alert("A mai nap nem látható (ellenőrizd a szűrőket).");
 });
-html+=`</div>`;
-});
-document.getElementById('eredmeny').innerHTML=html||'<p style="text-align:center;opacity:0.5;">Nincs találat.</p>';
-}
 
-document.getElementById('maigomb').addEventListener('click',()=>{const t=document.getElementById('today-marker');if(t)t.scrollIntoView({behavior:'smooth',block:'center'});else alert("A mai nap nem látható (ellenőrizd a szűrőket).");});
 document.getElementById('honap').addEventListener('change',showData);
 document.getElementById('muszak').addEventListener('change',showData);
+
+/* ==========================================================
+   ÚJ NAPTÁR LOGIKA (Minimalista, Betűkódos)
+   ========================================================== */
+let calDate = new Date(); // Naptár aktuális nézete
+
+document.getElementById('calendarBtn').addEventListener('click', () => {
+    document.getElementById('calModal').style.display = 'flex';
+    renderCalendar();
+});
+
+function closeCalendar(e) {
+    if(e === null || e.target.id === 'calModal') {
+        document.getElementById('calModal').style.display = 'none';
+    }
+}
+
+function changeCalMonth(delta) {
+    calDate.setMonth(calDate.getMonth() + delta);
+    renderCalendar();
+}
+
+function renderCalendar() {
+    const year = calDate.getFullYear();
+    const month = calDate.getMonth();
+    const today = new Date();
+    
+    // Hónap nevek
+    const honapok = ["Január","Február","Március","Április","Május","Június","Július","Augusztus","Szeptember","Október","November","December"];
+    document.getElementById('calTitle').innerText = `${year} ${honapok[month]}`;
+    
+    const grid = document.getElementById('calGrid');
+    grid.innerHTML = '';
+    
+    // Fejléc napok (H, K, Sze...)
+    const daysHeader = ['H','K','Sze','Cs','P','Szo','V'];
+    daysHeader.forEach(d => grid.innerHTML += `<div class="cal-day-name">${d}</div>`);
+    
+    // Hónap matek
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    
+    // Hétfővel kezdődjön (0=Vasárnap, javítjuk)
+    let startDayIndex = firstDay.getDay() - 1; 
+    if(startDayIndex === -1) startDayIndex = 6;
+    
+    // Üres cellák az elejére
+    for(let i=0; i<startDayIndex; i++) {
+        grid.innerHTML += `<div class="cal-cell cal-empty"></div>`;
+    }
+    
+    // Napok generálása
+    const currentFilterShift = document.getElementById('muszak').value; // Aktív szűrő
+
+    for(let i=1; i<=daysInMonth; i++) {
+        // Formátum összehozása a CSV-vel: 2026.05.12. (vagy 05)
+        // Fontos: a CSV-ben 0-val kezdődnek a hónapok/napok
+        const mm = String(month + 1).padStart(2, '0');
+        const dd = String(i).padStart(2, '0');
+        // Kétféle formátumra keresünk, mert a CSV lehet vegyes
+        const searchStr1 = `${year}.${mm}.${dd}.`;
+        const searchStr2 = `${year}-${mm}-${dd}`;
+        
+        // Megkeressük a műszakot aznapra (Figyelembe véve a szűrőt!)
+        // Ha a szűrő "mind", akkor az első találatot mutatjuk, vagy ha több van, akkor az elsőt.
+        // Ha a szűrő pl "B", akkor csak akkor írunk ki valamit, ha "B" dolgozik.
+        
+        let shiftChar = '';
+        
+        // Keressük meg a muszakok tömbben az erre a napra eső sorokat
+        const dayShifts = muszakok.filter(m => 
+            (m.datum.includes(searchStr1) || m.datum.includes(searchStr2))
+        );
+        
+        // Szűrés alkalmazása a cellára
+        let visibleShift = null;
+        if (currentFilterShift === 'mind') {
+            if(dayShifts.length > 0) visibleShift = dayShifts[0].muszak; // Első találat
+        } else {
+            // Ha van szűrő, megnézzük, dolgozik-e az a műszak
+            const match = dayShifts.find(m => m.muszak === currentFilterShift);
+            if(match) visibleShift = match.muszak;
+        }
+        
+        if(visibleShift) shiftChar = visibleShift;
+
+        // Mai nap jelölése
+        let isTodayClass = '';
+        if(year === today.getFullYear() && month === today.getMonth() && i === today.getDate()) {
+            isTodayClass = 'cal-today';
+        }
+        
+        // HTML Cella
+        const cell = document.createElement('div');
+        cell.className = `cal-cell ${isTodayClass}`;
+        cell.innerHTML = `
+            <span class="cal-num">${i}</span>
+            <span class="cal-shift code-${shiftChar}">${shiftChar}</span>
+        `;
+        
+        // Kattintás esemény (Ugrás a listában)
+        cell.onclick = () => {
+            closeCalendar(null);
+            // Kiszámoljuk az ID-t, amire ugrani kell (pl. date-20260512)
+            const targetId = `date-${year}${mm}${dd}`;
+            const targetEl = document.getElementById(targetId);
+            
+            if(targetEl) {
+                targetEl.scrollIntoView({behavior: 'smooth', block: 'center'});
+                // Kicsit villantsuk meg, hogy lássa hova ugrott (opcionális CSS effekt)
+                targetEl.style.transition = "background 0.5s";
+                targetEl.style.backgroundColor = "rgba(59,130,246,0.2)";
+                setTimeout(() => targetEl.style.backgroundColor = "transparent", 1000);
+            } else {
+                // Ha nincs a listában (pl. le van szűrve más hónapra)
+                // Akkor átállítjuk a hónap szűrőt és újratöltjük
+                const monthSelect = document.getElementById('honap');
+                monthSelect.value = mm;
+                showData(); // Lista frissítése
+                // És most próbálunk ugrani (kis késleltetéssel, hogy a DOM frissüljön)
+                setTimeout(() => {
+                    const newTarget = document.getElementById(targetId);
+                    if(newTarget) newTarget.scrollIntoView({behavior: 'smooth', block: 'center'});
+                }, 100);
+            }
+        };
+        
+        grid.appendChild(cell);
+    }
+}
 </script>
 </body>
 </html>
