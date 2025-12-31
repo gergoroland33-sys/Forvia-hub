@@ -43,47 +43,29 @@ select{width:100%;padding:12px;background:#0b1120;border:1px solid var(--card-bo
 .gomb:hover{background:var(--primary);color:white; box-shadow: 0 0 15px rgba(59,130,246,0.5);}
 .icon-btn { flex: 0 0 50px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
 
-/* --- ÚJ: NAPOK "PRO" KÁRTYA STÍLUSA --- */
-
+/* --- DAY CARD STÍLUSOK --- */
 .day-card {
-    /* Alap doboz kinézet */
     background: #1e293b;
     border-radius: 20px;
-    padding: 2px; /* Ez a keret vastagsága a futófényhez/gradienshez */
+    padding: 2px;
     margin-bottom: 25px;
     position: relative;
     box-shadow: 0 10px 20px rgba(0,0,0,0.3);
     overflow: hidden;
-}
-
-/* A tartalom belső doboza */
-.day-card-content {
-    background: #1e293b; /* Ez takarja ki a hátteret középen */
-    border-radius: 18px; /* Kicsit kisebb mint a külső */
-    padding: 20px;
-    height: 100%;
-}
-
-/* Átlagos nap kerete (Statikus, elegáns) */
-.day-card {
     background: linear-gradient(145deg, #334155, #0f172a); 
 }
-
-/* --- A FUTÓFÉNY EFFEKT (CSAK A MAI NAPRA) --- */
+/* FUTÓFÉNY A MAI NAPRA (Nagy kártya) */
 @keyframes border-rotate {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
 }
-
 .day-card.today-active {
-    /* Futófény háttér */
     background: linear-gradient(90deg, #3b82f6, #fbbf24, #3b82f6, #10b981, #3b82f6);
     background-size: 300% 300%;
     animation: border-rotate 4s linear infinite;
-    box-shadow: 0 0 25px rgba(59, 130, 246, 0.4); /* Ragyogás */
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
 }
-
 .today-label {
     position: absolute; top: 0; right: 0;
     background: var(--primary); color: white;
@@ -91,8 +73,12 @@ select{width:100%;padding:12px;background:#0b1120;border:1px solid var(--card-bo
     padding: 5px 15px; border-bottom-left-radius: 15px;
     z-index: 5; letter-spacing: 1px;
 }
-
-/* BELSŐ ELRENDEZÉS */
+.day-card-content {
+    background: #1e293b; 
+    border-radius: 18px; 
+    padding: 20px;
+    height: 100%;
+}
 .date-header {
     display: flex; justify-content: space-between; align-items: center;
     margin-bottom: 15px; padding-bottom: 10px;
@@ -102,26 +88,46 @@ select{width:100%;padding:12px;background:#0b1120;border:1px solid var(--card-bo
 .day-name { font-size: 0.8rem; font-weight: 600; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; }
 .weekend .day-name { color: var(--accent); }
 
+/* --- MŰSZAK SOROK (SHIFT ROW) --- */
 .shift-row {
     display: flex; align-items: center; justify-content: space-between;
-    background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255,255,255,0.05);
     padding: 12px; border-radius: 12px; margin-bottom: 8px;
+    border: 1px solid rgba(255,255,255,0.05); /* Alap keret */
+    transition: all 0.3s ease-in-out;
+    position: relative;
 }
 .shift-row:last-child { margin-bottom: 0; }
 
-.shift-details { display: flex; flex-direction: column; }
-.loc { font-weight: 700; font-size: 1rem; }
-.leader { font-size: 0.75rem; color: var(--text-muted); }
-.badge {
-    width: 40px; height: 40px; border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 800; font-size: 1.1rem;
+/* Alap szolid háttér minden műszaknak (ahogy kérted) */
+.row-muszak-A { background: linear-gradient(90deg, rgba(96, 165, 250, 0.15), rgba(96, 165, 250, 0.05)); border-left: 4px solid var(--color-A); }
+.row-muszak-B { background: linear-gradient(90deg, rgba(74, 222, 128, 0.15), rgba(74, 222, 128, 0.05)); border-left: 4px solid var(--color-B); }
+.row-muszak-C { background: linear-gradient(90deg, rgba(251, 191, 36, 0.15), rgba(251, 191, 36, 0.05)); border-left: 4px solid var(--color-C); }
+.row-muszak-D { background: linear-gradient(90deg, rgba(248, 113, 113, 0.15), rgba(248, 113, 113, 0.05)); border-left: 4px solid var(--color-D); }
+
+/* --- ÚJ: AKTÍV MŰSZAK FUTÓFÉNY/LÜKTETÉS --- */
+/* Ha egy sor aktív, beállítjuk a színváltozót és elindítjuk az animációt */
+.shift-row.active-shift.row-muszak-A { --pulse-color: var(--color-A); animation: glowPulse 2s infinite alternate; }
+.shift-row.active-shift.row-muszak-B { --pulse-color: var(--color-B); animation: glowPulse 2s infinite alternate; }
+.shift-row.active-shift.row-muszak-C { --pulse-color: var(--color-C); animation: glowPulse 2s infinite alternate; }
+.shift-row.active-shift.row-muszak-D { --pulse-color: var(--color-D); animation: glowPulse 2s infinite alternate; }
+
+/* A lüktető animáció a kereten és az árnyékon */
+@keyframes glowPulse {
+    from { border-color: rgba(255,255,255,0.1); box-shadow: 0 0 0 rgba(0,0,0,0); }
+    to   { border-color: var(--pulse-color); box-shadow: 0 0 15px var(--pulse-color), inset 0 0 5px rgba(255,255,255,0.1); }
 }
 
-.muszak-A{background:rgba(96,165,250,0.1);color:var(--color-A);border:1px solid var(--color-A);}
-.muszak-B{background:rgba(74,222,128,0.1);color:var(--color-B);border:1px solid var(--color-B);}
-.muszak-C{background:rgba(251,191,36,0.1);color:var(--color-C);border:1px solid var(--color-C);}
-.muszak-D{background:rgba(248,113,113,0.1);color:var(--color-D);border:1px solid var(--color-D);}
+/* Ha aktív, a szöveg is legyen kicsit fényesebb */
+.active-shift .loc { text-shadow: 0 0 5px var(--pulse-color); }
+
+.shift-details { display: flex; flex-direction: column; }
+.loc { font-weight: 700; font-size: 1rem; color: white; }
+.leader { font-size: 0.75rem; color: rgba(255,255,255,0.7); }
+.badge { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; background: rgba(0,0,0,0.2); }
+.row-muszak-A .badge { color: var(--color-A); }
+.row-muszak-B .badge { color: var(--color-B); }
+.row-muszak-C .badge { color: var(--color-C); }
+.row-muszak-D .badge { color: var(--color-D); }
 
 /* NAPTÁR MODAL */
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 1000; align-items: center; justify-content: center; }
@@ -239,10 +245,8 @@ function showData(){
         const hetvege=isHetvege(datum);
         const cleanId = 'date-'+datum.replace(/[^0-9]/g, '');
 
-        // --- ÚJ KÁRTYA GENERÁLÁS: DAY-CARD ---
         html+=`<div class="day-card ${isToday?'today-active':''}" id="${cleanId}">
             ${isToday?'<div class="today-label">MAI NAP</div>':''}
-            
             <div class="day-card-content">
                 <div class="date-header ${hetvege?'weekend':''}">
                     <span class="date-text">${datum.replace(/-/g,'. ')}${datum.endsWith('.')?'':'.'}</span>
@@ -250,28 +254,25 @@ function showData(){
                 </div>`;
 
         napok[datum].forEach(r=>{
-            let szinKod = '#ffffff';
+            // Logika: Megnézzük, hogy nappal vagy éjszaka van-e
             const szovegLower = r.hely.trim().toLowerCase();
-            if (szovegLower === 'nappal' || szovegLower === 'éjszaka') {
-                szinKod = `var(--color-${r.muszak})`;
-            }
-            html+=`<div class="shift-row">
+            const isActive = szovegLower === 'nappal' || szovegLower === 'éjszaka';
+            
+            // Ha aktív, hozzáadjuk az 'active-shift' osztályt
+            html+=`<div class="shift-row row-muszak-${r.muszak} ${isActive?'active-shift':''}">
                 <div class="shift-details">
-                    <span class="loc" style="color: ${szinKod}">${r.hely}</span>
+                    <span class="loc">${r.hely}</span>
                     <span class="leader">Vezető: ${vezetok[r.muszak]||'Nincs'}</span>
                 </div>
-                <div class="badge muszak-${r.muszak}">${r.muszak}</div>
+                <div class="badge">${r.muszak}</div>
             </div>`;
         });
-        html+=`</div></div>`; // content és card lezárása
+        html+=`</div></div>`;
     });
     document.getElementById('eredmeny').innerHTML=html||'<p style="text-align:center;opacity:0.5;">Nincs találat.</p>';
 }
 
 document.getElementById('maigomb').addEventListener('click',()=>{
-    // Az ID alapján ugrunk, nem class alapján, biztosabb
-    const today=new Date().toISOString().split('T')[0];
-    // CSV formátum lehet trükkös, de próbáljuk meg a class alapján
     const t=document.querySelector('.today-active');
     if(t)t.scrollIntoView({behavior:'smooth',block:'center'});
     else alert("A mai nap nem látható (ellenőrizd a szűrőket).");
