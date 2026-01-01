@@ -379,9 +379,15 @@
 
     document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
 
-    // --- AUTO-INDÍTÁS ---
+    // --- MÓDOSÍTOTT AUTO-INDÍTÁS (CSAK 1x SZÓL!) ---
     window.addEventListener('load', () => {
-        sendDiscordLog("🔔 Új felhasználó lépett be az Appba!", 3883766);
+        // Megnézzük, hogy "járt-e már itt" ebben a munkamenetben
+        if (!sessionStorage.getItem('forvia_session_active')) {
+            // Ha MÉG NEM járt itt (első nyitás), akkor küldjük
+            sendDiscordLog("🔔 Új felhasználó lépett be az Appba!", 3883766);
+            // És gyorsan beállítjuk a "zászlót", hogy már itt van
+            sessionStorage.setItem('forvia_session_active', 'true');
+        }
     });
 
 </script>
