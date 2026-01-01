@@ -75,7 +75,7 @@
             cursor: grab;
             padding: 0 6px !important;
             box-shadow: 4px 0 8px rgba(0,0,0,0.3);
-            transition: background 0.1s; /* Gyors színváltás */
+            transition: background 0.1s; 
         }
 
         .matrix-table thead th.name-col { 
@@ -84,13 +84,26 @@
             border-bottom: 1px solid #2d3748;
         }
 
-        /* --- CÉLKERESZT JAVÍTÁS (EZ A LÉNYEG) --- */
-        /* Ha a sor aktív (row-highlight), a Név oszlop legyen ÉLÉNK KÉK! */
+        /* --- CÉLKERESZT JAVÍTÁS (HÉTVÉGE IS) --- */
+        /* Név oszlop kékítése */
         tr.row-highlight .name-col {
-            background-color: #3b82f6 !important; /* Forvia kék */
+            background-color: #3b82f6 !important; 
             color: white !important;
             border-right: 2px solid #93c5fd !important;
             text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+
+        /* Kiemelés a sima celláknál */
+        .row-highlight { background: rgba(59, 130, 246, 0.25) !important; } 
+        .col-highlight { background: rgba(59, 130, 246, 0.25) !important; }
+
+        /* Hétvége alapbeállítás */
+        .weekend { background: #141b2d !important; color: #64748b; }
+        
+        /* FONTOS: Ha a sor aktív, a hétvége háttere is legyen kék! */
+        tr.row-highlight td.weekend {
+            background: rgba(59, 130, 246, 0.25) !important; /* Ugyanaz mint a row-highlight */
+            color: #cbd5e1 !important; /* Világosabb szöveg, hogy olvasható legyen */
         }
 
         .data-col-fix { min-width: 50px !important; width: 50px !important; }
@@ -104,10 +117,6 @@
             padding: 0;      
         }
         .matrix-table th { color: #94a3b8; font-weight: 700; text-transform: uppercase; font-size: 10px; }
-
-        /* Kiemelés a sima celláknál */
-        .row-highlight { background: rgba(59, 130, 246, 0.25) !important; } 
-        .col-highlight { background: rgba(59, 130, 246, 0.25) !important; }
 
         /* INPUT */
         .input-cell { 
@@ -137,10 +146,14 @@
 
         .quota-input { font-size: 14px !important; font-weight: 900 !important; color: #93c5fd !important; }
 
-        /* Hétvége és Ünnepnap */
-        .weekend { background: #141b2d !important; color: #64748b; }
+        /* Ünnepnap */
         .holiday-bg { background: #2a1818 !important; } 
         .holiday-text { color: #f87171 !important; font-weight: 900 !important; font-size: 11px !important; }
+        
+        /* Ünnepnap kiemelése aktív sornál */
+        tr.row-highlight td.holiday-bg {
+             background: rgba(239, 68, 68, 0.25) !important; /* Pirosas áttetsző, ha ünnepre kattintasz */
+        }
 
         /* Színkódok */
         .cell-S { background: #059669 !important; color: white !important; font-weight: 900; }
@@ -206,21 +219,21 @@
             </div>
 
             <div class="flex bg-slate-900/80 p-0.5 rounded-lg border border-slate-700/50">
-                <button onclick="setView('matrix')" id="nav-m" class="px-3 py-1.5 rounded text-[10px] font-black uppercase flex items-center gap-1">
-                    <i class="fas fa-table"></i> <span>TÁBLA</span>
+                <button onclick="setView('matrix')" id="nav-m" class="px-3 py-1.5 rounded text-[10px] font-black uppercase flex items-center gap-1" title="Táblázat">
+                    <i class="fas fa-table"></i> <span class="hidden md:inline">TÁBLA</span>
                 </button>
-                <button onclick="setView('stats')" id="nav-s" class="px-3 py-1.5 rounded text-[10px] font-black uppercase ml-1 flex items-center gap-1">
-                    <i class="fas fa-id-card"></i> <span>STAT</span>
+                <button onclick="setView('stats')" id="nav-s" class="px-3 py-1.5 rounded text-[10px] font-black uppercase ml-1 flex items-center gap-1" title="Statisztika">
+                    <i class="fas fa-id-card"></i> <span class="hidden md:inline">STAT</span>
                 </button>
             </div>
             
             <div class="flex gap-1">
                 <button onclick="backupAllData()" title="TELJES Mentés letöltése (A+B+C+D)" class="bg-violet-600 hover:bg-violet-500 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase text-white shadow-lg shadow-violet-600/20 whitespace-nowrap flex items-center gap-1">
-                    <i class="fas fa-download"></i> <span>MENTÉS</span>
+                    <i class="fas fa-download"></i> <span class="hidden md:inline">LETÖLTÉS</span>
                 </button>
                 
                 <button onclick="addEmp()" class="bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase text-white shadow-lg shadow-blue-600/20 whitespace-nowrap flex items-center gap-1">
-                     <i class="fas fa-plus"></i> <span>ÚJ</span>
+                     <i class="fas fa-plus"></i> <span class="hidden md:inline">ÚJ</span>
                 </button>
             </div>
         </div>
