@@ -47,18 +47,18 @@
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
             overflow: auto; 
-            -webkit-overflow-scrolling: touch; /* Sima görgetés mobilon */
+            -webkit-overflow-scrolling: touch; 
         }
 
         .matrix-table { border-collapse: separate; border-spacing: 0; }
         
-        /* 1. Dátum sor (Függőlegesen ragad) */
+        /* 1. Dátum sor */
         .matrix-table thead th {
             position: sticky;
             top: 0;
             z-index: 30;
             background: #1e293b; 
-            height: 40px; /* Kicsit alacsonyabb */
+            height: 40px; 
             box-shadow: 0 1px 0 #2d3748;
             padding: 2px 0;
         }
@@ -69,12 +69,13 @@
             left: 0 !important; 
             background: #1e293b !important; 
             z-index: 40 !important;
-            min-width: 160px; /* Kicsit keskenyebb névmező mobilon */
+            min-width: 160px; 
             max-width: 160px;
             border-right: 2px solid #3b82f6 !important; 
             cursor: grab;
             padding: 0 6px !important;
             box-shadow: 4px 0 8px rgba(0,0,0,0.3);
+            transition: background 0.2s, color 0.2s; /* Sima váltás */
         }
 
         .matrix-table thead th.name-col { 
@@ -83,43 +84,51 @@
             border-bottom: 1px solid #2d3748;
         }
 
+        /* --- CÉLKERESZT JAVÍTÁS --- */
+        /* Ha a sor aktív (row-highlight), a Név oszlop is legyen kék! */
+        tr.row-highlight .name-col {
+            background: #2563eb !important; /* Élénk kék háttér */
+            color: white !important;
+            border-right-color: #93c5fd !important;
+        }
+
         .data-col-fix { min-width: 50px !important; width: 50px !important; }
         .matrix-table thead th.data-col-fix { z-index: 30; }
 
         .matrix-table th, .matrix-table td { 
             border: 1px solid #2d3748; 
-            min-width: 36px; /* MOBIL OPTIMALIZÁLÁS: Kisebb cellák (42 helyett 36) */
-            height: 40px;    /* Fix magasság */
+            min-width: 36px; 
+            height: 40px;    
             text-align: center; font-size: 13px; 
-            padding: 0;      /* Padding nullázása a pontos illeszkedésért */
+            padding: 0;      
         }
         .matrix-table th { color: #94a3b8; font-weight: 700; text-transform: uppercase; font-size: 10px; }
 
-        /* Kiemelés (Sötétebb kék, hogy jobban látszódjon a fehér betű) */
-        .row-highlight { background: rgba(30, 58, 138, 0.4) !important; } 
-        .col-highlight { background: rgba(30, 58, 138, 0.4) !important; }
+        /* Kiemelés */
+        .row-highlight { background: rgba(37, 99, 235, 0.3) !important; } 
+        .col-highlight { background: rgba(37, 99, 235, 0.3) !important; }
 
-        /* MOBIL INPUT STÍLUS */
+        /* INPUT */
         .input-cell { 
             width: 100%; 
             height: 100%; 
-            border: 1px solid transparent; /* Alapból nincs keret */
+            border: 1px solid transparent; 
             text-align: center; 
             background: transparent; 
             color: white; 
             font-weight: 700; 
             outline: none; 
-            font-size: 16px; /* FONTOS: 16px megakadályozza az iOS zoomolást! */
+            font-size: 16px; 
             border-radius: 0;
             padding: 0;
             margin: 0;
-            caret-color: #3b82f6; /* Kék kurzor */
+            caret-color: #3b82f6; 
         }
 
-        /* AKTÍV CELLA STÍLUS (Fókusz) */
+        /* Aktív input */
         .input-cell:focus {
-            background: rgba(59, 130, 246, 0.2); /* Kivilágosodik */
-            border: 2px solid #60a5fa; /* Erős kék keret */
+            background: rgba(59, 130, 246, 0.2); 
+            border: 2px solid #60a5fa; 
             box-shadow: inset 0 0 5px rgba(59, 130, 246, 0.5);
             z-index: 10;
             position: relative;
@@ -196,17 +205,21 @@
             </div>
 
             <div class="flex bg-slate-900/80 p-0.5 rounded-lg border border-slate-700/50">
-                <button onclick="setView('matrix')" id="nav-m" class="px-3 py-1.5 rounded text-[10px] font-black uppercase"><i class="fas fa-table"></i></button>
-                <button onclick="setView('stats')" id="nav-s" class="px-3 py-1.5 rounded text-[10px] font-black uppercase ml-1"><i class="fas fa-id-card"></i></button>
+                <button onclick="setView('matrix')" id="nav-m" class="px-3 py-1.5 rounded text-[10px] font-black uppercase flex items-center gap-1">
+                    <i class="fas fa-table"></i> <span class="hidden sm:inline">TÁBLA</span>
+                </button>
+                <button onclick="setView('stats')" id="nav-s" class="px-3 py-1.5 rounded text-[10px] font-black uppercase ml-1 flex items-center gap-1">
+                    <i class="fas fa-id-card"></i> <span class="hidden sm:inline">STAT</span>
+                </button>
             </div>
             
             <div class="flex gap-1">
-                <button onclick="backupAllData()" title="TELJES Mentés letöltése (A+B+C+D)" class="bg-violet-600 hover:bg-violet-500 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase text-white shadow-lg shadow-violet-600/20 whitespace-nowrap">
-                    <i class="fas fa-download"></i> ALL
+                <button onclick="backupAllData()" title="TELJES Mentés letöltése (A+B+C+D)" class="bg-violet-600 hover:bg-violet-500 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase text-white shadow-lg shadow-violet-600/20 whitespace-nowrap flex items-center gap-1">
+                    <i class="fas fa-download"></i> <span class="hidden sm:inline">MENTÉS</span>
                 </button>
                 
-                <button onclick="addEmp()" class="bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase text-white shadow-lg shadow-blue-600/20 whitespace-nowrap">
-                     <i class="fas fa-plus"></i>
+                <button onclick="addEmp()" class="bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase text-white shadow-lg shadow-blue-600/20 whitespace-nowrap flex items-center gap-1">
+                     <i class="fas fa-plus"></i> <span class="hidden sm:inline">ÚJ</span>
                 </button>
             </div>
         </div>
@@ -287,7 +300,6 @@
             } catch(e) { document.getElementById('sync').innerText = "HIBA!"; }
         }
 
-        // --- MINDEN MŰSZAK LETÖLTÉSE ---
         async function backupAllData() {
             const btn = document.querySelector('button[title*="TELJES"]');
             const originalText = btn.innerHTML;
@@ -448,8 +460,8 @@
         function setView(v) {
             document.getElementById('v-matrix').classList.toggle('hidden', v !== 'matrix');
             document.getElementById('v-stats').classList.toggle('hidden', v !== 'stats');
-            document.getElementById('nav-m').className = v === 'matrix' ? "px-3 py-1.5 rounded text-[10px] font-black uppercase bg-blue-600 text-white" : "px-3 py-1.5 rounded text-[10px] font-black uppercase text-slate-400 hover:text-white";
-            document.getElementById('nav-s').className = v === 'stats' ? "px-3 py-1.5 rounded text-[10px] font-black uppercase bg-blue-600 text-white" : "px-3 py-1.5 rounded text-[10px] font-black uppercase text-slate-400 hover:text-white";
+            document.getElementById('nav-m').className = v === 'matrix' ? "px-3 py-1.5 rounded text-[10px] font-black uppercase bg-blue-600 text-white flex items-center gap-1" : "px-3 py-1.5 rounded text-[10px] font-black uppercase text-slate-400 hover:text-white flex items-center gap-1";
+            document.getElementById('nav-s').className = v === 'stats' ? "px-3 py-1.5 rounded text-[10px] font-black uppercase bg-blue-600 text-white flex items-center gap-1 ml-1" : "px-3 py-1.5 rounded text-[10px] font-black uppercase text-slate-400 hover:text-white flex items-center gap-1 ml-1";
             
             if(v==='stats') {
                 document.getElementById('stats-grid').innerHTML = employees.map(e => {
