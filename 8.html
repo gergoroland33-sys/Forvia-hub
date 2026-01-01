@@ -47,7 +47,7 @@
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
             overflow: auto; 
-            -webkit-overflow-scrolling: touch;
+            -webkit-overflow-scrolling: touch; /* Sima görgetés mobilon */
         }
 
         .matrix-table { border-collapse: separate; border-spacing: 0; }
@@ -58,7 +58,7 @@
             top: 0;
             z-index: 30;
             background: #1e293b; 
-            height: 45px;
+            height: 40px; /* Kicsit alacsonyabb */
             box-shadow: 0 1px 0 #2d3748;
             padding: 2px 0;
         }
@@ -69,11 +69,11 @@
             left: 0 !important; 
             background: #1e293b !important; 
             z-index: 40 !important;
-            min-width: 200px; 
-            max-width: 200px;
-            border-right: 3px solid #3b82f6 !important; 
+            min-width: 160px; /* Kicsit keskenyebb névmező mobilon */
+            max-width: 160px;
+            border-right: 2px solid #3b82f6 !important; 
             cursor: grab;
-            padding: 0 8px !important;
+            padding: 0 6px !important;
             box-shadow: 4px 0 8px rgba(0,0,0,0.3);
         }
 
@@ -83,26 +83,54 @@
             border-bottom: 1px solid #2d3748;
         }
 
-        .data-col-fix { min-width: 60px !important; width: 60px !important; }
+        .data-col-fix { min-width: 50px !important; width: 50px !important; }
         .matrix-table thead th.data-col-fix { z-index: 30; }
 
         .matrix-table th, .matrix-table td { 
             border: 1px solid #2d3748; 
-            min-width: 42px; 
+            min-width: 36px; /* MOBIL OPTIMALIZÁLÁS: Kisebb cellák (42 helyett 36) */
+            height: 40px;    /* Fix magasság */
             text-align: center; font-size: 13px; 
+            padding: 0;      /* Padding nullázása a pontos illeszkedésért */
         }
-        .matrix-table th { color: #94a3b8; font-weight: 700; text-transform: uppercase; font-size: 11px; }
+        .matrix-table th { color: #94a3b8; font-weight: 700; text-transform: uppercase; font-size: 10px; }
 
-        .row-highlight { background: rgba(59, 130, 246, 0.25) !important; }
-        .col-highlight { background: rgba(59, 130, 246, 0.25) !important; }
+        /* Kiemelés (Sötétebb kék, hogy jobban látszódjon a fehér betű) */
+        .row-highlight { background: rgba(30, 58, 138, 0.4) !important; } 
+        .col-highlight { background: rgba(30, 58, 138, 0.4) !important; }
 
-        .input-cell { width: 100%; height: 100%; min-height: 48px; border: none; text-align: center; background: transparent; color: white; font-weight: 800; outline: none; font-size: 16px; }
-        .quota-input { font-size: 15px !important; font-weight: 900 !important; color: #93c5fd !important; }
+        /* MOBIL INPUT STÍLUS */
+        .input-cell { 
+            width: 100%; 
+            height: 100%; 
+            border: 1px solid transparent; /* Alapból nincs keret */
+            text-align: center; 
+            background: transparent; 
+            color: white; 
+            font-weight: 700; 
+            outline: none; 
+            font-size: 16px; /* FONTOS: 16px megakadályozza az iOS zoomolást! */
+            border-radius: 0;
+            padding: 0;
+            margin: 0;
+            caret-color: #3b82f6; /* Kék kurzor */
+        }
+
+        /* AKTÍV CELLA STÍLUS (Fókusz) */
+        .input-cell:focus {
+            background: rgba(59, 130, 246, 0.2); /* Kivilágosodik */
+            border: 2px solid #60a5fa; /* Erős kék keret */
+            box-shadow: inset 0 0 5px rgba(59, 130, 246, 0.5);
+            z-index: 10;
+            position: relative;
+        }
+
+        .quota-input { font-size: 14px !important; font-weight: 900 !important; color: #93c5fd !important; }
 
         /* Hétvége és Ünnepnap */
         .weekend { background: #141b2d !important; color: #64748b; }
-        .holiday-bg { background: #1f1515 !important; } 
-        .holiday-text { color: #ef4444 !important; font-weight: 900 !important; font-size: 12px !important; }
+        .holiday-bg { background: #2a1818 !important; } 
+        .holiday-text { color: #f87171 !important; font-weight: 900 !important; font-size: 11px !important; }
 
         /* Színkódok */
         .cell-S { background: #059669 !important; color: white !important; font-weight: 900; }
@@ -173,8 +201,8 @@
             </div>
             
             <div class="flex gap-1">
-                <button onclick="backupData()" title="Biztonsági Mentés letöltése" class="bg-violet-600 hover:bg-violet-500 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase text-white shadow-lg shadow-violet-600/20 whitespace-nowrap">
-                    <i class="fas fa-download"></i>
+                <button onclick="backupAllData()" title="TELJES Mentés letöltése (A+B+C+D)" class="bg-violet-600 hover:bg-violet-500 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase text-white shadow-lg shadow-violet-600/20 whitespace-nowrap">
+                    <i class="fas fa-download"></i> ALL
                 </button>
                 
                 <button onclick="addEmp()" class="bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase text-white shadow-lg shadow-blue-600/20 whitespace-nowrap">
@@ -259,17 +287,39 @@
             } catch(e) { document.getElementById('sync').innerText = "HIBA!"; }
         }
 
-        // --- ÚJ FUNKCIÓ: BIZTONSÁGI MENTÉS LETÖLTÉSE ---
-        function backupData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(employees));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", `staff_pro_backup_${currentShift}_${new Date().toISOString().slice(0,10)}.json`);
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
+        // --- MINDEN MŰSZAK LETÖLTÉSE ---
+        async function backupAllData() {
+            const btn = document.querySelector('button[title*="TELJES"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            const shifts = ['A', 'B', 'C', 'D'];
+            let fullData = {};
+
+            try {
+                await Promise.all(shifts.map(async (s) => {
+                    const res = await fetch(`${DB}shift_${s}.json`);
+                    const data = await res.json();
+                    fullData[s] = data || [];
+                }));
+
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fullData));
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                const dateStr = new Date().toISOString().slice(0,10);
+                downloadAnchorNode.setAttribute("download", `FORVIA_FULL_BACKUP_${dateStr}.json`);
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+                
+                alert("Sikeres Teljes Mentés! (A, B, C, D)");
+
+            } catch (e) {
+                alert("Hiba a mentés során: " + e);
+            } finally {
+                btn.innerHTML = originalText;
+            }
         }
-        // ------------------------------------------------
 
         function initSortable() {
             Sortable.create(document.getElementById('tBody'), {
@@ -356,7 +406,7 @@
                     if (isHoliday) bgClass = 'holiday-bg weekend'; 
                     
                     const cls = (v && !isNaN(parseFloat(v.replace(',','.')))) ? 'cell-S' : (v==='BÁ'?'cell-BA':v==='IG'?'cell-IG':v==='TU'?'cell-TU':v.startsWith('KÉ')?'cell-KE':'');
-                    row += `<td class="${bgClass} ${cls}"><input type="text" value="${v}" onfocus="this.select(); highlight(this,${d},true)" onblur="highlight(this,${d},false); update(${e.id},'${k}',this.value,this)" class="input-cell"></td>`;
+                    row += `<td class="${bgClass} ${cls}"><input type="text" value="${v}" onfocus="this.select(); highlight(this,${d},true)" onblur="highlight(this,${d},false); update(${e.id},'${k}',this.value,this)" class="input-cell" inputmode="text"></td>`;
                 }
                 return row + "</tr>";
             }).join('');
