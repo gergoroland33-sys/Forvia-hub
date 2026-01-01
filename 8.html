@@ -63,8 +63,7 @@
             padding: 2px 0;
         }
 
-        /* 2. NÉV OSZLOP - JAVÍTVA */
-        /* !important használata, hogy felülírja a 'relative' osztályt és biztosan rögzüljön */
+        /* 2. NÉV OSZLOP */
         .name-col { 
             position: sticky !important; 
             left: 0 !important; 
@@ -105,7 +104,7 @@
         .holiday-bg { background: #1f1515 !important; } 
         .holiday-text { color: #ef4444 !important; font-weight: 900 !important; font-size: 12px !important; }
 
-        /* Színkódok (felülírják a hátteret) */
+        /* Színkódok */
         .cell-S { background: #059669 !important; color: white !important; font-weight: 900; }
         .cell-BA { background: #ea580c !important; color: white !important; font-weight: 900; }
         .cell-IG { background: #7c3aed !important; color: white !important; font-weight: 900; }
@@ -143,7 +142,7 @@
             <div class="flex items-center bg-slate-900/80 p-1 rounded-lg border border-slate-700/50 shadow-sm">
                 <div class="px-2 border-r border-slate-700/50 mr-1 flex items-center gap-1">
                      <span class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">
-                         <span class="hidden sm:inline">Műszak Váltó gomb</span>
+                         <span class="hidden sm:inline">Műszak Váltó</span>
                          <span class="sm:hidden">Műszak</span>
                      </span>
                      <i class="fas fa-chevron-right text-[9px] text-blue-500"></i>
@@ -173,9 +172,15 @@
                 <button onclick="setView('stats')" id="nav-s" class="px-3 py-1.5 rounded text-[10px] font-black uppercase ml-1"><i class="fas fa-id-card"></i></button>
             </div>
             
-            <button onclick="addEmp()" class="bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase text-white shadow-lg shadow-blue-600/20 whitespace-nowrap">
-                 <i class="fas fa-plus"></i>
-            </button>
+            <div class="flex gap-1">
+                <button onclick="backupData()" title="Biztonsági Mentés letöltése" class="bg-violet-600 hover:bg-violet-500 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase text-white shadow-lg shadow-violet-600/20 whitespace-nowrap">
+                    <i class="fas fa-download"></i>
+                </button>
+                
+                <button onclick="addEmp()" class="bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase text-white shadow-lg shadow-blue-600/20 whitespace-nowrap">
+                     <i class="fas fa-plus"></i>
+                </button>
+            </div>
         </div>
     </header>
 
@@ -253,6 +258,18 @@
                 document.getElementById('sync').innerHTML = 'ONLINE';
             } catch(e) { document.getElementById('sync').innerText = "HIBA!"; }
         }
+
+        // --- ÚJ FUNKCIÓ: BIZTONSÁGI MENTÉS LETÖLTÉSE ---
+        function backupData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(employees));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", `staff_pro_backup_${currentShift}_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+        // ------------------------------------------------
 
         function initSortable() {
             Sortable.create(document.getElementById('tBody'), {
@@ -431,7 +448,6 @@
         function changeMonth(v) { date.setMonth(date.getMonth() + v); render(); }
         function addEmp() { const n = prompt("Munkatárs neve:"); if(n) { employees.push({id:Date.now(), name:n, yearlyQuota:160, data:{}}); save(); render(); } }
         
-        // --- JAVÍTOTT TÖRLÉS FUNKCIÓ ---
         function delEmp(id) { 
             if(confirm("FIGYELEM!\n\nBiztosan törölni szeretnéd ezt a munkavállalót?\nAz adatok véglegesen elvesznek és nem állíthatók vissza!")) { 
                 employees = employees.filter(x => x.id != id); 
@@ -439,7 +455,6 @@
                 render(); 
             } 
         }
-        // -------------------------------
 
         window.onload = () => changeShift(currentShift);
     </script>
