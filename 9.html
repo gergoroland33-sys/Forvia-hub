@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Forvia Bank Scan Mobil Pro V6.1</title>
+<title>Forvia Bank Scan Mobil Ver5.5 (Focus Fix)</title>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <style>
-/* --- GLOBÁLIS BEÁLLÍTÁSOK (EREDETI V5.5) --- */
+/* --- GLOBÁLIS BEÁLLÍTÁSOK (EREDETI V4.7/V5.5) --- */
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 :root {
@@ -52,16 +52,12 @@ body {
 }
 #reader video { width: 100% !important; height: 100% !important; object-fit: cover; }
 
-/* INPUT ÉS GOMBOK (MÓDOSÍTOTT ELRENDEZÉS A VÁLTÓ GOMB MIATT) */
-.input-wrapper { width: 100%; max-width: 500px; display: flex; gap: 10px; margin-bottom: 25px; flex-shrink: 0; }
-
+.input-wrapper { width: 100%; max-width: 500px; display: flex; gap: 12px; margin-bottom: 25px; flex-shrink: 0; }
 input[type=text] {
     flex: 1; background: var(--glass); border: 1px solid var(--glass-border);
-    padding: 16px 15px; border-radius: 16px; color: white; font-size: 1.1rem;
+    padding: 16px 20px; border-radius: 16px; color: white; font-size: 1.2rem;
     font-weight: 600; text-align: center; outline: none; backdrop-filter: blur(5px); min-width: 0;
 }
-
-/* KAMERA SCAN GOMB */
 .scan-btn {
     width: 60px; height: 60px; border-radius: 16px; border: none;
     background: var(--accent); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -71,28 +67,7 @@ input[type=text] {
 .scan-btn svg { width: 28px; height: 28px; fill: white; }
 .scan-btn.active { background: var(--err-color); }
 
-/* --- ÚJ: PRO KAMERA VÁLTÓ GOMB --- */
-.switch-cam-btn {
-    width: 60px; height: 60px; border-radius: 16px; border: 1px solid var(--glass-border);
-    background: rgba(255, 255, 255, 0.1); color: white; cursor: pointer;
-    display: none; /* Alapból rejtve, csak akkor jön elő, ha van több kamera */
-    align-items: center; justify-content: center;
-    backdrop-filter: blur(5px); flex-shrink: 0; transition: all 0.2s;
-}
-.switch-cam-btn:active { transform: scale(0.92); background: rgba(255, 255, 255, 0.2); }
-.switch-cam-btn svg { width: 24px; height: 24px; fill: var(--text-muted); }
-
-/* KAMERA INFO POPUP (TOAST) */
-.cam-toast {
-    position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
-    background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 30px;
-    font-size: 0.9rem; z-index: 999; display: none; white-space: nowrap;
-    border: 1px solid var(--accent); box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-    animation: fadeUp 0.3s ease-out;
-}
-@keyframes fadeUp { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
-
-/* --- EREDMÉNYEK (GRID DESIGN - EREDETI) --- */
+/* --- EREDMÉNYEK --- */
 #resultsWrapper { width: 100%; max-width: 500px; padding-bottom: 20px; }
 
 .result-card {
@@ -152,7 +127,7 @@ input[type=text] {
 <body>
 
 <div class="header">
-    <h1>Forvia Cikkszám Scan</h1>
+    <h1>Forvia Cikkszám Scan </h1>
     <div class="credits">Készítette: <span>Gergő Roland</span></div>
 </div>
 
@@ -160,17 +135,9 @@ input[type=text] {
     <div id="loadMsg" class="load-msg">Adatbázis betöltése...</div>
 
     <div id="reader"></div>
-    <div id="camToast" class="cam-toast">Kamera Váltva</div>
 
     <div class="input-wrapper">
-        <button id="switchBtn" class="switch-cam-btn" onclick="switchCamera()" title="Kamera Váltás">
-            <svg viewBox="0 0 24 24">
-                <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
-            </svg>
-        </button>
-
         <input type="text" id="barcodeInput" placeholder="Scan Barcode-->" autocomplete="off">
-        
         <button class="scan-btn" onclick="handleCameraButton()" title="Kamera indítása">
             <svg id="camIcon" viewBox="0 0 24 24">
                 <path d="M4 6h2v12H4zm14 0h2v12h-2zm-4 0h2v12h-2zm-4 0h2v12h-2zM2 4v16h20V4H2zm18 14H4V6h16v12z"/>
@@ -198,7 +165,7 @@ input[type=text] {
 
 <script>
 /* ========================================================
-   LOGIKA - GARANTÁLTAN AZ EREDETI ALAPJÁN
+   LOGIKA - KAMERA ÉS KERESÉS (EREDETI V5.5 ALAPJÁN)
    ======================================================== */
 const input = document.getElementById('barcodeInput');
 const resultsWrapper = document.getElementById('resultsWrapper');
@@ -208,16 +175,10 @@ const camIcon = document.getElementById('camIcon');
 const stopIcon = document.getElementById('stopIcon');
 const scanBtn = document.querySelector('.scan-btn');
 const readerDiv = document.getElementById('reader');
-const switchBtn = document.getElementById('switchBtn');
-const camToast = document.getElementById('camToast');
 
 let html5QrCode = null;
 let isCameraRunning = false;
 let bankDB = [];
-
-// KAMERA LISTA MEMÓRIA
-let availableCameras = [];
-let currentCameraIndex = 0;
 
 async function init() {
     await loadBankCSV();
@@ -225,8 +186,7 @@ async function init() {
         loadMsg.innerText = `Adatbázis kész: ${bankDB.length} tétel`;
         loadMsg.style.color = "#10b981";
     }
-    renderHistory();
-    const savedCamId = localStorage.getItem('fv_selected_cam_id');
+    renderHistory(); 
 }
 
 async function loadBankCSV() {
@@ -306,7 +266,7 @@ function search(code) {
     }
 }
 
-// --- KAMERA KEZELÉS ---
+// --- KAMERA LOGIKA (EREDETI V5.5 + FÓKUSZ JAVÍTÁS) ---
 function handleCameraButton() {
     resultsWrapper.innerHTML = ''; 
     input.value = '';
@@ -314,30 +274,10 @@ function handleCameraButton() {
     if (isCameraRunning) {
         forceStopCamera();
     } else {
-        startCamera();
+        setTimeout(() => {
+            startCamera();
+        }, 200); 
     }
-}
-
-function switchCamera() {
-    if (!availableCameras || availableCameras.length < 2) return;
-
-    currentCameraIndex = (currentCameraIndex + 1) % availableCameras.length;
-    const newCam = availableCameras[currentCameraIndex];
-
-    localStorage.setItem('fv_selected_cam_id', newCam.id);
-    showToast(`📷 ${newCam.label || 'Kamera ' + (currentCameraIndex+1)}`);
-
-    if (isCameraRunning) {
-        html5QrCode.stop().then(() => {
-            startCamera(); 
-        });
-    }
-}
-
-function showToast(msg) {
-    camToast.innerText = msg;
-    camToast.style.display = 'block';
-    setTimeout(() => { camToast.style.display = 'none'; }, 2000);
 }
 
 function startCamera() {
@@ -350,61 +290,34 @@ function startCamera() {
         html5QrCode = new Html5Qrcode("reader");
     }
 
-    Html5Qrcode.getCameras().then(devices => {
-        if (devices && devices.length > 0) {
-            availableCameras = devices;
-            
-            if (availableCameras.length > 1) {
-                switchBtn.style.display = 'flex';
-            }
+    const config = { 
+        fps: 20, 
+        qrbox: { width: 200, height: 200 } 
+    };
+    
+    // --- ITT A VÁLTOZÁS: KÉNYSZERÍTETT AUTOFÓKUSZ ---
+    const cameraConstraints = { 
+        facingMode: "environment",
+        focusMode: "continuous",
+        advanced: [{ focusMode: "continuous" }] 
+    };
 
-            const savedId = localStorage.getItem('fv_selected_cam_id');
-            if (savedId) {
-                const foundIdx = availableCameras.findIndex(c => c.id === savedId);
-                if (foundIdx !== -1) currentCameraIndex = foundIdx;
-            } else {
-                currentCameraIndex = availableCameras.length - 1;
-            }
-        }
-        
-        const cameraIdOrConfig = (availableCameras.length > 0) 
-            ? availableCameras[currentCameraIndex].id 
-            : { facingMode: "environment" };
-
-        // --- ITT AZ ÚJ FÓKUSZ PARANCS! ---
-        const config = { 
-            fps: 20, 
-            qrbox: { width: 200, height: 200 }, 
-            aspectRatio: 1.0,
-            videoConstraints: {
-                focusMode: "continuous",      // Szabványos
-                advanced: [{ focusMode: "continuous" }] // Extra kérés (pl. Chrome/Android)
-            }
-        };
-        
-        html5QrCode.start(cameraIdOrConfig, config, 
-            (decodedText) => {
-                forceStopCamera().then(() => {
-                    input.value = decodedText;
-                    search(decodedText.trim().toUpperCase());
-                });
-            }, 
-            () => {}
-        ).then(() => {
-            isCameraRunning = true;
-        });
-
+    html5QrCode.start(
+        cameraConstraints, // Az új kényszerített beállítások
+        config,
+        (decodedText) => {
+            forceStopCamera().then(() => {
+                input.value = decodedText;
+                search(decodedText.trim().toUpperCase());
+            });
+        },
+        () => {}
+    ).then(() => {
+        isCameraRunning = true;
     }).catch(err => {
-        const config = { fps: 20, qrbox: { width: 200, height: 200 } };
-        html5QrCode.start({ facingMode: "environment" }, config,
-            (decodedText) => {
-                forceStopCamera().then(() => {
-                    input.value = decodedText;
-                    search(decodedText.trim().toUpperCase());
-                });
-            },
-            () => {}
-        ).then(() => isCameraRunning = true);
+        console.error("Kamera start hiba:", err);
+        forceStopCamera();
+        alert("Kamera hiba! Frissítsd az oldalt.");
     });
 }
 
@@ -440,6 +353,7 @@ function playSound(ok) {
     snd.currentTime = 0; snd.play().catch(()=>{});
 }
 
+// --- ELŐZMÉNY KEZELÉS (EREDETI) ---
 function saveToHistory(code, ok) {
     const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     let history = JSON.parse(localStorage.getItem('scanHistory') || '[]');
