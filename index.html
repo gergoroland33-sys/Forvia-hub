@@ -49,7 +49,36 @@
             padding: 40px 30px; border-radius: 24px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             max-width: 500px; width: 100%; animation: fadeIn 0.8s ease-out;
+            position: relative; /* A megosztás gomb pozicionálásához */
         }
+
+        /* --- ÚJ PRO MEGOSZTÁS GOMB STÍLUS --- */
+        .share-card-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+            z-index: 10;
+        }
+        .share-card-btn:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+        }
+        /* ------------------------------------- */
 
         .welcome-title {
             font-size: 2.2rem; font-weight: 800; margin: 0;
@@ -181,6 +210,10 @@
 
 <div id="home-screen">
     <div class="glass-card">
+        <div class="share-card-btn" onclick="shareApp()" title="App megosztása">
+            🔗
+        </div>
+
         <h1 class="welcome-title">Üdv <span class="highlight-blue">Felhasználó!</span></h1>
         <div id="display-date" class="current-date">
             <span id="date-text">0000. 00. 00.</span><br>
@@ -377,18 +410,23 @@
         }
     }
 
-    document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
-
-    // --- MÓDOSÍTOTT AUTO-INDÍTÁS (CSAK 1x SZÓL!) ---
-    window.addEventListener('load', () => {
-        // Megnézzük, hogy "járt-e már itt" ebben a munkamenetben
-        if (!sessionStorage.getItem('forvia_session_active')) {
-            // Ha MÉG NEM járt itt (első nyitás), akkor küldjük
-            sendDiscordLog("🔔 Új felhasználó lépett be az Appba!", 3883766);
-            // És gyorsan beállítjuk a "zászlót", hogy már itt van
-            sessionStorage.setItem('forvia_session_active', 'true');
+    // --- ÚJ PRO MEGOSZTÁS FUNKCIÓ ---
+    async function shareApp() {
+        const shareData = {
+            title: 'Forvia Hub',
+            text: 'Használd te is a Forvia SMT applikációt!',
+            url: window.location.href
+        };
+        try {
+            await navigator.share(shareData);
+        } catch (err) {
+            // Ha asztali gép, akkor vágólapra másoljuk
+            navigator.clipboard.writeText(window.location.href);
+            alert("Link másolva a vágólapra!");
         }
-    });
+    }
+
+    document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
 
 </script>
 </body>
