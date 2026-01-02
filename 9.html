@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Forvia Bank Scan Mobil Pro V6.0</title>
+<title>Forvia Bank Scan Mobil Pro V6.1</title>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <style>
@@ -57,7 +57,7 @@ body {
 
 input[type=text] {
     flex: 1; background: var(--glass); border: 1px solid var(--glass-border);
-    padding: 16px 15px; border-radius: 16px; color: white; font-size: 1.2rem;
+    padding: 16px 15px; border-radius: 16px; color: white; font-size: 1.1rem;
     font-weight: 600; text-align: center; outline: none; backdrop-filter: blur(5px); min-width: 0;
 }
 
@@ -208,7 +208,6 @@ const camIcon = document.getElementById('camIcon');
 const stopIcon = document.getElementById('stopIcon');
 const scanBtn = document.querySelector('.scan-btn');
 const readerDiv = document.getElementById('reader');
-// ÚJ ELEMEK
 const switchBtn = document.getElementById('switchBtn');
 const camToast = document.getElementById('camToast');
 
@@ -227,7 +226,6 @@ async function init() {
         loadMsg.style.color = "#10b981";
     }
     renderHistory();
-    // Megpróbáljuk betölteni a mentett kamerát (ha van)
     const savedCamId = localStorage.getItem('fv_selected_cam_id');
 }
 
@@ -308,7 +306,7 @@ function search(code) {
     }
 }
 
-// --- KAMERA KEZELÉS (ÚJ VÁLTÓ LOGIKÁVAL) ---
+// --- KAMERA KEZELÉS ---
 function handleCameraButton() {
     resultsWrapper.innerHTML = ''; 
     input.value = '';
@@ -323,17 +321,12 @@ function handleCameraButton() {
 function switchCamera() {
     if (!availableCameras || availableCameras.length < 2) return;
 
-    // Váltás a következőre
     currentCameraIndex = (currentCameraIndex + 1) % availableCameras.length;
     const newCam = availableCameras[currentCameraIndex];
 
-    // Mentés
     localStorage.setItem('fv_selected_cam_id', newCam.id);
-
-    // Kijelzés
     showToast(`📷 ${newCam.label || 'Kamera ' + (currentCameraIndex+1)}`);
 
-    // Ha fut a kamera, újraindítjuk az újjal
     if (isCameraRunning) {
         html5QrCode.stop().then(() => {
             startCamera(); 
@@ -357,34 +350,37 @@ function startCamera() {
         html5QrCode = new Html5Qrcode("reader");
     }
 
-    // Először megpróbáljuk lekérni a kamerákat (ha még nincs lista)
-    // Ez biztosítja, hogy első indításkor is működjön (engedélykérés után)
     Html5Qrcode.getCameras().then(devices => {
         if (devices && devices.length > 0) {
             availableCameras = devices;
             
-            // Ha több kamera van, mutatjuk a gombot
             if (availableCameras.length > 1) {
                 switchBtn.style.display = 'flex';
             }
 
-            // Megnézzük, van-e mentett kamera ID
             const savedId = localStorage.getItem('fv_selected_cam_id');
             if (savedId) {
                 const foundIdx = availableCameras.findIndex(c => c.id === savedId);
                 if (foundIdx !== -1) currentCameraIndex = foundIdx;
             } else {
-                // Ha nincs mentett, az utolsó (általában hátsó) legyen
                 currentCameraIndex = availableCameras.length - 1;
             }
         }
         
-        // INDÍTÁS: Ha van lista, akkor ID alapján, ha nincs, akkor "environment"
         const cameraIdOrConfig = (availableCameras.length > 0) 
             ? availableCameras[currentCameraIndex].id 
             : { facingMode: "environment" };
 
-        const config = { fps: 20, qrbox: { width: 200, height: 200 }, aspectRatio: 1.0 };
+        // --- ITT AZ ÚJ FÓKUSZ PARANCS! ---
+        const config = { 
+            fps: 20, 
+            qrbox: { width: 200, height: 200 }, 
+            aspectRatio: 1.0,
+            videoConstraints: {
+                focusMode: "continuous",      // Szabványos
+                advanced: [{ focusMode: "continuous" }] // Extra kérés (pl. Chrome/Android)
+            }
+        };
         
         html5QrCode.start(cameraIdOrConfig, config, 
             (decodedText) => {
@@ -399,7 +395,6 @@ function startCamera() {
         });
 
     }).catch(err => {
-        // Ha hiba van a lista lekéréssel (pl. első engedélykérés), simán indítjuk
         const config = { fps: 20, qrbox: { width: 200, height: 200 } };
         html5QrCode.start({ facingMode: "environment" }, config,
             (decodedText) => {
