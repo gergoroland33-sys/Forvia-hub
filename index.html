@@ -340,12 +340,26 @@
         'home':   '🏠 Kezdőlap'
     };
 
-    // --- DISCORD LOGGING RENDSZER ---
-    function sendDiscordLog(actionName, colorCode = 3883766) {
-        const webhookURL = "https://discord.com/api/webhooks/1455930417155674125/Fo3Kf92QdktExG5mbu65t52MYI5ORFCwIkEnGEen6DboOeyD12zXDsVlsXlMYnhzuGH_";
+    // --- DISCORD QUEUE RENDSZER (Spam védelem + Biztos kézbesítés) ---
+    // Ez az új, biztonságos logika, ami nem töröl semmit, csak sorba állít
+    let discordQueue = [];
+    let isSending = false;
 
-        const now = new Date();
-        const timeString = now.toLocaleTimeString('hu-HU');
+    // Ezt hívják a gombok (csak beteszi a sorba és indítja a feldolgozót)
+    function sendDiscordLog(actionName, colorCode = 3883766) {
+        discordQueue.push({ action: actionName, color: colorCode, time: new Date() });
+        processDiscordQueue();
+    }
+
+    // Ez a háttérben dolgozza fel a sort egyenként, szünettel
+    function processDiscordQueue() {
+        if (isSending || discordQueue.length === 0) return;
+
+        isSending = true;
+        const item = discordQueue.shift(); // Kivesszük a legrégebbit a sor elejéről
+
+        const webhookURL = "https://discord.com/api/webhooks/1455930417155674125/Fo3Kf92QdktExG5mbu65t52MYI5ORFCwIkEnGEen6DboOeyD12zXDsVlsXlMYnhzuGH_";
+        const timeString = item.time.toLocaleTimeString('hu-HU');
         
         let platform = "Ismeretlen eszköz";
         if(navigator.userAgent.includes("Android")) platform = "📱 Android";
@@ -357,13 +371,13 @@
             username: "Forvia Hub Logger",
             avatar_url: "https://i.imgur.com/4M34hi2.png",
             embeds: [{
-                title: actionName,
-                color: colorCode,
+                title: item.action,
+                color: item.color,
                 fields: [
                     { name: "⏰ Időpont", value: timeString, inline: true },
                     { name: "🛠️ Eszköz", value: platform, inline: true }
                 ],
-                footer: { text: "Master Shell v2.2 (Security)" }
+                footer: { text: "Master Shell v2.2 (Queued)" }
             }]
         };
 
@@ -371,8 +385,17 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
-        }).catch(err => console.error("Log hiba:", err));
+        })
+        .finally(() => {
+            // Akár sikerült, akár nem, várunk 2 másodpercet a következő előtt
+            // Így a Discord nem tilt le, és minden üzenet átmegy
+            setTimeout(() => {
+                isSending = false;
+                processDiscordQueue(); // Jöhet a következő!
+            }, 2000);
+        });
     }
+    // -----------------------------------------------------------------
 
     // --- NAVIGÁCIÓ ---
     function loadModule(url) {
