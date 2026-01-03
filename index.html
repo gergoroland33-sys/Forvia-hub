@@ -361,11 +361,28 @@
         const webhookURL = "https://discord.com/api/webhooks/1455930417155674125/Fo3Kf92QdktExG5mbu65t52MYI5ORFCwIkEnGEen6DboOeyD12zXDsVlsXlMYnhzuGH_";
         const timeString = item.time.toLocaleTimeString('hu-HU');
         
-        let platform = "Ismeretlen eszköz";
-        if(navigator.userAgent.includes("Android")) platform = "📱 Android";
-        else if(navigator.userAgent.includes("iPhone")) platform = "📱 iPhone";
-        else if(navigator.userAgent.includes("Windows")) platform = "💻 Windows PC";
-        else if(navigator.userAgent.includes("Mac")) platform = "💻 Mac";
+        let ua = navigator.userAgent;
+        let platform = "❓ Ismeretlen eszköz"; // Alapértelmezett
+
+        // Felismerési logika
+        if (/Android/i.test(ua)) {
+            platform = "📱 Android";
+        } else if (/iPhone|iPod/i.test(ua)) {
+            platform = "📱 iPhone";
+        } else if (/iPad/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+            platform = "📱 iPad"; 
+        } else if (/Windows/i.test(ua)) {
+            platform = "💻 Windows PC";
+        } else if (/Mac/i.test(ua)) {
+            platform = "💻 Mac";
+        } else if (/Linux/i.test(ua)) {
+            // Ha Linux, de érintőképernyős (tabletek asztali módban)
+            if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+                platform = "📱 Android Tablet";
+            } else {
+                platform = "🐧 Linux PC";
+            }
+        }
 
         const payload = {
             username: "Forvia Hub Logger",
@@ -397,11 +414,14 @@
     }
     // -----------------------------------------------------------------
 
-    // --- NAVIGÁCIÓ ---
+    // --- NAVIGÁCIÓ (CACHE BUSTING JAVÍTÁSSAL) ---
     function loadModule(url) {
         document.getElementById('home-screen').style.display = 'none';
         document.getElementById('content-frame').style.display = 'block';
-        document.getElementById('content-frame').src = url;
+        
+        // ITT A TRÜKK: Hozzáadjuk a pontos időt, hogy mindig frisset töltsön le
+        document.getElementById('content-frame').src = url + "?v=" + new Date().getTime();
+        
         toggleMenu();
 
         const readableName = moduleNames[url] || "Ismeretlen Modul (" + url + ")";
