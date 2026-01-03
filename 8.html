@@ -70,7 +70,7 @@
             box-sizing: border-box;
         }
 
-        /* --- STICKY OSZLOPOK (JAVÍTOTT MÉRETEK 60px-re) --- */
+        /* --- STICKY OSZLOPOK (JAVÍTOTT MÉRETEK + MOBIL FIX) --- */
         
         /* 1. NÉV OSZLOP (0px - 140px) */
         .name-col { 
@@ -86,13 +86,18 @@
             padding: 0 6px !important;
             box-shadow: 4px 0 8px rgba(0,0,0,0.3);
             box-sizing: border-box;
+            
+            /* MOBIL FIX: Nem engedi kijelölni a szöveget, így működik a húzás */
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
         }
 
-        /* 2. KERET OSZLOP (140px - 200px) - JAVÍTVA 60px-re */
+        /* 2. KERET OSZLOP (140px - 200px) - Szélesség: 60px */
         .sticky-quota {
             position: sticky !important;
             left: 140px !important; 
-            width: 60px !important;       /* MEGNÖVELVE */
+            width: 60px !important;       
             min-width: 60px !important;
             max-width: 60px !important;
             z-index: 40 !important;
@@ -101,11 +106,11 @@
             box-sizing: border-box;
         }
 
-        /* 3. KIVEHETŐ OSZLOP (200px - 260px) - JAVÍTVA 60px-re */
+        /* 3. KIVEHETŐ OSZLOP (200px - 260px) - Szélesség: 60px */
         .sticky-rem {
             position: sticky !important;
-            left: 200px !important;       /* 140 + 60 = 200 (Pontos illeszkedés) */
-            width: 60px !important;       /* MEGNÖVELVE */
+            left: 200px !important;       
+            width: 60px !important;       
             min-width: 60px !important;
             max-width: 60px !important;
             z-index: 40 !important;
@@ -115,7 +120,7 @@
             box-sizing: border-box;
         }
 
-        /* Fejlécek Z-Index */
+        /* Fejlécek Z-Index javítása */
         .matrix-table thead th.name-col,
         .matrix-table thead th.sticky-quota,
         .matrix-table thead th.sticky-rem { 
@@ -207,19 +212,19 @@
             font-weight: 900 !important;
         }
 
-        /* A Műszak (Piros) */
+        /* A Műszak (Piros) - Halvány keret (0.4) */
         .today-A { border-left: 2px solid rgba(239, 68, 68, 0.4) !important; border-right: 2px solid rgba(239, 68, 68, 0.4) !important; }
         thead th.today-A { color: #ef4444 !important; border-bottom: 2px solid rgba(239, 68, 68, 0.4) !important; background-color: #1e293b !important; }
 
-        /* B Műszak (Zöld) */
+        /* B Műszak (Zöld) - Halvány keret (0.4) */
         .today-B { border-left: 2px solid rgba(16, 185, 129, 0.4) !important; border-right: 2px solid rgba(16, 185, 129, 0.4) !important; }
         thead th.today-B { color: #10b981 !important; border-bottom: 2px solid rgba(16, 185, 129, 0.4) !important; background-color: #1e293b !important; }
 
-        /* C Műszak (Narancs) */
+        /* C Műszak (Narancs) - Halvány keret (0.4) */
         .today-C { border-left: 2px solid rgba(245, 158, 11, 0.4) !important; border-right: 2px solid rgba(245, 158, 11, 0.4) !important; }
         thead th.today-C { color: #f59e0b !important; border-bottom: 2px solid rgba(245, 158, 11, 0.4) !important; background-color: #1e293b !important; }
 
-        /* D Műszak (Lila) */
+        /* D Műszak (Lila) - Halvány keret (0.4) */
         .today-D { border-left: 2px solid rgba(139, 92, 246, 0.4) !important; border-right: 2px solid rgba(139, 92, 246, 0.4) !important; }
         thead th.today-D { color: #8b5cf6 !important; border-bottom: 2px solid rgba(139, 92, 246, 0.4) !important; background-color: #1e293b !important; }
 
@@ -360,6 +365,7 @@
                 const data = await res.json();
                 employees = Array.isArray(data) ? data : [];
                 render();
+                // MOBIL JAVÍTÁS: Késleltetés a véletlen drag ellen
                 initSortable();
             } catch(e) { console.error("Load hiba"); }
         }
@@ -409,6 +415,8 @@
             Sortable.create(document.getElementById('tBody'), {
                 animation: 150,
                 handle: '.name-col',
+                delay: 200, // MOBIL JAVÍTÁS: 200ms késleltetés, hogy lehessen görgetni
+                delayOnTouchOnly: true, // Csak érintőképernyőn vár
                 onEnd: function() {
                     let newOrder = [];
                     document.querySelectorAll('#tBody tr').forEach(tr => {
