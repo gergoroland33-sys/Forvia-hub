@@ -163,7 +163,7 @@
         .shift-C.active { background: #f59e0b; border-color: #fbbf24; }
         .shift-D.active { background: #8b5cf6; border-color: #a78bfa; }
 
-        /* --- PRO MŰSZAK-SPECIFIKUS MAI NAP KIEMELÉS (JAVÍTOTT: CSAK KERET) --- */
+        /* --- PRO MŰSZAK-SPECIFIKUS MAI NAP KIEMELÉS (JAVÍTOTT: HALVÁNY + ZÖLD MŰKÖDIK) --- */
         /* Alap közös stílus a mai naphoz */
         .today-base {
             position: relative;
@@ -171,41 +171,33 @@
             font-weight: 900 !important;
         }
 
-        /* A Műszak (Piros) - TISZTA HÁTTÉR */
+        /* A Műszak (Piros) - Halvány keret (0.4 opacity) */
         .today-A { 
-            border-left: 2px solid #ef4444 !important; 
-            border-right: 2px solid #ef4444 !important; 
-            background: transparent !important; 
-            box-shadow: none !important;
+            border-left: 2px solid rgba(239, 68, 68, 0.4) !important; 
+            border-right: 2px solid rgba(239, 68, 68, 0.4) !important; 
         }
-        thead th.today-A { color: #ef4444 !important; border-bottom: 2px solid #ef4444 !important; background-color: #1e293b !important; }
+        thead th.today-A { color: #ef4444 !important; border-bottom: 2px solid rgba(239, 68, 68, 0.4) !important; background-color: #1e293b !important; }
 
-        /* B Műszak (Zöld) - TISZTA HÁTTÉR */
+        /* B Műszak (Zöld) - Halvány keret (0.4 opacity) */
         .today-B { 
-            border-left: 2px solid #10b981 !important; 
-            border-right: 2px solid #10b981 !important; 
-            background: transparent !important;
-            box-shadow: none !important;
+            border-left: 2px solid rgba(16, 185, 129, 0.4) !important; 
+            border-right: 2px solid rgba(16, 185, 129, 0.4) !important; 
         }
-        thead th.today-B { color: #10b981 !important; border-bottom: 2px solid #10b981 !important; background-color: #1e293b !important; }
+        thead th.today-B { color: #10b981 !important; border-bottom: 2px solid rgba(16, 185, 129, 0.4) !important; background-color: #1e293b !important; }
 
-        /* C Műszak (Narancs) - TISZTA HÁTTÉR */
+        /* C Műszak (Narancs) - Halvány keret (0.4 opacity) */
         .today-C { 
-            border-left: 2px solid #f59e0b !important; 
-            border-right: 2px solid #f59e0b !important; 
-            background: transparent !important;
-            box-shadow: none !important;
+            border-left: 2px solid rgba(245, 158, 11, 0.4) !important; 
+            border-right: 2px solid rgba(245, 158, 11, 0.4) !important; 
         }
-        thead th.today-C { color: #f59e0b !important; border-bottom: 2px solid #f59e0b !important; background-color: #1e293b !important; }
+        thead th.today-C { color: #f59e0b !important; border-bottom: 2px solid rgba(245, 158, 11, 0.4) !important; background-color: #1e293b !important; }
 
-        /* D Műszak (Lila) - TISZTA HÁTTÉR */
+        /* D Műszak (Lila) - Halvány keret (0.4 opacity) */
         .today-D { 
-            border-left: 2px solid #8b5cf6 !important; 
-            border-right: 2px solid #8b5cf6 !important; 
-            background: transparent !important;
-            box-shadow: none !important;
+            border-left: 2px solid rgba(139, 92, 246, 0.4) !important; 
+            border-right: 2px solid rgba(139, 92, 246, 0.4) !important; 
         }
-        thead th.today-D { color: #8b5cf6 !important; border-bottom: 2px solid #8b5cf6 !important; background-color: #1e293b !important; }
+        thead th.today-D { color: #8b5cf6 !important; border-bottom: 2px solid rgba(139, 92, 246, 0.4) !important; background-color: #1e293b !important; }
 
         @media print {
             .no-print { display: none !important; }
@@ -433,7 +425,6 @@
             const days = new Date(2026, m+1, 0).getDate();
             document.getElementById('monthDisp').innerText = monthNames[m];
 
-            // MAI NAP ELLENŐRZÉSE
             const today = new Date();
             const isCurrentMonth = today.getFullYear() === 2026 && today.getMonth() === m;
             const currentDay = today.getDate();
@@ -447,7 +438,6 @@
                 const isHoliday = holidays2026.includes(`${m+1}-${d}`);
                 const headerClass = isHoliday ? 'holiday-text' : '';
                 
-                // MŰSZAK FÜGGŐ MAI NAP STÍLUS
                 const isToday = isCurrentMonth && d === currentDay;
                 const todayClass = isToday ? `today-base today-${currentShift}` : '';
                 const todayId = isToday ? 'today-header' : '';
@@ -482,7 +472,6 @@
                     const isWeekend = [0,6].includes(dayObj.getDay());
                     const isHoliday = holidays2026.includes(`${m+1}-${d}`);
                     
-                    // MŰSZAK FÜGGŐ MAI NAP STÍLUS CELLÁKRA
                     const isToday = isCurrentMonth && d === currentDay;
                     const todayClass = isToday ? `today-base today-${currentShift}` : '';
 
