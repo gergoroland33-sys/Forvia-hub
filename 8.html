@@ -163,35 +163,29 @@
         .shift-C.active { background: #f59e0b; border-color: #fbbf24; }
         .shift-D.active { background: #8b5cf6; border-color: #a78bfa; }
 
-        /* --- PRO RGB FUTÓFÉNY (MAI NAP) --- */
-        @keyframes rgb-run {
-            0% { border-color: #ff0000; box-shadow: inset 0 0 10px rgba(255,0,0,0.2); }
-            15% { border-color: #ff00ff; box-shadow: inset 0 0 10px rgba(255,0,255,0.2); }
-            30% { border-color: #0000ff; box-shadow: inset 0 0 10px rgba(0,0,255,0.2); }
-            45% { border-color: #00ffff; box-shadow: inset 0 0 10px rgba(0,255,255,0.2); }
-            60% { border-color: #00ff00; box-shadow: inset 0 0 10px rgba(0,255,0,0.2); }
-            75% { border-color: #ffff00; box-shadow: inset 0 0 10px rgba(255,255,0,0.2); }
-            90% { border-color: #ff0000; box-shadow: inset 0 0 10px rgba(255,0,0,0.2); }
-            100% { border-color: #ff0000; box-shadow: inset 0 0 10px rgba(255,0,0,0.2); }
-        }
-
-        .today-col {
-            animation: rgb-run 4s linear infinite;
-            border-left-width: 2px !important;
-            border-right-width: 2px !important;
+        /* --- PRO MŰSZAK-SPECIFIKUS MAI NAP KIEMELÉS --- */
+        /* Alap közös stílus a mai naphoz */
+        .today-base {
             position: relative;
             z-index: 5;
-        }
-        
-        thead th.today-col {
-            z-index: 35; /* Magasabb mint a sima th, alacsonyabb mint a név */
-            background-color: #1e293b; /* Fix háttér, hogy ne legyen átlátszó */
+            font-weight: 900 !important;
         }
 
-        /* Halvány háttér kiemelés a mai oszlopnak */
-        tbody td.today-col {
-            background-color: rgba(255, 255, 255, 0.03); 
-        }
+        /* A Műszak (Piros) */
+        .today-A { border-left: 2px solid #ef4444 !important; border-right: 2px solid #ef4444 !important; background: rgba(239, 68, 68, 0.1) !important; box-shadow: inset 0 0 15px rgba(239, 68, 68, 0.1); }
+        thead th.today-A { color: #ef4444 !important; border-bottom: 2px solid #ef4444 !important; background-color: #1e293b !important; }
+
+        /* B Műszak (Zöld) */
+        .today-B { border-left: 2px solid #10b981 !important; border-right: 2px solid #10b981 !important; background: rgba(16, 185, 129, 0.1) !important; box-shadow: inset 0 0 15px rgba(16, 185, 129, 0.1); }
+        thead th.today-B { color: #10b981 !important; border-bottom: 2px solid #10b981 !important; background-color: #1e293b !important; }
+
+        /* C Műszak (Narancs) */
+        .today-C { border-left: 2px solid #f59e0b !important; border-right: 2px solid #f59e0b !important; background: rgba(245, 158, 11, 0.1) !important; box-shadow: inset 0 0 15px rgba(245, 158, 11, 0.1); }
+        thead th.today-C { color: #f59e0b !important; border-bottom: 2px solid #f59e0b !important; background-color: #1e293b !important; }
+
+        /* D Műszak (Lila) */
+        .today-D { border-left: 2px solid #8b5cf6 !important; border-right: 2px solid #8b5cf6 !important; background: rgba(139, 92, 246, 0.1) !important; box-shadow: inset 0 0 15px rgba(139, 92, 246, 0.1); }
+        thead th.today-D { color: #8b5cf6 !important; border-bottom: 2px solid #8b5cf6 !important; background-color: #1e293b !important; }
 
         @media print {
             .no-print { display: none !important; }
@@ -242,8 +236,8 @@
                 <button onclick="changeMonth(1)" class="p-2 text-blue-400 hover:text-white"><i class="fas fa-chevron-right text-xs"></i></button>
             </div>
 
-            <button onclick="jumpToToday()" class="bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase text-white shadow-lg shadow-pink-600/20 whitespace-nowrap flex items-center gap-1 border border-pink-500/30">
-                <i class="fas fa-calendar-day"></i> <span class="hidden md:inline">MA</span>
+            <button onclick="jumpToToday()" class="bg-slate-800 hover:bg-slate-700 text-blue-400 hover:text-white border border-blue-500/30 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase shadow-lg whitespace-nowrap flex items-center gap-1 transition-all">
+                <i class="fas fa-calendar-day text-blue-500"></i> <span class="hidden md:inline">MA</span>
             </button>
 
             <div class="flex bg-slate-900/80 p-0.5 rounded-lg border border-slate-700/50 ml-auto">
@@ -433,9 +427,9 @@
                 const isHoliday = holidays2026.includes(`${m+1}-${d}`);
                 const headerClass = isHoliday ? 'holiday-text' : '';
                 
-                // RGB OSZLOP HA MA VAN
+                // MŰSZAK FÜGGŐ MAI NAP STÍLUS
                 const isToday = isCurrentMonth && d === currentDay;
-                const todayClass = isToday ? 'today-col' : '';
+                const todayClass = isToday ? `today-base today-${currentShift}` : '';
                 const todayId = isToday ? 'today-header' : '';
 
                 const dayOfWeek = new Date(2026, m, d).getDay();
@@ -468,9 +462,9 @@
                     const isWeekend = [0,6].includes(dayObj.getDay());
                     const isHoliday = holidays2026.includes(`${m+1}-${d}`);
                     
-                    // RGB OSZLOP HA MA VAN
+                    // MŰSZAK FÜGGŐ MAI NAP STÍLUS CELLÁKRA
                     const isToday = isCurrentMonth && d === currentDay;
-                    const todayClass = isToday ? 'today-col' : '';
+                    const todayClass = isToday ? `today-base today-${currentShift}` : '';
 
                     let bgClass = isWeekend ? 'weekend' : '';
                     if (isHoliday) bgClass = 'holiday-bg weekend'; 
@@ -482,26 +476,14 @@
             }).join('');
         }
 
-        // ÚJ FUNKCIÓ: Ugrás a mai napra
         function jumpToToday() {
             const now = new Date();
-            // Ellenőrizzük, hogy 2026 van-e (mivel ez az app 2026-ra készült)
-            // Ha tesztelni akarod idén, ezt a feltételt kiveheted, vagy átírhatod az évet
-            // if (now.getFullYear() !== 2026) { alert("Jelenleg nem 2026 van!"); return; }
-
-            date = new Date(2026, now.getMonth(), 1); // Beállítjuk az aktuális hónapot (év fix 2026)
-            render(); // Újrarajzoljuk a táblázatot
-
-            // Pici késleltetés, hogy a DOM felépüljön, majd görgetés
+            date = new Date(2026, now.getMonth(), 1); 
+            render();
             setTimeout(() => {
                 const el = document.getElementById('today-header');
-                if(el) {
-                    el.scrollIntoView({behavior: 'smooth', block: 'nearest', inline: 'center'});
-                } else {
-                    // Ha nem találtuk a mai napot (pl. mert az év nem stimmel a render logikában), 
-                    // akkor legalább a hónap elejére ugrunk
-                    document.querySelector('.table-container').scrollLeft = 0;
-                }
+                if(el) el.scrollIntoView({behavior: 'smooth', block: 'nearest', inline: 'center'});
+                else document.querySelector('.table-container').scrollLeft = 0;
             }, 100);
         }
 
