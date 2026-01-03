@@ -388,11 +388,36 @@
         });
     }
 
+    // --- MENÜ HIGHLIGHT KEZELÉS (Javított) ---
+    function updateMenuHighlight(targetUrl) {
+        // Mindenkiről levesszük az active osztályt
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        
+        if (targetUrl === 'home') {
+            // Megkeressük a Kezdőlap gombot (az első a listában, vagy onclick alapján)
+            const homeBtn = document.querySelector(".nav-item[onclick*='showHome']");
+            if(homeBtn) homeBtn.classList.add('active');
+        } else {
+            // Megkeressük azt a gombot, aminek az onclick-jében benne van a fájl neve
+            // Pl: '1.html' -> onclick="loadModule('1.html')"
+            const links = document.querySelectorAll(".nav-item");
+            links.forEach(link => {
+                // Egyszerűsítve: ha a gomb onclick szövege tartalmazza a fájl nevét
+                if (link.getAttribute('onclick') && link.getAttribute('onclick').includes(targetUrl)) {
+                    link.classList.add('active');
+                }
+            });
+        }
+    }
+
     // --- NAVIGÁCIÓ ---
     function loadModule(url, autoStart = false) {
         document.getElementById('home-screen').style.display = 'none';
         document.getElementById('content-frame').style.display = 'block';
         
+        // Frissítjük a menü kijelölést
+        updateMenuHighlight(url);
+
         let finalUrl = url + "?v=" + new Date().getTime();
         
         // Ha autoStart aktív (Barcode), akkor jelezzük a modulnak
@@ -413,6 +438,10 @@
         document.getElementById('home-screen').style.display = 'flex';
         document.getElementById('content-frame').style.display = 'none';
         document.getElementById('content-frame').src = ""; 
+        
+        // Frissítjük a menü kijelölést (Kezdőlap)
+        updateMenuHighlight('home');
+
         const sidebar = document.getElementById('sidebar');
         if(sidebar.classList.contains('open')) toggleMenu();
         
