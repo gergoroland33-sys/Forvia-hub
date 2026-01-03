@@ -438,19 +438,23 @@
         }, 800); 
     };
 
+    // --- JAVÍTOTT GOMB FELENGEDÉS LOGIKA (Android Fix) ---
     const endPress = (e) => {
-        // ANDROID JAVÍTÁS: Megállítjuk az egér eseményeket, ha érintés volt
-        if (e.type === 'touchend') {
-            e.preventDefault();
-        }
+        // Ha érintés volt, ne engedjük az egér eseményeket (dupla kattintás elkerülése)
+        if (e.type === 'touchend') e.preventDefault();
 
         clearTimeout(pressTimer);
         fab.style.transform = "scale(1)";
         
+        // Csak akkor nyitunk menüt, ha NEM volt hosszú nyomás
         if (fab.dataset.longPressed !== "true") {
             toggleMenu(); 
         }
-        fab.dataset.longPressed = "false";
+
+        // Késleltetjük a visszaállítást 200ms-el, hogy a "szellem kattintások" ne zavarjanak be
+        setTimeout(() => {
+            fab.dataset.longPressed = "false";
+        }, 200);
     };
 
     fab.addEventListener('mousedown', startPress);
