@@ -85,7 +85,6 @@
         }
 
         /* --- CÉLKERESZT JAVÍTÁS (HÉTVÉGE IS) --- */
-        /* Név oszlop kékítése */
         tr.row-highlight .name-col {
             background-color: #3b82f6 !important; 
             color: white !important;
@@ -93,17 +92,14 @@
             text-shadow: 0 1px 2px rgba(0,0,0,0.5);
         }
 
-        /* Kiemelés a sima celláknál */
         .row-highlight { background: rgba(59, 130, 246, 0.25) !important; } 
         .col-highlight { background: rgba(59, 130, 246, 0.25) !important; }
 
-        /* Hétvége alapbeállítás */
         .weekend { background: #141b2d !important; color: #64748b; }
         
-        /* FONTOS: Ha a sor aktív, a hétvége háttere is legyen kék! */
         tr.row-highlight td.weekend {
-            background: rgba(59, 130, 246, 0.25) !important; /* Ugyanaz mint a row-highlight */
-            color: #cbd5e1 !important; /* Világosabb szöveg, hogy olvasható legyen */
+            background: rgba(59, 130, 246, 0.25) !important; 
+            color: #cbd5e1 !important; 
         }
 
         .data-col-fix { min-width: 50px !important; width: 50px !important; }
@@ -135,7 +131,6 @@
             caret-color: #3b82f6; 
         }
 
-        /* Aktív input */
         .input-cell:focus {
             background: rgba(59, 130, 246, 0.3); 
             border: 2px solid #60a5fa; 
@@ -150,9 +145,8 @@
         .holiday-bg { background: #2a1818 !important; } 
         .holiday-text { color: #f87171 !important; font-weight: 900 !important; font-size: 11px !important; }
         
-        /* Ünnepnap kiemelése aktív sornál */
         tr.row-highlight td.holiday-bg {
-             background: rgba(239, 68, 68, 0.25) !important; /* Pirosas áttetsző, ha ünnepre kattintasz */
+             background: rgba(239, 68, 68, 0.25) !important; 
         }
 
         /* Színkódok */
@@ -168,6 +162,36 @@
         .shift-B.active { background: #10b981; border-color: #34d399; }
         .shift-C.active { background: #f59e0b; border-color: #fbbf24; }
         .shift-D.active { background: #8b5cf6; border-color: #a78bfa; }
+
+        /* --- PRO RGB FUTÓFÉNY (MAI NAP) --- */
+        @keyframes rgb-run {
+            0% { border-color: #ff0000; box-shadow: inset 0 0 10px rgba(255,0,0,0.2); }
+            15% { border-color: #ff00ff; box-shadow: inset 0 0 10px rgba(255,0,255,0.2); }
+            30% { border-color: #0000ff; box-shadow: inset 0 0 10px rgba(0,0,255,0.2); }
+            45% { border-color: #00ffff; box-shadow: inset 0 0 10px rgba(0,255,255,0.2); }
+            60% { border-color: #00ff00; box-shadow: inset 0 0 10px rgba(0,255,0,0.2); }
+            75% { border-color: #ffff00; box-shadow: inset 0 0 10px rgba(255,255,0,0.2); }
+            90% { border-color: #ff0000; box-shadow: inset 0 0 10px rgba(255,0,0,0.2); }
+            100% { border-color: #ff0000; box-shadow: inset 0 0 10px rgba(255,0,0,0.2); }
+        }
+
+        .today-col {
+            animation: rgb-run 4s linear infinite;
+            border-left-width: 2px !important;
+            border-right-width: 2px !important;
+            position: relative;
+            z-index: 5;
+        }
+        
+        thead th.today-col {
+            z-index: 35; /* Magasabb mint a sima th, alacsonyabb mint a név */
+            background-color: #1e293b; /* Fix háttér, hogy ne legyen átlátszó */
+        }
+
+        /* Halvány háttér kiemelés a mai oszlopnak */
+        tbody td.today-col {
+            background-color: rgba(255, 255, 255, 0.03); 
+        }
 
         @media print {
             .no-print { display: none !important; }
@@ -218,7 +242,11 @@
                 <button onclick="changeMonth(1)" class="p-2 text-blue-400 hover:text-white"><i class="fas fa-chevron-right text-xs"></i></button>
             </div>
 
-            <div class="flex bg-slate-900/80 p-0.5 rounded-lg border border-slate-700/50">
+            <button onclick="jumpToToday()" class="bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase text-white shadow-lg shadow-pink-600/20 whitespace-nowrap flex items-center gap-1 border border-pink-500/30">
+                <i class="fas fa-calendar-day"></i> <span class="hidden md:inline">MA</span>
+            </button>
+
+            <div class="flex bg-slate-900/80 p-0.5 rounded-lg border border-slate-700/50 ml-auto">
                 <button onclick="setView('matrix')" id="nav-m" class="px-3 py-1.5 rounded text-[10px] font-black uppercase flex items-center gap-1" title="Táblázat">
                     <i class="fas fa-table"></i> <span class="hidden md:inline">TÁBLA</span>
                 </button>
@@ -229,11 +257,11 @@
             
             <div class="flex gap-1">
                 <button onclick="backupAllData()" title="TELJES Mentés letöltése (A+B+C+D)" class="bg-violet-600 hover:bg-violet-500 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase text-white shadow-lg shadow-violet-600/20 whitespace-nowrap flex items-center gap-1">
-                    <i class="fas fa-download"></i> <span class="hidden md:inline">LETÖLTÉS</span>
+                    <i class="fas fa-download"></i>
                 </button>
                 
                 <button onclick="addEmp()" class="bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase text-white shadow-lg shadow-blue-600/20 whitespace-nowrap flex items-center gap-1">
-                     <i class="fas fa-plus"></i> <span class="hidden md:inline">ÚJ</span>
+                     <i class="fas fa-plus"></i>
                 </button>
             </div>
         </div>
@@ -391,6 +419,11 @@
             const days = new Date(2026, m+1, 0).getDate();
             document.getElementById('monthDisp').innerText = monthNames[m];
 
+            // MAI NAP ELLENŐRZÉSE
+            const today = new Date();
+            const isCurrentMonth = today.getFullYear() === 2026 && today.getMonth() === m;
+            const currentDay = today.getDate();
+
             let h = `<tr>
                 <th class="name-col">Név</th>
                 <th class="data-col-fix bg-slate-800 text-blue-300 border-b border-slate-700">KERET</th>
@@ -399,10 +432,16 @@
             for(let d=1; d<=days; d++) {
                 const isHoliday = holidays2026.includes(`${m+1}-${d}`);
                 const headerClass = isHoliday ? 'holiday-text' : '';
+                
+                // RGB OSZLOP HA MA VAN
+                const isToday = isCurrentMonth && d === currentDay;
+                const todayClass = isToday ? 'today-col' : '';
+                const todayId = isToday ? 'today-header' : '';
+
                 const dayOfWeek = new Date(2026, m, d).getDay();
                 const dayName = dayNamesShort[dayOfWeek];
                 
-                h += `<th class="${headerClass} leading-tight">${d}<br><span class="text-[9px] font-normal text-slate-500">${dayName}</span></th>`;
+                h += `<th id="${todayId}" class="${headerClass} ${todayClass} leading-tight">${d}<br><span class="text-[9px] font-normal text-slate-500">${dayName}</span></th>`;
             }
             document.getElementById('tHead').innerHTML = h + "</tr>";
 
@@ -428,14 +467,42 @@
                     const dayObj = new Date(2026,m,d);
                     const isWeekend = [0,6].includes(dayObj.getDay());
                     const isHoliday = holidays2026.includes(`${m+1}-${d}`);
+                    
+                    // RGB OSZLOP HA MA VAN
+                    const isToday = isCurrentMonth && d === currentDay;
+                    const todayClass = isToday ? 'today-col' : '';
+
                     let bgClass = isWeekend ? 'weekend' : '';
                     if (isHoliday) bgClass = 'holiday-bg weekend'; 
                     
                     const cls = (v && !isNaN(parseFloat(v.replace(',','.')))) ? 'cell-S' : (v==='BÁ'?'cell-BA':v==='IG'?'cell-IG':v==='TU'?'cell-TU':v.startsWith('KÉ')?'cell-KE':'');
-                    row += `<td class="${bgClass} ${cls}"><input type="text" value="${v}" onfocus="this.select(); highlight(this,${d},true)" onblur="highlight(this,${d},false); update(${e.id},'${k}',this.value,this)" class="input-cell" inputmode="text"></td>`;
+                    row += `<td class="${bgClass} ${cls} ${todayClass}"><input type="text" value="${v}" onfocus="this.select(); highlight(this,${d},true)" onblur="highlight(this,${d},false); update(${e.id},'${k}',this.value,this)" class="input-cell" inputmode="text"></td>`;
                 }
                 return row + "</tr>";
             }).join('');
+        }
+
+        // ÚJ FUNKCIÓ: Ugrás a mai napra
+        function jumpToToday() {
+            const now = new Date();
+            // Ellenőrizzük, hogy 2026 van-e (mivel ez az app 2026-ra készült)
+            // Ha tesztelni akarod idén, ezt a feltételt kiveheted, vagy átírhatod az évet
+            // if (now.getFullYear() !== 2026) { alert("Jelenleg nem 2026 van!"); return; }
+
+            date = new Date(2026, now.getMonth(), 1); // Beállítjuk az aktuális hónapot (év fix 2026)
+            render(); // Újrarajzoljuk a táblázatot
+
+            // Pici késleltetés, hogy a DOM felépüljön, majd görgetés
+            setTimeout(() => {
+                const el = document.getElementById('today-header');
+                if(el) {
+                    el.scrollIntoView({behavior: 'smooth', block: 'nearest', inline: 'center'});
+                } else {
+                    // Ha nem találtuk a mai napot (pl. mert az év nem stimmel a render logikában), 
+                    // akkor legalább a hónap elejére ugrunk
+                    document.querySelector('.table-container').scrollLeft = 0;
+                }
+            }, 100);
         }
 
         function printA4(id) {
