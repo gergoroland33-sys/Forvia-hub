@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Forvia Bank Scan Mobil Ver5.5</title>
+<title>Forvia Bank Scan Mobil Ver5.6 (DataMatrix Only)</title>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <style>
-/* --- GLOBÁLIS BEÁLLÍTÁSOK (EREDETI V4.7) --- */
+/* --- GLOBÁLIS BEÁLLÍTÁSOK --- */
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 :root {
@@ -28,7 +28,7 @@ body {
     margin: 0; padding: 0; width: 100%; height: 100dvh; display: flex; flex-direction: column; overflow: hidden;
 }
 
-/* --- FEJLÉC (EREDETI V4.7) --- */
+/* --- FEJLÉC --- */
 .header {
     flex-shrink: 0; width: 100%; background: rgba(15, 23, 42, 0.95);
     backdrop-filter: blur(10px); border-bottom: 1px solid var(--glass-border);
@@ -39,7 +39,7 @@ body {
 .header .credits { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
 .header .credits span { color: var(--accent); }
 
-/* --- TARTALOM (EREDETI V4.7) --- */
+/* --- TARTALOM --- */
 .main-content {
     flex: 1; display: flex; flex-direction: column; padding: 20px;
     overflow-y: auto; align-items: center; width: 100%; -webkit-overflow-scrolling: touch;
@@ -67,7 +67,7 @@ input[type=text] {
 .scan-btn svg { width: 28px; height: 28px; fill: white; }
 .scan-btn.active { background: var(--err-color); }
 
-/* --- EREDMÉNYEK (GRID DESIGN) --- */
+/* --- EREDMÉNYEK --- */
 #resultsWrapper { width: 100%; max-width: 500px; padding-bottom: 20px; }
 
 .result-card {
@@ -94,7 +94,7 @@ input[type=text] {
 .no-result { font-size: 1.5rem; font-weight: bold; color: var(--err-color); text-align: center; margin-top: 20px; }
 .load-msg { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px; }
 
-/* --- FOOTER (TÖRLÉS BALRA, ADATOK KÖZÉPEN) --- */
+/* --- FOOTER --- */
 .footer-history {
     background: rgba(15, 23, 42, 0.95); border-top: 1px solid var(--glass-border);
     height: 150px; flex-shrink: 0; overflow-y: auto; padding: 15px;
@@ -110,12 +110,8 @@ input[type=text] {
     padding: 2px 8px; border-radius: 4px;
 }
 
-/* --- JAVÍTOTT ELRENDEZÉS: KÖZELEBB AZ ÓRÁHOZ --- */
 .h-item {
-    display: flex; 
-    align-items: center;
-    justify-content: flex-start; /* Nem space-between, hanem balra igazítva */
-    gap: 30px; /* Fix távolság az idő és a kód között */
+    display: flex; align-items: center; justify-content: flex-start; gap: 30px;
     padding: 8px 12px; margin-bottom: 6px;
     background: rgba(255,255,255,0.03); border-radius: 8px; font-size: 0.85rem;
     border-left: 3px solid #555;
@@ -166,7 +162,7 @@ input[type=text] {
 
 <script>
 /* ========================================================
-   LOGIKA - KAMERA ÉS KERESÉS (V4.7 ALAPJÁN)
+   LOGIKA - DATA MATRIX SPECIALIZÁCIÓVAL
    ======================================================== */
 const input = document.getElementById('barcodeInput');
 const resultsWrapper = document.getElementById('resultsWrapper');
@@ -187,7 +183,7 @@ async function init() {
         loadMsg.innerText = `Adatbázis kész: ${bankDB.length} tétel`;
         loadMsg.style.color = "#10b981";
     }
-    renderHistory(); // Előzmények betöltése induláskor
+    renderHistory(); 
 }
 
 async function loadBankCSV() {
@@ -230,7 +226,6 @@ function search(code) {
 
     if (matches.length > 0) {
         playSound(true);
-        // Itt változott a megjelenítés (Grid Layout)
         matches.forEach(m => {
             const card = document.createElement('div');
             card.className = 'result-card';
@@ -268,7 +263,7 @@ function search(code) {
     }
 }
 
-// --- KAMERA LOGIKA (EREDETI V4.7) ---
+// --- JAVÍTOTT KAMERA LOGIKA (CSAK DATA MATRIX) ---
 function handleCameraButton() {
     resultsWrapper.innerHTML = ''; 
     input.value = '';
@@ -292,21 +287,26 @@ function startCamera() {
         html5QrCode = new Html5Qrcode("reader");
     }
 
+    // ITT A LÉNYEG: formatsToSupport -> CSAK DATA MATRIX
     const config = { 
-        fps: 20, 
-        qrbox: { width: 200, height: 200 } 
+        fps: 25, // Kicsit gyorsítottam a pásztázáson (20->25)
+        qrbox: { width: 250, height: 250 }, // Picit nagyobb fókuszterület
+        formatsToSupport: [ Html5QrcodeSupportedFormats.DATA_MATRIX ] 
     };
     
     html5QrCode.start(
         { facingMode: "environment" }, 
         config,
         (decodedText) => {
+            // Siker esetén
             forceStopCamera().then(() => {
                 input.value = decodedText;
                 search(decodedText.trim().toUpperCase());
             });
         },
-        () => {}
+        (errorMessage) => {
+            // Szkennelés közbeni hibák (nem talált kódot) - csendben maradunk
+        }
     ).then(() => {
         isCameraRunning = true;
     }).catch(err => {
@@ -348,17 +348,12 @@ function playSound(ok) {
     snd.currentTime = 0; snd.play().catch(()=>{});
 }
 
-// --- ÚJ ELŐZMÉNY KEZELÉS (LocalStorage, Idő + Kód) ---
+// --- ELŐZMÉNY KEZELÉS ---
 function saveToHistory(code, ok) {
     const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     let history = JSON.parse(localStorage.getItem('scanHistory') || '[]');
-    
-    // Csak a kódot mentjük és az időt
     history.unshift({ code, ok, time });
-    
-    // Max 30 elem
     if(history.length > 30) history.pop();
-    
     localStorage.setItem('scanHistory', JSON.stringify(history));
     renderHistory();
 }
@@ -385,12 +380,15 @@ function checkAutoStart() {
     const urlParams = new URLSearchParams(window.location.search);
     if(urlParams.get('autostart') === 'true') {
         setTimeout(() => {
-            handleCameraButton();
-        }, 500); // Fél másodpercet várunk, hogy biztosan betöltsön
+            // Csak akkor indítjuk, ha még nem fut
+            if(!isCameraRunning) {
+                let btn = document.querySelector("button"); 
+                if(btn) btn.click();
+            }
+        }, 500); 
     }
 }
 
-// Init futtatása, majd ha kész, csekkoljuk az autostartot
 init().then(() => {
     checkAutoStart();
 });
