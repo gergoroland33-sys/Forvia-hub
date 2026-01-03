@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Forvia Bank Scan Mobil Ver5.6 (DataMatrix Only)</title>
+<title>Forvia Bank Scan Mobil Ver5.7 (Focus Fix)</title>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <style>
@@ -162,7 +162,7 @@ input[type=text] {
 
 <script>
 /* ========================================================
-   LOGIKA - DATA MATRIX SPECIALIZÁCIÓVAL
+   LOGIKA - DATA MATRIX + KISEBB KERET (FÓKUSZ FIX)
    ======================================================== */
 const input = document.getElementById('barcodeInput');
 const resultsWrapper = document.getElementById('resultsWrapper');
@@ -263,7 +263,7 @@ function search(code) {
     }
 }
 
-// --- JAVÍTOTT KAMERA LOGIKA (CSAK DATA MATRIX) ---
+// --- JAVÍTOTT KAMERA LOGIKA (KIS QRBOX + DATA MATRIX) ---
 function handleCameraButton() {
     resultsWrapper.innerHTML = ''; 
     input.value = '';
@@ -287,10 +287,11 @@ function startCamera() {
         html5QrCode = new Html5Qrcode("reader");
     }
 
-    // ITT A LÉNYEG: formatsToSupport -> CSAK DATA MATRIX
+    // ITT A VÁLTOZTATÁS:
+    // qrbox 250x250 -> 160x160 (hogy közelebb kelljen vinni)
     const config = { 
-        fps: 25, // Kicsit gyorsítottam a pásztázáson (20->25)
-        qrbox: { width: 250, height: 250 }, // Picit nagyobb fókuszterület
+        fps: 25, 
+        qrbox: { width: 160, height: 160 }, 
         formatsToSupport: [ Html5QrcodeSupportedFormats.DATA_MATRIX ] 
     };
     
@@ -298,15 +299,12 @@ function startCamera() {
         { facingMode: "environment" }, 
         config,
         (decodedText) => {
-            // Siker esetén
             forceStopCamera().then(() => {
                 input.value = decodedText;
                 search(decodedText.trim().toUpperCase());
             });
         },
-        (errorMessage) => {
-            // Szkennelés közbeni hibák (nem talált kódot) - csendben maradunk
-        }
+        (errorMessage) => {}
     ).then(() => {
         isCameraRunning = true;
     }).catch(err => {
@@ -352,8 +350,10 @@ function playSound(ok) {
 function saveToHistory(code, ok) {
     const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     let history = JSON.parse(localStorage.getItem('scanHistory') || '[]');
+    
     history.unshift({ code, ok, time });
     if(history.length > 30) history.pop();
+    
     localStorage.setItem('scanHistory', JSON.stringify(history));
     renderHistory();
 }
@@ -380,7 +380,6 @@ function checkAutoStart() {
     const urlParams = new URLSearchParams(window.location.search);
     if(urlParams.get('autostart') === 'true') {
         setTimeout(() => {
-            // Csak akkor indítjuk, ha még nem fut
             if(!isCameraRunning) {
                 let btn = document.querySelector("button"); 
                 if(btn) btn.click();
