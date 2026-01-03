@@ -52,37 +52,35 @@
             position: relative; 
         }
 
-        /* --- MEGOSZTÁS GOMB STÍLUS --- */
+        /* --- MEGOSZTÁS GOMB (JOBB FELSŐ) --- */
         .share-card-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+            position: absolute; top: 20px; right: 20px;
+            width: 40px; height: 40px; border-radius: 50%;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--text-dim);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            z-index: 10;
+            color: var(--text-dim); display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s ease; z-index: 10;
         }
         .share-card-btn:hover {
-            background: var(--accent);
-            color: white;
-            border-color: var(--accent);
-            transform: scale(1.1);
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+            background: var(--accent); color: white; border-color: var(--accent);
+            transform: scale(1.1); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
         }
-        .share-icon-svg {
-            width: 20px;
-            height: 20px;
-            fill: currentColor;
+
+        /* --- FOGASKERÉK GOMB (BAL FELSŐ) --- */
+        .settings-card-btn {
+            position: absolute; top: 20px; left: 20px;
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-dim); display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s ease; z-index: 10;
         }
-        /* ----------------------------- */
+        .settings-card-btn:hover {
+            background: #fbbf24; color: black; border-color: #fbbf24; /* Sárgás kiemelés */
+            transform: scale(1.1); box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+        }
+
+        .icon-svg { width: 20px; height: 20px; fill: currentColor; }
 
         .welcome-title {
             font-size: 2.2rem; font-weight: 800; margin: 0;
@@ -138,7 +136,6 @@
             0% { transform: translate3d(0, 0, 0); }
             100% { transform: translate3d(-100%, 0, 0); }
         }
-        /* --------------------- */
 
         .sidebar {
             position: fixed; left: 0; top: 0;
@@ -157,9 +154,7 @@
             border-bottom: 1px solid var(--border);
             background: rgba(255,255,255,0.02);
         }
-        .sidebar-header h2 {
-            font-size: 1.3rem; margin: 0; letter-spacing: 1px; font-weight: 700;
-        }
+        .sidebar-header h2 { font-size: 1.3rem; margin: 0; letter-spacing: 1px; font-weight: 700; }
 
         .nav-list { padding: 20px; flex-grow: 1; overflow-y: auto; }
 
@@ -184,17 +179,12 @@
         .menu-fab span { font-size: 28px; color: white; line-height: 1; }
 
         .refresh-fab {
-            position: fixed; 
-            bottom: 110px; 
-            right: 37px; 
-            width: 45px; height: 45px;
-            background: rgba(30, 41, 59, 0.8);
-            backdrop-filter: blur(5px);
+            position: fixed; bottom: 110px; right: 37px; width: 45px; height: 45px;
+            background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(5px);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             cursor: pointer; z-index: 2147483647;
-            border: 1px solid var(--border);
-            transition: all 0.3s;
+            border: 1px solid var(--border); transition: all 0.3s;
         }
         .refresh-fab:active { transform: rotate(180deg) scale(0.9); }
         .refresh-fab span { font-size: 22px; color: var(--accent); line-height: 1; font-weight: bold; }
@@ -214,8 +204,14 @@
 
 <div id="home-screen">
     <div class="glass-card">
+        <div class="settings-card-btn" onclick="setQuickButton()" title="Gyorsgomb beállítása">
+            <svg class="icon-svg" viewBox="0 0 24 24">
+                <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.49l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+            </svg>
+        </div>
+
         <div class="share-card-btn" onclick="shareApp()" title="App megosztása">
-            <svg class="share-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <svg class="icon-svg" viewBox="0 0 24 24">
                 <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
             </svg>
         </div>
@@ -279,7 +275,7 @@
     <span>↻</span>
 </div>
 
-<div class="menu-fab" id="menuFab" onclick="toggleMenu()">
+<div class="menu-fab" id="menuFab">
     <span id="menuIcon">☰</span>
 </div>
 
@@ -340,54 +336,37 @@
         'home':   '🏠 Kezdőlap'
     };
 
-    // --- DISCORD QUEUE RENDSZER (Spam védelem + Biztos kézbesítés) ---
-    // Ez az új, biztonságos logika, ami nem töröl semmit, csak sorba állít
+    // --- DISCORD QUEUE RENDSZER ---
     let discordQueue = [];
     let isSending = false;
 
-    // Ezt hívják a gombok (csak beteszi a sorba és indítja a feldolgozót)
     function sendDiscordLog(actionName, colorCode = 3883766) {
         discordQueue.push({ action: actionName, color: colorCode, time: new Date() });
         processDiscordQueue();
     }
 
-    // Ez a háttérben dolgozza fel a sort egyenként, szünettel
     function processDiscordQueue() {
         if (isSending || discordQueue.length === 0) return;
 
         isSending = true;
-        const item = discordQueue.shift(); // Kivesszük a legrégebbit a sor elejéről
+        const item = discordQueue.shift();
 
         const webhookURL = "https://discord.com/api/webhooks/1455930417155674125/Fo3Kf92QdktExG5mbu65t52MYI5ORFCwIkEnGEen6DboOeyD12zXDsVlsXlMYnhzuGH_";
         const timeString = item.time.toLocaleTimeString('hu-HU');
         
         let ua = navigator.userAgent;
-        let platform = "❓ Ismeretlen eszköz"; // Alapértelmezett
-
-        // Felismerési logika
-        if (/Android/i.test(ua)) {
-            platform = "📱 Android";
-        } else if (/iPhone|iPod/i.test(ua)) {
-            platform = "📱 iPhone";
-        } else if (/iPad/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
-            platform = "📱 iPad"; 
-        } else if (/Windows/i.test(ua)) {
-            platform = "💻 Windows PC";
-        } else if (/Mac/i.test(ua)) {
-            platform = "💻 Mac";
-        } else if (/Linux/i.test(ua)) {
-            // Ha Linux, de érintőképernyős (tabletek asztali módban)
-            if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-                platform = "📱 Android Tablet";
-            } else {
-                platform = "🐧 Linux PC";
-            }
-        }
+        let platform = "❓ Ismeretlen";
+        if (/Android/i.test(ua)) platform = "📱 Android";
+        else if (/iPhone|iPod/i.test(ua)) platform = "📱 iPhone";
+        else if (/iPad/i.test(ua)) platform = "📱 iPad";
+        else if (/Windows/i.test(ua)) platform = "💻 Windows PC";
+        else if (/Mac/i.test(ua)) platform = "💻 Mac";
+        else if (/Linux/i.test(ua)) platform = "🐧 Linux";
 
         const payload = {
             username: "Forvia Hub Logger",
             avatar_url: "https://i.imgur.com/4M34hi2.png",
-            content: "@here", // ITT A MEGOLDÁS: Minden üzenet pingel!
+            content: "@here", // MINDEN ÜZENET PINGEL!
             embeds: [{
                 title: item.action,
                 color: item.color,
@@ -395,7 +374,7 @@
                     { name: "⏰ Időpont", value: timeString, inline: true },
                     { name: "🛠️ Eszköz", value: platform, inline: true }
                 ],
-                footer: { text: "Master Shell v2.2 (Queued)" }
+                footer: { text: "Master Shell v2.5 (Quick Button)" }
             }]
         };
 
@@ -405,40 +384,102 @@
             body: JSON.stringify(payload)
         })
         .finally(() => {
-            // Akár sikerült, akár nem, várunk 2 másodpercet a következő előtt
-            // Így a Discord nem tilt le, és minden üzenet átmegy
             setTimeout(() => {
                 isSending = false;
-                processDiscordQueue(); // Jöhet a következő!
+                processDiscordQueue(); 
             }, 2000);
         });
     }
-    // -----------------------------------------------------------------
 
     // --- NAVIGÁCIÓ (CACHE BUSTING JAVÍTÁSSAL) ---
-    function loadModule(url) {
+    // Betöltjük a mentett gyorsgomb beállítást (Alapértelmezett: 9.html)
+    let quickModule = localStorage.getItem('fv_quick_mod') || '9.html';
+
+    function loadModule(url, autoStart = false) {
         document.getElementById('home-screen').style.display = 'none';
         document.getElementById('content-frame').style.display = 'block';
         
-        // ITT A TRÜKK: Hozzáadjuk a pontos időt, hogy mindig frisset töltsön le
-        document.getElementById('content-frame').src = url + "?v=" + new Date().getTime();
+        // Ha autoStart aktív (és Barcode modul), akkor hozzáfűzzük a parancsot
+        let finalUrl = url + "?v=" + new Date().getTime();
         
-        toggleMenu();
+        // Csak a Barcode (9.html) ismeri ezt a parancsot, de nem baj ha másnak is küldjük
+        if(autoStart) {
+            finalUrl += "&autostart=true";
+        }
+
+        document.getElementById('content-frame').src = finalUrl;
+        
+        const sidebar = document.getElementById('sidebar');
+        if(sidebar.classList.contains('open')) toggleMenu();
 
         const readableName = moduleNames[url] || "Ismeretlen Modul (" + url + ")";
-        sendDiscordLog(`📂 Modul Megnyitva: ${readableName}`, 3066993);
+        sendDiscordLog(`📂 Modul Megnyitva: ${readableName} ${autoStart ? '(Gyorsgomb)' : ''}`, 3066993);
     }
 
     function showHome() {
         document.getElementById('home-screen').style.display = 'flex';
         document.getElementById('content-frame').style.display = 'none';
         document.getElementById('content-frame').src = ""; 
-        toggleMenu();
+        const sidebar = document.getElementById('sidebar');
+        if(sidebar.classList.contains('open')) toggleMenu();
         
         sendDiscordLog("🏠 Visszatérés a Kezdőlapra", 10070709);
     }
 
-    // --- BIZTONSÁGI MENÜK (Jelszó kijelzéssel) ---
+    // --- GYORSGOMB BEÁLLÍTÁS (FOGASKERÉK) ---
+    function setQuickButton() {
+        let text = "Írd be a modul számát (1-9), amit a hosszan nyomásra akarsz beállítani!\n\nJelenlegi: " + quickModule;
+        let val = prompt(text, quickModule.replace('.html', ''));
+        
+        if (val) {
+            let targetHtml = val.includes('.html') ? val : val + ".html";
+            if (moduleNames[targetHtml]) {
+                localStorage.setItem('fv_quick_mod', targetHtml);
+                quickModule = targetHtml;
+                alert("✅ Beállítva: " + moduleNames[targetHtml]);
+                sendDiscordLog("⚙️ Gyorsgomb átállítva: " + val, 16776960);
+            } else {
+                alert("❌ Hibás modulszám! (1, 2, 3... 9)");
+            }
+        }
+    }
+
+    // --- HOSSZÚ NYOMÁS LOGIKA (MENÜ GOMB) ---
+    let pressTimer;
+    const fab = document.getElementById('menuFab');
+
+    const startPress = (e) => {
+        fab.style.transform = "scale(0.8)";
+        
+        pressTimer = setTimeout(() => {
+            // HA LEJÁRT AZ 1.5 mp (Hosszú nyomás):
+            if (navigator.vibrate) navigator.vibrate(50);
+            fab.style.transform = "scale(1)";
+            
+            // Azonnali indítás (autoStart = true)
+            loadModule(quickModule, true);
+            
+            fab.dataset.longPressed = "true";
+        }, 800); 
+    };
+
+    const endPress = (e) => {
+        clearTimeout(pressTimer);
+        fab.style.transform = "scale(1)";
+        
+        if (fab.dataset.longPressed !== "true") {
+            toggleMenu(); // Rövid nyomás -> Menü
+        }
+        fab.dataset.longPressed = "false";
+    };
+
+    fab.addEventListener('mousedown', startPress);
+    fab.addEventListener('touchstart', startPress, {passive: true});
+    fab.addEventListener('mouseup', endPress);
+    fab.addEventListener('touchend', endPress);
+    fab.addEventListener('mouseleave', () => clearTimeout(pressTimer)); 
+
+    // --- EGYÉB FUNKCIÓK ---
     function openSecureLink() {
         let pin = prompt("Adatgeneráló - Biztonsági kód:");
         if (pin === "smtforvia2026") {
@@ -460,31 +501,13 @@
         }
     }
 
-    // --- ÚJ PRO MEGOSZTÁS FUNKCIÓ (Javított) ---
     async function shareApp() {
-        const shareData = {
-            title: 'Forvia Hub',
-            text: 'Használd te is a Forvia SMT applikációt!',
-            url: window.location.href
-        };
-        
-        if (navigator.share) {
-            try {
-                // Ha van natív megosztás (mobil), akkor használjuk
-                await navigator.share(shareData);
-            } catch (err) {
-                // Ha a felhasználó visszalép/mégsem (AbortError), NEM csinálunk semmit.
-                // Nem írunk ki semmit, nem másolunk vágólapra. Csendben maradunk.
-            }
-        } else {
-            // Ha asztali gép (PC/Laptop), akkor másoljuk vágólapra
-            try {
-                await navigator.clipboard.writeText(window.location.href);
-                alert("Link a vágólapra másolva!");
-            } catch (err) {
-                console.error('Hiba:', err);
-            }
-        }
+        // DISCORD LOG A MEGOSZTÁSHOZ
+        sendDiscordLog("📤 App Megosztás gomb lenyomva", 3066993);
+
+        const shareData = { title: 'Forvia Hub', text: 'Használd te is a Forvia SMT applikációt!', url: window.location.href };
+        if (navigator.share) { try { await navigator.share(shareData); } catch (err) {} } 
+        else { try { await navigator.clipboard.writeText(window.location.href); alert("Link a vágólapra másolva!"); } catch (err) { console.error('Hiba:', err); } }
     }
 
     document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
