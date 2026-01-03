@@ -380,7 +380,20 @@ function clearHistory() {
     }
 }
 
-init();
+// --- AUTOMATA INDÍTÁS (Master Shell parancsra) ---
+function checkAutoStart() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.get('autostart') === 'true') {
+        setTimeout(() => {
+            handleCameraButton();
+        }, 500); // Fél másodpercet várunk, hogy biztosan betöltsön
+    }
+}
+
+// Init futtatása, majd ha kész, csekkoljuk az autostartot
+init().then(() => {
+    checkAutoStart();
+});
 </script>
 </body>
 </html>
