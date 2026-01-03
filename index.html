@@ -152,7 +152,8 @@
             color: var(--text-dim); font-weight: 500; transition: 0.2s; cursor: pointer;
         }
         .nav-item i { width: 30px; font-style: normal; text-align: center; font-size: 1.2rem; }
-        .nav-item:hover, .nav-item.active { background: var(--accent); color: white; }
+        /* Csak Hover és Active állapotban lesz kék, nem marad úgy */
+        .nav-item:hover, .nav-item:active { background: var(--accent); color: white; }
 
         .menu-fab {
             position: fixed; bottom: 30px; right: 30px;
@@ -253,7 +254,7 @@
     </div>
 
     <nav class="nav-list">
-        <div onclick="showHome()" class="nav-item active"><i>🏠</i> Kezdőlap</div>
+        <div onclick="showHome()" class="nav-item"><i>🏠</i> Kezdőlap</div>
         <div onclick="loadModule('1.html')" class="nav-item"><i>🔍</i> Alkatrész Kereső</div>
         <div onclick="loadModule('2.html')" class="nav-item"><i>💰</i> Bérkalkulátor</div>
         <div onclick="loadModule('3.html')" class="nav-item"><i>📅</i> Műszaknaptár</div>
@@ -371,7 +372,7 @@
                     { name: "⏰ Időpont", value: timeString, inline: true },
                     { name: "🛠️ Eszköz", value: platform, inline: true }
                 ],
-                footer: { text: "Master Shell v2.7 (Fixed Scanner)" }
+                footer: { text: "Master Shell v2.8 (Clean Menu)" }
             }]
         };
 
@@ -388,36 +389,11 @@
         });
     }
 
-    // --- MENÜ HIGHLIGHT KEZELÉS (Javított) ---
-    function updateMenuHighlight(targetUrl) {
-        // Mindenkiről levesszük az active osztályt
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        
-        if (targetUrl === 'home') {
-            // Megkeressük a Kezdőlap gombot (az első a listában, vagy onclick alapján)
-            const homeBtn = document.querySelector(".nav-item[onclick*='showHome']");
-            if(homeBtn) homeBtn.classList.add('active');
-        } else {
-            // Megkeressük azt a gombot, aminek az onclick-jében benne van a fájl neve
-            // Pl: '1.html' -> onclick="loadModule('1.html')"
-            const links = document.querySelectorAll(".nav-item");
-            links.forEach(link => {
-                // Egyszerűsítve: ha a gomb onclick szövege tartalmazza a fájl nevét
-                if (link.getAttribute('onclick') && link.getAttribute('onclick').includes(targetUrl)) {
-                    link.classList.add('active');
-                }
-            });
-        }
-    }
-
-    // --- NAVIGÁCIÓ ---
+    // --- NAVIGÁCIÓ (Egyszerűsített, nincs highlight) ---
     function loadModule(url, autoStart = false) {
         document.getElementById('home-screen').style.display = 'none';
         document.getElementById('content-frame').style.display = 'block';
         
-        // Frissítjük a menü kijelölést
-        updateMenuHighlight(url);
-
         let finalUrl = url + "?v=" + new Date().getTime();
         
         // Ha autoStart aktív (Barcode), akkor jelezzük a modulnak
@@ -438,10 +414,6 @@
         document.getElementById('home-screen').style.display = 'flex';
         document.getElementById('content-frame').style.display = 'none';
         document.getElementById('content-frame').src = ""; 
-        
-        // Frissítjük a menü kijelölést (Kezdőlap)
-        updateMenuHighlight('home');
-
         const sidebar = document.getElementById('sidebar');
         if(sidebar.classList.contains('open')) toggleMenu();
         
@@ -467,7 +439,7 @@
         }, 800); 
     };
 
-    // --- JAVÍTOTT GOMB FELENGEDÉS LOGIKA (Android Fix) ---
+    // --- GOMB FELENGEDÉS LOGIKA (Android Fix + Race condition fix) ---
     const endPress = (e) => {
         // Ha érintés volt, ne engedjük az egér eseményeket (dupla kattintás elkerülése)
         if (e.type === 'touchend') e.preventDefault();
@@ -480,7 +452,7 @@
             toggleMenu(); 
         }
 
-        // Késleltetjük a visszaállítást 200ms-el, hogy a "szellem kattintások" ne zavarjanak be
+        // Késleltetjük a visszaállítást 200ms-el
         setTimeout(() => {
             fab.dataset.longPressed = "false";
         }, 200);
