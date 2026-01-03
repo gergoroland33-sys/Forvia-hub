@@ -70,7 +70,7 @@
             box-sizing: border-box;
         }
 
-        /* --- STICKY OSZLOPOK (JAVÍTOTT MÉRETEK + MOBIL FIX) --- */
+        /* --- STICKY OSZLOPOK --- */
         
         /* 1. NÉV OSZLOP (0px - 140px) */
         .name-col { 
@@ -87,13 +87,13 @@
             box-shadow: 4px 0 8px rgba(0,0,0,0.3);
             box-sizing: border-box;
             
-            /* MOBIL FIX: Nem engedi kijelölni a szöveget, így működik a húzás */
+            /* MOBIL FIX: Szöveg kijelölés tiltása a könnyebb húzásért */
             -webkit-user-select: none;
             user-select: none;
             touch-action: manipulation;
         }
 
-        /* 2. KERET OSZLOP (140px - 200px) - Szélesség: 60px */
+        /* 2. KERET OSZLOP (140px - 200px) - 60px */
         .sticky-quota {
             position: sticky !important;
             left: 140px !important; 
@@ -106,7 +106,7 @@
             box-sizing: border-box;
         }
 
-        /* 3. KIVEHETŐ OSZLOP (200px - 260px) - Szélesség: 60px */
+        /* 3. KIVEHETŐ OSZLOP (200px - 260px) - 60px */
         .sticky-rem {
             position: sticky !important;
             left: 200px !important;       
@@ -120,7 +120,7 @@
             box-sizing: border-box;
         }
 
-        /* Fejlécek Z-Index javítása */
+        /* Fejlécek Z-Index */
         .matrix-table thead th.name-col,
         .matrix-table thead th.sticky-quota,
         .matrix-table thead th.sticky-rem { 
@@ -227,6 +227,14 @@
         /* D Műszak (Lila) - Halvány keret (0.4) */
         .today-D { border-left: 2px solid rgba(139, 92, 246, 0.4) !important; border-right: 2px solid rgba(139, 92, 246, 0.4) !important; }
         thead th.today-D { color: #8b5cf6 !important; border-bottom: 2px solid rgba(139, 92, 246, 0.4) !important; background-color: #1e293b !important; }
+
+        /* Sortable Ghost (Mozgatás közbeni stílus) */
+        .sortable-fallback {
+            opacity: 1 !important;
+            background: #1e293b !important;
+            border: 1px solid #3b82f6;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
 
         @media print {
             .no-print { display: none !important; }
@@ -365,7 +373,6 @@
                 const data = await res.json();
                 employees = Array.isArray(data) ? data : [];
                 render();
-                // MOBIL JAVÍTÁS: Késleltetés a véletlen drag ellen
                 initSortable();
             } catch(e) { console.error("Load hiba"); }
         }
@@ -412,18 +419,28 @@
         }
 
         function initSortable() {
-            Sortable.create(document.getElementById('tBody'), {
+            var el = document.getElementById('tBody');
+            Sortable.create(el, {
                 animation: 150,
                 handle: '.name-col',
-                delay: 200, // MOBIL JAVÍTÁS: 200ms késleltetés, hogy lehessen görgetni
-                delayOnTouchOnly: true, // Csak érintőképernyőn vár
+                delay: 200, 
+                delayOnTouchOnly: true,
+                forceFallback: true, // JAVÍTÁS: Kényszerített fallback a stabil mozgatásért
                 onEnd: function() {
                     let newOrder = [];
-                    document.querySelectorAll('#tBody tr').forEach(tr => {
-                        newOrder.push(employees.find(e => e.id == tr.dataset.id));
+                    // Biztonságos újrarendezés
+                    el.querySelectorAll('tr').forEach(tr => {
+                        let id = tr.getAttribute('data-id');
+                        let emp = employees.find(e => e.id == id);
+                        if(emp) newOrder.push(emp);
                     });
-                    employees = newOrder;
-                    save();
+                    
+                    if(newOrder.length > 0) {
+                        employees = newOrder;
+                        save();
+                        // Fontos: Azonnali újrarajzolás, hogy a DOM szinkronban maradjon az adatokkal
+                        render(); 
+                    }
                 }
             });
         }
@@ -517,7 +534,6 @@
             }).join('');
         }
 
-        // JAVÍTOTT GÖRGETÉS - MEGNÖVELT OFFSETTEL (140+60+60 = 260)
         function jumpToToday() {
             const now = new Date();
             date = new Date(2026, now.getMonth(), 1); 
@@ -527,7 +543,6 @@
                 const container = document.querySelector('.table-container');
                 if(el && container) {
                     // 140 (Név) + 60 (Keret) + 60 (Kivehető) = 260px
-                    // Kivonjuk a 260-at, hogy a mai nap közvetlenül melléjük kerüljön
                     container.scrollTo({
                         left: el.offsetLeft - 260, 
                         behavior: 'smooth'
