@@ -50,7 +50,11 @@
             -webkit-overflow-scrolling: touch; 
         }
 
-        .matrix-table { border-collapse: separate; border-spacing: 0; }
+        .matrix-table { 
+            border-collapse: separate; 
+            border-spacing: 0; 
+            table-layout: fixed; /* Ez segít a stabil szélességben */
+        }
         
         /* 1. Dátum sor (Sticky Top) */
         .matrix-table thead th {
@@ -61,42 +65,50 @@
             height: 40px; 
             box-shadow: 0 1px 0 #2d3748;
             padding: 2px 0;
+            width: 36px; /* Fix nap szélesség */
+            min-width: 36px;
         }
 
-        /* --- STICKY OSZLOPOK (NÉV, KERET, KIVEHETŐ) --- */
+        /* --- STICKY OSZLOPOK JAVÍTVA --- */
         
-        /* 1. NÉV OSZLOP (Bal: 0px) */
+        /* 1. NÉV OSZLOP (Bal: 0px, Szélesség: 140px) */
         .name-col { 
             position: sticky !important; 
             left: 0 !important; 
             z-index: 40 !important;
-            min-width: 160px; 
-            max-width: 160px;
+            width: 140px !important;      /* FIX SZÉLESSÉG */
+            min-width: 140px !important;
+            max-width: 140px !important;
             background: #1e293b !important; 
             border-right: 2px solid #3b82f6 !important; 
             cursor: grab;
             padding: 0 6px !important;
             box-shadow: 4px 0 8px rgba(0,0,0,0.3);
-            transition: background 0.1s; 
         }
 
-        /* 2. KERET OSZLOP (Bal: 160px) */
+        /* 2. KERET OSZLOP (Bal: 140px, Szélesség: 50px) */
         .sticky-quota {
             position: sticky !important;
-            left: 160px !important; /* Név oszlop szélessége */
+            left: 140px !important;       /* Pontosan a név után */
+            width: 50px !important;       /* FIX SZÉLESSÉG */
+            min-width: 50px !important;
+            max-width: 50px !important;
             z-index: 40 !important;
-            background: #1e293b !important; /* Hogy takarjon */
+            background: #1e293b !important; 
             border-right: 1px solid #334155 !important;
         }
 
-        /* 3. KIVEHETŐ OSZLOP (Bal: 210px) */
+        /* 3. KIVEHETŐ OSZLOP (Bal: 190px, Szélesség: 50px) */
         .sticky-rem {
             position: sticky !important;
-            left: 210px !important; /* 160px (Név) + 50px (Keret) */
+            left: 190px !important;       /* 140 + 50 = 190 */
+            width: 50px !important;       /* FIX SZÉLESSÉG */
+            min-width: 50px !important;
+            max-width: 50px !important;
             z-index: 40 !important;
-            background: #1e293b !important; /* Hogy takarjon */
-            border-right: 4px solid #0f172a !important; /* Vastag elválasztó */
-            box-shadow: 4px 0 5px rgba(0,0,0,0.2); /* Árnyék a napok felé */
+            background: #1e293b !important; 
+            border-right: 4px solid #0f172a !important; 
+            box-shadow: 4px 0 5px rgba(0,0,0,0.2); 
         }
 
         /* Fejlécek Z-Index javítása (hogy a fejléc mindig a tartalom felett legyen) */
@@ -126,14 +138,12 @@
             color: #cbd5e1 !important; 
         }
 
-        .data-col-fix { min-width: 50px !important; width: 50px !important; }
-        
         .matrix-table th, .matrix-table td { 
             border: 1px solid #2d3748; 
-            min-width: 36px; 
             height: 40px;    
             text-align: center; font-size: 13px; 
             padding: 0;      
+            box-sizing: border-box; /* Fontos a pontos méretezéshez */
         }
         .matrix-table th { color: #94a3b8; font-weight: 700; text-transform: uppercase; font-size: 10px; }
 
@@ -193,19 +203,19 @@
             font-weight: 900 !important;
         }
 
-        /* A Műszak (Piros) - Halvány keret (0.4) */
+        /* A Műszak (Piros) */
         .today-A { border-left: 2px solid rgba(239, 68, 68, 0.4) !important; border-right: 2px solid rgba(239, 68, 68, 0.4) !important; }
         thead th.today-A { color: #ef4444 !important; border-bottom: 2px solid rgba(239, 68, 68, 0.4) !important; background-color: #1e293b !important; }
 
-        /* B Műszak (Zöld) - Halvány keret (0.4) */
+        /* B Műszak (Zöld) */
         .today-B { border-left: 2px solid rgba(16, 185, 129, 0.4) !important; border-right: 2px solid rgba(16, 185, 129, 0.4) !important; }
         thead th.today-B { color: #10b981 !important; border-bottom: 2px solid rgba(16, 185, 129, 0.4) !important; background-color: #1e293b !important; }
 
-        /* C Műszak (Narancs) - Halvány keret (0.4) */
+        /* C Műszak (Narancs) */
         .today-C { border-left: 2px solid rgba(245, 158, 11, 0.4) !important; border-right: 2px solid rgba(245, 158, 11, 0.4) !important; }
         thead th.today-C { color: #f59e0b !important; border-bottom: 2px solid rgba(245, 158, 11, 0.4) !important; background-color: #1e293b !important; }
 
-        /* D Műszak (Lila) - Halvány keret (0.4) */
+        /* D Műszak (Lila) */
         .today-D { border-left: 2px solid rgba(139, 92, 246, 0.4) !important; border-right: 2px solid rgba(139, 92, 246, 0.4) !important; }
         thead th.today-D { color: #8b5cf6 !important; border-bottom: 2px solid rgba(139, 92, 246, 0.4) !important; background-color: #1e293b !important; }
 
@@ -441,8 +451,8 @@
 
             let h = `<tr>
                 <th class="name-col">Név</th>
-                <th class="data-col-fix sticky-quota bg-slate-800 text-blue-300 border-b border-slate-700">KERET</th>
-                <th class="data-col-fix sticky-rem bg-slate-800 text-emerald-400 border-b border-slate-700 border-r-4 border-r-slate-900">KIVEHETŐ</th>`;
+                <th class="sticky-quota bg-slate-800 text-blue-300 border-b border-slate-700">KERET</th>
+                <th class="sticky-rem bg-slate-800 text-emerald-400 border-b border-slate-700 border-r-4 border-r-slate-900">KIVEHETŐ</th>`;
             
             for(let d=1; d<=days; d++) {
                 const isHoliday = holidays2026.includes(`${m+1}-${d}`);
@@ -469,10 +479,10 @@
                         <button onclick="delEmp(${e.id})" class="text-red-500/30 hover:text-red-500 transition-colors p-1 flex-shrink-0 ml-1"><i class="fas fa-times-circle"></i></button>
                     </div>
                 </td>
-                <td class="data-col-fix sticky-quota bg-slate-800 border-r border-slate-700/50">
+                <td class="sticky-quota bg-slate-800 border-r border-slate-700/50">
                     <input type="number" value="${e.yearlyQuota||160}" onchange="employees.find(x=>x.id==${e.id}).yearlyQuota=this.value; save(); render();" class="input-cell quota-input text-center">
                 </td>
-                <td id="rem-${e.id}" class="data-col-fix sticky-rem bg-slate-800 text-emerald-400 font-black text-[15px] border-r-4 border-slate-900 text-center">
+                <td id="rem-${e.id}" class="sticky-rem bg-slate-800 text-emerald-400 font-black text-[15px] border-r-4 border-slate-900 text-center">
                     ${(e.yearlyQuota||160)-s}
                 </td>`;
                 
