@@ -103,12 +103,15 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- HÍRSÁV STÍLUS --- */
+        /* --- HÍRSÁV STÍLUS (Most már dinamikus színekkel) --- */
         .ticker-wrap {
             position: fixed; bottom: 0; left: 0; width: 100%; overflow: hidden; height: 36px;
-            background-color: rgba(15, 23, 42, 0.95); border-top: 1px solid var(--accent);
+            /* Alapértelmezett szín (Kék) - JS felülírja */
+            background-color: rgba(15, 23, 42, 0.95); 
+            border-top: 1px solid var(--accent);
             z-index: 1000; backdrop-filter: blur(5px);
             padding-left: 100%; box-sizing: content-box;
+            transition: background-color 0.5s ease; /* Szép színátmenet */
         }
         .ticker-move {
             display: inline-block; height: 36px; line-height: 36px; white-space: nowrap;
@@ -116,7 +119,9 @@
             animation: ticker 30s linear infinite;
         }
         .ticker-item {
-            display: inline-block; padding: 0 2rem; font-size: 0.9rem; color: #fbbf24;
+            display: inline-block; padding: 0 2rem; font-size: 0.9rem; 
+            /* Alapértelmezett szín (Arany) - JS felülírja */
+            color: #fbbf24;
             font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
         }
         @keyframes ticker {
@@ -155,8 +160,6 @@
         }
         .nav-item i { width: 30px; font-style: normal; text-align: center; font-size: 1.2rem; }
         
-        /* JAVÍTOTT GOMB STÍLUS: Csak akkor kék, ha ÉPPEN nyomod (:active) */
-        /* A :hover-t meghagyjuk PC-re, de mobilon a :active dominál */
         @media (hover: hover) {
             .nav-item:hover { background: rgba(59, 130, 246, 0.2); color: white; }
         }
@@ -170,31 +173,17 @@
             cursor: pointer; z-index: 2147483647; 
             border: 2px solid rgba(255,255,255,0.1);
             transition: transform 0.2s;
-            
-            /* KIJELÖLÉS TILTÁSA (Anti-Select) */
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -khtml-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            outline: none;
-            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; outline: none; -webkit-tap-highlight-color: transparent;
         }
         .menu-fab:active { transform: scale(0.9); }
         .menu-fab span { font-size: 28px; color: white; line-height: 1; }
 
         .refresh-fab {
-            position: fixed; 
-            bottom: 110px; 
-            right: 37px; 
-            width: 45px; height: 45px;
-            background: rgba(30, 41, 59, 0.8);
-            backdrop-filter: blur(5px);
+            position: fixed; bottom: 110px; right: 37px; width: 45px; height: 45px;
+            background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(5px);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            cursor: pointer; z-index: 2147483647;
-            border: 1px solid var(--border);
+            cursor: pointer; z-index: 2147483647; border: 1px solid var(--border);
             transition: all 0.3s;
         }
         .refresh-fab:active { transform: rotate(180deg) scale(0.9); }
@@ -285,6 +274,9 @@
 </div>
 
 <script>
+    // --- KONFIGURÁCIÓ (Firebase URL) ---
+    const DB_URL = "https://forviastaff-default-rtdb.firebaseio.com/"; 
+
     const nevnapok = {
         "01-01": "Alpár", "01-02": "Ábel", "01-03": "Genovéva, Benjámin", "01-04": "Titusz, Leona", "01-05": "Simon", "01-06": "Boldizsár", "01-07": "Attila, Ramóna", "01-08": "Gyöngyvér", "01-09": "Marcell", "01-10": "Melánia", "01-11": "Ágota", "01-12": "Ernő", "01-13": "Veronika", "01-14": "Bódog", "01-15": "Lóránt, Loránd", "01-16": "Gusztáv", "01-17": "Antal, Antónia", "01-18": "Piroska", "01-19": "Sára, Márió", "01-20": "Fábián, Sebestyén", "01-21": "Ágnes", "01-22": "Vince", "01-23": "Zelma, Rajmund", "01-24": "Timót", "01-25": "Pál", "01-26": "Vanda, Paula", "01-27": "Angelika", "01-28": "Károly, Karola", "01-29": "Adél", "01-30": "Martina, Gerda", "01-31": "Marcella",
         "02-01": "Ignác", "02-02": "Karolina, Aida", "02-03": "Balázs", "02-04": "Ráhel, Csenge", "02-05": "Ágota, Ingrid", "02-06": "Dorottya, Dóra", "02-07": "Tódor, Rómeó", "02-08": "Aranka", "02-09": "Abigél, Alex", "02-10": "Elvira", "02-11": "Bertold, Marietta", "02-12": "Lívia, Lídia", "02-13": "Ella, Linda", "02-14": "Bálint, Valentin", "02-15": "Kolos, Georgina", "02-16": "Julianna, Lilla", "02-17": "Donát", "02-18": "Bernadett", "02-19": "Zsuzsanna", "02-20": "Aladár, Álmos", "02-21": "Eleonóra", "02-22": "Gerzson", "02-23": "Alfréd", "02-24": "Mátyás", "02-25": "Géza", "02-26": "Viktor, Győző", "02-27": "Gábor, Edina", "02-28": "Elemér", "02-29": "Auguszta",
@@ -299,6 +291,32 @@
         "11-01": "Marianna", "11-02": "Achilles", "11-03": "Győző", "11-04": "Károly", "11-05": "Imre", "11-06": "Lénárd", "11-07": "Rezső", "11-08": "Zsombor", "11-09": "Tivadar", "11-10": "Réka", "11-11": "Márton", "11-12": "Jónás, Renátó", "11-13": "Szilvia", "11-14": "Aliz", "11-15": "Albert, Lipót", "11-16": "Ödön", "11-17": "Hortenzia, Gergő", "11-18": "Jenő", "11-19": "Erzsébet", "11-20": "Jolán", "11-21": "Olivér", "11-22": "Cecília", "11-23": "Kelemen, Kolos", "11-24": "Emma", "11-25": "Katalin", "11-26": "Virág", "11-27": "Virgil", "11-28": "Stefánia", "11-29": "Taksony", "11-30": "András, Andor",
         "12-01": "Elza", "12-02": "Melinda, Vivien", "12-03": "Ferenc, Olívia", "12-04": "Borbála, Barbara", "12-05": "Vilma", "12-06": "Miklós", "12-07": "Ambrus", "12-08": "Mária", "12-09": "Natália", "12-10": "Judit", "12-11": "Árpád", "12-12": "Gabriella", "12-13": "Luca, Otília", "12-14": "Szilárda", "12-15": "Valér", "12-16": "Etelka, Aletta", "12-17": "Lázár, Olimpia", "12-18": "Auguszta", "12-19": "Viola", "12-20": "Teofil", "12-21": "Tamás", "12-22": "Zénó", "12-23": "Viktória", "12-24": "Ádám, Éva", "12-25": "Eugénia", "12-26": "István", "12-27": "János", "12-28": "Kamilla", "12-29": "Tamás, Tamara", "12-30": "Dávid", "12-31": "Szilveszter"
     };
+
+    // --- 1. AUTOMATIKUS ÜZENET ÉS SZÍN BETÖLTÉS (FIREBASE) ---
+    async function loadTickerMessage() {
+        try {
+            const res = await fetch(`${DB_URL}ticker_config.json`);
+            if (!res.ok) throw new Error("Hiba");
+            const data = await res.json();
+            
+            // Ha van mentett üzenet
+            if (data && data.text) {
+                const tickerWrap = document.querySelector('.ticker-wrap');
+                const tickerItem = document.querySelector('.ticker-item');
+                
+                if (tickerItem) tickerItem.innerText = data.text;
+                
+                // Színek beállítása (ha vannak mentve)
+                if (data.bg && tickerWrap) tickerWrap.style.backgroundColor = data.bg;
+                if (data.color && tickerItem) tickerItem.style.color = data.color;
+            }
+        } catch (e) {
+            console.log("Alapértelmezett infósáv (Fallback) betöltve.");
+        }
+    }
+
+    // Indításkor azonnal lekérdezzük
+    loadTickerMessage();
 
     function updateInfo() {
         const now = new Date();
@@ -396,10 +414,7 @@
         });
     }
 
-    // --- NAVIGÁCIÓ (Kényszerített fókusz elvétel - BLUR) ---
-    // A 'caller' paraméter maga a gomb, amire kattintottál
     function loadModule(url, autoStart = false, caller = null) {
-        // Ha van gomb, azonnal elvesszük tőle a fókuszt (hogy ne maradjon kék)
         if(caller) caller.blur();
 
         document.getElementById('home-screen').style.display = 'none';
@@ -407,7 +422,6 @@
         
         let finalUrl = url + "?v=" + new Date().getTime();
         
-        // Ha autoStart aktív (Barcode), akkor jelezzük a modulnak
         if(autoStart) {
             finalUrl += "&autostart=true";
         }
@@ -422,7 +436,7 @@
     }
 
     function showHome(caller = null) {
-        if(caller) caller.blur(); // Blur itt is
+        if(caller) caller.blur(); 
 
         document.getElementById('home-screen').style.display = 'flex';
         document.getElementById('content-frame').style.display = 'none';
@@ -433,42 +447,26 @@
         sendDiscordLog("🏠 Visszatérés a Kezdőlapra", 10070709);
     }
 
-    // --- HOSSZÚ NYOMÁS LOGIKA (FIX: 9.html) ---
+    // --- HOSSZÚ NYOMÁS LOGIKA ---
     let pressTimer;
     const fab = document.getElementById('menuFab');
 
     const startPress = (e) => {
         fab.style.transform = "scale(0.8)";
-        
         pressTimer = setTimeout(() => {
-            // Hosszú nyomás:
             if (navigator.vibrate) navigator.vibrate(50);
             fab.style.transform = "scale(1)";
-            
-            // FIXEN A 9-ES MODULT INDÍTJA + AUTOSTART
             loadModule('9.html', true);
-            
             fab.dataset.longPressed = "true";
         }, 800); 
     };
 
-    // --- GOMB FELENGEDÉS LOGIKA (Android Fix + Race condition fix) ---
     const endPress = (e) => {
-        // Ha érintés volt, ne engedjük az egér eseményeket (dupla kattintás elkerülése)
         if (e.type === 'touchend') e.preventDefault();
-
         clearTimeout(pressTimer);
         fab.style.transform = "scale(1)";
-        
-        // Csak akkor nyitunk menüt, ha NEM volt hosszú nyomás
-        if (fab.dataset.longPressed !== "true") {
-            toggleMenu(); 
-        }
-
-        // Késleltetjük a visszaállítást 200ms-el
-        setTimeout(() => {
-            fab.dataset.longPressed = "false";
-        }, 200);
+        if (fab.dataset.longPressed !== "true") { toggleMenu(); }
+        setTimeout(() => { fab.dataset.longPressed = "false"; }, 200);
     };
 
     fab.addEventListener('mousedown', startPress);
@@ -477,14 +475,59 @@
     fab.addEventListener('touchend', endPress);
     fab.addEventListener('mouseleave', () => clearTimeout(pressTimer)); 
 
-    // --- EGYÉB FUNKCIÓK ---
+    // --- TITKOS SZERKESZTŐ LOGIKA ---
     function openSecureLink(caller) {
         if(caller) caller.blur();
-        let pin = prompt("Adatgeneráló - Biztonsági kód:");
+        
+        // JELSZÓ BEKÉRÉS
+        let pin = prompt("Adja meg a kódot:");
+        
+        // 1. ESET: SIMA ADATGENERÁLÓ (ADMIN)
         if (pin === "smtforvia2026") {
             window.open("https://gergoroland33-sys.github.io/adatgeneralo/", "_blank");
             sendDiscordLog("🔐 ADMIN BELÉPÉS: Adatgeneráló", 65280);
-        } else if (pin !== null) {
+        } 
+        // 2. ESET: TITKOS INFÓSÁV SZERKESZTŐ
+        else if (pin === "infosav2026") {
+            // SZÖVEG BEKÉRÉSE
+            let newText = prompt("Írd be az új alsó csík szöveget:");
+            if (!newText) return; // Mégse gomb esetén kilép
+
+            // SZÍN VÁLASZTÁSA
+            let theme = prompt("Válassz színt:\n1 = Eredeti (Sötétkék/Arany)\n2 = Figyelem (Sárga/Kék)\n3 = Riasztás (Piros/Fehér)\n4 = Egyedi (Te adod meg)");
+            
+            let newBg = "rgba(15, 23, 42, 0.95)"; // Default BG
+            let newCol = "#fbbf24"; // Default Text
+
+            if (theme == "2") {
+                newBg = "#facc15"; // Sárga
+                newCol = "#1e3a8a"; // Kék
+            } else if (theme == "3") {
+                newBg = "#ef4444"; // Piros
+                newCol = "#ffffff"; // Fehér
+            } else if (theme == "4") {
+                newBg = prompt("Háttér szín (pl. #000000):", "#000000");
+                newCol = prompt("Betű szín (pl. #ffffff):", "#ffffff");
+            }
+
+            // MENTÉS FIREBASE-BE (Szöveg + Színek)
+            fetch(`${DB_URL}ticker_config.json`, {
+                method: 'PUT',
+                body: JSON.stringify({ text: newText, bg: newBg, color: newCol })
+            }).then(() => {
+                alert("✅ Üzenet és szín frissítve!");
+                
+                // AZONNALI FRISSÍTÉS HELYBEN
+                const tickerWrap = document.querySelector('.ticker-wrap');
+                const tickerItem = document.querySelector('.ticker-item');
+                tickerItem.innerText = newText;
+                tickerWrap.style.backgroundColor = newBg;
+                tickerItem.style.color = newCol;
+
+                sendDiscordLog(`📢 INFÓSÁV FRISSÍTVE: ${newText}`, 16776960);
+            }).catch(err => alert("Hiba a mentéskor!"));
+        }
+        else if (pin !== null) {
             alert("Hibás kód!");
             sendDiscordLog("🚨 HIBÁS PIN: Adatgeneráló (Beírva: " + pin + ")", 16711680);
         }
@@ -503,7 +546,6 @@
 
     async function shareApp(caller) {
         if(caller) caller.blur();
-        // DISCORD LOG A MEGOSZTÁSHOZ
         sendDiscordLog("📤 App Megosztás gomb lenyomva", 3066993);
 
         const shareData = { title: 'Forvia Hub', text: 'Használd te is a Forvia SMT applikációt!', url: window.location.href };
