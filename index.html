@@ -344,6 +344,9 @@
     // --- DISCORD QUEUE RENDSZER ---
     let discordQueue = [];
     let isSending = false;
+    
+    // 1. Session ID (Munkamenet azonosító) generálása
+    const sessionID = Math.floor(Math.random() * 0x10000).toString(16).toUpperCase();
 
     function sendDiscordLog(actionName, colorCode = 3883766) {
         discordQueue.push({ action: actionName, color: colorCode, time: new Date() });
@@ -377,7 +380,8 @@
                 color: item.color,
                 fields: [
                     { name: "⏰ Időpont", value: timeString, inline: true },
-                    { name: "🛠️ Eszköz", value: platform, inline: true }
+                    // 2. ID hozzáadása az üzenethez
+                    { name: "🛠️ Eszköz & ID", value: `${platform} | ID: #${sessionID}`, inline: true }
                 ],
                 footer: { text: "Master Shell v2.9 (No Sticky Hover)" }
             }]
