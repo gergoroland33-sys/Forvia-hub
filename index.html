@@ -103,27 +103,33 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- HÍRSÁV STÍLUS (Most már dinamikus színekkel) --- */
+        /* --- HÍRSÁV STÍLUS (JAVÍTOTT, AKADÁSMENTES) --- */
         .ticker-wrap {
             position: fixed; bottom: 0; left: 0; width: 100%; overflow: hidden; height: 36px;
             /* Alapértelmezett szín (Kék) - JS felülírja */
             background-color: rgba(15, 23, 42, 0.95); 
             border-top: 1px solid var(--accent);
             z-index: 1000; backdrop-filter: blur(5px);
-            padding-left: 100%; box-sizing: content-box;
-            transition: background-color 0.5s ease; /* Szép színátmenet */
+            white-space: nowrap;
+            transition: background-color 0.5s ease; 
         }
         .ticker-move {
             display: inline-block; height: 36px; line-height: 36px; white-space: nowrap;
-            padding-right: 100%; box-sizing: content-box;
-            animation: ticker 30s linear infinite;
+            padding-left: 100%; /* Jobb oldalról indul */
+            animation: ticker 35s linear infinite; /* Lassítottam (30->35) a stabilitásért */
+            
+            /* GPU GYORSÍTÁS BEKAPCSOLÁSA (AKADÁS ELLEN) */
+            will-change: transform;
+            transform: translateZ(0); 
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
         }
         .ticker-item {
             display: inline-block; padding: 0 2rem; font-size: 0.9rem; 
-            /* Alapértelmezett szín (Arany) - JS felülírja */
             color: #fbbf24;
             font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
         }
+        
         @keyframes ticker {
             0% { transform: translate3d(0, 0, 0); }
             100% { transform: translate3d(-100%, 0, 0); }
@@ -494,14 +500,14 @@
             if (!newText) return; // Mégse gomb esetén kilép
 
             // SZÍN VÁLASZTÁSA
-            let theme = prompt("Válassz színt:\n1 = Eredeti (Sötétkék/Arany)\n2 = Figyelem (Sárga/Kék)\n3 = Riasztás (Piros/Fehér)\n4 = Egyedi (Te adod meg)");
+            let theme = prompt("Válassz színt:\n1 = Eredeti (Sötétkék/Arany)\n2 = Forvia Kék (Sötétkék/Kék)\n3 = Riasztás (Piros/Fehér)\n4 = Egyedi");
             
             let newBg = "rgba(15, 23, 42, 0.95)"; // Default BG
             let newCol = "#fbbf24"; // Default Text
 
             if (theme == "2") {
-                newBg = "#facc15"; // Sárga
-                newCol = "#1e3a8a"; // Kék
+                newBg = "rgba(15, 23, 42, 0.95)"; // Eredeti sötétkék háttér
+                newCol = "#3b82f6"; // Forvia Kék betű
             } else if (theme == "3") {
                 newBg = "#ef4444"; // Piros
                 newCol = "#ffffff"; // Fehér
