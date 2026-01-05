@@ -345,8 +345,15 @@
     let discordQueue = [];
     let isSending = false;
     
-    // 1. Session ID (Munkamenet azonosító) generálása
-    const sessionID = Math.floor(Math.random() * 0x10000).toString(16).toUpperCase();
+    // 1. TARTÓS ESZKÖZ AZONOSÍTÓ (Persistent Device ID) KEZELÉSE
+    // Először megnézzük, van-e már mentett ID
+    let deviceID = localStorage.getItem('fv_device_id');
+    
+    // Ha nincs, generálunk egyet és elmentjük örökre
+    if (!deviceID) {
+        deviceID = Math.floor(Math.random() * 0x10000).toString(16).toUpperCase();
+        localStorage.setItem('fv_device_id', deviceID);
+    }
 
     function sendDiscordLog(actionName, colorCode = 3883766) {
         discordQueue.push({ action: actionName, color: colorCode, time: new Date() });
@@ -380,8 +387,8 @@
                 color: item.color,
                 fields: [
                     { name: "⏰ Időpont", value: timeString, inline: true },
-                    // 2. ID hozzáadása az üzenethez
-                    { name: "🛠️ Eszköz & ID", value: `${platform} | ID: #${sessionID}`, inline: true }
+                    // 2. A TARTÓS ID BEILLESZTÉSE (Ez már nem változik frissítéskor)
+                    { name: "🛠️ Eszköz & ID", value: `${platform} | ID: #${deviceID}`, inline: true }
                 ],
                 footer: { text: "Master Shell v2.9 (No Sticky Hover)" }
             }]
