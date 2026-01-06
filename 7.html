@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Forvia Quality Analysis Pro</title>
 <style>
-/* --- ALAP BEÁLLÍTÁSOK --- */
+/* --- ALAP BEÁLLÍTÁSOK (Változatlan) --- */
 :root {
     --bg-app: #0f172a;
     --bg-card: #1e293b;
@@ -29,7 +29,6 @@ body {
 
 .container { max-width: 1200px; margin: 0 auto; }
 
-/* --- FEJLÉC --- */
 header {
     display: flex; justify-content: space-between; align-items: center;
     padding-bottom: 15px; border-bottom: 1px solid var(--border); margin-bottom: 15px;
@@ -38,7 +37,6 @@ header {
 .brand span { color: var(--primary); font-weight: 800; }
 .meta-info { font-size: 0.85rem; color: var(--text-muted); text-align: right; }
 
-/* --- BETÖLTŐ ZÓNA --- */
 .upload-zone {
     background: linear-gradient(145deg, var(--bg-card), var(--bg-app));
     border: 2px dashed var(--border);
@@ -46,7 +44,6 @@ header {
     margin-bottom: 15px; cursor: pointer; transition: 0.3s;
 }
 
-/* --- SZŰRŐK --- */
 .filter-bar {
     display: flex; gap: 10px; background: var(--bg-card);
     padding: 12px; border-radius: 10px; margin-bottom: 20px;
@@ -59,7 +56,6 @@ select {
     border: 1px solid var(--border); padding: 6px; border-radius: 6px; font-size: 0.85rem;
 }
 
-/* --- STATISZTIKA --- */
 .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
 .stat-card {
     background: var(--bg-card); padding: 15px; border-radius: 12px;
@@ -71,7 +67,6 @@ select {
 .stat-value { font-size: 1.6rem; font-weight: 800; display: block; margin: 2px 0; }
 .stat-sub { font-size: 0.75rem; color: var(--text-muted); }
 
-/* --- TÁBLÁZATOK --- */
 .analysis-section { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 .panel { background: var(--bg-card); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; }
 .panel-header { padding: 10px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border); text-align: center; }
@@ -95,57 +90,51 @@ td { border-bottom: 1px solid rgba(255,255,255,0.05); }
 .bar-container { height: 4px; width: 100%; background: var(--bg-sub); border-radius: 2px; margin-top: 5px; overflow: hidden; }
 .bar-fill { height: 100%; border-radius: 2px; }
 
-/* --- ⚡ PROFI NYOMTATÁSI JAVÍTÁS (A4, FEHÉR ALAP) ⚡ --- */
+/* --- ⚡ EGYLAPOS PROFI NYOMTATÁS JAVÍTÁSA (75% ZOOM) ⚡ --- */
 @media print {
-    @page { size: A4 portrait; margin: 10mm; }
+    @page { size: A4 portrait; margin: 5mm; }
     
     body { 
         background: white !important; 
         color: black !important; 
-        padding: 0;
+        padding: 0 !important;
         -webkit-print-color-adjust: exact !important; 
         print-color-adjust: exact !important;
-        zoom: 100%; /* Normál méret a jó olvashatóságért */
+        zoom: 75% !important; /* Visszaállítva az eredeti méretezésre az egy laphoz */
     }
 
-    .container { max-width: 100%; width: 100%; }
+    .container { width: 100% !important; max-width: 100% !important; margin: 0 !important; }
 
-    /* Szövegek olvashatósága */
-    .brand h1 { color: black !important; }
+    /* Szövegek kontrasztja */
+    .brand h1, #fileDisplay, .panel-title { color: black !important; }
     .brand span { color: #2563eb !important; }
     .stat-sub, th { color: #475569 !important; }
-    #fileDisplay { color: black !important; }
 
-    /* Kártyák és Panelek */
+    /* Panelek és kártyák */
     .stat-card, .panel { 
         background: white !important; 
         border: 1px solid #cbd5e1 !important; 
         box-shadow: none !important;
-        page-break-inside: avoid;
     }
     
     .panel-header { background: #f1f5f9 !important; border-bottom: 1px solid #cbd5e1 !important; }
-    .panel-title { color: black !important; }
-
-    /* Táblázat javítás */
     td { border-bottom: 1px solid #e2e8f0 !important; color: black !important; }
-    td div[style*="color:#fff"] { color: black !important; } /* Cikkszám színe */
-    
+    td div[style*="color:#fff"] { color: black !important; }
+
     .badge-location { 
-        background: #f8fafc !important; 
+        background: #f1f5f9 !important; 
         color: #1d4ed8 !important; 
         border: 1px solid #bfdbfe !important; 
     }
 
-    /* Grafikon sávok láthatósága */
     .bar-container { background: #f1f5f9 !important; border: 1px solid #e2e8f0 !important; }
 
-    /* Elemek elrejtése */
+    /* Elemek elrejtése a helytakarékosság miatt */
     .upload-zone, .filter-bar, .meta-info button { display: none !important; }
     
-    /* Elrendezés megtartása */
-    .stats-grid { gap: 10px; margin-bottom: 15px; }
-    .analysis-section { grid-template-columns: 1fr 1fr !important; gap: 15px; }
+    /* Grid elrendezés kényszerítése */
+    .stats-grid { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 10px !important; margin-bottom: 10px !important; }
+    .analysis-section { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 15px !important; }
 }
 </style>
 </head>
@@ -270,31 +259,20 @@ function updateView() {
     const fGA = document.getElementById('filterGepsorA').value;
     const fG = document.getElementById('filterGepsor').value;
     const limit = parseInt(document.getElementById('topLimit').value);
-
     const filtered = allData.filter(d => (fGA === 'mind' || d.gA === fGA) && (fG === 'mind' || d.g === fG));
-
     let stats = { beult: 0, felv: 0, kam: 0, dF: {}, dK: {}, dLocs: {} };
-
     filtered.forEach(d => {
-        stats.beult += d.b;
-        stats.felv += d.f;
-        stats.kam += d.k;
-        
+        stats.beult += d.b; stats.felv += d.f; stats.kam += d.k;
         if (d.f > 0) stats.dF[d.cikk] = (stats.dF[d.cikk] || 0) + d.f;
         if (d.k > 0) stats.dK[d.cikk] = (stats.dK[d.cikk] || 0) + d.k;
-        
         if (!stats.dLocs[d.cikk]) stats.dLocs[d.cikk] = new Set();
-        if (d.f > 0 || d.k > 0) {
-            stats.dLocs[d.cikk].add(`${d.g} (${d.gA})`);
-        }
+        if (d.f > 0 || d.k > 0) stats.dLocs[d.cikk].add(`${d.g} (${d.gA})`);
     });
-
     document.getElementById('totalBeult').innerText = stats.beult.toLocaleString();
     document.getElementById('totalFelv').innerText = stats.felv.toLocaleString();
     document.getElementById('totalKam').innerText = stats.kam.toLocaleString();
     document.getElementById('rateFelv').innerText = (stats.beult > 0 ? ((stats.felv/stats.beult)*100).toFixed(2) : "0.00") + "% arány";
     document.getElementById('rateKam').innerText = (stats.beult > 0 ? ((stats.kam/stats.beult)*100).toFixed(2) : "0.00") + "% arány";
-
     renderTable('tableFelv', stats.dF, stats.dLocs, stats.felv, limit, 'worstFelvBadge', 'red-style', 'var(--danger)');
     renderTable('tableKam', stats.dK, stats.dLocs, stats.kam, limit, 'worstKamBadge', 'yellow-style', 'var(--warning)');
 }
@@ -303,18 +281,14 @@ function renderTable(tableId, dataDict, locDict, totalError, limit, badgeId, bad
     const tbody = document.getElementById(tableId).querySelector('tbody');
     tbody.innerHTML = "";
     const sorted = Object.entries(dataDict).sort((a, b) => b[1] - a[1]);
-
     const badgeEl = document.getElementById(badgeId);
     if (sorted.length > 0) {
         badgeEl.innerHTML = `<span>⚠️ ${sorted[0][0]}</span> <span>${sorted[0][1].toLocaleString()} hiba</span>`;
-        badgeEl.style.display = "flex";
-        badgeEl.className = `critical-banner ${badgeClass}`;
+        badgeEl.style.display = "flex"; badgeEl.className = `critical-banner ${badgeClass}`;
     } else { badgeEl.style.display = "none"; }
-
     const maxVal = sorted.length > 0 ? sorted[0][1] : 1;
     sorted.slice(0, limit).forEach((item, idx) => {
         const locationBadge = Array.from(locDict[item[0]] || ["Ismeretlen"]).join(", ");
-        
         tbody.innerHTML += `
         <tr>
             <td>
