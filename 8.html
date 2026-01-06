@@ -538,17 +538,26 @@
             const now = new Date();
             date = new Date(2026, now.getMonth(), 1); 
             render();
-            setTimeout(() => {
-                const el = document.getElementById('today-header');
-                const container = document.querySelector('.table-container');
-                if(el && container) {
-                    // 140 (Név) + 60 (Keret) + 60 (Kivehető) = 260px
-                    container.scrollTo({
-                        left: el.offsetLeft - 260, 
-                        behavior: 'smooth'
-                    });
-                }
-            }, 100);
+            
+            // JAVÍTÁS: Kettős időzítés (requestAnimationFrame + setTimeout)
+            // Ez garantálja, hogy laptopon és telefonon is megvárja a böngésző a táblázat megjelenését
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    const el = document.getElementById('today-header');
+                    const container = document.querySelector('.table-container');
+                    
+                    if(el && container) {
+                        // 140 (Név) + 60 (Keret) + 60 (Kivehető) = 260px a fix sáv
+                        // Biztosítjuk, hogy ne legyen negatív a szám
+                        const targetPos = Math.max(0, el.offsetLeft - 260);
+                        
+                        container.scrollTo({
+                            left: targetPos, 
+                            behavior: 'smooth'
+                        });
+                    }
+                }, 200); // 100-ról 200ms-re növelve a stabilitásért
+            });
         }
 
         function printA4(id) {
