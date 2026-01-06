@@ -95,28 +95,57 @@ td { border-bottom: 1px solid rgba(255,255,255,0.05); }
 .bar-container { height: 4px; width: 100%; background: var(--bg-sub); border-radius: 2px; margin-top: 5px; overflow: hidden; }
 .bar-fill { height: 100%; border-radius: 2px; }
 
-/* --- ⚡ NYOMTATÁS (SZÍNES, EGYLAPOS A4) ⚡ --- */
+/* --- ⚡ PROFI NYOMTATÁSI JAVÍTÁS (A4, FEHÉR ALAP) ⚡ --- */
 @media print {
-    @page { size: A4 portrait; margin: 5mm; }
+    @page { size: A4 portrait; margin: 10mm; }
     
     body { 
-        background-color: var(--bg-app) !important; 
-        color: var(--text-main) !important; 
+        background: white !important; 
+        color: black !important; 
+        padding: 0;
         -webkit-print-color-adjust: exact !important; 
         print-color-adjust: exact !important;
-        zoom: 75%;
+        zoom: 100%; /* Normál méret a jó olvashatóságért */
     }
 
+    .container { max-width: 100%; width: 100%; }
+
+    /* Szövegek olvashatósága */
+    .brand h1 { color: black !important; }
+    .brand span { color: #2563eb !important; }
+    .stat-sub, th { color: #475569 !important; }
+    #fileDisplay { color: black !important; }
+
+    /* Kártyák és Panelek */
+    .stat-card, .panel { 
+        background: white !important; 
+        border: 1px solid #cbd5e1 !important; 
+        box-shadow: none !important;
+        page-break-inside: avoid;
+    }
+    
+    .panel-header { background: #f1f5f9 !important; border-bottom: 1px solid #cbd5e1 !important; }
+    .panel-title { color: black !important; }
+
+    /* Táblázat javítás */
+    td { border-bottom: 1px solid #e2e8f0 !important; color: black !important; }
+    td div[style*="color:#fff"] { color: black !important; } /* Cikkszám színe */
+    
+    .badge-location { 
+        background: #f8fafc !important; 
+        color: #1d4ed8 !important; 
+        border: 1px solid #bfdbfe !important; 
+    }
+
+    /* Grafikon sávok láthatósága */
+    .bar-container { background: #f1f5f9 !important; border: 1px solid #e2e8f0 !important; }
+
+    /* Elemek elrejtése */
     .upload-zone, .filter-bar, .meta-info button { display: none !important; }
     
-    .container { width: 100%; }
-    .stat-card, .panel { background-color: var(--bg-card) !important; border: 1px solid var(--border) !important; }
-    .badge-location { background-color: var(--bg-app) !important; color: #3b82f6 !important; border: 1px solid var(--border) !important; }
-    .analysis-section { grid-template-columns: 1fr 1fr !important; }
-    
-    /* Ne engedjük szétcsúszni a lapot */
-    .stat-value { font-size: 1.4rem !important; }
-    table { font-size: 0.75rem !important; }
+    /* Elrendezés megtartása */
+    .stats-grid { gap: 10px; margin-bottom: 15px; }
+    .analysis-section { grid-template-columns: 1fr 1fr !important; gap: 15px; }
 }
 </style>
 </head>
@@ -251,11 +280,9 @@ function updateView() {
         stats.felv += d.f;
         stats.kam += d.k;
         
-        // Hibaösszesítés cikkszámonként
         if (d.f > 0) stats.dF[d.cikk] = (stats.dF[d.cikk] || 0) + d.f;
         if (d.k > 0) stats.dK[d.cikk] = (stats.dK[d.cikk] || 0) + d.k;
         
-        // Minden sorban kényszerítjük a Gép (Gépsor) formátumot
         if (!stats.dLocs[d.cikk]) stats.dLocs[d.cikk] = new Set();
         if (d.f > 0 || d.k > 0) {
             stats.dLocs[d.cikk].add(`${d.g} (${d.gA})`);
@@ -286,7 +313,6 @@ function renderTable(tableId, dataDict, locDict, totalError, limit, badgeId, bad
 
     const maxVal = sorted.length > 0 ? sorted[0][1] : 1;
     sorted.slice(0, limit).forEach((item, idx) => {
-        // Itt garantáljuk, hogy minden helyszín megjelenjen
         const locationBadge = Array.from(locDict[item[0]] || ["Ismeretlen"]).join(", ");
         
         tbody.innerHTML += `
