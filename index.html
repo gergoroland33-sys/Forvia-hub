@@ -12,14 +12,14 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-
-    <!-- ======= TELJES EREDETI STYLE – VÁLTOZATLAN ======= -->
     <style>
         :root {
             --bg: #0b1120; --card: #1e293b; --accent: #3b82f6;
             --text: #f3f4f6; --text-dim: #94a3b8; --border: #334155;
         }
+
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             background: #0f172a; color: var(--text);
@@ -27,34 +27,220 @@
             display: flex; flex-direction: column;
             padding-top: env(safe-area-inset-top); 
         }
+
         #content-frame {
             border: none; width: 100%; height: 100%;
-            display: none; background: #0f172a;
+            display: none; 
+            background: #0f172a;
         }
+
         #home-screen {
             flex-grow: 1; display: flex; flex-direction: column;
             align-items: center; justify-content: center; text-align: center;
-            background: radial-gradient(circle at top right, rgba(59,130,246,.15), transparent 40%),
-                        radial-gradient(circle at bottom left, rgba(16,185,129,.1), transparent 40%), #0b1120;
-            padding: 20px; position: relative;
+            background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+            radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.1), transparent 40%), #0b1120;
+            padding: 20px; position: relative; width: 100%; height: 100%;
         }
-        /* … A TELJES STÍLUSOD ITT VAN, VÁLTOZATLANUL … */
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px 30px; border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            max-width: 500px; width: 100%; animation: fadeIn 0.8s ease-out;
+            position: relative; 
+        }
+
+        .share-card-btn {
+            position: absolute; top: 20px; right: 20px;
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-dim); display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s ease; z-index: 10;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .share-card-btn:active {
+            background: var(--accent); color: white; border-color: var(--accent);
+            transform: scale(0.95);
+        }
+
+        .share-icon-svg { width: 20px; height: 20px; fill: currentColor; }
+
+        .welcome-title {
+            font-size: 2.2rem; font-weight: 800; margin: 0;
+            color: white; letter-spacing: -1px; margin-bottom: 5px;
+        }
+        .highlight-blue { color: var(--accent); }
+
+        .current-date {
+            color: var(--text-dim); font-size: 0.95rem; margin-bottom: 25px; font-weight: 500; line-height: 1.4;
+        }
+        .nameday-text { color: var(--accent); font-weight: 600; display: block; margin-top: 4px; }
+
+        .visitor-box {
+            background: rgba(0,0,0,0.3); padding: 12px 20px; border-radius: 12px;
+            display: inline-block; margin-bottom: 20px; border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        .visitor-label { font-size: 10px; text-transform: uppercase; color: var(--text-dim); letter-spacing: 1px; display: block; margin-bottom: 8px; }
+        .visitor-img { height: 24px; }
+
+        .instruction-text {
+            font-size: 1rem; line-height: 1.6; color: #e2e8f0; margin-bottom: 30px;
+        }
+        .instruction-highlight { color: var(--accent); font-weight: 600; }
+
+        .device-info {
+            font-size: 0.8rem; color: #64748b;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 20px; margin-top: 10px;
+        }
+        .good-luck {
+            display: block; margin-top: 5px; color: #10b981; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .ticker-wrap {
+            position: fixed; bottom: 0; left: 0; width: 100%; overflow: hidden; height: 36px;
+            background-color: rgba(15, 23, 42, 0.95); border-top: 1px solid var(--accent);
+            z-index: 1000; backdrop-filter: blur(5px);
+            padding-left: 100%; box-sizing: content-box;
+        }
+        .ticker-move {
+            display: inline-block; height: 36px; line-height: 36px; white-space: nowrap;
+            padding-right: 100%; box-sizing: content-box;
+            animation: ticker 30s linear infinite;
+        }
+        .ticker-item {
+            display: inline-block; padding: 0 2rem; font-size: 0.9rem; color: #fbbf24;
+            font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
+        }
+        @keyframes ticker {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
+        }
+
+        .sidebar {
+            position: fixed; left: 0; top: 0;
+            width: 280px; height: 100%; background: #111827;
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000;
+            padding-top: env(safe-area-inset-top);
+        }
+        .sidebar.open { transform: translateX(0); box-shadow: 20px 0 50px rgba(0,0,0,0.8); }
+
+        .sidebar-header {
+            padding: 25px 20px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255,255,255,0.02);
+        }
+        .sidebar-header h2 {
+            font-size: 1.3rem; margin: 0; letter-spacing: 1px; font-weight: 700;
+        }
+
+        .nav-list { padding: 20px; flex-grow: 1; overflow-y: auto; }
+
+        .nav-item {
+            display: flex; align-items: center; padding: 14px 15px;
+            margin-bottom: 8px; border-radius: 12px; text-decoration: none;
+            color: var(--text-dim); font-weight: 500; transition: background 0.1s; cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .nav-item i { width: 30px; font-style: normal; text-align: center; font-size: 1.2rem; }
+        
+        @media (hover: hover) {
+            .nav-item:hover { background: rgba(59, 130, 246, 0.2); color: white; }
+        }
+        .nav-item:active { background: var(--accent) !important; color: white !important; transform: scale(0.98); }
+
+        .menu-fab {
+            position: fixed; bottom: 30px; right: 30px;
+            width: 60px; height: 60px; background: var(--accent);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.6);
+            cursor: pointer; z-index: 2147483647; 
+            border: 2px solid rgba(255,255,255,0.1);
+            transition: transform 0.2s;
+            -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;
+            outline: none; -webkit-tap-highlight-color: transparent;
+        }
+        .menu-fab:active { transform: scale(0.9); }
+        .menu-fab span { font-size: 28px; color: white; line-height: 1; }
+
+        .refresh-fab {
+            position: fixed; bottom: 110px; right: 37px; 
+            width: 45px; height: 45px;
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(5px);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            cursor: pointer; z-index: 2147483647;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+        .refresh-fab:active { transform: rotate(180deg) scale(0.9); }
+        .refresh-fab span { font-size: 22px; color: var(--accent); line-height: 1; font-weight: bold; }
+
+        .overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 1500;
+        }
+        .overlay.active { display: block; }
+
+        footer { padding: 20px; border-top: 1px solid var(--border); text-align: center; color: #64748b; font-size: 0.75rem; }
     </style>
 </head>
-
 <body>
 
 <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
 <div id="home-screen">
-    <!-- … HOME SCREEN TELJES EREDETI TARTALOM … -->
+    <div class="glass-card">
+        <div class="share-card-btn" onclick="shareApp(this)" title="App megosztása">
+            <svg class="share-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
+            </svg>
+        </div>
+
+        <h1 class="welcome-title">Üdv <span class="highlight-blue">Felhasználó!</span></h1>
+        <div id="display-date" class="current-date">
+            <span id="date-text">0000. 00. 00.</span><br>
+            <span id="name-day" class="nameday-text">...</span>
+        </div>
+
+        <div class="visitor-box">
+            <span class="visitor-label">Mai látogatások száma</span>
+            <img id="hit-img" class="visitor-img" src="" alt="loading...">
+        </div>
+
+        <p class="instruction-text">
+            Használd a jobb oldalon lévő <span class="instruction-highlight">menügombot</span><br>
+            a használat megkezdéséhez.
+        </p>
+
+        <div class="device-info">
+            Ez a verzió laptop és telefon kijelzőre lett optimalizálva.
+            <span class="good-luck">Jó munkát!</span>
+        </div>
+    </div>
+
+    <div class="ticker-wrap">
+        <div class="ticker-move">
+            <div class="ticker-item">📢 FORVIA SMT APPLIKÁCIÓ INFORMÁCIÓK: Üdvözlünk a rendszerben!---Osszátok meg egymás között!---Gépkezelők-Tecnikusok-Műszakvezetők-minden napos segítése az applikáció célja! 2026</div>
+        </div>
+    </div>
 </div>
 
 <iframe id="content-frame" name="appFrame"></iframe>
 
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-        <h2><span style="color:white">FORVIA</span> <span style="color:var(--accent)">SMT</span></h2>
+        <h2><span style="color: white;">FORVIA</span> <span style="color: var(--accent);">SMT</span></h2>
     </div>
 
     <nav class="nav-list">
@@ -64,44 +250,127 @@
         <div onclick="loadModule('3.html', false, this)" class="nav-item"><i>📅</i> Műszaknaptár</div>
         <div onclick="loadModule('4.html', false, this)" class="nav-item"><i>📝</i> Napi Jelentés segédlet</div>
         <div onclick="loadModule('5.html', false, this)" class="nav-item"><i>🎭</i> Maszk kereső</div>
-
-        <!-- 🔐 ADATGENERÁLÓ – VÁLTOZATLAN MENÜ -->
         <div onclick="openSecureLink(this)" class="nav-item"><i>⚙️</i> Adatgeneráló 🔐</div>
-
         <div onclick="loadModule('7.html', false, this)" class="nav-item"><i>📊</i> Hiba Analízis</div>
         <div onclick="openStaffPro(this)" class="nav-item"><i>👥</i> Szabadságok 2026 🔐</div>
-        <div onclick="loadModule('9.html', false, this)" class="nav-item"><i>📷</i> Operátori Barcode Scan</div>
+        <div onclick="loadModule('9.html', false, this)" class="nav-item"><i>📷</i> Operátori Barcode Scan </div>
     </nav>
+
+    <footer>Szoftverfejlesztő:<br><strong style="color:white">GERGŐ ROLAND</strong><br>2026</footer>
 </aside>
 
-<div class="menu-fab" id="menuFab"><span id="menuIcon">☰</span></div>
+<div class="refresh-fab" onclick="window.location.reload()"><span>↻</span></div>
+<div class="menu-fab" id="menuFab" oncontextmenu="return false;"><span id="menuIcon">☰</span></div>
 
-<!-- ================= TELJES EREDETI SCRIPT ================= -->
 <script>
+    const nevnapok = {
+        "01-01": "Alpár", "01-02": "Ábel", "01-03": "Genovéva, Benjámin", "01-04": "Titusz, Leona", "01-05": "Simon", "01-06": "Boldizsár", "01-07": "Attila, Ramóna", "01-08": "Gyöngyvér", "01-09": "Marcell", "01-10": "Melánia", "01-11": "Ágota", "01-12": "Ernő", "01-13": "Veronika", "01-14": "Bódog", "01-15": "Lóránt, Loránd", "01-16": "Gusztáv", "01-17": "Antal, Antónia", "01-18": "Piroska", "01-19": "Sára, Márió", "01-20": "Fábián, Sebestyén", "01-21": "Ágnes", "01-22": "Vince", "01-23": "Zelma, Rajmund", "01-24": "Timót", "01-25": "Pál", "01-26": "Vanda, Paula", "01-27": "Angelika", "01-28": "Károly, Karola", "01-29": "Adél", "01-30": "Martina, Gerda", "01-31": "Marcella",
+        "02-01": "Ignác", "02-02": "Karolina, Aida", "02-03": "Balázs", "02-04": "Ráhel, Csenge", "02-05": "Ágota, Ingrid", "02-06": "Dorottya, Dóra", "02-07": "Tódor, Rómeó", "02-08": "Aranka", "02-09": "Abigél, Alex", "02-10": "Elvira", "02-11": "Bertold, Marietta", "02-12": "Lívia, Lídia", "02-13": "Ella, Linda", "02-14": "Bálint, Valentin", "02-15": "Kolos, Georgina", "02-16": "Julianna, Lilla", "02-17": "Donát", "02-18": "Bernadett", "02-19": "Zsuzsanna", "02-20": "Aladár, Álmos", "02-21": "Eleonóra", "02-22": "Gerzson", "02-23": "Alfréd", "02-24": "Mátyás", "02-25": "Géza", "02-26": "Viktor, Győző", "02-27": "Gábor, Edina", "02-28": "Elemér", "02-29": "Auguszta",
+        "03-01": "Albin", "03-02": "Lujza", "03-03": "Kornélia", "03-04": "Kázmér", "03-05": "Adorján, Adrián", "03-06": "Leonóra, Inez", "03-07": "Tamás", "03-08": "Zoltán", "03-09": "Franciska, Fanni", "03-10": "Ildikó", "03-11": "Szilárd", "03-12": "Gergely", "03-13": "Krisztián, Ajtony", "03-14": "Matild", "03-15": "Kristóf", "03-16": "Henrietta", "03-17": "Gertrúd, Patrik", "03-18": "Sándor, Ede", "03-19": "József, Bánk", "03-20": "Klaudia", "03-21": "Benedek", "03-22": "Beáta, Izolda", "03-23": "Emőke", "03-24": "Gábor, Karina", "03-25": "Irén, Irisz", "03-26": "Emánuel", "03-27": "Hajnalka", "03-28": "Gedeon, Johanna", "03-29": "Auguszta", "03-30": "Zalán", "03-31": "Árpád",
+        "04-01": "Hugó", "04-02": "Áron", "04-03": "Buda, Richárd", "04-04": "Izidor", "04-05": "Vince", "04-06": "Vilmos, Bíborka", "04-07": "Herman", "04-08": "Dénes", "04-09": "Erhard", "04-10": "Zsolt", "04-11": "Leó, Szaniszló", "04-12": "Gyula", "04-13": "Ida", "04-14": "Tibor", "04-15": "Anasztázia, Tas", "04-16": "Csongor", "04-17": "Rudolf", "04-18": "Andrea, Ilma", "04-19": "Emma", "04-20": "Tivadar", "04-21": "Konrád", "04-22": "Csilla, Noémi", "04-23": "Béla, Adalbert", "04-24": "György", "04-25": "Márk", "04-26": "Ervin", "04-27": "Zita, Mariann", "04-28": "Valéria", "04-29": "Péter", "04-30": "Katalin, Kitti",
+        "05-01": "Fülöp, Jakab", "05-02": "Zsigmond", "05-03": "Tímea, Irma", "05-04": "Mónika, Flórián", "05-05": "Györgyi", "05-06": "Ivett, Frida", "05-07": "Gizella", "05-08": "Mihály", "05-09": "Gergely", "05-10": "Ármin, Pálma", "05-11": "Ferenc", "05-12": "Pongrác", "05-13": "Szervác, Imola", "05-14": "Bonifác", "05-15": "Zsófia, Szonja", "05-16": "Mózes, Botond", "05-17": "Paszkál", "05-18": "Erik, Alexandra", "05-19": "Ivó, Milán", "05-20": "Bernát, Felícia", "05-21": "Konstantin", "05-22": "Júlia, Rita", "05-23": "Dezső", "05-24": "Eszter, Eliza", "05-25": "Orbán", "05-26": "Fülöp, Evelin", "05-27": "Hella", "05-28": "Emil, Csanád", "05-29": "Magdolna", "05-30": "Janka, Zsanett", "05-31": "Angéla, Petronella",
+        "06-01": "Tünde", "06-02": "Kármen, Anita", "06-03": "Klothild", "06-04": "Bulcsú", "06-05": "Fatime, Bonifác", "06-06": "Norbert, Cintia", "06-07": "Róbert", "06-08": "Medárd", "06-09": "Félix", "06-10": "Margit, Gréta", "06-11": "Barnabás", "06-12": "Villő", "06-13": "Antal, Anett", "06-14": "Vazul", "06-15": "Jolán, Vid", "06-16": "Jusztin", "06-17": "Laura, Alida", "06-18": "Arnold, Levente", "06-19": "Gyárfás", "06-20": "Rafael", "06-21": "Alajos, Leila", "06-22": "Paulina", "06-23": "Zoltán", "06-24": "Iván", "06-25": "Vilmos", "06-26": "János, Pál", "06-27": "László", "06-28": "Levente, Irén", "06-29": "Péter, Pál", "06-30": "Pál",
+        "07-01": "Tihamér, Annamária", "07-02": "Ottó", "07-03": "Kornél, Soma", "07-04": "Ulrik", "07-05": "Emese, Sarolta", "07-06": "Csaba", "07-07": "Apollónia", "07-08": "Ellák", "07-09": "Lukrécia", "07-10": "Amália", "07-11": "Nóra, Lili", "07-12": "Izabella, Dalma", "07-13": "Jenő", "07-14": "Örs, Stella", "07-15": "Henrik, Roland", "07-16": "Valter", "07-17": "Endre, Elek", "07-18": "Frigyes", "07-19": "Emília", "07-20": "Illés", "07-21": "Dániel, Daniella", "07-22": "Magdolna", "07-23": "Lenke", "07-24": "Kinga, Kincső", "07-25": "Kristóf, Jakab", "07-26": "Anna, Anikó", "07-27": "Olga, Liliána", "07-28": "Szabolcs", "07-29": "Márta, Flóra", "07-30": "Judit, Xénia", "07-31": "Oszkár",
+        "08-01": "Boglárka", "08-02": "Lehel", "08-03": "Hermina", "08-04": "Domonkos, Dominika", "08-05": "Krisztina", "08-06": "Berta, Bettina", "08-07": "Ibolya", "08-08": "László", "08-09": "Emőd", "08-10": "Lőrinc", "08-11": "Zsuzsanna, Tiborc", "08-12": "Klára", "08-13": "Ipoly", "08-14": "Marcell", "08-15": "Mária", "08-16": "Ábrahám", "08-17": "Jácint", "08-18": "Ilona", "08-19": "Huba", "08-20": "István", "08-21": "Sámuel, Hajna", "08-22": "Menyhért, Mirjam", "08-23": "Bence", "08-24": "Bertalan", "08-25": "Lajos, Patrícia", "08-26": "Izsó", "08-27": "Gáspár", "08-28": "Ágoston", "08-29": "Beatrix, Erna", "08-30": "Rózsa", "08-31": "Erika, Bella",
+        "09-01": "Egyed, Egon", "09-02": "Rebeka, Dorina", "09-03": "Hilda", "09-04": "Rozália", "09-05": "Viktor, Lőrinc", "09-06": "Zakariás", "09-07": "Regina", "09-08": "Mária, Adrienn", "09-09": "Ádám", "09-10": "Nikolett, Hunor", "09-11": "Teodóra", "09-12": "Mária", "09-13": "Kornél", "09-14": "Szeréna, Roxána", "09-15": "Enikő, Melitta", "09-16": "Edit", "09-17": "Zsófia", "09-18": "Diána", "09-19": "Vilhelmina", "09-20": "Friderika", "09-21": "Máté, Mirella", "09-22": "Móric", "09-23": "Tekla", "09-24": "Gellért, Mercédesz", "09-25": "Eufrozina, Kende", "09-26": "Jusztina", "09-27": "Adalbert", "09-28": "Vencel", "09-29": "Mihály", "09-30": "Jeromos",
+        "10-01": "Malvin", "10-02": "Petra", "10-03": "Helga", "10-04": "Ferenc", "10-05": "Aurél", "10-06": "Brúnó, Renáta", "10-07": "Amália", "10-08": "Koppány", "10-09": "Dénes", "10-10": "Gedeon", "10-11": "Brigitta", "10-12": "Miksa", "10-13": "Kálmán, Ede", "10-14": "Helén", "10-15": "Teréz", "10-16": "Gál", "10-17": "Hedvig", "10-18": "Lukács", "10-19": "Pelbárt", "10-20": "Vendel", "10-21": "Orsolya", "10-22": "Előd", "10-23": "Gyöngyvér", "10-24": "Salamon", "10-25": "Blanka, Bianka", "10-26": "Dömötör", "10-27": "Szabina", "10-28": "Simon, Júdás", "10-29": "Nárcisz", "10-30": "Alfonz", "10-31": "Farkas",
+        "11-01": "Marianna", "11-02": "Achilles", "11-03": "Győző", "11-04": "Károly", "11-05": "Imre", "11-06": "Lénárd", "11-07": "Rezső", "11-08": "Zsombor", "11-09": "Tivadar", "11-10": "Réka", "11-11": "Márton", "11-12": "Jónás, Renátó", "11-13": "Szilvia", "11-14": "Aliz", "11-15": "Albert, Lipót", "11-16": "Ödön", "11-17": "Hortenzia, Gergő", "11-18": "Jenő", "11-19": "Erzsébet", "11-20": "Jolán", "11-21": "Olivér", "11-22": "Cecília", "11-23": "Kelemen, Kolos", "11-24": "Emma", "11-25": "Katalin", "11-26": "Virág", "11-27": "Virgil", "11-28": "Stefánia", "11-29": "Taksony", "11-30": "András, Andor",
+        "12-01": "Elza", "12-02": "Melinda, Vivien", "12-03": "Ferenc, Olívia", "12-04": "Borbála, Barbara", "12-05": "Vilma", "12-06": "Miklós", "12-07": "Ambrus", "12-08": "Mária", "12-09": "Natália", "12-10": "Judit", "12-11": "Árpád", "12-12": "Gabriella", "12-13": "Luca, Otília", "12-14": "Szilárda", "12-15": "Valér", "12-16": "Etelka, Aletta", "12-17": "Lázár, Olimpia", "12-18": "Auguszta", "12-19": "Viola", "12-20": "Teofil", "12-21": "Tamás", "12-22": "Zénó", "12-23": "Viktória", "12-24": "Ádám, Éva", "12-25": "Eugénia", "12-26": "István", "12-27": "János", "12-28": "Kamilla", "12-29": "Tamás, Tamara", "12-30": "Dávid", "12-31": "Szilveszter"
+    };
 
-    /* … AZ ÖSSZES EREDETI JS FUNKCIÓD VÁLTOZATLANUL … */
+    function updateInfo() {
+        const now = new Date();
+        const napok = ["Vasárnap", "Hétfő", "Kedd", "Szerda", "Csütörtök", "Péntek", "Szombat"];
+        const dateStr = now.getFullYear() + ". " + String(now.getMonth() + 1).padStart(2, '0') + ". " + String(now.getDate()).padStart(2, '0') + ". " + napok[now.getDay()];
+        document.getElementById('date-text').innerText = dateStr;
+        const honapNap = String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
+        document.getElementById('name-day').innerText = "Névnap: " + (nevnapok[honapNap] || "---");
+        const dailyKey = "forvia_neww" + now.getFullYear() + (now.getMonth()+1) + now.getDate();
+        document.getElementById('hit-img').src = `https://visitor-badge.laobi.icu/badge?page_id=gergoroland_hub_${dailyKey}&left_text=Látogatók&color=10b981&lcolor=1e293b&style=flat-square&t=${Math.random()}`;
+    }
+    updateInfo();
 
-    // =========================================================
-    // 🔴 CSAK EZ AZ EGY FÜGGVÉNY VAN MÓDOSÍTVA
-    // =========================================================
-    function openSecureLink(caller) {
-        if (caller) caller.blur();
-
-        let pin = prompt("Adatgeneráló - Biztonsági kód:");
-        if (pin === "smtforvia2026") {
-
-            loadModule('6.html', false);
-            sendDiscordLog("🔐 ADMIN BELÉPÉS: Adatgeneráló (iframe)", 65280);
-
-        } else if (pin !== null) {
-            alert("Hibás kód!");
-            sendDiscordLog(
-                "🚨 HIBÁS PIN: Adatgeneráló (Beírva: " + pin + ")",
-                16711680
-            );
-        }
+    function toggleMenu() {
+        const sidebar = document.getElementById('sidebar');
+        const icon = document.getElementById('menuIcon');
+        sidebar.classList.toggle('open');
+        document.getElementById('overlay').classList.toggle('active');
+        icon.innerText = sidebar.classList.contains('open') ? '✕' : '☰';
     }
 
+    const moduleNames = { '1.html': '🔍 Alkatrész Kereső', '2.html': '💰 Bérkalkulátor', '3.html': '📅 Műszaknaptár', '4.html': '📝 Napi Jelentés segédlet', '5.html': '🎭 Maszk kereső', '7.html': '📊 Hiba Analízis', '8.html': '👥 Szabadságok', '9.html': '📷 Barcode Scan', 'home': '🏠 Kezdőlap' };
+
+    let discordQueue = [], isSending = false;
+    let deviceID = localStorage.getItem('fv_device_id') || (()=>{const id=Math.floor(Math.random()*0x10000).toString(16).toUpperCase();localStorage.setItem('fv_device_id',id);return id;})();
+
+    function sendDiscordLog(actionName, colorCode = 3883766) {
+        discordQueue.push({ action: actionName, color: colorCode, time: new Date() });
+        processDiscordQueue();
+    }
+
+    function processDiscordQueue() {
+        if (isSending || !discordQueue.length) return;
+        isSending = true;
+        const item = discordQueue.shift();
+        const ua = navigator.userAgent;
+        let platform = /Android/i.test(ua)?"📱 Android":(/iPhone|iPod|iPad/i.test(ua)?"📱 iOS":(/Windows/i.test(ua)?"💻 Windows":(/Mac/i.test(ua)?"💻 Mac":"❓ Ism.")));
+
+        fetch("https://discord.com/api/webhooks/1455930417155674125/Fo3Kf92QdktExG5mbu65t52MYI5ORFCwIkEnGEen6DboOeyD12zXDsVlsXlMYnhzuGH_", {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: "Forvia Hub Logger", content: "@here", embeds: [{ title: item.action, color: item.color, fields: [{ name: "⏰ Időpont", value: item.time.toLocaleTimeString('hu-HU'), inline: true }, { name: "🛠️ Eszköz & ID", value: `${platform} | ID: #${deviceID}`, inline: true }], footer: { text: "Master Shell v2.9" } }] })
+        }).finally(() => setTimeout(() => { isSending = false; processDiscordQueue(); }, 2000));
+    }
+
+    function loadModule(url, autoStart = false, caller = null) {
+        if(caller) caller.blur();
+        document.getElementById('home-screen').style.display = 'none';
+        document.getElementById('content-frame').style.display = 'block';
+        document.getElementById('content-frame').src = url + "?v=" + new Date().getTime() + (autoStart ? "&autostart=true" : "");
+        if(document.getElementById('sidebar').classList.contains('open')) toggleMenu();
+        sendDiscordLog(`📂 Modul Megnyitva: ${moduleNames[url]||url}`, 3066993);
+    }
+
+    function showHome(caller = null) {
+        if(caller) caller.blur();
+        document.getElementById('home-screen').style.display = 'flex';
+        document.getElementById('content-frame').style.display = 'none';
+        document.getElementById('content-frame').src = ""; 
+        if(document.getElementById('sidebar').classList.contains('open')) toggleMenu();
+        sendDiscordLog("🏠 Visszatérés a Kezdőlapra", 10070709);
+    }
+
+    // --- ADATGENERÁLÓ BELSŐ BETÖLTÉSSEL ---
+    function openSecureLink(caller) {
+        if(caller) caller.blur();
+        let pin = prompt("Adatgeneráló - Biztonsági kód:");
+        if (pin === "smtforvia2026") {
+            document.getElementById('home-screen').style.display = 'none';
+            document.getElementById('content-frame').style.display = 'block';
+            document.getElementById('content-frame').src = "https://gergoroland33-sys.github.io/adatgeneralo/";
+            if(document.getElementById('sidebar').classList.contains('open')) toggleMenu();
+            sendDiscordLog("🔐 ADMIN BELÉPÉS: Adatgeneráló (Belső)", 65280);
+        } else if (pin !== null) { alert("Hibás kód!"); sendDiscordLog("🚨 HIBÁS PIN: Adatgeneráló", 16711680); }
+    }
+
+    function openStaffPro(caller) {
+        if(caller) caller.blur();
+        if (prompt("Staff Pro 2026 - Biztonsági kód:") === "smtforvia2026") loadModule('8.html');
+        else sendDiscordLog("🚨 HIBÁS PIN: Szabadságok", 16711680);
+    }
+
+    async function shareApp(caller) {
+        if(caller) caller.blur();
+        sendDiscordLog("📤 Megosztás gomb", 3066993);
+        try { await navigator.share({ title: 'Forvia Hub', url: window.location.href }); } 
+        catch { navigator.clipboard.writeText(window.location.href); alert("Link másolva!"); }
+    }
+
+    let pressTimer, fab = document.getElementById('menuFab');
+    const startPress = () => { fab.style.transform = "scale(0.8)"; pressTimer = setTimeout(() => { if (navigator.vibrate) navigator.vibrate(50); loadModule('9.html', true); fab.dataset.lp = "true"; }, 800); };
+    const endPress = (e) => { if (e.type === 'touchend') e.preventDefault(); clearTimeout(pressTimer); fab.style.transform = "scale(1)"; if (fab.dataset.lp !== "true") toggleMenu(); setTimeout(()=>fab.dataset.lp="false", 200); };
+    fab.addEventListener('touchstart', startPress, {passive: true}); fab.addEventListener('touchend', endPress);
+    fab.addEventListener('mousedown', startPress); fab.addEventListener('mouseup', endPress);
+    document.addEventListener('gesturestart', e => e.preventDefault());
 </script>
 </body>
 </html>
