@@ -75,34 +75,33 @@ h1{color:#3b82f6;margin-bottom:30px;}
 <div id="status">Betöltés...</div>
 
 <script>
-let adatb = []; // A teljes CSV táblázat sorai
-let fejléc = []; // Az első sor (Szekrény nevek)
-let maszkLista = []; // Csak a maszk nevek (pl. M1050, M2000) a kereséshez
+let adatb = []; 
+let fejléc = []; 
+let maszkLista = []; 
 
-// CSV betöltése
-fetch('Maszk%202026.csv')
+// JAVÍTÁS: A fetch végére tettem egy egyedi azonosítót, hogy ne a régi cache-elt fájlt olvassa be
+fetch('Maszk%202026.csv?v=' + Date.now())
 .then(response => {
 if (!response.ok) throw new Error("A CSV fájl nem található!");
 return response.text();
 })
 .then(szoveg => {
-adatb = szoveg.split('\n').filter(r => r.trim() !== ''); // Üres sorok kuka
+// JAVÍTÁS: Kezeli a Windows-os sorvégeket is a split(/\r?\n/) használatával
+adatb = szoveg.split(/\r?\n/).filter(r => r.trim() !== ''); 
 
 if(adatb.length > 0) {
 fejléc = adatb[0].split(';');
 
-// Összes maszk kigyűjtése a javaslatokhoz
+maszkLista = []; // Tisztítás beolvasás előtt
 for (let i = 1; i < adatb.length; i++) {
 const cellak = adatb[i].split(';');
 for (let j = 0; j < cellak.length; j++) {
 const adat = cellak[j].trim().toUpperCase();
-// Ha az adat 'M' betűvel kezdődik, akkor az egy maszk
 if (adat.length > 1 && adat.startsWith('M')) {
 maszkLista.push(adat);
 }
 }
 }
-// Duplikációk törlése (hogy ne legyen kétszer ugyanaz a listában)
 maszkLista = [...new Set(maszkLista)].sort();
 
 document.getElementById('status').style.color = '#10b981';
@@ -113,13 +112,12 @@ document.getElementById('status').innerText = `Adatbázis kész: ${maszkLista.le
 document.getElementById('status').innerText = "HIBA: A 'Maszk 2026.csv' nem olvasható.";
 });
 
-// Ez fut le minden billentyűleütéskor
 function gepeles() {
 const kulcs = document.getElementById('inp').value.trim().toUpperCase();
 const listaDoboz = document.getElementById('javaslatok');
 const eredmenyDoboz = document.getElementById('eredmeny');
 
-listaDoboz.innerHTML = ''; // Lista törlése
+listaDoboz.innerHTML = ''; 
 
 if (kulcs.length < 1) {
 listaDoboz.style.display = 'none';
@@ -127,8 +125,6 @@ eredmenyDoboz.style.display = 'none';
 return;
 }
 
-// Keressük meg azokat a maszkokat, amik tartalmazzák a beírt szöveget
-// Csak az első 10 találatot mutatjuk, hogy ne legyen kilométeres a lista
 const talalatok = maszkLista.filter(m => m.includes(kulcs)).slice(0, 10);
 
 if (talalatok.length > 0) {
@@ -137,11 +133,10 @@ talalatok.forEach(maszk => {
 const div = document.createElement('div');
 div.className = 'tipp';
 div.innerHTML = `${maszk} <span>Kiválasztás &rarr;</span>`;
-// Ha rákattint, töltse be
 div.onclick = function() {
 document.getElementById('inp').value = maszk;
-kereses(maszk); // Indítjuk a részletes keresést
-listaDoboz.style.display = 'none'; // Lista eltűnik
+kereses(maszk); 
+listaDoboz.style.display = 'none'; 
 };
 listaDoboz.appendChild(div);
 });
@@ -150,9 +145,7 @@ listaDoboz.style.display = 'none';
 }
 }
 
-// Ez keresi meg a pontos helyet (Szekrény, Fakk)
 function kereses(konkretMaszk) {
-// Ha nem paraméterként jött, akkor a mezőből olvassuk
 const kulcs = konkretMaszk || document.getElementById('inp').value.trim().toUpperCase();
 const doboz = document.getElementById('eredmeny');
 
@@ -187,8 +180,6 @@ if (talalat) break;
 }
 
 if (!talalat) {
-// Ha nincs konkrét találat, de gépeltünk valamit, ne tüntessük el durván,
-// de itt most elrejtjük az eredmény dobozt, mert a lista segít.
 doboz.style.display = 'none';
 }
 }
