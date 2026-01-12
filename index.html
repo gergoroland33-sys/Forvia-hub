@@ -52,7 +52,6 @@
             position: relative; 
         }
 
-        /* --- MEGOSZTÁS GOMB (JOBB FELSŐ) --- */
         .share-card-btn {
             position: absolute; top: 20px; right: 20px;
             width: 40px; height: 40px; border-radius: 50%;
@@ -60,7 +59,6 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: var(--text-dim); display: flex; align-items: center; justify-content: center;
             cursor: pointer; transition: all 0.3s ease; z-index: 10;
-            -webkit-tap-highlight-color: transparent; /* Mobilos villanás eltüntetése */
         }
         .share-card-btn:active {
             background: var(--accent); color: white; border-color: var(--accent);
@@ -83,9 +81,10 @@
         .visitor-box {
             background: rgba(0,0,0,0.3); padding: 12px 20px; border-radius: 12px;
             display: inline-block; margin-bottom: 20px; border: 1px solid rgba(59, 130, 246, 0.3);
+            min-height: 40px;
         }
         .visitor-label { font-size: 10px; text-transform: uppercase; color: var(--text-dim); letter-spacing: 1px; display: block; margin-bottom: 8px; }
-        .visitor-img { height: 24px; }
+        .visitor-img { height: 24px; display: none; } /* Alapból rejtve, amíg be nem tölt */
 
         .instruction-text {
             font-size: 1rem; line-height: 1.6; color: #e2e8f0; margin-bottom: 30px;
@@ -103,7 +102,6 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- HÍRSÁV STÍLUS --- */
         .ticker-wrap {
             position: fixed; bottom: 0; left: 0; width: 100%; overflow: hidden; height: 36px;
             background-color: rgba(15, 23, 42, 0.95); border-top: 1px solid var(--accent);
@@ -151,12 +149,9 @@
             display: flex; align-items: center; padding: 14px 15px;
             margin-bottom: 8px; border-radius: 12px; text-decoration: none;
             color: var(--text-dim); font-weight: 500; transition: background 0.1s; cursor: pointer;
-            -webkit-tap-highlight-color: transparent; /* Mobilon ne legyen szürke háttér érintéskor */
         }
         .nav-item i { width: 30px; font-style: normal; text-align: center; font-size: 1.2rem; }
         
-        /* JAVÍTOTT GOMB STÍLUS: Csak akkor kék, ha ÉPPEN nyomod (:active) */
-        /* A :hover-t meghagyjuk PC-re, de mobilon a :active dominál */
         @media (hover: hover) {
             .nav-item:hover { background: rgba(59, 130, 246, 0.2); color: white; }
         }
@@ -170,24 +165,13 @@
             cursor: pointer; z-index: 2147483647; 
             border: 2px solid rgba(255,255,255,0.1);
             transition: transform 0.2s;
-            
-            /* KIJELÖLÉS TILTÁSA (Anti-Select) */
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -khtml-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            outline: none;
-            -webkit-tap-highlight-color: transparent;
+            user-select: none; outline: none;
         }
         .menu-fab:active { transform: scale(0.9); }
         .menu-fab span { font-size: 28px; color: white; line-height: 1; }
 
         .refresh-fab {
-            position: fixed; 
-            bottom: 110px; 
-            right: 37px; 
+            position: fixed; bottom: 110px; right: 37px; 
             width: 45px; height: 45px;
             background: rgba(30, 41, 59, 0.8);
             backdrop-filter: blur(5px);
@@ -229,7 +213,7 @@
 
         <div class="visitor-box">
             <span class="visitor-label">Mai látogatások száma</span>
-            <img id="hit-img" class="visitor-img" src="" alt="loading...">
+            <img id="hit-img" class="visitor-img" alt="számláló">
         </div>
 
         <p class="instruction-text">
@@ -312,11 +296,22 @@
         const maiNevnap = nevnapok[honapNap] || "---";
         document.getElementById('name-day').innerText = "Névnap: " + maiNevnap;
 
+        // --- BIZTONSÁGOS LÁTOGATÁSSZÁMLÁLÓ ---
         const dailyKey = "forvia_neww" + now.getFullYear() + (now.getMonth()+1) + now.getDate();
         const cacheBuster = Math.floor(Math.random() * 1000);
-        
         const hitUrl = `https://visitor-badge.laobi.icu/badge?page_id=gergoroland_hub_${dailyKey}&left_text=Látogatók&color=10b981&lcolor=1e293b&style=flat-square&t=${cacheBuster}`;
-        document.getElementById('hit-img').src = hitUrl;
+        
+        const tempImg = new Image();
+        tempImg.onload = function() {
+            const hitImg = document.getElementById('hit-img');
+            hitImg.src = hitUrl;
+            hitImg.style.display = 'inline-block';
+        };
+        tempImg.onerror = function() {
+            // Céges hálózat tiltja, ne csináljunk semmit, a kép rejtve marad
+            console.warn("Visitor badge blocked by network.");
+        };
+        tempImg.src = hitUrl;
     }
     updateInfo();
 
@@ -341,26 +336,12 @@
         'home':   '🏠 Kezdőlap'
     };
 
-    // --- DISCORD QUEUE RENDSZER ---
     let discordQueue = [];
     let isSending = false;
+    let deviceID = localStorage.getItem('fv_device_id') || Math.floor(Math.random() * 0x10000).toString(16).toUpperCase();
+    if (!localStorage.getItem('fv_device_id')) localStorage.setItem('fv_device_id', deviceID);
     
-    // 1. TARTÓS ESZKÖZ AZONOSÍTÓ & AKTIVITÁS SZÁMLÁLÓ
-    let deviceID = localStorage.getItem('fv_device_id');
-    // Itt tároljuk a teljes aktivitást (kattintások száma)
-    let totalActivity = localStorage.getItem('fv_total_activity');
-
-    // Ha nincs ID, generálunk
-    if (!deviceID) {
-        deviceID = Math.floor(Math.random() * 0x10000).toString(16).toUpperCase();
-        localStorage.setItem('fv_device_id', deviceID);
-    }
-    
-    // Ha még nincs aktivitás számláló, legyen 0
-    if (!totalActivity) {
-        totalActivity = 0;
-        localStorage.setItem('fv_total_activity', totalActivity);
-    }
+    let totalActivity = parseInt(localStorage.getItem('fv_total_activity') || 0);
 
     function sendDiscordLog(actionName, colorCode = 3883766) {
         discordQueue.push({ action: actionName, color: colorCode, time: new Date() });
@@ -372,40 +353,34 @@
 
         isSending = true;
         const item = discordQueue.shift();
-
         const webhookURL = "https://discord.com/api/webhooks/1455930417155674125/Fo3Kf92QdktExG5mbu65t52MYI5ORFCwIkEnGEen6DboOeyD12zXDsVlsXlMYnhzuGH_";
-        const timeString = item.time.toLocaleTimeString('hu-HU');
         
-        let ua = navigator.userAgent;
-        let platform = "❓ Ismeretlen";
-        if (/Android/i.test(ua)) platform = "📱 Android";
-        else if (/iPhone|iPod/i.test(ua)) platform = "📱 iPhone";
-        else if (/iPad/i.test(ua)) platform = "📱 iPad";
-        else if (/Windows/i.test(ua)) platform = "💻 Windows PC";
-        else if (/Mac/i.test(ua)) platform = "💻 Mac";
-        else if (/Linux/i.test(ua)) platform = "🐧 Linux";
+        let platform = /Android/i.test(navigator.userAgent) ? "📱 Android" : 
+                       (/iPhone|iPad|iPod/i.test(navigator.userAgent) ? "📱 iOS" : "💻 Desktop");
 
         const payload = {
             username: "Forvia Hub Logger",
             avatar_url: "https://i.imgur.com/4M34hi2.png",
-            content: "@here", // PINGELÉS MINDENKINEK
+            content: "@here",
             embeds: [{
                 title: item.action,
                 color: item.color,
                 fields: [
-                    { name: "⏰ Időpont", value: timeString, inline: true },
-                    // JAVÍTVA: Itt mindig a legfrissebb totalActivity-t mutatja
-                    { name: "🛠️ Eszköz & ID", value: `${platform} | ID: #${deviceID} | Aktivitás: ${totalActivity}.`, inline: true }
+                    { name: "⏰ Időpont", value: item.time.toLocaleTimeString('hu-HU'), inline: true },
+                    { name: "🛠️ Eszköz & ID", value: `${platform} | ID: #${deviceID} | Aktivitás: ${totalActivity}`, inline: true }
                 ],
-                footer: { text: "Master Shell v2.9 (Aktivitás számláló verzio)" }
+                footer: { text: "Master Shell v2.9.1 (Stability Patch)" }
             }]
         };
 
+        // --- BIZTONSÁGOS DISCORD KÜLDÉS ---
         fetch(webhookURL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         })
+        .then(() => {}) // Sikeres küldés, nincs teendő
+        .catch(() => {}) // Tűzfal tiltja, elnyeljük a hibát, hogy a queue haladhasson
         .finally(() => {
             setTimeout(() => {
                 isSending = false;
@@ -414,83 +389,48 @@
         });
     }
 
-    // --- NAVIGÁCIÓ (Kényszerített fókusz elvétel - BLUR) ---
-    // A 'caller' paraméter maga a gomb, amire kattintottál
     function loadModule(url, autoStart = false, caller = null) {
-        // Ha van gomb, azonnal elvesszük tőle a fókuszt (hogy ne maradjon kék)
         if(caller) caller.blur();
-
-        // --- AKTIVITÁS NÖVELÉSE MINDEN MODUL NYITÁSKOR ---
-        totalActivity = parseInt(totalActivity) + 1;
+        totalActivity++;
         localStorage.setItem('fv_total_activity', totalActivity);
 
         document.getElementById('home-screen').style.display = 'none';
-        document.getElementById('content-frame').style.display = 'block';
+        const frame = document.getElementById('content-frame');
+        frame.style.display = 'block';
+        frame.src = url + "?v=" + new Date().getTime() + (autoStart ? "&autostart=true" : "");
         
-        let finalUrl = url + "?v=" + new Date().getTime();
-        
-        // Ha autoStart aktív (Barcode), akkor jelezzük a modulnak
-        if(autoStart) {
-            finalUrl += "&autostart=true";
-        }
-
-        document.getElementById('content-frame').src = finalUrl;
-        
-        const sidebar = document.getElementById('sidebar');
-        if(sidebar.classList.contains('open')) toggleMenu();
-
-        const readableName = moduleNames[url] || "Ismeretlen Modul (" + url + ")";
-        sendDiscordLog(`📂 Modul Megnyitva: ${readableName} ${autoStart ? '(Gyorsgomb)' : ''}`, 3066993);
+        if(document.getElementById('sidebar').classList.contains('open')) toggleMenu();
+        sendDiscordLog(`📂 Modul: ${moduleNames[url] || url}`, 3066993);
     }
 
     function showHome(caller = null) {
-        if(caller) caller.blur(); // Blur itt is
-
+        if(caller) caller.blur();
         document.getElementById('home-screen').style.display = 'flex';
-        document.getElementById('content-frame').style.display = 'none';
-        document.getElementById('content-frame').src = ""; 
-        const sidebar = document.getElementById('sidebar');
-        if(sidebar.classList.contains('open')) toggleMenu();
-        
-        sendDiscordLog("🏠 Visszatérés a Kezdőlapra", 10070709);
+        const frame = document.getElementById('content-frame');
+        frame.style.display = 'none';
+        frame.src = ""; 
+        if(document.getElementById('sidebar').classList.contains('open')) toggleMenu();
+        sendDiscordLog("🏠 Kezdőlap", 10070709);
     }
 
-    // --- HOSSZÚ NYOMÁS LOGIKA (FIX: 9.html) ---
+    // --- FAB LOGIKA ---
     let pressTimer;
     const fab = document.getElementById('menuFab');
-
     const startPress = (e) => {
         fab.style.transform = "scale(0.8)";
-        
         pressTimer = setTimeout(() => {
-            // Hosszú nyomás:
             if (navigator.vibrate) navigator.vibrate(50);
             fab.style.transform = "scale(1)";
-            
-            // FIXEN A 9-ES MODULT INDÍTJA + AUTOSTART
             loadModule('9.html', true);
-            
             fab.dataset.longPressed = "true";
         }, 800); 
     };
-
-    // --- GOMB FELENGEDÉS LOGIKA (Android Fix + Race condition fix) ---
     const endPress = (e) => {
-        // Ha érintés volt, ne engedjük az egér eseményeket (dupla kattintás elkerülése)
         if (e.type === 'touchend') e.preventDefault();
-
         clearTimeout(pressTimer);
         fab.style.transform = "scale(1)";
-        
-        // Csak akkor nyitunk menüt, ha NEM volt hosszú nyomás
-        if (fab.dataset.longPressed !== "true") {
-            toggleMenu(); 
-        }
-
-        // Késleltetjük a visszaállítást 200ms-el
-        setTimeout(() => {
-            fab.dataset.longPressed = "false";
-        }, 200);
+        if (fab.dataset.longPressed !== "true") toggleMenu();
+        setTimeout(() => { fab.dataset.longPressed = "false"; }, 200);
     };
 
     fab.addEventListener('mousedown', startPress);
@@ -499,16 +439,15 @@
     fab.addEventListener('touchend', endPress);
     fab.addEventListener('mouseleave', () => clearTimeout(pressTimer)); 
 
-    // --- EGYÉB FUNKCIÓK ---
     function openSecureLink(caller) {
         if(caller) caller.blur();
         let pin = prompt("Adatgeneráló - Biztonsági kód:");
         if (pin === "smtforvia2026") {
             window.open("https://gergoroland33-sys.github.io/adatgeneralo/", "_blank");
-            sendDiscordLog("🔐 ADMIN BELÉPÉS: Adatgeneráló", 65280);
+            sendDiscordLog("🔐 ADMIN: Adatgeneráló", 65280);
         } else if (pin !== null) {
             alert("Hibás kód!");
-            sendDiscordLog("🚨 HIBÁS PIN: Adatgeneráló (Beírva: " + pin + ")", 16711680);
+            sendDiscordLog("🚨 HIBÁS PIN: Adatgeneráló", 16711680);
         }
     }
 
@@ -518,23 +457,20 @@
         if (pin === "smtforvia2026") {
             loadModule('8.html');
         } else if (pin !== null) {
-            alert("Hibás kód! Hozzáférés megtagadva.");
-            sendDiscordLog("🚨 HIBÁS PIN: Szabadságok (Beírva: " + pin + ")", 16711680);
+            alert("Hibás kód!");
+            sendDiscordLog("🚨 HIBÁS PIN: Szabadságok", 16711680);
         }
     }
 
     async function shareApp(caller) {
         if(caller) caller.blur();
-        // DISCORD LOG A MEGOSZTÁSHOZ
-        sendDiscordLog("📤 App Megosztás gomb lenyomva", 3066993);
-
-        const shareData = { title: 'Forvia Hub', text: 'Használd te is a Forvia SMT applikációt!', url: window.location.href };
+        sendDiscordLog("📤 Megosztás", 3066993);
+        const shareData = { title: 'Forvia Hub', text: 'Forvia SMT app', url: window.location.href };
         if (navigator.share) { try { await navigator.share(shareData); } catch (err) {} } 
-        else { try { await navigator.clipboard.writeText(window.location.href); alert("Link a vágólapra másolva!"); } catch (err) { console.error('Hiba:', err); } }
+        else { try { await navigator.clipboard.writeText(window.location.href); alert("Link másolva!"); } catch (err) {} }
     }
 
     document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
-
 </script>
 </body>
 </html>
