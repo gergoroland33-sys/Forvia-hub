@@ -109,7 +109,7 @@
         .cal-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: #64748b; font-weight: 700; }
         
         .cal-main-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-        .cal-date-text { font-size: 1.4rem; font-weight: 800; color: white; letter-spacing: -0.5px; }
+        .cal-date-text { font-size: 1.4rem; font-weight: 800; color: white; letter-spacing: -0.5px; } /* Kicsit kisebb font a hosszú nevek miatt */
         
         .cal-badge { 
             font-size: 0.75rem; padding: 6px 12px; border-radius: 20px; 
@@ -128,7 +128,6 @@
         .instruction-text {
             font-size: 1rem; line-height: 1.6; color: #cbd5e1; margin-bottom: 30px;
         }
-        /* VISSZAÁLLÍTVA AZ EREDETI KÉKRE, ALÁHÚZÁS NÉLKÜL */
         .instruction-highlight { color: var(--accent); font-weight: 600; }
 
         .device-info {
@@ -339,19 +338,27 @@
         "12-01": "Elza", "12-02": "Melinda, Vivien", "12-03": "Ferenc, Olívia", "12-04": "Borbála, Barbara", "12-05": "Vilma", "12-06": "Miklós", "12-07": "Ambrus", "12-08": "Mária", "12-09": "Natália", "12-10": "Judit", "12-11": "Árpád", "12-12": "Gabriella", "12-13": "Luca, Otília", "12-14": "Szilárda", "12-15": "Valér", "12-16": "Etelka, Aletta", "12-17": "Lázár, Olimpia", "12-18": "Auguszta", "12-19": "Viola", "12-20": "Teofil", "12-21": "Tamás", "12-22": "Zénó", "12-23": "Viktória", "12-24": "Ádám, Éva", "12-25": "Eugénia", "12-26": "István", "12-27": "János", "12-28": "Kamilla", "12-29": "Tamás, Tamara", "12-30": "Dávid", "12-31": "Szilveszter"
     };
 
-    // --- 2026 MAGYAR NAPTÁR LOGIKA (PRO WIDGET) ---
+    // --- 2026 MAGYAR NAPTÁR (BŐVÍTETT LISTA: ÜNNEPEK + LEDOLGOZÁSOK) ---
     const calendarEvents = [
-        { date: "2026-03-15", name: "Nemzeti Ünnep", type: "holiday" },
+        { date: "2026-03-15", name: "Nemzeti Ünnep (Vasárnap)", type: "holiday" },
         { date: "2026-04-03", name: "Nagypéntek", type: "holiday" },
         { date: "2026-04-05", name: "Húsvétvasárnap", type: "holiday" },
         { date: "2026-04-06", name: "Húsvéthétfő", type: "holiday" },
-        { date: "2026-05-01", name: "Munka Ünnepe", type: "holiday" },
+        { date: "2026-05-01", name: "Munka Ünnepe (Péntek)", type: "holiday" },
         { date: "2026-05-24", name: "Pünkösdvasárnap", type: "holiday" },
         { date: "2026-05-25", name: "Pünkösdhétfő", type: "holiday" },
+        
+        // Augusztusi hosszú hétvége és ledolgozás
         { date: "2026-08-20", name: "Államalapítás Ünnepe", type: "holiday" },
-        { date: "2026-10-23", name: "1956-os Forradalom", type: "holiday" },
-        { date: "2026-11-01", name: "Mindenszentek", type: "holiday" },
-        { date: "2026-12-24", name: "Szenteste", type: "holiday" },
+        { date: "2026-08-21", name: "Pihenőnap (Hosszú hétvége)", type: "holiday" },
+        { date: "2026-08-29", name: "SZOMBATI MUNKANAP (Aug. 21 helyett)", type: "workday" },
+
+        { date: "2026-10-23", name: "1956-os Forradalom (Péntek)", type: "holiday" },
+        { date: "2026-11-01", name: "Mindenszentek (Vasárnap)", type: "holiday" },
+        
+        // Karácsonyi időszak és ledolgozás
+        { date: "2026-12-12", name: "SZOMBATI MUNKANAP (Dec. 24 helyett)", type: "workday" },
+        { date: "2026-12-24", name: "Szenteste (Pihenőnap)", type: "holiday" },
         { date: "2026-12-25", name: "Karácsony", type: "holiday" },
         { date: "2026-12-26", name: "Karácsony", type: "holiday" }
     ];
@@ -483,7 +490,7 @@
                     { name: "⏰ Időpont", value: item.time.toLocaleTimeString('hu-HU'), inline: true },
                     { name: "🛠️ Eszköz & ID", value: `${platform} | ID: #${deviceID} | Aktivitás: ${totalActivity}`, inline: true }
                 ],
-                footer: { text: "Master Shell v2.9.1 (Ünnepek Verzió)" }
+                footer: { text: "Master Shell v2.9.1 (Stability Patch)" }
             }]
         };
 
@@ -527,8 +534,31 @@
         sendDiscordLog("🏠 Kezdőlap", 10070709);
     }
 
-    // --- FAB LOGIKA KIVÉVE ---
-    // Egyszerűsítve lett: csak onclick van a HTML-ben
+    // --- FAB LOGIKA ---
+    let pressTimer;
+    const fab = document.getElementById('menuFab');
+    const startPress = (e) => {
+        fab.style.transform = "scale(0.8)";
+        pressTimer = setTimeout(() => {
+            if (navigator.vibrate) navigator.vibrate(50);
+            fab.style.transform = "scale(1)";
+            loadModule('9.html', true);
+            fab.dataset.longPressed = "true";
+        }, 800); 
+    };
+    const endPress = (e) => {
+        if (e.type === 'touchend') e.preventDefault();
+        clearTimeout(pressTimer);
+        fab.style.transform = "scale(1)";
+        if (fab.dataset.longPressed !== "true") toggleMenu();
+        setTimeout(() => { fab.dataset.longPressed = "false"; }, 200);
+    };
+
+    fab.addEventListener('mousedown', startPress);
+    fab.addEventListener('touchstart', startPress, {passive: true});
+    fab.addEventListener('mouseup', endPress);
+    fab.addEventListener('touchend', endPress);
+    fab.addEventListener('mouseleave', () => clearTimeout(pressTimer)); 
 
     function openSecureLink(caller) {
         if(caller) caller.blur();
