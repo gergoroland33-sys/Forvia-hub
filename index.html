@@ -2,7 +2,7 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <title>FORVIA HUB - MASTER SHELL</title>
 
     <link rel="icon" type="image/png" href="icon.png">
@@ -16,7 +16,7 @@
         :root {
             --bg: #0b1120; --card: #1e293b; --accent: #3b82f6;
             --text: #f3f4f6; --text-dim: #94a3b8; --border: #334155;
-            --success: #10b981; --warning: #fbbf24;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -26,7 +26,9 @@
             background: #0f172a; color: var(--text);
             margin: 0; height: 100dvh; overflow: hidden;
             display: flex; flex-direction: column;
-            padding-top: env(safe-area-inset-top); 
+            padding-top: env(safe-area-inset-top);
+            /* Globális tiltás a kijelölésre, hogy app-szerűbb legyen */
+            -webkit-user-select: none; user-select: none;
         }
 
         #content-frame {
@@ -38,17 +40,20 @@
         #home-screen {
             flex-grow: 1; display: flex; flex-direction: column;
             align-items: center; justify-content: center; text-align: center;
-            background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
-            radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.1), transparent 40%), #0b1120;
+            /* PRO: Mélyebb, sötétebb háttér effektek */
+            background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 45%),
+            radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.05), transparent 45%), #0b1120;
             padding: 20px; position: relative; width: 100%; height: 100%;
         }
 
+        /* --- PRO GLASS CARD DESIGN --- */
         .glass-card {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(30, 41, 59, 0.4); /* Sötétebb alappal */
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-top: 1px solid rgba(255, 255, 255, 0.15); /* Fényesebb felső él */
             padding: 40px 30px; border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6);
             max-width: 500px; width: 100%; animation: fadeIn 0.8s ease-out;
             position: relative; 
         }
@@ -56,8 +61,8 @@
         .share-card-btn {
             position: absolute; top: 20px; right: 20px;
             width: 40px; height: 40px; border-radius: 50%;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             color: var(--text-dim); display: flex; align-items: center; justify-content: center;
             cursor: pointer; transition: all 0.3s ease; z-index: 10;
         }
@@ -71,54 +76,67 @@
         .welcome-title {
             font-size: 2.2rem; font-weight: 800; margin: 0;
             color: white; letter-spacing: -1px; margin-bottom: 5px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
-        .highlight-blue { color: var(--accent); }
+        .highlight-blue { 
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
         .current-date {
-            color: var(--text-dim); font-size: 0.95rem; margin-bottom: 25px; font-weight: 500; line-height: 1.4;
+            color: var(--text-dim); font-size: 0.95rem; margin-bottom: 30px; font-weight: 500; line-height: 1.5;
         }
-        .nameday-text { color: var(--accent); font-weight: 600; display: block; margin-top: 4px; }
+        .nameday-text { color: var(--accent); font-weight: 600; display: block; margin-top: 4px; font-size: 0.85rem; letter-spacing: 0.5px; }
 
-        /* --- ÚJ CALENDAR WIDGET STÍLUSOK (PRO MEGJELENÉS) --- */
+        /* --- PRO CALENDAR WIDGET --- */
         .calendar-box {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 16px;
-            padding: 15px 20px;
+            padding: 18px 22px;
             margin-bottom: 30px;
             text-align: left;
             position: relative;
             overflow: hidden;
             transition: all 0.3s ease;
             border-left: 4px solid var(--accent);
-            display: inline-block;
-            width: 100%;
+            display: inline-block; width: 100%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
         }
-        .cal-header { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
-        .cal-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-dim); font-weight: 700; }
-        .cal-main-row { display: flex; justify-content: space-between; align-items: center; }
-        .cal-date-text { font-size: 1.4rem; font-weight: 800; color: white; letter-spacing: -0.5px; }
-        .cal-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: 600; text-transform: uppercase; white-space: nowrap;}
-        .cal-event-name { font-size: 0.95rem; color: #94a3b8; margin-top: 2px; font-weight: 500; }
+
+        .cal-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+        .cal-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: #64748b; font-weight: 700; }
         
-        /* Státusz színek */
-        .cal-badge.holiday { background: rgba(16, 185, 129, 0.2); color: var(--success); }
-        .cal-badge.workday { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
-        .calendar-box.type-holiday { border-left-color: var(--success); }
-        .calendar-box.type-workday { border-left-color: var(--warning); }
+        .cal-main-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .cal-date-text { font-size: 1.5rem; font-weight: 800; color: white; letter-spacing: -0.5px; }
+        
+        .cal-badge { 
+            font-size: 0.75rem; padding: 6px 12px; border-radius: 20px; 
+            font-weight: 700; text-transform: uppercase; white-space: nowrap;
+            letter-spacing: 0.5px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .cal-event-name { font-size: 0.95rem; color: #94a3b8; font-weight: 500; }
+        
+        /* Státusz színek (Pro) */
+        .cal-badge.holiday { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .cal-badge.workday { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
+        
+        .calendar-box.type-holiday { border-left-color: #34d399; }
+        .calendar-box.type-workday { border-left-color: #fbbf24; }
 
         .instruction-text {
-            font-size: 1rem; line-height: 1.6; color: #e2e8f0; margin-bottom: 30px;
+            font-size: 1rem; line-height: 1.6; color: #cbd5e1; margin-bottom: 30px;
         }
-        .instruction-highlight { color: var(--accent); font-weight: 600; }
+        .instruction-highlight { color: white; font-weight: 700; border-bottom: 2px solid var(--accent); }
 
         .device-info {
             font-size: 0.8rem; color: #64748b;
-            border-top: 1px solid rgba(255,255,255,0.1);
+            border-top: 1px solid rgba(255,255,255,0.08);
             padding-top: 20px; margin-top: 10px;
         }
         .good-luck {
-            display: block; margin-top: 5px; color: #10b981; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+            display: block; margin-top: 5px; color: var(--success); font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
         }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -178,18 +196,26 @@
         }
         .nav-item:active { background: var(--accent) !important; color: white !important; transform: scale(0.98); }
 
+        /* --- JAVÍTOTT MENÜ FAB (NEM KIJELÖLHETŐ + PRO ÁRNYÉK) --- */
         .menu-fab {
             position: fixed; bottom: 30px; right: 30px;
             width: 60px; height: 60px; background: var(--accent);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.6);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5), inset 0 2px 5px rgba(255,255,255,0.2);
             cursor: pointer; z-index: 2147483647; 
-            border: 2px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.1);
             transition: transform 0.2s;
-            user-select: none; outline: none;
+            /* Fontos: letiltja a kijelölést */
+            -webkit-user-select: none; 
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none; /* iOS menü tiltása */
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
         }
-        .menu-fab:active { transform: scale(0.9); }
-        .menu-fab span { font-size: 28px; color: white; line-height: 1; }
+        .menu-fab:active { transform: scale(0.92); box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4); }
+        .menu-fab span { font-size: 28px; color: white; line-height: 1; pointer-events: none; }
 
         .refresh-fab {
             position: fixed; bottom: 110px; right: 37px; 
@@ -201,9 +227,10 @@
             cursor: pointer; z-index: 2147483647;
             border: 1px solid var(--border);
             transition: all 0.3s;
+            -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
         }
         .refresh-fab:active { transform: rotate(180deg) scale(0.9); }
-        .refresh-fab span { font-size: 22px; color: var(--accent); line-height: 1; font-weight: bold; }
+        .refresh-fab span { font-size: 22px; color: var(--accent); line-height: 1; font-weight: bold; pointer-events: none; }
 
         .overlay {
             display: none; position: fixed; inset: 0;
@@ -250,7 +277,7 @@
         </p>
 
         <div class="device-info">
-            Ez a verzió laptop és telefon kijelzőre lett optimalizálva.
+            Forvia SMT Master Shell v2.9.2
             <span class="good-luck">Jó munkát!</span>
         </div>
     </div>
