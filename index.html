@@ -16,6 +16,7 @@
         :root {
             --bg: #0b1120; --card: #1e293b; --accent: #3b82f6;
             --text: #f3f4f6; --text-dim: #94a3b8; --border: #334155;
+            --success: #10b981; --warning: #fbbf24;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -78,13 +79,33 @@
         }
         .nameday-text { color: var(--accent); font-weight: 600; display: block; margin-top: 4px; }
 
-        .visitor-box {
-            background: rgba(0,0,0,0.3); padding: 12px 20px; border-radius: 12px;
-            display: inline-block; margin-bottom: 20px; border: 1px solid rgba(59, 130, 246, 0.3);
-            min-height: 40px;
+        /* --- ÚJ CALENDAR WIDGET STÍLUSOK (PRO MEGJELENÉS) --- */
+        .calendar-box {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 15px 20px;
+            margin-bottom: 30px;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--accent);
+            display: inline-block;
+            width: 100%;
         }
-        .visitor-label { font-size: 10px; text-transform: uppercase; color: var(--text-dim); letter-spacing: 1px; display: block; margin-bottom: 8px; }
-        .visitor-img { height: 24px; display: none; } /* Alapból rejtve, amíg be nem tölt */
+        .cal-header { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+        .cal-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-dim); font-weight: 700; }
+        .cal-main-row { display: flex; justify-content: space-between; align-items: center; }
+        .cal-date-text { font-size: 1.4rem; font-weight: 800; color: white; letter-spacing: -0.5px; }
+        .cal-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: 600; text-transform: uppercase; white-space: nowrap;}
+        .cal-event-name { font-size: 0.95rem; color: #94a3b8; margin-top: 2px; font-weight: 500; }
+        
+        /* Státusz színek */
+        .cal-badge.holiday { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .cal-badge.workday { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .calendar-box.type-holiday { border-left-color: var(--success); }
+        .calendar-box.type-workday { border-left-color: var(--warning); }
 
         .instruction-text {
             font-size: 1rem; line-height: 1.6; color: #e2e8f0; margin-bottom: 30px;
@@ -211,9 +232,16 @@
             <span id="name-day" class="nameday-text">...</span>
         </div>
 
-        <div class="visitor-box">
-            <span class="visitor-label">Mai látogatások száma</span>
-            <img id="hit-img" class="visitor-img" alt="számláló">
+        <div id="calendar-widget" class="calendar-box">
+            <div class="cal-header">
+                <span id="cal-type-icon">📅</span> 
+                <span id="cal-label" class="cal-label">KÖVETKEZŐ ESEMÉNY</span>
+            </div>
+            <div class="cal-main-row">
+                <span id="cal-date" class="cal-date-text">...</span>
+                <span id="cal-days-left" class="cal-badge">...</span>
+            </div>
+            <div id="cal-name" class="cal-event-name">Betöltés...</div>
         </div>
 
         <p class="instruction-text">
@@ -284,6 +312,77 @@
         "12-01": "Elza", "12-02": "Melinda, Vivien", "12-03": "Ferenc, Olívia", "12-04": "Borbála, Barbara", "12-05": "Vilma", "12-06": "Miklós", "12-07": "Ambrus", "12-08": "Mária", "12-09": "Natália", "12-10": "Judit", "12-11": "Árpád", "12-12": "Gabriella", "12-13": "Luca, Otília", "12-14": "Szilárda", "12-15": "Valér", "12-16": "Etelka, Aletta", "12-17": "Lázár, Olimpia", "12-18": "Auguszta", "12-19": "Viola", "12-20": "Teofil", "12-21": "Tamás", "12-22": "Zénó", "12-23": "Viktória", "12-24": "Ádám, Éva", "12-25": "Eugénia", "12-26": "István", "12-27": "János", "12-28": "Kamilla", "12-29": "Tamás, Tamara", "12-30": "Dávid", "12-31": "Szilveszter"
     };
 
+    // --- 2026 MAGYAR NAPTÁR LOGIKA (PRO WIDGET) ---
+    const calendarEvents = [
+        { date: "2026-03-15", name: "Nemzeti Ünnep", type: "holiday" },
+        { date: "2026-04-03", name: "Nagypéntek", type: "holiday" },
+        { date: "2026-04-05", name: "Húsvétvasárnap", type: "holiday" },
+        { date: "2026-04-06", name: "Húsvéthétfő", type: "holiday" },
+        { date: "2026-05-01", name: "Munka Ünnepe", type: "holiday" },
+        { date: "2026-05-24", name: "Pünkösdvasárnap", type: "holiday" },
+        { date: "2026-05-25", name: "Pünkösdhétfő", type: "holiday" },
+        { date: "2026-08-20", name: "Államalapítás Ünnepe", type: "holiday" },
+        { date: "2026-10-23", name: "1956-os Forradalom", type: "holiday" },
+        { date: "2026-11-01", name: "Mindenszentek", type: "holiday" },
+        { date: "2026-12-24", name: "Szenteste", type: "holiday" },
+        { date: "2026-12-25", name: "Karácsony", type: "holiday" },
+        { date: "2026-12-26", name: "Karácsony", type: "holiday" }
+    ];
+
+    function updateCalendarWidget() {
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+
+        let nextEvent = calendarEvents.find(e => {
+            const eventDate = new Date(e.date);
+            return eventDate >= now;
+        });
+
+        if (!nextEvent) {
+            nextEvent = { date: "2027-01-01", name: "Újév", type: "holiday" };
+        }
+
+        const eventDate = new Date(nextEvent.date);
+        const timeDiff = eventDate - now;
+        const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
+        const box = document.getElementById('calendar-widget');
+        const label = document.getElementById('cal-label');
+        const dateDisplay = document.getElementById('cal-date');
+        const daysBadge = document.getElementById('cal-days-left');
+        const nameDisplay = document.getElementById('cal-name');
+        const icon = document.getElementById('cal-type-icon');
+
+        const monthNames = ["Jan", "Feb", "Már", "Ápr", "Máj", "Jún", "Júl", "Aug", "Szep", "Okt", "Nov", "Dec"];
+        const formattedDate = `${monthNames[eventDate.getMonth()]}. ${String(eventDate.getDate()).padStart(2, '0')}.`;
+
+        dateDisplay.innerText = formattedDate;
+        nameDisplay.innerText = nextEvent.name;
+
+        box.className = "calendar-box"; 
+        daysBadge.className = "cal-badge"; 
+
+        if (nextEvent.type === 'workday') {
+            box.classList.add('type-workday');
+            daysBadge.classList.add('workday');
+            label.innerText = "KÖTELEZŐ MUNKANAP";
+            icon.innerText = "⚠️";
+        } else {
+            box.classList.add('type-holiday');
+            daysBadge.classList.add('holiday');
+            label.innerText = "KÖVETKEZŐ ÜNNEP";
+            icon.innerText = "🏖️";
+        }
+
+        if (daysLeft === 0) {
+            daysBadge.innerText = "MA!";
+        } else if (daysLeft === 1) {
+            daysBadge.innerText = "HOLNAP";
+        } else {
+            daysBadge.innerText = `${daysLeft} NAP`;
+        }
+    }
+
     function updateInfo() {
         const now = new Date();
         const napok = ["Vasárnap", "Hétfő", "Kedd", "Szerda", "Csütörtök", "Péntek", "Szombat"];
@@ -296,22 +395,8 @@
         const maiNevnap = nevnapok[honapNap] || "---";
         document.getElementById('name-day').innerText = "Névnap: " + maiNevnap;
 
-        // --- BIZTONSÁGOS LÁTOGATÁSSZÁMLÁLÓ ---
-        const dailyKey = "forvia_neww" + now.getFullYear() + (now.getMonth()+1) + now.getDate();
-        const cacheBuster = Math.floor(Math.random() * 1000);
-        const hitUrl = `https://visitor-badge.laobi.icu/badge?page_id=gergoroland_hub_${dailyKey}&left_text=Látogatók&color=10b981&lcolor=1e293b&style=flat-square&t=${cacheBuster}`;
-        
-        const tempImg = new Image();
-        tempImg.onload = function() {
-            const hitImg = document.getElementById('hit-img');
-            hitImg.src = hitUrl;
-            hitImg.style.display = 'inline-block';
-        };
-        tempImg.onerror = function() {
-            // Céges hálózat tiltja, ne csináljunk semmit, a kép rejtve marad
-            console.warn("Visitor badge blocked by network.");
-        };
-        tempImg.src = hitUrl;
+        // ÚJ FUNKCIÓ HÍVÁSA
+        updateCalendarWidget();
     }
     updateInfo();
 
