@@ -109,7 +109,7 @@
         .cal-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: #64748b; font-weight: 700; }
         
         .cal-main-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-        .cal-date-text { font-size: 1.4rem; font-weight: 800; color: white; letter-spacing: -0.5px; } /* Kicsit kisebb font a hosszú nevek miatt */
+        .cal-date-text { font-size: 1.4rem; font-weight: 800; color: white; letter-spacing: -0.5px; }
         
         .cal-badge { 
             font-size: 0.75rem; padding: 6px 12px; border-radius: 20px; 
@@ -205,11 +205,12 @@
             cursor: pointer; z-index: 2147483647; 
             border: 1px solid rgba(255,255,255,0.1);
             transition: transform 0.2s;
+            /* Fontos: letiltja a kijelölést */
             -webkit-user-select: none; 
             -moz-user-select: none;
             -ms-user-select: none;
             user-select: none;
-            -webkit-touch-callout: none;
+            -webkit-touch-callout: none; /* iOS menü tiltása */
             outline: none;
             -webkit-tap-highlight-color: transparent;
         }
@@ -407,7 +408,7 @@
             box.classList.add('type-holiday');
             daysBadge.classList.add('holiday');
             label.innerText = "KÖVETKEZŐ ÜNNEP";
-            icon.innerText = "📅";
+            icon.innerText = "🏖️";
         }
 
         if (daysLeft === 0) {
@@ -490,7 +491,7 @@
                     { name: "⏰ Időpont", value: item.time.toLocaleTimeString('hu-HU'), inline: true },
                     { name: "🛠️ Eszköz & ID", value: `${platform} | ID: #${deviceID} | Aktivitás: ${totalActivity}`, inline: true }
                 ],
-                footer: { text: "Master Shell v2.9.1 (Legújabb verzió)" }
+                footer: { text: "Master Shell v2.9.3 (Final)" }
             }]
         };
 
@@ -534,31 +535,7 @@
         sendDiscordLog("🏠 Kezdőlap", 10070709);
     }
 
-    // --- FAB LOGIKA ---
-    let pressTimer;
-    const fab = document.getElementById('menuFab');
-    const startPress = (e) => {
-        fab.style.transform = "scale(0.8)";
-        pressTimer = setTimeout(() => {
-            if (navigator.vibrate) navigator.vibrate(50);
-            fab.style.transform = "scale(1)";
-            loadModule('9.html', true);
-            fab.dataset.longPressed = "true";
-        }, 800); 
-    };
-    const endPress = (e) => {
-        if (e.type === 'touchend') e.preventDefault();
-        clearTimeout(pressTimer);
-        fab.style.transform = "scale(1)";
-        if (fab.dataset.longPressed !== "true") toggleMenu();
-        setTimeout(() => { fab.dataset.longPressed = "false"; }, 200);
-    };
-
-    fab.addEventListener('mousedown', startPress);
-    fab.addEventListener('touchstart', startPress, {passive: true});
-    fab.addEventListener('mouseup', endPress);
-    fab.addEventListener('touchend', endPress);
-    fab.addEventListener('mouseleave', () => clearTimeout(pressTimer)); 
+    // --- FAB LOGIKA: Törölve, csak sima onclick maradt ---
 
     function openSecureLink(caller) {
         if(caller) caller.blur();
