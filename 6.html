@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProGen Systems - Végleges Verzió</title>
+<style>
+    :root {
+        --bg-core: #0a0a0a;       /* Mélyfekete alap */
+        --bg-panel: #111111;      /* Panel háttér */
+        --bg-input: #1a1a1a;      /* Input mező */
+        --border: #2a2a2a;        /* Finom keret */
+        --text-main: #e5e5e5;
+        --text-muted: #737373;
+        
+        /* Állapot színek */
+        --c-success: #10b981;     /* Zöld (Valid) */
+        --c-warning: #f59e0b;     /* Sárga (Duplikáció) */
+        --c-error: #ef4444;       /* Piros (Hiba) */
+        --c-accent: #8b5cf6;      /* Lila (Kiemelés) */
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        margin: 0; padding: 0;
+        height: 100vh;
+        background-color: var(--bg-core);
+        color: var(--text-main);
+        font-family: 'Segoe UI', 'Roboto', monospace;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    /* --- AZ ELEGÁNS VÉKONY RGB KERET --- */
+    .pro-container {
+        position: relative;
+        width: 1200px; max-width: 95%; height: 95vh; /* Kicsit magasabb, hogy kitöltse a keretet */
+        background: var(--bg-core); 
+        border-radius: 10px;
+        z-index: 10;
+        display: flex; flex-direction: column;
+        padding: 2px; 
+        overflow: hidden;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+    }
+
+    .pro-container::before {
+        content: ''; position: absolute;
+        top: -50%; left: -50%; width: 200%; height: 200%;
+        background: conic-gradient(
+            transparent, 
+            #ff0055, #ff9900, #ffea00, #55ff00, 
+            #00ccff, #9900ff, #ff0055, transparent
+        );
+        animation: rotateBorder 4s linear infinite;
+        z-index: -1;
+    }
+
+    @keyframes rotateBorder { 100% { transform: rotate(360deg); } }
+
+    .inner-frame {
+        background: var(--bg-panel);
+        width: 100%; height: 100%;
+        border-radius: 8px;
+        display: flex; flex-direction: column;
+        overflow: hidden;
+    }
+
+    /* --- FEJLÉC --- */
+    header {
+        height: 60px; padding: 0 25px;
+        border-bottom: 1px solid var(--border);
+        display: flex; justify-content: space-between; align-items: center;
+        background: #141414;
+    }
+    .brand-title { font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: white; }
+    .brand-title span { color: var(--c-accent); }
+    
+    .btn-help {
+        background: transparent; border: 1px solid var(--border); color: var(--text-muted);
+        padding: 6px 15px; font-size: 11px; border-radius: 4px; cursor: pointer; text-transform: uppercase; font-weight: 600;
+        display: flex; align-items: center; gap: 8px; transition: 0.2s;
+    }
+    .btn-help:hover { border-color: var(--text-main); color: var(--text-main); background: #222; }
+
+    /* --- GRID ELRENDEZÉS --- */
+    .app-grid {
+        flex: 1; display: grid; grid-template-columns: 280px 1fr; overflow: hidden;
+    }
+
+    /* BAL OLDAL (Sidebar) */
+    .sidebar {
+        background: #0f0f0f; border-right: 1px solid var(--border); padding: 20px;
+        display: flex; flex-direction: column; gap: 25px;
+    }
+    .section-head { font-size: 11px; font-weight: 700; color: #525252; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
+
+    /* --- ÚJ, ÉREZHETŐ FIZIKAI KAPCSOLÓ --- */
+    .toggle-grp {
+        display: flex;
+        background: #080808; /* Mélyedés háttere */
+        padding: 4px;
+        border-radius: 8px;
+        border: 1px solid #222;
+        box-shadow: inset 0 3px 8px rgba(0,0,0,0.8); /* Belső árnyék a mélységért */
+        position: relative;
+    }
+    .t-btn {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: #555;
+        padding: 10px;
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+        border-radius: 6px;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Rugalmas animáció */
+        position: relative;
+        z-index: 2;
+        text-shadow: 0 1px 1px rgba(0,0,0,0.5); /*kis mélység a szövegnek*/
+    }
+    /* Aktív gomb - Kiemelkedik */
+    .t-btn.active {
+        background: #e5e5e5; /* Világos fizikai gomb szín */
+        color: #111; /* Kontrasztos sötét szöveg */
+        box-shadow: 0 4px 10px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3); /* Erős külső árnyék */
+        text-shadow: none;
+        transform: translateY(-1px); /* Picit kiemelkedik */
+    }
+    .t-btn:not(.active):hover { color: #888; }
+
+
+    /* Fájl Import */
+    .drop-area {
+        height: 120px; border: 1px dashed #333; border-radius: 6px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        text-align: center; cursor: pointer; transition: 0.2s; background: rgba(255,255,255,0.01);
+    }
+    .drop-area:hover { border-color: var(--c-accent); background: rgba(139, 92, 246, 0.05); }
+    .drop-area.active { border-style: solid; border-color: var(--c-success); background: rgba(16, 185, 129, 0.05); }
+    
+    /* Adatok */
+    .data-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px; color: #888; border-bottom: 1px solid #1a1a1a; padding-bottom: 4px; }
+    .data-val { color: var(--c-accent); font-family: monospace; font-weight: bold; }
+
+    /* JOBB OLDAL (Workspace) */
+    .workspace {
+        display: grid; grid-template-rows: auto 1fr; background: var(--bg-panel); overflow: hidden;
+    }
+
+    .input-panel { padding: 20px; background: #121212; border-bottom: 1px solid var(--border); }
+    textarea {
+        width: 100%; height: 80px; background: var(--bg-input); border: 1px solid var(--border);
+        color: white; padding: 15px; font-family: 'Consolas', monospace; font-size: 13px;
+        resize: none; outline: none; border-radius: 5px; display: block;
+    }
+    textarea:focus { border-color: var(--c-accent); }
+
+    /* Állapot sáv */
+    .status-dashboard {
+        display: flex; gap: 20px; padding: 10px 20px; background: #0c0c0c; border-bottom: 1px solid var(--border); align-items: center;
+    }
+    .d-badge { font-size: 11px; display: flex; align-items: center; gap: 6px; color: #888; }
+    .d-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+    /* Lista */
+    .list-area { overflow-y: auto; padding: 0; }
+    .list-item {
+        display: grid; grid-template-columns: 40px 1fr auto; gap: 15px; padding: 8px 20px;
+        border-bottom: 1px solid #1a1a1a; font-family: monospace; font-size: 13px; color: #ccc; align-items: center;
+        border-left: 3px solid transparent; transition: background 0.2s;
+    }
+    .list-item:hover { background: #161616; }
+    
+    .idx { color: #444; font-size: 11px; text-align: right; }
+    
+    /* Státusz színek */
+    .list-item.ok { border-left-color: var(--c-success); }
+    .list-item.dup { border-left-color: var(--c-warning); opacity: 0.7; }
+    .list-item.err { border-left-color: var(--c-error); background: rgba(239, 68, 68, 0.05); }
+
+    .tag { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; }
+    .tag.ok { color: var(--c-success); background: rgba(16, 185, 129, 0.1); }
+    .tag.dup { color: var(--c-warning); background: rgba(245, 158, 11, 0.1); }
+    .tag.err { color: var(--c-error); background: rgba(239, 68, 68, 0.1); }
+
+    /* FOOTER */
+    footer {
+        height: 60px; padding: 0 25px; border-top: 1px solid var(--border);
+        background: #141414; display: flex; justify-content: flex-end; align-items: center; gap: 20px;
+    }
+    .fix-tool { display: flex; align-items: center; gap: 10px; font-size: 11px; color: #666; }
+    .fix-input { width: 30px; background: var(--bg-input); border: 1px solid var(--border); color: white; text-align: center; padding: 4px; border-radius: 3px; }
+    
+    .btn-main {
+        background: white; color: black; border: none; padding: 10px 25px;
+        font-size: 12px; font-weight: 700; border-radius: 4px; cursor: pointer; transition: 0.2s;
+    }
+    .btn-main:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 0 15px rgba(255,255,255,0.2); }
+    .btn-main:disabled { background: #333; color: #555; cursor: not-allowed; }
+
+    /* --- SÚGÓ MODAL (Hidden by default) --- */
+    .modal-overlay {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 999;
+        justify-content: center; align-items: center;
+    }
+    .modal-box {
+        background: #111; width: 600px; max-width: 90%; border: 1px solid var(--border); border-radius: 8px;
+        box-shadow: 0 20px 50px rgba(0,0,0,1); overflow: hidden;
+    }
+    .modal-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #161616; }
+    .modal-title { font-size: 16px; font-weight: bold; color: white; text-transform: uppercase; }
+    .modal-close { background: transparent; border: none; color: #666; font-size: 20px; cursor: pointer; }
+    
+    .modal-body { padding: 30px; color: #ccc; font-size: 13px; line-height: 1.6; }
+    .step-item { margin-bottom: 20px; display: flex; gap: 15px; }
+    .step-num { width: 24px; height: 24px; background: var(--c-accent); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; font-size: 12px; }
+    .step-text h4 { margin: 0 0 5px 0; color: white; font-size: 14px; }
+    .step-text p { margin: 0; color: #888; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+</style>
+<script>
+// --- MOTOR ---
+const MiniZip={table:(function(){let t=[],c;for(let n=0;n<256;n++){c=n;for(let k=0;k<8;k++)c=((c&1)?(0xEDB88320^(c>>>1)):(c>>>1));t[n]=c}return t})(),crc32:function(str){let crc=0^(-1);for(let i=0;i<str.length;i++){crc=(crc>>>8)^MiniZip.table[(crc^str.charCodeAt(i))&0xFF]}return(crc^(-1))>>>0},files:[],file:function(name,content){this.files.push({name,content})},generate:function(){let parts=[],cd=[],offset=0;this.files.forEach(f=>{const utf8=unescape(encodeURIComponent(f.content));const crc=MiniZip.crc32(utf8);const size=utf8.length;const nameLen=f.name.length;let header=new Uint8Array(30+nameLen);let view=new DataView(header.buffer);view.setUint32(0,0x04034b50,true);view.setUint16(4,10,true);view.setUint16(6,0,true);view.setUint16(8,0,true);view.setUint16(10,0,true);view.setUint16(12,0,true);view.setUint32(14,crc,true);view.setUint32(18,size,true);view.setUint32(22,size,true);view.setUint16(26,nameLen,true);view.setUint16(28,0,true);for(let i=0;i<nameLen;i++)header[30+i]=f.name.charCodeAt(i);parts.push(header);let contentArr=new Uint8Array(size);for(let i=0;i<size;i++)contentArr[i]=utf8.charCodeAt(i);parts.push(contentArr);let cdr=new Uint8Array(46+nameLen);let cdrView=new DataView(cdr.buffer);cdrView.setUint32(0,0x02014b50,true);cdrView.setUint16(4,10,true);cdrView.setUint16(6,10,true);cdrView.setUint16(8,0,true);cdrView.setUint16(10,0,true);cdrView.setUint16(12,0,true);cdrView.setUint16(14,0,true);cdrView.setUint32(16,crc,true);cdrView.setUint32(20,size,true);cdrView.setUint32(24,size,true);cdrView.setUint16(28,nameLen,true);cdrView.setUint16(30,0,true);cdrView.setUint16(32,0,true);cdrView.setUint16(34,0,true);cdrView.setUint16(36,0,true);cdrView.setUint32(38,0,true);cdrView.setUint32(42,offset,true);for(let i=0;i<nameLen;i++)cdr[46+i]=f.name.charCodeAt(i);cd.push(cdr);offset+=(30+nameLen+size)});let cdSize=0;cd.forEach(p=>cdSize+=p.byteLength);let eocd=new Uint8Array(22);let eocdView=new DataView(eocd.buffer);eocdView.setUint32(0,0x06054b50,true);eocdView.setUint16(4,0,true);eocdView.setUint16(6,0,true);eocdView.setUint16(8,this.files.length,true);eocdView.setUint16(10,this.files.length,true);eocdView.setUint32(12,cdSize,true);eocdView.setUint32(16,offset,true);eocdView.setUint16(20,0,true);let blobParts=[...parts,...cd,eocd];this.files=[];return new Blob(blobParts,{type:"application/zip"})}};
+</script>
+</head>
+<body>
+
+<div id="helpModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title">Részletes Használati Utasítás</span>
+            <button class="modal-close" onclick="toggleHelp(false)">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="step-item">
+                <div class="step-num">1</div>
+                <div class="step-text">
+                    <h4>Működési mód kiválasztása</h4>
+                    <p><b>SPI Mód:</b> A fájlnév teljesen megegyezik a leolvasott kóddal.<br><b>CKD Mód:</b> Csak a fájlnév eleje (prefix) kerül cserére, a többi marad.</p>
+                </div>
+            </div>
+            <div class="step-item">
+                <div class="step-num">2</div>
+                <div class="step-text">
+                    <h4>Sablon betöltése</h4>
+                    <p>Húzd be az eredeti CSV fájlt a bal oldali keretbe. A program ebből állapítja meg az elvárt karakterhosszt és a fájl szerkezetét.</p>
+                </div>
+            </div>
+            <div class="step-item">
+                <div class="step-num">3</div>
+                <div class="step-text">
+                    <h4>Szkennelés és Ellenőrzés</h4>
+                    <p>Csipogd be a kódokat. A rendszer automatikusan ellenőrzi:<br>
+                    • <span style="color:var(--c-success)">Zöld:</span> Minden rendben, kész a mentésre.<br>
+                    • <span style="color:var(--c-warning)">Sárga:</span> Ez a kód már szerepel a listában (duplikáció). Nem kerül bele 2x.<br>
+                    • <span style="color:var(--c-error)">Piros:</span> Hibás hosszúságú kód. Javítani kell!</p>
+                </div>
+            </div>
+            <div class="step-item">
+                <div class="step-num">4</div>
+                <div class="step-text">
+                    <h4>Generálás</h4>
+                    <p>Ha nincs piros hiba a listában, kattints a "Generálás Indítása" gombra a ZIP letöltéséhez.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="pro-container">
+    <div class="inner-frame">
+        <header>
+            <div class="brand-title">ProGen <span>Systems</span> <span style="font-size:10px; color:#555; margin-left:10px;">DEV: GERGŐ ROLAND</span></div>
+            <button class="btn-help" onclick="toggleHelp(true)">
+                <span>?</span> Használati Utasítás
+            </button>
+        </header>
+
+        <div class="app-grid">
+            <aside class="sidebar">
+                <div>
+                    <div class="section-head">Generálási Mód</div>
+                    <div class="toggle-grp">
+                        <button class="t-btn active" id="btnSPI" onclick="setMode('SPI')">SPI</button>
+                        <button class="t-btn" id="btnCKD" onclick="setMode('CKD')">CKD</button>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="section-head">Sablon CSV Fájl</div>
+                    <div class="drop-area" id="dropZone" onclick="document.getElementById('fileInp').click()">
+                        <div id="dropEmpty">
+                            <span style="font-size:24px; color:#444; margin-bottom:5px;">📥</span>
+                            <span style="font-size:11px; color:#666;">Kattints vagy húzd ide</span>
+                        </div>
+                        <div id="dropLoaded" style="display:none;">
+                            <span style="font-size:24px; color:var(--c-success); margin-bottom:5px;">✔</span>
+                            <span id="fileNameDisp" style="font-size:11px; color:white; font-weight:bold;">fájlnév.csv</span>
+                        </div>
+                        <input type="file" id="fileInp" hidden accept=".csv" onchange="handleFile(this.files[0])">
+                    </div>
+                </div>
+
+                <div>
+                    <div class="section-head">Adat Paraméterek</div>
+                    <div class="data-row">
+                        <span>Bázis kód:</span>
+                        <span class="data-val" id="origBarcode">-</span>
+                    </div>
+                    <div class="data-row" style="border:none;">
+                        <span>Elvárt hossz:</span>
+                        <span class="data-val" id="origLength">-</span>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="workspace">
+                <div class="input-panel">
+                    <div class="section-head">Szkennelés (Bemenet)</div>
+                    <textarea id="barcodeInp" placeholder="Olvassa be a vonalkódokat..." oninput="processInput()" autofocus></textarea>
+                </div>
+
+                <div class="status-dashboard">
+                    <div class="d-badge"><div class="d-dot" style="background:var(--c-success)"></div> <span id="statOk">0 Valid</span></div>
+                    <div class="d-badge"><div class="d-dot" style="background:var(--c-warning)"></div> <span id="statDup">0 Duplikált</span></div>
+                    <div class="d-badge"><div class="d-dot" style="background:var(--c-error)"></div> <span id="statErr">0 Hiba</span></div>
+                </div>
+
+                <div class="list-area" id="previewList">
+                    <div style="padding:40px; text-align:center; color:#333; font-size:12px;">Nincs feldolgozott adat.</div>
+                </div>
+            </main>
+        </div>
+
+        <footer>
+            <div class="fix-tool">
+                <span>Utolsó karakter javítása:</span>
+                <input type="text" id="fixChar" class="fix-input" maxlength="1" placeholder="_" oninput="processInput()">
+            </div>
+            <button class="btn-main" id="genBtn" disabled onclick="generateZip()">GENERÁLÁS INDÍTÁSA</button>
+        </footer>
+    </div>
+</div>
+
+<script>
+// --- ALAP LOGIKA (Változatlanul stabil) ---
+let currentMode = 'SPI', csvContent = "", originalBarcode = "", originalFileName = "", processedBarcodes = [];
+
+function toggleHelp(show) {
+    document.getElementById('helpModal').style.display = show ? 'flex' : 'none';
+}
+
+function setMode(mode) { 
+    currentMode = mode; 
+    document.getElementById('btnSPI').classList.toggle('active', mode === 'SPI'); 
+    document.getElementById('btnCKD').classList.toggle('active', mode === 'CKD'); 
+    if(originalFileName) handleFileProcessing(originalFileName); 
+}
+
+function handleFile(file) { 
+    if(!file) return; 
+    originalFileName = file.name; 
+    document.getElementById('dropZone').classList.add('active');
+    document.getElementById('dropEmpty').style.display = 'none';
+    document.getElementById('dropLoaded').style.display = 'block';
+    document.getElementById('fileNameDisp').innerText = file.name;
+    const reader = new FileReader(); 
+    reader.onload = (e) => { csvContent = e.target.result; handleFileProcessing(file.name); }; 
+    reader.readAsText(file); 
+}
+
+function handleFileProcessing(name) { 
+    originalBarcode = (currentMode === 'CKD') ? name.split('_')[0] : name.replace('.csv', '').split('_')[0]; 
+    document.getElementById('origBarcode').innerText = originalBarcode; 
+    document.getElementById('origLength').innerText = originalBarcode.length; 
+    processInput(); 
+}
+
+function processInput() {
+    const raw = document.getElementById('barcodeInp').value; 
+    const fix = document.getElementById('fixChar').value;
+    const lines = raw.split(/[\n, ]+/).map(s => s.trim()).filter(s => s !== "");
+    const listDiv = document.getElementById('previewList'); 
+    
+    listDiv.innerHTML = ""; 
+    processedBarcodes = [];
+    
+    let countOk = 0, countDup = 0, countErr = 0;
+    let seenCodes = new Set(); 
+
+    if(lines.length === 0) {
+        listDiv.innerHTML = '<div style="padding:40px; text-align:center; color:#333; font-size:12px;">Nincs feldolgozott adat.</div>';
+        updateStats(0,0,0);
+        document.getElementById('genBtn').disabled = true;
+        return;
+    }
+
+    lines.forEach((code, index) => {
+        let final = (currentMode === 'SPI' && fix !== "") ? code.substring(0, code.length - 1) + fix : code;
+        const targetLen = originalBarcode.length;
+        const currentLen = final.length;
+        
+        let statusClass = ""; 
+        let badgeText = "";
+
+        if (currentLen !== targetLen) {
+            statusClass = "err";
+            countErr++;
+            const diff = currentLen - targetLen;
+            badgeText = diff < 0 ? `TÚL RÖVID (${diff})` : `TÚL HOSSZÚ (+${diff})`;
+        } 
+        else if (seenCodes.has(final)) {
+            statusClass = "dup";
+            countDup++;
+            badgeText = "DUPLIKÁCIÓ (KIHAGYVA)";
+        } 
+        else {
+            statusClass = "ok";
+            countOk++;
+            badgeText = "JÓVÁHAGYVA";
+            processedBarcodes.push(final); 
+            seenCodes.add(final);
+        }
+
+        const item = document.createElement('div'); 
+        item.className = `list-item ${statusClass}`;
+        item.innerHTML = `
+            <span class="idx">${index + 1}.</span>
+            <span style="font-weight:bold; letter-spacing:0.5px; color:${statusClass==='err'?'var(--c-error)':(statusClass==='dup'?'var(--c-warning)':'white')}">${final}</span> 
+            <span class="tag ${statusClass}">${badgeText}</span>
+        `;
+        listDiv.appendChild(item); 
+    });
+
+    updateStats(countOk, countDup, countErr);
+    document.getElementById('genBtn').disabled = (processedBarcodes.length === 0 || countErr > 0 || !csvContent);
+}
+
+function updateStats(ok, dup, err) {
+    document.getElementById('statOk').innerText = `${ok} Valid`;
+    document.getElementById('statDup').innerText = `${dup} Duplikált`;
+    document.getElementById('statErr').innerText = `${err} Hiba`;
+    
+    document.getElementById('statOk').style.opacity = ok > 0 ? "1" : "0.5";
+    document.getElementById('statDup').style.opacity = dup > 0 ? "1" : "0.5";
+    document.getElementById('statErr').style.opacity = err > 0 ? "1" : "0.5";
+}
+
+function generateZip() {
+    const btn = document.getElementById('genBtn'); 
+    const originalText = btn.innerText;
+    btn.innerText = "FELDOLGOZÁS..."; 
+    btn.disabled = true;
+
+    processedBarcodes.forEach(c => {
+        const content = csvContent.split(originalBarcode).join(c);
+        const name = (currentMode === 'CKD') ? originalFileName.replace(originalBarcode, c) : (c + ".csv");
+        MiniZip.file(name, content);
+    });
+
+    setTimeout(() => { 
+        const blob = MiniZip.generate();
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `ProGen_${currentMode}_${new Date().getTime()}.zip`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        btn.innerText = "LETÖLTÉS KÉSZ";
+        setTimeout(() => { btn.innerText = originalText; btn.disabled = false; }, 2000);
+    }, 200);
+}
+</script>
+</body>
+</html>
