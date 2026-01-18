@@ -27,7 +27,6 @@
             margin: 0; height: 100dvh; overflow: hidden;
             display: flex; flex-direction: column;
             padding-top: env(safe-area-inset-top);
-            /* Globális tiltás a kijelölésre, hogy app-szerűbb legyen */
             -webkit-user-select: none; user-select: none;
         }
 
@@ -40,18 +39,16 @@
         #home-screen {
             flex-grow: 1; display: flex; flex-direction: column;
             align-items: center; justify-content: center; text-align: center;
-            /* PRO: Mélyebb, sötétebb háttér effektek */
             background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 45%),
             radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.05), transparent 45%), #0b1120;
             padding: 20px; position: relative; width: 100%; height: 100%;
         }
 
-        /* --- PRO GLASS CARD DESIGN --- */
         .glass-card {
-            background: rgba(30, 41, 59, 0.4); /* Sötétebb alappal */
+            background: rgba(30, 41, 59, 0.4); 
             backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            border-top: 1px solid rgba(255, 255, 255, 0.15); /* Fényesebb felső él */
+            border-top: 1px solid rgba(255, 255, 255, 0.15); 
             padding: 40px 30px; border-radius: 24px;
             box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6);
             max-width: 500px; width: 100%; animation: fadeIn 0.8s ease-out;
@@ -89,7 +86,6 @@
         }
         .nameday-text { color: var(--accent); font-weight: 600; display: block; margin-top: 4px; font-size: 0.85rem; letter-spacing: 0.5px; }
 
-        /* --- PRO CALENDAR WIDGET --- */
         .calendar-box {
             background: linear-gradient(145deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -118,7 +114,6 @@
         }
         .cal-event-name { font-size: 0.95rem; color: #94a3b8; font-weight: 500; }
         
-        /* Státusz színek (Pro) */
         .cal-badge.holiday { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
         .cal-badge.workday { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
         
@@ -196,7 +191,6 @@
         }
         .nav-item:active { background: var(--accent) !important; color: white !important; transform: scale(0.98); }
 
-        /* --- JAVÍTOTT MENÜ FAB (EGYSZERŰ KLIKK + TILTOTT KIJELÖLÉS) --- */
         .menu-fab {
             position: fixed; bottom: 30px; right: 30px;
             width: 60px; height: 60px; background: var(--accent);
@@ -205,12 +199,11 @@
             cursor: pointer; z-index: 2147483647; 
             border: 1px solid rgba(255,255,255,0.1);
             transition: transform 0.2s;
-            /* Fontos: letiltja a kijelölést */
             -webkit-user-select: none; 
             -moz-user-select: none;
             -ms-user-select: none;
             user-select: none;
-            -webkit-touch-callout: none; /* iOS menü tiltása */
+            -webkit-touch-callout: none;
             outline: none;
             -webkit-tap-highlight-color: transparent;
         }
@@ -339,7 +332,6 @@
         "12-01": "Elza", "12-02": "Melinda, Vivien", "12-03": "Ferenc, Olívia", "12-04": "Borbála, Barbara", "12-05": "Vilma", "12-06": "Miklós", "12-07": "Ambrus", "12-08": "Mária", "12-09": "Natália", "12-10": "Judit", "12-11": "Árpád", "12-12": "Gabriella", "12-13": "Luca, Otília", "12-14": "Szilárda", "12-15": "Valér", "12-16": "Etelka, Aletta", "12-17": "Lázár, Olimpia", "12-18": "Auguszta", "12-19": "Viola", "12-20": "Teofil", "12-21": "Tamás", "12-22": "Zénó", "12-23": "Viktória", "12-24": "Ádám, Éva", "12-25": "Eugénia", "12-26": "István", "12-27": "János", "12-28": "Kamilla", "12-29": "Tamás, Tamara", "12-30": "Dávid", "12-31": "Szilveszter"
     };
 
-    // --- 2026 MAGYAR NAPTÁR (BŐVÍTETT LISTA: ÜNNEPEK + LEDOLGOZÁSOK) ---
     const calendarEvents = [
         { date: "2026-03-15", name: "Nemzeti Ünnep (Vasárnap)", type: "holiday" },
         { date: "2026-04-03", name: "Nagypéntek", type: "holiday" },
@@ -348,16 +340,11 @@
         { date: "2026-05-01", name: "Munka Ünnepe (Péntek)", type: "holiday" },
         { date: "2026-05-24", name: "Pünkösdvasárnap", type: "holiday" },
         { date: "2026-05-25", name: "Pünkösdhétfő", type: "holiday" },
-        
-        // Augusztusi hosszú hétvége és ledolgozás
         { date: "2026-08-20", name: "Államalapítás Ünnepe", type: "holiday" },
         { date: "2026-08-21", name: "Pihenőnap (Hosszú hétvége)", type: "holiday" },
         { date: "2026-08-29", name: "SZOMBATI MUNKANAP (Aug. 21 helyett)", type: "workday" },
-
         { date: "2026-10-23", name: "1956-os Forradalom (Péntek)", type: "holiday" },
         { date: "2026-11-01", name: "Mindenszentek (Vasárnap)", type: "holiday" },
-        
-        // Karácsonyi időszak és ledolgozás
         { date: "2026-12-12", name: "SZOMBATI MUNKANAP (Dec. 24 helyett)", type: "workday" },
         { date: "2026-12-24", name: "Szenteste (Pihenőnap)", type: "holiday" },
         { date: "2026-12-25", name: "Karácsony", type: "holiday" },
@@ -388,9 +375,7 @@
         const nameDisplay = document.getElementById('cal-name');
         const icon = document.getElementById('cal-type-icon');
 
-        // Itt módosítottam: Teljes hónapnevek
         const monthNames = ["Január", "Február", "Március", "Április", "Május", "Június", "Július", "Augusztus", "Szeptember", "Október", "November", "December"];
-        // Itt módosítottam: Szebb formátum (Március 15.)
         const formattedDate = `${monthNames[eventDate.getMonth()]} ${eventDate.getDate()}.`;
 
         dateDisplay.innerText = formattedDate;
@@ -432,12 +417,12 @@
         const maiNevnap = nevnapok[honapNap] || "---";
         document.getElementById('name-day').innerText = "Névnap: " + maiNevnap;
 
-        // ÚJ FUNKCIÓ HÍVÁSA
         updateCalendarWidget();
     }
     updateInfo();
 
     function toggleMenu() {
+        if(navigator.vibrate) navigator.vibrate(15);
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('overlay');
         const icon = document.getElementById('menuIcon');
@@ -452,6 +437,7 @@
         '3.html': '📅 Műszaknaptár',
         '4.html': '📝 Napi Jelentés segédlet',
         '5.html': '🎭 Maszk kereső',
+        '6.html': '⚙️ Adatgeneráló',  // ÚJ MODUL HOZZÁADVA!
         '7.html': '📊 Hiba Analízis',
         '8.html': '👥 Szabadságok (Staff Pro)',
         '9.html': '📷 Barcode Scan',
@@ -465,18 +451,16 @@
     
     let totalActivity = parseInt(localStorage.getItem('fv_total_activity') || 0);
 
-    // --- BIZTONSÁGOS MÓD (Discord Logolás KIKAPCSOLVA) ---
     function sendDiscordLog(actionName, colorCode = 3883766) {
-        // Üres függvény - Nem küld adatot a hálózatra
         console.log("Log kikapcsolva: " + actionName);
     }
 
     function processDiscordQueue() {
-        // Üres függvény - Nem próbál csatlakozni
         return;
     }
 
     function loadModule(url, autoStart = false, caller = null) {
+        if(navigator.vibrate) navigator.vibrate(15);
         if(caller) caller.blur();
         totalActivity++;
         localStorage.setItem('fv_total_activity', totalActivity);
@@ -491,6 +475,7 @@
     }
 
     function showHome(caller = null) {
+        if(navigator.vibrate) navigator.vibrate(15);
         if(caller) caller.blur();
         document.getElementById('home-screen').style.display = 'flex';
         const frame = document.getElementById('content-frame');
@@ -500,14 +485,17 @@
         sendDiscordLog("🏠 Kezdőlap", 10070709);
     }
 
-    // --- FAB LOGIKA: Törölve, csak sima onclick maradt ---
-
+    // --- MÓDOSÍTOTT ADATGENERÁLÓ FÜGGVÉNY (Nincs GitHub Link, csak belső betöltés) ---
     function openSecureLink(caller) {
+        if(navigator.vibrate) navigator.vibrate(15);
         if(caller) caller.blur();
+        
         let pin = prompt("Adatgeneráló - Biztonsági kód:");
         if (pin === "smtforvia2026") {
-            window.open("https://gergoroland33-sys.github.io/adatgeneralo/", "_blank");
-            sendDiscordLog("🔐 ADMIN: Adatgeneráló", 65280);
+            // EREDETI: window.open("...github.io...");
+            // ÚJ: Belsőleg töltjük be a 6.html fájlt
+            loadModule('6.html'); 
+            sendDiscordLog("🔐 ADMIN: Adatgeneráló (Belső)", 65280);
         } else if (pin !== null) {
             alert("Hibás kód!");
             sendDiscordLog("🚨 HIBÁS PIN: Adatgeneráló", 16711680);
@@ -515,6 +503,7 @@
     }
 
     function openStaffPro(caller) {
+        if(navigator.vibrate) navigator.vibrate(15);
         if(caller) caller.blur();
         let pin = prompt("Staff Pro 2026 - Biztonsági kód:");
         if (pin === "smtforvia2026") {
@@ -526,6 +515,7 @@
     }
 
     async function shareApp(caller) {
+        if(navigator.vibrate) navigator.vibrate(15);
         if(caller) caller.blur();
         sendDiscordLog("📤 Megosztás", 3066993);
         const shareData = { title: 'Forvia Hub', text: 'Forvia SMT app', url: window.location.href };
