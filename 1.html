@@ -3,197 +3,168 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Forvia Cikkszám kereső 2026</title>
+<title>Forvia Terminál 2026</title>
 <style>
-/* --- LETISZTULT DESIGN (Nincs felesleges csicsa) --- */
+/* --- INDUSTRIAL PRO DESIGN --- */
 :root { 
-    --bg-main: #0f172a;       /* Sötétkék háttér */
-    --panel-bg: #1e293b;      /* Panelek színe */
-    --accent: #3b82f6;        /* Forvia kék */
-    --text-white: #ffffff;
-    --text-gray: #94a3b8;
-    --border: #334155;
-    
-    /* Adat színek */
-    --bank-bg: #1e3a8a;       /* Feeder bank címsor */
-    --ultetes-bg: #14532d;    /* Beültetés címsor */
+    --bg-main: #111827;       /* Matt sötét alap */
+    --card-bg: #1f2937;       /* Kártya háttér */
+    --accent: #3b82f6;        /* Forvia kék (csak jelzésnek) */
+    --text-main: #f3f4f6;     /* Hófehér szöveg */
+    --text-muted: #9ca3af;    /* Szürke feliratok */
+    --border: #374151;        /* Finom elválasztó vonalak */
+    --font-mono: 'Consolas', 'Monaco', monospace; /* Kódokhoz */
 }
 
 body { 
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-    margin: 0; 
-    padding: 0; 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    margin: 0; padding: 0; 
     background: var(--bg-main); 
-    color: var(--text-white); 
-    font-size: 16px;
+    color: var(--text-main); 
 }
 
-/* FEJLÉC */
-.brand-header { 
-    font-size: 12px; 
-    color: var(--text-gray); 
-    text-align: center; 
-    padding: 8px 0; 
-    letter-spacing: 1px; 
-    background: #020617;
-}
-
+/* FEJLÉC - Minimalista */
 .top-bar { 
-    background: var(--panel-bg); 
-    border-bottom: 3px solid var(--accent); 
-    padding: 15px 20px; 
-    position: sticky; 
-    top: 0; 
-    z-index: 1000; 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    background: #0f172a; 
+    border-bottom: 2px solid var(--accent); 
+    padding: 12px 20px; 
+    position: sticky; top: 0; z-index: 1000; 
+    display: flex; justify-content: space-between; align-items: center; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
-.top-bar h2 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--accent); text-transform: uppercase; }
-.date-display { font-size: 0.9rem; color: var(--text-gray); font-weight: 500; }
+.top-bar h2 { margin: 0; font-size: 1.1rem; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
+.brand-sub { font-size: 0.7rem; color: var(--accent); font-weight: normal; margin-left: 10px; }
+.date-display { font-size: 0.85rem; color: var(--text-muted); font-family: var(--font-mono); }
 
-/* KERESŐ RÉSZ */
-.search-container { padding: 20px 15px; max-width: 800px; margin: 0 auto; }
+/* KERESŐ - Nagy kontraszt */
+.search-container { padding: 20px 15px; max-width: 700px; margin: 0 auto; }
 
 input { 
     width: 100%; 
     font-size: 1.4rem; 
-    padding: 15px 20px; 
+    padding: 14px 15px; 
     box-sizing: border-box; 
-    background: #020617; 
+    background: #000000; 
     border: 2px solid var(--border); 
-    border-radius: 8px; 
-    color: white; 
+    border-radius: 4px; 
+    color: #fff; 
     outline: none; 
-    font-family: monospace; /* Hogy a 0 és O jól elkülönüljön */
-    transition: 0.2s;
+    font-family: var(--font-mono); 
+    font-weight: bold;
 }
-input:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); }
+input:focus { border-color: var(--accent); background: #0b101b; }
 
-/* Javaslatok */
-#suggest { 
-    background: var(--panel-bg); 
-    border-radius: 0 0 8px 8px; 
-    border: 1px solid var(--border); 
-    border-top: none;
-    display: none; 
-    margin-top: -2px;
-}
-.s-item { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid var(--border); font-size: 1.1rem; }
-.s-item:hover { background: var(--accent); color: white; }
-
-/* ELŐZMÉNYEK (History) - Jól láthatóan */
-#historySection { margin-top: 15px; }
-.history-title { font-size: 0.8rem; color: var(--text-gray); text-transform: uppercase; margin-bottom: 8px; font-weight: bold;}
-.history-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+/* Előzmények - Szolid gombok */
+#historySection { margin-top: 15px; border-top: 1px solid var(--border); padding-top: 10px; }
+.history-title { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; }
+.history-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { 
-    background: var(--panel-bg); 
-    color: var(--text-white);
-    padding: 8px 16px; 
-    border-radius: 6px; 
-    font-size: 0.95rem; 
+    background: var(--card-bg); 
+    color: var(--text-main);
+    padding: 6px 12px; 
+    border-radius: 4px; 
+    font-size: 0.9rem; 
     border: 1px solid var(--border); 
     cursor: pointer; 
-    font-family: monospace;
-    transition: 0.2s;
+    font-family: var(--font-mono);
 }
-.chip:hover { border-color: var(--accent); background: #2d3748; }
+.chip:hover { border-color: var(--accent); background: #374151; }
 
-/* TALÁLATI KÁRTYÁK - Egyértelmű és tiszta */
-#eredmeny { max-width: 800px; margin: 0 auto 50px auto; padding: 0 15px; }
+/* Javaslatok lista */
+#suggest { background: var(--card-bg); border: 1px solid var(--border); display: none; margin-top: -2px; }
+.s-item { padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; font-family: var(--font-mono); }
+.s-item:hover { background: var(--accent); color: white; }
 
-.section-title {
-    margin-top: 25px;
-    margin-bottom: 10px;
-    padding: 12px;
-    border-radius: 6px;
+/* EREDMÉNYEK - TÁBLÁZATOS NÉZET */
+#eredmeny { max-width: 700px; margin: 0 auto 50px auto; padding: 0 15px; }
+
+.section-label {
+    margin-top: 25px; margin-bottom: 5px; 
+    padding: 8px; 
+    background: #374151; 
+    color: #fff; 
+    font-weight: bold; 
+    text-transform: uppercase; 
+    font-size: 0.85rem; 
+    border-radius: 4px;
     text-align: center;
-    text-transform: uppercase;
-    font-weight: 800;
-    font-size: 1rem;
-    letter-spacing: 1px;
 }
-.title-bank { background: var(--bank-color); color: white; border: 1px solid #60a5fa; }
-.title-ultetes { background: var(--ultetes-bg); color: white; border: 1px solid #4ade80; }
+.label-bank { border-left: 5px solid #2563eb; }
+.label-ultetes { border-left: 5px solid #16a34a; }
 
+/* KÁRTYA DESIGN - Ipari sorok */
 .card { 
-    background: var(--panel-bg); 
-    margin-bottom: 12px; 
-    padding: 15px 20px; 
-    border-radius: 8px; 
+    background: var(--card-bg); 
+    margin-bottom: 15px; 
     border: 1px solid var(--border); 
-    border-left: 5px solid var(--border); /* Modell szín jelző helye */
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 15px;
+    border-radius: 4px; 
+    overflow: hidden;
 }
 
-/* Adatmezők stílusa - MINDEN EGYFORMA FONTOS */
-.data-group {
-    flex: 1 1 45%; /* Két oszlopos elrendezés mobilon is olvasható marad */
-    min-width: 140px;
+/* Egy sor az adatoknak: Balra címke, Jobbra érték */
+.data-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid #374151; /* Sor elválasztó */
 }
-.data-label {
-    display: block;
-    font-size: 0.75rem;
-    color: var(--text-gray);
-    text-transform: uppercase;
-    margin-bottom: 2px;
+.data-row:last-child { border-bottom: none; }
+.data-row:nth-child(odd) { background: rgba(255,255,255,0.02); } /* Halvány csíkozás */
+
+.d-label { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; }
+.d-value { color: white; font-weight: 600; font-size: 1.05rem; text-align: right; }
+
+/* Kiemelt Cikkszám */
+.row-header {
+    background: #111827;
+    padding: 10px 15px;
+    border-bottom: 2px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
 }
-.data-value {
-    display: block;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: white;
-}
-/* Kiemelt cikkszám */
-.highlight-id { color: var(--accent); font-family: monospace; font-size: 1.2rem; }
+.main-id { font-family: var(--font-mono); font-size: 1.3rem; color: var(--accent); font-weight: bold; }
 
 </style>
 </head>
 <body>
 
-<div class="brand-header">Forvia Cikkszám kereső 2026 {Gergő Roland}</div>
-
 <div class="top-bar">
-    <h2>FORVIA TERMINAL</h2>
+    <h2>FORVIA <span class="brand-sub">TERMINAL v2.6</span></h2>
     <div class="date-display" id="dateText"></div>
 </div>
 
 <div class="search-container">
-    <input id="keres" type="text" placeholder="Cikkszám beírása..." disabled autocomplete="off" />
+    <input id="keres" type="text" placeholder="CIKKSZÁM LEOLVASÁSA..." disabled autocomplete="off" />
     <div id="suggest"></div>
     
     <div id="historySection" style="display:none;">
-        <div class="history-title">Legutóbbi keresések (5):</div>
+        <div class="history-title">UTOLSÓ 5 KERESÉS:</div>
         <div class="history-chips" id="historyChips"></div>
     </div>
 </div>
 
-<div id="eredmeny">Adatok betöltése folyamatban...</div>
+<div id="eredmeny"></div>
 
 <script>
-/* --- LOGIKA (Változatlanul hagyva az eredeti működést) --- */
+/* --- A MŰKÖDÉS (MOTOR) ÉRINTETLEN --- */
 let bank=[],ultetes=[],idSet=new Set(),uniqueIdsArr=[],keresIdozito=null,searchHistory=JSON.parse(localStorage.getItem('searchHistory')||"[]");
 
 function updateDate(){
-    const m=["Január","Február","Március","Április","Május","Június","Július","Augusztus","Szeptember","Október","November","December"];
-    const d=["Vasárnap","Hétfő","Kedd","Szerda","Csütörtök","Péntek","Szombat"];
+    const m=["01","02","03","04","05","06","07","08","09","10","11","12"];
     const n=new Date();
-    document.getElementById('dateText').textContent=`${n.getFullYear()}.${m[n.getMonth()]}.${n.getDate()} ${d[n.getDay()]}`;
+    // Gyári formátum: ÉÉÉÉ.HH.NN
+    document.getElementById('dateText').textContent=`${n.getFullYear()}.${m[n.getMonth()]}.${n.getDate().toString().padStart(2,'0')}`;
 }
 updateDate();
 
 function getModelColor(m){
-    if(!m||m==="N/A")return"#4a5568";
+    if(!m||m==="N/A")return"#374151"; // Szürke ha nincs adat
     let h=0;
     for(let i=0;i<m.length;i++){h=m.charCodeAt(i)+((h<<5)-h);}
-    return`hsl(${Math.abs(h)%360},65%,50%)`;
+    return`hsl(${Math.abs(h)%360},60%,45%)`;
 }
 
-// Adatbetöltés
+// Adatok betöltése
 Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.text())]).then(([bT,uT])=>{
     bank=feldolgoz(bT);
     ultetes=feldolgoz(uT);
@@ -204,7 +175,7 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
     
     const inp=document.getElementById('keres');
     inp.disabled=false;
-    document.getElementById('eredmeny').innerHTML=''; // Ürítés
+    document.getElementById('eredmeny').innerHTML='<div style="text-align:center; color:#4b5563; padding:20px;">VÁRAKOZÁS ADATRA...</div>';
     renderHistory();
     
     inp.addEventListener('input',function(){
@@ -252,7 +223,6 @@ function renderHistory(){
     const c=document.getElementById('historyChips'),s=document.getElementById('historySection');
     if(!searchHistory.length){s.style.display='none';return;}
     s.style.display='block';
-    // Itt biztosítjuk, hogy chips formában, egymás mellett jelenjenek meg
     c.innerHTML=searchHistory.map(x=>`<div class="chip" onclick="selectSuggest('${x}')">${x}</div>`).join('');
 }
 
@@ -262,49 +232,74 @@ function keres(k){
     
     let h='';
     
-    // BANK ADATOK
+    // BANK ADATOK - Soros megjelenítés
     const bT=bank.filter(r=>r[2]&&r[2].toUpperCase().includes(k)).slice(0,30);
     if(bT.length){
-        h+=`<div class="section-title title-bank">Feeder bank adatok</div>`;
+        h+=`<div class="section-label label-bank">Feeder Bank Adatok</div>`;
         bT.forEach(r=>{
             const mc=getModelColor(r[3]);
-            // Itt alakítottam át a kártyát, hogy minden adat egyforma hangsúlyt kapjon
+            // Itt az új struktúra: Table-szerű sorok
             h+=`
-            <div class="card" style="border-left-color:${mc}">
-                <div class="data-group"><span class="data-label">Cikkszám</span><span class="data-value highlight-id">${r[2]}</span></div>
-                <div class="data-group"><span class="data-label">Gép</span><span class="data-value">${r[0]}</span></div>
-                <div class="data-group"><span class="data-label">Pozíció</span><span class="data-value">${r[1]}</span></div>
-                <div class="data-group"><span class="data-label">Modell</span><span class="data-value" style="color:${mc}">${r[3]}</span></div>
+            <div class="card" style="border-left: 5px solid ${mc}">
+                <div class="row-header">
+                    <span class="d-label">CIKKSZÁM</span>
+                    <span class="main-id">${r[2]}</span>
+                </div>
+                <div class="data-row">
+                    <span class="d-label">Gép</span>
+                    <span class="d-value">${r[0]}</span>
+                </div>
+                <div class="data-row">
+                    <span class="d-label">Pozíció</span>
+                    <span class="d-value">${r[1]}</span>
+                </div>
+                <div class="data-row">
+                    <span class="d-label">Modell</span>
+                    <span class="d-value" style="color:${mc}">${r[3]}</span>
+                </div>
             </div>`;
         });
     }
     
-    // BEÜLTETÉS ADATOK
+    // BEÜLTETÉS ADATOK - Soros megjelenítés
     const uT=ultetes.filter(r=>r[0]&&r[0].toUpperCase().includes(k)).sort((a,b)=>parseInt(b[5])-parseInt(a[5])).slice(0,30);
     if(uT.length){
-        h+=`<div class="section-title title-ultetes">Beültetés adatok</div>`;
+        h+=`<div class="section-label label-ultetes">Beültetés Adatok</div>`;
         uT.forEach(r=>{
-            // Itt is minden adat egyformán fontos
             h+=`
-            <div class="card" style="border-left-color:#16a34a">
-                <div class="data-group"><span class="data-label">Cikkszám</span><span class="data-value highlight-id">${r[0]}</span></div>
-                <div class="data-group"><span class="data-label">Alkatrész</span><span class="data-value">${r[1]}</span></div>
-                <div class="data-group"><span class="data-label">Oldal</span><span class="data-value">${r[3]}</span></div>
-                <div class="data-group"><span class="data-label">Modell</span><span class="data-value">${r[4]}</span></div>
-                <div class="data-group"><span class="data-label">Beültetés db</span><span class="data-value">${r[5]}</span></div>
+            <div class="card" style="border-left: 5px solid #16a34a">
+                <div class="row-header">
+                    <span class="d-label">CIKKSZÁM</span>
+                    <span class="main-id">${r[0]}</span>
+                </div>
+                <div class="data-row">
+                    <span class="d-label">Alkatrész</span>
+                    <span class="d-value">${r[1]}</span>
+                </div>
+                <div class="data-row">
+                    <span class="d-label">Oldal</span>
+                    <span class="d-value">${r[3]}</span>
+                </div>
+                <div class="data-row">
+                    <span class="d-label">Modell</span>
+                    <span class="d-value">${r[4]}</span>
+                </div>
+                <div class="data-row">
+                    <span class="d-label">Beültetés DB</span>
+                    <span class="d-value">${r[5]}</span>
+                </div>
             </div>`;
         });
     }
 
-    // ELŐZMÉNYEK FRISSÍTÉSE
+    // ELŐZMÉNYEK KEZELÉSE
     if(idSet.has(k)){
-        // Duplikáció szűrés és 5 elemre vágás
         searchHistory=[k,...searchHistory.filter(c=>c!==k)].slice(0,5);
         localStorage.setItem('searchHistory',JSON.stringify(searchHistory));
         renderHistory();
     }
     
-    e.innerHTML=h||`<div style="text-align:center; padding:20px; color:#94a3b8;">Nincs találat a következőre: "${k}"</div>`;
+    e.innerHTML=h||`<div style="text-align:center; padding:30px; color:#6b7280; font-weight:bold;">NINCS TALÁLAT: "${k}"</div>`;
 }
 </script>
 </body>
