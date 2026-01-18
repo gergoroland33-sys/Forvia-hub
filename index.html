@@ -465,50 +465,15 @@
     
     let totalActivity = parseInt(localStorage.getItem('fv_total_activity') || 0);
 
+    // --- BIZTONSÁGOS MÓD (Discord Logolás KIKAPCSOLVA) ---
     function sendDiscordLog(actionName, colorCode = 3883766) {
-        discordQueue.push({ action: actionName, color: colorCode, time: new Date() });
-        processDiscordQueue();
+        // Üres függvény - Nem küld adatot a hálózatra
+        console.log("Log kikapcsolva: " + actionName);
     }
 
     function processDiscordQueue() {
-        if (isSending || discordQueue.length === 0) return;
-
-        isSending = true;
-        const item = discordQueue.shift();
-        const webhookURL = "https://discord.com/api/webhooks/1455930417155674125/Fo3Kf92QdktExG5mbu65t52MYI5ORFCwIkEnGEen6DboOeyD12zXDsVlsXlMYnhzuGH_";
-        
-        let platform = /Android/i.test(navigator.userAgent) ? "📱 Android" : 
-                       (/iPhone|iPad|iPod/i.test(navigator.userAgent) ? "📱 iOS" : "💻 Desktop");
-
-        const payload = {
-            username: "Forvia Hub Logger",
-            avatar_url: "https://i.imgur.com/4M34hi2.png",
-            content: "@here",
-            embeds: [{
-                title: item.action,
-                color: item.color,
-                fields: [
-                    { name: "⏰ Időpont", value: item.time.toLocaleTimeString('hu-HU'), inline: true },
-                    { name: "🛠️ Eszköz & ID", value: `${platform} | ID: #${deviceID} | Aktivitás: ${totalActivity}`, inline: true }
-                ],
-                footer: { text: "Master Shell v2.9.3 (Final)" }
-            }]
-        };
-
-        // --- BIZTONSÁGOS DISCORD KÜLDÉS ---
-        fetch(webhookURL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-        .then(() => {}) // Sikeres küldés, nincs teendő
-        .catch(() => {}) // Tűzfal tiltja, elnyeljük a hibát, hogy a queue haladhasson
-        .finally(() => {
-            setTimeout(() => {
-                isSending = false;
-                processDiscordQueue(); 
-            }, 2000);
-        });
+        // Üres függvény - Nem próbál csatlakozni
+        return;
     }
 
     function loadModule(url, autoStart = false, caller = null) {
