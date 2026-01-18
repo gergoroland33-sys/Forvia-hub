@@ -27,8 +27,7 @@ body {
 
 /* FEJLÉC */
 .top-bar { 
-    background: rgba(15, 23, 42, 0.8);
-    backdrop-filter: blur(10px);
+    background: rgba(15, 23, 42, 0.95); /* Kicsit sötétebb a jobb kontrasztért */
     border-bottom: 1px solid var(--border); 
     padding: 10px 20px; 
     position: sticky; top: 0; z-index: 100; 
@@ -37,24 +36,14 @@ body {
 .brand { font-weight: 700; font-size: 1rem; color: var(--accent); letter-spacing: 0.5px; }
 .date-display { font-size: 0.75rem; color: var(--text-secondary); font-family: monospace; }
 
-/* KERESŐ DESIGN */
+/* KERESŐ */
 .search-wrapper { padding: 15px; max-width: 600px; margin: 0 auto; position: relative; }
-
 .input-group { position: relative; width: 100%; display: flex; align-items: center; }
 
-/* Nagyító ikon */
-.search-icon {
-    position: absolute;
-    left: 15px;
-    color: var(--text-secondary);
-    font-size: 1.1rem;
-    pointer-events: none; /* Átkattintható */
-    z-index: 10;
-}
+.search-icon { position: absolute; left: 15px; color: var(--text-secondary); font-size: 1.1rem; pointer-events: none; z-index: 10; }
 
 input { 
     width: 100%; 
-    /* Padding: Balra hely a nagyítónak, Jobbra az X-nek */
     padding: 12px 45px 12px 45px; 
     box-sizing: border-box; 
     background: var(--input-bg); 
@@ -69,21 +58,13 @@ input {
 }
 input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2); }
 
-/* Törlés (X) Gomb */
 .clear-btn {
-    position: absolute;
-    right: 15px;
-    color: var(--text-secondary);
-    cursor: pointer;
-    display: none; 
-    font-size: 1.1rem;
-    padding: 5px;
-    transition: 0.2s;
-    z-index: 10;
+    position: absolute; right: 15px; color: var(--text-secondary); cursor: pointer; display: none; 
+    font-size: 1.1rem; padding: 5px; transition: 0.2s; z-index: 10;
 }
 .clear-btn:hover { color: white; transform: scale(1.1); }
 
-/* JAVASLATOK (Dropdown) */
+/* JAVASLATOK */
 #suggest { 
     background: var(--card-surface); 
     border: 1px solid var(--border); 
@@ -94,8 +75,6 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
 }
 .s-item { padding: 10px 20px; cursor: pointer; border-bottom: 1px solid var(--border); font-family: monospace; }
 .s-item:hover { background: var(--accent); color: white; }
-
-/* Kiemelés stílusa (csak a javaslatoknál) */
 .hl { color: var(--accent); font-weight: bold; }
 
 /* ELŐZMÉNYEK */
@@ -103,27 +82,48 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
 .history-title { font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 5px; margin-left: 10px; font-weight: 600;}
 .history-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { 
-    background: rgba(255,255,255,0.03); 
-    padding: 5px 12px; 
-    border-radius: 20px; 
-    font-size: 0.8rem; 
-    border: 1px solid var(--border); 
-    cursor: pointer; 
-    font-family: monospace;
-    transition: 0.2s;
-    color: var(--text-secondary);
+    background: rgba(255,255,255,0.03); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; 
+    border: 1px solid var(--border); cursor: pointer; font-family: monospace; transition: 0.2s; color: var(--text-secondary);
 }
 .chip:hover { border-color: var(--accent); color: white; background: rgba(255,255,255,0.05); }
 
-/* KÁRTYA RENDSZER */
+/* --- EREDMÉNYEK ÉS KÁRTYÁK --- */
 #eredmeny { max-width: 600px; margin: 0 auto 50px auto; padding: 0 15px; }
 
-.section-label {
-    font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); 
-    text-transform: uppercase; letter-spacing: 1px; margin: 20px 0 10px 0; text-align: center;
-    display: flex; align-items: center; justify-content: center; gap: 10px;
+/* EZ AZ ÚJ RÉSZ: 
+   Látványos elválasztó fejlécek 
+*/
+.section-header {
+    margin-top: 40px; /* Nagyobb távolság a blokkok között */
+    margin-bottom: 15px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    border-left: 6px solid transparent;
 }
-.section-label::before, .section-label::after { content: ""; height: 1px; width: 30px; background: var(--border); }
+
+/* KÉK FEEDER BANK CÍMSOR */
+.header-bank {
+    background: linear-gradient(90deg, rgba(30, 58, 138, 0.6), transparent);
+    border-left-color: #3b82f6;
+    color: #93c5fd;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+/* ZÖLD BEÜLTETÉS CÍMSOR */
+.header-ultetes {
+    background: linear-gradient(90deg, rgba(20, 83, 45, 0.6), transparent);
+    border-left-color: #22c55e;
+    color: #86efac;
+    border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+}
 
 .card { 
     background: var(--card-surface); 
@@ -141,11 +141,8 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
 .card-content { flex: 1; padding: 10px 15px; display: grid; gap: 2px; }
 
 .data-row { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: baseline; 
-    padding: 3px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.02);
+    display: flex; justify-content: space-between; align-items: baseline; 
+    padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.02);
 }
 .data-row:last-child { border-bottom: none; }
 
@@ -168,12 +165,9 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
 <div class="search-wrapper">
     <div class="input-group">
         <span class="search-icon">🔍</span>
-        
         <input id="keres" type="text" placeholder="Kezd el gépelni a cikkszámot!" disabled autocomplete="off" />
-        
         <span class="clear-btn" id="clearBtn" onclick="clearSearch()" title="Törlés">✕</span>
     </div>
-    
     <div id="suggest"></div>
     <div id="historySection" style="display:none;">
         <div class="history-title">Előzmények</div>
@@ -200,18 +194,15 @@ function getModelColor(m){
     return`hsl(${Math.abs(h)%360},70%,55%)`; 
 }
 
-// Helper: Szöveg kiemelése (Csak a javaslatokhoz)
 function highlight(text, term) {
     if(!text) return "";
     if(!term || term.length < 1) return text;
     return text.toString().replace(new RegExp(`(${term})`, 'gi'), '<span class="hl">$1</span>');
 }
 
-// Törlés gomb funkció
 window.clearSearch = function() {
     const inp = document.getElementById('keres');
-    inp.value = '';
-    inp.focus();
+    inp.value = ''; inp.focus();
     document.getElementById('clearBtn').style.display = 'none';
     document.getElementById('suggest').style.display = 'none';
     document.getElementById('eredmeny').innerHTML = '<div style="text-align:center; padding:30px; color:#475569; font-size:0.9rem;">Adatok betöltve. Várakozás...</div>';
@@ -230,11 +221,9 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
     document.getElementById('eredmeny').innerHTML='<div style="text-align:center; padding:30px; color:#475569; font-size:0.9rem;">Adatok betöltve. Várakozás...</div>';
     renderHistory();
     
-    // Input figyelés
     inp.addEventListener('input',function(){
         const v=this.value.toUpperCase();
         clearBtn.style.display = v.length > 0 ? 'block' : 'none';
-
         if(v.length<2){ 
             document.getElementById('suggest').style.display='none'; 
             document.getElementById('eredmeny').innerHTML=''; 
@@ -251,8 +240,6 @@ function feldolgoz(t){return t.split('\n').map(s=>s.replace(/"/g,'').trim()).fil
 function updateSuggest(v){
     const b=document.getElementById('suggest'); const m=[];
     for(let i=0;i<uniqueIdsArr.length;i++){ if(uniqueIdsArr[i].includes(v)){ m.push(uniqueIdsArr[i]); if(m.length>=6)break; }}
-    
-    // Itt használjuk a highlightot
     if(m.length>0){ b.innerHTML=m.map(x=>`<div class="s-item" onclick="selectSuggest('${x}')">${highlight(x, v)}</div>`).join(''); b.style.display='block'; }
     else{ b.style.display='none'; }
 }
@@ -276,10 +263,11 @@ function keres(k){
     
     let h='';
     
-    // BANK ADATOK - Nincs highlight, csak sima adat
+    // BANK ADATOK
     const bT=bank.filter(r=>r[2]&&r[2].toUpperCase().includes(k)).slice(0,30);
     if(bT.length){
-        h+=`<div class="section-label">Feeder Bank</div>`;
+        // Kiemelt kék címsor
+        h+=`<div class="section-header header-bank">📦 FEEDER BANK ADATOK</div>`;
         bT.forEach(r=>{
             const mc=getModelColor(r[3]);
             h+=`
@@ -303,10 +291,11 @@ function keres(k){
         });
     }
     
-    // BEÜLTETÉS ADATOK - Nincs highlight, csak sima adat
+    // BEÜLTETÉS ADATOK
     const uT=ultetes.filter(r=>r[0]&&r[0].toUpperCase().includes(k)).sort((a,b)=>parseInt(b[5])-parseInt(a[5])).slice(0,30);
     if(uT.length){
-        h+=`<div class="section-label">Beültetés</div>`;
+        // Kiemelt zöld címsor
+        h+=`<div class="section-header header-ultetes">🌱 BEÜLTETÉS ADATOK</div>`;
         uT.forEach(r=>{
             const mc=getModelColor(r[4]); 
             h+=`
