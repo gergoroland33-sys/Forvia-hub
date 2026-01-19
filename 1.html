@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Forvia Smart Search 2026</title>
 <style>
-/* --- 2026 MODERN COMPACT UI (EREDETI) --- */
+/* --- 2026 MODERN COMPACT UI --- */
 :root { 
     --bg-app: #0f172a;       
     --card-surface: #1e293b; 
@@ -27,17 +27,14 @@ body {
 
 /* FEJLÉC */
 .top-bar { 
-    background: rgba(15, 23, 42, 0.95);
+    background: rgba(15, 23, 42, 0.95); /* Kicsit sötétebb a jobb kontrasztért */
     border-bottom: 1px solid var(--border); 
     padding: 10px 20px; 
     position: sticky; top: 0; z-index: 100; 
     display: flex; justify-content: space-between; align-items: center; 
 }
 .brand { font-weight: 700; font-size: 1rem; color: var(--accent); letter-spacing: 0.5px; }
-/* MÓDOSÍTÁS: A dátum helyett/mellett egy kis státuszjelző, ha nincs net */
-.status-indicator { font-size: 0.75rem; font-family: monospace; font-weight: bold; }
-.st-online { color: #4ade80; } /* Zöld */
-.st-offline { color: #fbbf24; } /* Sárga */
+.date-display { font-size: 0.75rem; color: var(--text-secondary); font-family: monospace; }
 
 /* KERESŐ */
 .search-wrapper { padding: 15px; max-width: 600px; margin: 0 auto; position: relative; }
@@ -93,8 +90,11 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
 /* --- EREDMÉNYEK ÉS KÁRTYÁK --- */
 #eredmeny { max-width: 600px; margin: 0 auto 50px auto; padding: 0 15px; }
 
+/* EZ AZ ÚJ RÉSZ: 
+   Látványos elválasztó fejlécek 
+*/
 .section-header {
-    margin-top: 40px; 
+    margin-top: 40px; /* Nagyobb távolság a blokkok között */
     margin-bottom: 15px;
     padding: 12px 20px;
     border-radius: 8px;
@@ -109,6 +109,7 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
     border-left: 6px solid transparent;
 }
 
+/* KÉK FEEDER BANK CÍMSOR */
 .header-bank {
     background: linear-gradient(90deg, rgba(30, 58, 138, 0.6), transparent);
     border-left-color: #3b82f6;
@@ -116,6 +117,7 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
     border-bottom: 1px solid rgba(59, 130, 246, 0.2);
 }
 
+/* ZÖLD BEÜLTETÉS CÍMSOR */
 .header-ultetes {
     background: linear-gradient(90deg, rgba(20, 83, 45, 0.6), transparent);
     border-left-color: #22c55e;
@@ -157,7 +159,7 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
 
 <div class="top-bar">
     <div class="brand">FORVIA TERMINAL</div>
-    <div class="status-indicator" id="statusText">Betöltés...</div>
+    <div class="date-display" id="dateText"></div>
 </div>
 
 <div class="search-wrapper">
@@ -179,92 +181,11 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
 /* --- LOGIKA --- */
 let bank=[],ultetes=[],idSet=new Set(),uniqueIdsArr=[],keresIdozito=null,searchHistory=JSON.parse(localStorage.getItem('searchHistory')||"[]");
 
-// Ez a függvény felel az "OKOS" betöltésért
-async function initSystem() {
-    const statusEl = document.getElementById('statusText');
-    const inp = document.getElementById('keres');
-    
-    try {
-        // 1. PRÓBA: Letöltés internetről (Időbélyeggel, hogy mindig friss legyen)
-        const [resBank, resUltetes] = await Promise.all([
-            fetch('bank.csv?t=' + Date.now()),
-            fetch('ultetes.csv?t=' + Date.now())
-        ]);
-
-        if(!resBank.ok || !resUltetes.ok) throw new Error("Hálózati hiba");
-
-        const txtBank = await resBank.text();
-        const txtUltetes = await resUltetes.text();
-
-        // 2. SIKER: Elmentjük a telefonra későbbre
-        localStorage.setItem('cached_bank_data', txtBank);
-        localStorage.setItem('cached_ultetes_data', txtUltetes);
-        localStorage.setItem('cached_date', getTodayStr());
-
-        // 3. Feldolgozás
-        processData(txtBank, txtUltetes);
-        
-        statusEl.innerHTML = `<span class="st-online">● ONLINE</span> ${getTodayStr()}`;
-        
-    } catch (error) {
-        // 4. HIBA (Nincs net): Elővesszük a mentettet
-        console.log("Offline mód aktiválása...");
-        const savedBank = localStorage.getItem('cached_bank_data');
-        const savedUltetes = localStorage.getItem('cached_ultetes_data');
-        const savedDate = localStorage.getItem('cached_date') || "Régi";
-
-        if(savedBank && savedUltetes) {
-            processData(savedBank, savedUltetes);
-            statusEl.innerHTML = `<span class="st-offline">● OFFLINE (${savedDate})</span>`;
-            // Kis figyelmeztetés a kereső alá, hogy tudja a user
-            document.getElementById('eredmeny').innerHTML = '<div style="text-align:center; padding:15px; color:#fbbf24; font-size:0.8rem;">⚠️ Nincs internet kapcsolat. A legutóbbi mentett adatokat használom.</div>';
-        } else {
-            // 5. SE NET, SE MENTÉS (Legelső indítás hiba)
-            statusEl.innerHTML = `<span style="color:#ef4444">HIBA</span>`;
-            document.getElementById('eredmeny').innerHTML = '<div style="text-align:center; padding:30px; color:#ef4444;">Az első indításhoz internet szükséges az adatok letöltéséhez!</div>';
-            return; // Megállunk
-        }
-    }
-
-    // Ha eljutottunk idáig, engedélyezzük a keresőt
-    inp.disabled = false;
-    if(document.getElementById('eredmeny').innerText.includes("Adatok betöltve") || document.getElementById('eredmeny').innerHTML === "") {
-         document.getElementById('eredmeny').innerHTML='<div style="text-align:center; padding:30px; color:#475569; font-size:0.9rem;">Adatok betöltve</div>';
-    }
-    renderHistory();
-    
-    // Kereső események beállítása (EZ A RÉGI KÓDOD)
-    const clearBtn = document.getElementById('clearBtn');
-    inp.addEventListener('input',function(){
-        const v=this.value.toUpperCase();
-        clearBtn.style.display = v.length > 0 ? 'block' : 'none';
-        if(v.length<2){ 
-            document.getElementById('suggest').style.display='none'; 
-            // Ha offline, ne töröljük a figyelmeztetést
-            if(!document.getElementById('eredmeny').innerText.includes("Nincs internet")) {
-                document.getElementById('eredmeny').innerHTML=''; 
-            }
-            return;
-        }
-        updateSuggest(v); 
-        clearTimeout(keresIdozito); 
-        keresIdozito=setTimeout(()=>keres(v),100);
-    });
-}
-
-function processData(bText, uText) {
-    bank = feldolgoz(bText); 
-    ultetes = feldolgoz(uText);
-    idSet.clear();
-    bank.forEach(r=>r[2]&&idSet.add(r[2].toUpperCase()));
-    ultetes.forEach(r=>r[0]&&idSet.add(r[0].toUpperCase()));
-    uniqueIdsArr=Array.from(idSet);
-}
-
-function getTodayStr(){
+function updateDate(){
     const n=new Date();
-    return `${n.getFullYear()}.${(n.getMonth()+1).toString().padStart(2,'0')}.${n.getDate().toString().padStart(2,'0')}`;
+    document.getElementById('dateText').textContent=`${n.getFullYear()}.${(n.getMonth()+1).toString().padStart(2,'0')}.${n.getDate().toString().padStart(2,'0')}`;
 }
+updateDate();
 
 function getModelColor(m){
     if(!m||m==="N/A")return"#334155";
@@ -284,14 +205,35 @@ window.clearSearch = function() {
     inp.value = ''; inp.focus();
     document.getElementById('clearBtn').style.display = 'none';
     document.getElementById('suggest').style.display = 'none';
-    // Offline üzenet megtartása
-    const savedDate = localStorage.getItem('cached_date');
-    if(document.getElementById('statusText').innerText.includes("OFFLINE")) {
-         document.getElementById('eredmeny').innerHTML = `<div style="text-align:center; padding:15px; color:#fbbf24; font-size:0.8rem;">⚠️ Nincs internet kapcsolat. A legutóbbi mentett adatokat használom.</div>`;
-    } else {
-         document.getElementById('eredmeny').innerHTML = '<div style="text-align:center; padding:30px; color:#475569; font-size:0.9rem;">Adatok betöltve</div>';
-    }
+    document.getElementById('eredmeny').innerHTML = '<div style="text-align:center; padding:30px; color:#475569; font-size:0.9rem;">Adatok betöltve</div>';
 };
+
+Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.text())]).then(([bT,uT])=>{
+    bank=feldolgoz(bT); ultetes=feldolgoz(uT);
+    bank.forEach(r=>r[2]&&idSet.add(r[2].toUpperCase()));
+    ultetes.forEach(r=>r[0]&&idSet.add(r[0].toUpperCase()));
+    uniqueIdsArr=Array.from(idSet);
+    
+    const inp=document.getElementById('keres');
+    const clearBtn = document.getElementById('clearBtn');
+    
+    inp.disabled=false;
+    document.getElementById('eredmeny').innerHTML='<div style="text-align:center; padding:30px; color:#475569; font-size:0.9rem;">Adatok betöltve</div>';
+    renderHistory();
+    
+    inp.addEventListener('input',function(){
+        const v=this.value.toUpperCase();
+        clearBtn.style.display = v.length > 0 ? 'block' : 'none';
+        if(v.length<2){ 
+            document.getElementById('suggest').style.display='none'; 
+            document.getElementById('eredmeny').innerHTML=''; 
+            return;
+        }
+        updateSuggest(v); 
+        clearTimeout(keresIdozito); 
+        keresIdozito=setTimeout(()=>keres(v),100);
+    });
+});
 
 function feldolgoz(t){return t.split('\n').map(s=>s.replace(/"/g,'').trim()).filter(s=>s).slice(1).map(s=>s.split(';').map(e=>e.trim()));}
 
@@ -388,9 +330,6 @@ function keres(k){
     
     e.innerHTML=h||`<div style="text-align:center; padding:30px; color:#64748b;">Nincs találat: "${k}"</div>`;
 }
-
-// INDÍTÁS (Ez az egyetlen új sor, ami elindítja a folyamatot)
-initSystem();
 </script>
 </body>
 </html>
