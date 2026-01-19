@@ -2,22 +2,24 @@
 <html lang="hu">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ProGen Systems - Végleges Verzió</title>
 <style>
     :root {
-        --bg-core: #0a0a0a;       /* Mélyfekete alap */
-        --bg-panel: #111111;      /* Panel háttér */
-        --bg-input: #1a1a1a;      /* Input mező */
-        --border: #2a2a2a;        /* Finom keret */
-        --text-main: #e5e5e5;
-        --text-muted: #737373;
+        /* --- ÚJ SZÍNPALETTA (Kevésbé brutál, jobban olvasható) --- */
+        --bg-core: #0f172a;       /* Sötétkék-szürke (Slate 900) - Fekete helyett */
+        --bg-panel: #1e293b;      /* Világosabb panel (Slate 800) */
+        --bg-input: #334155;      /* Jól látható input mező (Slate 700) */
+        --border: #475569;        /* Erősebb, láthatóbb keret */
         
-        /* Állapot színek */
-        --c-success: #10b981;     /* Zöld (Valid) */
-        --c-warning: #f59e0b;     /* Sárga (Duplikáció) */
-        --c-error: #ef4444;       /* Piros (Hiba) */
-        --c-accent: #8b5cf6;      /* Lila (Kiemelés) */
+        --text-main: #f1f5f9;     /* Majdnem fehér szöveg */
+        --text-muted: #94a3b8;    /* Halványabb szöveg */
+        
+        /* Állapot színek (Maradtak a régiek, mert azok jók) */
+        --c-success: #10b981;     
+        --c-warning: #f59e0b;     
+        --c-error: #ef4444;       
+        --c-accent: #8b5cf6;      /* Lila kiemelés */
+        --c-accent-hover: #7c3aed;
     }
 
     * { box-sizing: border-box; }
@@ -25,7 +27,8 @@
     body {
         margin: 0; padding: 0;
         height: 100vh;
-        background-color: var(--bg-core);
+        /* Kellemesebb, nem koromfekete háttér */
+        background: radial-gradient(circle at center, #1e293b, #0f172a); 
         color: var(--text-main);
         font-family: 'Segoe UI', 'Roboto', monospace;
         display: flex;
@@ -34,19 +37,20 @@
         overflow: hidden;
     }
 
-    /* --- AZ ELEGÁNS VÉKONY RGB KERET --- */
+    /* --- PRO CONTAINER --- */
     .pro-container {
         position: relative;
-        width: 1200px; max-width: 95%; height: 95vh; /* Kicsit magasabb, hogy kitöltse a keretet */
+        width: 1200px; max-width: 95%; height: 95vh;
         background: var(--bg-core); 
-        border-radius: 10px;
+        border-radius: 12px;
         z-index: 10;
         display: flex; flex-direction: column;
-        padding: 2px; 
+        padding: 3px; /* Kicsit vastagabb RGB keret hely */
         overflow: hidden;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        box-shadow: 0 25px 60px rgba(0,0,0,0.6);
     }
 
+    /* RGB Keret animáció */
     .pro-container::before {
         content: ''; position: absolute;
         top: -50%; left: -50%; width: 200%; height: 200%;
@@ -57,6 +61,7 @@
         );
         animation: rotateBorder 4s linear infinite;
         z-index: -1;
+        opacity: 0.8; /* Kicsit finomítottam az erősségén */
     }
 
     @keyframes rotateBorder { 100% { transform: rotate(360deg); } }
@@ -64,7 +69,7 @@
     .inner-frame {
         background: var(--bg-panel);
         width: 100%; height: 100%;
-        border-radius: 8px;
+        border-radius: 9px;
         display: flex; flex-direction: column;
         overflow: hidden;
     }
@@ -74,159 +79,205 @@
         height: 60px; padding: 0 25px;
         border-bottom: 1px solid var(--border);
         display: flex; justify-content: space-between; align-items: center;
-        background: #141414;
+        background: rgba(15, 23, 42, 0.95); /* Sötétebb fejléc */
     }
-    .brand-title { font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: white; }
+    .brand-title { font-size: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
     .brand-title span { color: var(--c-accent); }
     
+    /* KIEMELT HASZNÁLATI UTASÍTÁS GOMB */
     .btn-help {
-        background: transparent; border: 1px solid var(--border); color: var(--text-muted);
-        padding: 6px 15px; font-size: 11px; border-radius: 4px; cursor: pointer; text-transform: uppercase; font-weight: 600;
+        background: rgba(139, 92, 246, 0.15); /* Halvány lila háttér */
+        border: 1px solid var(--c-accent);      /* Lila keret */
+        color: #e2e8f0;
+        padding: 8px 18px; font-size: 12px; border-radius: 6px; 
+        cursor: pointer; text-transform: uppercase; font-weight: 700;
         display: flex; align-items: center; gap: 8px; transition: 0.2s;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
-    .btn-help:hover { border-color: var(--text-main); color: var(--text-main); background: #222; }
+    .btn-help:hover { 
+        background: var(--c-accent); 
+        color: white; 
+        box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+    }
 
     /* --- GRID ELRENDEZÉS --- */
     .app-grid {
-        flex: 1; display: grid; grid-template-columns: 280px 1fr; overflow: hidden;
+        flex: 1; display: grid; grid-template-columns: 300px 1fr; /* Kicsit szélesebb sidebar */
+        overflow: hidden;
     }
 
     /* BAL OLDAL (Sidebar) */
     .sidebar {
-        background: #0f0f0f; border-right: 1px solid var(--border); padding: 20px;
-        display: flex; flex-direction: column; gap: 25px;
+        background: #1e293b; /* Világosabb mint a régi fekete */
+        border-right: 1px solid var(--border); padding: 25px;
+        display: flex; flex-direction: column; gap: 30px;
     }
-    .section-head { font-size: 11px; font-weight: 700; color: #525252; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
+    .section-head { 
+        font-size: 12px; font-weight: 800; color: #cbd5e1; /* Világosabb címek */
+        text-transform: uppercase; margin-bottom: 10px; letter-spacing: 0.8px; 
+    }
 
-    /* --- ÚJ, ÉREZHETŐ FIZIKAI KAPCSOLÓ --- */
+    /* --- FIZIKAI KAPCSOLÓ --- */
     .toggle-grp {
         display: flex;
-        background: #080808; /* Mélyedés háttere */
-        padding: 4px;
+        background: #0f172a; 
+        padding: 5px;
         border-radius: 8px;
-        border: 1px solid #222;
-        box-shadow: inset 0 3px 8px rgba(0,0,0,0.8); /* Belső árnyék a mélységért */
-        position: relative;
+        border: 1px solid var(--border);
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
     }
     .t-btn {
         flex: 1;
-        background: transparent;
-        border: none;
-        color: #555;
-        padding: 10px;
-        font-size: 12px;
-        font-weight: 800;
-        cursor: pointer;
-        border-radius: 6px;
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Rugalmas animáció */
-        position: relative;
-        z-index: 2;
-        text-shadow: 0 1px 1px rgba(0,0,0,0.5); /*kis mélység a szövegnek*/
+        background: transparent; border: none; color: #64748b;
+        padding: 10px; font-size: 13px; font-weight: 800;
+        cursor: pointer; border-radius: 6px;
+        transition: all 0.3s ease;
     }
-    /* Aktív gomb - Kiemelkedik */
     .t-btn.active {
-        background: #e5e5e5; /* Világos fizikai gomb szín */
-        color: #111; /* Kontrasztos sötét szöveg */
-        box-shadow: 0 4px 10px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3); /* Erős külső árnyék */
-        text-shadow: none;
-        transform: translateY(-1px); /* Picit kiemelkedik */
+        background: var(--text-main); 
+        color: #0f172a; 
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        transform: scale(1.02);
     }
-    .t-btn:not(.active):hover { color: #888; }
+    .t-btn:not(.active):hover { color: #94a3b8; background: rgba(255,255,255,0.05); }
 
 
-    /* Fájl Import */
+    /* --- KIEMELT DROP ZONE (Fájl behúzó) --- */
     .drop-area {
-        height: 120px; border: 1px dashed #333; border-radius: 6px;
+        height: 140px; 
+        border: 2px dashed #64748b; /* Erősebb, szürke keret alapból */
+        border-radius: 8px;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
-        text-align: center; cursor: pointer; transition: 0.2s; background: rgba(255,255,255,0.01);
+        text-align: center; cursor: pointer; transition: all 0.2s ease;
+        background: #334155; /* Jól látható háttérszín */
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
     }
-    .drop-area:hover { border-color: var(--c-accent); background: rgba(139, 92, 246, 0.05); }
-    .drop-area.active { border-style: solid; border-color: var(--c-success); background: rgba(16, 185, 129, 0.05); }
+    .drop-area:hover { 
+        border-color: var(--c-accent); 
+        background: #3c4a63; 
+        transform: translateY(-2px);
+    }
+    .drop-area.active { 
+        border-style: solid; 
+        border-color: var(--c-success); 
+        background: rgba(16, 185, 129, 0.1); 
+    }
+    #dropEmpty span:first-child { font-size: 32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
     
     /* Adatok */
-    .data-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px; color: #888; border-bottom: 1px solid #1a1a1a; padding-bottom: 4px; }
-    .data-val { color: var(--c-accent); font-family: monospace; font-weight: bold; }
+    .data-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: #94a3b8; border-bottom: 1px solid #334155; padding-bottom: 6px; }
+    .data-val { color: var(--c-accent); font-family: monospace; font-weight: bold; font-size: 14px; }
 
     /* JOBB OLDAL (Workspace) */
     .workspace {
-        display: grid; grid-template-rows: auto 1fr; background: var(--bg-panel); overflow: hidden;
+        display: grid; grid-template-rows: auto 1fr; background: #1a2333; /* Kicsit sötétebb kékesszürke */
+        overflow: hidden;
     }
 
-    .input-panel { padding: 20px; background: #121212; border-bottom: 1px solid var(--border); }
+    .input-panel { padding: 25px; background: #1e293b; border-bottom: 1px solid var(--border); }
+    
+    /* --- KIEMELT TEXTAREA --- */
     textarea {
-        width: 100%; height: 80px; background: var(--bg-input); border: 1px solid var(--border);
-        color: white; padding: 15px; font-family: 'Consolas', monospace; font-size: 13px;
-        resize: none; outline: none; border-radius: 5px; display: block;
+        width: 100%; height: 100px; 
+        background: #334155; /* Világosabb háttér */
+        border: 2px solid #475569; /* Erős keret */
+        color: white; padding: 15px; font-family: 'Consolas', monospace; font-size: 14px;
+        resize: none; outline: none; border-radius: 8px; display: block;
+        transition: all 0.2s;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
     }
-    textarea:focus { border-color: var(--c-accent); }
+    textarea:focus { 
+        border-color: var(--c-accent); 
+        background: #3d4c63;
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2); /* Fókusz gyűrű */
+    }
+    textarea::placeholder { color: #94a3b8; opacity: 0.7; }
 
     /* Állapot sáv */
     .status-dashboard {
-        display: flex; gap: 20px; padding: 10px 20px; background: #0c0c0c; border-bottom: 1px solid var(--border); align-items: center;
+        display: flex; gap: 20px; padding: 12px 25px; background: #0f172a; border-bottom: 1px solid var(--border); align-items: center;
     }
-    .d-badge { font-size: 11px; display: flex; align-items: center; gap: 6px; color: #888; }
-    .d-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .d-badge { font-size: 12px; display: flex; align-items: center; gap: 8px; color: #cbd5e1; font-weight: 600; }
+    .d-dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 5px currentColor; }
 
     /* Lista */
-    .list-area { overflow-y: auto; padding: 0; }
+    .list-area { overflow-y: auto; padding: 0; background: #1a2333; }
     .list-item {
-        display: grid; grid-template-columns: 40px 1fr auto; gap: 15px; padding: 8px 20px;
-        border-bottom: 1px solid #1a1a1a; font-family: monospace; font-size: 13px; color: #ccc; align-items: center;
-        border-left: 3px solid transparent; transition: background 0.2s;
+        display: grid; grid-template-columns: 45px 1fr auto; gap: 15px; padding: 10px 25px;
+        border-bottom: 1px solid #2d3b52; font-family: monospace; font-size: 14px; color: #e2e8f0; align-items: center;
+        border-left: 4px solid transparent; transition: background 0.2s;
     }
-    .list-item:hover { background: #161616; }
+    .list-item:hover { background: #2d3b52; }
     
-    .idx { color: #444; font-size: 11px; text-align: right; }
+    .idx { color: #64748b; font-size: 11px; text-align: right; }
     
-    /* Státusz színek */
     .list-item.ok { border-left-color: var(--c-success); }
-    .list-item.dup { border-left-color: var(--c-warning); opacity: 0.7; }
-    .list-item.err { border-left-color: var(--c-error); background: rgba(239, 68, 68, 0.05); }
+    .list-item.dup { border-left-color: var(--c-warning); opacity: 0.8; }
+    .list-item.err { border-left-color: var(--c-error); background: rgba(239, 68, 68, 0.1); }
 
-    .tag { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; }
-    .tag.ok { color: var(--c-success); background: rgba(16, 185, 129, 0.1); }
-    .tag.dup { color: var(--c-warning); background: rgba(245, 158, 11, 0.1); }
-    .tag.err { color: var(--c-error); background: rgba(239, 68, 68, 0.1); }
+    .tag { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
+    .tag.ok { color: #6ee7b7; background: rgba(16, 185, 129, 0.2); }
+    .tag.dup { color: #fcd34d; background: rgba(245, 158, 11, 0.2); }
+    .tag.err { color: #fca5a5; background: rgba(239, 68, 68, 0.2); }
 
     /* FOOTER */
     footer {
-        height: 60px; padding: 0 25px; border-top: 1px solid var(--border);
-        background: #141414; display: flex; justify-content: flex-end; align-items: center; gap: 20px;
+        height: 70px; padding: 0 25px; border-top: 1px solid var(--border);
+        background: #0f172a; display: flex; justify-content: flex-end; align-items: center; gap: 25px;
     }
-    .fix-tool { display: flex; align-items: center; gap: 10px; font-size: 11px; color: #666; }
-    .fix-input { width: 30px; background: var(--bg-input); border: 1px solid var(--border); color: white; text-align: center; padding: 4px; border-radius: 3px; }
+    .fix-tool { display: flex; align-items: center; gap: 12px; font-size: 12px; color: #94a3b8; font-weight: 600; }
+    
+    /* KIEMELT JAVÍTÓ INPUT */
+    .fix-input { 
+        width: 40px; height: 32px;
+        background: #334155; 
+        border: 2px solid var(--c-accent); /* Lila keret */
+        color: white; text-align: center; font-size: 14px; font-weight: bold;
+        padding: 4px; border-radius: 6px; 
+        transition: 0.2s;
+    }
+    .fix-input:focus { background: #475569; outline: none; box-shadow: 0 0 10px rgba(139, 92, 246, 0.3); }
     
     .btn-main {
-        background: white; color: black; border: none; padding: 10px 25px;
-        font-size: 12px; font-weight: 700; border-radius: 4px; cursor: pointer; transition: 0.2s;
+        background: #f8fafc; color: #0f172a; border: none; padding: 12px 30px;
+        font-size: 13px; font-weight: 800; border-radius: 6px; cursor: pointer; transition: 0.2s;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-    .btn-main:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 0 15px rgba(255,255,255,0.2); }
-    .btn-main:disabled { background: #333; color: #555; cursor: not-allowed; }
+    .btn-main:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255,255,255,0.15); background: white; }
+    .btn-main:disabled { background: #334155; color: #64748b; cursor: not-allowed; box-shadow: none; }
 
-    /* --- SÚGÓ MODAL (Hidden by default) --- */
+    /* --- SÚGÓ MODAL --- */
     .modal-overlay {
         display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 999;
+        background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 999;
         justify-content: center; align-items: center;
     }
     .modal-box {
-        background: #111; width: 600px; max-width: 90%; border: 1px solid var(--border); border-radius: 8px;
-        box-shadow: 0 20px 50px rgba(0,0,0,1); overflow: hidden;
+        background: #1e293b; width: 600px; max-width: 90%; 
+        border: 1px solid var(--border); border-radius: 12px;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.7); overflow: hidden;
     }
-    .modal-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #161616; }
-    .modal-title { font-size: 16px; font-weight: bold; color: white; text-transform: uppercase; }
-    .modal-close { background: transparent; border: none; color: #666; font-size: 20px; cursor: pointer; }
+    .modal-header { padding: 20px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #0f172a; }
+    .modal-title { font-size: 16px; font-weight: 800; color: white; text-transform: uppercase; letter-spacing: 1px; }
+    .modal-close { background: transparent; border: none; color: #94a3b8; font-size: 24px; cursor: pointer; transition: 0.2s; }
+    .modal-close:hover { color: white; }
     
-    .modal-body { padding: 30px; color: #ccc; font-size: 13px; line-height: 1.6; }
-    .step-item { margin-bottom: 20px; display: flex; gap: 15px; }
-    .step-num { width: 24px; height: 24px; background: var(--c-accent); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; font-size: 12px; }
-    .step-text h4 { margin: 0 0 5px 0; color: white; font-size: 14px; }
-    .step-text p { margin: 0; color: #888; }
+    .modal-body { padding: 30px; color: #cbd5e1; font-size: 14px; line-height: 1.6; }
+    .step-item { margin-bottom: 25px; display: flex; gap: 20px; }
+    .step-num { 
+        width: 28px; height: 28px; background: var(--c-accent); color: white; 
+        border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+        font-weight: 800; flex-shrink: 0; font-size: 14px; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.4); 
+    }
+    .step-text h4 { margin: 0 0 5px 0; color: white; font-size: 15px; }
+    .step-text p { margin: 0; color: #94a3b8; }
 
     /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; border: 2px solid #0f172a; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
 </style>
 <script>
 // --- MOTOR ---
@@ -300,8 +351,8 @@ const MiniZip={table:(function(){let t=[],c;for(let n=0;n<256;n++){c=n;for(let k
                     <div class="section-head">Sablon CSV Fájl</div>
                     <div class="drop-area" id="dropZone" onclick="document.getElementById('fileInp').click()">
                         <div id="dropEmpty">
-                            <span style="font-size:24px; color:#444; margin-bottom:5px;">📥</span>
-                            <span style="font-size:11px; color:#666;">Kattints vagy húzd ide</span>
+                            <span style="font-size:24px; color:#cbd5e1; margin-bottom:5px;">📥</span>
+                            <span style="font-size:11px; color:#94a3b8; font-weight:bold;">Kattints vagy húzd ide</span>
                         </div>
                         <div id="dropLoaded" style="display:none;">
                             <span style="font-size:24px; color:var(--c-success); margin-bottom:5px;">✔</span>
@@ -337,7 +388,7 @@ const MiniZip={table:(function(){let t=[],c;for(let n=0;n<256;n++){c=n;for(let k
                 </div>
 
                 <div class="list-area" id="previewList">
-                    <div style="padding:40px; text-align:center; color:#333; font-size:12px;">Nincs feldolgozott adat.</div>
+                    <div style="padding:40px; text-align:center; color:#64748b; font-size:12px;">Nincs feldolgozott adat.</div>
                 </div>
             </main>
         </div>
@@ -399,7 +450,7 @@ function processInput() {
     let seenCodes = new Set(); 
 
     if(lines.length === 0) {
-        listDiv.innerHTML = '<div style="padding:40px; text-align:center; color:#333; font-size:12px;">Nincs feldolgozott adat.</div>';
+        listDiv.innerHTML = '<div style="padding:40px; text-align:center; color:#64748b; font-size:12px;">Nincs feldolgozott adat.</div>';
         updateStats(0,0,0);
         document.getElementById('genBtn').disabled = true;
         return;
