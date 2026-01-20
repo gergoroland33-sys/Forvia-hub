@@ -24,19 +24,24 @@ body{
 }
 .container{max-width:550px;margin:0 auto;}
 
-header{text-align:center;margin-bottom:10px;padding-top:5px; transition: opacity 0.3s;}
+/* HEADER: Görgetéskor eltűnik (elhalványul) */
+header{
+    text-align:center; margin-bottom:10px; padding-top:5px; 
+    transition: all 0.3s ease; opacity: 1; transform: translateY(0);
+}
+header.hidden { opacity: 0; transform: translateY(-20px); pointer-events: none; }
+
 header h1{font-size:1.6rem;font-weight:800;margin:0;background:linear-gradient(to right,#60a5fa,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 header p { margin: 5px 0 0 0; color: var(--text-muted); font-size: 0.8rem; }
 
-/* --- DINAMIKUS FILTER PANEL --- */
+/* --- A PANEL ALAPÁLLAPOTA (Fent vagyunk) --- */
 .filter-panel{
     position: sticky;
     top: 10px; 
-    z-index: 100;
+    z-index: 500; /* Nagyon magasra tesszük, hogy biztosan legfelül legyen */
     
-    /* ALAPÁLLAPOT (Éles, teli szín) */
-    background: #1e293b; /* Teli sötétkék */
-    backdrop-filter: none; /* Nincs homály */
+    /* 1. ÁLLAPOT: Szolid, sötét, mint a kártyák */
+    background: #1e293b; 
     border: 1px solid var(--card-border);
     box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     
@@ -45,18 +50,22 @@ header p { margin: 5px 0 0 0; color: var(--text-muted); font-size: 0.8rem; }
     margin-bottom:25px; 
     display:grid; grid-template-columns:1fr 1fr; gap:10px;
     
-    /* A varázslat: finom átmenet minden tulajdonságra */
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease-in-out; /* Gyorsabb átmenet */
 }
 
-/* GÖRGETETT ÁLLAPOT (Ez a "scrolled" class kapcsol be JS-el) */
+/* --- A PANEL GÖRGETETT ÁLLAPOTA (Lejjebb görgettünk) --- */
+/* Ez a class kapcsolódik be JavaScripttel */
 .filter-panel.scrolled {
-    background: rgba(15, 23, 42, 0.65); /* Áttetsző */
-    backdrop-filter: blur(16px) saturate(180%); /* Erős homály + színkiemelés */
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
-    border-color: rgba(255, 255, 255, 0.15); /* Finomabb keret */
-    box-shadow: 0 20px 40px rgba(0,0,0,0.6); /* Mélyebb árnyék */
-    transform: translateY(-5px); /* Picit feljebb ugrik */
+    /* 2. ÁLLAPOT: ÜVEG HATÁS + KÉK KERET (hogy lásd a változást) */
+    background: rgba(15, 23, 42, 0.75); /* Áttetszőbb */
+    backdrop-filter: blur(12px); /* Homályosítás */
+    -webkit-backdrop-filter: blur(12px);
+    
+    border-color: rgba(59, 130, 246, 0.5); /* Kivilágosodik a keret */
+    border-bottom: 2px solid var(--primary); /* Kap egy kék csíkot alulra! */
+    
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6); /* Nagyobb árnyék */
+    margin-top: -60px; /* Trükk: feljebb csúszik a header helyére */
 }
 
 label{display:block;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:4px;}
@@ -77,7 +86,7 @@ select{width:100%;padding:10px;background:#0b1120;border:1px solid var(--card-bo
 .gomb:active { transform: scale(0.98); }
 .icon-btn { flex: 0 0 45px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
 
-/* --- DAY CARD (MARADT A RÉGI) --- */
+/* DAY CARD */
 .day-card {
     background: #1e293b;
     border-radius: 20px;
@@ -87,7 +96,7 @@ select{width:100%;padding:10px;background:#0b1120;border:1px solid var(--card-bo
     box-shadow: 0 10px 20px rgba(0,0,0,0.3);
     overflow: hidden;
     background: linear-gradient(145deg, #334155, #0f172a);
-    scroll-margin-top: 200px; /* Helyet hagyunk a headernek ugráskor */
+    scroll-margin-top: 180px; 
 }
 
 @keyframes border-rotate {
@@ -123,7 +132,7 @@ select{width:100%;padding:10px;background:#0b1120;border:1px solid var(--card-bo
 .day-name { font-size: 0.8rem; font-weight: 600; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; }
 .weekend .day-name { color: var(--accent); }
 
-/* --- MŰSZAK SOROK --- */
+/* SHIFT ROWS */
 .shift-row {
     display: flex; align-items: center; justify-content: space-between;
     padding: 12px; border-radius: 12px; margin-bottom: 8px;
@@ -245,19 +254,18 @@ select{width:100%;padding:10px;background:#0b1120;border:1px solid var(--card-bo
 </div>
 
 <script>
-// --- JS GÖRGETÉS ÉRZÉKELŐ ---
+// --- JAVÍTOTT GÖRGETÉS ÉRZÉKELŐ ---
 window.addEventListener('scroll', () => {
     const panel = document.querySelector('.filter-panel');
     const header = document.getElementById('mainHeader');
     
-    if (window.scrollY > 20) {
-        // Ha görgetünk: Üveg effekt BE
+    // Már 10 pixel után aktiválódik
+    if (window.scrollY > 10) {
         panel.classList.add('scrolled');
-        header.style.opacity = '0.5'; // A cím elhalványul
+        header.classList.add('hidden'); // A cím eltűnik, hogy feljebb csússzon a panel
     } else {
-        // Ha fent vagyunk: Üveg effekt KI (Teli szín)
         panel.classList.remove('scrolled');
-        header.style.opacity = '1'; // A cím teljesen látszik
+        header.classList.remove('hidden');
     }
 });
 
