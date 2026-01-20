@@ -24,26 +24,48 @@ body{
 }
 .container{max-width:550px;margin:0 auto;}
 
-header{text-align:center;margin-bottom:20px;padding-top:10px;}
+header{text-align:center;margin-bottom:15px;padding-top:5px;}
 header h1{font-size:1.6rem;font-weight:800;margin:0;background:linear-gradient(to right,#60a5fa,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+header p { margin: 5px 0 0 0; color: var(--text-muted); font-size: 0.8rem; }
 
-/* FILTER PANEL */
+/* --- FILTER PANEL (MODIFIED: STICKY) --- */
 .filter-panel{
-    background:rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px);
-    padding:20px; border-radius:20px; border:1px solid rgba(255,255,255,0.1);
-    margin-bottom:25px; display:grid; grid-template-columns:1fr 1fr; gap:12px;
-    box-shadow:0 10px 30px -5px rgba(0,0,0,0.5);
+    /* A ragadós varázslat itt történik: */
+    position: sticky;
+    top: 10px; /* 10px-re a képernyő tetejétől megáll */
+    z-index: 100; /* Hogy a kártyák fölött maradjon */
+    
+    background: rgba(15, 23, 42, 0.85); /* Sötétebb, hogy jobban olvasható legyen */
+    backdrop-filter: blur(12px); /* Erős homályosítás a modern üveg hatásért */
+    -webkit-backdrop-filter: blur(12px); /* Safari támogatás */
+    
+    padding:15px; /* Kicsit kompaktabb */
+    border-radius:16px; 
+    border:1px solid rgba(255,255,255,0.1);
+    margin-bottom:25px; 
+    display:grid; grid-template-columns:1fr 1fr; gap:10px;
+    box-shadow:0 15px 35px -5px rgba(0,0,0,0.6); /* Erősebb árnyék, hogy "lebegjen" */
 }
-label{display:block;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:6px;}
-select{width:100%;padding:12px;background:#0b1120;border:1px solid var(--card-border);border-radius:12px;color:white;font-size:15px;outline:none;}
+
+label{display:block;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:4px;}
+select{width:100%;padding:10px;background:#0b1120;border:1px solid var(--card-border);border-radius:10px;color:white;font-size:14px;outline:none;}
 
 /* GOMBOK */
-.btn-group { grid-column: span 2; display: flex; gap: 10px; }
-.gomb{flex: 1; padding:14px;background:rgba(59,130,246,0.1);color:var(--primary);border:1px solid var(--primary);border-radius:12px;font-weight:700;cursor:pointer;transition:0.2s;}
+.btn-group { grid-column: span 2; display: flex; gap: 10px; margin-top: 5px; }
+.gomb{
+    flex: 1; padding:12px; /* Kicsit kompaktabb gombok */
+    background:rgba(59,130,246,0.15);
+    color:var(--primary);
+    border:1px solid rgba(59, 130, 246, 0.5);
+    border-radius:10px;
+    font-weight:700; font-size: 0.9rem;
+    cursor:pointer; transition:0.2s;
+}
 .gomb:hover{background:var(--primary);color:white; box-shadow: 0 0 15px rgba(59,130,246,0.5);}
-.icon-btn { flex: 0 0 50px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+.gomb:active { transform: scale(0.98); }
+.icon-btn { flex: 0 0 45px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
 
-/* --- DAY CARD STÍLUSOK --- */
+/* --- DAY CARD STÍLUSOK (Változatlan) --- */
 .day-card {
     background: #1e293b;
     border-radius: 20px;
@@ -52,9 +74,12 @@ select{width:100%;padding:12px;background:#0b1120;border:1px solid var(--card-bo
     position: relative;
     box-shadow: 0 10px 20px rgba(0,0,0,0.3);
     overflow: hidden;
-    background: linear-gradient(145deg, #334155, #0f172a); 
+    background: linear-gradient(145deg, #334155, #0f172a);
+    /* Scroll margin a sticky header miatt: */
+    scroll-margin-top: 180px; 
 }
-/* FUTÓFÉNY A MAI NAPRA (Nagy kártya) */
+
+/* FUTÓFÉNY A MAI NAPRA */
 @keyframes border-rotate {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
@@ -88,16 +113,13 @@ select{width:100%;padding:12px;background:#0b1120;border:1px solid var(--card-bo
 .day-name { font-size: 0.8rem; font-weight: 600; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; }
 .weekend .day-name { color: var(--accent); }
 
-/* --- MŰSZAK SOROK (SHIFT ROW) --- */
+/* --- MŰSZAK SOROK --- */
 .shift-row {
     display: flex; align-items: center; justify-content: space-between;
     padding: 12px; border-radius: 12px; margin-bottom: 8px;
     background: rgba(15, 23, 42, 0.6);
     border: 1px solid rgba(255,255,255,0.1);
-    transition: all 0.3s ease-in-out;
-    position: relative;
-    overflow: hidden;
-    z-index: 0;
+    position: relative; overflow: hidden; z-index: 0;
 }
 .shift-row:last-child { margin-bottom: 0; }
 
@@ -106,27 +128,21 @@ select{width:100%;padding:12px;background:#0b1120;border:1px solid var(--card-bo
 .row-muszak-C { --shift-color: var(--color-C); }
 .row-muszak-D { --shift-color: var(--color-D); }
 
-/* --- AKTÍV MŰSZAK STÍLUSOK (Nappal/Éjszaka) --- */
 .shift-row.active-shift {
     background: linear-gradient(90deg, rgba(255,255,255,0.07), rgba(255,255,255,0));
     border-left: 4px solid var(--shift-color);
     border-color: transparent; 
 }
 .shift-row.active-shift::before {
-    content: '';
-    position: absolute;
-    z-index: -2;
+    content: ''; position: absolute; z-index: -2;
     left: -50%; top: -50%; width: 200%; height: 200%;
     background: conic-gradient(transparent, transparent, transparent, var(--shift-color) 30%, transparent 50%);
     animation: rotateSnake 3s linear infinite;
 }
 .shift-row.active-shift::after {
-    content: '';
-    position: absolute;
-    z-index: -1;
+    content: ''; position: absolute; z-index: -1;
     left: 2px; top: 2px; right: 2px; bottom: 2px;
-    border-radius: 10px; 
-    background: #1e293b; 
+    border-radius: 10px; background: #1e293b; 
 }
 @keyframes rotateSnake { 100% { transform: rotate(360deg); } }
 
@@ -151,61 +167,59 @@ select{width:100%;padding:12px;background:#0b1120;border:1px solid var(--card-bo
 .cal-cell { aspect-ratio: 1/1; background: #0f172a; border-radius: 8px; border: 1px solid #334155; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; cursor: pointer; transition: 0.2s;}
 .cal-cell:hover { border-color: var(--primary); background: #1e293b; }
 .cal-num { font-size: 0.9rem; font-weight: 600; color: #cbd5e1; }
-
-/* Módosított stílus a több betűnek */
-.cal-shift { 
-    font-size: 0.7rem; font-weight: 800; 
-    position: absolute; bottom: 3px; right: 4px; 
-    color: var(--text-muted); 
-    display: flex; gap: 2px; /* Kicsi rés a betűk között */
-}
-
+.cal-shift { font-size: 0.7rem; font-weight: 800; position: absolute; bottom: 3px; right: 4px; color: var(--text-muted); display: flex; gap: 2px; }
 .code-A { color: var(--color-A); } .code-B { color: var(--color-B); } .code-C { color: var(--color-C); } .code-D { color: var(--color-D); }
 .cal-today { border: 2px solid var(--primary); background: rgba(59,130,246,0.1); }
 .cal-empty { background: transparent; border: none; cursor: default; }
+
+/* Spacer a végére, hogy az utolsó kártya is kényelmesen látszódjon */
+#eredmeny { padding-bottom: 50px; }
+
 @media (max-width:480px){.filter-panel{grid-template-columns:1fr;}.btn-group{grid-column: span 1;}}
 </style>
 </head>
 <body>
 <div class="container">
 <header>
-<h1>FORVIA SMT</h1>
-<p>Digitális Műszaknaptár 2026</p>
+    <h1>FORVIA SMT</h1>
+    <p>Digitális Műszaknaptár 2026</p>
 </header>
+
 <div class="filter-panel">
-<div>
-<label>Hónap</label>
-<select id="honap">
-<option value="mind">Összes hónap</option>
-<option value="01">Január</option>
-<option value="02">Február</option>
-<option value="03">Március</option>
-<option value="04">Április</option>
-<option value="05">Május</option>
-<option value="06">Június</option>
-<option value="07">Július</option>
-<option value="08">Augusztus</option>
-<option value="09">Szeptember</option>
-<option value="10">Október</option>
-<option value="11">November</option>
-<option value="12">December</option>
-</select>
+    <div>
+        <label>Hónap</label>
+        <select id="honap">
+            <option value="mind">Összes hónap</option>
+            <option value="01">Január</option>
+            <option value="02">Február</option>
+            <option value="03">Március</option>
+            <option value="04">Április</option>
+            <option value="05">Május</option>
+            <option value="06">Június</option>
+            <option value="07">Július</option>
+            <option value="08">Augusztus</option>
+            <option value="09">Szeptember</option>
+            <option value="10">Október</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+        </select>
+    </div>
+    <div>
+        <label>Műszak</label>
+        <select id="muszak">
+            <option value="mind">Mind</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+        </select>
+    </div>
+    <div class="btn-group">
+        <button class="gomb icon-btn" id="calendarBtn" title="Havi nézet">📅</button>
+        <button class="gomb" id="maigomb">Ugrás a mai naphoz</button>
+    </div>
 </div>
-<div>
-<label>Műszak</label>
-<select id="muszak">
-<option value="mind">Mind</option>
-<option value="A">A</option>
-<option value="B">B</option>
-<option value="C">C</option>
-<option value="D">D</option>
-</select>
-</div>
-<div class="btn-group">
-    <button class="gomb icon-btn" id="calendarBtn" title="Havi nézet">📅</button>
-    <button class="gomb" id="maigomb">Ugrás a mai naphoz</button>
-</div>
-</div>
+
 <div id="eredmeny"></div>
 </div>
 
@@ -297,7 +311,6 @@ document.getElementById('maigomb').addEventListener('click',()=>{
 document.getElementById('honap').addEventListener('change',showData);
 document.getElementById('muszak').addEventListener('change',showData);
 
-// --- NAPTÁR LOGIKA JAVÍTOTT (Space-Proof + ÖSSZES MŰSZAK) ---
 let calDate = new Date();
 document.getElementById('calendarBtn').addEventListener('click', () => {
     document.getElementById('calModal').style.display = 'flex';
@@ -337,30 +350,19 @@ function renderCalendar() {
         const mm = String(month + 1).padStart(2, '0');
         const dd = String(i).padStart(2, '0');
         const compareDate = `${year}${mm}${dd}`;
-        
-        let shiftContent = ''; // Ebben gyűjtjük a HTML-t
+        let shiftContent = ''; 
 
-        // Szűrés a 'muszakok' tömbből (space-biztosan)
         const dayShifts = muszakok.filter(m => {
             const cleanCSV = m.datum.replace(/[^0-9]/g, ''); 
             return cleanCSV.startsWith(compareDate);
         });
 
-        // ITT A VÁLTOZÁS A "MIND" ESETÉN:
         if (currentFilterShift === 'mind') {
-            // Megkeressük az összes EGYEDI műszak betűt aznapra
             const uniqueShifts = [...new Set(dayShifts.map(m => m.muszak))].sort();
-            
-            // Mindegyiknek generálunk egy színes span-t
-            uniqueShifts.forEach(s => {
-                shiftContent += `<span class="code-${s}">${s}</span>`;
-            });
+            uniqueShifts.forEach(s => { shiftContent += `<span class="code-${s}">${s}</span>`; });
         } else {
-            // Ha van konkrét szűrő, csak azt keressük
             const match = dayShifts.find(m => m.muszak === currentFilterShift);
-            if(match) {
-                shiftContent = `<span class="code-${match.muszak}">${match.muszak}</span>`;
-            }
+            if(match) { shiftContent = `<span class="code-${match.muszak}">${match.muszak}</span>`; }
         }
 
         let isTodayClass = '';
@@ -370,7 +372,6 @@ function renderCalendar() {
         
         const cell = document.createElement('div');
         cell.className = `cal-cell ${isTodayClass}`;
-        // A shiftContent-et tesszük a cellába
         cell.innerHTML = `<span class="cal-num">${i}</span><span class="cal-shift">${shiftContent}</span>`;
         
         cell.onclick = () => {
