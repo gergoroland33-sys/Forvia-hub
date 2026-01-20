@@ -24,27 +24,39 @@ body{
 }
 .container{max-width:550px;margin:0 auto;}
 
-header{text-align:center;margin-bottom:15px;padding-top:5px;}
+header{text-align:center;margin-bottom:10px;padding-top:5px; transition: opacity 0.3s;}
 header h1{font-size:1.6rem;font-weight:800;margin:0;background:linear-gradient(to right,#60a5fa,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 header p { margin: 5px 0 0 0; color: var(--text-muted); font-size: 0.8rem; }
 
-/* --- FILTER PANEL (MODIFIED: STICKY) --- */
+/* --- DINAMIKUS FILTER PANEL --- */
 .filter-panel{
-    /* A ragadós varázslat itt történik: */
     position: sticky;
-    top: 10px; /* 10px-re a képernyő tetejétől megáll */
-    z-index: 100; /* Hogy a kártyák fölött maradjon */
+    top: 10px; 
+    z-index: 100;
     
-    background: rgba(15, 23, 42, 0.85); /* Sötétebb, hogy jobban olvasható legyen */
-    backdrop-filter: blur(12px); /* Erős homályosítás a modern üveg hatásért */
-    -webkit-backdrop-filter: blur(12px); /* Safari támogatás */
+    /* ALAPÁLLAPOT (Éles, teli szín) */
+    background: #1e293b; /* Teli sötétkék */
+    backdrop-filter: none; /* Nincs homály */
+    border: 1px solid var(--card-border);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     
-    padding:15px; /* Kicsit kompaktabb */
+    padding:15px; 
     border-radius:16px; 
-    border:1px solid rgba(255,255,255,0.1);
     margin-bottom:25px; 
     display:grid; grid-template-columns:1fr 1fr; gap:10px;
-    box-shadow:0 15px 35px -5px rgba(0,0,0,0.6); /* Erősebb árnyék, hogy "lebegjen" */
+    
+    /* A varázslat: finom átmenet minden tulajdonságra */
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* GÖRGETETT ÁLLAPOT (Ez a "scrolled" class kapcsol be JS-el) */
+.filter-panel.scrolled {
+    background: rgba(15, 23, 42, 0.65); /* Áttetsző */
+    backdrop-filter: blur(16px) saturate(180%); /* Erős homály + színkiemelés */
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border-color: rgba(255, 255, 255, 0.15); /* Finomabb keret */
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6); /* Mélyebb árnyék */
+    transform: translateY(-5px); /* Picit feljebb ugrik */
 }
 
 label{display:block;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:4px;}
@@ -53,7 +65,7 @@ select{width:100%;padding:10px;background:#0b1120;border:1px solid var(--card-bo
 /* GOMBOK */
 .btn-group { grid-column: span 2; display: flex; gap: 10px; margin-top: 5px; }
 .gomb{
-    flex: 1; padding:12px; /* Kicsit kompaktabb gombok */
+    flex: 1; padding:12px;
     background:rgba(59,130,246,0.15);
     color:var(--primary);
     border:1px solid rgba(59, 130, 246, 0.5);
@@ -65,7 +77,7 @@ select{width:100%;padding:10px;background:#0b1120;border:1px solid var(--card-bo
 .gomb:active { transform: scale(0.98); }
 .icon-btn { flex: 0 0 45px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
 
-/* --- DAY CARD STÍLUSOK (Változatlan) --- */
+/* --- DAY CARD (MARADT A RÉGI) --- */
 .day-card {
     background: #1e293b;
     border-radius: 20px;
@@ -75,11 +87,9 @@ select{width:100%;padding:10px;background:#0b1120;border:1px solid var(--card-bo
     box-shadow: 0 10px 20px rgba(0,0,0,0.3);
     overflow: hidden;
     background: linear-gradient(145deg, #334155, #0f172a);
-    /* Scroll margin a sticky header miatt: */
-    scroll-margin-top: 180px; 
+    scroll-margin-top: 200px; /* Helyet hagyunk a headernek ugráskor */
 }
 
-/* FUTÓFÉNY A MAI NAPRA */
 @keyframes border-rotate {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
@@ -171,16 +181,13 @@ select{width:100%;padding:10px;background:#0b1120;border:1px solid var(--card-bo
 .code-A { color: var(--color-A); } .code-B { color: var(--color-B); } .code-C { color: var(--color-C); } .code-D { color: var(--color-D); }
 .cal-today { border: 2px solid var(--primary); background: rgba(59,130,246,0.1); }
 .cal-empty { background: transparent; border: none; cursor: default; }
-
-/* Spacer a végére, hogy az utolsó kártya is kényelmesen látszódjon */
 #eredmeny { padding-bottom: 50px; }
-
 @media (max-width:480px){.filter-panel{grid-template-columns:1fr;}.btn-group{grid-column: span 1;}}
 </style>
 </head>
 <body>
 <div class="container">
-<header>
+<header id="mainHeader">
     <h1>FORVIA SMT</h1>
     <p>Digitális Műszaknaptár 2026</p>
 </header>
@@ -238,6 +245,22 @@ select{width:100%;padding:10px;background:#0b1120;border:1px solid var(--card-bo
 </div>
 
 <script>
+// --- JS GÖRGETÉS ÉRZÉKELŐ ---
+window.addEventListener('scroll', () => {
+    const panel = document.querySelector('.filter-panel');
+    const header = document.getElementById('mainHeader');
+    
+    if (window.scrollY > 20) {
+        // Ha görgetünk: Üveg effekt BE
+        panel.classList.add('scrolled');
+        header.style.opacity = '0.5'; // A cím elhalványul
+    } else {
+        // Ha fent vagyunk: Üveg effekt KI (Teli szín)
+        panel.classList.remove('scrolled');
+        header.style.opacity = '1'; // A cím teljesen látszik
+    }
+});
+
 let muszakok=[];
 const vezetok={'A':'Czerovszki Zsolt','B':'Hajdu Zoltán','C':'Kamasz Ádám','D':'Komjáti István'};
 function parseDatum(str){if(!str)return null;const isoStr=str.replace(/\./g,'-').replace(/\s/g,'').replace(/-$/,'');return new Date(isoStr);}
@@ -288,7 +311,6 @@ function showData(){
         napok[datum].forEach(r=>{
             const szovegLower = r.hely.trim().toLowerCase();
             const isActive = szovegLower === 'nappal' || szovegLower === 'éjszaka';
-            
             html+=`<div class="shift-row row-muszak-${r.muszak} ${isActive?'active-shift':''}">
                 <div class="shift-details">
                     <span class="loc">${r.hely}</span>
@@ -345,18 +367,15 @@ function renderCalendar() {
         grid.innerHTML += `<div class="cal-cell cal-empty"></div>`;
     }
     const currentFilterShift = document.getElementById('muszak').value;
-    
     for(let i=1; i<=daysInMonth; i++) {
         const mm = String(month + 1).padStart(2, '0');
         const dd = String(i).padStart(2, '0');
         const compareDate = `${year}${mm}${dd}`;
         let shiftContent = ''; 
-
         const dayShifts = muszakok.filter(m => {
             const cleanCSV = m.datum.replace(/[^0-9]/g, ''); 
             return cleanCSV.startsWith(compareDate);
         });
-
         if (currentFilterShift === 'mind') {
             const uniqueShifts = [...new Set(dayShifts.map(m => m.muszak))].sort();
             uniqueShifts.forEach(s => { shiftContent += `<span class="code-${s}">${s}</span>`; });
@@ -364,16 +383,13 @@ function renderCalendar() {
             const match = dayShifts.find(m => m.muszak === currentFilterShift);
             if(match) { shiftContent = `<span class="code-${match.muszak}">${match.muszak}</span>`; }
         }
-
         let isTodayClass = '';
         if(year === today.getFullYear() && month === today.getMonth() && i === today.getDate()) {
             isTodayClass = 'cal-today';
         }
-        
         const cell = document.createElement('div');
         cell.className = `cal-cell ${isTodayClass}`;
         cell.innerHTML = `<span class="cal-num">${i}</span><span class="cal-shift">${shiftContent}</span>`;
-        
         cell.onclick = () => {
             closeCalendar(null);
             const targetId = `date-${year}${mm}${dd}`;
