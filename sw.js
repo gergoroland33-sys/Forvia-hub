@@ -1,4 +1,6 @@
-const CACHE_NAME = 'forvia-hub-auto-v1';
+const CACHE_NAME = 'forvia-hub-v1';
+
+// A lista a jelenlegi fájlneveiddel
 const ASSETS = [
   './',
   './index.html',
@@ -15,47 +17,45 @@ const ASSETS = [
   './bank.csv',
   './muszakok.csv',
   './ultetes.csv',
-  './Maszk 2026.csv'
+  './Maszk%202026.csv',            // Így a kód kezeli a szóközt a fájlnevedben!
+  'https://unpkg.com/html5-qrcode' // Ez kell a 9.html kamerájához
 ];
 
-// Telepítéskor elmentjük, ami biztosan kell
+// 1. TELEPÍTÉS (Mindent elmentünk)
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
+      console.log('Offline fájlok mentése...');
       return cache.addAll(ASSETS);
     })
   );
 });
 
-// Aktiváláskor átvesszük az irányítást
+// 2. AKTIVÁLÁS
 self.addEventListener('activate', (event) => {
   event.waitUntil(clients.claim());
 });
 
-// A FŐ VARÁZSLAT: Hálózat, majd Cache (Network First)
+// 3. MŰKÖDÉS (Először Net, ha nincs, akkor Cache)
 self.addEventListener('fetch', (event) => {
+  // Csak a webes kérésekkel foglalkozunk
+  if (!event.request.url.startsWith('http')) return;
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // 1. HA VAN NET:
-        // Ha sikeres a letöltés és érvényes a válasz...
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
+        // Ha van net, frissítjük a tárolt verziót
+        if (response && response.status === 200) {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
         }
-
-        // ...akkor csinálunk egy másolatot a Cache-be a jövőre nézve...
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-
-        // ...és odaadjuk a friss adatot a felhasználónak.
         return response;
       })
       .catch(() => {
-        // 2. HA NINCS NET (Offline):
-        // Akkor elővesszük a legutóbb elmentett verziót.
+        // Ha nincs net, adjuk a mentettet
         return caches.match(event.request);
       })
   );
