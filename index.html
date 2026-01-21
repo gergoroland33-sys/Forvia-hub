@@ -120,40 +120,33 @@
         .calendar-box.type-holiday { border-left-color: #34d399; }
         .calendar-box.type-workday { border-left-color: #fbbf24; }
 
-        /* --- ÚJ STÍLUS: MŰSZAK INFORMÁCIÓ (ICONS NÉLKÜL) --- */
+        /* --- PRO MŰSZAK INFO STYLE --- */
         .shift-info-box {
-            margin-top: 12px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.25);
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            animation: fadeIn 0.5s;
+            margin-top: 15px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(59, 130, 246, 0.2); /* Finom kék keret */
+            border-radius: 12px;
+            overflow: hidden;
+            animation: fadeIn 0.5s ease;
         }
-        .shift-title {
-            font-size: 0.7rem;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
-            font-weight: 700;
+        .shift-header-row {
+            background: rgba(59, 130, 246, 0.1); /* Fejléc háttér */
+            padding: 8px 12px;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+            font-size: 0.65rem; color: #60a5fa; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 1.2px;
+            display: flex; align-items: center; gap: 6px;
         }
-        .shift-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: white;
+        .shift-content-row {
+            display: flex; justify-content: space-between; padding: 12px 14px;
         }
-        .shift-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
+        .shift-col { display: flex; flex-direction: column; gap: 4px; }
+        .shift-label-sub { font-size: 0.7rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; }
+        .shift-value-main { 
+            font-size: 0.9rem; color: white; font-weight: 700; letter-spacing: 0.3px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
         }
-        .shift-letter {
-            color: var(--accent);
-            font-weight: 800;
-        }
+        .text-right { text-align: right; }
 
         .instruction-text {
             font-size: 1rem; line-height: 1.6; color: #cbd5e1; margin-bottom: 30px;
@@ -354,7 +347,7 @@
 <script>
     const nevnapok = {
         "01-01": "Alpár", "01-02": "Ábel", "01-03": "Genovéva, Benjámin", "01-04": "Titusz, Leona", "01-05": "Simon", "01-06": "Boldizsár", "01-07": "Attila, Ramóna", "01-08": "Gyöngyvér", "01-09": "Marcell", "01-10": "Melánia", "01-11": "Ágota", "01-12": "Ernő", "01-13": "Veronika", "01-14": "Bódog", "01-15": "Lóránt, Loránd", "01-16": "Gusztáv", "01-17": "Antal, Antónia", "01-18": "Piroska", "01-19": "Sára, Márió", "01-20": "Fábián, Sebestyén", "01-21": "Ágnes", "01-22": "Vince", "01-23": "Zelma, Rajmund", "01-24": "Timót", "01-25": "Pál", "01-26": "Vanda, Paula", "01-27": "Angelika", "01-28": "Károly, Karola", "01-29": "Adél", "01-30": "Martina, Gerda", "01-31": "Marcella",
-        "02-01": "Ignác", "02-02": "Karolina, Aida", "02-03": "Balázs", "02-04": "Ráhel, Csenge", "02-05": "Ágota, Ingrid", "02-06": "Dorottya, Dóra", "02-07": "Tódor, Rómeó", "02-08": "Aranka", "02-09": "Abigél, Alex", "02-10": "Elvira", "02-11": "Bertold, Marietta", "02-12": "Lívia, Lídia", "02-13": "Ella, Linda", "02-14": "Bálint, Valentin", "02-15": "Kolos, Georgina", "02-16": "Julianna, Lilla", "02-16": "Julianna, Lilla", "02-17": "Donát", "02-18": "Bernadett", "02-19": "Zsuzsanna", "02-20": "Aladár, Álmos", "02-21": "Eleonóra", "02-22": "Gerzson", "02-23": "Alfréd", "02-24": "Mátyás", "02-25": "Géza", "02-26": "Viktor, Győző", "02-27": "Gábor, Edina", "02-28": "Elemér", "02-29": "Auguszta",
+        "02-01": "Ignác", "02-02": "Karolina, Aida", "02-03": "Balázs", "02-04": "Ráhel, Csenge", "02-05": "Ágota, Ingrid", "02-06": "Dorottya, Dóra", "02-07": "Tódor, Rómeó", "02-08": "Aranka", "02-09": "Abigél, Alex", "02-10": "Elvira", "02-11": "Bertold, Marietta", "02-12": "Lívia, Lídia", "02-13": "Ella, Linda", "02-14": "Bálint, Valentin", "02-15": "Kolos, Georgina", "02-16": "Julianna, Lilla", "02-17": "Donát", "02-18": "Bernadett", "02-19": "Zsuzsanna", "02-20": "Aladár, Álmos", "02-21": "Eleonóra", "02-22": "Gerzson", "02-23": "Alfréd", "02-24": "Mátyás", "02-25": "Géza", "02-26": "Viktor, Győző", "02-27": "Gábor, Edina", "02-28": "Elemér", "02-29": "Auguszta",
         "03-01": "Albin", "03-02": "Lujza", "03-03": "Kornélia", "03-04": "Kázmér", "03-05": "Adorján, Adrián", "03-06": "Leonóra, Inez", "03-07": "Tamás", "03-08": "Zoltán", "03-09": "Franciska, Fanni", "03-10": "Ildikó", "03-11": "Szilárd", "03-12": "Gergely", "03-13": "Krisztián, Ajtony", "03-14": "Matild", "03-15": "Kristóf", "03-16": "Henrietta", "03-17": "Gertrúd, Patrik", "03-18": "Sándor, Ede", "03-19": "József, Bánk", "03-20": "Klaudia", "03-21": "Benedek", "03-22": "Beáta, Izolda", "03-23": "Emőke", "03-24": "Gábor, Karina", "03-25": "Irén, Irisz", "03-26": "Emánuel", "03-27": "Hajnalka", "03-28": "Gedeon, Johanna", "03-29": "Auguszta", "03-30": "Zalán", "03-31": "Árpád",
         "04-01": "Hugó", "04-02": "Áron", "04-03": "Buda, Richárd", "04-04": "Izidor", "04-05": "Vince", "04-06": "Vilmos, Bíborka", "04-07": "Herman", "04-08": "Dénes", "04-09": "Erhard", "04-10": "Zsolt", "04-11": "Leó, Szaniszló", "04-12": "Gyula", "04-13": "Ida", "04-14": "Tibor", "04-15": "Anasztázia, Tas", "04-16": "Csongor", "04-17": "Rudolf", "04-18": "Andrea, Ilma", "04-19": "Emma", "04-20": "Tivadar", "04-21": "Konrád", "04-22": "Csilla, Noémi", "04-23": "Béla, Adalbert", "04-24": "György", "04-25": "Márk", "04-26": "Ervin", "04-27": "Zita, Mariann", "04-28": "Valéria", "04-29": "Péter", "04-30": "Katalin, Kitti",
         "05-01": "Fülöp, Jakab", "05-02": "Zsigmond", "05-03": "Tímea, Irma", "05-04": "Mónika, Flórián", "05-05": "Györgyi", "05-06": "Ivett, Frida", "05-07": "Gizella", "05-08": "Mihály", "05-09": "Gergely", "05-10": "Ármin, Pálma", "05-11": "Ferenc", "05-12": "Pongrác", "05-13": "Szervác, Imola", "05-14": "Bonifác", "05-15": "Zsófia, Szonja", "05-16": "Mózes, Botond", "05-17": "Paszkál", "05-18": "Erik, Alexandra", "05-19": "Ivó, Milán", "05-20": "Bernát, Felícia", "05-21": "Konstantin", "05-22": "Júlia, Rita", "05-23": "Dezső", "05-24": "Eszter, Eliza", "05-25": "Orbán", "05-26": "Fülöp, Evelin", "05-27": "Hella", "05-28": "Emil, Csanád", "05-29": "Magdolna", "05-30": "Janka, Zsanett", "05-31": "Angéla, Petronella",
@@ -439,7 +432,7 @@
             daysBadge.innerText = `${daysLeft} NAP`;
         }
 
-        // --- MŰSZAK INFO MEGJELENÍTÉSE HA VAN ---
+        // --- PRO MŰSZAK INFO MEGJELENÍTÉSE ---
         const oldInfo = document.getElementById('shift-info-display');
         if (oldInfo) oldInfo.remove();
 
@@ -447,16 +440,19 @@
             const shiftDiv = document.createElement('div');
             shiftDiv.id = 'shift-info-display';
             shiftDiv.className = 'shift-info-box';
+            // Itt a szerkezet és a szöveg módosult "pro" verzióra
             shiftDiv.innerHTML = `
-                <div class="shift-title">ÉRINTETT MŰSZAKOK:</div>
-                <div class="shift-row">
-                    <div class="shift-item">
-                        <span>Nappal:</span>
-                        <span class="shift-letter">${nextEvent.shiftDay}</span>
+                <div class="shift-header-row">
+                    <span>ÉRINTETT MŰSZAKOK</span>
+                </div>
+                <div class="shift-content-row">
+                    <div class="shift-col">
+                        <span class="shift-label-sub">Nappal</span>
+                        <span class="shift-value-main">${nextEvent.shiftDay} műszak</span>
                     </div>
-                    <div class="shift-item">
-                        <span>Éjszaka:</span>
-                        <span class="shift-letter">${nextEvent.shiftNight}</span>
+                    <div class="shift-col text-right">
+                        <span class="shift-label-sub">Éjszaka</span>
+                        <span class="shift-value-main">${nextEvent.shiftNight} műszak</span>
                     </div>
                 </div>
             `;
