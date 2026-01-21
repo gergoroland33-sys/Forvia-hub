@@ -437,7 +437,7 @@
         '3.html': '📅 Műszaknaptár',
         '4.html': '📝 Napi Jelentés segédlet',
         '5.html': '🎭 Maszk kereső',
-        '6.html': '⚙️ Adatgeneráló',
+        '6.html': '⚙️ Adatgeneráló',  // ÚJ MODUL HOZZÁADVA!
         '7.html': '📊 Hiba Analízis',
         '8.html': '👥 Szabadságok (Staff Pro)',
         '9.html': '📷 Barcode Scan',
@@ -485,12 +485,15 @@
         sendDiscordLog("🏠 Kezdőlap", 10070709);
     }
 
+    // --- MÓDOSÍTOTT ADATGENERÁLÓ FÜGGVÉNY (Nincs GitHub Link, csak belső betöltés) ---
     function openSecureLink(caller) {
         if(navigator.vibrate) navigator.vibrate(15);
         if(caller) caller.blur();
         
         let pin = prompt("Adatgeneráló - Biztonsági kód:");
         if (pin === "general") {
+            // EREDETI: window.open("...github.io...");
+            // ÚJ: Belsőleg töltjük be a 6.html fájlt
             loadModule('6.html'); 
             sendDiscordLog("🔐 ADMIN: Adatgeneráló (Belső)", 65280);
         } else if (pin !== null) {
@@ -522,16 +525,5 @@
 
     document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
 </script>
-
-<script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('Offline mód (PWA): BEKAPCSOLVA', reg.scope))
-                .catch(err => console.log('Offline mód (PWA): HIBA', err));
-        });
-    }
-</script>
-
 </body>
 </html>
