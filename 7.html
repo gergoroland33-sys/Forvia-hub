@@ -3,139 +3,136 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Forvia Quality Analysis Pro</title>
+<title>Forvia SMT Managerial Dashboard</title>
 <style>
-/* --- ALAP BEÁLLÍTÁSOK (Változatlan) --- */
+/* --- PRO DESIGN SYSTEM --- */
 :root {
-    --bg-app: #0f172a;
-    --bg-card: #1e293b;
-    --bg-sub: #334155;
-    --primary: #3b82f6;
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    --danger: #ef4444;
-    --warning: #f59e0b;
-    --border: #334155;
+    --bg-app: #0f172a;       /* Sötétkék háttér */
+    --bg-card: #1e293b;      /* Kártya háttér */
+    --primary: #3b82f6;      /* Forvia Kék */
+    --text-main: #f8fafc;    /* Fehér szöveg */
+    --text-muted: #94a3b8;   /* Szürke szöveg */
+    --danger: #ef4444;       /* Piros (Pick hiba) */
+    --warning: #f59e0b;      /* Sárga (Vision hiba) */
+    --success: #10b981;      /* Zöld (Yield) */
+    --border: #334155;       /* Keret */
 }
-
-* { box-sizing: border-box; }
 
 body {
-    font-family: 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     background-color: var(--bg-app);
     color: var(--text-main);
-    margin: 0; padding: 15px;
+    margin: 0; padding: 20px;
+    font-size: 14px;
 }
 
-.container { max-width: 1200px; margin: 0 auto; }
+.container { max-width: 1400px; margin: 0 auto; }
 
+/* HEADER */
 header {
     display: flex; justify-content: space-between; align-items: center;
-    padding-bottom: 15px; border-bottom: 1px solid var(--border); margin-bottom: 15px;
+    padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px;
 }
-.brand h1 { margin: 0; font-size: 1.4rem; text-transform: uppercase; letter-spacing: 1.5px; }
-.brand span { color: var(--primary); font-weight: 800; }
-.meta-info { font-size: 0.85rem; color: var(--text-muted); text-align: right; }
+.brand h1 { margin: 0; font-size: 1.8rem; text-transform: uppercase; letter-spacing: 1px; color: white; }
+.brand span { color: var(--primary); font-weight: 900; }
+.brand .subtitle { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; margin-top: 5px; }
 
-.upload-zone {
-    background: linear-gradient(145deg, var(--bg-card), var(--bg-app));
-    border: 2px dashed var(--border);
-    padding: 15px; text-align: center; border-radius: 12px;
-    margin-bottom: 15px; cursor: pointer; transition: 0.3s;
+/* CONTROLS & FILTER */
+.controls-area {
+    display: flex; gap: 15px; margin-bottom: 25px; align-items: stretch;
 }
+.upload-btn {
+    background: var(--primary); color: white; border: none; padding: 0 25px;
+    border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center;
+    transition: 0.2s;
+}
+.upload-btn:hover { background: #2563eb; }
 
 .filter-bar {
     display: flex; gap: 10px; background: var(--bg-card);
-    padding: 12px; border-radius: 10px; margin-bottom: 20px;
-    border: 1px solid var(--border); flex-wrap: wrap;
+    padding: 10px 15px; border-radius: 8px; border: 1px solid var(--border); flex: 1;
 }
-.filter-group { flex: 1; min-width: 120px; }
-.filter-group label { display: block; font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; font-weight: bold; }
+.filter-group { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.filter-group label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 4px; }
 select {
-    width: 100%; background: var(--bg-app); color: white;
-    border: 1px solid var(--border); padding: 6px; border-radius: 6px; font-size: 0.85rem;
+    background: var(--bg-app); color: white; border: 1px solid var(--border);
+    padding: 8px; border-radius: 4px; font-size: 0.9rem; width: 100%;
 }
 
-.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
-.stat-card {
-    background: var(--bg-card); padding: 15px; border-radius: 12px;
-    position: relative; border: 1px solid var(--border);
+/* KPI CARDS (Managerial Level) */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+.kpi-card {
+    background: var(--bg-card); padding: 20px; border-radius: 10px;
+    border: 1px solid var(--border); position: relative; overflow: hidden;
 }
-.stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--primary); }
-.stat-card.danger::before { background: var(--danger); }
-.stat-card.warning::before { background: var(--warning); }
-.stat-value { font-size: 1.6rem; font-weight: 800; display: block; margin: 2px 0; }
-.stat-sub { font-size: 0.75rem; color: var(--text-muted); }
-
-.analysis-section { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-.panel { background: var(--bg-card); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; }
-.panel-header { padding: 10px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border); text-align: center; }
-.panel-title { font-size: 0.9rem; font-weight: bold; margin: 0; text-transform: uppercase; }
-
-.critical-banner { display: none; padding: 8px; margin: 10px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; border: 1px solid transparent; justify-content: space-between; }
-.critical-banner.red-style { color: var(--danger); border-color: var(--danger); background: rgba(239, 68, 68, 0.1); }
-.critical-banner.yellow-style { color: var(--warning); border-color: var(--warning); background: rgba(245, 158, 11, 0.1); }
-
-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-td, th { padding: 8px 12px; text-align: left; }
-th { color: var(--text-muted); font-size: 0.65rem; text-transform: uppercase; border-bottom: 1px solid var(--border); }
-td { border-bottom: 1px solid rgba(255,255,255,0.05); }
-
-.badge-location {
-    display: inline-block; padding: 2px 6px; border-radius: 4px;
-    font-size: 0.7rem; background: var(--bg-app); border: 1px solid var(--border); 
-    color: #3b82f6; font-weight: bold; margin-top: 4px;
+.kpi-card h3 { margin: 0 0 10px 0; font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; }
+.kpi-value { font-size: 2rem; font-weight: 800; display: block; line-height: 1; }
+.kpi-sub { font-size: 0.85rem; margin-top: 8px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+.badge-ppm {
+    background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;
 }
 
-.bar-container { height: 4px; width: 100%; background: var(--bg-sub); border-radius: 2px; margin-top: 5px; overflow: hidden; }
-.bar-fill { height: 100%; border-radius: 2px; }
+/* ANALYSIS PANELS */
+.analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.panel { background: var(--bg-card); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; }
+.panel-header {
+    padding: 15px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.15);
+}
+.panel-title { font-size: 1rem; font-weight: 700; text-transform: uppercase; margin: 0; display: flex; align-items: center; gap: 10px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 
-/* --- ⚡ EGYLAPOS PROFI NYOMTATÁS JAVÍTÁSA (75% ZOOM) ⚡ --- */
+/* Critical Alert Banner inside Panel */
+.alert-banner {
+    margin: 15px 15px 5px 15px; padding: 10px 15px; border-radius: 6px;
+    font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center;
+    border-left: 4px solid;
+}
+
+/* TABLE */
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+th { text-align: left; padding: 12px 15px; color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+td { padding: 10px 15px; border-bottom: 1px solid rgba(255,255,255,0.03); vertical-align: middle; }
+
+.item-name { font-weight: 700; font-size: 0.95rem; color: #fff; display: block; }
+.item-loc { font-size: 0.75rem; color: var(--primary); margin-top: 2px; display: inline-block; background: rgba(59, 130, 246, 0.1); padding: 2px 6px; border-radius: 4px; }
+.stat-primary { font-weight: 800; font-size: 1rem; text-align: right; }
+.stat-secondary { font-size: 0.75rem; color: var(--text-muted); text-align: right; margin-top: 2px; }
+
+/* PROGRESS BAR IN TABLE */
+.prog-track { width: 100%; height: 4px; background: rgba(255,255,255,0.1); margin-top: 8px; border-radius: 2px; overflow: hidden; }
+.prog-fill { height: 100%; border-radius: 2px; }
+
+/* PRINT STYLES (A4 ONE PAGE) */
 @media print {
-    @page { size: A4 portrait; margin: 5mm; }
-    
+    @page { size: A4 landscape; margin: 5mm; }
     body { 
-        background: white !important; 
-        color: black !important; 
-        padding: 0 !important;
-        -webkit-print-color-adjust: exact !important; 
-        print-color-adjust: exact !important;
-        zoom: 75% !important; /* Visszaállítva az eredeti méretezésre az egy laphoz */
+        background: white !important; color: black !important; padding: 0 !important; zoom: 68% !important; 
+        -webkit-print-color-adjust: exact !important;
     }
-
-    .container { width: 100% !important; max-width: 100% !important; margin: 0 !important; }
-
-    /* Szövegek kontrasztja */
-    .brand h1, #fileDisplay, .panel-title { color: black !important; }
-    .brand span { color: #2563eb !important; }
-    .stat-sub, th { color: #475569 !important; }
-
-    /* Panelek és kártyák */
-    .stat-card, .panel { 
-        background: white !important; 
-        border: 1px solid #cbd5e1 !important; 
-        box-shadow: none !important;
-    }
+    .controls-area { display: none !important; }
+    .container { max-width: 100% !important; }
     
-    .panel-header { background: #f1f5f9 !important; border-bottom: 1px solid #cbd5e1 !important; }
-    td { border-bottom: 1px solid #e2e8f0 !important; color: black !important; }
-    td div[style*="color:#fff"] { color: black !important; }
-
-    .badge-location { 
-        background: #f1f5f9 !important; 
-        color: #1d4ed8 !important; 
-        border: 1px solid #bfdbfe !important; 
-    }
-
-    .bar-container { background: #f1f5f9 !important; border: 1px solid #e2e8f0 !important; }
-
-    /* Elemek elrejtése a helytakarékosság miatt */
-    .upload-zone, .filter-bar, .meta-info button { display: none !important; }
+    /* Colors for Print */
+    .brand h1 { color: black !important; }
+    .kpi-card, .panel { background: white !important; border: 1px solid #ccc !important; box-shadow: none !important; }
+    .panel-header { background: #f0f0f0 !important; border-bottom: 1px solid #ccc !important; }
+    .item-name { color: #000 !important; }
+    td { border-bottom: 1px solid #eee !important; }
+    .item-loc { background: #eff6ff !important; color: #1d4ed8 !important; border: 1px solid #bfdbfe; }
     
-    /* Grid elrendezés kényszerítése */
-    .stats-grid { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 10px !important; margin-bottom: 10px !important; }
-    .analysis-section { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 15px !important; }
+    /* Stat colors override for print readability */
+    .text-danger { color: #dc2626 !important; }
+    .text-warning { color: #d97706 !important; }
+    .text-success { color: #059669 !important; }
 }
+
+/* UTILS */
+.text-danger { color: var(--danger); }
+.text-warning { color: var(--warning); }
+.text-success { color: var(--success); }
+.bg-danger-sub { background: rgba(239, 68, 68, 0.1); color: var(--danger); border-color: var(--danger); }
+.bg-warning-sub { background: rgba(245, 158, 11, 0.1); color: var(--warning); border-color: var(--warning); }
 </style>
 </head>
 <body>
@@ -143,71 +140,93 @@ td { border-bottom: 1px solid rgba(255,255,255,0.05); }
 <div class="container">
     <header>
         <div class="brand">
-            <h1>Forvia <span>Quality Analytics</span></h1>
-            <div style="font-size:0.75rem; color:var(--text-muted);">SMT Line Performance Dashboard</div>
+            <h1>Forvia <span>SMT Analytics</span></h1>
+            <div class="subtitle">Production Quality & Attrition Report</div>
         </div>
-        <div class="meta-info">
-            <div id="fileDisplay">Várakozás fájlra...</div>
-            <button onclick="window.print()" style="margin-top:5px; padding:6px 12px; background:var(--primary); color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">NYOMTATÁS</button>
+        <div style="text-align:right">
+            <div id="reportDate" style="font-weight:bold; font-size:0.9rem;">2024-05-15</div>
+            <div style="font-size:0.8rem; color:var(--text-muted)">Generated by QA Pro</div>
         </div>
     </header>
 
-    <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
-        <div style="font-size:1rem; font-weight:bold;">📂 CSV Adatfájl Betöltése</div>
+    <div class="controls-area">
+        <div class="upload-btn" onclick="document.getElementById('fileInput').click()">
+            📂 Adatfájl Betöltése (CSV)
+        </div>
         <input type="file" id="fileInput" accept=".csv,.txt" style="display:none">
+
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label>Gépsor (Line)</label>
+                <select id="filterLine" onchange="filterLineChanged()"><option value="mind">Teljes Gyár</option></select>
+            </div>
+            <div class="filter-group">
+                <label>Beültető Gép (Machine)</label>
+                <select id="filterMachine" onchange="updateView()"><option value="mind">Minden Gép</option></select>
+            </div>
+            <div class="filter-group">
+                <label>Toplista Méret</label>
+                <select id="topLimit" onchange="updateView()">
+                    <option value="5">Top 5 (Fókusz)</option>
+                    <option value="10" selected>Top 10 (Normál)</option>
+                    <option value="15">Top 15 (Részletes)</option>
+                </select>
+            </div>
+        </div>
+        <button onclick="window.print()" style="background:#334155; color:white; border:none; padding:0 20px; border-radius:6px; cursor:pointer; font-weight:bold;">🖨️ PDF</button>
     </div>
 
-    <div class="filter-bar">
-        <div class="filter-group">
-            <label>GÉPSOR (A)</label>
-            <select id="filterGepsorA" onchange="updateView()"><option value="mind">Összes</option></select>
+    <div class="kpi-grid">
+        <div class="kpi-card" style="border-top: 4px solid var(--primary);">
+            <h3>Gyártott Mennyiség</h3>
+            <span class="kpi-value" id="kpiTotal">0</span>
+            <div class="kpi-sub" style="color:var(--text-muted)">Beültetett alkatrész</div>
         </div>
-        <div class="filter-group">
-            <label>GÉP MEGNEVEZÉS</label>
-            <select id="filterGepsor" onchange="updateView()"><option value="mind">Összes</option></select>
+        
+        <div class="kpi-card" style="border-top: 4px solid var(--success);">
+            <h3>First Pass Yield (Kihozatal)</h3>
+            <span class="kpi-value text-success" id="kpiYield">100%</span>
+            <div class="kpi-sub">Folyamat hatékonyság</div>
         </div>
-        <div class="filter-group">
-            <label>LISTA HOSSZA</label>
-            <select id="topLimit" onchange="updateView()">
-                <option value="5">Top 5</option>
-                <option value="10" selected>Top 10</option>
-                <option value="15">Top 15</option>
-            </select>
+
+        <div class="kpi-card" style="border-top: 4px solid var(--danger);">
+            <h3>Felvételi Hiba (Pick)</h3>
+            <span class="kpi-value text-danger" id="kpiPickRate">0.00%</span>
+            <div class="kpi-sub text-danger">
+                <span id="kpiPickPPM" class="badge-ppm">0 PPM</span>
+                <span>veszteség</span>
+            </div>
+        </div>
+
+        <div class="kpi-card" style="border-top: 4px solid var(--warning);">
+            <h3>Felismerési Hiba (Vision)</h3>
+            <span class="kpi-value text-warning" id="kpiVisRate">0.00%</span>
+            <div class="kpi-sub text-warning">
+                <span id="kpiVisPPM" class="badge-ppm">0 PPM</span>
+                <span>veszteség</span>
+            </div>
         </div>
     </div>
 
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-title">Termelés</div>
-            <span class="stat-value" id="totalBeult" style="color:var(--primary)">0</span>
-            <div class="stat-sub">Összes beültetés</div>
-        </div>
-        <div class="stat-card danger">
-            <div class="stat-title">Felvételi Hiba</div>
-            <span class="stat-value" id="totalFelv" style="color:var(--danger)">0</span>
-            <div class="stat-sub" id="rateFelv">0.00%</div>
-        </div>
-        <div class="stat-card warning">
-            <div class="stat-title">Kamera Hiba</div>
-            <span class="stat-value" id="totalKam" style="color:var(--warning)">0</span>
-            <div class="stat-sub" id="rateKam">0.00%</div>
-        </div>
-    </div>
-
-    <div class="analysis-section">
+    <div class="analysis-grid">
         <div class="panel">
-            <div class="panel-header"><h3 class="panel-title" style="color:var(--danger)">Top Felvételi Hibák</h3></div>
-            <div id="worstFelvBadge" class="critical-banner red-style"></div>
-            <table id="tableFelv">
-                <thead><tr><th>Cikkszám / Helyszín</th><th style="text-align:right">Hiba</th></tr></thead>
+            <div class="panel-header">
+                <h3 class="panel-title text-danger"><span class="dot" style="background:var(--danger)"></span> KRITIKUS FELVÉTELI HIBÁK</h3>
+            </div>
+            <div id="alertPick" class="alert-banner bg-danger-sub" style="display:none"></div>
+            <table id="tablePick">
+                <thead><tr><th>Alkatrész / Feeder Pozíció</th><th style="text-align:right">Elszóródás / Arány</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
+
         <div class="panel">
-            <div class="panel-header"><h3 class="panel-title" style="color:var(--warning)">Top Kamera Hibák</h3></div>
-            <div id="worstKamBadge" class="critical-banner yellow-style"></div>
-            <table id="tableKam">
-                <thead><tr><th>Cikkszám / Helyszín</th><th style="text-align:right">Hiba</th></tr></thead>
+            <div class="panel-header">
+                <h3 class="panel-title text-warning"><span class="dot" style="background:var(--warning)"></span> KRITIKUS FELISMERÉSI HIBÁK</h3>
+            </div>
+            <div id="alertVis" class="alert-banner bg-warning-sub" style="display:none"></div>
+            <table id="tableVis">
+                <thead><tr><th>Alkatrész / Feeder Pozíció</th><th style="text-align:right">Elszóródás / Arány</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -215,91 +234,215 @@ td { border-bottom: 1px solid rgba(255,255,255,0.05); }
 </div>
 
 <script>
-let allData = [];
+/* --- ADATKEZELÉS ÉS LOGIKA --- */
+let rawData = [];
+let lineMachineMap = {}; // Struktúra: { "Line1": ["GépA", "GépB"], "Line2": [...] }
 
+// 1. Dátum beállítása
+document.getElementById('reportDate').innerText = new Date().toLocaleDateString('hu-HU', { year: 'numeric', month: 'long', day: 'numeric' });
+
+// 2. Fájl Beolvasás
 document.getElementById('fileInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
-    document.getElementById('fileDisplay').innerText = `Fájl: ${file.name}`;
+    
     const reader = new FileReader();
     reader.onload = (ev) => {
-        const lines = ev.target.result.split('\n').map(x => x.trim()).filter(x => x);
-        let sep = lines[0].indexOf(';') > -1 ? ';' : ',';
-        allData = lines.slice(1).map(line => {
-            const c = line.split(sep);
-            return { 
-                gA: c[0] ? c[0].trim() : "Ismeretlen", 
-                g: c[1] ? c[1].trim() : "Ismeretlen", 
-                cikk: c[2] ? c[2].trim() : "Ismeretlen", 
-                b: parseInt(c[3])||0, 
-                f: parseInt(c[4])||0, 
-                k: parseInt(c[5])||0 
-            };
-        });
-        populateFilters();
-        updateView();
+        const text = ev.target.result;
+        processData(text);
     };
     reader.readAsText(file);
 });
 
-function populateFilters() {
-    const gA = [...new Set(allData.map(d => d.gA))].sort();
-    const g = [...new Set(allData.map(d => d.g))].sort();
-    const fill = (id, items) => {
-        const s = document.getElementById(id);
-        s.innerHTML = '<option value="mind">Összes</option>';
-        items.forEach(i => s.innerHTML += `<option value="${i}">${i}</option>`);
-    };
-    fill('filterGepsorA', gA);
-    fill('filterGepsor', g);
+function processData(csvText) {
+    const lines = csvText.split('\n').map(x => x.trim()).filter(x => x);
+    if(lines.length < 2) return;
+
+    // Automatikus elválasztó detektálás (; vagy ,)
+    const sep = lines[0].indexOf(';') > -1 ? ';' : ',';
+    
+    rawData = [];
+    lineMachineMap = {};
+
+    // Adatok betöltése és Térkép építése
+    for(let i=1; i<lines.length; i++) {
+        const col = lines[i].split(sep);
+        if(col.length < 4) continue;
+
+        const line = col[0] ? col[0].trim() : "Egyéb";
+        const machine = col[1] ? col[1].trim() : "Egyéb";
+        
+        // Térkép építése a dropdownhoz
+        if(!lineMachineMap[line]) lineMachineMap[line] = new Set();
+        lineMachineMap[line].add(machine);
+
+        rawData.push({
+            line: line,
+            machine: machine,
+            part: col[2] ? col[2].trim() : "Unknown",
+            good: parseInt(col[3]) || 0,
+            pickErr: parseInt(col[4]) || 0,
+            visErr: parseInt(col[5]) || 0
+        });
+    }
+
+    initFilters();
+    updateView();
 }
 
-function updateView() {
-    if (!allData.length) return;
-    const fGA = document.getElementById('filterGepsorA').value;
-    const fG = document.getElementById('filterGepsor').value;
-    const limit = parseInt(document.getElementById('topLimit').value);
-    const filtered = allData.filter(d => (fGA === 'mind' || d.gA === fGA) && (fG === 'mind' || d.g === fG));
-    let stats = { beult: 0, felv: 0, kam: 0, dF: {}, dK: {}, dLocs: {} };
-    filtered.forEach(d => {
-        stats.beult += d.b; stats.felv += d.f; stats.kam += d.k;
-        if (d.f > 0) stats.dF[d.cikk] = (stats.dF[d.cikk] || 0) + d.f;
-        if (d.k > 0) stats.dK[d.cikk] = (stats.dK[d.cikk] || 0) + d.k;
-        if (!stats.dLocs[d.cikk]) stats.dLocs[d.cikk] = new Set();
-        if (d.f > 0 || d.k > 0) stats.dLocs[d.cikk].add(`${d.g} (${d.gA})`);
+function initFilters() {
+    const lineSelect = document.getElementById('filterLine');
+    lineSelect.innerHTML = '<option value="mind">Teljes Gyár (Összes)</option>';
+    
+    Object.keys(lineMachineMap).sort().forEach(line => {
+        lineSelect.innerHTML += `<option value="${line}">${line}</option>`;
     });
-    document.getElementById('totalBeult').innerText = stats.beult.toLocaleString();
-    document.getElementById('totalFelv').innerText = stats.felv.toLocaleString();
-    document.getElementById('totalKam').innerText = stats.kam.toLocaleString();
-    document.getElementById('rateFelv').innerText = (stats.beult > 0 ? ((stats.felv/stats.beult)*100).toFixed(2) : "0.00") + "% arány";
-    document.getElementById('rateKam').innerText = (stats.beult > 0 ? ((stats.kam/stats.beult)*100).toFixed(2) : "0.00") + "% arány";
-    renderTable('tableFelv', stats.dF, stats.dLocs, stats.felv, limit, 'worstFelvBadge', 'red-style', 'var(--danger)');
-    renderTable('tableKam', stats.dK, stats.dLocs, stats.kam, limit, 'worstKamBadge', 'yellow-style', 'var(--warning)');
+
+    // Reset machine filter
+    filterLineChanged(); 
 }
 
-function renderTable(tableId, dataDict, locDict, totalError, limit, badgeId, badgeClass, colorVar) {
+// 3. Intelligens Szűrés (Ez volt a kérésed!)
+function filterLineChanged() {
+    const selectedLine = document.getElementById('filterLine').value;
+    const machineSelect = document.getElementById('filterMachine');
+    
+    machineSelect.innerHTML = '<option value="mind">Minden Gép</option>';
+    
+    if (selectedLine !== 'mind' && lineMachineMap[selectedLine]) {
+        // Csak a választott sorhoz tartozó gépek
+        const machines = Array.from(lineMachineMap[selectedLine]).sort();
+        machines.forEach(m => {
+            machineSelect.innerHTML += `<option value="${m}">${m}</option>`;
+        });
+    } else {
+        // Ha "Teljes Gyár", akkor az összes létező gép
+        const allMachines = new Set();
+        Object.values(lineMachineMap).forEach(s => s.forEach(m => allMachines.add(m)));
+        Array.from(allMachines).sort().forEach(m => {
+            machineSelect.innerHTML += `<option value="${m}">${m}</option>`;
+        });
+    }
+    updateView();
+}
+
+// 4. Számítás és Megjelenítés (Menedzseri logika)
+function updateView() {
+    if(rawData.length === 0) return;
+
+    const sLine = document.getElementById('filterLine').value;
+    const sMach = document.getElementById('filterMachine').value;
+    const limit = parseInt(document.getElementById('topLimit').value);
+
+    // Szűrés
+    const data = rawData.filter(d => 
+        (sLine === 'mind' || d.line === sLine) &&
+        (sMach === 'mind' || d.machine === sMach)
+    );
+
+    // Aggregálás
+    let sumGood = 0, sumPick = 0, sumVis = 0;
+    let pickByPart = {}, visByPart = {};
+    let locByPart = {}; // Hol fordult elő?
+
+    data.forEach(d => {
+        sumGood += d.good;
+        sumPick += d.pickErr;
+        sumVis += d.visErr;
+
+        if(d.pickErr > 0) pickByPart[d.part] = (pickByPart[d.part] || 0) + d.pickErr;
+        if(d.visErr > 0) visByPart[d.part] = (visByPart[d.part] || 0) + d.visErr;
+
+        if(d.pickErr > 0 || d.visErr > 0) {
+            if(!locByPart[d.part]) locByPart[d.part] = new Set();
+            locByPart[d.part].add(`${d.machine} (${d.line})`);
+        }
+    });
+
+    // MENEDZSERI KPI SZÁMÍTÁS (Javított képletek!)
+    // Total Usage = Good + PickErrors + VisionErrors (Minden, amit elhasználtunk a tekercsről)
+    const totalUsage = sumGood + sumPick + sumVis;
+
+    // Pick Rate: Hiba / Total Usage
+    const pickRate = totalUsage > 0 ? (sumPick / totalUsage) * 100 : 0;
+    const pickPPM = totalUsage > 0 ? Math.round((sumPick / totalUsage) * 1000000) : 0;
+
+    // Vision Rate: Hiba / Total Usage (Anyagveszteség szemlélet)
+    const visRate = totalUsage > 0 ? (sumVis / totalUsage) * 100 : 0;
+    const visPPM = totalUsage > 0 ? Math.round((sumVis / totalUsage) * 1000000) : 0;
+
+    // Yield (FPY): Good / Total Usage
+    const yieldVal = totalUsage > 0 ? (sumGood / totalUsage) * 100 : 100;
+
+    // DOM Update
+    document.getElementById('kpiTotal').innerText = sumGood.toLocaleString();
+    document.getElementById('kpiYield').innerText = yieldVal.toFixed(2) + "%";
+    
+    document.getElementById('kpiPickRate').innerText = pickRate.toFixed(2) + "%";
+    document.getElementById('kpiPickPPM').innerText = pickPPM.toLocaleString() + " PPM";
+    
+    document.getElementById('kpiVisRate').innerText = visRate.toFixed(2) + "%";
+    document.getElementById('kpiVisPPM').innerText = visPPM.toLocaleString() + " PPM";
+
+    // Táblázatok renderelése
+    renderTable('tablePick', pickByPart, locByPart, sumPick, limit, 'alertPick', 'text-danger', 'var(--danger)');
+    renderTable('tableVis', visByPart, locByPart, sumVis, limit, 'alertVis', 'text-warning', 'var(--warning)');
+}
+
+function renderTable(tableId, dataMap, locMap, totalErr, limit, alertId, textClass, colorVar) {
     const tbody = document.getElementById(tableId).querySelector('tbody');
     tbody.innerHTML = "";
-    const sorted = Object.entries(dataDict).sort((a, b) => b[1] - a[1]);
-    const badgeEl = document.getElementById(badgeId);
-    if (sorted.length > 0) {
-        badgeEl.innerHTML = `<span>⚠️ ${sorted[0][0]}</span> <span>${sorted[0][1].toLocaleString()} hiba</span>`;
-        badgeEl.style.display = "flex"; badgeEl.className = `critical-banner ${badgeClass}`;
-    } else { badgeEl.style.display = "none"; }
+    
+    // Rendezés csökkenő sorrendbe
+    const sorted = Object.entries(dataMap).sort((a,b) => b[1] - a[1]);
+    
+    // Top Hiba Kiemelés (Badge)
+    const alertEl = document.getElementById(alertId);
+    if(sorted.length > 0) {
+        const topItem = sorted[0];
+        const topShare = totalErr > 0 ? ((topItem[1] / totalErr) * 100).toFixed(1) : 0;
+        alertEl.style.display = "flex";
+        alertEl.innerHTML = `
+            <span><strong>TOP PROBLÉMA:</strong> ${topItem[0]}</span>
+            <span>A hibák <strong>${topShare}%</strong>-a!</span>
+        `;
+    } else {
+        alertEl.style.display = "none";
+    }
+
+    // Sorok generálása
     const maxVal = sorted.length > 0 ? sorted[0][1] : 1;
+    
     sorted.slice(0, limit).forEach((item, idx) => {
-        const locationBadge = Array.from(locDict[item[0]] || ["Ismeretlen"]).join(", ");
+        const part = item[0];
+        const count = item[1];
+        
+        // Helyszínek formázása (max 3, utána "...")
+        const locs = Array.from(locMap[part] || ["N/A"]);
+        let locString = locs.slice(0, 3).join(", ");
+        if(locs.length > 3) locString += `, +${locs.length - 3} gép`;
+
+        // Share % (Pareto)
+        const share = totalErr > 0 ? ((count / totalErr) * 100).toFixed(1) : "0.0";
+
         tbody.innerHTML += `
         <tr>
             <td>
-                <div style="font-weight:bold; color:#fff;">${idx+1}. ${item[0]}</div>
-                <div class="badge-location">${locationBadge}</div>
-                <div class="bar-container"><div class="bar-fill" style="width:${(item[1]/maxVal)*100}%; background:${colorVar}"></div></div>
+                <span class="item-name">${idx+1}. ${part}</span>
+                <span class="item-loc">📍 ${locString}</span>
+                <div class="prog-track">
+                    <div class="prog-fill" style="width:${(count/maxVal)*100}%; background:${colorVar}"></div>
+                </div>
             </td>
-            <td style="text-align:right; font-weight:800; font-size:1rem; color:${colorVar}">${item[1].toLocaleString()}</td>
-        </tr>`;
+            <td style="vertical-align:top">
+                <div class="stat-primary ${textClass}">${count.toLocaleString()} db</div>
+                <div class="stat-secondary">Össz. hiba ${share}%-a</div>
+            </td>
+        </tr>
+        `;
     });
 }
 </script>
+
 </body>
 </html>
