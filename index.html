@@ -120,20 +120,21 @@
         .calendar-box.type-holiday { border-left-color: #34d399; }
         .calendar-box.type-workday { border-left-color: #fbbf24; }
 
-        /* --- PRO MŰSZAK INFO STYLE --- */
+        /* --- PRO MŰSZAK INFO STYLE (MÓDOSÍTVA A KÉRÉS ALAPJÁN) --- */
         .shift-info-box {
             margin-top: 15px;
             background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(59, 130, 246, 0.2); /* Finom kék keret */
+            border: 1px solid rgba(59, 130, 246, 0.2); 
             border-radius: 12px;
             overflow: hidden;
             animation: fadeIn 0.5s ease;
         }
         .shift-header-row {
-            background: rgba(59, 130, 246, 0.1); /* Fejléc háttér */
+            /* Kérésre: olyan kék színű, mint a "Felhasználó" szöveg */
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); 
             padding: 8px 12px;
-            border-bottom: 1px solid rgba(59, 130, 246, 0.1);
-            font-size: 0.65rem; color: #60a5fa; font-weight: 800;
+            color: white; /* Fehér betű */
+            font-size: 0.65rem; font-weight: 800;
             text-transform: uppercase; letter-spacing: 1.2px;
             display: flex; align-items: center; gap: 6px;
         }
@@ -142,8 +143,9 @@
         }
         .shift-col { display: flex; flex-direction: column; gap: 4px; }
         .shift-label-sub { font-size: 0.7rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; }
+        
         .shift-value-main { 
-            font-size: 0.9rem; color: white; font-weight: 700; letter-spacing: 0.3px;
+            font-size: 0.9rem; font-weight: 700; letter-spacing: 0.3px;
             text-shadow: 0 1px 2px rgba(0,0,0,0.5);
         }
         .text-right { text-align: right; }
@@ -440,7 +442,7 @@
             const shiftDiv = document.createElement('div');
             shiftDiv.id = 'shift-info-display';
             shiftDiv.className = 'shift-info-box';
-            // Itt a szerkezet és a szöveg módosult "pro" verzióra
+            // Kért módosítás: Fehér betűjel, Kék műszak felirat
             shiftDiv.innerHTML = `
                 <div class="shift-header-row">
                     <span>ÉRINTETT MŰSZAKOK</span>
@@ -448,11 +450,17 @@
                 <div class="shift-content-row">
                     <div class="shift-col">
                         <span class="shift-label-sub">Nappal</span>
-                        <span class="shift-value-main">${nextEvent.shiftDay} műszak</span>
+                        <span class="shift-value-main">
+                            <span style="color:white; font-size:1.1rem;">${nextEvent.shiftDay}</span> 
+                            <span style="color:#60a5fa; font-size:0.8rem; text-transform: uppercase;">műszak</span>
+                        </span>
                     </div>
                     <div class="shift-col text-right">
                         <span class="shift-label-sub">Éjszaka</span>
-                        <span class="shift-value-main">${nextEvent.shiftNight} műszak</span>
+                        <span class="shift-value-main">
+                            <span style="color:white; font-size:1.1rem;">${nextEvent.shiftNight}</span> 
+                            <span style="color:#60a5fa; font-size:0.8rem; text-transform: uppercase;">műszak</span>
+                        </span>
                     </div>
                 </div>
             `;
