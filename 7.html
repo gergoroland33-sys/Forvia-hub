@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Forvia SMT Managerial Dashboard v3.2</title>
+<title>Forvia SMT Managerial Dashboard v3.3</title>
 <style>
 /* --- DESIGN SYSTEM --- */
 :root {
@@ -41,7 +41,16 @@ header {
 .brand span { color: var(--primary); font-weight: 900; }
 .brand .subtitle { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
 
-.header-actions { display: flex; gap: 10px; align-items: center; }
+.header-actions { display: flex; gap: 15px; align-items: center; }
+
+/* DÁTUM MEGJELENÍTŐ STÍLUSA */
+.date-display {
+    text-align: right;
+    border-right: 1px solid var(--border);
+    padding-right: 15px;
+}
+.date-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+.date-value { font-size: 1rem; font-weight: 700; color: white; }
 
 /* HELP BUTTON */
 .help-btn {
@@ -83,7 +92,6 @@ select {
 }
 .kpi-card h3 { margin: 0 0 5px 0; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); }
 
-/* KPI Value Styling - A két érték (Darab és %) megjelenítése */
 .kpi-main-val { font-size: 1.8rem; font-weight: 800; display: block; line-height: 1.1; margin-bottom: 4px; }
 .kpi-sub-val { font-size: 1rem; font-weight: 600; opacity: 0.9; display: block; }
 
@@ -137,10 +145,11 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
 .help-text { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
 .formula { background: rgba(0,0,0,0.3); padding: 5px; border-radius: 4px; font-family: monospace; color: #fff; display: block; margin-top: 5px;}
 
-/* --- RESPONSIVE MOBIL --- */
+/* --- RESPONSIVE --- */
 @media (max-width: 768px) {
     body { padding: 10px; }
     .header-actions { width: 100%; justify-content: space-between; margin-top: 10px; }
+    .date-display { border-right: none; padding-right: 0; }
     .controls-area { flex-direction: column; }
     .upload-btn { width: 100%; justify-content: center; }
     .filter-bar { width: 100%; flex-direction: column; }
@@ -151,7 +160,7 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
     .kpi-grid { grid-template-columns: 1fr; } 
 }
 
-/* --- NYOMTATÁS (LAPTOPRA - ÁLLÓ A4 - 1 OLDAL) --- */
+/* --- NYOMTATÁS (LAPTOP - ÁLLÓ A4 - 1 OLDAL) --- */
 @media print {
     @page { size: A4 portrait; margin: 5mm; }
     body { 
@@ -160,6 +169,11 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
         -webkit-print-color-adjust: exact !important;
     }
     .controls-area, .help-btn, .modal-overlay { display: none !important; }
+    /* A dátum maradjon látható nyomtatásban is */
+    .date-display { border-right: none !important; color: black !important; }
+    .date-label { color: #555 !important; }
+    .date-value { color: #000 !important; font-size: 1.2rem !important; }
+
     .container { max-width: 100% !important; margin: 0 !important; }
     .kpi-card, .panel { 
         background: white !important; border: 1px solid #ccc !important; 
@@ -198,7 +212,10 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
             <div class="subtitle">Production Quality & Attrition Dashboard by Fajcsik Valér 2026</div>
         </div>
         <div class="header-actions">
-            <div id="reportDate" style="font-weight:bold; font-size:0.9rem;"></div>
+            <div class="date-display">
+                <div class="date-label">Elemzett Időszak</div>
+                <div class="date-value" id="reportDate">MAI NAP</div>
+            </div>
             <button class="help-btn" onclick="toggleModal(true)">❓ MAGYARÁZAT</button>
         </div>
     </header>
@@ -318,6 +335,7 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
 <script>
 let rawData = [];
 let lineMachineMap = {}; 
+// Alapértelmezett dátum
 document.getElementById('reportDate').innerText = new Date().toLocaleDateString('hu-HU');
 
 function toggleModal(show) { document.getElementById('helpModal').style.display = show ? 'flex' : 'none'; }
@@ -325,6 +343,23 @@ function toggleModal(show) { document.getElementById('helpModal').style.display 
 document.getElementById('fileInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
+
+    // --- ÚJ FUNKCIÓ: DÁTUM KINYERÉSE A FÁJLNÉVBŐL ---
+    // Megkeresi a (...) közötti részt a fájl nevében
+    const fileName = file.name;
+    const dateMatch = fileName.match(/\((.*?)\)/); 
+    
+    // Ha van találat, azt írja ki, ha nincs, akkor a mai dátumot (vagy a fájl nevét)
+    if(dateMatch && dateMatch[1]) {
+        document.getElementById('reportDate').innerText = dateMatch[1];
+        // Kiemelés, hogy lássák, frissült
+        document.getElementById('reportDate').style.color = "var(--primary)";
+    } else {
+        // Ha nincs dátum a fájlnévben, marad a mai
+        document.getElementById('reportDate').innerText = new Date().toLocaleDateString('hu-HU');
+        document.getElementById('reportDate').style.color = "white";
+    }
+
     const reader = new FileReader();
     reader.onload = (ev) => processData(ev.target.result);
     reader.readAsText(file);
@@ -404,7 +439,6 @@ function updateView() {
     document.getElementById('kpiTotal').innerText = sumGood.toLocaleString();
     document.getElementById('kpiYield').innerText = yieldVal.toFixed(2) + "%";
     
-    // Itt töltjük be a Darabszámot ÉS a Százalékot is
     document.getElementById('kpiPickCount').innerText = sumPick.toLocaleString() + " db";
     document.getElementById('kpiPickRate').innerText = pickRate.toFixed(2) + "%";
     document.getElementById('kpiPickPPM').innerText = pickPPM.toLocaleString() + " PPM";
