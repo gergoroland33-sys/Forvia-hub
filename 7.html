@@ -3,26 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Forvia SMT Managerial Dashboard</title>
+<title>Forvia SMT Managerial Dashboard v3.1</title>
 <style>
-/* --- PRO DESIGN SYSTEM --- */
+/* --- DESIGN SYSTEM --- */
 :root {
-    --bg-app: #0f172a;       /* Sötétkék háttér */
-    --bg-card: #1e293b;      /* Kártya háttér */
-    --primary: #3b82f6;      /* Forvia Kék */
-    --text-main: #f8fafc;    /* Fehér szöveg */
-    --text-muted: #94a3b8;   /* Szürke szöveg */
-    --danger: #ef4444;       /* Piros (Pick hiba) */
-    --warning: #f59e0b;      /* Sárga (Vision hiba) */
-    --success: #10b981;      /* Zöld (Yield) */
-    --border: #334155;       /* Keret */
+    --bg-app: #0f172a;       
+    --bg-card: #1e293b;      
+    --bg-modal: rgba(15, 23, 42, 0.95);
+    --primary: #3b82f6;      
+    --text-main: #f8fafc;    
+    --text-muted: #94a3b8;   
+    --danger: #ef4444;       
+    --warning: #f59e0b;      
+    --success: #10b981;      
+    --border: #334155;       
 }
+
+* { box-sizing: border-box; }
 
 body {
     font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     background-color: var(--bg-app);
     color: var(--text-main);
-    margin: 0; padding: 20px;
+    margin: 0; padding: 15px;
     font-size: 14px;
 }
 
@@ -31,100 +34,164 @@ body {
 /* HEADER */
 header {
     display: flex; justify-content: space-between; align-items: center;
-    padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px;
+    padding-bottom: 15px; border-bottom: 1px solid var(--border); margin-bottom: 20px;
+    flex-wrap: wrap; gap: 10px;
 }
-.brand h1 { margin: 0; font-size: 1.8rem; text-transform: uppercase; letter-spacing: 1px; color: white; }
+.brand h1 { margin: 0; font-size: 1.5rem; text-transform: uppercase; letter-spacing: 1px; color: white; }
 .brand span { color: var(--primary); font-weight: 900; }
-.brand .subtitle { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; margin-top: 5px; }
+.brand .subtitle { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
 
-/* CONTROLS & FILTER */
+.header-actions { display: flex; gap: 10px; align-items: center; }
+
+/* HELP BUTTON */
+.help-btn {
+    background: transparent; border: 1px solid var(--border); color: var(--text-muted);
+    padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;
+    display: flex; align-items: center; gap: 5px; transition: 0.2s;
+}
+.help-btn:hover { background: var(--bg-card); color: white; border-color: var(--primary); }
+
+/* CONTROLS AREA */
 .controls-area {
-    display: flex; gap: 15px; margin-bottom: 25px; align-items: stretch;
+    display: flex; gap: 15px; margin-bottom: 20px; align-items: flex-start; flex-wrap: wrap;
 }
 .upload-btn {
-    background: var(--primary); color: white; border: none; padding: 0 25px;
+    background: var(--primary); color: white; border: none; padding: 10px 20px;
     border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center;
-    transition: 0.2s;
+    white-space: nowrap; height: 42px;
 }
 .upload-btn:hover { background: #2563eb; }
 
 .filter-bar {
     display: flex; gap: 10px; background: var(--bg-card);
-    padding: 10px 15px; border-radius: 8px; border: 1px solid var(--border); flex: 1;
+    padding: 10px; border-radius: 8px; border: 1px solid var(--border); flex: 1;
+    flex-wrap: wrap;
 }
-.filter-group { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-.filter-group label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 4px; }
+.filter-group { flex: 1; min-width: 140px; }
+.filter-group label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 4px; }
 select {
     background: var(--bg-app); color: white; border: 1px solid var(--border);
-    padding: 8px; border-radius: 4px; font-size: 0.9rem; width: 100%;
+    padding: 6px; border-radius: 4px; font-size: 0.9rem; width: 100%; height: 30px;
 }
 
-/* KPI CARDS (Managerial Level) */
-.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+/* KPI CARDS */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
 .kpi-card {
-    background: var(--bg-card); padding: 20px; border-radius: 10px;
-    border: 1px solid var(--border); position: relative; overflow: hidden;
+    background: var(--bg-card); padding: 15px; border-radius: 10px;
+    border: 1px solid var(--border); position: relative;
 }
-.kpi-card h3 { margin: 0 0 10px 0; font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; }
-.kpi-value { font-size: 2rem; font-weight: 800; display: block; line-height: 1; }
-.kpi-sub { font-size: 0.85rem; margin-top: 8px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+.kpi-card h3 { margin: 0 0 5px 0; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); }
+.kpi-value { font-size: 1.8rem; font-weight: 800; display: block; line-height: 1.1; }
+.kpi-sub { font-size: 0.8rem; margin-top: 5px; font-weight: 500; display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
 .badge-ppm {
-    background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;
+    background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px; font-size: 0.7rem;
 }
 
-/* ANALYSIS PANELS */
-.analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+/* PANELS */
+.analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 .panel { background: var(--bg-card); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; }
 .panel-header {
-    padding: 15px; border-bottom: 1px solid var(--border);
-    display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.15);
+    padding: 10px 15px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2);
 }
-.panel-title { font-size: 1rem; font-weight: 700; text-transform: uppercase; margin: 0; display: flex; align-items: center; gap: 10px; }
-.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.panel-title { font-size: 0.9rem; font-weight: 700; text-transform: uppercase; margin: 0; display: flex; align-items: center; gap: 8px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 
-/* Critical Alert Banner inside Panel */
 .alert-banner {
-    margin: 15px 15px 5px 15px; padding: 10px 15px; border-radius: 6px;
-    font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center;
-    border-left: 4px solid;
+    margin: 10px 10px 0 10px; padding: 8px 12px; border-radius: 6px;
+    font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center;
+    border-left: 3px solid;
 }
 
 /* TABLE */
-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-th { text-align: left; padding: 12px 15px; color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; border-bottom: 1px solid var(--border); }
-td { padding: 10px 15px; border-bottom: 1px solid rgba(255,255,255,0.03); vertical-align: middle; }
+table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+th { text-align: left; padding: 8px 12px; color: var(--text-muted); font-size: 0.65rem; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
 
-.item-name { font-weight: 700; font-size: 0.95rem; color: #fff; display: block; }
-.item-loc { font-size: 0.75rem; color: var(--primary); margin-top: 2px; display: inline-block; background: rgba(59, 130, 246, 0.1); padding: 2px 6px; border-radius: 4px; }
-.stat-primary { font-weight: 800; font-size: 1rem; text-align: right; }
-.stat-secondary { font-size: 0.75rem; color: var(--text-muted); text-align: right; margin-top: 2px; }
-
-/* PROGRESS BAR IN TABLE */
-.prog-track { width: 100%; height: 4px; background: rgba(255,255,255,0.1); margin-top: 8px; border-radius: 2px; overflow: hidden; }
+.item-name { font-weight: 700; color: #fff; display: block; }
+.item-loc { font-size: 0.7rem; color: var(--primary); background: rgba(59, 130, 246, 0.1); padding: 1px 4px; border-radius: 3px; display: inline-block; margin-top: 2px;}
+.stat-primary { font-weight: 800; font-size: 0.9rem; text-align: right; }
+.stat-secondary { font-size: 0.7rem; color: var(--text-muted); text-align: right; }
+.prog-track { width: 100%; height: 3px; background: rgba(255,255,255,0.1); margin-top: 5px; border-radius: 2px; }
 .prog-fill { height: 100%; border-radius: 2px; }
 
-/* PRINT STYLES (A4 ONE PAGE) */
+/* MODAL (HELP) */
+.modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--bg-modal); z-index: 1000; justify-content: center; align-items: center;
+    padding: 20px;
+}
+.modal-content {
+    background: var(--bg-card); max-width: 600px; width: 100%; border-radius: 12px;
+    border: 1px solid var(--border); padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    max-height: 90vh; overflow-y: auto;
+}
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;}
+.modal-close { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; }
+.help-section { margin-bottom: 15px; }
+.help-title { color: var(--primary); font-weight: bold; font-size: 0.9rem; margin-bottom: 5px; text-transform: uppercase; }
+.help-text { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+.formula { background: rgba(0,0,0,0.3); padding: 5px; border-radius: 4px; font-family: monospace; color: #fff; display: block; margin-top: 5px;}
+
+/* --- RESPONSIVE MOBIL NÉZET --- */
+@media (max-width: 768px) {
+    body { padding: 10px; }
+    .header-actions { width: 100%; justify-content: space-between; margin-top: 10px; }
+    
+    .controls-area { flex-direction: column; }
+    .upload-btn { width: 100%; justify-content: center; }
+    .filter-bar { width: 100%; flex-direction: column; }
+    
+    .kpi-grid { grid-template-columns: 1fr 1fr; } 
+    .analysis-grid { grid-template-columns: 1fr; }
+    .kpi-value { font-size: 1.5rem; }
+}
+
+@media (max-width: 480px) {
+    .kpi-grid { grid-template-columns: 1fr; } 
+    .brand h1 { font-size: 1.2rem; }
+}
+
+/* --- NYOMTATÁS (LAPTOPRA - ÁLLÓ A4 - 1 OLDAL) --- */
 @media print {
-    @page { size: A4 landscape; margin: 5mm; }
+    @page { size: A4 portrait; margin: 5mm; } /* VISSZAÁLLÍTVA: PORTRAIT */
     body { 
-        background: white !important; color: black !important; padding: 0 !important; zoom: 68% !important; 
+        background: white !important; color: black !important; padding: 0 !important; 
+        zoom: 75% !important; /* Optimális zoom az álló nézethez */
         -webkit-print-color-adjust: exact !important;
     }
-    .controls-area { display: none !important; }
-    .container { max-width: 100% !important; }
     
-    /* Colors for Print */
-    .brand h1 { color: black !important; }
-    .kpi-card, .panel { background: white !important; border: 1px solid #ccc !important; box-shadow: none !important; }
+    /* Gombok és egyéb elemek elrejtése */
+    .controls-area, .help-btn, .modal-overlay { display: none !important; }
+    
+    .container { max-width: 100% !important; margin: 0 !important; }
+    
+    /* Panelek stílusa nyomtatásban */
+    .kpi-card, .panel { 
+        background: white !important; 
+        border: 1px solid #ccc !important; 
+        box-shadow: none !important; 
+        break-inside: avoid; /* Megakadályozza a kártyák törését */
+    }
     .panel-header { background: #f0f0f0 !important; border-bottom: 1px solid #ccc !important; }
+    
+    /* Szövegek és színek nyomtatáshoz */
     .item-name { color: #000 !important; }
     td { border-bottom: 1px solid #eee !important; }
-    .item-loc { background: #eff6ff !important; color: #1d4ed8 !important; border: 1px solid #bfdbfe; }
+    .item-loc { background: #eff6ff !important; color: #1d4ed8 !important; border: 1px solid #bfdbfe !important; }
     
-    /* Stat colors override for print readability */
     .text-danger { color: #dc2626 !important; }
     .text-warning { color: #d97706 !important; }
     .text-success { color: #059669 !important; }
+    .bg-danger-sub { background: #fef2f2 !important; border-color: #dc2626 !important; color: #991b1b !important; }
+    .bg-warning-sub { background: #fffbeb !important; border-color: #d97706 !important; color: #92400e !important; }
+    
+    /* Layout rögzítése nyomtatásnál (hogy ne essen szét) */
+    .kpi-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 10px !important; }
+    .analysis-grid { grid-template-columns: 1fr 1fr !important; gap: 15px !important; }
+    
+    /* Font méretek finomítása nyomtatáshoz */
+    .kpi-value { font-size: 1.6rem !important; }
+    th, td { font-size: 0.85rem !important; padding: 6px 8px !important; }
 }
 
 /* UTILS */
@@ -141,56 +208,56 @@ td { padding: 10px 15px; border-bottom: 1px solid rgba(255,255,255,0.03); vertic
     <header>
         <div class="brand">
             <h1>Forvia <span>SMT Analytics</span></h1>
-            <div class="subtitle">Production Quality & Attrition Report</div>
+            <div class="subtitle">Production Quality & Attrition Dashboard v3.0</div>
         </div>
-        <div style="text-align:right">
-            <div id="reportDate" style="font-weight:bold; font-size:0.9rem;">2024-05-15</div>
-            <div style="font-size:0.8rem; color:var(--text-muted)">Generated by QA Pro</div>
+        <div class="header-actions">
+            <div id="reportDate" style="font-weight:bold; font-size:0.9rem;"></div>
+            <button class="help-btn" onclick="toggleModal(true)">❓ MAGYARÁZAT</button>
         </div>
     </header>
 
     <div class="controls-area">
         <div class="upload-btn" onclick="document.getElementById('fileInput').click()">
-            📂 Adatfájl Betöltése (CSV)
+            📂 Adatfájl (CSV)
         </div>
         <input type="file" id="fileInput" accept=".csv,.txt" style="display:none">
 
         <div class="filter-bar">
             <div class="filter-group">
-                <label>Gépsor (Line)</label>
+                <label>Gépsor</label>
                 <select id="filterLine" onchange="filterLineChanged()"><option value="mind">Teljes Gyár</option></select>
             </div>
             <div class="filter-group">
-                <label>Beültető Gép (Machine)</label>
+                <label>Beültető Gép</label>
                 <select id="filterMachine" onchange="updateView()"><option value="mind">Minden Gép</option></select>
             </div>
             <div class="filter-group">
                 <label>Toplista Méret</label>
                 <select id="topLimit" onchange="updateView()">
-                    <option value="5">Top 5 (Fókusz)</option>
-                    <option value="10" selected>Top 10 (Normál)</option>
-                    <option value="15">Top 15 (Részletes)</option>
+                    <option value="5">Top 5</option>
+                    <option value="10" selected>Top 10</option>
+                    <option value="15">Top 15</option>
                 </select>
             </div>
         </div>
-        <button onclick="window.print()" style="background:#334155; color:white; border:none; padding:0 20px; border-radius:6px; cursor:pointer; font-weight:bold;">🖨️ PDF</button>
+        <button onclick="window.print()" style="background:#334155; color:white; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:bold;">🖨️ PDF</button>
     </div>
 
     <div class="kpi-grid">
         <div class="kpi-card" style="border-top: 4px solid var(--primary);">
             <h3>Gyártott Mennyiség</h3>
             <span class="kpi-value" id="kpiTotal">0</span>
-            <div class="kpi-sub" style="color:var(--text-muted)">Beültetett alkatrész</div>
+            <div class="kpi-sub" style="color:var(--text-muted)">Beültetett (Jó) darab</div>
         </div>
         
         <div class="kpi-card" style="border-top: 4px solid var(--success);">
-            <h3>First Pass Yield (Kihozatal)</h3>
+            <h3>FPY / Kihozatal</h3>
             <span class="kpi-value text-success" id="kpiYield">100%</span>
-            <div class="kpi-sub">Folyamat hatékonyság</div>
+            <div class="kpi-sub">First Pass Yield</div>
         </div>
 
         <div class="kpi-card" style="border-top: 4px solid var(--danger);">
-            <h3>Felvételi Hiba (Pick)</h3>
+            <h3>Felvételi Hiba</h3>
             <span class="kpi-value text-danger" id="kpiPickRate">0.00%</span>
             <div class="kpi-sub text-danger">
                 <span id="kpiPickPPM" class="badge-ppm">0 PPM</span>
@@ -199,7 +266,7 @@ td { padding: 10px 15px; border-bottom: 1px solid rgba(255,255,255,0.03); vertic
         </div>
 
         <div class="kpi-card" style="border-top: 4px solid var(--warning);">
-            <h3>Felismerési Hiba (Vision)</h3>
+            <h3>Felismerési Hiba</h3>
             <span class="kpi-value text-warning" id="kpiVisRate">0.00%</span>
             <div class="kpi-sub text-warning">
                 <span id="kpiVisPPM" class="badge-ppm">0 PPM</span>
@@ -215,7 +282,7 @@ td { padding: 10px 15px; border-bottom: 1px solid rgba(255,255,255,0.03); vertic
             </div>
             <div id="alertPick" class="alert-banner bg-danger-sub" style="display:none"></div>
             <table id="tablePick">
-                <thead><tr><th>Alkatrész / Feeder Pozíció</th><th style="text-align:right">Elszóródás / Arány</th></tr></thead>
+                <thead><tr><th>Alkatrész / Feeder</th><th style="text-align:right">Elszóródás / Részarány</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -226,45 +293,88 @@ td { padding: 10px 15px; border-bottom: 1px solid rgba(255,255,255,0.03); vertic
             </div>
             <div id="alertVis" class="alert-banner bg-warning-sub" style="display:none"></div>
             <table id="tableVis">
-                <thead><tr><th>Alkatrész / Feeder Pozíció</th><th style="text-align:right">Elszóródás / Arány</th></tr></thead>
+                <thead><tr><th>Alkatrész / Feeder</th><th style="text-align:right">Elszóródás / Részarány</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
     </div>
 </div>
 
+<div id="helpModal" class="modal-overlay" onclick="if(event.target===this) toggleModal(false)">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 style="margin:0">Útmutató a Kimutatáshoz</h2>
+            <button class="modal-close" onclick="toggleModal(false)">&times;</button>
+        </div>
+        
+        <div class="help-section">
+            <div class="help-title">1. Hogyan számol a rendszer? (Scrap Rate)</div>
+            <div class="help-text">
+                A rendszer az <strong>összes felhasznált</strong> (felvett) anyaghoz viszonyítja a veszteséget. Ez a legpontosabb "Anyagveszteség" mutató.
+                <span class="formula">Hibaarány % = Hiba / (Jó darab + Hiba) * 100</span>
+            </div>
+        </div>
+
+        <div class="help-section">
+            <div class="help-title">2. Mi az a PPM?</div>
+            <div class="help-text">
+                <strong>Parts Per Million.</strong> Azt mutatja meg, hogy 1 millió alkatrészből hány darab lenne selejt. 
+                <br><em>Példa: 0.5% hiba = 5000 PPM.</em> <br>Az autóiparban ez a standard minőségi mérőszám.
+            </div>
+        </div>
+
+        <div class="help-section">
+            <div class="help-title">3. Mi az FPY (Kihozatal)?</div>
+            <div class="help-text">
+                <strong>First Pass Yield.</strong> Azt mutatja, hogy az alkatrészek hány százaléka ment át a folyamaton sikeresen elsőre. 
+                <br><em>Cél: Minél közelebb a 100%-hoz.</em>
+            </div>
+        </div>
+
+        <div class="help-section">
+            <div class="help-title">4. Táblázatok értelmezése</div>
+            <div class="help-text">
+                <ul>
+                    <li><strong>Felvételi Hiba (Pick):</strong> Feeder, Vákuum vagy Nozzle probléma.</li>
+                    <li><strong>Felismerési Hiba (Vision):</strong> Kamera, Alkatrész geometria vagy sérülés.</li>
+                    <li><strong>Részarány (Jobb oldalt):</strong> Azt mutatja, hogy az adott alkatrész felelős-e az összes hiba nagy részéért (pl. "A hibák 40%-a ez az egy tekercs").</li>
+                </ul>
+            </div>
+        </div>
+        
+        <button onclick="toggleModal(false)" style="width:100%; padding:10px; background:var(--primary); color:white; border:none; border-radius:6px; cursor:pointer; margin-top:10px;">ÉRTEM, BEZÁRÁS</button>
+    </div>
+</div>
+
 <script>
-/* --- ADATKEZELÉS ÉS LOGIKA --- */
+/* --- LOGIKA --- */
 let rawData = [];
-let lineMachineMap = {}; // Struktúra: { "Line1": ["GépA", "GépB"], "Line2": [...] }
+let lineMachineMap = {}; 
 
-// 1. Dátum beállítása
-document.getElementById('reportDate').innerText = new Date().toLocaleDateString('hu-HU', { year: 'numeric', month: 'long', day: 'numeric' });
+document.getElementById('reportDate').innerText = new Date().toLocaleDateString('hu-HU');
 
-// 2. Fájl Beolvasás
+// Modal Kezelés
+function toggleModal(show) {
+    document.getElementById('helpModal').style.display = show ? 'flex' : 'none';
+}
+
+// Fájl betöltés
 document.getElementById('fileInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
-    
     const reader = new FileReader();
-    reader.onload = (ev) => {
-        const text = ev.target.result;
-        processData(text);
-    };
+    reader.onload = (ev) => processData(ev.target.result);
     reader.readAsText(file);
 });
 
 function processData(csvText) {
     const lines = csvText.split('\n').map(x => x.trim()).filter(x => x);
     if(lines.length < 2) return;
-
-    // Automatikus elválasztó detektálás (; vagy ,)
     const sep = lines[0].indexOf(';') > -1 ? ';' : ',';
     
     rawData = [];
     lineMachineMap = {};
 
-    // Adatok betöltése és Térkép építése
     for(let i=1; i<lines.length; i++) {
         const col = lines[i].split(sep);
         if(col.length < 4) continue;
@@ -272,177 +382,124 @@ function processData(csvText) {
         const line = col[0] ? col[0].trim() : "Egyéb";
         const machine = col[1] ? col[1].trim() : "Egyéb";
         
-        // Térkép építése a dropdownhoz
         if(!lineMachineMap[line]) lineMachineMap[line] = new Set();
         lineMachineMap[line].add(machine);
 
         rawData.push({
-            line: line,
-            machine: machine,
-            part: col[2] ? col[2].trim() : "Unknown",
+            line: line, machine: machine, part: col[2] ? col[2].trim() : "Unknown",
             good: parseInt(col[3]) || 0,
             pickErr: parseInt(col[4]) || 0,
             visErr: parseInt(col[5]) || 0
         });
     }
-
     initFilters();
     updateView();
 }
 
 function initFilters() {
     const lineSelect = document.getElementById('filterLine');
-    lineSelect.innerHTML = '<option value="mind">Teljes Gyár (Összes)</option>';
-    
+    lineSelect.innerHTML = '<option value="mind">Teljes Gyár</option>';
     Object.keys(lineMachineMap).sort().forEach(line => {
         lineSelect.innerHTML += `<option value="${line}">${line}</option>`;
     });
-
-    // Reset machine filter
     filterLineChanged(); 
 }
 
-// 3. Intelligens Szűrés (Ez volt a kérésed!)
 function filterLineChanged() {
-    const selectedLine = document.getElementById('filterLine').value;
-    const machineSelect = document.getElementById('filterMachine');
+    const sLine = document.getElementById('filterLine').value;
+    const mSelect = document.getElementById('filterMachine');
+    mSelect.innerHTML = '<option value="mind">Minden Gép</option>';
     
-    machineSelect.innerHTML = '<option value="mind">Minden Gép</option>';
-    
-    if (selectedLine !== 'mind' && lineMachineMap[selectedLine]) {
-        // Csak a választott sorhoz tartozó gépek
-        const machines = Array.from(lineMachineMap[selectedLine]).sort();
-        machines.forEach(m => {
-            machineSelect.innerHTML += `<option value="${m}">${m}</option>`;
+    if (sLine !== 'mind' && lineMachineMap[sLine]) {
+        Array.from(lineMachineMap[sLine]).sort().forEach(m => {
+            mSelect.innerHTML += `<option value="${m}">${m}</option>`;
         });
     } else {
-        // Ha "Teljes Gyár", akkor az összes létező gép
-        const allMachines = new Set();
-        Object.values(lineMachineMap).forEach(s => s.forEach(m => allMachines.add(m)));
-        Array.from(allMachines).sort().forEach(m => {
-            machineSelect.innerHTML += `<option value="${m}">${m}</option>`;
+        const allM = new Set();
+        Object.values(lineMachineMap).forEach(s => s.forEach(m => allM.add(m)));
+        Array.from(allM).sort().forEach(m => {
+            mSelect.innerHTML += `<option value="${m}">${m}</option>`;
         });
     }
     updateView();
 }
 
-// 4. Számítás és Megjelenítés (Menedzseri logika)
 function updateView() {
     if(rawData.length === 0) return;
-
     const sLine = document.getElementById('filterLine').value;
     const sMach = document.getElementById('filterMachine').value;
     const limit = parseInt(document.getElementById('topLimit').value);
 
-    // Szűrés
     const data = rawData.filter(d => 
         (sLine === 'mind' || d.line === sLine) &&
         (sMach === 'mind' || d.machine === sMach)
     );
 
-    // Aggregálás
-    let sumGood = 0, sumPick = 0, sumVis = 0;
-    let pickByPart = {}, visByPart = {};
-    let locByPart = {}; // Hol fordult elő?
+    let sumGood=0, sumPick=0, sumVis=0;
+    let pMap={}, vMap={}, lMap={};
 
     data.forEach(d => {
-        sumGood += d.good;
-        sumPick += d.pickErr;
-        sumVis += d.visErr;
-
-        if(d.pickErr > 0) pickByPart[d.part] = (pickByPart[d.part] || 0) + d.pickErr;
-        if(d.visErr > 0) visByPart[d.part] = (visByPart[d.part] || 0) + d.visErr;
-
+        sumGood += d.good; sumPick += d.pickErr; sumVis += d.visErr;
+        if(d.pickErr > 0) pMap[d.part] = (pMap[d.part]||0) + d.pickErr;
+        if(d.visErr > 0) vMap[d.part] = (vMap[d.part]||0) + d.visErr;
         if(d.pickErr > 0 || d.visErr > 0) {
-            if(!locByPart[d.part]) locByPart[d.part] = new Set();
-            locByPart[d.part].add(`${d.machine} (${d.line})`);
+            if(!lMap[d.part]) lMap[d.part] = new Set();
+            lMap[d.part].add(`${d.machine}`);
         }
     });
 
-    // MENEDZSERI KPI SZÁMÍTÁS (Javított képletek!)
-    // Total Usage = Good + PickErrors + VisionErrors (Minden, amit elhasználtunk a tekercsről)
+    // KPI SZÁMÍTÁS (Menedzseri)
     const totalUsage = sumGood + sumPick + sumVis;
+    const pickRate = totalUsage > 0 ? (sumPick/totalUsage)*100 : 0;
+    const visRate = totalUsage > 0 ? (sumVis/totalUsage)*100 : 0;
+    const pickPPM = totalUsage > 0 ? Math.round((sumPick/totalUsage)*1000000) : 0;
+    const visPPM = totalUsage > 0 ? Math.round((sumVis/totalUsage)*1000000) : 0;
+    const yieldVal = totalUsage > 0 ? (sumGood/totalUsage)*100 : 100;
 
-    // Pick Rate: Hiba / Total Usage
-    const pickRate = totalUsage > 0 ? (sumPick / totalUsage) * 100 : 0;
-    const pickPPM = totalUsage > 0 ? Math.round((sumPick / totalUsage) * 1000000) : 0;
-
-    // Vision Rate: Hiba / Total Usage (Anyagveszteség szemlélet)
-    const visRate = totalUsage > 0 ? (sumVis / totalUsage) * 100 : 0;
-    const visPPM = totalUsage > 0 ? Math.round((sumVis / totalUsage) * 1000000) : 0;
-
-    // Yield (FPY): Good / Total Usage
-    const yieldVal = totalUsage > 0 ? (sumGood / totalUsage) * 100 : 100;
-
-    // DOM Update
     document.getElementById('kpiTotal').innerText = sumGood.toLocaleString();
     document.getElementById('kpiYield').innerText = yieldVal.toFixed(2) + "%";
-    
     document.getElementById('kpiPickRate').innerText = pickRate.toFixed(2) + "%";
     document.getElementById('kpiPickPPM').innerText = pickPPM.toLocaleString() + " PPM";
-    
     document.getElementById('kpiVisRate').innerText = visRate.toFixed(2) + "%";
     document.getElementById('kpiVisPPM').innerText = visPPM.toLocaleString() + " PPM";
 
-    // Táblázatok renderelése
-    renderTable('tablePick', pickByPart, locByPart, sumPick, limit, 'alertPick', 'text-danger', 'var(--danger)');
-    renderTable('tableVis', visByPart, locByPart, sumVis, limit, 'alertVis', 'text-warning', 'var(--warning)');
+    renderTable('tablePick', pMap, lMap, sumPick, limit, 'alertPick', 'text-danger', 'var(--danger)');
+    renderTable('tableVis', vMap, lMap, sumVis, limit, 'alertVis', 'text-warning', 'var(--warning)');
 }
 
-function renderTable(tableId, dataMap, locMap, totalErr, limit, alertId, textClass, colorVar) {
-    const tbody = document.getElementById(tableId).querySelector('tbody');
+function renderTable(tid, dMap, lMap, total, limit, aid, tCls, col) {
+    const tbody = document.getElementById(tid).querySelector('tbody');
     tbody.innerHTML = "";
+    const sorted = Object.entries(dMap).sort((a,b) => b[1]-a[1]);
     
-    // Rendezés csökkenő sorrendbe
-    const sorted = Object.entries(dataMap).sort((a,b) => b[1] - a[1]);
-    
-    // Top Hiba Kiemelés (Badge)
-    const alertEl = document.getElementById(alertId);
+    const aEl = document.getElementById(aid);
     if(sorted.length > 0) {
-        const topItem = sorted[0];
-        const topShare = totalErr > 0 ? ((topItem[1] / totalErr) * 100).toFixed(1) : 0;
-        alertEl.style.display = "flex";
-        alertEl.innerHTML = `
-            <span><strong>TOP PROBLÉMA:</strong> ${topItem[0]}</span>
-            <span>A hibák <strong>${topShare}%</strong>-a!</span>
-        `;
-    } else {
-        alertEl.style.display = "none";
-    }
+        const share = total>0 ? ((sorted[0][1]/total)*100).toFixed(1) : 0;
+        aEl.style.display = "flex";
+        aEl.innerHTML = `<span><strong>TOP HIBA:</strong> ${sorted[0][0]}</span><span>A hibák <strong>${share}%</strong>-a!</span>`;
+    } else { aEl.style.display = "none"; }
 
-    // Sorok generálása
     const maxVal = sorted.length > 0 ? sorted[0][1] : 1;
-    
-    sorted.slice(0, limit).forEach((item, idx) => {
-        const part = item[0];
-        const count = item[1];
-        
-        // Helyszínek formázása (max 3, utána "...")
-        const locs = Array.from(locMap[part] || ["N/A"]);
-        let locString = locs.slice(0, 3).join(", ");
-        if(locs.length > 3) locString += `, +${locs.length - 3} gép`;
-
-        // Share % (Pareto)
-        const share = totalErr > 0 ? ((count / totalErr) * 100).toFixed(1) : "0.0";
+    sorted.slice(0, limit).forEach((it, i) => {
+        const locs = Array.from(lMap[it[0]]||["-"]);
+        let lStr = locs.slice(0,2).join(", ");
+        if(locs.length>2) lStr += ` (+${locs.length-2})`;
+        const share = total>0 ? ((it[1]/total)*100).toFixed(1) : "0.0";
 
         tbody.innerHTML += `
         <tr>
             <td>
-                <span class="item-name">${idx+1}. ${part}</span>
-                <span class="item-loc">📍 ${locString}</span>
-                <div class="prog-track">
-                    <div class="prog-fill" style="width:${(count/maxVal)*100}%; background:${colorVar}"></div>
-                </div>
+                <span class="item-name">${i+1}. ${it[0]}</span>
+                <span class="item-loc">${lStr}</span>
+                <div class="prog-track"><div class="prog-fill" style="width:${(it[1]/maxVal)*100}%; background:${col}"></div></div>
             </td>
             <td style="vertical-align:top">
-                <div class="stat-primary ${textClass}">${count.toLocaleString()} db</div>
-                <div class="stat-secondary">Össz. hiba ${share}%-a</div>
+                <div class="stat-primary ${tCls}">${it[1].toLocaleString()}</div>
+                <div class="stat-secondary">${share}% részarány</div>
             </td>
-        </tr>
-        `;
+        </tr>`;
     });
 }
 </script>
-
 </body>
 </html>
