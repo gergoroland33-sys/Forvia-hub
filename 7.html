@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Forvia SMT Managerial Dashboard v3.1</title>
+<title>Forvia SMT Managerial Dashboard v3.2</title>
 <style>
 /* --- DESIGN SYSTEM --- */
 :root {
@@ -79,12 +79,17 @@ select {
 .kpi-card {
     background: var(--bg-card); padding: 15px; border-radius: 10px;
     border: 1px solid var(--border); position: relative;
+    display: flex; flex-direction: column; justify-content: space-between;
 }
 .kpi-card h3 { margin: 0 0 5px 0; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); }
-.kpi-value { font-size: 1.8rem; font-weight: 800; display: block; line-height: 1.1; }
-.kpi-sub { font-size: 0.8rem; margin-top: 5px; font-weight: 500; display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+
+/* KPI Value Styling - A két érték (Darab és %) megjelenítése */
+.kpi-main-val { font-size: 1.8rem; font-weight: 800; display: block; line-height: 1.1; margin-bottom: 4px; }
+.kpi-sub-val { font-size: 1rem; font-weight: 600; opacity: 0.9; display: block; }
+
+.kpi-footer { font-size: 0.75rem; margin-top: 10px; font-weight: 500; display: flex; align-items: center; gap: 6px; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;}
 .badge-ppm {
-    background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px; font-size: 0.7rem;
+    background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px; font-size: 0.7rem; font-weight: normal;
 }
 
 /* PANELS */
@@ -132,66 +137,48 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
 .help-text { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
 .formula { background: rgba(0,0,0,0.3); padding: 5px; border-radius: 4px; font-family: monospace; color: #fff; display: block; margin-top: 5px;}
 
-/* --- RESPONSIVE MOBIL NÉZET --- */
+/* --- RESPONSIVE MOBIL --- */
 @media (max-width: 768px) {
     body { padding: 10px; }
     .header-actions { width: 100%; justify-content: space-between; margin-top: 10px; }
-    
     .controls-area { flex-direction: column; }
     .upload-btn { width: 100%; justify-content: center; }
     .filter-bar { width: 100%; flex-direction: column; }
-    
     .kpi-grid { grid-template-columns: 1fr 1fr; } 
     .analysis-grid { grid-template-columns: 1fr; }
-    .kpi-value { font-size: 1.5rem; }
 }
-
 @media (max-width: 480px) {
     .kpi-grid { grid-template-columns: 1fr; } 
-    .brand h1 { font-size: 1.2rem; }
 }
 
 /* --- NYOMTATÁS (LAPTOPRA - ÁLLÓ A4 - 1 OLDAL) --- */
 @media print {
-    @page { size: A4 portrait; margin: 5mm; } /* VISSZAÁLLÍTVA: PORTRAIT */
+    @page { size: A4 portrait; margin: 5mm; }
     body { 
         background: white !important; color: black !important; padding: 0 !important; 
-        zoom: 75% !important; /* Optimális zoom az álló nézethez */
+        zoom: 75% !important;
         -webkit-print-color-adjust: exact !important;
     }
-    
-    /* Gombok és egyéb elemek elrejtése */
     .controls-area, .help-btn, .modal-overlay { display: none !important; }
-    
     .container { max-width: 100% !important; margin: 0 !important; }
-    
-    /* Panelek stílusa nyomtatásban */
     .kpi-card, .panel { 
-        background: white !important; 
-        border: 1px solid #ccc !important; 
-        box-shadow: none !important; 
-        break-inside: avoid; /* Megakadályozza a kártyák törését */
+        background: white !important; border: 1px solid #ccc !important; 
+        box-shadow: none !important; break-inside: avoid; 
     }
     .panel-header { background: #f0f0f0 !important; border-bottom: 1px solid #ccc !important; }
-    
-    /* Szövegek és színek nyomtatáshoz */
     .item-name { color: #000 !important; }
     td { border-bottom: 1px solid #eee !important; }
     .item-loc { background: #eff6ff !important; color: #1d4ed8 !important; border: 1px solid #bfdbfe !important; }
-    
     .text-danger { color: #dc2626 !important; }
     .text-warning { color: #d97706 !important; }
     .text-success { color: #059669 !important; }
     .bg-danger-sub { background: #fef2f2 !important; border-color: #dc2626 !important; color: #991b1b !important; }
     .bg-warning-sub { background: #fffbeb !important; border-color: #d97706 !important; color: #92400e !important; }
-    
-    /* Layout rögzítése nyomtatásnál (hogy ne essen szét) */
     .kpi-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 10px !important; }
     .analysis-grid { grid-template-columns: 1fr 1fr !important; gap: 15px !important; }
-    
-    /* Font méretek finomítása nyomtatáshoz */
-    .kpi-value { font-size: 1.6rem !important; }
-    th, td { font-size: 0.85rem !important; padding: 6px 8px !important; }
+    .kpi-main-val { font-size: 1.6rem !important; }
+    .kpi-footer { border-top: 1px solid #eee !important; color: #555 !important; }
+    .badge-ppm { border: 1px solid #ddd !important; background: #fff !important; }
 }
 
 /* UTILS */
@@ -208,7 +195,7 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
     <header>
         <div class="brand">
             <h1>Forvia <span>SMT Analytics</span></h1>
-            <div class="subtitle">Production Quality & Attrition Dashboard v3.0</div>
+            <div class="subtitle">Production Quality & Attrition Dashboard by Fajcsik Valér 2026</div>
         </div>
         <div class="header-actions">
             <div id="reportDate" style="font-weight:bold; font-size:0.9rem;"></div>
@@ -246,29 +233,39 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
     <div class="kpi-grid">
         <div class="kpi-card" style="border-top: 4px solid var(--primary);">
             <h3>Gyártott Mennyiség</h3>
-            <span class="kpi-value" id="kpiTotal">0</span>
-            <div class="kpi-sub" style="color:var(--text-muted)">Beültetett (Jó) darab</div>
+            <div>
+                <span class="kpi-main-val" id="kpiTotal">0</span>
+            </div>
+            <div class="kpi-footer">Beültetett (Jó) darab</div>
         </div>
         
         <div class="kpi-card" style="border-top: 4px solid var(--success);">
             <h3>FPY / Kihozatal</h3>
-            <span class="kpi-value text-success" id="kpiYield">100%</span>
-            <div class="kpi-sub">First Pass Yield</div>
+            <div>
+                <span class="kpi-main-val text-success" id="kpiYield">100%</span>
+            </div>
+            <div class="kpi-footer">First Pass Yield</div>
         </div>
 
         <div class="kpi-card" style="border-top: 4px solid var(--danger);">
-            <h3>Felvételi Hiba</h3>
-            <span class="kpi-value text-danger" id="kpiPickRate">0.00%</span>
-            <div class="kpi-sub text-danger">
+            <h3>Felvételi Hiba (Pick)</h3>
+            <div>
+                <span class="kpi-main-val text-danger" id="kpiPickCount">0 db</span>
+                <span class="kpi-sub-val text-danger" id="kpiPickRate">0.00%</span>
+            </div>
+            <div class="kpi-footer">
                 <span id="kpiPickPPM" class="badge-ppm">0 PPM</span>
                 <span>veszteség</span>
             </div>
         </div>
 
         <div class="kpi-card" style="border-top: 4px solid var(--warning);">
-            <h3>Felismerési Hiba</h3>
-            <span class="kpi-value text-warning" id="kpiVisRate">0.00%</span>
-            <div class="kpi-sub text-warning">
+            <h3>Felismerési Hiba (Vision)</h3>
+            <div>
+                <span class="kpi-main-val text-warning" id="kpiVisCount">0 db</span>
+                <span class="kpi-sub-val text-warning" id="kpiVisRate">0.00%</span>
+            </div>
+            <div class="kpi-footer">
                 <span id="kpiVisPPM" class="badge-ppm">0 PPM</span>
                 <span>veszteség</span>
             </div>
@@ -306,59 +303,25 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
             <h2 style="margin:0">Útmutató a Kimutatáshoz</h2>
             <button class="modal-close" onclick="toggleModal(false)">&times;</button>
         </div>
-        
         <div class="help-section">
             <div class="help-title">1. Hogyan számol a rendszer? (Scrap Rate)</div>
-            <div class="help-text">
-                A rendszer az <strong>összes felhasznált</strong> (felvett) anyaghoz viszonyítja a veszteséget. Ez a legpontosabb "Anyagveszteség" mutató.
-                <span class="formula">Hibaarány % = Hiba / (Jó darab + Hiba) * 100</span>
-            </div>
+            <div class="help-text">A rendszer az <strong>összes felhasznált</strong> anyaghoz (Jó + Hiba) viszonyítja a veszteséget.<span class="formula">Hibaarány % = Hiba / (Jó darab + Hiba) * 100</span></div>
         </div>
-
         <div class="help-section">
             <div class="help-title">2. Mi az a PPM?</div>
-            <div class="help-text">
-                <strong>Parts Per Million.</strong> Azt mutatja meg, hogy 1 millió alkatrészből hány darab lenne selejt. 
-                <br><em>Példa: 0.5% hiba = 5000 PPM.</em> <br>Az autóiparban ez a standard minőségi mérőszám.
-            </div>
+            <div class="help-text"><strong>Parts Per Million.</strong> 1 millió alkatrészre vetített hiba. (pl. 0.5% = 5000 PPM).</div>
         </div>
-
-        <div class="help-section">
-            <div class="help-title">3. Mi az FPY (Kihozatal)?</div>
-            <div class="help-text">
-                <strong>First Pass Yield.</strong> Azt mutatja, hogy az alkatrészek hány százaléka ment át a folyamaton sikeresen elsőre. 
-                <br><em>Cél: Minél közelebb a 100%-hoz.</em>
-            </div>
-        </div>
-
-        <div class="help-section">
-            <div class="help-title">4. Táblázatok értelmezése</div>
-            <div class="help-text">
-                <ul>
-                    <li><strong>Felvételi Hiba (Pick):</strong> Feeder, Vákuum vagy Nozzle probléma.</li>
-                    <li><strong>Felismerési Hiba (Vision):</strong> Kamera, Alkatrész geometria vagy sérülés.</li>
-                    <li><strong>Részarány (Jobb oldalt):</strong> Azt mutatja, hogy az adott alkatrész felelős-e az összes hiba nagy részéért (pl. "A hibák 40%-a ez az egy tekercs").</li>
-                </ul>
-            </div>
-        </div>
-        
         <button onclick="toggleModal(false)" style="width:100%; padding:10px; background:var(--primary); color:white; border:none; border-radius:6px; cursor:pointer; margin-top:10px;">ÉRTEM, BEZÁRÁS</button>
     </div>
 </div>
 
 <script>
-/* --- LOGIKA --- */
 let rawData = [];
 let lineMachineMap = {}; 
-
 document.getElementById('reportDate').innerText = new Date().toLocaleDateString('hu-HU');
 
-// Modal Kezelés
-function toggleModal(show) {
-    document.getElementById('helpModal').style.display = show ? 'flex' : 'none';
-}
+function toggleModal(show) { document.getElementById('helpModal').style.display = show ? 'flex' : 'none'; }
 
-// Fájl betöltés
 document.getElementById('fileInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -371,20 +334,14 @@ function processData(csvText) {
     const lines = csvText.split('\n').map(x => x.trim()).filter(x => x);
     if(lines.length < 2) return;
     const sep = lines[0].indexOf(';') > -1 ? ';' : ',';
-    
-    rawData = [];
-    lineMachineMap = {};
-
+    rawData = []; lineMachineMap = {};
     for(let i=1; i<lines.length; i++) {
         const col = lines[i].split(sep);
         if(col.length < 4) continue;
-
         const line = col[0] ? col[0].trim() : "Egyéb";
         const machine = col[1] ? col[1].trim() : "Egyéb";
-        
         if(!lineMachineMap[line]) lineMachineMap[line] = new Set();
         lineMachineMap[line].add(machine);
-
         rawData.push({
             line: line, machine: machine, part: col[2] ? col[2].trim() : "Unknown",
             good: parseInt(col[3]) || 0,
@@ -397,11 +354,9 @@ function processData(csvText) {
 }
 
 function initFilters() {
-    const lineSelect = document.getElementById('filterLine');
-    lineSelect.innerHTML = '<option value="mind">Teljes Gyár</option>';
-    Object.keys(lineMachineMap).sort().forEach(line => {
-        lineSelect.innerHTML += `<option value="${line}">${line}</option>`;
-    });
+    const s = document.getElementById('filterLine');
+    s.innerHTML = '<option value="mind">Teljes Gyár</option>';
+    Object.keys(lineMachineMap).sort().forEach(l => s.innerHTML += `<option value="${l}">${l}</option>`);
     filterLineChanged(); 
 }
 
@@ -409,17 +364,12 @@ function filterLineChanged() {
     const sLine = document.getElementById('filterLine').value;
     const mSelect = document.getElementById('filterMachine');
     mSelect.innerHTML = '<option value="mind">Minden Gép</option>';
-    
     if (sLine !== 'mind' && lineMachineMap[sLine]) {
-        Array.from(lineMachineMap[sLine]).sort().forEach(m => {
-            mSelect.innerHTML += `<option value="${m}">${m}</option>`;
-        });
+        Array.from(lineMachineMap[sLine]).sort().forEach(m => mSelect.innerHTML += `<option value="${m}">${m}</option>`);
     } else {
         const allM = new Set();
         Object.values(lineMachineMap).forEach(s => s.forEach(m => allM.add(m)));
-        Array.from(allM).sort().forEach(m => {
-            mSelect.innerHTML += `<option value="${m}">${m}</option>`;
-        });
+        Array.from(allM).sort().forEach(m => mSelect.innerHTML += `<option value="${m}">${m}</option>`);
     }
     updateView();
 }
@@ -429,11 +379,7 @@ function updateView() {
     const sLine = document.getElementById('filterLine').value;
     const sMach = document.getElementById('filterMachine').value;
     const limit = parseInt(document.getElementById('topLimit').value);
-
-    const data = rawData.filter(d => 
-        (sLine === 'mind' || d.line === sLine) &&
-        (sMach === 'mind' || d.machine === sMach)
-    );
+    const data = rawData.filter(d => (sLine === 'mind' || d.line === sLine) && (sMach === 'mind' || d.machine === sMach));
 
     let sumGood=0, sumPick=0, sumVis=0;
     let pMap={}, vMap={}, lMap={};
@@ -448,7 +394,6 @@ function updateView() {
         }
     });
 
-    // KPI SZÁMÍTÁS (Menedzseri)
     const totalUsage = sumGood + sumPick + sumVis;
     const pickRate = totalUsage > 0 ? (sumPick/totalUsage)*100 : 0;
     const visRate = totalUsage > 0 ? (sumVis/totalUsage)*100 : 0;
@@ -458,8 +403,13 @@ function updateView() {
 
     document.getElementById('kpiTotal').innerText = sumGood.toLocaleString();
     document.getElementById('kpiYield').innerText = yieldVal.toFixed(2) + "%";
+    
+    // Itt töltjük be a Darabszámot ÉS a Százalékot is
+    document.getElementById('kpiPickCount').innerText = sumPick.toLocaleString() + " db";
     document.getElementById('kpiPickRate').innerText = pickRate.toFixed(2) + "%";
     document.getElementById('kpiPickPPM').innerText = pickPPM.toLocaleString() + " PPM";
+    
+    document.getElementById('kpiVisCount').innerText = sumVis.toLocaleString() + " db";
     document.getElementById('kpiVisRate').innerText = visRate.toFixed(2) + "%";
     document.getElementById('kpiVisPPM').innerText = visPPM.toLocaleString() + " PPM";
 
@@ -485,7 +435,6 @@ function renderTable(tid, dMap, lMap, total, limit, aid, tCls, col) {
         let lStr = locs.slice(0,2).join(", ");
         if(locs.length>2) lStr += ` (+${locs.length-2})`;
         const share = total>0 ? ((it[1]/total)*100).toFixed(1) : "0.0";
-
         tbody.innerHTML += `
         <tr>
             <td>
