@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Forvia SMT Managerial Dashboard v3.3</title>
+<title>Forvia SMT Managerial Dashboard v3.4</title>
 <style>
 /* --- DESIGN SYSTEM --- */
 :root {
@@ -43,7 +43,7 @@ header {
 
 .header-actions { display: flex; gap: 15px; align-items: center; }
 
-/* DÁTUM MEGJELENÍTŐ STÍLUSA */
+/* DÁTUM MEGJELENÍTŐ */
 .date-display {
     text-align: right;
     border-right: 1px solid var(--border);
@@ -127,7 +127,7 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
 .prog-track { width: 100%; height: 3px; background: rgba(255,255,255,0.1); margin-top: 5px; border-radius: 2px; }
 .prog-fill { height: 100%; border-radius: 2px; }
 
-/* MODAL (HELP) */
+/* MODAL (HELP) - RÉSZLETES */
 .modal-overlay {
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: var(--bg-modal); z-index: 1000; justify-content: center; align-items: center;
@@ -140,10 +140,18 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
 }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;}
 .modal-close { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; }
-.help-section { margin-bottom: 15px; }
-.help-title { color: var(--primary); font-weight: bold; font-size: 0.9rem; margin-bottom: 5px; text-transform: uppercase; }
-.help-text { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
-.formula { background: rgba(0,0,0,0.3); padding: 5px; border-radius: 4px; font-family: monospace; color: #fff; display: block; margin-top: 5px;}
+.help-section { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.help-section:last-child { border-bottom: none; }
+.help-title { color: var(--primary); font-weight: bold; font-size: 1rem; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+.help-text { font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; }
+.help-text strong { color: white; }
+.help-text ul { margin: 5px 0 0 0; padding-left: 20px; }
+.help-text li { margin-bottom: 4px; }
+.formula { 
+    background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; 
+    font-family: 'Courier New', monospace; color: #fff; display: block; 
+    margin-top: 8px; border: 1px solid var(--border);
+}
 
 /* --- RESPONSIVE --- */
 @media (max-width: 768px) {
@@ -169,7 +177,6 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
         -webkit-print-color-adjust: exact !important;
     }
     .controls-area, .help-btn, .modal-overlay { display: none !important; }
-    /* A dátum maradjon látható nyomtatásban is */
     .date-display { border-right: none !important; color: black !important; }
     .date-label { color: #555 !important; }
     .date-value { color: #000 !important; font-size: 1.2rem !important; }
@@ -209,7 +216,7 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
     <header>
         <div class="brand">
             <h1>Forvia <span>SMT Analytics</span></h1>
-            <div class="subtitle">Production Quality & Attrition Dashboard by Fajcsik Valér 2026</div>
+            <div class="subtitle">Production Quality & Attrition Dashboard bs Fajcsik Valér 2026</div>
         </div>
         <div class="header-actions">
             <div class="date-display">
@@ -296,7 +303,7 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
             </div>
             <div id="alertPick" class="alert-banner bg-danger-sub" style="display:none"></div>
             <table id="tablePick">
-                <thead><tr><th>Alkatrész / Feeder</th><th style="text-align:right">Elszóródás / Részarány</th></tr></thead>
+                <thead><tr><th>Cikkszám</th><th style="text-align:right">Elszóródás / Részarány</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -307,7 +314,7 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
             </div>
             <div id="alertVis" class="alert-banner bg-warning-sub" style="display:none"></div>
             <table id="tableVis">
-                <thead><tr><th>Alkatrész / Feeder</th><th style="text-align:right">Elszóródás / Részarány</th></tr></thead>
+                <thead><tr><th>Cikkszám</th><th style="text-align:right">Elszóródás / Részarány</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -317,25 +324,64 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
 <div id="helpModal" class="modal-overlay" onclick="if(event.target===this) toggleModal(false)">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 style="margin:0">Útmutató a Kimutatáshoz</h2>
+            <h2 style="margin:0">Forvia Analytics - Szakmai Útmutató</h2>
             <button class="modal-close" onclick="toggleModal(false)">&times;</button>
         </div>
+        
         <div class="help-section">
-            <div class="help-title">1. Hogyan számol a rendszer? (Scrap Rate)</div>
-            <div class="help-text">A rendszer az <strong>összes felhasznált</strong> anyaghoz (Jó + Hiba) viszonyítja a veszteséget.<span class="formula">Hibaarány % = Hiba / (Jó darab + Hiba) * 100</span></div>
+            <div class="help-title">1. A Számítás Módszertana (Scrap Rate)</div>
+            <div class="help-text">
+                Ez a dashboard a <strong>valós anyagveszteséget</strong> (Scrap Rate) mutatja, amely a teljes betárazott (felhasznált) mennyiséghez viszonyít.
+                Ez eltér az egyszerű "hiba per jó darab" számítástól, mert tartalmazza magát a selejtet is a nevezőben.
+                <span class="formula">Elszóródás % = Hiba darab / (Jó darab + Hiba darab) * 100</span>
+                <em>Miért fontos ez?</em> Mert így pontosan látható, hogy a raktárból kiadott anyag hány százaléka végezte a hulladékban.
+            </div>
         </div>
+
         <div class="help-section">
-            <div class="help-title">2. Mi az a PPM?</div>
-            <div class="help-text"><strong>Parts Per Million.</strong> 1 millió alkatrészre vetített hiba. (pl. 0.5% = 5000 PPM).</div>
+            <div class="help-title">2. KPI Mutatók Értelmezése</div>
+            <div class="help-text">
+                <ul>
+                    <li><strong>FPY (First Pass Yield):</strong> Kihozatal. Azt mutatja, hogy a folyamatba belépő alkatrészek hány százaléka került sikeresen beültetésre első próbálkozásra. Cél: >99.5%.</li>
+                    <li><strong>PPM (Parts Per Million):</strong> Az autóipar standard mutatója. Azt fejezi ki, hogy <strong>egymillió</strong> alkatrészből mennyi lenne a selejt az adott aránnyal.
+                        <br><em>Példa: Ha a hibaarány 0.1%, az 1000 PPM-et jelent.</em>
+                    </li>
+                </ul>
+            </div>
         </div>
-        <button onclick="toggleModal(false)" style="width:100%; padding:10px; background:var(--primary); color:white; border:none; border-radius:6px; cursor:pointer; margin-top:10px;">ÉRTEM, BEZÁRÁS</button>
+
+        <div class="help-section">
+            <div class="help-title">3. Hiba Típusok és Teendők</div>
+            <div class="help-text">
+                <ul>
+                    <li><strong><span style="color:var(--danger)">FELVÉTELI HIBA (Pick Error):</span></strong> 
+                        A gép meg sem tudta fogni az alkatrészt, vagy elejtette a kamera előtt.
+                        <br><strong>Gyakori okok:</strong> Feeder hiba (kopás), Nozzle eltömődés, Vákuum hiba, Cover tape probléma.
+                    </li>
+                    <li><strong><span style="color:var(--warning)">FELISMERÉSI HIBA (Vision Error):</span></strong> 
+                        A gép felvette az alkatrészt, de a kamera visszautasította.
+                        <br><strong>Gyakori okok:</strong> Sérült alkatrész, Alkatrész fordítva van a szalagban (flip), Rossz lábgeometria, Szennyezett kamera.
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="help-section">
+            <div class="help-title">4. Táblázatok (Pareto Elemzés)</div>
+            <div class="help-text">
+                A listák csökkenő sorrendben mutatják a hibákat. A jobb oldali <strong>"Részarány"</strong> (Share) a legfontosabb mutató a döntéshozáshoz:
+                azt mutatja meg, hogy az <em>összes</em> gépállásból az az egyetlen alkatrész felelős a hibák hány százalékáért.
+                <br><em>Ha egy alkatrész részaránya magas (>20%), a karbantartást azonnal oda kell irányítani!</em>
+            </div>
+        </div>
+        
+        <button onclick="toggleModal(false)" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold; font-size:1rem;">ÉRTEM, KÖSZÖNÖM</button>
     </div>
 </div>
 
 <script>
 let rawData = [];
 let lineMachineMap = {}; 
-// Alapértelmezett dátum
 document.getElementById('reportDate').innerText = new Date().toLocaleDateString('hu-HU');
 
 function toggleModal(show) { document.getElementById('helpModal').style.display = show ? 'flex' : 'none'; }
@@ -344,18 +390,14 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
 
-    // --- ÚJ FUNKCIÓ: DÁTUM KINYERÉSE A FÁJLNÉVBŐL ---
-    // Megkeresi a (...) közötti részt a fájl nevében
+    // Dátum kinyerése a fájlnévből (...)
     const fileName = file.name;
     const dateMatch = fileName.match(/\((.*?)\)/); 
     
-    // Ha van találat, azt írja ki, ha nincs, akkor a mai dátumot (vagy a fájl nevét)
     if(dateMatch && dateMatch[1]) {
         document.getElementById('reportDate').innerText = dateMatch[1];
-        // Kiemelés, hogy lássák, frissült
         document.getElementById('reportDate').style.color = "var(--primary)";
     } else {
-        // Ha nincs dátum a fájlnévben, marad a mai
         document.getElementById('reportDate').innerText = new Date().toLocaleDateString('hu-HU');
         document.getElementById('reportDate').style.color = "white";
     }
