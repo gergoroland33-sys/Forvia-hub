@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Forvia SMT Managerial Dashboard v3.4</title>
+<title>Forvia SMT Managerial Dashboard v3.5</title>
 <style>
 /* --- DESIGN SYSTEM --- */
 :root {
@@ -127,7 +127,7 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
 .prog-track { width: 100%; height: 3px; background: rgba(255,255,255,0.1); margin-top: 5px; border-radius: 2px; }
 .prog-fill { height: 100%; border-radius: 2px; }
 
-/* MODAL (HELP) - RÉSZLETES */
+/* MODAL (HELP) */
 .modal-overlay {
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: var(--bg-modal); z-index: 1000; justify-content: center; align-items: center;
@@ -168,20 +168,57 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
     .kpi-grid { grid-template-columns: 1fr; } 
 }
 
-/* --- NYOMTATÁS (LAPTOP - ÁLLÓ A4 - 1 OLDAL) --- */
+/* --- NYOMTATÁS (LAPTOP - ÁLLÓ A4 - 1 OLDAL) - PRO FEJLÉC --- */
 @media print {
-    @page { size: A4 portrait; margin: 5mm; }
+    @page { size: A4 portrait; margin: 10mm 5mm 5mm 5mm; }
     body { 
         background: white !important; color: black !important; padding: 0 !important; 
         zoom: 75% !important;
         -webkit-print-color-adjust: exact !important;
     }
-    .controls-area, .help-btn, .modal-overlay { display: none !important; }
-    .date-display { border-right: none !important; color: black !important; }
-    .date-label { color: #555 !important; }
-    .date-value { color: #000 !important; font-size: 1.2rem !important; }
-
+    
     .container { max-width: 100% !important; margin: 0 !important; }
+    .controls-area, .help-btn, .modal-overlay { display: none !important; }
+
+    /* FEJLÉC PROFESSZIONÁLIS IGAZÍTÁSA (KÖZÉPRE) */
+    header {
+        display: block !important; /* Megtörjük a flexboxot */
+        text-align: center !important; /* Mindent középre */
+        margin-bottom: 30px !important;
+        border-bottom: 2px solid #333 !important; /* Vastagabb, elegánsabb vonal */
+        padding-bottom: 15px !important;
+    }
+
+    .brand {
+        display: block !important;
+        margin-bottom: 10px !important;
+    }
+    .brand h1 {
+        font-size: 24px !important;
+        color: #000 !important;
+        letter-spacing: 2px !important;
+    }
+    .brand .subtitle {
+        color: #555 !important;
+        font-size: 10px !important;
+    }
+
+    .header-actions {
+        display: block !important; /* Dátum a cím alá */
+        text-align: center !important;
+        width: 100% !important;
+        margin-top: 10px !important;
+    }
+
+    .date-display {
+        border-right: none !important;
+        padding-right: 0 !important;
+        text-align: center !important;
+    }
+    .date-label { color: #555 !important; font-size: 10px !important; }
+    .date-value { color: #000 !important; font-size: 14px !important; margin-top: 2px !important; }
+
+    /* TÖBBI NYOMTATÁSI BEÁLLÍTÁS (Változatlan) */
     .kpi-card, .panel { 
         background: white !important; border: 1px solid #ccc !important; 
         box-shadow: none !important; break-inside: avoid; 
