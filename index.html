@@ -127,7 +127,7 @@
         .calendar-box.type-holiday { border-left-color: #34d399; }
         .calendar-box.type-workday { border-left-color: #fbbf24; }
 
-        /* --- PRO MŰSZAK INFO STYLE (JAVÍTVA: EREDETI HALVÁNY HÁTTÉR) --- */
+        /* --- PRO MŰSZAK INFO STYLE (JAVÍTVA: EREDETI HALVÁNY HÁTTÉR + CENTRÁLÁS) --- */
         .shift-info-box {
             margin-top: 15px;
             background: rgba(15, 23, 42, 0.6);
@@ -137,19 +137,25 @@
             animation: fadeIn 0.5s ease;
         }
         .shift-header-row {
-            /* VISSZAÁLLÍTVA AZ EREDETI HALVÁNYRA */
             background: rgba(59, 130, 246, 0.1);
             border-bottom: 1px solid rgba(59, 130, 246, 0.1);
             padding: 8px 12px;
-            color: #60a5fa; /* A fejléc szöveg színe visszakerül kékre, hogy olvasható legyen a sötéten */
+            color: #60a5fa; 
             font-size: 0.65rem; font-weight: 800;
             text-transform: uppercase; letter-spacing: 1.2px;
-            display: flex; align-items: center; gap: 6px;
+            display: flex; align-items: center; justify-content: center; /* KÖZÉPRE IGAZÍTÁS */
+            gap: 6px;
         }
         .shift-content-row {
-            display: flex; justify-content: space-between; padding: 12px 14px;
+            display: flex; 
+            justify-content: center; /* KÖZÉPRE IGAZÍTÁS */
+            gap: 40px; /* SZÉP TÁVOLSÁG A KÉT OSZLOP KÖZÖTT */
+            padding: 12px 14px;
         }
-        .shift-col { display: flex; flex-direction: column; gap: 4px; }
+        .shift-col { 
+            display: flex; flex-direction: column; gap: 4px; 
+            align-items: center; /* TARTALOM KÖZÉPRE IGAZÍTÁSA AZ OSZLOPON BELÜL */
+        }
         .shift-label-sub { font-size: 0.7rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; }
         
         .shift-value-main { 
@@ -450,7 +456,7 @@
             const shiftDiv = document.createElement('div');
             shiftDiv.id = 'shift-info-display';
             shiftDiv.className = 'shift-info-box';
-            // Kért módosítás: Fehér betűjel, Kék műszak felirat
+            // Kért módosítás: Fehér betűjel, Kék műszak felirat + KÖZÉPRE IGAZÍTOTT STRUKTÚRA
             shiftDiv.innerHTML = `
                 <div class="shift-header-row">
                     <span>ÉRINTETT MŰSZAKOK</span>
@@ -463,7 +469,7 @@
                             <span style="color:#60a5fa; font-size:0.8rem; text-transform: uppercase;">műszak</span>
                         </span>
                     </div>
-                    <div class="shift-col text-right">
+                    <div class="shift-col">
                         <span class="shift-label-sub">Éjszaka</span>
                         <span class="shift-value-main">
                             <span style="color:white; font-size:1.1rem;">${nextEvent.shiftNight}</span> 
