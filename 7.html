@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Forvia SMT Managerial Dashboard v3.5</title>
+<title>Forvia SMT Managerial Dashboard v3.6</title>
 <style>
 /* --- DESIGN SYSTEM --- */
 :root {
@@ -40,6 +40,17 @@ header {
 .brand h1 { margin: 0; font-size: 1.5rem; text-transform: uppercase; letter-spacing: 1px; color: white; }
 .brand span { color: var(--primary); font-weight: 900; }
 .brand .subtitle { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+
+/* ÚJ ELEM: AKTÍV SOR KIÍRÁSA */
+#activeLineLabel {
+    display: none; /* Alapból rejtve, JS kapcsolja be */
+    margin-top: 5px;
+    font-size: 0.9rem;
+    color: var(--primary);
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
 
 .header-actions { display: flex; gap: 15px; align-items: center; }
 
@@ -182,10 +193,10 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
 
     /* FEJLÉC PROFESSZIONÁLIS IGAZÍTÁSA (KÖZÉPRE) */
     header {
-        display: block !important; /* Megtörjük a flexboxot */
-        text-align: center !important; /* Mindent középre */
+        display: block !important;
+        text-align: center !important;
         margin-bottom: 30px !important;
-        border-bottom: 2px solid #333 !important; /* Vastagabb, elegánsabb vonal */
+        border-bottom: 2px solid #333 !important;
         padding-bottom: 15px !important;
     }
 
@@ -202,9 +213,19 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
         color: #555 !important;
         font-size: 10px !important;
     }
+    
+    /* AKTÍV SOR NYOMTATÁSI STÍLUS */
+    #activeLineLabel {
+        color: #000 !important;
+        font-size: 14px !important;
+        margin-top: 8px !important;
+        border: 1px solid #000;
+        padding: 4px 10px;
+        display: inline-block !important; /* Ha a JS engedélyezte, itt blokkosítjuk */
+    }
 
     .header-actions {
-        display: block !important; /* Dátum a cím alá */
+        display: block !important;
         text-align: center !important;
         width: 100% !important;
         margin-top: 10px !important;
@@ -218,7 +239,7 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
     .date-label { color: #555 !important; font-size: 10px !important; }
     .date-value { color: #000 !important; font-size: 14px !important; margin-top: 2px !important; }
 
-    /* TÖBBI NYOMTATÁSI BEÁLLÍTÁS (Változatlan) */
+    /* TÖBBI NYOMTATÁSI BEÁLLÍTÁS */
     .kpi-card, .panel { 
         background: white !important; border: 1px solid #ccc !important; 
         box-shadow: none !important; break-inside: avoid; 
@@ -254,6 +275,7 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
         <div class="brand">
             <h1>Forvia <span>SMT Analytics</span></h1>
             <div class="subtitle">Production Quality & Attrition Dashboard by: Fajcsik Valér 2026</div>
+            <div id="activeLineLabel"></div>
         </div>
         <div class="header-actions">
             <div class="date-display">
@@ -493,6 +515,17 @@ function updateView() {
     const sLine = document.getElementById('filterLine').value;
     const sMach = document.getElementById('filterMachine').value;
     const limit = parseInt(document.getElementById('topLimit').value);
+    
+    // --- ÚJ RÉSZ: AKTÍV SOR KIJELZÉSE ---
+    const lineLabel = document.getElementById('activeLineLabel');
+    if(sLine !== 'mind') {
+        lineLabel.innerText = "Kiválasztott Sor: " + sLine;
+        lineLabel.style.display = 'block';
+    } else {
+        lineLabel.style.display = 'none';
+    }
+    // -------------------------------------
+
     const data = rawData.filter(d => (sLine === 'mind' || d.line === sLine) && (sMach === 'mind' || d.machine === sMach));
 
     let sumGood=0, sumPick=0, sumVis=0;
@@ -517,7 +550,6 @@ function updateView() {
 
     document.getElementById('kpiTotal').innerText = sumGood.toLocaleString();
     
-    // MÓDOSÍTÁS: FPY Színezés logika
     const yieldEl = document.getElementById('kpiYield');
     yieldEl.innerText = yieldVal.toFixed(2) + "%";
     
