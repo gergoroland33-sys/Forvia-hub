@@ -516,7 +516,18 @@ function updateView() {
     const yieldVal = totalUsage > 0 ? (sumGood/totalUsage)*100 : 100;
 
     document.getElementById('kpiTotal').innerText = sumGood.toLocaleString();
-    document.getElementById('kpiYield').innerText = yieldVal.toFixed(2) + "%";
+    
+    // MÓDOSÍTÁS: FPY Színezés logika
+    const yieldEl = document.getElementById('kpiYield');
+    yieldEl.innerText = yieldVal.toFixed(2) + "%";
+    
+    if (yieldVal < 99.98) {
+        yieldEl.classList.remove('text-success');
+        yieldEl.classList.add('text-danger');
+    } else {
+        yieldEl.classList.remove('text-danger');
+        yieldEl.classList.add('text-success');
+    }
     
     document.getElementById('kpiPickCount').innerText = sumPick.toLocaleString() + " db";
     document.getElementById('kpiPickRate').innerText = pickRate.toFixed(2) + "%";
