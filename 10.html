@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Szemétkihordás Terv</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --card-bg: #161b22;
+            --accent: #00f2ff; /* Neon Cyan */
+            --accent-dim: rgba(0, 242, 255, 0.1);
+            --text-main: #e6edf3;
+            --text-muted: #8b949e;
+            --border: #30363d;
+            --highlight: #238636; 
+        }
+
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        header {
+            background-color: #0d1117;
+            border-bottom: 1px solid var(--border);
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        .brand {
+            font-weight: 900;
+            font-size: 1.2rem;
+            color: var(--accent);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .current-shift-badge {
+            background: var(--border);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            border: 1px solid #555;
+        }
+
+        .info-box {
+            background: #10141a;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            text-align: center;
+        }
+        .info-highlight { color: var(--accent); font-weight: bold; }
+
+        .container {
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 15px;
+            position: relative;
+        }
+
+        .card.today {
+            background: linear-gradient(160deg, #1c2128 0%, #161b22 100%);
+            border: 1px solid var(--accent);
+            box-shadow: 0 0 20px var(--accent-dim);
+            padding: 25px 20px; 
+            margin-bottom: 10px;
+            transform: scale(1.02);
+            animation: pulseBorder 3s infinite;
+        }
+
+        @keyframes pulseBorder {
+            0% { box-shadow: 0 0 10px var(--accent-dim); }
+            50% { box-shadow: 0 0 25px rgba(0, 242, 255, 0.3); }
+            100% { box-shadow: 0 0 10px var(--accent-dim); }
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 8px;
+        }
+
+        .date-display { font-weight: bold; font-size: 1rem; color: #fff; }
+        .today .date-display { font-size: 1.2rem; color: var(--accent); }
+
+        .status-pill {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            padding: 4px 8px;
+            border-radius: 20px;
+            background: #333;
+            color: #aaa;
+        }
+        .today .status-pill { background: var(--accent); color: #000; }
+
+        .names-display {
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: center;
+            color: var(--text-main);
+            margin-top: 10px;
+            letter-spacing: 0.5px;
+        }
+        .today .names-display {
+            font-size: 1.6rem; 
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            margin: 15px 0;
+        }
+
+        .shift-time {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        .rest-view {
+            text-align: center;
+            padding: 40px 20px;
+            border: 2px dashed #333;
+            border-radius: 15px;
+            color: #666;
+            margin-top: 20px;
+        }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 1000;
+            display: none; justify-content: center; align-items: center; padding: 20px;
+        }
+        .modal {
+            background: #1c2128; border: 1px solid var(--border);
+            padding: 25px; border-radius: 12px; width: 100%; max-width: 400px;
+        }
+        h3 { margin-top: 0; color: var(--accent); }
+        input, select, textarea {
+            width: 100%; padding: 12px; background: #0d1117; border: 1px solid #30363d;
+            color: #fff; border-radius: 6px; margin: 8px 0; font-size: 16px;
+        }
+        textarea { height: 100px; resize: none; }
+        .btn {
+            width: 100%; padding: 14px; background: var(--accent); color: #000;
+            font-weight: bold; border: none; border-radius: 6px; cursor: pointer;
+            margin-top: 15px; font-size: 1rem; text-transform: uppercase;
+        }
+        .btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand" onclick="openPassModal()">
+            ♻️ SHIFT PRO
+        </div>
+        <div class="current-shift-badge" id="headerShiftBadge">A</div>
+    </header>
+
+    <div class="info-box">
+        Ez a <span id="infoShiftName" class="info-highlight">"A" műszak</span> hivatalos szemétkihordási terve.<br>
+        A rendszer 3 napos, igazságos rotációt mutat.
+    </div>
+
+    <div class="container" id="scheduleContainer">
+        </div>
+
+    <div class="modal-overlay" id="passModal">
+        <div class="modal">
+            <h3>Admin Belépés</h3>
+            <p style="color:#888; font-size:0.8rem;">A beállítások módosításához add meg a jelszót.</p>
+            <input type="password" id="passInput" placeholder="Jelszó">
+            <button class="btn" onclick="checkPass()">Belépés</button>
+            <button class="btn btn-outline" onclick="closeModals()">Mégse</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal">
+            <h3>Beállítások</h3>
+            
+            <label style="font-size:0.8rem; color:#aaa;">Műszak kiválasztása</label>
+            <select id="shiftSelect">
+                <option value="A">"A" Műszak</option>
+                <option value="B">"B" Műszak</option>
+                <option value="C">"C" Műszak</option>
+                <option value="D">"D" Műszak</option>
+            </select>
+
+            <label style="font-size:0.8rem; color:#aaa; margin-top:10px; display:block;">Gépkezelők (Vesszővel elválasztva)</label>
+            <textarea id="namesInput" placeholder="Név 1, Név 2, Név 3..."></textarea>
+
+            <button class="btn" onclick="saveSettings()">Mentés</button>
+            <button class="btn btn-outline" onclick="shareLink()">🔗 Link Megosztása</button>
+        </div>
+    </div>
+
+<script>
+    const CYCLE_START = new Date(2025, 6, 31); 
+    const ADMIN_PASS = "1234";
+
+    let config = {
+        shift: "A",
+        names: ["Kovács János", "Nagy Péter", "Szabó István", "Varga Tamás", "Kiss Éva"]
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadConfig();
+        updateUI();
+    });
+
+    function getPair(globalIndex, names) {
+        if (names.length < 2) return "Nincs elég adat";
+        let start = (globalIndex * 2) % names.length;
+        let p1 = names[start];
+        let p2 = names[(start + 1) % names.length];
+        return `${p1} – ${p2}`;
+    }
+
+    function updateUI() {
+        document.getElementById('headerShiftBadge').textContent = config.shift;
+        document.getElementById('infoShiftName').textContent = `"${config.shift}" műszak`;
+
+        const container = document.getElementById('scheduleContainer');
+        container.innerHTML = '';
+
+        let today = new Date();
+        today.setHours(0,0,0,0);
+
+        let diffTime = today - CYCLE_START;
+        let totalDaysSinceStart = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        let todayCycleIdx = ((totalDaysSinceStart % 12) + 12) % 12;
+
+        let blockStartIdx = 0;
+        if (todayCycleIdx >= 3) blockStartIdx = 3;
+        if (todayCycleIdx >= 6) blockStartIdx = 6;
+        if (todayCycleIdx >= 9) blockStartIdx = 9;
+
+        let shiftsInBlock = getShiftsForBlock(blockStartIdx); 
+        let isWorking = (config.shift === shiftsInBlock.day || config.shift === shiftsInBlock.night);
+        let shiftType = (config.shift === shiftsInBlock.day) ? "NAPPAL (06:00-18:00)" : "ÉJSZAKA (18:00-06:00)";
+
+        if (!isWorking) {
+            container.innerHTML = `
+                <div class="rest-view">
+                    <h2>😴 PIHENŐNAPOK</h2>
+                    <p>A(z) "${config.shift}" műszak jelenleg nem dolgozik.</p>
+                    <p style="font-size:0.8rem">A következő munkanapok később kezdődnek.</p>
+                </div>
+            `;
+            return;
+        }
+
+        let offset = todayCycleIdx - blockStartIdx;
+        let blockDate = new Date(today);
+        blockDate.setDate(today.getDate() - offset);
+
+        let baseSeed = Math.floor(blockDate.getTime() / (1000 * 60 * 60 * 24)) + config.shift.charCodeAt(0);
+
+        for(let i=0; i<3; i++) {
+            let currentDay = new Date(blockDate);
+            currentDay.setDate(blockDate.getDate() + i);
+            
+            let isToday = (currentDay.getTime() === today.getTime());
+            let dateStr = currentDay.toLocaleDateString('hu-HU', { month: 'short', day: 'numeric', weekday: 'long' });
+            let status = isToday ? "MAI NAP" : (currentDay < today ? "TELJESÍTVE" : "KÖVETKEZŐ");
+            let pair = getPair(baseSeed + i, config.names);
+
+            let cardHtml = `
+                <div class="card ${isToday ? 'today' : ''}">
+                    <div class="card-header">
+                        <span class="date-display">${dateStr}</span>
+                        <span class="status-pill">${status}</span>
+                    </div>
+                    <div class="names-display">${pair}</div>
+                    <div class="shift-time">${shiftType}</div>
+                </div>
+            `;
+            container.innerHTML += cardHtml;
+        }
+    }
+
+    function getShiftsForBlock(startIdx) {
+        if(startIdx === 0) return { day: "B", night: "A" };
+        if(startIdx === 3) return { day: "D", night: "C" };
+        if(startIdx === 6) return { day: "A", night: "B" };
+        return { day: "C", night: "D" }; 
+    }
+
+    function openPassModal() {
+        document.getElementById('passModal').style.display = 'flex';
+        document.getElementById('passInput').value = '';
+        document.getElementById('passInput').focus();
+    }
+
+    function checkPass() {
+        if(document.getElementById('passInput').value === ADMIN_PASS) {
+            closeModals();
+            openSettings();
+        } else {
+            alert("Hibás jelszó!");
+        }
+    }
+
+    function openSettings() {
+        document.getElementById('settingsModal').style.display = 'flex';
+        document.getElementById('shiftSelect').value = config.shift;
+        document.getElementById('namesInput').value = config.names.join(', ');
+    }
+
+    function closeModals() {
+        document.querySelectorAll('.modal-overlay').forEach(el => el.style.display = 'none');
+    }
+
+    function saveSettings() {
+        config.shift = document.getElementById('shiftSelect').value;
+        let raw = document.getElementById('namesInput').value;
+        config.names = raw.split(',').map(n => n.trim()).filter(n => n);
+        localStorage.setItem('shiftConfig_v2', JSON.stringify(config));
+        closeModals();
+        updateUI();
+        alert("Beállítások mentve!");
+    }
+
+    function loadConfig() {
+        const params = new URLSearchParams(window.location.search);
+        if(params.has('data')) {
+            try {
+                let json = atob(params.get('data'));
+                config = JSON.parse(json);
+                localStorage.setItem('shiftConfig_v2', JSON.stringify(config));
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } catch(e) {}
+            return;
+        }
+        let saved = localStorage.getItem('shiftConfig_v2');
+        if(saved) config = JSON.parse(saved);
+    }
+
+    function shareLink() {
+        let str = btoa(JSON.stringify(config));
+        let url = window.location.protocol + "//" + window.location.host + window.location.pathname + "?data=" + str;
+        navigator.clipboard.writeText(url).then(() => alert("Link másolva! Küldd el a kollégáknak."), () => prompt("Másold ki:", url));
+    }
+
+</script>
+</body>
+</html>
