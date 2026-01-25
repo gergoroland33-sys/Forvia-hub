@@ -2,189 +2,286 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Szemétkihordás Terv</title>
     <style>
         :root {
-            --bg: #050505;
-            --card-bg: #161b22;
-            --accent: #00f2ff; /* Neon Cyan */
-            --accent-dim: rgba(0, 242, 255, 0.1);
-            --text-main: #e6edf3;
-            --text-muted: #8b949e;
-            --border: #30363d;
-            --highlight: #238636; 
+            /* Modern Pro Palette */
+            --bg-grad-start: #0f172a; /* Slate 900 */
+            --bg-grad-end: #1e293b;   /* Slate 800 */
+            --card-glass: rgba(30, 41, 59, 0.7);
+            --border-glass: rgba(255, 255, 255, 0.1);
+            
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            
+            --accent-primary: #3b82f6; /* Modern Blue */
+            --accent-glow: rgba(59, 130, 246, 0.5);
+            
+            /* RGB Gradient colors */
+            --rgb-1: #ef4444;
+            --rgb-2: #e879f9;
+            --rgb-3: #6366f1;
+            --rgb-4: #22d3ee;
         }
 
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        * { box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
 
         body {
-            background-color: var(--bg);
+            background: linear-gradient(135deg, var(--bg-grad-start), var(--bg-grad-end));
             color: var(--text-main);
             margin: 0;
             padding: 0;
-            min-height: 100vh;
+            min-height: 100dvh; /* Dinamikus magasság mobilon */
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
         }
 
+        /* --- MODERN HEADER --- */
         header {
-            background-color: #0d1117;
-            border-bottom: 1px solid var(--border);
-            padding: 15px 20px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-glass);
+            padding: 16px 24px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
         }
 
         .brand {
-            font-weight: 900;
-            font-size: 1.2rem;
-            color: var(--accent);
+            font-weight: 800;
+            font-size: 1.1rem;
+            background: linear-gradient(to right, #3b82f6, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             letter-spacing: 1px;
             text-transform: uppercase;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
 
         .current-shift-badge {
-            background: var(--border);
+            background: rgba(255, 255, 255, 0.1);
             color: #fff;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            border: 1px solid #555;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border: 1px solid var(--border-glass);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
+        /* --- INFO SÁV --- */
         .info-box {
-            background: #10141a;
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.85rem;
+            background: rgba(15, 23, 42, 0.5);
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-glass);
+            font-size: 0.8rem;
             color: var(--text-muted);
-            line-height: 1.4;
             text-align: center;
         }
-        .info-highlight { color: var(--accent); font-weight: bold; }
+        .info-highlight { color: #60a5fa; font-weight: 600; }
 
+        /* --- FŐ TARTALOM --- */
         .container {
             padding: 20px;
-            max-width: 600px;
+            max-width: 500px;
             margin: 0 auto;
             width: 100%;
-            flex: 1;
+            flex: 1; /* Kitölti a helyet */
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            justify-content: flex-start; /* Mobilon jobb, ha fentről indul, de középre húzható */
+            gap: 16px;
+            padding-bottom: 40px; /* Biztonsági margó alul */
+        }
+        
+        /* Ha kevés a tartalom, középre igazítjuk függőlegesen */
+        @media (min-height: 700px) {
+            .container { justify-content: center; }
         }
 
+        /* --- KÁRTYÁK --- */
         .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 15px;
+            background: var(--card-glass);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 18px 24px;
             position: relative;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
+        /* MAI NAP - PRO MEGJELENÉS (RGB ANIMÁCIÓ) */
         .card.today {
-            background: linear-gradient(160deg, #1c2128 0%, #161b22 100%);
-            border: 1px solid var(--accent);
-            box-shadow: 0 0 20px var(--accent-dim);
-            padding: 25px 20px; 
-            margin-bottom: 10px;
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid transparent; /* Trükk a gradienshez */
+            padding: 25px 24px;
+            margin-bottom: 15px;
             transform: scale(1.02);
-            animation: pulseBorder 3s infinite;
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
         }
 
-        @keyframes pulseBorder {
-            0% { box-shadow: 0 0 10px var(--accent-dim); }
-            50% { box-shadow: 0 0 25px rgba(0, 242, 255, 0.3); }
-            100% { box-shadow: 0 0 10px var(--accent-dim); }
+        /* RGB Keret és Háttér effekt */
+        .card.today::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 16px; 
+            padding: 2px; /* Keret vastagsága */
+            background: linear-gradient(45deg, var(--rgb-1), var(--rgb-2), var(--rgb-3), var(--rgb-4));
+            background-size: 400% 400%;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            animation: rgbFlow 6s ease infinite;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Finom ragyogás a háttérben */
+        .card.today::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        @keyframes rgbFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            margin-bottom: 12px;
             padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
         }
 
-        .date-display { font-weight: bold; font-size: 1rem; color: #fff; }
-        .today .date-display { font-size: 1.2rem; color: var(--accent); }
+        .date-display { 
+            font-weight: 600; 
+            font-size: 0.95rem; 
+            color: #cbd5e1; 
+            text-transform: capitalize;
+        }
+        .today .date-display { 
+            font-size: 1.1rem; 
+            color: #fff; 
+            font-weight: 700;
+        }
 
         .status-pill {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             text-transform: uppercase;
             font-weight: 800;
-            padding: 4px 8px;
+            padding: 4px 10px;
             border-radius: 20px;
-            background: #333;
-            color: #aaa;
+            background: rgba(255,255,255,0.05);
+            color: #64748b;
+            letter-spacing: 0.5px;
         }
-        .today .status-pill { background: var(--accent); color: #000; }
+        .today .status-pill { 
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            color: #fff; 
+            box-shadow: 0 2px 10px rgba(59, 130, 246, 0.4);
+        }
 
         .names-display {
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             font-weight: 600;
             text-align: center;
             color: var(--text-main);
-            margin-top: 10px;
-            letter-spacing: 0.5px;
+            margin: 15px 0;
+            letter-spacing: 0.3px;
         }
         .today .names-display {
-            font-size: 1.6rem; 
+            font-size: 1.7rem; 
             font-weight: 800;
-            color: #fff;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-            margin: 15px 0;
+            background: linear-gradient(to right, #ffffff, #e2e8f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 20px 0;
+            /* Text shadow a jobb olvashatóságért */
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
         }
 
         .shift-time {
             text-align: center;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
-            margin-top: 5px;
+            margin-top: 8px;
+            font-weight: 500;
         }
 
+        /* --- PIHENŐ MÓD --- */
         .rest-view {
             text-align: center;
-            padding: 40px 20px;
-            border: 2px dashed #333;
-            border-radius: 15px;
-            color: #666;
+            padding: 50px 20px;
+            background: rgba(255,255,255,0.02);
+            border: 1px dashed var(--border-glass);
+            border-radius: 20px;
+            color: var(--text-muted);
             margin-top: 20px;
         }
+        .rest-view h2 { color: #10b981; margin-bottom: 10px; }
 
+        /* --- ADMIN MODALS --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 1000;
+            background: rgba(0,0,0,0.8); 
+            backdrop-filter: blur(5px);
+            z-index: 1000;
             display: none; justify-content: center; align-items: center; padding: 20px;
         }
         .modal {
-            background: #1c2128; border: 1px solid var(--border);
-            padding: 25px; border-radius: 12px; width: 100%; max-width: 400px;
+            background: #1e293b; 
+            border: 1px solid #334155;
+            padding: 24px; border-radius: 16px; width: 100%; max-width: 380px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
-        h3 { margin-top: 0; color: var(--accent); }
+        .modal h3 { margin-top: 0; color: #fff; font-size: 1.2rem; }
+        
         input, select, textarea {
-            width: 100%; padding: 12px; background: #0d1117; border: 1px solid #30363d;
-            color: #fff; border-radius: 6px; margin: 8px 0; font-size: 16px;
+            width: 100%; padding: 14px; 
+            background: #0f172a; 
+            border: 1px solid #334155;
+            color: #fff; border-radius: 10px; margin: 10px 0; font-size: 1rem;
+            outline: none; transition: border-color 0.2s;
         }
-        textarea { height: 100px; resize: none; }
+        input:focus, select:focus, textarea:focus { border-color: var(--accent-primary); }
+        textarea { height: 120px; resize: none; }
+        
         .btn {
-            width: 100%; padding: 14px; background: var(--accent); color: #000;
-            font-weight: bold; border: none; border-radius: 6px; cursor: pointer;
-            margin-top: 15px; font-size: 1rem; text-transform: uppercase;
+            width: 100%; padding: 14px; 
+            background: var(--accent-primary); color: #fff;
+            font-weight: 600; border: none; border-radius: 10px; cursor: pointer;
+            margin-top: 15px; font-size: 1rem;
+            transition: transform 0.1s, background 0.2s;
         }
-        .btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
+        .btn:active { transform: scale(0.98); }
+        .btn-outline { 
+            background: transparent; border: 1px solid var(--accent-primary); color: var(--accent-primary); 
+            margin-top: 10px;
+        }
 
     </style>
 </head>
@@ -192,7 +289,7 @@
 
     <header>
         <div class="brand" onclick="openPassModal()">
-            ♻️ SHIFT PRO
+            <span>♻️</span> SHIFT PRO
         </div>
         <div class="current-shift-badge" id="headerShiftBadge">A</div>
     </header>
@@ -208,7 +305,7 @@
     <div class="modal-overlay" id="passModal">
         <div class="modal">
             <h3>Admin Belépés</h3>
-            <p style="color:#888; font-size:0.8rem;">A beállítások módosításához add meg a jelszót.</p>
+            <p style="color:#94a3b8; font-size:0.9rem; margin-bottom: 15px;">A beállítások módosításához add meg a jelszót.</p>
             <input type="password" id="passInput" placeholder="Jelszó">
             <button class="btn" onclick="checkPass()">Belépés</button>
             <button class="btn btn-outline" onclick="closeModals()">Mégse</button>
@@ -219,7 +316,7 @@
         <div class="modal">
             <h3>Beállítások</h3>
             
-            <label style="font-size:0.8rem; color:#aaa;">Műszak kiválasztása</label>
+            <label style="font-size:0.85rem; color:#94a3b8; font-weight:600;">Műszak kiválasztása</label>
             <select id="shiftSelect">
                 <option value="A">"A" Műszak</option>
                 <option value="B">"B" Műszak</option>
@@ -227,7 +324,7 @@
                 <option value="D">"D" Műszak</option>
             </select>
 
-            <label style="font-size:0.8rem; color:#aaa; margin-top:10px; display:block;">Gépkezelők (Vesszővel elválasztva)</label>
+            <label style="font-size:0.85rem; color:#94a3b8; margin-top:15px; display:block; font-weight:600;">Gépkezelők (Vesszővel elválasztva)</label>
             <textarea id="namesInput" placeholder="Név 1, Név 2, Név 3..."></textarea>
 
             <button class="btn" onclick="saveSettings()">Mentés</button>
@@ -236,6 +333,9 @@
     </div>
 
 <script>
+    /* A LOGIKA ÉS A JS KÓD 100%-BAN VÁLTOZATLAN.
+       CSAK A MEGJELENÍTÉS (CSS) VÁLTOZOTT.
+    */
     const CYCLE_START = new Date(2025, 6, 31); 
     const ADMIN_PASS = "1234";
 
