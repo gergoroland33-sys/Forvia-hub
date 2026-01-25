@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Forvia Bank Scan Mobil Ver5.7 (Focus Fix)</title>
+<title>Forvia Bank Scan Mobil Ver5.8 (Focus Pro)</title>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <style>
@@ -44,6 +44,30 @@ body {
     flex: 1; display: flex; flex-direction: column; padding: 20px;
     overflow-y: auto; align-items: center; width: 100%; -webkit-overflow-scrolling: touch;
 }
+
+/* --- ÚJ PRO KAPCSOLÓ STÍLUS --- */
+.focus-switch-wrapper {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 15px;
+    background: rgba(30, 41, 59, 0.6); padding: 8px 16px; border-radius: 30px;
+    border: 1px solid var(--glass-border); backdrop-filter: blur(4px);
+}
+.switch-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px; }
+
+/* A tényleges csúszka */
+.toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #475569; transition: .3s; border-radius: 34px;
+}
+.slider:before {
+    position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+    background-color: white; transition: .3s; border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+input:checked + .slider { background-color: var(--accent); }
+input:checked + .slider:before { transform: translateX(20px); }
+/* -------------------------- */
 
 #reader {
     width: 100%; max-width: 300px; aspect-ratio: 1 / 1; border-radius: 20px;
@@ -131,6 +155,14 @@ input[type=text] {
 <div class="main-content" id="screen">
     <div id="loadMsg" class="load-msg">Adatbázis betöltése...</div>
 
+    <div class="focus-switch-wrapper">
+        <label class="toggle-switch">
+            <input type="checkbox" id="focusToggle">
+            <span class="slider"></span>
+        </label>
+        <span class="switch-label">iPhone 15+ Makró Mód</span>
+    </div>
+
     <div id="reader"></div>
 
     <div class="input-wrapper">
@@ -162,7 +194,7 @@ input[type=text] {
 
 <script>
 /* ========================================================
-   LOGIKA - DATA MATRIX + KISEBB KERET (FÓKUSZ FIX)
+   LOGIKA - DATA MATRIX + FÓKUSZ VÁLASZTÓ
    ======================================================== */
 const input = document.getElementById('barcodeInput');
 const resultsWrapper = document.getElementById('resultsWrapper');
@@ -263,7 +295,7 @@ function search(code) {
     }
 }
 
-// --- JAVÍTOTT KAMERA LOGIKA (KIS QRBOX + DATA MATRIX) ---
+// --- KAMERA LOGIKA KAPCSOLÓVAL ---
 function handleCameraButton() {
     resultsWrapper.innerHTML = ''; 
     input.value = '';
@@ -287,16 +319,41 @@ function startCamera() {
         html5QrCode = new Html5Qrcode("reader");
     }
 
-    // ITT A VÁLTOZTATÁS:
-    // qrbox 250x250 -> 160x160 (hogy közelebb kelljen vinni)
-    const config = { 
-        fps: 25, 
-        qrbox: { width: 120, height: 120 }, 
-        formatsToSupport: [ Html5QrcodeSupportedFormats.DATA_MATRIX ] 
-    };
+    // KAPCSOLÓ ÁLLAPOTÁNAK LEKÉRDEZÉSE
+    const isProMode = document.getElementById('focusToggle').checked;
+
+    let config = {};
+    let constraints = {};
+
+    if (isProMode) {
+        // --- PRO MÓD (iPhone 15/14 Fix) ---
+        // Nagyobb keret (hogy távolabb tarthasd) és kényszerített fókusz
+        console.log("iPhone 15 Makró Mód: AKTÍV");
+        config = { 
+            fps: 25, 
+            qrbox: { width: 250, height: 250 }, // Nagyobb keret
+            formatsToSupport: [ Html5QrcodeSupportedFormats.DATA_MATRIX ] 
+        };
+        constraints = { 
+            facingMode: "environment",
+            focusMode: "continuous",
+            width: { min: 1024, ideal: 1280, max: 1920 }, // Magasabb felbontás
+            advanced: [{ focusMode: "continuous" }]
+        };
+    } else {
+        // --- EREDETI MÓD (Mindenki másnak) ---
+        // Ez BÁJTRA PONTOSAN az eredeti beállítás
+        console.log("Normál Mód: AKTÍV");
+        config = { 
+            fps: 25, 
+            qrbox: { width: 120, height: 120 }, 
+            formatsToSupport: [ Html5QrcodeSupportedFormats.DATA_MATRIX ] 
+        };
+        constraints = { facingMode: "environment" };
+    }
     
     html5QrCode.start(
-        { facingMode: "environment" }, 
+        constraints, 
         config,
         (decodedText) => {
             forceStopCamera().then(() => {
@@ -307,6 +364,19 @@ function startCamera() {
         (errorMessage) => {}
     ).then(() => {
         isCameraRunning = true;
+        
+        // Ha Pro módban vagyunk, megpróbálunk még egy extra fókuszt küldeni
+        if (isProMode) {
+            setTimeout(() => {
+                try {
+                    const capabilities = html5QrCode.getRunningTrackCapabilities();
+                    if (capabilities.focusMode && capabilities.focusMode.includes('continuous')) {
+                         html5QrCode.applyVideoConstraints({ focusMode: 'continuous' });
+                    }
+                } catch (e) {}
+            }, 800);
+        }
+
     }).catch(err => {
         console.error("Kamera start hiba:", err);
         forceStopCamera();
