@@ -27,7 +27,7 @@ body {
 
 /* FEJLÉC */
 .top-bar { 
-    background: rgba(15, 23, 42, 0.95); /* Kicsit sötétebb a jobb kontrasztért */
+    background: rgba(15, 23, 42, 0.95); 
     border-bottom: 1px solid var(--border); 
     padding: 10px 20px; 
     position: sticky; top: 0; z-index: 100; 
@@ -37,7 +37,7 @@ body {
 .date-display { font-size: 0.75rem; color: var(--text-secondary); font-family: monospace; }
 
 /* KERESŐ */
-.search-wrapper { padding: 15px; max-width: 600px; margin: 0 auto; position: relative; }
+.search-wrapper { padding: 15px; max-width: 600px; margin: 0 auto; position: relative; z-index: 200; }
 .input-group { position: relative; width: 100%; display: flex; align-items: center; }
 
 .search-icon { position: absolute; left: 15px; color: var(--text-secondary); font-size: 1.1rem; pointer-events: none; z-index: 10; }
@@ -64,21 +64,48 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
 }
 .clear-btn:hover { color: white; transform: scale(1.1); }
 
-/* JAVASLATOK */
+/* --- JAVASLATOK (PRO VERZIÓ) --- */
+/* Ez biztosítja, hogy a lista ne takarja ki a mezőt és görgethető legyen */
 #suggest { 
-    background: var(--card-surface); 
+    background: rgba(30, 41, 59, 0.98); /* Sötét, modern háttér */
+    backdrop-filter: blur(12px);        /* Homályosított üveghatás */
     border: 1px solid var(--border); 
-    border-radius: 12px; 
-    margin-top: 5px; 
-    position: absolute; width: calc(100% - 30px); z-index: 50; 
-    display: none; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    border-top: none;                   /* Fent ne legyen keret, olvadjon egybe */
+    border-radius: 0 0 20px 20px;       /* Csak alul kerekítve */
+    
+    position: absolute; 
+    top: 100%;                          /* Pontosan a mező alatt kezdődik */
+    left: 15px;                         /* Igazodik a mező bal széléhez */
+    right: 15px;                        /* Igazodik a mező jobb széléhez */
+    z-index: 1000;                      /* Minden más felett */
+    
+    display: none; 
+    box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+    
+    max-height: 260px;                  /* MAXIMÁLIS MAGASSÁG: Nem foglalja el a képernyőt */
+    overflow-y: auto;                   /* Görgethető, ha sok a találat */
+    scrollbar-width: thin;              /* Vékony görgetősáv */
+    scrollbar-color: var(--accent) var(--bg-app);
 }
-.s-item { padding: 10px 20px; cursor: pointer; border-bottom: 1px solid var(--border); font-family: monospace; }
-.s-item:hover { background: var(--accent); color: white; }
-.hl { color: var(--accent); font-weight: bold; }
+
+.s-item { 
+    padding: 12px 20px; 
+    cursor: pointer; 
+    border-bottom: 1px solid rgba(255,255,255,0.05); 
+    font-family: monospace; 
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+}
+.s-item:last-child { border-bottom: none; }
+.s-item:hover { 
+    background: rgba(96, 165, 250, 0.15); 
+    color: white; 
+    padding-left: 25px; /* Finom animáció jobbra */
+}
+.hl { color: var(--accent); font-weight: bold; text-shadow: 0 0 10px rgba(96, 165, 250, 0.3); }
 
 /* ELŐZMÉNYEK */
-#historySection { margin-top: 15px; }
+#historySection { margin-top: 15px; position: relative; z-index: 1; }
 .history-title { font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 5px; margin-left: 10px; font-weight: 600;}
 .history-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { 
@@ -90,11 +117,8 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
 /* --- EREDMÉNYEK ÉS KÁRTYÁK --- */
 #eredmeny { max-width: 600px; margin: 0 auto 50px auto; padding: 0 15px; }
 
-/* EZ AZ ÚJ RÉSZ: 
-   Látványos elválasztó fejlécek 
-*/
 .section-header {
-    margin-top: 40px; /* Nagyobb távolság a blokkok között */
+    margin-top: 40px; 
     margin-bottom: 15px;
     padding: 12px 20px;
     border-radius: 8px;
@@ -167,8 +191,10 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
         <span class="search-icon">🔍</span>
         <input id="keres" type="text" placeholder="Kezd el gépelni a cikkszámot!" disabled autocomplete="off" />
         <span class="clear-btn" id="clearBtn" onclick="clearSearch()" title="Törlés">✕</span>
+        
+        <div id="suggest"></div>
     </div>
-    <div id="suggest"></div>
+    
     <div id="historySection" style="display:none;">
         <div class="history-title">Előzmények</div>
         <div class="history-chips" id="historyChips"></div>
