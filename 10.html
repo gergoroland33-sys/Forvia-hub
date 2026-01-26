@@ -18,7 +18,7 @@
             --card-border: rgba(255, 255, 255, 0.1);
         }
 
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
 
         body {
             background-color: var(--bg-dark);
@@ -29,7 +29,7 @@
             overflow: hidden;
         }
 
-        /* --- FELSŐ RÉSZ: MAI NAP (HERO) --- */
+        /* --- FELSŐ RÉSZ: MAI NAP (HERO) - VÁLTOZATLAN --- */
         .hero-section {
             flex: 1;
             display: flex; flex-direction: column;
@@ -77,46 +77,83 @@
             box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
         }
 
-        /* --- ALSÓ RÉSZ: LISTA (SCROLL) --- */
+        /* --- ALSÓ RÉSZ: LISTA (MÓDOSÍTVA) --- */
         .list-container {
-            height: 40vh; /* Kicsit magasabb */
-            background: var(--surface);
-            border-top-left-radius: 30px; border-top-right-radius: 30px;
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+            height: 45vh; /* Kicsit több hely a listának */
+            /* Háttér és keret eltávolítva a lebegő hatáshoz */
+            background: transparent; 
+            box-shadow: none;
+            border-radius: 0;
+            
             overflow-y: auto;
-            padding: 25px;
+            padding: 20px 25px;
             position: relative; z-index: 2;
+            /* Maszkolás, hogy felül szépen tűnjön el */
+            mask-image: linear-gradient(to bottom, transparent 0%, black 10%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%);
         }
 
-        .handle { width: 40px; height: 5px; background: rgba(255,255,255,0.1); border-radius: 10px; margin: 0 auto 20px auto; }
-        .list-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 15px; letter-spacing: 1px; }
+        .list-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 15px; letter-spacing: 1px; text-align: center; }
 
-        /* --- ÚJ KÁRTYA STÍLUS A LISTÁHOZ --- */
+        /* --- ÚJ, LENYITHATÓ LEBEGŐ KÁRTYÁK --- */
         .list-card {
-            background: var(--card-glass);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.05); /* Nagyon halvány alap */
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
             margin-bottom: 12px;
-            display: flex; align-items: center; justify-content: space-between;
-            transition: transform 0.2s;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
         
-        /* Dátum blokk (bal oldal) */
-        .lc-date-box {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: rgba(0,0,0,0.3);
-            border-radius: 12px;
-            width: 50px; height: 50px;
-            margin-right: 15px;
+        /* Aktív (lenyitott) állapot */
+        .list-card.active {
+            background: var(--card-glass);
+            border-color: var(--primary-glow);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.2);
         }
-        .lc-day { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--accent); }
-        .lc-num { font-size: 1.1rem; font-weight: 700; color: #fff; line-height: 1; }
 
-        /* Nevek (jobb oldal) */
-        .lc-content { flex: 1; }
-        .lc-names { font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 2px; }
-        .lc-weekday { font-size: 0.8rem; color: var(--text-dim); }
+        /* Kártya Fejléc (Mindig látszik) */
+        .lc-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 15px 20px;
+        }
+        
+        .lc-date-summary {
+            display: flex; align-items: center; gap: 12px;
+        }
+        .lc-day-badge {
+            background: rgba(6, 182, 212, 0.15); color: var(--accent);
+            font-weight: 700; font-size: 0.8rem; padding: 4px 8px; border-radius: 6px; text-transform: uppercase;
+        }
+        .lc-date-text { font-weight: 600; color: var(--text-dim); }
+        .list-card.active .lc-date-text { color: #fff; }
+
+        .lc-arrow { color: var(--text-dim); transition: transform 0.3s ease; }
+        .list-card.active .lc-arrow { transform: rotate(180deg); color: var(--primary); }
+
+        /* Kártya Tartalom (Lenyitható rész) */
+        .lc-details {
+            max-height: 0;
+            opacity: 0;
+            transition: all 0.3s ease-in-out;
+            padding: 0 20px;
+        }
+
+        .list-card.active .lc-details {
+            max-height: 100px; /* Elég hely a neveknek */
+            opacity: 1;
+            padding-bottom: 20px;
+        }
+
+        .lc-names {
+            font-size: 1.3rem; font-weight: 800; color: #fff;
+            text-align: center;
+            background: linear-gradient(to right, #fff, #a5b4fc);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
 
         .list-container::-webkit-scrollbar { width: 0px; background: transparent; }
         .rest-view { text-align: center; margin-top: 50px; opacity: 0.7; }
@@ -127,8 +164,7 @@
     <section class="hero-section" id="heroContainer"></section>
 
     <div class="list-container">
-        <div class="handle"></div>
-        <div class="list-title">Következő beosztás</div>
+        <div class="list-title">Következő beosztás (Koppints a részletekért)</div>
         <div id="upcomingList"></div>
     </div>
 
@@ -152,20 +188,11 @@
         return config.names.split(',').map(n => n.trim()).filter(n => n !== "");
     }
 
-    // --- A JAVÍTOTT, SZIGORÚ SZÁMOLÁS ---
-    // Ez a függvény kiszámolja, hogy a CIKLUS KEZDETE óta hányadik műszaknapon járunk.
-    // Nem dátum alapján ugrál, hanem sorszám alapján.
-    // 1. műszaknap = 1-2. ember
-    // 2. műszaknap = 3-4. ember
-    // Így lehetetlen, hogy valaki duplázzon.
+    // --- A JAVÍTOTT, SZIGORÚ SZÁMOLÁS (Változatlan) ---
     function getPairForShiftIndex(shiftIndex) {
         let list = getCleanNames();
         let n = list.length;
         if(n < 2) return "Kevés név!";
-
-        // A "shiftIndex" az, hogy hányadik munkanap van a kezdetek óta.
-        // Minden munkanap 2 ember fogy el.
-        // A matek: (shiftIndex * 2) a lista "abszolút" pozíciója.
         
         let slot1 = (shiftIndex * 2) % n;
         let slot2 = (shiftIndex * 2 + 1) % n;
@@ -185,7 +212,6 @@
         let diffTime = today - CYCLE_START;
         let totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
         
-        // Ciklus infók
         let cycleIdx = ((totalDays % 12) + 12) % 12;
         let blockStart = 0;
         if (cycleIdx >= 3) blockStart = 3;
@@ -207,12 +233,11 @@
                     <p style="color:var(--text-dim)">Ma nincs szemétkihordás.</p>
                 </div>
             `;
-            // A listát azért kitöltjük a jövővel
             fillUpcomingList(today, listContainer); 
             return;
         }
 
-        // 2. MAI NAP (HA MUNKA) - Kiszámoljuk a pontos indexet
+        // 2. MAI NAP (HA MUNKA)
         let currentShiftIndex = calculateShiftIndex(today);
         let todayPair = getPairForShiftIndex(currentShiftIndex);
         
@@ -235,11 +260,7 @@
         fillUpcomingList(today, listContainer);
     }
 
-    // Segédfüggvény: Kiszámolja, hányadik munkanap ez a kezdetek (CYCLE_START) óta.
-    // Ez a lelke a stabil forgásnak.
     function calculateShiftIndex(targetDate) {
-        // Végigmegyünk napról napra a kezdettől a célig, és számoljuk a munkanapokat.
-        // Ez kicsit erőforrásigényesebb, de 100% pontos.
         let count = 0;
         let iterDate = new Date(CYCLE_START);
         
@@ -257,8 +278,6 @@
             let work = (config.shift === s.day || config.shift === s.night);
             
             if(work) {
-                // Ha ez munkanap volt, növeljük a számlálót
-                // De csak akkor, ha nem a cél dátum után vagyunk (bár a while megfogja)
                 if(iterDate.getTime() === targetDate.getTime()) {
                     return count;
                 }
@@ -266,23 +285,15 @@
             }
             iterDate.setDate(iterDate.getDate() + 1);
         }
-        return count; // Fallback, ha jövőbe kérdezünk
+        return count;
     }
 
-    // Lista generálása (ugyanazzal a logikával)
+    // Lista generálása (MÓDOSÍTVA: Új HTML szerkezet a lenyithatósághoz)
     function fillUpcomingList(startDate, container) {
         let countFound = 0;
         let iterDate = new Date(startDate);
-        iterDate.setDate(iterDate.getDate() + 1); // Holnaptól kezdjük
+        iterDate.setDate(iterDate.getDate() + 1);
 
-        // Hányadik munkanapnál tartottunk TEGNAP? (hogy tudjuk folytatni a számolást)
-        // Megkeressük az utolsó valid shift indexet a mai napig.
-        let runningShiftIndex = -1;
-        
-        // Egyszerűbb: Kiszámoljuk a holnapi nap indexét, ha munkanap.
-        // Ha nem, megyünk tovább.
-        
-        // Generáljunk 10 jövőbeli alkalmat
         while(countFound < 10) {
             let dTime = iterDate - CYCLE_START;
             let dDays = Math.floor(dTime / (1000 * 60 * 60 * 24));
@@ -297,32 +308,31 @@
             let work = (config.shift === s.day || config.shift === s.night);
             
             if(work) {
-                // Ez egy munkanap! Számoljuk ki a pontos indexét.
                 let idx = calculateShiftIndex(iterDate);
                 let pair = getPairForShiftIndex(idx);
                 
-                let dayName = iterDate.toLocaleDateString('hu-HU', { month: 'short', day: 'numeric' }); // pl. jan. 24.
-                let dayShort = iterDate.toLocaleDateString('hu-HU', { weekday: 'short' }); // pl. Sze
-                let dayNum = iterDate.getDate();
+                // Dátum formázás az új kártyához
+                let dayShort = iterDate.toLocaleDateString('hu-HU', { weekday: 'short' });
+                let dateFull = iterDate.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric' });
 
+                // ÚJ HTML SZERKEZET (Header + Details + Onclick)
                 container.innerHTML += `
-                    <div class="list-card">
-                        <div class="lc-date-box">
-                            <span class="lc-day">${dayShort}</span>
-                            <span class="lc-num">${dayNum}</span>
+                    <div class="list-card" onclick="this.classList.toggle('active')">
+                        <div class="lc-header">
+                            <div class="lc-date-summary">
+                                <span class="lc-day-badge">${dayShort}</span>
+                                <span class="lc-date-text">${dateFull}</span>
+                            </div>
+                            <div class="lc-arrow">▼</div>
                         </div>
-                        <div class="lc-content">
+                        <div class="lc-details">
                             <div class="lc-names">${pair}</div>
-                            <div class="lc-weekday">${iterDate.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric' })}</div>
                         </div>
                     </div>
                 `;
                 countFound++;
             }
-            // Következő nap
             iterDate.setDate(iterDate.getDate() + 1);
-            
-            // Biztonsági fék (ha 60 napig nincs munka, álljon le)
             if(countFound === 0 && (iterDate - startDate) > 5000000000) break; 
         }
     }
