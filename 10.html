@@ -270,7 +270,7 @@
 
     <div class="modal-overlay" id="settingsModal">
         <div class="modal">
-            <h3>Beállítások</h3>
+            <h3>Beállítások (Helyi)</h3>
             
             <label style="font-size:0.85rem; color:#94a3b8;">Műszak</label>
             <select id="shiftSelect">
@@ -292,18 +292,28 @@
     const CYCLE_START = new Date(2025, 6, 31); 
     const ADMIN_PASS = "1234";
 
+    // ----------------------------------------------------------------
+    // !!! ITT KELL ÁTÍRNOD A NEVEKET !!! 
+    // Ide írd be a valós neveket idézőjelek közé, vesszővel elválasztva.
+    // Ha ezt a fájlt feltöltöd a GitHubra, MINDENKINÉL ez lesz a névsor.
+    // ----------------------------------------------------------------
     let config = {
         shift: "A",
-        names: ["Kovács János", "Nagy Péter", "Szabó István", "Varga Tamás", "Kiss Éva"]
+        names: [
+            "Barbi", 
+            "Peti", 
+            "Jani"
+        ]
     };
+    // ----------------------------------------------------------------
 
     document.addEventListener('DOMContentLoaded', () => {
-        loadConfig();
-        updateUI();
+        loadConfig(); // Betölti a beállításokat
+        updateUI();   // Kirajzolja a kártyákat
     });
 
     function getPair(globalIndex, names) {
-        if (names.length < 2) return "Nincs elég adat";
+        if (!names || names.length < 2) return "Nincs elég adat";
         let start = (globalIndex * 2) % names.length;
         let p1 = names[start];
         let p2 = names[(start + 1) % names.length];
@@ -338,7 +348,6 @@
                 <div class="rest-view">
                     <h2>😴 PIHENŐNAPOK</h2>
                     <p>A(z) "${config.shift}" műszak jelenleg nem dolgozik.</p>
-                    <p style="font-size:0.8rem">A következő munkanapok később kezdődnek.</p>
                 </div>
             `;
             return;
@@ -372,7 +381,7 @@
             container.innerHTML += cardHtml;
         }
         
-        // Auto-Scroll (Biztos ami biztos)
+        // Auto-Scroll
         setTimeout(() => {
              const todayCard = document.getElementById('todayCard');
              if(todayCard) todayCard.scrollIntoView({behavior: "smooth", block: "center"});
@@ -412,16 +421,18 @@
     }
 
     function saveSettings() {
+        // Helyi mentés
         config.shift = document.getElementById('shiftSelect').value;
         let raw = document.getElementById('namesInput').value;
         config.names = raw.split(',').map(n => n.trim()).filter(n => n);
         localStorage.setItem('shiftConfig_v2', JSON.stringify(config));
         closeModals();
         updateUI();
-        alert("Beállítások mentve!");
+        alert("Beállítások mentve (Csak a te telefonodon)!");
     }
 
     function loadConfig() {
+        // 1. Linkből betöltés (ha kaptál linket)
         const params = new URLSearchParams(window.location.search);
         if(params.has('data')) {
             try {
@@ -429,11 +440,16 @@
                 config = JSON.parse(json);
                 localStorage.setItem('shiftConfig_v2', JSON.stringify(config));
                 window.history.replaceState({}, document.title, window.location.pathname);
+                return;
             } catch(e) {}
-            return;
         }
+        
+        // 2. Helyi tárhelyből betöltés (ha már állítottad)
         let saved = localStorage.getItem('shiftConfig_v2');
-        if(saved) config = JSON.parse(saved);
+        if(saved) {
+            config = JSON.parse(saved);
+        }
+        // 3. Ha egyik sincs, marad a kódban lévő "Barbi, Peti, Jani"
     }
 
     function shareLink() {
