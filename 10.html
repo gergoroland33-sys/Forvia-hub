@@ -53,7 +53,7 @@
             background: var(--card-bg); border-radius: 20px; padding: 25px;
             position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             border: 1px solid rgba(255,255,255,0.05); transition: transform 0.3s ease;
-            opacity: 0.5; transform: scale(0.95); filter: grayscale(0.5); /* Háttér kártyák sötétebbek */
+            opacity: 0.6; transform: scale(0.95); filter: grayscale(0.4);
         }
 
         /* MAI NAP - KIEMELÉS */
@@ -61,7 +61,7 @@
             background: #151e2e;
             opacity: 1; transform: scale(1.05); filter: grayscale(0);
             border: 2px solid var(--accent);
-            box-shadow: 0 0 30px var(--glow);
+            box-shadow: 0 0 25px var(--glow);
             z-index: 5;
         }
 
@@ -112,15 +112,14 @@
 
 <script>
     // ==========================================
-    // ⚙️ BEÁLLÍTÁSOK (IDE ÍRJ!)
+    // ⚙️ BEÁLLÍTÁSOK
     // ==========================================
     
     const config = {
         // Műszak betűjele (A, B, C vagy D):
         shift: "C",
 
-        // NEVEK: Írd be a neveket vesszővel.
-        // Bármennyi név lehet (páros vagy páratlan is jó!)
+        // NEVEK:
         names: "Laci,Jani,Patrik,Zsuzsa,Peti,Barbi,Reni,Böbe,Kriszti"
     };
 
@@ -173,7 +172,6 @@
         let baseDate = new Date(today);
         baseDate.setDate(today.getDate() - offset);
         
-        // Stabil seed a dátumból
         let baseSeed = Math.floor(baseDate.getTime() / (1000 * 60 * 60 * 24)) + config.shift.charCodeAt(0);
 
         for(let i=0; i<3; i++) {
@@ -184,7 +182,6 @@
             let dateStr = currentDay.toLocaleDateString('hu-HU', { month: 'short', day: 'numeric', weekday: 'long' });
             let label = isToday ? "MAI NAP" : (currentDay < today ? "TELJESÍTVE" : "KÖVETKEZŐ");
             
-            // Itt hívjuk meg az új logikát
             let pair = getNamesForDay(baseSeed + i);
 
             let html = `
@@ -208,23 +205,30 @@
         }, 100);
     }
 
-    // --- EZ AZ ÚJ, FAIR ALGORITMUS ---
+    // --- AZ OKOS ALGORITMUS ---
     function getNamesForDay(seed) {
         let list = getCleanNames();
         let n = list.length;
         if(n < 2) return "Kevés név!";
 
-        // Kiszámoljuk a két "globális" sorszámot
-        let slot1 = seed * 2;
-        let slot2 = seed * 2 + 1;
+        let p1Index, p2Index;
 
-        // A "CSÚSZÓ SZALAG" FORMULA:
-        // (slot + (slot / n)) % n
-        // Ez biztosítja, hogy amikor a lista körbeér, egyet "ugrik" a kiválasztás,
-        // így páros számú embernél is mindig új párok keletkeznek.
-        
-        let p1Index = (slot1 + Math.floor(slot1 / n)) % n;
-        let p2Index = (slot2 + Math.floor(slot2 / n)) % n;
+        // HA PÁRATLAN SZÁMÚ EMBER VAN (mint most, 9 fő):
+        // A sima körforgás tökéletes, mert a maradékos osztás miatt
+        // a párok maguktól elcsúsznak minden körben.
+        if (n % 2 !== 0) {
+            p1Index = (seed * 2) % n;
+            p2Index = (seed * 2 + 1) % n;
+        } 
+        // HA PÁROS SZÁMÚ EMBER VAN (pl. 10 fő):
+        // Bekapcsoljuk a "csúsztatást" (Sliding Window),
+        // hogy ne alakuljanak ki örökös fix párok.
+        else {
+            let slot1 = seed * 2;
+            let slot2 = seed * 2 + 1;
+            p1Index = (slot1 + Math.floor(slot1 / n)) % n;
+            p2Index = (slot2 + Math.floor(slot2 / n)) % n;
+        }
 
         let p1 = list[p1Index];
         let p2 = list[p2Index];
