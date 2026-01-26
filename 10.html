@@ -6,193 +6,110 @@
     <title>Szemétkihordás Terv</title>
     <style>
         :root {
-            --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --glass-bg: rgba(255, 255, 255, 0.1);
-            --glass-border: rgba(255, 255, 255, 0.2);
-            --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --glow: rgba(59, 130, 246, 0.5);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
 
         body {
-            font-family: var(--font-main);
-            background: var(--primary-gradient);
-            min-height: 100vh;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            overflow-x: hidden;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0; padding: 0;
+            height: 100dvh;
+            display: flex; flex-direction: column;
+            overflow: hidden; 
         }
 
-        /* --- FEJLÉC --- */
+        /* FEJLÉC */
         header {
-            padding: 30px 20px 20px 20px;
-            text-align: center;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent);
-        }
-
-        .app-icon { font-size: 3rem; margin-bottom: 5px; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); }
-        
-        h1 {
-            font-size: 1.8rem;
-            font-weight: 800;
-            margin-bottom: 8px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .description {
-            font-size: 0.95rem;
-            opacity: 0.9;
-            max-width: 300px;
-            margin: 0 auto 15px auto;
-            line-height: 1.4;
-        }
-
-        .shift-badge {
-            display: inline-block;
-            background: rgba(255,255,255,0.25);
-            backdrop-filter: blur(4px);
-            padding: 6px 16px;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 0.9rem;
-            border: 1px solid var(--glass-border);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-
-        /* --- TARTALOM --- */
-        main {
-            flex: 1;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-            padding-bottom: 80px; /* Hely a görgetésnek */
-        }
-
-        /* --- KÁRTYÁK --- */
-        .card {
-            width: 100%;
-            max-width: 380px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border-radius: 24px;
-            border: 1px solid var(--glass-border);
-            padding: 20px;
-            box-shadow: var(--card-shadow);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Dátum sor */
-        .card-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
+            padding: 15px 20px;
+            background: rgba(15, 23, 42, 0.95);
             border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center; z-index: 10;
+        }
+        .app-title {
+            font-weight: 900; letter-spacing: 1px;
+            text-transform: uppercase; font-size: 1.1rem; color: var(--accent);
+        }
+        .app-desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 5px; }
+
+        /* TARTALOM */
+        main {
+            flex: 1; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            padding: 20px; padding-bottom: 100px; /* Hely a görgetésnek */
+            overflow-y: auto;
         }
 
-        .card-date { font-weight: 600; opacity: 0.8; font-size: 0.9rem; text-transform: uppercase; }
-        
-        .status-pill {
-            font-size: 0.75rem;
-            font-weight: 800;
-            padding: 4px 10px;
-            border-radius: 12px;
-            background: rgba(0,0,0,0.2);
-            color: rgba(255,255,255,0.8);
+        .container { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 20px; }
+
+        /* KÁRTYÁK - ALAP */
+        .card {
+            background: var(--card-bg); border-radius: 20px; padding: 25px;
+            position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.05); transition: transform 0.3s ease;
+            /* Alapból kicsit halványabb, hogy a MAI nap üssön el */
+            opacity: 0.6; transform: scale(0.95); filter: grayscale(0.4);
         }
 
-        /* Nevek */
-        .names-wrapper {
-            text-align: center;
-            padding: 10px 0;
-        }
-
-        .names-text {
-            font-size: 1.5rem;
-            font-weight: 800;
-            line-height: 1.3;
-            letter-spacing: 0.5px;
-        }
-
-        .shift-type {
-            text-align: center;
-            font-size: 0.8rem;
-            opacity: 0.7;
-            margin-top: 10px;
-            font-weight: 500;
-        }
-
-        /* --- A MAI NAP KIEMELÉSE --- */
+        /* MAI NAP - KIEMELT PAKLI EFEKT */
         .card.today {
-            background: #ffffff;
-            color: #333;
-            transform: scale(1.03);
-            border: none;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            z-index: 10;
+            background: #151e2e;
+            opacity: 1; transform: scale(1.05); filter: grayscale(0);
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 25px var(--glow);
+            z-index: 5;
         }
 
-        .card.today .card-top { border-bottom: 1px solid rgba(0,0,0,0.1); }
-        .card.today .card-date { color: #667eea; opacity: 1; }
+        .card-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .date-text { font-size: 1rem; font-weight: 600; color: var(--text-muted); text-transform: capitalize; }
+        .today .date-text { color: #fff; }
+
+        .badge {
+            font-size: 0.7rem; font-weight: 800; padding: 5px 10px;
+            border-radius: 50px; text-transform: uppercase;
+            background: rgba(255,255,255,0.1); color: var(--text-muted);
+        }
+        .today .badge { background: var(--accent); color: #fff; box-shadow: 0 2px 10px var(--glow); }
+
+        .names-box { text-align: center; margin: 15px 0; }
+        .names {
+            font-size: 1.8rem; font-weight: 800; line-height: 1.3;
+            background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
         
-        .card.today .status-pill {
-            background: #667eea;
-            color: white;
-            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.4);
-        }
+        .card:not(.today) .names { font-size: 1.3rem; opacity: 0.7; }
 
-        .card.today .names-text {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 2rem; /* Nagyobb betű */
-        }
-        
-        .card.today .shift-type { color: #666; opacity: 1; }
+        .shift-info { text-align: center; font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
 
-        /* --- PIHENŐNAP --- */
-        .rest-view {
-            text-align: center;
-            background: rgba(255,255,255,0.15);
-            padding: 40px;
-            border-radius: 30px;
-            backdrop-filter: blur(10px);
-            border: 2px dashed rgba(255,255,255,0.3);
-            max-width: 350px;
+        /* PIHENŐNAP NÉZET */
+        .rest-mode {
+            text-align: center; padding: 40px;
+            border: 2px dashed #334155; border-radius: 20px; color: var(--text-muted);
         }
-        .rest-emoji { font-size: 4rem; margin-bottom: 15px; display: block; animation: float 3s ease-in-out infinite; }
-        
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-
+        .rest-icon { font-size: 3rem; display: block; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
     <header>
-        <span class="app-icon">♻️</span>
-        <h1>Szemétkihordás</h1>
-        <p class="description">
-            Ez a terv mutatja, kinek a feladata összeszedni és kivinni a szemetet a műszakban.
-        </p>
-        <div class="shift-badge" id="headerShiftBadge">...</div>
+        <div class="app-title">♻️ SZEMÉTKIHORDÁS</div>
+        <div class="app-desc">Aktuális műszak beosztás</div>
     </header>
 
-    <main id="scheduleContainer">
-        </main>
+    <main>
+        <div class="container" id="scheduleContainer"></div>
+    </main>
 
 <script>
     // ==========================================
@@ -203,7 +120,8 @@
         // Műszak betűjele (A, B, C vagy D):
         shift: "C",
 
-        // NEVEK: Írd be a neveket vesszővel elválasztva.
+        // NEVEK: Csak írd be őket egymás után vesszővel elválasztva.
+        // Bármennyit írhatsz, törölhetsz, a sorrend számít!
         names: "Laci,Jani,Patrik,Zsuzsa,Peti,Barbi,Reni,Böbe,Kriszti"
     };
 
@@ -214,12 +132,11 @@
     const CYCLE_START = new Date(2025, 6, 31); 
 
     document.addEventListener('DOMContentLoaded', () => {
-        // Fejléc frissítése
-        document.getElementById('headerShiftBadge').innerText = `${config.shift} MŰSZAK BEOSZTÁS`;
         renderSchedule();
     });
 
     function getCleanNames() {
+        // Ez a függvény varázsolja át az egy soros szöveget listává
         return config.names.split(',').map(n => n.trim()).filter(n => n !== "");
     }
 
@@ -241,15 +158,14 @@
 
         let shifts = getShifts(blockStart);
         let isWorking = (config.shift === shifts.day || config.shift === shifts.night);
-        let shiftType = (config.shift === shifts.day) ? "☀️ Nappalos (06:00 - 18:00)" : "🌙 Éjszakás (18:00 - 06:00)";
+        let shiftType = (config.shift === shifts.day) ? "☀️ NAPPAL (06:00-18:00)" : "🌙 ÉJSZAKA (18:00-06:00)";
 
         if (!isWorking) {
             container.innerHTML = `
-                <div class="rest-view">
-                    <span class="rest-emoji">😴</span>
-                    <h2 style="margin-bottom:10px;">Pihenőnap</h2>
-                    <p>A(z) <strong>${config.shift} műszak</strong> jelenleg nem dolgozik.</p>
-                    <p style="font-size:0.8rem; margin-top:15px; opacity:0.7">Jó pihenést!</p>
+                <div class="rest-mode">
+                    <span class="rest-icon">😴</span>
+                    <h2>PIHENŐNAPOK</h2>
+                    <p>A(z) "${config.shift}" műszak jelenleg nem dolgozik.</p>
                 </div>
             `;
             return;
@@ -262,41 +178,35 @@
         // Stabil seed a dátumból
         let baseSeed = Math.floor(baseDate.getTime() / (1000 * 60 * 60 * 24)) + config.shift.charCodeAt(0);
 
-        // 3 nap generálása (Tegnap/Ma/Holnap vagy Múlt/Jelen/Jövő)
         for(let i=0; i<3; i++) {
             let currentDay = new Date(baseDate);
             currentDay.setDate(baseDate.getDate() + i);
             
             let isToday = (currentDay.getTime() === today.getTime());
-            
-            // Magyar dátum formázás
-            let dateStr = currentDay.toLocaleDateString('hu-HU', { month: 'short', day: 'numeric' }) + 
-                          `, ` + currentDay.toLocaleDateString('hu-HU', { weekday: 'long' });
-
+            let dateStr = currentDay.toLocaleDateString('hu-HU', { month: 'short', day: 'numeric', weekday: 'long' });
             let label = isToday ? "MAI NAP" : (currentDay < today ? "TELJESÍTVE" : "KÖVETKEZŐ");
             
             let pair = getNamesForDay(baseSeed + i);
 
             let html = `
                 <div class="card ${isToday ? 'today' : ''}" id="${isToday ? 'focusCard' : ''}">
-                    <div class="card-top">
-                        <span class="card-date">${dateStr}</span>
-                        <span class="status-pill">${label}</span>
+                    <div class="card-header">
+                        <span class="date-text">${dateStr}</span>
+                        <span class="badge">${label}</span>
                     </div>
-                    <div class="names-wrapper">
-                        <div class="names-text">${pair}</div>
+                    <div class="names-box">
+                        <div class="names">${pair}</div>
                     </div>
-                    <div class="shift-type">${shiftType}</div>
+                    <div class="shift-info">${shiftType}</div>
                 </div>
             `;
             container.innerHTML += html;
         }
 
-        // Automatikus görgetés a mai naphoz
         setTimeout(() => {
             const focusCard = document.getElementById('focusCard');
             if(focusCard) focusCard.scrollIntoView({behavior: "smooth", block: "center"});
-        }, 300);
+        }, 100);
     }
 
     function getNamesForDay(seed) {
@@ -307,7 +217,7 @@
         let p1 = list[idx];
         let p2 = list[(idx + 1) % list.length];
         
-        return `${p1} & ${p2}`;
+        return `${p1} – ${p2}`;
     }
 
     function getShifts(startIdx) {
