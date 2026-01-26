@@ -32,26 +32,22 @@
             color: var(--text-main);
             margin: 0;
             padding: 0;
-            min-height: 100dvh; /* Dinamikus magasság mobilon */
+            height: 100dvh; /* Fix teljes magasság */
             display: flex;
             flex-direction: column;
-            overflow-x: hidden;
+            overflow: hidden; /* Görgetés tiltása a body-n, a container görög */
         }
 
         /* --- MODERN HEADER --- */
         header {
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: rgba(15, 23, 42, 0.95);
             border-bottom: 1px solid var(--border-glass);
-            padding: 16px 24px;
+            padding: 12px 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            position: sticky;
-            top: 0;
             z-index: 100;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            flex-shrink: 0; /* Ne nyomódjon össze */
         }
 
         .brand {
@@ -76,37 +72,41 @@
             font-size: 0.85rem;
             font-weight: 700;
             border: 1px solid var(--border-glass);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
         /* --- INFO SÁV --- */
         .info-box {
             background: rgba(15, 23, 42, 0.5);
-            padding: 12px 20px;
+            padding: 10px 20px;
             border-bottom: 1px solid var(--border-glass);
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
             text-align: center;
+            flex-shrink: 0;
         }
         .info-highlight { color: #60a5fa; font-weight: 600; }
 
-        /* --- FŐ TARTALOM --- */
-        .container {
-            padding: 20px;
-            max-width: 500px;
-            margin: 0 auto;
-            width: 100%;
-            flex: 1; /* Kitölti a helyet */
+        /* --- FŐ TARTALOM (CENTRÍROZVA) --- */
+        .scroll-wrapper {
+            flex: 1;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start; /* Mobilon jobb, ha fentről indul, de középre húzható */
-            gap: 16px;
-            padding-bottom: 40px; /* Biztonsági margó alul */
+            /* Ez a kulcs a középre igazításhoz: */
+            justify-content: center; 
+            padding: 20px;
         }
-        
-        /* Ha kevés a tartalom, középre igazítjuk függőlegesen */
-        @media (min-height: 700px) {
-            .container { justify-content: center; }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            /* Ha a tartalom magasabb mint a képernyő, akkor fentről induljon */
+            margin-top: auto; 
+            margin-bottom: auto;
         }
 
         /* --- KÁRTYÁK --- */
@@ -116,32 +116,33 @@
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid var(--border-glass);
             border-radius: 16px;
-            padding: 18px 24px;
+            padding: 15px 20px;
             position: relative;
             transition: transform 0.2s;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            opacity: 0.7; /* A nem mai napok halványabbak */
+            transform: scale(0.95);
         }
 
         /* MAI NAP - PRO MEGJELENÉS (RGB ANIMÁCIÓ) */
         .card.today {
-            background: rgba(30, 41, 59, 0.9);
-            border: 1px solid transparent; /* Trükk a gradienshez */
+            background: rgba(30, 41, 59, 0.95);
+            border: 1px solid transparent; 
             padding: 25px 24px;
-            margin-bottom: 15px;
-            transform: scale(1.02);
+            margin: 10px 0; /* Extra térköz */
+            transform: scale(1.05); /* Nagyobb mint a többi */
+            opacity: 1;
             position: relative;
-            z-index: 1;
-            overflow: hidden;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            z-index: 10;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
         }
 
-        /* RGB Keret és Háttér effekt */
+        /* RGB Keret */
         .card.today::before {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
             border-radius: 16px; 
-            padding: 2px; /* Keret vastagsága */
+            padding: 2px; 
             background: linear-gradient(45deg, var(--rgb-1), var(--rgb-2), var(--rgb-3), var(--rgb-4));
             background-size: 400% 400%;
             -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -150,16 +151,6 @@
             animation: rgbFlow 6s ease infinite;
             pointer-events: none;
             z-index: -1;
-        }
-
-        /* Finom ragyogás a háttérben */
-        .card.today::after {
-            content: '';
-            position: absolute;
-            top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
-            z-index: -2;
-            pointer-events: none;
         }
 
         @keyframes rgbFlow {
@@ -172,14 +163,14 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             padding-bottom: 8px;
             border-bottom: 1px solid rgba(255,255,255,0.08);
         }
 
         .date-display { 
             font-weight: 600; 
-            font-size: 0.95rem; 
+            font-size: 0.9rem; 
             color: #cbd5e1; 
             text-transform: capitalize;
         }
@@ -206,21 +197,20 @@
         }
 
         .names-display {
-            font-size: 1.15rem;
+            font-size: 1.1rem;
             font-weight: 600;
             text-align: center;
             color: var(--text-main);
-            margin: 15px 0;
+            margin: 10px 0;
             letter-spacing: 0.3px;
         }
         .today .names-display {
-            font-size: 1.7rem; 
+            font-size: 1.8rem; 
             font-weight: 800;
             background: linear-gradient(to right, #ffffff, #e2e8f0);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin: 20px 0;
-            /* Text shadow a jobb olvashatóságért */
+            margin: 15px 0;
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
         }
 
@@ -240,7 +230,6 @@
             border: 1px dashed var(--border-glass);
             border-radius: 20px;
             color: var(--text-muted);
-            margin-top: 20px;
         }
         .rest-view h2 { color: #10b981; margin-bottom: 10px; }
 
@@ -299,8 +288,10 @@
         A rendszer 3 napos, igazságos rotációt mutat.
     </div>
 
-    <div class="container" id="scheduleContainer">
-        </div>
+    <div class="scroll-wrapper">
+        <div class="container" id="scheduleContainer">
+            </div>
+    </div>
 
     <div class="modal-overlay" id="passModal">
         <div class="modal">
@@ -333,9 +324,6 @@
     </div>
 
 <script>
-    /* A LOGIKA ÉS A JS KÓD 100%-BAN VÁLTOZATLAN.
-       CSAK A MEGJELENÍTÉS (CSS) VÁLTOZOTT.
-    */
     const CYCLE_START = new Date(2025, 6, 31); 
     const ADMIN_PASS = "1234";
 
@@ -407,7 +395,7 @@
             let pair = getPair(baseSeed + i, config.names);
 
             let cardHtml = `
-                <div class="card ${isToday ? 'today' : ''}">
+                <div class="card ${isToday ? 'today' : ''}" id="${isToday ? 'todayCard' : ''}">
                     <div class="card-header">
                         <span class="date-display">${dateStr}</span>
                         <span class="status-pill">${status}</span>
@@ -418,6 +406,15 @@
             `;
             container.innerHTML += cardHtml;
         }
+
+        // --- AUTOMATA SCROLL A KÖZÉPHEZ ---
+        // Ez biztosítja, hogy a 'Mai nap' kártya legyen a fókuszban
+        setTimeout(() => {
+            const todayCard = document.getElementById('todayCard');
+            if (todayCard) {
+                todayCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 300);
     }
 
     function getShiftsForBlock(startIdx) {
