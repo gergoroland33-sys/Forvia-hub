@@ -2,7 +2,7 @@
 <html lang="hu">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Forvia Smart Search 2026</title>
 <style>
 /* --- ALAP BEÁLLÍTÁSOK (PC/TABLET - ÉRINTETLEN) --- */
@@ -143,14 +143,15 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
     .search-icon { display: none; } 
     .clear-btn { top: 6px; right: 12px; }
 
-    /* KÁRTYA ELRENDEZÉS */
+    /* KÁRTYA ELRENDEZÉS - FLEX */
     #eredmeny {
         display: flex;
         flex-wrap: wrap;         
         justify-content: center; 
         gap: 5px;                
         padding: 5px;
-        margin-bottom: 300px; /* Hely a biztonsági zónának */
+        /* Ha a billentyűzet nyitva van, a padding-bottom dinamikusan nőhet JS-ből, de alapnak jó: */
+        padding-bottom: 320px; 
     }
     
     .section-header { 
@@ -164,14 +165,9 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
         width: fit-content;      
         min-width: 0;            
         max-width: 100%;         
-        
-        display: flex;
-        flex-direction: column; 
-        margin-bottom: 0; 
-        border-radius: 6px; 
-        font-size: 0.75rem;      
-        border: 1px solid rgba(255,255,255,0.08); 
-        background: #1e293b; 
+        display: flex; flex-direction: column; 
+        margin-bottom: 0; border-radius: 6px; font-size: 0.75rem;      
+        border: 1px solid rgba(255,255,255,0.08); background: #1e293b; 
         box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
     }
     
@@ -184,30 +180,31 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
     .row-main .d-value { font-size: 0.95rem; font-weight: 700; white-space: normal; word-break: break-all;}
 
 
-    /* --- PRO 3D BILLENTYŰZET - FIXÁLT ALJA --- */
+    /* --- PRO 3D BILLENTYŰZET - STABIL POZÍCIÓ --- */
     #kbContainer {
         display: block;
-        position: fixed; bottom: 0; left: 0; right: 0;
-        /* Magasság automatikus, hogy kitöltse a biztonsági zónát */
+        position: fixed; 
+        bottom: 0; left: 0; right: 0;
+        /* Magasság automatikus, a tartalom + padding adja ki */
         height: auto; 
         background: #0f172a; 
         border-top: 2px solid #1e293b;
         z-index: 5000;
         user-select: none;
         padding: 5px;
-        /* ITT A JAVÍTÁS: Hozzácsatoljuk a telefon fizikai aljához (Safe Area) */
-        padding-bottom: calc(5px + env(safe-area-inset-bottom));
+        /* A biztonsági zóna kitöltése */
+        padding-bottom: env(safe-area-inset-bottom);
         box-sizing: border-box;
         box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
     }
 
-    /* Rácsok fix magassága, hogy ne torzuljanak */
+    /* Belső konténerek magassága fix, így a gombok nem torzulnak */
     #viewNumeric, #viewAlpha {
         display: grid;
         grid-template-columns: repeat(4, 1fr) repeat(3, 1.3fr) 1.2fr; 
         grid-template-rows: repeat(4, 1fr);
         gap: 3px; 
-        height: 280px; /* FIX magasság a gomboknak */
+        height: 270px; /* Stabil magasság */
     }
     
     #viewAlpha {
@@ -408,6 +405,7 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
             const kb = document.getElementById('kbContainer');
             const inp = document.getElementById('keres');
             
+            // Ha a kattintás NEM a billentyűzeten és NEM a keresőn volt
             if(kb.style.display === 'block' && !kb.contains(e.target) && e.target !== inp) {
                 kb.style.display = 'none';
             }
