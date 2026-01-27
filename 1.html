@@ -11,11 +11,17 @@
     --card-surface: #1e293b; 
     --input-bg: #020617;     
     --accent: #3b82f6;       
-    --accent-glow: rgba(59, 130, 246, 0.4);
+    --accent-dark: #1e40af;
     --text-primary: #f8fafc;
     --text-secondary: #94a3b8;
     --border: rgba(255,255,255,0.08);
-    --radius: 12px;          
+    --radius: 12px;
+
+    /* ÚJ PRO SZÍNEK MOBILRA */
+    --kb-bg: #1f2937;
+    --key-bg-top: #4b5563;
+    --key-bg-bottom: #374151;
+    --key-shadow: #111827;
 }
 
 body { 
@@ -28,7 +34,7 @@ body {
     transition: padding-bottom 0.3s;
 }
 
-/* FEJLÉC */
+/* FEJLÉC (Csak PC) */
 .top-bar { 
     background: rgba(15, 23, 42, 0.95); 
     border-bottom: 1px solid var(--border); 
@@ -39,7 +45,7 @@ body {
 .brand { font-weight: 700; font-size: 1rem; color: var(--accent); letter-spacing: 0.5px; }
 .date-display { font-size: 0.75rem; color: var(--text-secondary); font-family: monospace; }
 
-/* KERESŐ */
+/* KERESŐ WRAPPER (PC) */
 .search-wrapper { 
     padding: 15px; 
     max-width: 600px; 
@@ -47,10 +53,10 @@ body {
     position: relative; 
     z-index: 200; 
 }
-
 .input-group { position: relative; width: 100%; display: flex; align-items: center; }
 .search-icon { position: absolute; left: 15px; color: var(--text-secondary); font-size: 1.1rem; pointer-events: none; z-index: 10; }
 
+/* INPUT ALAP (PC) */
 input { 
     width: 100%; 
     padding: 12px 45px 12px 45px; 
@@ -65,7 +71,7 @@ input {
     font-family: monospace; 
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4); }
 input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3) !important; }
 
 .clear-btn {
@@ -73,7 +79,7 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
     font-size: 1.1rem; padding: 5px; z-index: 10;
 }
 
-/* EREDMÉNY KONTÉNER (PC Alap) */
+/* EREDMÉNY KONTÉNER (PC) */
 #eredmeny { max-width: 600px; margin: 0 auto 50px auto; padding: 0 15px; }
 
 /* PC Kártya Stílus */
@@ -95,7 +101,7 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
 .row-main .d-value { font-size: 1.1rem; font-weight: 700; color: white; font-family: monospace; }
 .row-main .d-label { color: var(--accent); font-weight: bold; }
 
-/* Fejlécek */
+/* Fejlécek (PC) */
 .section-header {
     margin-top: 30px; margin-bottom: 10px; padding: 8px 15px;
     border-radius: 8px; font-size: 0.85rem; font-weight: 800; text-transform: uppercase;
@@ -104,139 +110,143 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
 .header-bank { background: linear-gradient(90deg, rgba(30, 58, 138, 0.6), transparent); border-left-color: #3b82f6; color: #93c5fd; }
 .header-ultetes { background: linear-gradient(90deg, rgba(20, 83, 45, 0.6), transparent); border-left-color: #22c55e; color: #86efac; }
 
-/* --- PC: Virtual Keyboard elrejtése --- */
-#kbContainer, #kbToggleBtn { display: none; }
+/* PC: Virtual Keyboard elrejtése */
+#kbContainer { display: none; }
 
 /* ========================================= */
-/* --- MOBIL NÉZET (Max 1024px) --- */
+/* --- MOBIL PRO NÉZET (Max 1024px) --- */
 /* ========================================= */
 @media screen and (max-width: 1024px) {
-    /* 1. Header elrejtése a helytakarékosság miatt */
     .top-bar { display: none; }
-
-    /* 2. Kompakt Kereső "Excel" stílusban */
+    #suggest, #historySection { display: none !important; }
+    
+    /* --- PRO KERESŐSÁV --- */
     .search-wrapper { 
-        padding: 8px 10px; 
+        padding: 10px 15px;
         margin-top: 0; 
-        background: #0f172a;
+        background: rgba(15, 23, 42, 0.8); /* Áttetsző háttér */
+        backdrop-filter: blur(10px); /* Homályosítás a pro hatásért */
         border-bottom: 1px solid var(--border);
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        position: sticky; top: 0;
     }
-    .input-group { height: 36px; }
+    .input-group { height: 40px; }
     input { 
-        height: 36px; 
-        padding: 5px 15px; 
-        font-size: 0.95rem; 
-        border-radius: 6px; /* Kockásabb, Excel-esebb */
-        background: #1e293b;
-        border: 1px solid #475569;
+        height: 40px; 
+        padding: 5px 20px;
+        font-size: 1rem;
+        /* STÍLUSOSABB, LEKEREKÍTETT FORMA */
+        border-radius: 30px; 
+        background: rgba(30, 41, 59, 0.6);
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
+    }
+    input:focus {
+        background: rgba(30, 41, 59, 0.9);
+        border-color: var(--accent);
+        /* Finomabb ragyogás */
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2), inset 0 2px 4px rgba(0,0,0,0.1);
     }
     .search-icon { display: none; } 
-    .clear-btn { top: 5px; right: 10px; }
+    .clear-btn { top: 8px; right: 12px; }
 
-    /* 3. Rejtsük el a zavaró PC elemeket */
-    #suggest, #historySection { display: none !important; }
-
-    /* 4. Találati lista: 2 oszlopos rács */
+    /* --- TALÁLATI RÁCS --- */
     #eredmeny {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 6px;
-        padding: 8px;
-        margin-bottom: 300px; /* Hely a billentyűzetnek */
+        display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px;
+        margin-bottom: 300px;
     }
-    .section-header { grid-column: 1 / -1; margin-top: 5px; margin-bottom: 0; padding: 4px 8px; font-size: 0.7rem; }
-
-    /* Mobil Kártya Design */
-    .card { flex-direction: column; margin-bottom: 0; border-radius: 6px; font-size: 0.8rem; height: 100%; border-color: rgba(255,255,255,0.08); }
+    .section-header { grid-column: 1 / -1; margin-top: 10px; margin-bottom: 5px; padding: 5px 10px; font-size: 0.75rem; background: rgba(255,255,255,0.03); border: none; color: var(--text-secondary);}
+    .card { flex-direction: column; margin-bottom: 0; border-radius: 8px; font-size: 0.8rem; height: 100%; border: 1px solid rgba(255,255,255,0.05); background: #1e293b; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
     .color-strip { width: 100%; height: 3px; order: -1; }
-    .card-content { padding: 6px; gap: 0; }
-    .data-row { flex-direction: column; align-items: flex-start; border: none; padding: 0; margin-bottom: 2px; }
-    .row-main { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 3px; margin-bottom: 3px; }
-    .d-label { font-size: 0.6rem; opacity: 0.6; }
-    .d-value { font-size: 0.85rem; text-align: left; color: white; }
-    .row-main .d-value { font-size: 0.9rem; word-break: break-all; }
+    .card-content { padding: 8px; gap: 2px; }
+    .data-row { flex-direction: column; align-items: flex-start; border: none; padding: 0; margin-bottom: 3px; }
+    .row-main { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; margin-bottom: 5px; }
+    .d-label { font-size: 0.65rem; opacity: 0.6; letter-spacing: 0.5px; }
+    .d-value { font-size: 0.9rem; text-align: left; color: white; font-weight: 500; }
+    .row-main .d-value { font-size: 1rem; word-break: break-all; font-weight: 700; }
 
-    /* --- MODERN BILLENTYŰZET KERET --- */
+    /* --- PRO EXCEL-STÍLUSÚ BILLENTYŰZET KERET --- */
     #kbContainer {
         display: block;
         position: fixed; bottom: 0; left: 0; right: 0;
-        height: 290px;
-        background: #0f172a;
-        border-top: 1px solid #334155;
+        height: 300px;
+        background: var(--kb-bg); /* Sötét, komoly háttér */
+        border-top: 1px solid rgba(255,255,255,0.1);
         z-index: 5000;
-        box-shadow: 0 -5px 25px rgba(0,0,0,0.6);
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
         user-select: none;
-        padding: 6px;
+        padding: 8px;
         box-sizing: border-box;
     }
 
-    /* Váltógomb a tálcán */
+    /* Váltósáv */
     .mode-switch-bar {
         display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 6px; padding: 0 4px;
-        height: 35px;
+        margin-bottom: 10px; padding: 0 5px; height: 32px;
     }
-    .kb-label { color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;}
+    .kb-label { color: var(--text-secondary); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; }
     
     .switch-btn {
-        background: rgba(59, 130, 246, 0.15);
+        background: rgba(255,255,255,0.05);
         color: var(--accent);
-        border: 1px solid rgba(59, 130, 246, 0.3);
+        border: 1px solid rgba(59, 130, 246, 0.2);
         border-radius: 20px;
-        padding: 5px 15px;
-        font-size: 0.85rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: 0.2s;
-        display: flex; align-items: center; gap: 5px;
+        padding: 4px 14px;
+        font-size: 0.8rem; font-weight: 700;
+        cursor: pointer; transition: 0.2s;
+        display: flex; align-items: center; gap: 6px;
     }
-    .switch-btn:active { background: var(--accent); color: white; transform: scale(0.95); }
+    .switch-btn:active { background: var(--accent); color: white; }
 
-    /* KÖZÖS GOMB STÍLUS */
+    /* --- EXCEL KEYCAP STÍLUS (A LÉNYEG) --- */
     .k-btn {
-        background: #1e293b;
+        /* Színátmenet a 3D hatáshoz */
+        background: linear-gradient(to bottom, var(--key-bg-top), var(--key-bg-bottom));
         color: white;
-        border-radius: 8px;
+        border-radius: 6px; /* Kicsit szögletesebb, mint az Apple, mint az Excel */
         display: flex; align-items: center; justify-content: center;
-        font-family: sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; /* Rendszer font a pro hatáshoz */
         font-weight: 500;
-        font-size: 1.2rem;
-        box-shadow: 0 3px 0 rgba(0,0,0,0.3);
+        font-size: 1.3rem;
+        /* A jellegzetes "billentyű" árnyék */
+        box-shadow: 0 2px 0 var(--key-shadow), inset 0 1px 0 rgba(255,255,255,0.15);
         cursor: pointer;
-        transition: all 0.05s;
+        transition: all 0.08s ease-out;
         position: relative;
+        border: 1px solid rgba(0,0,0,0.2);
     }
-    .k-btn:active { transform: translateY(3px); box-shadow: none; background: #334155; }
-
-    /* Speciális gombok */
-    .k-btn.accent { background: var(--accent); color: white; }
-    .k-btn.accent:active { background: #2563eb; }
-    .k-btn.red { background: #991b1b; color: white; }
-    .k-btn.red:active { background: #7f1d1d; }
-    .k-btn.wide { grid-column: span 2; }
-
-    /* --- NÉZET 1: SZÁMOK (NUMPAD) --- */
-    #viewNumeric {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        grid-template-rows: repeat(4, 1fr);
-        gap: 8px;
-        height: calc(100% - 45px); /* Hely a switch barnak */
+    .k-btn:active {
+        /* Benyomódás effektus */
+        transform: translateY(2px);
+        box-shadow: 0 0 0 var(--key-shadow), inset 0 2px 4px rgba(0,0,0,0.2);
+        background: var(--key-bg-bottom);
     }
-    #viewNumeric .k-btn { font-size: 1.8rem; font-weight: 600; } /* Nagy számok */
 
-    /* --- NÉZET 2: BETŰK (QWERTZ) --- */
-    #viewAlpha {
-        display: none; /* Alapból rejtve */
-        grid-template-columns: repeat(10, 1fr);
-        grid-template-rows: repeat(4, 1fr);
-        gap: 4px;
-        height: calc(100% - 45px);
+    /* Speciális gombok pro stílusban */
+    .k-btn.accent { 
+        background: linear-gradient(to bottom, #3b82f6, #2563eb); 
+        box-shadow: 0 2px 0 #1d4ed8, inset 0 1px 0 rgba(255,255,255,0.2);
     }
-    #viewAlpha .k-btn { font-size: 1rem; border-radius: 5px; font-weight: 600; }
+    .k-btn.accent:active { background: #2563eb; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
     
-    /* Váltáskor a JS cseréli a display-t */
+    .k-btn.red { 
+        background: linear-gradient(to bottom, #ef4444, #dc2626);
+        box-shadow: 0 2px 0 #b91c1c, inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+    .k-btn.red:active { background: #dc2626; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
+
+    /* Nézetek rácsszerkezete */
+    #viewNumeric {
+        display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(4, 1fr);
+        gap: 8px; height: calc(100% - 42px);
+    }
+    #viewNumeric .k-btn { font-size: 1.6rem; font-weight: 600; }
+
+    #viewAlpha {
+        display: none; grid-template-columns: repeat(10, 1fr); grid-template-rows: repeat(4, 1fr);
+        gap: 5px; height: calc(100% - 42px);
+    }
+    #viewAlpha .k-btn { font-size: 1rem; font-weight: 600; border-radius: 5px; }
 }
 
 @media screen and (min-width: 1024px) {
@@ -271,7 +281,7 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
     <div class="mode-switch-bar">
         <span class="kb-label" id="kbStatus">SZÁMOK</span>
         <button class="switch-btn" onclick="toggleKbMode()">
-            <span id="switchIcon">ABC</span> 
+            <span id="switchIcon" style="font-size: 1.1rem;">⌨</span> 
             <span>VÁLTÁS</span>
         </button>
     </div>
@@ -301,7 +311,7 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
 <script>
 let bank=[],ultetes=[],idSet=new Set(),uniqueIdsArr=[],keresIdozito=null,searchHistory=JSON.parse(localStorage.getItem('searchHistory')||"[]");
 let searchFinalized = false;
-let isNumericMode = true; // Alapértelmezett a Szám mód
+let isNumericMode = true;
 
 function updateDate(){
     const n=new Date();
@@ -330,7 +340,7 @@ window.clearSearch = function() {
     if(window.innerWidth >= 1024) inp.focus(); else inp.blur();
     document.getElementById('clearBtn').style.display = 'none';
     document.getElementById('suggest').style.display = 'none';
-    document.getElementById('eredmeny').innerHTML = '<div style="text-align:center; padding:30px; color:#475569; font-size:0.9rem;">Adatok betöltve</div>';
+    document.getElementById('eredmeny').innerHTML = '<div style="text-align:center; padding:30px; color:#64748b;">Adatok betöltve</div>';
 };
 
 Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.text())]).then(([bT,uT])=>{
@@ -359,7 +369,7 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
     checkDeviceMode();
     window.addEventListener('resize', checkDeviceMode);
 
-    document.getElementById('eredmeny').innerHTML='<div style="text-align:center; padding:30px; color:#475569; font-size:0.9rem;">Adatok betöltve</div>';
+    document.getElementById('eredmeny').innerHTML='<div style="text-align:center; padding:30px; color:#64748b;">Adatok betöltve</div>';
     renderHistory();
     
     inp.addEventListener('input',function(){
@@ -376,14 +386,12 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
         keresIdozito=setTimeout(()=>keres(v),100);
     });
 
-    // Mobilon kinyitja a billentyűzetet ha rákattintasz
     inp.addEventListener('click', function() {
         if(window.innerWidth < 1024) {
              document.getElementById('kbContainer').style.display = 'block';
         }
     });
 
-    // Betű Billentyűzet Generálás
     generateAlphaKeys();
 });
 
@@ -460,8 +468,6 @@ function keres(k){
     e.innerHTML=h||`<div style="text-align:center; padding:30px; color:#64748b;">Nincs találat: "${k}"</div>`;
 }
 
-// --- BILLENTYŰZET LOGIKA ---
-
 function toggleKbMode() {
     isNumericMode = !isNumericMode;
     const numView = document.getElementById('viewNumeric');
@@ -473,7 +479,7 @@ function toggleKbMode() {
         numView.style.display = 'grid';
         alphaView.style.display = 'none';
         label.textContent = "SZÁMOK";
-        icon.textContent = "ABC";
+        icon.textContent = "⌨";
     } else {
         numView.style.display = 'none';
         alphaView.style.display = 'grid';
@@ -494,7 +500,6 @@ function generateAlphaKeys() {
         container.appendChild(d);
     });
     
-    // Hozzáadjuk a törlés és enter gombot a betű nézethez is
     const del = document.createElement('div');
     del.className = 'k-btn red'; del.textContent = '⌫';
     del.onclick = backspaceKey;
