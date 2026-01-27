@@ -150,8 +150,7 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
         justify-content: center; 
         gap: 5px;                
         padding: 5px;
-        /* Több helyet hagyunk alul, hogy ne takarjon ki semmit a billentyűzet */
-        margin-bottom: 340px; 
+        margin-bottom: 280px; /* Kevesebb helyet kell hagyni a kisebb billentyűzet miatt */
     }
     
     .section-header { 
@@ -180,32 +179,30 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
     .row-main .d-value { font-size: 0.95rem; font-weight: 700; white-space: normal; word-break: break-all;}
 
 
-    /* --- PRO 3D BILLENTYŰZET - ALKALMAZKODÓ MÉRET --- */
+    /* --- PRO 3D BILLENTYŰZET - 15%-kal ALACSONYABB --- */
     #kbContainer {
         display: block;
         position: fixed; 
         bottom: 0; left: 0; right: 0;
-        /* A magasság automatikus, a tartalom határozza meg */
         height: auto; 
         background: #0f172a; 
         border-top: 2px solid #1e293b;
         z-index: 5000;
         user-select: none;
         padding: 5px;
-        /* Ez biztosítja, hogy a Home Bar ne takarjon bele az alsó sorba */
+        /* Hozzácsatolva az aljához */
         padding-bottom: calc(5px + env(safe-area-inset-bottom));
         box-sizing: border-box;
         box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
     }
 
-    /* A gomboknak adunk kicsit több helyet, hogy ne legyenek laposak */
+    /* CSÖKKENTETT MAGASSÁG (295px -> 250px) */
     #viewNumeric, #viewAlpha {
         display: grid;
         grid-template-columns: repeat(4, 1fr) repeat(3, 1.3fr) 1.2fr; 
         grid-template-rows: repeat(4, 1fr);
         gap: 3px; 
-        /* Megnövelt fix magasság a gomboknak, így szépek maradnak */
-        height: 295px; 
+        height: 250px; /* Alacsonyabb gombok, de azonos elrendezés */
     }
     
     #viewAlpha {
@@ -400,6 +397,7 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
 
     generateAlphaKeys();
     
+    // KATTINTÁS A HÁTTÉRRE ELTÜNTETI A BILLENTYŰZETET
     document.addEventListener('click', function(e) {
         if(window.innerWidth < 1024) {
             const kb = document.getElementById('kbContainer');
