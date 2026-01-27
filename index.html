@@ -36,17 +36,16 @@
             background: #0f172a;
         }
 
-        /* --- MÓDOSÍTÁS KEZDETE: Görgethetőség beállítása laptopra --- */
+        /* --- Görgethetőség beállítása laptopra --- */
         #home-screen {
             flex-grow: 1; display: flex; flex-direction: column;
             align-items: center; 
-            /* justify-content: center; KIVÉVE, hogy ne vágja le a tetejét kis képernyőn */
             text-align: center;
             background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 45%),
             radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.05), transparent 45%), #0b1120;
             padding: 20px; position: relative; width: 100%; height: 100%;
-            overflow-y: auto; /* Görgetés engedélyezése */
-            padding-bottom: 60px; /* Hely a tickernek */
+            overflow-y: auto; 
+            padding-bottom: 60px;
         }
 
         .glass-card {
@@ -58,9 +57,8 @@
             box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6);
             max-width: 500px; width: 100%; animation: fadeIn 0.8s ease-out;
             position: relative; 
-            margin: auto; /* Ez biztosítja a középre igazítást ÉS a biztonságos görgetést */
+            margin: auto; 
         }
-        /* --- MÓDOSÍTÁS VÉGE --- */
 
         .share-card-btn {
             position: absolute; top: 20px; right: 20px;
@@ -127,7 +125,6 @@
         .calendar-box.type-holiday { border-left-color: #34d399; }
         .calendar-box.type-workday { border-left-color: #fbbf24; }
 
-        /* --- PRO MŰSZAK INFO STYLE (JAVÍTVA: EREDETI HALVÁNY HÁTTÉR + CENTRÁLÁS) --- */
         .shift-info-box {
             margin-top: 15px;
             background: rgba(15, 23, 42, 0.6);
@@ -143,18 +140,18 @@
             color: #60a5fa; 
             font-size: 0.65rem; font-weight: 800;
             text-transform: uppercase; letter-spacing: 1.2px;
-            display: flex; align-items: center; justify-content: center; /* KÖZÉPRE IGAZÍTÁS */
+            display: flex; align-items: center; justify-content: center;
             gap: 6px;
         }
         .shift-content-row {
             display: flex; 
-            justify-content: center; /* KÖZÉPRE IGAZÍTÁS */
-            gap: 40px; /* SZÉP TÁVOLSÁG A KÉT OSZLOP KÖZÖTT */
+            justify-content: center;
+            gap: 40px;
             padding: 12px 14px;
         }
         .shift-col { 
             display: flex; flex-direction: column; gap: 4px; 
-            align-items: center; /* TARTALOM KÖZÉPRE IGAZÍTÁSA AZ OSZLOPON BELÜL */
+            align-items: center;
         }
         .shift-label-sub { font-size: 0.7rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; }
         
@@ -242,7 +239,7 @@
             box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5), inset 0 2px 5px rgba(255,255,255,0.2);
             cursor: pointer; z-index: 2147483647; 
             border: 1px solid rgba(255,255,255,0.1);
-            transition: transform 0.2s;
+            transition: transform 0.2s, top 0.3s, bottom 0.3s; /* Transition hozzáadva a finom mozgáshoz */
             -webkit-user-select: none; 
             -moz-user-select: none;
             -ms-user-select: none;
@@ -268,6 +265,21 @@
         }
         .refresh-fab:active { transform: rotate(180deg) scale(0.9); }
         .refresh-fab span { font-size: 22px; color: var(--accent); line-height: 1; font-weight: bold; pointer-events: none; }
+
+        /* --- MÓDOSÍTÁS: 1.HTML SPECIÁLIS POZÍCIÓK --- */
+        /* Ha a 'search-mode-active' osztály rajta van a body-n, a gombok fentre kerülnek */
+        body.search-mode-active .menu-fab {
+            bottom: auto !important;
+            top: 70px !important;
+            right: 20px !important;
+        }
+        
+        body.search-mode-active .refresh-fab {
+            bottom: auto !important;
+            top: 140px !important; /* Menü alatt */
+            right: 27px !important;
+        }
+        /* ------------------------------------------- */
 
         .overlay {
             display: none; position: fixed; inset: 0;
@@ -457,7 +469,6 @@
             const shiftDiv = document.createElement('div');
             shiftDiv.id = 'shift-info-display';
             shiftDiv.className = 'shift-info-box';
-            // Kért módosítás: Fehér betűjel, Kék műszak felirat + KÖZÉPRE IGAZÍTOTT STRUKTÚRA
             shiftDiv.innerHTML = `
                 <div class="shift-header-row">
                     <span>ÉRINTETT MŰSZAKOK</span>
@@ -515,11 +526,11 @@
         '3.html': '📅 Műszaknaptár',
         '4.html': '📝 Napi Jelentés segédlet',
         '5.html': '🎭 Maszk kereső',
-        '6.html': '⚙️ Adatgeneráló',  // ÚJ MODUL HOZZÁADVA!
+        '6.html': '⚙️ Adatgeneráló',
         '7.html': '📊 Hiba Analízis',
         '8.html': '👥 Szabadságok (Staff Pro)',
         '9.html': '📷 Barcode Scan',
-        '10.html': '🗑️ Szemétkihordás Terv', // ÚJ MODUL BEILLESZTVE ITT
+        '10.html': '🗑️ Szemétkihordás Terv',
         'home':   '🏠 Kezdőlap'
     };
 
@@ -544,6 +555,14 @@
         totalActivity++;
         localStorage.setItem('fv_total_activity', totalActivity);
 
+        // --- MÓDOSÍTÁS: Ha az 1.html van megnyitva, kapcsoljuk be a felső gomb pozíciót ---
+        if (url === '1.html') {
+            document.body.classList.add('search-mode-active');
+        } else {
+            document.body.classList.remove('search-mode-active');
+        }
+        // ---------------------------------------------------------------------------------
+
         document.getElementById('home-screen').style.display = 'none';
         const frame = document.getElementById('content-frame');
         frame.style.display = 'block';
@@ -556,6 +575,11 @@
     function showHome(caller = null) {
         if(navigator.vibrate) navigator.vibrate(15);
         if(caller) caller.blur();
+        
+        // --- MÓDOSÍTÁS: Kezdőlapra lépéskor visszaállítjuk a gombokat ---
+        document.body.classList.remove('search-mode-active');
+        // ---------------------------------------------------------------
+
         document.getElementById('home-screen').style.display = 'flex';
         const frame = document.getElementById('content-frame');
         frame.style.display = 'none';
@@ -564,15 +588,12 @@
         sendDiscordLog("🏠 Kezdőlap", 10070709);
     }
 
-    // --- MÓDOSÍTOTT ADATGENERÁLÓ FÜGGVÉNY (Nincs GitHub Link, csak belső betöltés) ---
     function openSecureLink(caller) {
         if(navigator.vibrate) navigator.vibrate(15);
         if(caller) caller.blur();
         
         let pin = prompt("Adatgeneráló - Biztonsági kód:");
         if (pin === "general") {
-            // EREDETI: window.open("...github.io...");
-            // ÚJ: Belsőleg töltjük be a 6.html fájlt
             loadModule('6.html'); 
             sendDiscordLog("🔐 ADMIN: Adatgeneráló (Belső)", 65280);
         } else if (pin !== null) {
