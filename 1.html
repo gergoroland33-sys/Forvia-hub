@@ -5,23 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Forvia Smart Search 2026</title>
 <style>
-/* --- ALAP BEÁLLÍTÁSOK (PC/TABLET) --- */
+/* --- ALAP BEÁLLÍTÁSOK (PC/TABLET - ÉRINTETLEN) --- */
 :root { 
     --bg-app: #0f172a;       
     --card-surface: #1e293b; 
     --input-bg: #020617;     
     --accent: #3b82f6;       
-    --accent-dark: #1e40af;
     --text-primary: #f8fafc;
     --text-secondary: #94a3b8;
     --border: rgba(255,255,255,0.08);
     --radius: 12px;
-
-    /* ÚJ PRO SZÍNEK MOBILRA */
-    --kb-bg: #1f2937;
-    --key-bg-top: #4b5563;
-    --key-bg-bottom: #374151;
-    --key-shadow: #111827;
 }
 
 body { 
@@ -56,7 +49,6 @@ body {
 .input-group { position: relative; width: 100%; display: flex; align-items: center; }
 .search-icon { position: absolute; left: 15px; color: var(--text-secondary); font-size: 1.1rem; pointer-events: none; z-index: 10; }
 
-/* INPUT ALAP (PC) */
 input { 
     width: 100%; 
     padding: 12px 45px 12px 45px; 
@@ -79,7 +71,6 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
     font-size: 1.1rem; padding: 5px; z-index: 10;
 }
 
-/* EREDMÉNY KONTÉNER (PC) */
 #eredmeny { max-width: 600px; margin: 0 auto 50px auto; padding: 0 15px; }
 
 /* PC Kártya Stílus */
@@ -101,7 +92,6 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
 .row-main .d-value { font-size: 1.1rem; font-weight: 700; color: white; font-family: monospace; }
 .row-main .d-label { color: var(--accent); font-weight: bold; }
 
-/* Fejlécek (PC) */
 .section-header {
     margin-top: 30px; margin-bottom: 10px; padding: 8px 15px;
     border-radius: 8px; font-size: 0.85rem; font-weight: 800; text-transform: uppercase;
@@ -110,143 +100,117 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
 .header-bank { background: linear-gradient(90deg, rgba(30, 58, 138, 0.6), transparent); border-left-color: #3b82f6; color: #93c5fd; }
 .header-ultetes { background: linear-gradient(90deg, rgba(20, 83, 45, 0.6), transparent); border-left-color: #22c55e; color: #86efac; }
 
-/* PC: Virtual Keyboard elrejtése */
 #kbContainer { display: none; }
 
 /* ========================================= */
-/* --- MOBIL PRO NÉZET (Max 1024px) --- */
+/* --- MOBIL NÉZET (Max 1024px) --- */
 /* ========================================= */
 @media screen and (max-width: 1024px) {
     .top-bar { display: none; }
     #suggest, #historySection { display: none !important; }
     
-    /* --- PRO KERESŐSÁV --- */
     .search-wrapper { 
         padding: 10px 15px;
         margin-top: 0; 
-        background: rgba(15, 23, 42, 0.8); /* Áttetsző háttér */
-        backdrop-filter: blur(10px); /* Homályosítás a pro hatásért */
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(10px);
         border-bottom: 1px solid var(--border);
         position: sticky; top: 0;
+        z-index: 6000;
     }
     .input-group { height: 40px; }
     input { 
         height: 40px; 
         padding: 5px 20px;
-        font-size: 1rem;
-        /* STÍLUSOSABB, LEKEREKÍTETT FORMA */
-        border-radius: 30px; 
-        background: rgba(30, 41, 59, 0.6);
-        border: 1px solid rgba(255,255,255,0.1);
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
-        transition: all 0.2s ease;
+        font-size: 1.1rem;
+        border-radius: 8px; /* Excelesebb, enyhén lekerekített */
+        background: #2b2b2b;
+        border: 1px solid #444;
+        color: white;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
     }
-    input:focus {
-        background: rgba(30, 41, 59, 0.9);
-        border-color: var(--accent);
-        /* Finomabb ragyogás */
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2), inset 0 2px 4px rgba(0,0,0,0.1);
-    }
+    input:focus { border-color: #107c41; box-shadow: 0 0 0 2px rgba(16, 124, 65, 0.3); } /* Excel zöldes fókusz */
+    
     .search-icon { display: none; } 
     .clear-btn { top: 8px; right: 12px; }
 
-    /* --- TALÁLATI RÁCS --- */
     #eredmeny {
         display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px;
-        margin-bottom: 300px;
+        margin-bottom: 350px; /* Hely a magasabb billentyűzetnek */
     }
     .section-header { grid-column: 1 / -1; margin-top: 10px; margin-bottom: 5px; padding: 5px 10px; font-size: 0.75rem; background: rgba(255,255,255,0.03); border: none; color: var(--text-secondary);}
-    .card { flex-direction: column; margin-bottom: 0; border-radius: 8px; font-size: 0.8rem; height: 100%; border: 1px solid rgba(255,255,255,0.05); background: #1e293b; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .card { flex-direction: column; margin-bottom: 0; border-radius: 6px; font-size: 0.8rem; height: 100%; border: 1px solid rgba(255,255,255,0.05); background: #1e293b; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
     .color-strip { width: 100%; height: 3px; order: -1; }
     .card-content { padding: 8px; gap: 2px; }
     .data-row { flex-direction: column; align-items: flex-start; border: none; padding: 0; margin-bottom: 3px; }
     .row-main { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; margin-bottom: 5px; }
-    .d-label { font-size: 0.65rem; opacity: 0.6; letter-spacing: 0.5px; }
+    .d-label { font-size: 0.65rem; opacity: 0.6; }
     .d-value { font-size: 0.9rem; text-align: left; color: white; font-weight: 500; }
     .row-main .d-value { font-size: 1rem; word-break: break-all; font-weight: 700; }
 
-    /* --- PRO EXCEL-STÍLUSÚ BILLENTYŰZET KERET --- */
+    /* --- EXCEL BILLENTYŰZET KONTRUKCIÓ --- */
     #kbContainer {
         display: block;
         position: fixed; bottom: 0; left: 0; right: 0;
-        height: 300px;
-        background: var(--kb-bg); /* Sötét, komoly háttér */
-        border-top: 1px solid rgba(255,255,255,0.1);
+        height: 340px; /* Magasabb a 4 soros sűrű rács miatt */
+        background: #202020; /* Excel sötét háttér */
+        border-top: 1px solid #333;
         z-index: 5000;
-        box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
         user-select: none;
-        padding: 8px;
+        padding: 6px;
         box-sizing: border-box;
     }
 
-    /* Váltósáv */
-    .mode-switch-bar {
-        display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 10px; padding: 0 5px; height: 32px;
-    }
-    .kb-label { color: var(--text-secondary); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; }
-    
-    .switch-btn {
-        background: rgba(255,255,255,0.05);
-        color: var(--accent);
-        border: 1px solid rgba(59, 130, 246, 0.2);
-        border-radius: 20px;
-        padding: 4px 14px;
-        font-size: 0.8rem; font-weight: 700;
-        cursor: pointer; transition: 0.2s;
-        display: flex; align-items: center; gap: 6px;
-    }
-    .switch-btn:active { background: var(--accent); color: white; }
-
-    /* --- EXCEL KEYCAP STÍLUS (A LÉNYEG) --- */
-    .k-btn {
-        /* Színátmenet a 3D hatáshoz */
-        background: linear-gradient(to bottom, var(--key-bg-top), var(--key-bg-bottom));
-        color: white;
-        border-radius: 6px; /* Kicsit szögletesebb, mint az Apple, mint az Excel */
-        display: flex; align-items: center; justify-content: center;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; /* Rendszer font a pro hatáshoz */
-        font-weight: 500;
-        font-size: 1.3rem;
-        /* A jellegzetes "billentyű" árnyék */
-        box-shadow: 0 2px 0 var(--key-shadow), inset 0 1px 0 rgba(255,255,255,0.15);
-        cursor: pointer;
-        transition: all 0.08s ease-out;
-        position: relative;
-        border: 1px solid rgba(0,0,0,0.2);
-    }
-    .k-btn:active {
-        /* Benyomódás effektus */
-        transform: translateY(2px);
-        box-shadow: 0 0 0 var(--key-shadow), inset 0 2px 4px rgba(0,0,0,0.2);
-        background: var(--key-bg-bottom);
-    }
-
-    /* Speciális gombok pro stílusban */
-    .k-btn.accent { 
-        background: linear-gradient(to bottom, #3b82f6, #2563eb); 
-        box-shadow: 0 2px 0 #1d4ed8, inset 0 1px 0 rgba(255,255,255,0.2);
-    }
-    .k-btn.accent:active { background: #2563eb; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
-    
-    .k-btn.red { 
-        background: linear-gradient(to bottom, #ef4444, #dc2626);
-        box-shadow: 0 2px 0 #b91c1c, inset 0 1px 0 rgba(255,255,255,0.2);
-    }
-    .k-btn.red:active { background: #dc2626; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
-
-    /* Nézetek rácsszerkezete */
+    /* A Grid rendszer - 8 oszlop */
     #viewNumeric {
-        display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(4, 1fr);
-        gap: 8px; height: calc(100% - 42px);
+        display: grid;
+        grid-template-columns: repeat(4, 1fr) repeat(3, 1.3fr) 1.2fr; /* 4 funkció, 3 szám, 1 akció */
+        grid-template-rows: repeat(4, 1fr);
+        gap: 2px;
+        height: 100%;
     }
-    #viewNumeric .k-btn { font-size: 1.6rem; font-weight: 600; }
 
+    /* QWERTZ nézet maradhat normál */
     #viewAlpha {
         display: none; grid-template-columns: repeat(10, 1fr); grid-template-rows: repeat(4, 1fr);
-        gap: 5px; height: calc(100% - 42px);
+        gap: 4px; height: 100%; padding-top: 5px;
     }
-    #viewAlpha .k-btn { font-size: 1rem; font-weight: 600; border-radius: 5px; }
+
+    /* Gomb Stílusok */
+    .k-btn {
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 4px; /* Exceles kocka forma */
+        font-family: sans-serif; font-size: 1.1rem; font-weight: 500;
+        cursor: pointer;
+        transition: background 0.1s;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    .k-btn:active { transform: translateY(1px); box-shadow: none; }
+
+    /* 1. Számok (Világosabb szürke) */
+    .k-btn.num { 
+        background: #4a4a4a; color: white; font-size: 1.5rem; font-weight: 400;
+    }
+    .k-btn.num:active { background: #5a5a5a; }
+
+    /* 2. Funkciók (Sötét szürke) */
+    .k-btn.func {
+        background: #333333; color: #ddd; font-size: 1.1rem;
+    }
+    .k-btn.func:active { background: #444; }
+
+    /* 3. Speciális (Kék/Zöld/Piros) */
+    .k-btn.accent {
+        background: #2563eb; color: white; /* Enter kék */
+    }
+    .k-btn.red {
+        background: #333; color: white; /* Backspace sötét */
+    }
+    
+    /* Excel elrendezés specialitások */
+    .span-v-2 { grid-row: span 2; } /* Magas Enter */
+    .span-h-2 { grid-column: span 2; } /* Széles 0 */
+    .abc-switch { background: #107c41 !important; color: white; font-weight: bold; font-size: 0.9rem;} /* Zöld ABC gomb */
 }
 
 @media screen and (min-width: 1024px) {
@@ -278,30 +242,39 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
 <div id="eredmeny"></div>
 
 <div id="kbContainer">
-    <div class="mode-switch-bar">
-        <span class="kb-label" id="kbStatus">SZÁMOK</span>
-        <button class="switch-btn" onclick="toggleKbMode()">
-            <span id="switchIcon" style="font-size: 1.1rem;">⌨</span> 
-            <span>VÁLTÁS</span>
-        </button>
-    </div>
-
+    
     <div id="viewNumeric">
-        <div class="k-btn" onclick="typeKey('7')">7</div>
-        <div class="k-btn" onclick="typeKey('8')">8</div>
-        <div class="k-btn" onclick="typeKey('9')">9</div>
-        
-        <div class="k-btn" onclick="typeKey('4')">4</div>
-        <div class="k-btn" onclick="typeKey('5')">5</div>
-        <div class="k-btn" onclick="typeKey('6')">6</div>
-        
-        <div class="k-btn" onclick="typeKey('1')">1</div>
-        <div class="k-btn" onclick="typeKey('2')">2</div>
-        <div class="k-btn" onclick="typeKey('3')">3</div>
-        
+        <div class="k-btn func abc-switch" onclick="toggleKbMode()">ABC</div>
+        <div class="k-btn func" onclick="typeKey('-')">-</div>
+        <div class="k-btn func" onclick="typeKey(':')">:</div>
+        <div class="k-btn func" onclick="typeKey('/')">/</div>
+        <div class="k-btn num" onclick="typeKey('7')">7</div>
+        <div class="k-btn num" onclick="typeKey('8')">8</div>
+        <div class="k-btn num" onclick="typeKey('9')">9</div>
         <div class="k-btn red" onclick="backspaceKey()">⌫</div>
-        <div class="k-btn" onclick="typeKey('0')">0</div>
-        <div class="k-btn accent" onclick="enterKey()">⏎</div>
+
+        <div class="k-btn func" onclick="clearSearch()">CL</div>
+        <div class="k-btn func" onclick="typeKey('(')">(</div>
+        <div class="k-btn func" onclick="typeKey(')')">)</div>
+        <div class="k-btn func" onclick="typeKey('*')">*</div>
+        <div class="k-btn num" onclick="typeKey('4')">4</div>
+        <div class="k-btn num" onclick="typeKey('5')">5</div>
+        <div class="k-btn num" onclick="typeKey('6')">6</div>
+        <div class="k-btn accent span-v-2" onclick="enterKey()">⏎</div>
+
+        <div class="k-btn func" onclick="typeKey('=')">=</div>
+        <div class="k-btn func" onclick="typeKey('<')">&lt;</div>
+        <div class="k-btn func" onclick="typeKey('>')">&gt;</div>
+        <div class="k-btn func" onclick="typeKey('_')">_</div>
+        <div class="k-btn num" onclick="typeKey('1')">1</div>
+        <div class="k-btn num" onclick="typeKey('2')">2</div>
+        <div class="k-btn num" onclick="typeKey('3')">3</div>
+        <div class="k-btn func" onclick="typeKey('%')">%</div>
+        <div class="k-btn func" onclick="typeKey('.')">.</div>
+        <div class="k-btn func" onclick="typeKey('+')">+</div>
+        <div class="k-btn num span-h-2" onclick="typeKey('0')">0</div>
+        <div class="k-btn num" onclick="typeKey(',')">,</div>
+        <div class="k-btn func" onclick="toggleKeyboard()">▼</div>
     </div>
 
     <div id="viewAlpha">
@@ -389,6 +362,7 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
     inp.addEventListener('click', function() {
         if(window.innerWidth < 1024) {
              document.getElementById('kbContainer').style.display = 'block';
+             document.getElementById('kbContainer').classList.remove('hidden');
         }
     });
 
@@ -472,34 +446,45 @@ function toggleKbMode() {
     isNumericMode = !isNumericMode;
     const numView = document.getElementById('viewNumeric');
     const alphaView = document.getElementById('viewAlpha');
-    const label = document.getElementById('kbStatus');
-    const icon = document.getElementById('switchIcon');
     
     if(isNumericMode) {
         numView.style.display = 'grid';
         alphaView.style.display = 'none';
-        label.textContent = "SZÁMOK";
-        icon.textContent = "⌨";
     } else {
         numView.style.display = 'none';
         alphaView.style.display = 'grid';
-        label.textContent = "BETŰK";
-        icon.textContent = "123";
+    }
+}
+
+function toggleKeyboard() {
+    const kb = document.getElementById('kbContainer');
+    if(kb.style.display === 'none') {
+        kb.style.display = 'block';
+    } else {
+        kb.style.display = 'none';
     }
 }
 
 function generateAlphaKeys() {
     const container = document.getElementById('viewAlpha');
+    // Betűkiosztás - QWERTZ
     const qwertz = "QWERTZUIOPASDFGHJKLYXCVBNM-.".split('');
     
     qwertz.forEach(char => {
         const d = document.createElement('div');
-        d.className = 'k-btn';
+        d.className = 'k-btn num'; // A betűk is nézzenek ki úgy mint a számok
         d.textContent = char;
+        d.style.fontSize = "1rem";
         d.onclick = (e) => { e.preventDefault(); typeKey(char); }; 
         container.appendChild(d);
     });
     
+    // Hozzáadunk egy gombot a számokhoz való visszatéréshez
+    const toNum = document.createElement('div');
+    toNum.className = 'k-btn func abc-switch'; toNum.textContent = '123';
+    toNum.onclick = toggleKbMode;
+    container.insertBefore(toNum, container.firstChild); // Első helyre
+
     const del = document.createElement('div');
     del.className = 'k-btn red'; del.textContent = '⌫';
     del.onclick = backspaceKey;
