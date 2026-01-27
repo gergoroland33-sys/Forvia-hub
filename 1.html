@@ -109,7 +109,7 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
     .top-bar { display: none; }
     #suggest, #historySection { display: none !important; }
     
-    /* "Adatok betöltve" elrejtése mobilon */
+    /* "Adatok betöltve" elrejtése - BIZTOSÍTÉK */
     .empty-msg { display: none !important; }
 
     .search-wrapper { 
@@ -145,42 +145,66 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
     .search-icon { display: none; } 
     .clear-btn { top: 6px; right: 12px; }
 
-    /* --- MÓDOSÍTÁS: DINAMIKUS (FLEX) KÁRTYA ELRENDEZÉS --- */
+    /* --- JAVÍTOTT KÁRTYA ELRENDEZÉS --- */
     #eredmeny {
-        display: flex;           /* Grid helyett Flex */
-        flex-wrap: wrap;         /* Engedjük tördelni */
-        gap: 6px; 
-        padding: 10px;
+        display: flex;
+        flex-wrap: wrap;         /* Engedélyezzük a többsoros tördelést */
+        justify-content: center; /* Középre rendezzük a kártyákat */
+        gap: 5px;                /* Pici hézag */
+        padding: 5px;
         margin-bottom: 290px;
-        align-items: flex-start;
     }
     
-    .section-header { width: 100%; margin-top: 10px; margin-bottom: 5px; padding: 5px 10px; font-size: 0.75rem; background: rgba(255,255,255,0.03); border: none; color: var(--text-secondary);}
+    .section-header { 
+        width: 100%;             /* A fejléc mindig teljes szélességű */
+        margin-top: 10px; margin-bottom: 2px; padding: 4px; 
+        font-size: 0.7rem; background: transparent; border: none; color: var(--text-secondary); text-align: center;
+    }
     
     .card { 
-        /* Flex beállítások a dinamikus mérethez */
-        flex: 1 1 auto;          /* Nőhet és zsugorodhat, de tartalomhoz igazodik */
-        width: auto;             /* Tartalom határozza meg az alapszélességet */
-        min-width: 120px;        /* Ne legyen túl kicsi */
+        /* EZ A LÉNYEG: A kártya csak akkora, amekkora a tartalom */
+        flex: 0 1 auto;          /* Nem nő (0), zsugorodhat (1), auto bázis */
+        width: fit-content;      /* Szorosan a tartalomra tapad */
+        min-width: 0;            /* Engedjük egészen kicsire */
+        max-width: 100%;         /* De ne lógjon ki */
         
+        display: flex;
         flex-direction: column; 
         margin-bottom: 0; 
         border-radius: 6px; 
-        font-size: 0.8rem; 
-        border: 1px solid rgba(255,255,255,0.05); 
+        font-size: 0.75rem;      /* Kicsit kisebb betű, hogy több férjen */
+        border: 1px solid rgba(255,255,255,0.08); 
         background: #1e293b; 
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
     }
     
     .color-strip { width: 100%; height: 3px; order: -1; }
-    .card-content { padding: 8px; gap: 2px; }
-    .data-row { flex-direction: column; align-items: flex-start; border: none; padding: 0; margin-bottom: 3px; }
-    .row-main { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; margin-bottom: 5px; }
-    .d-label { font-size: 0.65rem; opacity: 0.6; }
-    .d-value { font-size: 0.9rem; text-align: left; color: white; font-weight: 500; }
-    .row-main .d-value { font-size: 1rem; word-break: break-all; font-weight: 700; }
+    
+    .card-content { 
+        padding: 6px 8px; /* Tömör padding */
+        gap: 1px; 
+    }
+    
+    .data-row { 
+        flex-direction: column; align-items: center; /* Középre igazítjuk az adatokat */
+        border: none; padding: 0; margin-bottom: 2px; 
+    }
+    
+    .row-main { 
+        border-bottom: 1px solid rgba(255,255,255,0.1); 
+        padding-bottom: 3px; margin-bottom: 3px; 
+        text-align: center;
+    }
+    
+    .d-label { font-size: 0.6rem; opacity: 0.5; display: none; } /* Címkét elrejthetjük, ha nagyon kell a hely, vagy hagyjuk */
+    /* Visszateszem a címkét, de kicsiben */
+    .d-label { display: block; font-size: 0.55rem; text-transform: uppercase; margin-bottom: 0px;}
 
-    /* --- PRO 3D BILLENTYŰZET (EGYEDI SZÍN) --- */
+    .d-value { font-size: 0.85rem; text-align: center; color: white; font-weight: 500; white-space: nowrap; }
+    .row-main .d-value { font-size: 0.95rem; font-weight: 700; white-space: normal; word-break: break-all;}
+
+
+    /* --- PRO 3D BILLENTYŰZET --- */
     #kbContainer {
         display: block;
         position: fixed; bottom: 0; left: 0; right: 0;
@@ -194,7 +218,6 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
         box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
     }
 
-    /* Grid marad az Excel */
     #viewNumeric {
         display: grid;
         grid-template-columns: repeat(4, 1fr) repeat(3, 1.3fr) 1.2fr; 
@@ -359,8 +382,8 @@ window.clearSearch = function() {
     document.getElementById('clearBtn').style.display = 'none';
     document.getElementById('suggest').style.display = 'none';
     
-    // --- MÓDOSÍTÁS: Osztály hozzáadva, hogy mobilon elrejthessük ---
-    document.getElementById('eredmeny').innerHTML = '<div class="empty-msg" style="text-align:center; padding:30px; color:#64748b;">Adatok betöltve</div>';
+    // TÖRÖLTEM AZ ADATOK BETÖLTVE SZÖVEGET
+    document.getElementById('eredmeny').innerHTML = '';
 };
 
 Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.text())]).then(([bT,uT])=>{
@@ -389,8 +412,8 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
     checkDeviceMode();
     window.addEventListener('resize', checkDeviceMode);
 
-    // --- MÓDOSÍTÁS: Osztály hozzáadva ---
-    document.getElementById('eredmeny').innerHTML='<div class="empty-msg" style="text-align:center; padding:30px; color:#64748b;">Adatok betöltve</div>';
+    // ÜRESRE ÁLLÍTVA INDÍTÁSKOR IS
+    document.getElementById('eredmeny').innerHTML='';
     renderHistory();
     
     inp.addEventListener('input',function(){
