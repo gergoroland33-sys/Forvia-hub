@@ -23,8 +23,8 @@ body {
     background: var(--bg-app); 
     color: var(--text-primary); 
     font-size: 14px; 
-    /* Mobilon helyet hagyunk a billentyűzetnek alapértelmezésben */
-    padding-bottom: 280px; 
+    /* Hely a billentyűzetnek + biztonsági sáv */
+    padding-bottom: 340px; 
     transition: padding-bottom 0.3s;
 }
 
@@ -175,12 +175,14 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
 .row-main .d-label { color: var(--accent); font-weight: bold; }
 
 /* ---------------------------------------------------- */
-/* --- HIBRID BILLENTYŰZET (MOBIL NÉZET) STÍLUSOK --- */
+/* --- HIBRID BILLENTYŰZET --- */
 /* ---------------------------------------------------- */
 #virtualKeyboard {
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    height: 280px;
+    height: 340px; 
+    padding-bottom: 60px; /* Hely a böngésző gombjának */
+    box-sizing: border-box; 
     background: #0f172a;
     border-top: 2px solid #334155;
     z-index: 5000;
@@ -194,7 +196,6 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
     transform: translateY(100%);
 }
 
-/* BAL OLDAL: BETŰK */
 .kb-letters {
     flex: 1.4; 
     padding: 5px;
@@ -205,7 +206,6 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
     border-right: 1px solid rgba(255,255,255,0.1);
 }
 
-/* JOBB OLDAL: SZÁMOK (PRIORITÁS) */
 .kb-numbers {
     flex: 1;
     padding: 5px;
@@ -229,7 +229,7 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
     font-size: 1.1rem;
     box-shadow: 0 2px 0 rgba(0,0,0,0.4);
     transition: all 0.1s;
-    touch-action: manipulation; /* Gyorsabb reakció érintésre */
+    touch-action: manipulation; 
 }
 .v-key:active {
     transform: translateY(2px);
@@ -238,15 +238,14 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
     color: #000;
 }
 
-/* Számok és funkció gombok */
 .v-key.num { font-size: 1.6rem; background: #334155; color: #60a5fa; }
 .v-key.backspace { grid-column: span 1; background: #7f1d1d; color: white; font-size: 1.2rem; }
 .v-key.clr-key { font-size: 0.9rem; background: #475569; }
 
-/* Billentyűzet elrejtő gomb */
+/* Billentyűzet gomb pozíciója */
 .kb-toggle-btn {
     position: fixed;
-    bottom: 290px; 
+    bottom: 350px; 
     right: 20px;
     width: 50px; height: 50px;
     border-radius: 50%;
@@ -261,10 +260,9 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
     transition: bottom 0.3s, transform 0.2s;
 }
 .kb-toggle-btn:active { transform: scale(0.9); }
-.kb-toggle-btn.floated { bottom: 20px; }
+.kb-toggle-btn.floated { bottom: 80px; } 
 
-/* --- LAPTOP/PC NÉZET OPTIMALIZÁLÁS --- */
-/* Ha a képernyő szélesebb mint 1024px (Laptop/PC), elrejtjük a mobil cuccokat */
+/* --- LAPTOP/PC NÉZET --- */
 @media screen and (min-width: 1024px) {
     #kbToggle, #virtualKeyboard { display: none !important; }
     body { padding-bottom: 0 !important; }
@@ -297,8 +295,7 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
 <button id="kbToggle" class="kb-toggle-btn" onclick="toggleKeyboard()">▼</button>
 
 <div id="virtualKeyboard">
-    <div class="kb-letters" id="kbLetters">
-        </div>
+    <div class="kb-letters" id="kbLetters"></div>
     <div class="kb-numbers">
         <div class="v-key num" onclick="typeKey('7')">7</div>
         <div class="v-key num" onclick="typeKey('8')">8</div>
@@ -319,7 +316,6 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
 </div>
 
 <script>
-/* --- ALAP LOGIKA (ADATBETÖLTÉS) --- */
 let bank=[],ultetes=[],idSet=new Set(),uniqueIdsArr=[],keresIdozito=null,searchHistory=JSON.parse(localStorage.getItem('searchHistory')||"[]");
 
 function updateDate(){
@@ -344,8 +340,6 @@ function highlight(text, term) {
 window.clearSearch = function() {
     const inp = document.getElementById('keres');
     inp.value = ''; 
-    // FONTOS: Mobilon nem adunk fókuszt törléskor, hogy ne ugorjon fel billentyűzet feleslegesen
-    // Laptopon viszont adunk fókuszt.
     if(window.innerWidth >= 1024) inp.focus(); else inp.blur();
 
     document.getElementById('clearBtn').style.display = 'none';
@@ -353,7 +347,6 @@ window.clearSearch = function() {
     document.getElementById('eredmeny').innerHTML = '<div style="text-align:center; padding:30px; color:#475569; font-size:0.9rem;">Adatok betöltve</div>';
 };
 
-/* --- ADATOK BETÖLTÉSE ÉS MODE DETECT --- */
 Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.text())]).then(([bT,uT])=>{
     bank=feldolgoz(bT); ultetes=feldolgoz(uT);
     bank.forEach(r=>r[2]&&idSet.add(r[2].toUpperCase()));
@@ -363,26 +356,21 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
     const inp=document.getElementById('keres');
     const clearBtn = document.getElementById('clearBtn');
     
-    // --- ESZKÖZ FELISMERÉS (SMART MODE) ---
     function checkDeviceMode() {
         const isMobile = window.innerWidth < 1024;
         const kbToggle = document.getElementById('kbToggle');
         
         if (isMobile) {
-            // MOBIL: Tiltjuk a natív billentyűzetet
             inp.readOnly = true; 
             kbToggle.style.display = 'flex';
         } else {
-            // LAPTOP: Engedjük a gépelést
             inp.readOnly = false;
             kbToggle.style.display = 'none';
-            document.body.style.paddingBottom = "0"; // Reset padding
+            document.body.style.paddingBottom = "0"; 
         }
     }
     
-    // Induláskor ellenőrizzük
     checkDeviceMode();
-    // Ha elforgatják a tabletet/átméretezik az ablakot
     window.addEventListener('resize', checkDeviceMode);
 
     document.getElementById('eredmeny').innerHTML='<div style="text-align:center; padding:30px; color:#475569; font-size:0.9rem;">Adatok betöltve</div>';
@@ -401,7 +389,6 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
         keresIdozito=setTimeout(()=>keres(v),100);
     });
 
-    // Ha mobilon mégis rákattint a mezőre, nyissa meg a mi billentyűzetünket
     inp.addEventListener('click', function() {
         if(window.innerWidth < 1024) {
             const kb = document.getElementById('virtualKeyboard');
@@ -410,8 +397,27 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
                 kb.classList.remove('hidden');
                 btn.classList.remove('floated');
                 btn.innerHTML = "▼";
-                document.body.style.paddingBottom = "280px";
+                document.body.style.paddingBottom = "340px";
             }
+        }
+    });
+
+    // --- ÚJ: KATTINTÁS A HÁTTÉRRE A BILLENTYŰZET BEZÁRÁSÁHOZ ---
+    document.addEventListener('click', function(event) {
+        // Ha nem mobilon vagyunk, ne fusson le
+        if (window.innerWidth >= 1024) return;
+
+        const kb = document.getElementById('virtualKeyboard');
+        const btn = document.getElementById('kbToggle');
+        const inp = document.getElementById('keres');
+        
+        // Ha a billentyűzet le van csukva, nem kell tenni semmit
+        if (kb.classList.contains('hidden')) return;
+
+        // Ha a kattintás NEM a billentyűzeten, NEM a toggle gombon, és NEM az inputon történt
+        if (!kb.contains(event.target) && !btn.contains(event.target) && !inp.contains(event.target)) {
+            // Akkor zárja be a billentyűzetet
+            toggleKeyboard();
         }
     });
 });
@@ -441,10 +447,8 @@ function renderHistory(){
 function keres(k){
     const e=document.getElementById('eredmeny');
     if(k.length<2)return;
-    
     let h='';
     
-    // BANK ADATOK
     const bT=bank.filter(r=>r[2]&&r[2].toUpperCase().includes(k)).slice(0,30);
     if(bT.length){
         h+=`<div class="section-header header-bank"> FEEDER BANK ADATOK</div>`;
@@ -454,24 +458,15 @@ function keres(k){
             <div class="card">
                 <div class="color-strip" style="background:${mc}"></div>
                 <div class="card-content">
-                    <div class="data-row row-main">
-                        <span class="d-label">Cikkszám</span><span class="d-value">${r[2]}</span>
-                    </div>
-                    <div class="data-row">
-                        <span class="d-label">Modell</span><span class="d-value">${r[3]}</span>
-                    </div>
-                    <div class="data-row">
-                        <span class="d-label">Gép</span><span class="d-value">${r[0]}</span>
-                    </div>
-                    <div class="data-row">
-                        <span class="d-label">Pozíció</span><span class="d-value">${r[1]}</span>
-                    </div>
+                    <div class="data-row row-main"><span class="d-label">Cikkszám</span><span class="d-value">${r[2]}</span></div>
+                    <div class="data-row"><span class="d-label">Modell</span><span class="d-value">${r[3]}</span></div>
+                    <div class="data-row"><span class="d-label">Gép</span><span class="d-value">${r[0]}</span></div>
+                    <div class="data-row"><span class="d-label">Pozíció</span><span class="d-value">${r[1]}</span></div>
                 </div>
             </div>`;
         });
     }
     
-    // BEÜLTETÉS ADATOK
     const uT=ultetes.filter(r=>r[0]&&r[0].toUpperCase().includes(k)).sort((a,b)=>parseInt(b[5])-parseInt(a[5])).slice(0,30);
     if(uT.length){
         h+=`<div class="section-header header-ultetes"> BEÜLTETÉS ADATOK</div>`;
@@ -481,21 +476,11 @@ function keres(k){
             <div class="card">
                 <div class="color-strip" style="background:${mc}"></div>
                 <div class="card-content">
-                    <div class="data-row row-main">
-                        <span class="d-label">Cikkszám</span><span class="d-value">${r[0]}</span>
-                    </div>
-                    <div class="data-row">
-                        <span class="d-label">Modell</span><span class="d-value">${r[4]}</span>
-                    </div>
-                    <div class="data-row">
-                        <span class="d-label">Oldal</span><span class="d-value">${r[3]}</span>
-                    </div>
-                    <div class="data-row">
-                        <span class="d-label">Beültetés db</span><span class="d-value">${r[5]}</span>
-                    </div>
-                    <div class="data-row">
-                        <span class="d-label">Alkatrész</span><span class="d-value">${r[1]}</span>
-                    </div>
+                    <div class="data-row row-main"><span class="d-label">Cikkszám</span><span class="d-value">${r[0]}</span></div>
+                    <div class="data-row"><span class="d-label">Modell</span><span class="d-value">${r[4]}</span></div>
+                    <div class="data-row"><span class="d-label">Oldal</span><span class="d-value">${r[3]}</span></div>
+                    <div class="data-row"><span class="d-label">Beültetés db</span><span class="d-value">${r[5]}</span></div>
+                    <div class="data-row"><span class="d-label">Alkatrész</span><span class="d-value">${r[1]}</span></div>
                 </div>
             </div>`;
         });
@@ -506,32 +491,23 @@ function keres(k){
         localStorage.setItem('searchHistory',JSON.stringify(searchHistory));
         renderHistory();
     }
-    
     e.innerHTML=h||`<div style="text-align:center; padding:30px; color:#64748b;">Nincs találat: "${k}"</div>`;
 }
 
-/* ----------------------------------- */
-/* --- BILLENTYŰZET LOGIKA SZKRIPT --- */
-/* ----------------------------------- */
-
-// Betűk generálása
 const letterContainer = document.getElementById('kbLetters');
 const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ-.".split('');
 letters.forEach(char => {
     const d = document.createElement('div');
     d.className = 'v-key';
     d.textContent = char;
-    d.onclick = (e) => { e.preventDefault(); typeKey(char); }; // Prevent default touch behavior
+    d.onclick = (e) => { e.preventDefault(); typeKey(char); }; 
     letterContainer.appendChild(d);
 });
 
-// Billentyűzet megjelenítés/elrejtés
 function toggleKeyboard() {
     const kb = document.getElementById('virtualKeyboard');
     const btn = document.getElementById('kbToggle');
-    
     kb.classList.toggle('hidden');
-    
     if (kb.classList.contains('hidden')) {
         btn.classList.add('floated');
         btn.innerHTML = "⌨️";
@@ -539,31 +515,27 @@ function toggleKeyboard() {
     } else {
         btn.classList.remove('floated');
         btn.innerHTML = "▼";
-        document.body.style.paddingBottom = "280px"; 
+        document.body.style.paddingBottom = "340px"; 
     }
 }
 
-// Karakter beírása
 function typeKey(char) {
     const inp = document.getElementById('keres');
     inp.value += char;
     triggerSearch();
 }
 
-// Backspace
 function backspaceKey() {
     const inp = document.getElementById('keres');
     inp.value = inp.value.slice(0, -1);
     triggerSearch();
 }
 
-// Keresés esemény manuális elsütése
 function triggerSearch() {
     const inp = document.getElementById('keres');
     const event = new Event('input', { bubbles: true, cancelable: true });
     inp.dispatchEvent(event);
 }
-
 </script>
 </body>
 </html>
