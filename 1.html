@@ -150,7 +150,7 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
         justify-content: center; 
         gap: 5px;                
         padding: 5px;
-        margin-bottom: 280px; /* Kevesebb helyet kell hagyni a kisebb billentyűzet miatt */
+        margin-bottom: 280px; 
     }
     
     .section-header { 
@@ -190,19 +190,18 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
         z-index: 5000;
         user-select: none;
         padding: 5px;
-        /* Hozzácsatolva az aljához */
         padding-bottom: calc(5px + env(safe-area-inset-bottom));
         box-sizing: border-box;
         box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
     }
 
-    /* CSÖKKENTETT MAGASSÁG (295px -> 250px) */
+    /* 250px magas rács */
     #viewNumeric, #viewAlpha {
         display: grid;
         grid-template-columns: repeat(4, 1fr) repeat(3, 1.3fr) 1.2fr; 
         grid-template-rows: repeat(4, 1fr);
         gap: 3px; 
-        height: 250px; /* Alacsonyabb gombok, de azonos elrendezés */
+        height: 250px; 
     }
     
     #viewAlpha {
@@ -297,6 +296,8 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
         <div class="k-btn num" onclick="typeKey('2')">2</div>
         <div class="k-btn num" onclick="typeKey('3')">3</div>
 
+        <div style="visibility:hidden; pointer-events:none;"></div>
+        
         <div class="k-btn func" onclick="typeKey('%')">%</div>
         <div class="k-btn func" onclick="typeKey('.')">.</div>
         <div class="k-btn func" onclick="typeKey('+')">+</div>
@@ -397,7 +398,6 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
 
     generateAlphaKeys();
     
-    // KATTINTÁS A HÁTTÉRRE ELTÜNTETI A BILLENTYŰZETET
     document.addEventListener('click', function(e) {
         if(window.innerWidth < 1024) {
             const kb = document.getElementById('kbContainer');
