@@ -109,18 +109,21 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
     .top-bar { display: none; }
     #suggest, #historySection { display: none !important; }
     
+    /* "Adatok betöltve" elrejtése mobilon */
+    .empty-msg { display: none !important; }
+
     .search-wrapper { 
-        padding: 10px 0; /* Kevesebb padding */
+        padding: 10px 0; 
         margin-top: 5px; 
-        background: transparent; /* Lebegő hatás */
+        background: transparent; 
         position: sticky; top: 5px;
         z-index: 6000;
-        display: flex; justify-content: center; /* Középre igazítás */
+        display: flex; justify-content: center; 
     }
     .input-group { 
-        width: 75%; /* A kért 25%-os csökkentés szélességben */
+        width: 75%; 
         height: 38px; 
-        box-shadow: 0 8px 20px rgba(0,0,0,0.5); /* Erős árnyék a kiemeléshez */
+        box-shadow: 0 8px 20px rgba(0,0,0,0.5); 
         border-radius: 50px;
     }
     input { 
@@ -128,10 +131,10 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
         padding: 5px 20px;
         font-size: 1rem;
         border-radius: 50px; 
-        background: #1e293b; /* Világosabb háttér */
+        background: #1e293b; 
         border: 1px solid #475569;
         color: white;
-        text-align: center; /* Középre ír */
+        text-align: center; 
     }
     input:focus { 
         border-color: #3b82f6; 
@@ -142,12 +145,33 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
     .search-icon { display: none; } 
     .clear-btn { top: 6px; right: 12px; }
 
+    /* --- MÓDOSÍTÁS: DINAMIKUS (FLEX) KÁRTYA ELRENDEZÉS --- */
     #eredmeny {
-        display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px;
-        margin-bottom: 290px; /* Hely a billentyűzetnek */
+        display: flex;           /* Grid helyett Flex */
+        flex-wrap: wrap;         /* Engedjük tördelni */
+        gap: 6px; 
+        padding: 10px;
+        margin-bottom: 290px;
+        align-items: flex-start;
     }
-    .section-header { grid-column: 1 / -1; margin-top: 10px; margin-bottom: 5px; padding: 5px 10px; font-size: 0.75rem; background: rgba(255,255,255,0.03); border: none; color: var(--text-secondary);}
-    .card { flex-direction: column; margin-bottom: 0; border-radius: 6px; font-size: 0.8rem; height: 100%; border: 1px solid rgba(255,255,255,0.05); background: #1e293b; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    
+    .section-header { width: 100%; margin-top: 10px; margin-bottom: 5px; padding: 5px 10px; font-size: 0.75rem; background: rgba(255,255,255,0.03); border: none; color: var(--text-secondary);}
+    
+    .card { 
+        /* Flex beállítások a dinamikus mérethez */
+        flex: 1 1 auto;          /* Nőhet és zsugorodhat, de tartalomhoz igazodik */
+        width: auto;             /* Tartalom határozza meg az alapszélességet */
+        min-width: 120px;        /* Ne legyen túl kicsi */
+        
+        flex-direction: column; 
+        margin-bottom: 0; 
+        border-radius: 6px; 
+        font-size: 0.8rem; 
+        border: 1px solid rgba(255,255,255,0.05); 
+        background: #1e293b; 
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+    }
+    
     .color-strip { width: 100%; height: 3px; order: -1; }
     .card-content { padding: 8px; gap: 2px; }
     .data-row { flex-direction: column; align-items: flex-start; border: none; padding: 0; margin-bottom: 3px; }
@@ -160,8 +184,8 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
     #kbContainer {
         display: block;
         position: fixed; bottom: 0; left: 0; right: 0;
-        height: 280px; /* Kisebb, kompaktabb méret */
-        background: #0f172a; /* Mély sötétkék alap */
+        height: 280px; 
+        background: #0f172a; 
         border-top: 2px solid #1e293b;
         z-index: 5000;
         user-select: none;
@@ -175,7 +199,7 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
         display: grid;
         grid-template-columns: repeat(4, 1fr) repeat(3, 1.3fr) 1.2fr; 
         grid-template-rows: repeat(4, 1fr);
-        gap: 3px; /* Kicsit nagyobb térköz a 3D hatáshoz */
+        gap: 3px; 
         height: 100%;
     }
 
@@ -184,58 +208,47 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
         gap: 3px; height: 100%; padding-top: 2px;
     }
 
-    /* 3D GOMB STÍLUS */
     .k-btn {
         display: flex; align-items: center; justify-content: center;
         border-radius: 6px; 
         font-family: sans-serif; font-size: 1.1rem; font-weight: 600;
         cursor: pointer;
         position: relative;
-        /* 3D színátmenet és árnyék */
         background: linear-gradient(145deg, #334155, #1e293b);
-        border-top: 1px solid rgba(255,255,255,0.1); /* Fénycsík felül */
-        box-shadow: 0 4px 0 #0f172a, 0 5px 5px rgba(0,0,0,0.3); /* Vastag "talp" az alján */
+        border-top: 1px solid rgba(255,255,255,0.1); 
+        box-shadow: 0 4px 0 #0f172a, 0 5px 5px rgba(0,0,0,0.3); 
         color: #e2e8f0;
         transition: all 0.05s;
     }
     
-    /* Benyomás effektus */
     .k-btn:active { 
-        transform: translateY(3px); /* Lejjebb megy */
-        box-shadow: 0 1px 0 #0f172a, inset 0 2px 5px rgba(0,0,0,0.3); /* Eltűnik a talp */
+        transform: translateY(3px); 
+        box-shadow: 0 1px 0 #0f172a, inset 0 2px 5px rgba(0,0,0,0.3); 
         background: #1e293b;
     }
 
-    /* 1. Számok (Kiemelt, világosabb) */
     .k-btn.num { 
         background: linear-gradient(145deg, #475569, #334155);
         color: white; font-size: 1.4rem; font-weight: 700;
     }
     
-    /* 2. Funkciók (Sötétebb) */
-    .k-btn.func {
-        color: #94a3b8; font-size: 1rem;
-    }
+    .k-btn.func { color: #94a3b8; font-size: 1rem; }
 
-    /* 3. Speciális Színek */
     .k-btn.accent {
-        background: linear-gradient(145deg, #3b82f6, #2563eb); /* Kék gradiens */
+        background: linear-gradient(145deg, #3b82f6, #2563eb); 
         box-shadow: 0 4px 0 #1e40af, 0 5px 5px rgba(0,0,0,0.3);
         color: white;
     }
-    .k-btn.accent:active {
-        box-shadow: 0 1px 0 #1e40af;
-        background: #2563eb;
-    }
+    .k-btn.accent:active { box-shadow: 0 1px 0 #1e40af; background: #2563eb; }
 
     .k-btn.red {
-        background: linear-gradient(145deg, #b91c1c, #991b1b); /* Vörös gradiens */
+        background: linear-gradient(145deg, #b91c1c, #991b1b); 
         box-shadow: 0 4px 0 #7f1d1d, 0 5px 5px rgba(0,0,0,0.3);
         color: white;
     }
 
     .abc-switch {
-        background: linear-gradient(145deg, #10b981, #059669) !important; /* Zöld gradiens */
+        background: linear-gradient(145deg, #10b981, #059669) !important; 
         box-shadow: 0 4px 0 #047857, 0 5px 5px rgba(0,0,0,0.3);
         color: white; font-weight: 800; font-size: 0.8rem;
     }
@@ -345,7 +358,9 @@ window.clearSearch = function() {
     if(window.innerWidth >= 1024) inp.focus(); else inp.blur();
     document.getElementById('clearBtn').style.display = 'none';
     document.getElementById('suggest').style.display = 'none';
-    document.getElementById('eredmeny').innerHTML = '<div style="text-align:center; padding:30px; color:#64748b;">Adatok betöltve</div>';
+    
+    // --- MÓDOSÍTÁS: Osztály hozzáadva, hogy mobilon elrejthessük ---
+    document.getElementById('eredmeny').innerHTML = '<div class="empty-msg" style="text-align:center; padding:30px; color:#64748b;">Adatok betöltve</div>';
 };
 
 Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.text())]).then(([bT,uT])=>{
@@ -374,7 +389,8 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
     checkDeviceMode();
     window.addEventListener('resize', checkDeviceMode);
 
-    document.getElementById('eredmeny').innerHTML='<div style="text-align:center; padding:30px; color:#64748b;">Adatok betöltve</div>';
+    // --- MÓDOSÍTÁS: Osztály hozzáadva ---
+    document.getElementById('eredmeny').innerHTML='<div class="empty-msg" style="text-align:center; padding:30px; color:#64748b;">Adatok betöltve</div>';
     renderHistory();
     
     inp.addEventListener('input',function(){
