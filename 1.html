@@ -23,6 +23,9 @@ body {
     background: var(--bg-app); 
     color: var(--text-primary); 
     font-size: 14px; 
+    /* Mobilon helyet hagyunk a billentyűzetnek alapértelmezésben */
+    padding-bottom: 280px; 
+    transition: padding-bottom 0.3s;
 }
 
 /* FEJLÉC */
@@ -64,27 +67,23 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
 }
 .clear-btn:hover { color: white; transform: scale(1.1); }
 
-/* --- JAVASLATOK (PRO VERZIÓ) --- */
-/* Ez biztosítja, hogy a lista ne takarja ki a mezőt és görgethető legyen */
+/* --- JAVASLATOK --- */
 #suggest { 
-    background: rgba(30, 41, 59, 0.98); /* Sötét, modern háttér */
-    backdrop-filter: blur(12px);        /* Homályosított üveghatás */
+    background: rgba(30, 41, 59, 0.98); 
+    backdrop-filter: blur(12px);        
     border: 1px solid var(--border); 
-    border-top: none;                   /* Fent ne legyen keret, olvadjon egybe */
-    border-radius: 0 0 20px 20px;       /* Csak alul kerekítve */
-    
+    border-top: none;                   
+    border-radius: 0 0 20px 20px;       
     position: absolute; 
-    top: 100%;                          /* Pontosan a mező alatt kezdődik */
-    left: 15px;                         /* Igazodik a mező bal széléhez */
-    right: 15px;                        /* Igazodik a mező jobb széléhez */
-    z-index: 1000;                      /* Minden más felett */
-    
+    top: 100%;                          
+    left: 15px;                         
+    right: 15px;                        
+    z-index: 1000;                      
     display: none; 
     box-shadow: 0 15px 30px rgba(0,0,0,0.6);
-    
-    max-height: 260px;                  /* MAXIMÁLIS MAGASSÁG: Nem foglalja el a képernyőt */
-    overflow-y: auto;                   /* Görgethető, ha sok a találat */
-    scrollbar-width: thin;              /* Vékony görgetősáv */
+    max-height: 260px;                  
+    overflow-y: auto;                   
+    scrollbar-width: thin;              
     scrollbar-color: var(--accent) var(--bg-app);
 }
 
@@ -100,7 +99,7 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
 .s-item:hover { 
     background: rgba(96, 165, 250, 0.15); 
     color: white; 
-    padding-left: 25px; /* Finom animáció jobbra */
+    padding-left: 25px; 
 }
 .hl { color: var(--accent); font-weight: bold; text-shadow: 0 0 10px rgba(96, 165, 250, 0.3); }
 
@@ -133,7 +132,6 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
     border-left: 6px solid transparent;
 }
 
-/* KÉK FEEDER BANK CÍMSOR */
 .header-bank {
     background: linear-gradient(90deg, rgba(30, 58, 138, 0.6), transparent);
     border-left-color: #3b82f6;
@@ -141,7 +139,6 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
     border-bottom: 1px solid rgba(59, 130, 246, 0.2);
 }
 
-/* ZÖLD BEÜLTETÉS CÍMSOR */
 .header-ultetes {
     background: linear-gradient(90deg, rgba(20, 83, 45, 0.6), transparent);
     border-left-color: #22c55e;
@@ -177,6 +174,101 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
 .row-main .d-value { font-size: 1.1rem; font-weight: 700; color: white; font-family: monospace; letter-spacing: 0.5px; }
 .row-main .d-label { color: var(--accent); font-weight: bold; }
 
+/* ---------------------------------------------------- */
+/* --- HIBRID BILLENTYŰZET (MOBIL NÉZET) STÍLUSOK --- */
+/* ---------------------------------------------------- */
+#virtualKeyboard {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 280px;
+    background: #0f172a;
+    border-top: 2px solid #334155;
+    z-index: 5000;
+    display: flex;
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+    user-select: none;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#virtualKeyboard.hidden {
+    transform: translateY(100%);
+}
+
+/* BAL OLDAL: BETŰK */
+.kb-letters {
+    flex: 1.4; 
+    padding: 5px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); 
+    grid-template-rows: repeat(6, 1fr);
+    gap: 4px;
+    border-right: 1px solid rgba(255,255,255,0.1);
+}
+
+/* JOBB OLDAL: SZÁMOK (PRIORITÁS) */
+.kb-numbers {
+    flex: 1;
+    padding: 5px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 6px;
+    background: rgba(0,0,0,0.2);
+}
+
+.v-key {
+    background: #1e293b;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.4);
+    transition: all 0.1s;
+    touch-action: manipulation; /* Gyorsabb reakció érintésre */
+}
+.v-key:active {
+    transform: translateY(2px);
+    box-shadow: none;
+    background: var(--accent);
+    color: #000;
+}
+
+/* Számok és funkció gombok */
+.v-key.num { font-size: 1.6rem; background: #334155; color: #60a5fa; }
+.v-key.backspace { grid-column: span 1; background: #7f1d1d; color: white; font-size: 1.2rem; }
+.v-key.clr-key { font-size: 0.9rem; background: #475569; }
+
+/* Billentyűzet elrejtő gomb */
+.kb-toggle-btn {
+    position: fixed;
+    bottom: 290px; 
+    right: 20px;
+    width: 50px; height: 50px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #0f172a;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 15px rgba(96, 165, 250, 0.4);
+    z-index: 5001;
+    cursor: pointer;
+    border: none;
+    transition: bottom 0.3s, transform 0.2s;
+}
+.kb-toggle-btn:active { transform: scale(0.9); }
+.kb-toggle-btn.floated { bottom: 20px; }
+
+/* --- LAPTOP/PC NÉZET OPTIMALIZÁLÁS --- */
+/* Ha a képernyő szélesebb mint 1024px (Laptop/PC), elrejtjük a mobil cuccokat */
+@media screen and (min-width: 1024px) {
+    #kbToggle, #virtualKeyboard { display: none !important; }
+    body { padding-bottom: 0 !important; }
+}
 </style>
 </head>
 <body>
@@ -189,9 +281,8 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
 <div class="search-wrapper">
     <div class="input-group">
         <span class="search-icon">🔍</span>
-        <input id="keres" type="text" placeholder="Kezd el gépelni a cikkszámot!" disabled autocomplete="off" />
+        <input id="keres" type="text" placeholder="Gépelj..." autocomplete="off" />
         <span class="clear-btn" id="clearBtn" onclick="clearSearch()" title="Törlés">✕</span>
-        
         <div id="suggest"></div>
     </div>
     
@@ -203,8 +294,32 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
 
 <div id="eredmeny"></div>
 
+<button id="kbToggle" class="kb-toggle-btn" onclick="toggleKeyboard()">▼</button>
+
+<div id="virtualKeyboard">
+    <div class="kb-letters" id="kbLetters">
+        </div>
+    <div class="kb-numbers">
+        <div class="v-key num" onclick="typeKey('7')">7</div>
+        <div class="v-key num" onclick="typeKey('8')">8</div>
+        <div class="v-key num" onclick="typeKey('9')">9</div>
+        
+        <div class="v-key num" onclick="typeKey('4')">4</div>
+        <div class="v-key num" onclick="typeKey('5')">5</div>
+        <div class="v-key num" onclick="typeKey('6')">6</div>
+        
+        <div class="v-key num" onclick="typeKey('1')">1</div>
+        <div class="v-key num" onclick="typeKey('2')">2</div>
+        <div class="v-key num" onclick="typeKey('3')">3</div>
+        
+        <div class="v-key backspace" onclick="backspaceKey()">⌫</div>
+        <div class="v-key num" onclick="typeKey('0')">0</div>
+        <div class="v-key clr-key" onclick="clearSearch();">CLR</div>
+    </div>
+</div>
+
 <script>
-/* --- LOGIKA --- */
+/* --- ALAP LOGIKA (ADATBETÖLTÉS) --- */
 let bank=[],ultetes=[],idSet=new Set(),uniqueIdsArr=[],keresIdozito=null,searchHistory=JSON.parse(localStorage.getItem('searchHistory')||"[]");
 
 function updateDate(){
@@ -228,12 +343,17 @@ function highlight(text, term) {
 
 window.clearSearch = function() {
     const inp = document.getElementById('keres');
-    inp.value = ''; inp.focus();
+    inp.value = ''; 
+    // FONTOS: Mobilon nem adunk fókuszt törléskor, hogy ne ugorjon fel billentyűzet feleslegesen
+    // Laptopon viszont adunk fókuszt.
+    if(window.innerWidth >= 1024) inp.focus(); else inp.blur();
+
     document.getElementById('clearBtn').style.display = 'none';
     document.getElementById('suggest').style.display = 'none';
     document.getElementById('eredmeny').innerHTML = '<div style="text-align:center; padding:30px; color:#475569; font-size:0.9rem;">Adatok betöltve</div>';
 };
 
+/* --- ADATOK BETÖLTÉSE ÉS MODE DETECT --- */
 Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.text())]).then(([bT,uT])=>{
     bank=feldolgoz(bT); ultetes=feldolgoz(uT);
     bank.forEach(r=>r[2]&&idSet.add(r[2].toUpperCase()));
@@ -243,7 +363,28 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
     const inp=document.getElementById('keres');
     const clearBtn = document.getElementById('clearBtn');
     
-    inp.disabled=false;
+    // --- ESZKÖZ FELISMERÉS (SMART MODE) ---
+    function checkDeviceMode() {
+        const isMobile = window.innerWidth < 1024;
+        const kbToggle = document.getElementById('kbToggle');
+        
+        if (isMobile) {
+            // MOBIL: Tiltjuk a natív billentyűzetet
+            inp.readOnly = true; 
+            kbToggle.style.display = 'flex';
+        } else {
+            // LAPTOP: Engedjük a gépelést
+            inp.readOnly = false;
+            kbToggle.style.display = 'none';
+            document.body.style.paddingBottom = "0"; // Reset padding
+        }
+    }
+    
+    // Induláskor ellenőrizzük
+    checkDeviceMode();
+    // Ha elforgatják a tabletet/átméretezik az ablakot
+    window.addEventListener('resize', checkDeviceMode);
+
     document.getElementById('eredmeny').innerHTML='<div style="text-align:center; padding:30px; color:#475569; font-size:0.9rem;">Adatok betöltve</div>';
     renderHistory();
     
@@ -258,6 +399,20 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
         updateSuggest(v); 
         clearTimeout(keresIdozito); 
         keresIdozito=setTimeout(()=>keres(v),100);
+    });
+
+    // Ha mobilon mégis rákattint a mezőre, nyissa meg a mi billentyűzetünket
+    inp.addEventListener('click', function() {
+        if(window.innerWidth < 1024) {
+            const kb = document.getElementById('virtualKeyboard');
+            const btn = document.getElementById('kbToggle');
+            if(kb.classList.contains('hidden')){
+                kb.classList.remove('hidden');
+                btn.classList.remove('floated');
+                btn.innerHTML = "▼";
+                document.body.style.paddingBottom = "280px";
+            }
+        }
     });
 });
 
@@ -292,7 +447,6 @@ function keres(k){
     // BANK ADATOK
     const bT=bank.filter(r=>r[2]&&r[2].toUpperCase().includes(k)).slice(0,30);
     if(bT.length){
-        // Kiemelt kék címsor
         h+=`<div class="section-header header-bank"> FEEDER BANK ADATOK</div>`;
         bT.forEach(r=>{
             const mc=getModelColor(r[3]);
@@ -320,7 +474,6 @@ function keres(k){
     // BEÜLTETÉS ADATOK
     const uT=ultetes.filter(r=>r[0]&&r[0].toUpperCase().includes(k)).sort((a,b)=>parseInt(b[5])-parseInt(a[5])).slice(0,30);
     if(uT.length){
-        // Kiemelt zöld címsor
         h+=`<div class="section-header header-ultetes"> BEÜLTETÉS ADATOK</div>`;
         uT.forEach(r=>{
             const mc=getModelColor(r[4]); 
@@ -356,6 +509,61 @@ function keres(k){
     
     e.innerHTML=h||`<div style="text-align:center; padding:30px; color:#64748b;">Nincs találat: "${k}"</div>`;
 }
+
+/* ----------------------------------- */
+/* --- BILLENTYŰZET LOGIKA SZKRIPT --- */
+/* ----------------------------------- */
+
+// Betűk generálása
+const letterContainer = document.getElementById('kbLetters');
+const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ-.".split('');
+letters.forEach(char => {
+    const d = document.createElement('div');
+    d.className = 'v-key';
+    d.textContent = char;
+    d.onclick = (e) => { e.preventDefault(); typeKey(char); }; // Prevent default touch behavior
+    letterContainer.appendChild(d);
+});
+
+// Billentyűzet megjelenítés/elrejtés
+function toggleKeyboard() {
+    const kb = document.getElementById('virtualKeyboard');
+    const btn = document.getElementById('kbToggle');
+    
+    kb.classList.toggle('hidden');
+    
+    if (kb.classList.contains('hidden')) {
+        btn.classList.add('floated');
+        btn.innerHTML = "⌨️";
+        document.body.style.paddingBottom = "0"; 
+    } else {
+        btn.classList.remove('floated');
+        btn.innerHTML = "▼";
+        document.body.style.paddingBottom = "280px"; 
+    }
+}
+
+// Karakter beírása
+function typeKey(char) {
+    const inp = document.getElementById('keres');
+    inp.value += char;
+    triggerSearch();
+}
+
+// Backspace
+function backspaceKey() {
+    const inp = document.getElementById('keres');
+    inp.value = inp.value.slice(0, -1);
+    triggerSearch();
+}
+
+// Keresés esemény manuális elsütése
+function triggerSearch() {
+    const inp = document.getElementById('keres');
+    const event = new Event('input', { bubbles: true, cancelable: true });
+    inp.dispatchEvent(event);
+}
+
 </script>
 </body>
 </html>
