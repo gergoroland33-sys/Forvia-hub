@@ -211,8 +211,9 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
     flex: 1.4; 
     padding: 5px;
     display: grid;
-    grid-template-columns: repeat(5, 1fr); 
-    grid-template-rows: repeat(6, 1fr);
+    /* MÓDOSÍTÁS: 10 oszlop a QWERTZ elrendezéshez */
+    grid-template-columns: repeat(10, 1fr); 
+    grid-template-rows: repeat(4, 1fr); /* Több sor a QWERTZ-hez */
     gap: 4px;
     border-right: 1px solid rgba(255,255,255,0.1);
 }
@@ -276,22 +277,61 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
 
 /* --- MOBIL/TABLET NÉZET ÉS MÓDOSÍTÁSOK --- */
 @media screen and (max-width: 1024px) {
-    /* ITT A LÉNYEG: Rövidebb kereső, hogy a gombok elférjenek */
+    /* Rövidebb kereső, hogy a gombok elférjenek */
     .search-wrapper {
-        margin-right: 70px; /* Hely a jobb oldali lebegő gomboknak */
+        margin-right: 70px;
         width: auto;
+        padding: 10px; /* Kevesebb padding mobilon */
     }
     
-    /* JAVASLATOK TILTÁSA MOBILON */
-    #suggest { 
-        display: none !important; 
+    /* JAVASLATOK ÉS ELŐZMÉNYEK TILTÁSA MOBILON - A KÉRÉSNEK MEGFELELŐEN */
+    #suggest { display: none !important; }
+    #historySection { display: none !important; }
+
+    /* --- KOMPAKT KÁRTYA NÉZET MOBILRA --- */
+    /* Sokkal sűrűbb kártyák, hogy több férjen ki */
+    .card {
+        margin-bottom: 4px; /* Kisebb táv a kártyák között */
+        border-radius: 6px;
     }
+    .card-content {
+        padding: 5px 8px; /* Minimális padding belül */
+        gap: 0; /* Nulla gap a sorok között */
+    }
+    .data-row {
+        padding: 1px 0; /* Ultra vékony sorok */
+        border-bottom: none; /* Vonalak törlése a zsúfoltság ellen */
+    }
+    .row-main {
+        margin-bottom: 2px;
+        padding-bottom: 2px;
+        border-bottom: 1px solid rgba(255,255,255,0.1); /* Csak a fő sor alatt marad vonal */
+    }
+    
+    /* Betűméretek csökkentése mobilon */
+    .d-label { font-size: 0.65rem; }
+    .d-value { font-size: 0.8rem; }
+    .row-main .d-value { font-size: 0.95rem; } /* A fő adat maradjon olvasható */
+    
+    /* Fejlécek tömörítése */
+    .section-header {
+        margin-top: 15px;
+        margin-bottom: 8px;
+        padding: 6px 10px;
+        font-size: 0.75rem;
+        min-height: 20px;
+    }
+    
+    /* Billentyűzet font méret igazítás */
+    .v-key { font-size: 0.9rem; }
+    .v-key.num { font-size: 1.3rem; }
 }
 
 /* --- LAPTOP/PC NÉZET --- */
 @media screen and (min-width: 1024px) {
     #kbToggle, #virtualKeyboard { display: none !important; }
     body { padding-bottom: 0 !important; }
+    /* PC-n minden marad az eredeti "szellős" design */
 }
 </style>
 </head>
@@ -344,7 +384,6 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
 <script>
 let bank=[],ultetes=[],idSet=new Set(),uniqueIdsArr=[],keresIdozito=null,searchHistory=JSON.parse(localStorage.getItem('searchHistory')||"[]");
 
-// ÚJ VÁLTOZÓ A GYORS TÖRLÉSHEZ
 let searchFinalized = false;
 
 function updateDate(){
@@ -369,8 +408,8 @@ function highlight(text, term) {
 window.clearSearch = function() {
     const inp = document.getElementById('keres');
     inp.value = ''; 
-    searchFinalized = false; // Reseteljük a flaget
-    inp.classList.remove('search-ready'); // Zöld keret le
+    searchFinalized = false; 
+    inp.classList.remove('search-ready'); 
     if(window.innerWidth >= 1024) inp.focus(); else inp.blur();
 
     document.getElementById('clearBtn').style.display = 'none';
@@ -411,7 +450,6 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
         const v=this.value.toUpperCase();
         clearBtn.style.display = v.length > 0 ? 'block' : 'none';
         
-        // Ha manuálisan töröl, reseteljük a flaget
         if(v.length === 0) searchFinalized = false;
 
         if(v.length<2){ 
@@ -420,7 +458,6 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
             return;
         }
         
-        // Javaslatok csak PC-n (mobilon CSS tiltja, de itt is biztosítjuk)
         if(window.innerWidth >= 1024) {
             updateSuggest(v);
         }
@@ -469,11 +506,12 @@ window.selectSuggest=function(c){
     const i=document.getElementById('keres'); i.value=c; 
     document.getElementById('suggest').style.display='none'; 
     document.getElementById('clearBtn').style.display = 'block'; 
-    searchFinalized = false; // Javaslat választásakor nem kell automata törlés
+    searchFinalized = false; 
     keres(c); 
 };
 
 function renderHistory(){
+    // PC-n ez lefut, mobilon a CSS eltünteti
     const c=document.getElementById('historyChips'),s=document.getElementById('historySection');
     if(!searchHistory.length){s.style.display='none';return;} s.style.display='block';
     c.innerHTML=searchHistory.map(x=>`<div class="chip" onclick="selectSuggest('${x}')">${x}</div>`).join('');
@@ -529,9 +567,12 @@ function keres(k){
     e.innerHTML=h||`<div style="text-align:center; padding:30px; color:#64748b;">Nincs találat: "${k}"</div>`;
 }
 
+// --- MÓDOSÍTOTT QWERTZ BILLENTYŰZET GENERÁLÁS ---
 const letterContainer = document.getElementById('kbLetters');
-const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ-.".split('');
-letters.forEach(char => {
+// Itt definiáljuk a QWERTZ sorrendet. A CSS rács 10 oszlopos, így a sorok szépen fognak törni.
+const qwertz = "QWERTZUIOPASDFGHJKLYXCVBNM-.".split('');
+
+qwertz.forEach(char => {
     const d = document.createElement('div');
     d.className = 'v-key';
     d.textContent = char;
@@ -554,22 +595,17 @@ function toggleKeyboard() {
     }
 }
 
-// --- ÚJ ENTER FUNKCIÓ ---
 function enterKey() {
     const inp = document.getElementById('keres');
     if(inp.value.length > 0) {
-        // Jelöljük meg, hogy a keresés "kész"
         searchFinalized = true;
-        // Vizuális visszajelzés (zöld keret)
         inp.classList.add('search-ready');
     }
 }
 
-// --- MÓDOSÍTOTT GÉPELÉS LOGIKA ---
 function typeKey(char) {
     const inp = document.getElementById('keres');
     
-    // HA már nyomtunk Entert, akkor az első új karakternél TÖRÖLJÜK a mezőt
     if (searchFinalized) {
         inp.value = "";
         searchFinalized = false;
@@ -583,7 +619,7 @@ function typeKey(char) {
 function backspaceKey() {
     const inp = document.getElementById('keres');
     inp.value = inp.value.slice(0, -1);
-    searchFinalized = false; // Ha töröl, ne reseteljen automatán
+    searchFinalized = false; 
     inp.classList.remove('search-ready');
     triggerSearch();
 }
