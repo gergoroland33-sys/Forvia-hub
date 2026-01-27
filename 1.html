@@ -40,7 +40,15 @@ body {
 .date-display { font-size: 0.75rem; color: var(--text-secondary); font-family: monospace; }
 
 /* KERESŐ */
-.search-wrapper { padding: 15px; max-width: 600px; margin: 0 auto; position: relative; z-index: 200; }
+.search-wrapper { 
+    padding: 15px; 
+    max-width: 600px; 
+    margin: 0 auto; 
+    position: relative; 
+    z-index: 200; 
+    transition: all 0.3s ease;
+}
+
 .input-group { position: relative; width: 100%; display: flex; align-items: center; }
 
 .search-icon { position: absolute; left: 15px; color: var(--text-secondary); font-size: 1.1rem; pointer-events: none; z-index: 10; }
@@ -60,6 +68,9 @@ input {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2); }
+
+/* Keresés sikerességét jelző animációhoz */
+input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3) !important; }
 
 .clear-btn {
     position: absolute; right: 15px; color: var(--text-secondary); cursor: pointer; display: none; 
@@ -240,7 +251,8 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
 
 .v-key.num { font-size: 1.6rem; background: #334155; color: #60a5fa; }
 .v-key.backspace { grid-column: span 1; background: #7f1d1d; color: white; font-size: 1.2rem; }
-.v-key.clr-key { font-size: 0.9rem; background: #475569; }
+/* ÚJ ENTER GOMB STÍLUS */
+.v-key.enter-key { font-size: 1.4rem; background: #2563eb; color: white; grid-column: span 1; }
 
 /* Billentyűzet gomb pozíciója */
 .kb-toggle-btn {
@@ -261,6 +273,20 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
 }
 .kb-toggle-btn:active { transform: scale(0.9); }
 .kb-toggle-btn.floated { bottom: 80px; } 
+
+/* --- MOBIL/TABLET NÉZET ÉS MÓDOSÍTÁSOK --- */
+@media screen and (max-width: 1024px) {
+    /* ITT A LÉNYEG: Rövidebb kereső, hogy a gombok elférjenek */
+    .search-wrapper {
+        margin-right: 70px; /* Hely a jobb oldali lebegő gomboknak */
+        width: auto;
+    }
+    
+    /* JAVASLATOK TILTÁSA MOBILON */
+    #suggest { 
+        display: none !important; 
+    }
+}
 
 /* --- LAPTOP/PC NÉZET --- */
 @media screen and (min-width: 1024px) {
@@ -311,12 +337,15 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(96, 165, 2
         
         <div class="v-key backspace" onclick="backspaceKey()">⌫</div>
         <div class="v-key num" onclick="typeKey('0')">0</div>
-        <div class="v-key clr-key" onclick="clearSearch();">CLR</div>
+        <div class="v-key enter-key" onclick="enterKey()">⏎</div>
     </div>
 </div>
 
 <script>
 let bank=[],ultetes=[],idSet=new Set(),uniqueIdsArr=[],keresIdozito=null,searchHistory=JSON.parse(localStorage.getItem('searchHistory')||"[]");
+
+// ÚJ VÁLTOZÓ A GYORS TÖRLÉSHEZ
+let searchFinalized = false;
 
 function updateDate(){
     const n=new Date();
@@ -340,6 +369,8 @@ function highlight(text, term) {
 window.clearSearch = function() {
     const inp = document.getElementById('keres');
     inp.value = ''; 
+    searchFinalized = false; // Reseteljük a flaget
+    inp.classList.remove('search-ready'); // Zöld keret le
     if(window.innerWidth >= 1024) inp.focus(); else inp.blur();
 
     document.getElementById('clearBtn').style.display = 'none';
@@ -379,12 +410,21 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
     inp.addEventListener('input',function(){
         const v=this.value.toUpperCase();
         clearBtn.style.display = v.length > 0 ? 'block' : 'none';
+        
+        // Ha manuálisan töröl, reseteljük a flaget
+        if(v.length === 0) searchFinalized = false;
+
         if(v.length<2){ 
             document.getElementById('suggest').style.display='none'; 
             document.getElementById('eredmeny').innerHTML=''; 
             return;
         }
-        updateSuggest(v); 
+        
+        // Javaslatok csak PC-n (mobilon CSS tiltja, de itt is biztosítjuk)
+        if(window.innerWidth >= 1024) {
+            updateSuggest(v);
+        }
+        
         clearTimeout(keresIdozito); 
         keresIdozito=setTimeout(()=>keres(v),100);
     });
@@ -402,21 +442,15 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
         }
     });
 
-    // --- ÚJ: KATTINTÁS A HÁTTÉRRE A BILLENTYŰZET BEZÁRÁSÁHOZ ---
     document.addEventListener('click', function(event) {
-        // Ha nem mobilon vagyunk, ne fusson le
         if (window.innerWidth >= 1024) return;
-
         const kb = document.getElementById('virtualKeyboard');
         const btn = document.getElementById('kbToggle');
         const inp = document.getElementById('keres');
         
-        // Ha a billentyűzet le van csukva, nem kell tenni semmit
         if (kb.classList.contains('hidden')) return;
 
-        // Ha a kattintás NEM a billentyűzeten, NEM a toggle gombon, és NEM az inputon történt
         if (!kb.contains(event.target) && !btn.contains(event.target) && !inp.contains(event.target)) {
-            // Akkor zárja be a billentyűzetet
             toggleKeyboard();
         }
     });
@@ -435,6 +469,7 @@ window.selectSuggest=function(c){
     const i=document.getElementById('keres'); i.value=c; 
     document.getElementById('suggest').style.display='none'; 
     document.getElementById('clearBtn').style.display = 'block'; 
+    searchFinalized = false; // Javaslat választásakor nem kell automata törlés
     keres(c); 
 };
 
@@ -519,8 +554,28 @@ function toggleKeyboard() {
     }
 }
 
+// --- ÚJ ENTER FUNKCIÓ ---
+function enterKey() {
+    const inp = document.getElementById('keres');
+    if(inp.value.length > 0) {
+        // Jelöljük meg, hogy a keresés "kész"
+        searchFinalized = true;
+        // Vizuális visszajelzés (zöld keret)
+        inp.classList.add('search-ready');
+    }
+}
+
+// --- MÓDOSÍTOTT GÉPELÉS LOGIKA ---
 function typeKey(char) {
     const inp = document.getElementById('keres');
+    
+    // HA már nyomtunk Entert, akkor az első új karakternél TÖRÖLJÜK a mezőt
+    if (searchFinalized) {
+        inp.value = "";
+        searchFinalized = false;
+        inp.classList.remove('search-ready');
+    }
+    
     inp.value += char;
     triggerSearch();
 }
@@ -528,6 +583,8 @@ function typeKey(char) {
 function backspaceKey() {
     const inp = document.getElementById('keres');
     inp.value = inp.value.slice(0, -1);
+    searchFinalized = false; // Ha töröl, ne reseteljen automatán
+    inp.classList.remove('search-ready');
     triggerSearch();
 }
 
