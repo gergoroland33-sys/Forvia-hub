@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Forvia Bank Scan V7.1 (Smart Cam)</title>
+<title>Forvia Scan V7.2 (Stable Fix)</title>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <style>
-/* --- GLOBÁLIS BEÁLLÍTÁSOK --- */
+/* --- GLOBÁLIS DESIGN (Változatlan, mert szép volt) --- */
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 :root {
@@ -45,7 +45,7 @@ body {
     overflow-y: auto; align-items: center; width: 100%; -webkit-overflow-scrolling: touch;
 }
 
-/* --- BEÁLLÍTÁSOK PANEL (ÚJ STÍLUS) --- */
+/* --- KAMERA PANEL --- */
 .settings-box {
     width: 100%; max-width: 320px; margin-bottom: 20px;
     background: rgba(30, 41, 59, 0.7); 
@@ -55,10 +55,7 @@ body {
     display: flex; flex-direction: column; gap: 12px;
 }
 
-/* Stílusos lenyíló menü */
-.select-wrapper {
-    position: relative; width: 100%;
-}
+.select-wrapper { position: relative; width: 100%; }
 .select-wrapper::after {
     content: '▼'; font-size: 0.7rem; color: var(--accent);
     position: absolute; right: 15px; top: 50%; transform: translateY(-50%); pointer-events: none;
@@ -68,35 +65,26 @@ select#cameraSelect {
     background: #0f172a; color: white; 
     border: 1px solid var(--glass-border);
     padding: 10px 15px; padding-right: 35px;
-    border-radius: 12px; font-size: 0.9rem; font-weight: 500;
-    outline: none; transition: border 0.3s;
+    border-radius: 12px; font-size: 0.85rem; font-weight: 500;
+    outline: none;
 }
-select#cameraSelect:focus { border-color: var(--accent); }
 
-/* Slider stílus */
-.slider-group {
-    display: flex; flex-direction: column; gap: 6px;
-}
+.slider-group { display: flex; flex-direction: column; gap: 6px; }
 .slider-header {
     display: flex; justify-content: space-between; font-size: 0.75rem; 
     color: var(--text-muted); font-weight: 700; text-transform: uppercase;
 }
 .slider-val { color: var(--accent); }
 
-input[type=range] {
-    -webkit-appearance: none; width: 100%; background: transparent; 
-}
-input[type=range]::-webkit-slider-runnable-track {
-    width: 100%; height: 6px; background: #475569; border-radius: 3px;
-}
+input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; background: #475569; border-radius: 3px; }
 input[type=range]::-webkit-slider-thumb {
     height: 18px; width: 18px; border-radius: 50%;
     background: var(--accent); margin-top: -6px; 
-    box-shadow: 0 0 10px var(--accent-glow); border: 2px solid white;
-    -webkit-appearance: none;
+    box-shadow: 0 0 10px var(--accent-glow); border: 2px solid white; -webkit-appearance: none;
 }
 
-/* --- KAMERA KÉP --- */
+/* --- KAMERA DOBOZ --- */
 #reader {
     width: 100%; max-width: 300px; aspect-ratio: 1 / 1; border-radius: 20px;
     overflow: hidden; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -104,14 +92,13 @@ input[type=range]::-webkit-slider-thumb {
 }
 #reader video { width: 100% !important; height: 100% !important; object-fit: cover; }
 
-/* INPUT MEZŐ */
+/* INPUT */
 .input-wrapper { width: 100%; max-width: 500px; display: flex; gap: 12px; margin-bottom: 25px; flex-shrink: 0; }
 input[type=text] {
     flex: 1; background: var(--glass); border: 1px solid var(--glass-border);
     padding: 16px 20px; border-radius: 16px; color: white; font-size: 1.2rem;
     font-weight: 600; text-align: center; outline: none; backdrop-filter: blur(5px); min-width: 0;
 }
-
 .scan-btn {
     width: 60px; height: 60px; border-radius: 16px; border: none;
     background: var(--accent); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -123,23 +110,19 @@ input[type=text] {
 
 /* --- EREDMÉNYEK --- */
 #resultsWrapper { width: 100%; max-width: 500px; padding-bottom: 20px; }
-
 .result-card {
     background: #1e293b; border: 1px solid var(--glass-border);
     border-radius: 20px; overflow: hidden; margin-bottom: 15px;
     animation: popIn 0.3s ease-out; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
 @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-
 .res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--glass-border); }
 .res-cell { background: #1e293b; padding: 15px 10px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; }
 .res-full { grid-column: span 2; border-bottom: 1px solid var(--glass-border); }
-
 .res-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; letter-spacing: 1px; }
 .res-value { font-size: 1.1rem; font-weight: 800; color: white; word-break: break-all; line-height: 1.2; }
 .res-highlight { color: #fbbf24; font-size: 1.4rem; } 
 .res-ok { color: var(--ok-color); }
-
 .no-result { font-size: 1.5rem; font-weight: bold; color: var(--err-color); text-align: center; margin-top: 20px; }
 .load-msg { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px; }
 
@@ -152,7 +135,6 @@ input[type=text] {
 .history-header { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; }
 .history-title { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: bold; }
 .clear-btn { color: var(--err-color); font-size: 0.75rem; cursor: pointer; text-transform: uppercase; font-weight: bold; border: 1px solid var(--err-color); padding: 2px 8px; border-radius: 4px; }
-
 .h-item { display: flex; align-items: center; justify-content: flex-start; gap: 30px; padding: 8px 12px; margin-bottom: 6px; background: rgba(255,255,255,0.03); border-radius: 8px; font-size: 0.85rem; border-left: 3px solid #555; }
 .h-ok { border-left-color: var(--ok-color); }
 .h-err { border-left-color: var(--err-color); }
@@ -162,7 +144,7 @@ input[type=text] {
 <body>
 
 <div class="header">
-    <h1>Forvia Scan V7.1</h1>
+    <h1>Forvia Scan V7.2</h1>
     <div class="credits">Készítette: <span>Gergő Roland</span></div>
 </div>
 
@@ -172,8 +154,8 @@ input[type=text] {
     <div class="settings-box">
         <div class="select-wrapper">
             <select id="cameraSelect">
-                <option value="auto">Auto (Hátsó kamera)</option>
-                </select>
+                <option value="auto">Auto (Eredeti stabil mód)</option>
+            </select>
         </div>
         
         <div class="slider-group">
@@ -216,7 +198,7 @@ input[type=text] {
 
 <script>
 /* ========================================================
-   LOGIKA V7.1 - JAVÍTOTT KAMERA KEZELÉS
+   LOGIKA V7.2 - STABILIOS JAVÍTÁS + SZIGORÚ SZŰRÉS
    ======================================================== */
 const input = document.getElementById('barcodeInput');
 const resultsWrapper = document.getElementById('resultsWrapper');
@@ -249,7 +231,6 @@ boxSizeSlider.addEventListener('input', (e) => {
     sliderValueDisplay.innerText = newVal + "px";
     localStorage.setItem('scanBoxSize', newVal);
     if(isCameraRunning) {
-        // Debounce restart
         if(this.restartTimeout) clearTimeout(this.restartTimeout);
         this.restartTimeout = setTimeout(() => {
             stopCameraInternal().then(() => startCameraInternal());
@@ -266,7 +247,7 @@ cameraSelect.addEventListener('change', () => {
         localStorage.setItem('selectedCameraId', selectedId);
     }
     
-    // Ha fut a kamera, azonnal váltunk
+    // Csak akkor váltunk, ha már fut a kamera
     if (isCameraRunning) {
         stopCameraInternal().then(() => startCameraInternal());
     }
@@ -279,48 +260,47 @@ async function init() {
         loadMsg.style.color = "#10b981";
     }
     renderHistory();
-    // Próbáljuk meg betölteni a listát, ha már van engedély, de nem baj ha még nincs
-    updateCameraList(); 
+    // Nem hívunk updateCameraList-et itt, hogy ne kavarjon be az indulásnál
+    // Majd a kamera start után töltjük be, amikor már van engedély.
 }
 
-// --- KAMERÁK FELTÉRKÉPEZÉSE (SZŰRÉSSEL) ---
+// --- KAMERÁK FELTÉRKÉPEZÉSE (SZIGORÚ SZŰRÉS) ---
 function updateCameraList() {
     Html5Qrcode.getCameras().then(devices => {
         if (!devices || !devices.length) return;
-
-        // Csak akkor frissítjük a listát, ha változott, vagy üres
+        
+        // Ha ugyanaz a lista, nem rajzoljuk újra
         if(availableCameras.length === devices.length) return;
-        
         availableCameras = devices;
+
         const savedId = localStorage.getItem('selectedCameraId');
-        
-        let html = '<option value="auto">Auto (Alapértelmezett)</option>';
+        let html = '<option value="auto">Auto (Eredeti stabil mód)</option>';
         
         devices.forEach(camera => {
             const label = (camera.label || "").toLowerCase();
-            // SZŰRÉS: Ha 'front', 'user', 'selfie' van benne, KIHAGYJUK
-            if (label.includes('front') || label.includes('előlap') || label.includes('selfie') || label.includes('user')) {
+            
+            // --- JAVÍTOTT SZŰRÉS ---
+            // Kiveszünk mindent ami: front, elülső, elöl, selfie, user
+            if (label.includes('front') || 
+                label.includes('elülső') || 
+                label.includes('elöl') || 
+                label.includes('selfie') || 
+                label.includes('user')) {
                 return; 
             }
             
             const isSelected = (savedId === camera.id) ? 'selected' : '';
-            // Szépítjük a nevet a listában
-            let displayLabel = camera.label || `Kamera ${camera.id.substr(0,5)}...`;
+            // Rövidítjük a nevet ha túl hosszú
+            let displayLabel = camera.label || `Kamera ${camera.id.substr(0,4)}`;
+            if(displayLabel.length > 35) displayLabel = displayLabel.substr(0,34) + "..";
+            
             html += `<option value="${camera.id}" ${isSelected}>${displayLabel}</option>`;
         });
         
         cameraSelect.innerHTML = html;
         
-        // Ha van mentett ID, de nincs a listában (pl. új telefon), töröljük a mentést
-        if (savedId && savedId !== 'auto' && !devices.some(d => d.id === savedId)) {
-            console.log("Mentett kamera nem található, visszaállás...");
-            localStorage.removeItem('selectedCameraId');
-            cameraSelect.value = 'auto';
-        }
-
     }).catch(err => {
-        // Ez normális, ha még nincs engedély
-        console.log("Még nincs kamera lista engedély.");
+        console.log("Még nincs lista hozzáférés");
     });
 }
 
@@ -349,7 +329,6 @@ async function loadBankCSV() {
     }
 }
 
-// --- KERESÉS ÉS INPUT ---
 input.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         const code = input.value.trim().toUpperCase();
@@ -395,10 +374,9 @@ function search(code) {
     }
 }
 
-// --- FŐ KAMERA VEZÉRLÉS ---
+// --- KAMERA VEZÉRLÉS (STABILITÁS JAVÍTVA) ---
 function toggleCamera() {
     resultsWrapper.innerHTML = ''; input.value = '';
-
     if (isCameraRunning) {
         stopCameraInternal();
     } else {
@@ -406,7 +384,7 @@ function toggleCamera() {
     }
 }
 
-async function startCameraInternal() {
+async function startCameraInternal(forceAuto = false) {
     readerDiv.style.display = 'block';
     camIcon.style.display = 'none'; stopIcon.style.display = 'block';
     scanBtn.classList.add('active');
@@ -416,14 +394,18 @@ async function startCameraInternal() {
     }
 
     const currentBoxSize = parseInt(boxSizeSlider.value);
-    const savedCamId = localStorage.getItem('selectedCameraId');
+    // Ha forceAuto igaz, akkor ignoráljuk a mentést
+    const savedCamId = forceAuto ? 'auto' : localStorage.getItem('selectedCameraId');
     
-    // FONTOS: Ha van ID, akkor nincs facingMode. Különben hiba lehet iOS-en.
+    // --- KONFIGURÁCIÓ ---
+    // Az "environment" beállítás a legstabilabb iOS-en.
+    // Csak akkor váltunk deviceId-ra, ha a felhasználó kifejezetten kért mást.
     let constraints;
     if (savedCamId && savedCamId !== 'auto') {
-        constraints = { deviceId: { exact: savedCamId } }; // Konkrét kamera
+        constraints = { deviceId: { exact: savedCamId } };
     } else {
-        constraints = { facingMode: "environment" }; // Auto hátsó
+        // Ez az "Eredeti kód" beállítása, ami működött!
+        constraints = { facingMode: "environment" }; 
     }
 
     const config = { 
@@ -445,20 +427,26 @@ async function startCameraInternal() {
             (err) => {}
         );
         isCameraRunning = true;
-        // Ha sikeres a start, most már biztosan le tudjuk kérni a listát!
+        
+        // Ha sikeres a start, akkor kérjük le a listát (mert már van engedély)
         updateCameraList();
+        
     } catch (err) {
-        console.error("Start Error:", err);
-        // Hiba esetén fallback: Töröljük a mentett ID-t és újrapróbáljuk Auto módban
-        if (savedCamId) {
-            console.log("Hiba a mentett kamerával, visszatérés Auto módba.");
+        console.error("Kamera hiba:", err);
+        
+        // --- HIBAKEZELÉS / AUTOMATIKUS JAVÍTÁS ---
+        // Ha nem sikerült elindítani a választott kamerát, akkor azonnal
+        // visszaváltunk a biztonságos "Auto" módra.
+        if (!forceAuto && savedCamId && savedCamId !== 'auto') {
+            console.log("Választott kamera hiba -> Visszaállás Auto módra");
             localStorage.removeItem('selectedCameraId');
             cameraSelect.value = 'auto';
-            // Stop, wait, restart
-            await stopCameraInternal(); 
-            setTimeout(() => startCameraInternal(), 200);
+            // Újrapróbáljuk Auto módban
+            await stopCameraInternal();
+            return startCameraInternal(true); 
         } else {
-            alert("Kamera hiba! Kérlek frissítsd az oldalt.");
+            // Ha már auto módban is hiba van
+            alert("Kamera hozzáférési hiba. Ellenőrizd az engedélyeket.");
             stopCameraInternal();
         }
     }
@@ -484,7 +472,6 @@ function stopCameraInternal() {
 
 function cleanupUI() {
     isCameraRunning = false;
-    // html5QrCode = null; // Nem nullázzuk ki, hogy gyorsabb legyen az újraindítás
     readerDiv.style.display = 'none';
     camIcon.style.display = 'block'; stopIcon.style.display = 'none';
     scanBtn.classList.remove('active');
