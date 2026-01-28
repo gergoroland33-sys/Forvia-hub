@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Forvia Bank Scan Mobil Ver6.0 (Manual Slider)</title>
+<title>Forvia Bank Scan Mobil Ver6.1 (iOS Ultra)</title>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <style>
-/* --- GLOBÁLIS BEÁLLÍTÁSOK --- */
+/* --- GLOBÁLIS BEÁLLÍTÁSOK (Változatlan) --- */
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 :root {
@@ -45,7 +45,7 @@ body {
     overflow-y: auto; align-items: center; width: 100%; -webkit-overflow-scrolling: touch;
 }
 
-/* --- ÚJ SLIDER STÍLUS --- */
+/* --- SLIDER STÍLUS --- */
 .slider-wrapper {
     width: 100%; max-width: 300px; margin-bottom: 15px;
     background: rgba(30, 41, 59, 0.6); padding: 12px 16px; border-radius: 20px;
@@ -58,7 +58,6 @@ body {
 }
 .slider-val { color: var(--accent); font-weight: bold; }
 
-/* Range Slider Customization */
 input[type=range] {
     -webkit-appearance: none; width: 100%; background: transparent; margin-top: 5px;
 }
@@ -72,8 +71,8 @@ input[type=range]::-webkit-slider-thumb {
     background: var(--accent); cursor: pointer; -webkit-appearance: none;
     margin-top: -7px; box-shadow: 0 0 10px var(--accent-glow); border: 2px solid white;
 }
-/* -------------------------- */
 
+/* --- VIDEO --- */
 #reader {
     width: 100%; max-width: 300px; aspect-ratio: 1 / 1; border-radius: 20px;
     overflow: hidden; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -153,7 +152,7 @@ input[type=text] {
 <body>
 
 <div class="header">
-    <h1>Forvia Cikkszám Scan </h1>
+    <h1>Forvia Scan V6.1</h1>
     <div class="credits">Készítette: <span>Gergő Roland</span></div>
 </div>
 
@@ -199,7 +198,7 @@ input[type=text] {
 
 <script>
 /* ========================================================
-   LOGIKA - DATA MATRIX + KÉZI KERET ÁLLÍTÁS
+   LOGIKA V6.1 - IOS ULTRA WIDE AUTO DETECT
    ======================================================== */
 const input = document.getElementById('barcodeInput');
 const resultsWrapper = document.getElementById('resultsWrapper');
@@ -210,7 +209,6 @@ const stopIcon = document.getElementById('stopIcon');
 const scanBtn = document.querySelector('.scan-btn');
 const readerDiv = document.getElementById('reader');
 
-// Slider elemek
 const boxSizeSlider = document.getElementById('boxSizeSlider');
 const sliderValueDisplay = document.getElementById('sliderValueDisplay');
 
@@ -219,27 +217,21 @@ let isCameraRunning = false;
 let bankDB = [];
 
 // --- SLIDER LOGIKA ---
-// Betöltjük a mentett értéket
 const savedSize = localStorage.getItem('scanBoxSize');
 if(savedSize) {
     boxSizeSlider.value = savedSize;
     sliderValueDisplay.innerText = savedSize + "px";
 }
 
-// Ha mozgatod a csúszkát
 boxSizeSlider.addEventListener('input', (e) => {
     const newVal = e.target.value;
     sliderValueDisplay.innerText = newVal + "px";
-    localStorage.setItem('scanBoxSize', newVal); // Elmentjük
+    localStorage.setItem('scanBoxSize', newVal); 
 
-    // Ha épp megy a kamera, újraindítjuk az új mérettel, hogy lásd az eredményt
     if(isCameraRunning) {
-        // Kis késleltetés, hogy ne villogjon, ha gyorsan húzod
         if(this.restartTimeout) clearTimeout(this.restartTimeout);
         this.restartTimeout = setTimeout(() => {
-            forceStopCamera().then(() => {
-                startCamera();
-            });
+            forceStopCamera().then(() => startCamera());
         }, 300);
     }
 });
@@ -299,27 +291,21 @@ function search(code) {
             card.innerHTML = `
                 <div class="res-grid">
                     <div class="res-cell res-full">
-                        <span class="res-label">Modell</span>
-                        <span class="res-value">${m.model}</span>
+                        <span class="res-label">Modell</span><span class="res-value">${m.model}</span>
                     </div>
                     <div class="res-cell">
-                        <span class="res-label">Gép</span>
-                        <span class="res-value">${m.gep}</span>
+                        <span class="res-label">Gép</span><span class="res-value">${m.gep}</span>
                     </div>
                     <div class="res-cell">
-                        <span class="res-label">Pozíció</span>
-                        <span class="res-value res-highlight">#${m.poz}</span>
+                        <span class="res-label">Pozíció</span><span class="res-value res-highlight">#${m.poz}</span>
                     </div>
                     <div class="res-cell">
-                        <span class="res-label">Azonosító (ID)</span>
-                        <span class="res-value" style="font-size:0.9rem;">${m.id}</span>
+                        <span class="res-label">Azonosító (ID)</span><span class="res-value" style="font-size:0.9rem;">${m.id}</span>
                     </div>
                     <div class="res-cell">
-                        <span class="res-label">MSD</span>
-                        <span class="res-value res-ok">${m.msd}</span>
+                        <span class="res-label">MSD</span><span class="res-value res-ok">${m.msd}</span>
                     </div>
-                </div>
-            `;
+                </div>`;
             resultsWrapper.appendChild(card);
         });
         saveToHistory(code, true);
@@ -338,13 +324,12 @@ function handleCameraButton() {
     if (isCameraRunning) {
         forceStopCamera();
     } else {
-        setTimeout(() => {
-            startCamera();
-        }, 200); 
+        setTimeout(() => startCamera(), 200); 
     }
 }
 
-function startCamera() {
+// *** EZ A KULCS FÜGGVÉNY - MÓDOSÍTVA ***
+async function startCamera() {
     readerDiv.style.display = 'block';
     camIcon.style.display = 'none';
     stopIcon.style.display = 'block';
@@ -354,37 +339,91 @@ function startCamera() {
         html5QrCode = new Html5Qrcode("reader");
     }
 
-    // LEKÉRJÜK A CSÚSZKA JELENLEGI ÉRTÉKÉT
     const currentBoxSize = parseInt(boxSizeSlider.value);
     
-    // --- BIZTONSÁGOS BEÁLLÍTÁSOK ---
-    // Nincs 'constraints' variálás, így nem omlik össze iPhone-on.
-    // A méretet szoftveresen (qrbox) oldjuk meg.
+    // 1. ALAP KONFIGURÁCIÓ (ANDROIDRA EZT HASZNÁLJUK)
+    let videoConstraints = { facingMode: "environment" };
+
+    // 2. IOS DETEKTÁLÁS
+    // Ha iPhone/iPad, akkor megpróbáljuk okosabban
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if (isIOS) {
+        try {
+            // Lekérjük a kamerákat (ez Androidon is lefutna, de ott nem bántjuk)
+            const devices = await Html5Qrcode.getCameras();
+            if (devices && devices.length > 0) {
+                // Keresünk olyat, aminek a nevében van hogy 'ultra' vagy 'wide'
+                // De vigyázunk, hogy ne az előlapi legyen
+                const ultraCam = devices.find(d => {
+                    const label = d.label.toLowerCase();
+                    return (label.includes('ultra') || label.includes('wide')) && !label.includes('front') && !label.includes('előlap');
+                });
+
+                if (ultraCam) {
+                    console.log("iOS Ultra Wide megtalálva:", ultraCam.label);
+                    // Ha megvan, felülírjuk a konfigot
+                    videoConstraints = { deviceId: { exact: ultraCam.id } };
+                } else {
+                    console.log("Nincs Ultra Wide címke, marad a standard.");
+                }
+            }
+        } catch (err) {
+            // Ha hiba van a lekérdezésben (pl. még nincs engedély), 
+            // semmi baj, a 'videoConstraints' marad az eredeti 'environment'!
+            console.log("Kamera lista lekérdezés sikertelen, fallback indul.");
+        }
+    }
+
     const config = { 
         fps: 25, 
         qrbox: { width: currentBoxSize, height: currentBoxSize }, 
         formatsToSupport: [ Html5QrcodeSupportedFormats.DATA_MATRIX ] 
     };
-
-    const constraints = { facingMode: "environment" };
     
-    html5QrCode.start(
-        constraints, 
-        config,
-        (decodedText) => {
-            forceStopCamera().then(() => {
-                input.value = decodedText;
-                search(decodedText.trim().toUpperCase());
-            });
-        },
-        (errorMessage) => {}
-    ).then(() => {
+    // INDÍTÁS
+    try {
+        await html5QrCode.start(
+            videoConstraints, 
+            config,
+            (decodedText) => {
+                forceStopCamera().then(() => {
+                    input.value = decodedText;
+                    search(decodedText.trim().toUpperCase());
+                });
+            },
+            (errorMessage) => {}
+        );
         isCameraRunning = true;
-    }).catch(err => {
+    } catch (err) {
         console.error("Kamera start hiba:", err);
+        
+        // BIZTONSÁGI FALLBACK: Ha az ultra wide-al elhasalt volna iOS-en,
+        // újrapróbáljuk a sima beállítással.
+        if (isIOS && videoConstraints.deviceId) {
+            console.log("Ultra start hiba, újrapróbálkozás standard módban...");
+            try {
+                await html5QrCode.start(
+                    { facingMode: "environment" }, 
+                    config,
+                    (decodedText) => {
+                        forceStopCamera().then(() => {
+                            input.value = decodedText;
+                            search(decodedText.trim().toUpperCase());
+                        });
+                    },
+                    (errorMessage) => {}
+                );
+                isCameraRunning = true;
+                return; // Sikeres fallback
+            } catch(e) {
+               // Ha ez is elhasal, akkor tényleg baj van
+            }
+        }
+
         forceStopCamera();
         alert("Kamera hiba! Frissítsd az oldalt.");
-    });
+    }
 }
 
 function forceStopCamera() {
@@ -448,13 +487,12 @@ function clearHistory() {
     }
 }
 
-// --- AUTOMATA INDÍTÁS ---
 function checkAutoStart() {
     const urlParams = new URLSearchParams(window.location.search);
     if(urlParams.get('autostart') === 'true') {
         setTimeout(() => {
             if(!isCameraRunning) {
-                let btn = document.querySelector("button"); 
+                let btn = document.querySelector(".scan-btn"); 
                 if(btn) btn.click();
             }
         }, 500); 
