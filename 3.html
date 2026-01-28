@@ -181,7 +181,18 @@ function showData(){
                     <span class="day-name">${getNapNeve(datum)}</span>
                 </div>`;
 
+                // --- ITT A MÓDOSÍTÁS KEZDETE ---
         const shifts = napok[datum];
+        
+        // Sorrendezés: Nappal -> Éjszaka -> Otthon
+        shifts.sort((a, b) => {
+            const sorrend = { 'nappal': 1, 'éjszaka': 2, 'otthon': 3 };
+            const helyA = a.hely.trim().toLowerCase(); // Kisbetűsítés és szóközök levágása
+            const helyB = b.hely.trim().toLowerCase();
+            return (sorrend[helyA] || 4) - (sorrend[helyB] || 4);
+        });
+        // --- MÓDOSÍTÁS VÉGE ---
+
         for (let j = 0; j < shifts.length; j++) {
             const r = shifts[j];
             const szovegLower = r.hely.trim().toLowerCase();
