@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Forvia Scan V7.2 (Stable Fix)</title>
+<title>Forvia Bank Scan Mobil Ver6.0 (Manual Slider)</title>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <style>
-/* --- GLOBÁLIS DESIGN (Változatlan, mert szép volt) --- */
+/* --- GLOBÁLIS BEÁLLÍTÁSOK --- */
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 :root {
@@ -45,46 +45,35 @@ body {
     overflow-y: auto; align-items: center; width: 100%; -webkit-overflow-scrolling: touch;
 }
 
-/* --- KAMERA PANEL --- */
-.settings-box {
-    width: 100%; max-width: 320px; margin-bottom: 20px;
-    background: rgba(30, 41, 59, 0.7); 
-    border: 1px solid var(--glass-border);
-    border-radius: 20px; padding: 15px;
-    backdrop-filter: blur(5px);
-    display: flex; flex-direction: column; gap: 12px;
+/* --- ÚJ SLIDER STÍLUS --- */
+.slider-wrapper {
+    width: 100%; max-width: 300px; margin-bottom: 15px;
+    background: rgba(30, 41, 59, 0.6); padding: 12px 16px; border-radius: 20px;
+    border: 1px solid var(--glass-border); backdrop-filter: blur(4px);
+    display: flex; flex-direction: column; gap: 5px;
 }
-
-.select-wrapper { position: relative; width: 100%; }
-.select-wrapper::after {
-    content: '▼'; font-size: 0.7rem; color: var(--accent);
-    position: absolute; right: 15px; top: 50%; transform: translateY(-50%); pointer-events: none;
-}
-select#cameraSelect {
-    width: 100%; appearance: none; -webkit-appearance: none;
-    background: #0f172a; color: white; 
-    border: 1px solid var(--glass-border);
-    padding: 10px 15px; padding-right: 35px;
-    border-radius: 12px; font-size: 0.85rem; font-weight: 500;
-    outline: none;
-}
-
-.slider-group { display: flex; flex-direction: column; gap: 6px; }
 .slider-header {
-    display: flex; justify-content: space-between; font-size: 0.75rem; 
-    color: var(--text-muted); font-weight: 700; text-transform: uppercase;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;
 }
-.slider-val { color: var(--accent); }
+.slider-val { color: var(--accent); font-weight: bold; }
 
-input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
-input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; background: #475569; border-radius: 3px; }
+/* Range Slider Customization */
+input[type=range] {
+    -webkit-appearance: none; width: 100%; background: transparent; margin-top: 5px;
+}
+input[type=range]:focus { outline: none; }
+input[type=range]::-webkit-slider-runnable-track {
+    width: 100%; height: 6px; cursor: pointer;
+    background: #475569; border-radius: 3px;
+}
 input[type=range]::-webkit-slider-thumb {
-    height: 18px; width: 18px; border-radius: 50%;
-    background: var(--accent); margin-top: -6px; 
-    box-shadow: 0 0 10px var(--accent-glow); border: 2px solid white; -webkit-appearance: none;
+    height: 20px; width: 20px; border-radius: 50%;
+    background: var(--accent); cursor: pointer; -webkit-appearance: none;
+    margin-top: -7px; box-shadow: 0 0 10px var(--accent-glow); border: 2px solid white;
 }
+/* -------------------------- */
 
-/* --- KAMERA DOBOZ --- */
 #reader {
     width: 100%; max-width: 300px; aspect-ratio: 1 / 1; border-radius: 20px;
     overflow: hidden; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -92,7 +81,6 @@ input[type=range]::-webkit-slider-thumb {
 }
 #reader video { width: 100% !important; height: 100% !important; object-fit: cover; }
 
-/* INPUT */
 .input-wrapper { width: 100%; max-width: 500px; display: flex; gap: 12px; margin-bottom: 25px; flex-shrink: 0; }
 input[type=text] {
     flex: 1; background: var(--glass); border: 1px solid var(--glass-border);
@@ -110,19 +98,28 @@ input[type=text] {
 
 /* --- EREDMÉNYEK --- */
 #resultsWrapper { width: 100%; max-width: 500px; padding-bottom: 20px; }
+
 .result-card {
     background: #1e293b; border: 1px solid var(--glass-border);
     border-radius: 20px; overflow: hidden; margin-bottom: 15px;
     animation: popIn 0.3s ease-out; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
 @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-.res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--glass-border); }
-.res-cell { background: #1e293b; padding: 15px 10px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+
+.res-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--glass-border);
+}
+.res-cell {
+    background: #1e293b; padding: 15px 10px; text-align: center;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+}
 .res-full { grid-column: span 2; border-bottom: 1px solid var(--glass-border); }
+
 .res-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; letter-spacing: 1px; }
 .res-value { font-size: 1.1rem; font-weight: 800; color: white; word-break: break-all; line-height: 1.2; }
 .res-highlight { color: #fbbf24; font-size: 1.4rem; } 
 .res-ok { color: var(--ok-color); }
+
 .no-result { font-size: 1.5rem; font-weight: bold; color: var(--err-color); text-align: center; margin-top: 20px; }
 .load-msg { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px; }
 
@@ -132,10 +129,22 @@ input[type=text] {
     height: 150px; flex-shrink: 0; overflow-y: auto; padding: 15px;
     padding-bottom: max(15px, env(safe-area-inset-bottom));
 }
-.history-header { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; }
+.history-header {
+    display: flex; align-items: center; gap: 15px; margin-bottom: 10px;
+}
 .history-title { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: bold; }
-.clear-btn { color: var(--err-color); font-size: 0.75rem; cursor: pointer; text-transform: uppercase; font-weight: bold; border: 1px solid var(--err-color); padding: 2px 8px; border-radius: 4px; }
-.h-item { display: flex; align-items: center; justify-content: flex-start; gap: 30px; padding: 8px 12px; margin-bottom: 6px; background: rgba(255,255,255,0.03); border-radius: 8px; font-size: 0.85rem; border-left: 3px solid #555; }
+.clear-btn {
+    color: var(--err-color); font-size: 0.75rem; cursor: pointer; 
+    text-transform: uppercase; font-weight: bold; border: 1px solid var(--err-color);
+    padding: 2px 8px; border-radius: 4px;
+}
+
+.h-item {
+    display: flex; align-items: center; justify-content: flex-start; gap: 30px;
+    padding: 8px 12px; margin-bottom: 6px;
+    background: rgba(255,255,255,0.03); border-radius: 8px; font-size: 0.85rem;
+    border-left: 3px solid #555;
+}
 .h-ok { border-left-color: var(--ok-color); }
 .h-err { border-left-color: var(--err-color); }
 .h-time { font-size: 0.75rem; color: #64748b; font-weight: bold; white-space: nowrap; }
@@ -144,34 +153,26 @@ input[type=text] {
 <body>
 
 <div class="header">
-    <h1>Forvia Scan V7.2</h1>
+    <h1>Forvia Cikkszám Scan </h1>
     <div class="credits">Készítette: <span>Gergő Roland</span></div>
 </div>
 
-<div class="main-content">
+<div class="main-content" id="screen">
     <div id="loadMsg" class="load-msg">Adatbázis betöltése...</div>
 
-    <div class="settings-box">
-        <div class="select-wrapper">
-            <select id="cameraSelect">
-                <option value="auto">Auto (Eredeti stabil mód)</option>
-            </select>
+    <div class="slider-wrapper">
+        <div class="slider-header">
+            <span>Keret mérete</span>
+            <span id="sliderValueDisplay" class="slider-val">200px</span>
         </div>
-        
-        <div class="slider-group">
-            <div class="slider-header">
-                <span>Keret mérete</span>
-                <span id="sliderValueDisplay">200px</span>
-            </div>
-            <input type="range" id="boxSizeSlider" min="100" max="350" step="10" value="200">
-        </div>
+        <input type="range" id="boxSizeSlider" min="100" max="350" step="10" value="200">
     </div>
 
     <div id="reader"></div>
 
     <div class="input-wrapper">
-        <input type="text" id="barcodeInput" placeholder="Kód..." autocomplete="off">
-        <button class="scan-btn" onclick="toggleCamera()" title="Kamera indítása">
+        <input type="text" id="barcodeInput" placeholder="Scan Barcode-->" autocomplete="off">
+        <button class="scan-btn" onclick="handleCameraButton()" title="Kamera indítása">
             <svg id="camIcon" viewBox="0 0 24 24">
                 <path d="M4 6h2v12H4zm14 0h2v12h-2zm-4 0h2v12h-2zm-4 0h2v12h-2zM2 4v16h20V4H2zm18 14H4V6h16v12z"/>
                 <path d="M0 0h24v24H0z" fill="none"/>
@@ -198,7 +199,7 @@ input[type=text] {
 
 <script>
 /* ========================================================
-   LOGIKA V7.2 - STABILIOS JAVÍTÁS + SZIGORÚ SZŰRÉS
+   LOGIKA - DATA MATRIX + KÉZI KERET ÁLLÍTÁS
    ======================================================== */
 const input = document.getElementById('barcodeInput');
 const resultsWrapper = document.getElementById('resultsWrapper');
@@ -209,47 +210,37 @@ const stopIcon = document.getElementById('stopIcon');
 const scanBtn = document.querySelector('.scan-btn');
 const readerDiv = document.getElementById('reader');
 
-// Beállítások
+// Slider elemek
 const boxSizeSlider = document.getElementById('boxSizeSlider');
 const sliderValueDisplay = document.getElementById('sliderValueDisplay');
-const cameraSelect = document.getElementById('cameraSelect');
 
 let html5QrCode = null;
 let isCameraRunning = false;
 let bankDB = [];
-let availableCameras = [];
 
-// --- SLIDER ---
+// --- SLIDER LOGIKA ---
+// Betöltjük a mentett értéket
 const savedSize = localStorage.getItem('scanBoxSize');
 if(savedSize) {
     boxSizeSlider.value = savedSize;
     sliderValueDisplay.innerText = savedSize + "px";
 }
 
+// Ha mozgatod a csúszkát
 boxSizeSlider.addEventListener('input', (e) => {
     const newVal = e.target.value;
     sliderValueDisplay.innerText = newVal + "px";
-    localStorage.setItem('scanBoxSize', newVal);
+    localStorage.setItem('scanBoxSize', newVal); // Elmentjük
+
+    // Ha épp megy a kamera, újraindítjuk az új mérettel, hogy lásd az eredményt
     if(isCameraRunning) {
+        // Kis késleltetés, hogy ne villogjon, ha gyorsan húzod
         if(this.restartTimeout) clearTimeout(this.restartTimeout);
         this.restartTimeout = setTimeout(() => {
-            stopCameraInternal().then(() => startCameraInternal());
-        }, 500);
-    }
-});
-
-// --- KAMERA LISTA ESEMÉNY ---
-cameraSelect.addEventListener('change', () => {
-    const selectedId = cameraSelect.value;
-    if (selectedId === 'auto') {
-        localStorage.removeItem('selectedCameraId');
-    } else {
-        localStorage.setItem('selectedCameraId', selectedId);
-    }
-    
-    // Csak akkor váltunk, ha már fut a kamera
-    if (isCameraRunning) {
-        stopCameraInternal().then(() => startCameraInternal());
+            forceStopCamera().then(() => {
+                startCamera();
+            });
+        }, 300);
     }
 });
 
@@ -259,49 +250,7 @@ async function init() {
         loadMsg.innerText = `Adatbázis kész: ${bankDB.length} tétel`;
         loadMsg.style.color = "#10b981";
     }
-    renderHistory();
-    // Nem hívunk updateCameraList-et itt, hogy ne kavarjon be az indulásnál
-    // Majd a kamera start után töltjük be, amikor már van engedély.
-}
-
-// --- KAMERÁK FELTÉRKÉPEZÉSE (SZIGORÚ SZŰRÉS) ---
-function updateCameraList() {
-    Html5Qrcode.getCameras().then(devices => {
-        if (!devices || !devices.length) return;
-        
-        // Ha ugyanaz a lista, nem rajzoljuk újra
-        if(availableCameras.length === devices.length) return;
-        availableCameras = devices;
-
-        const savedId = localStorage.getItem('selectedCameraId');
-        let html = '<option value="auto">Auto (Eredeti stabil mód)</option>';
-        
-        devices.forEach(camera => {
-            const label = (camera.label || "").toLowerCase();
-            
-            // --- JAVÍTOTT SZŰRÉS ---
-            // Kiveszünk mindent ami: front, elülső, elöl, selfie, user
-            if (label.includes('front') || 
-                label.includes('elülső') || 
-                label.includes('elöl') || 
-                label.includes('selfie') || 
-                label.includes('user')) {
-                return; 
-            }
-            
-            const isSelected = (savedId === camera.id) ? 'selected' : '';
-            // Rövidítjük a nevet ha túl hosszú
-            let displayLabel = camera.label || `Kamera ${camera.id.substr(0,4)}`;
-            if(displayLabel.length > 35) displayLabel = displayLabel.substr(0,34) + "..";
-            
-            html += `<option value="${camera.id}" ${isSelected}>${displayLabel}</option>`;
-        });
-        
-        cameraSelect.innerHTML = html;
-        
-    }).catch(err => {
-        console.log("Még nincs lista hozzáférés");
-    });
+    renderHistory(); 
 }
 
 async function loadBankCSV() {
@@ -324,7 +273,7 @@ async function loadBankCSV() {
             });
         });
     } catch (e) { 
-        loadMsg.innerText = "HIBA: bank.csv nem található!";
+        loadMsg.innerText = "HIBA: bank.csv betöltése sikertelen!";
         loadMsg.style.color = "#ef4444";
     }
 }
@@ -333,7 +282,8 @@ input.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         const code = input.value.trim().toUpperCase();
         if (code) search(code);
-        input.value = ''; input.blur();
+        input.value = '';
+        input.blur();
     }
 });
 
@@ -349,21 +299,27 @@ function search(code) {
             card.innerHTML = `
                 <div class="res-grid">
                     <div class="res-cell res-full">
-                        <span class="res-label">Modell</span><span class="res-value">${m.model}</span>
+                        <span class="res-label">Modell</span>
+                        <span class="res-value">${m.model}</span>
                     </div>
                     <div class="res-cell">
-                        <span class="res-label">Gép</span><span class="res-value">${m.gep}</span>
+                        <span class="res-label">Gép</span>
+                        <span class="res-value">${m.gep}</span>
                     </div>
                     <div class="res-cell">
-                        <span class="res-label">Pozíció</span><span class="res-value res-highlight">#${m.poz}</span>
+                        <span class="res-label">Pozíció</span>
+                        <span class="res-value res-highlight">#${m.poz}</span>
                     </div>
                     <div class="res-cell">
-                        <span class="res-label">Azonosító</span><span class="res-value" style="font-size:0.9rem;">${m.id}</span>
+                        <span class="res-label">Azonosító (ID)</span>
+                        <span class="res-value" style="font-size:0.9rem;">${m.id}</span>
                     </div>
                     <div class="res-cell">
-                        <span class="res-label">MSD</span><span class="res-value res-ok">${m.msd}</span>
+                        <span class="res-label">MSD</span>
+                        <span class="res-value res-ok">${m.msd}</span>
                     </div>
-                </div>`;
+                </div>
+            `;
             resultsWrapper.appendChild(card);
         });
         saveToHistory(code, true);
@@ -374,92 +330,71 @@ function search(code) {
     }
 }
 
-// --- KAMERA VEZÉRLÉS (STABILITÁS JAVÍTVA) ---
-function toggleCamera() {
-    resultsWrapper.innerHTML = ''; input.value = '';
+// --- KAMERA LOGIKA ---
+function handleCameraButton() {
+    resultsWrapper.innerHTML = ''; 
+    input.value = '';
+
     if (isCameraRunning) {
-        stopCameraInternal();
+        forceStopCamera();
     } else {
-        startCameraInternal();
+        setTimeout(() => {
+            startCamera();
+        }, 200); 
     }
 }
 
-async function startCameraInternal(forceAuto = false) {
+function startCamera() {
     readerDiv.style.display = 'block';
-    camIcon.style.display = 'none'; stopIcon.style.display = 'block';
+    camIcon.style.display = 'none';
+    stopIcon.style.display = 'block';
     scanBtn.classList.add('active');
 
     if (html5QrCode === null) {
         html5QrCode = new Html5Qrcode("reader");
     }
 
+    // LEKÉRJÜK A CSÚSZKA JELENLEGI ÉRTÉKÉT
     const currentBoxSize = parseInt(boxSizeSlider.value);
-    // Ha forceAuto igaz, akkor ignoráljuk a mentést
-    const savedCamId = forceAuto ? 'auto' : localStorage.getItem('selectedCameraId');
     
-    // --- KONFIGURÁCIÓ ---
-    // Az "environment" beállítás a legstabilabb iOS-en.
-    // Csak akkor váltunk deviceId-ra, ha a felhasználó kifejezetten kért mást.
-    let constraints;
-    if (savedCamId && savedCamId !== 'auto') {
-        constraints = { deviceId: { exact: savedCamId } };
-    } else {
-        // Ez az "Eredeti kód" beállítása, ami működött!
-        constraints = { facingMode: "environment" }; 
-    }
-
+    // --- BIZTONSÁGOS BEÁLLÍTÁSOK ---
+    // Nincs 'constraints' variálás, így nem omlik össze iPhone-on.
+    // A méretet szoftveresen (qrbox) oldjuk meg.
     const config = { 
         fps: 25, 
-        qrbox: { width: currentBoxSize, height: currentBoxSize },
+        qrbox: { width: currentBoxSize, height: currentBoxSize }, 
         formatsToSupport: [ Html5QrcodeSupportedFormats.DATA_MATRIX ] 
     };
 
-    try {
-        await html5QrCode.start(
-            constraints, 
-            config,
-            (decodedText) => {
-                stopCameraInternal().then(() => {
-                    input.value = decodedText;
-                    search(decodedText.trim().toUpperCase());
-                });
-            },
-            (err) => {}
-        );
+    const constraints = { facingMode: "environment" };
+    
+    html5QrCode.start(
+        constraints, 
+        config,
+        (decodedText) => {
+            forceStopCamera().then(() => {
+                input.value = decodedText;
+                search(decodedText.trim().toUpperCase());
+            });
+        },
+        (errorMessage) => {}
+    ).then(() => {
         isCameraRunning = true;
-        
-        // Ha sikeres a start, akkor kérjük le a listát (mert már van engedély)
-        updateCameraList();
-        
-    } catch (err) {
-        console.error("Kamera hiba:", err);
-        
-        // --- HIBAKEZELÉS / AUTOMATIKUS JAVÍTÁS ---
-        // Ha nem sikerült elindítani a választott kamerát, akkor azonnal
-        // visszaváltunk a biztonságos "Auto" módra.
-        if (!forceAuto && savedCamId && savedCamId !== 'auto') {
-            console.log("Választott kamera hiba -> Visszaállás Auto módra");
-            localStorage.removeItem('selectedCameraId');
-            cameraSelect.value = 'auto';
-            // Újrapróbáljuk Auto módban
-            await stopCameraInternal();
-            return startCameraInternal(true); 
-        } else {
-            // Ha már auto módban is hiba van
-            alert("Kamera hozzáférési hiba. Ellenőrizd az engedélyeket.");
-            stopCameraInternal();
-        }
-    }
+    }).catch(err => {
+        console.error("Kamera start hiba:", err);
+        forceStopCamera();
+        alert("Kamera hiba! Frissítsd az oldalt.");
+    });
 }
 
-function stopCameraInternal() {
+function forceStopCamera() {
     return new Promise((resolve) => {
-        if (html5QrCode && isCameraRunning) {
+        if (html5QrCode) {
             html5QrCode.stop().then(() => {
                 html5QrCode.clear();
                 cleanupUI();
                 resolve();
-            }).catch(() => {
+            }).catch(err => {
                 cleanupUI();
                 resolve();
             });
@@ -471,9 +406,11 @@ function stopCameraInternal() {
 }
 
 function cleanupUI() {
+    html5QrCode = null;
     isCameraRunning = false;
     readerDiv.style.display = 'none';
-    camIcon.style.display = 'block'; stopIcon.style.display = 'none';
+    camIcon.style.display = 'block';
+    stopIcon.style.display = 'none';
     scanBtn.classList.remove('active');
 }
 
@@ -482,11 +419,14 @@ function playSound(ok) {
     snd.currentTime = 0; snd.play().catch(()=>{});
 }
 
+// --- ELŐZMÉNY KEZELÉS ---
 function saveToHistory(code, ok) {
     const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     let history = JSON.parse(localStorage.getItem('scanHistory') || '[]');
+    
     history.unshift({ code, ok, time });
     if(history.length > 30) history.pop();
+    
     localStorage.setItem('scanHistory', JSON.stringify(history));
     renderHistory();
 }
@@ -508,14 +448,22 @@ function clearHistory() {
     }
 }
 
+// --- AUTOMATA INDÍTÁS ---
 function checkAutoStart() {
     const urlParams = new URLSearchParams(window.location.search);
     if(urlParams.get('autostart') === 'true') {
-        setTimeout(() => { if(!isCameraRunning) toggleCamera(); }, 500); 
+        setTimeout(() => {
+            if(!isCameraRunning) {
+                let btn = document.querySelector("button"); 
+                if(btn) btn.click();
+            }
+        }, 500); 
     }
 }
 
-init().then(() => checkAutoStart());
+init().then(() => {
+    checkAutoStart();
+});
 </script>
 </body>
 </html>
