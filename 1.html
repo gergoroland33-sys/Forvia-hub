@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Forvia Smart Search 2026</title>
 <style>
-/* --- ALAP BEÁLLÍTÁSOK (PC/TABLET - ÉRINTETLEN) --- */
+/* --- ALAP BEÁLLÍTÁSOK (PC/TABLET) --- */
 :root { 
     --bg-app: #0f172a;       
     --card-surface: #1e293b; 
@@ -40,18 +40,25 @@ body {
 
 /* KERESŐ WRAPPER (PC) */
 .search-wrapper { 
-    padding: 15px; 
+    padding: 30px 15px 15px 15px; /* Kicsit nagyobb felső padding PC-n */
     max-width: 600px; 
     margin: 0 auto; 
     position: relative; 
     z-index: 200; 
 }
-.input-group { position: relative; width: 100%; display: flex; align-items: center; }
+
+.input-group { 
+    position: relative; 
+    width: 100%; 
+    display: flex; 
+    align-items: center; 
+}
+
 .search-icon { position: absolute; left: 15px; color: var(--text-secondary); font-size: 1.1rem; pointer-events: none; z-index: 10; }
 
 input { 
     width: 100%; 
-    padding: 12px 45px 12px 45px; 
+    padding: 14px 45px 14px 45px; 
     box-sizing: border-box; 
     background: var(--input-bg); 
     border: 1px solid #334155; 
@@ -66,11 +73,98 @@ input {
 input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4); }
 input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3) !important; }
 
+/* Ha lenyílik a javaslat, az input alja legyen szögletes */
+input.suggestions-active {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom: 1px solid transparent;
+}
+
 .clear-btn {
     position: absolute; right: 15px; color: var(--text-secondary); cursor: pointer; display: none; 
     font-size: 1.1rem; padding: 5px; z-index: 10;
 }
 
+/* --- ÚJ: AJÁNLÓ LISTA (Autocomplete - PC) --- */
+#suggest {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0; right: 0;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-top: none;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    z-index: 1000;
+    max-height: 300px;
+    overflow-y: auto;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    padding-bottom: 10px;
+}
+
+.s-item {
+    padding: 12px 20px;
+    cursor: pointer;
+    color: #cbd5e1;
+    font-family: monospace;
+    font-size: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    transition: background 0.2s;
+}
+
+.s-item:hover {
+    background: #3b82f6;
+    color: white;
+}
+.s-item:last-child { border-bottom: none; }
+.hl { color: #fff; font-weight: bold; text-decoration: underline; text-decoration-color: var(--accent); }
+
+/* --- ÚJ: ELŐZMÉNYEK SZEKCIÓ (PC) --- */
+#historySection {
+    margin-top: 15px;
+    display: none; /* JS kapcsolja be, ha van adat */
+    animation: fadeIn 0.5s ease;
+}
+
+.history-title {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.history-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+}
+
+.chip {
+    background: #334155;
+    color: #e2e8f0;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-family: monospace;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.05);
+    transition: all 0.2s;
+}
+
+.chip:hover {
+    background: var(--accent);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+/* EREDMÉNYEK */
 #eredmeny { max-width: 600px; margin: 0 auto 50px auto; padding: 0 15px; }
 
 /* PC Kártya Stílus */
@@ -107,6 +201,7 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
 /* ========================================= */
 @media screen and (max-width: 1024px) {
     .top-bar { display: none; }
+    /* Mobilon elrejtjük az új PC funkciókat */
     #suggest, #historySection { display: none !important; }
     .empty-msg { display: none !important; }
 
@@ -134,6 +229,9 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
         color: white;
         text-align: center; 
     }
+    /* Mobilon ne legyen szögletes az alja gépeléskor sem */
+    input.suggestions-active { border-radius: 50px; }
+
     input:focus { 
         border-color: #3b82f6; 
         background: #334155;
@@ -179,7 +277,7 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
     .row-main .d-value { font-size: 0.95rem; font-weight: 700; white-space: normal; word-break: break-all;}
 
 
-    /* --- PRO 3D BILLENTYŰZET - 15%-kal ALACSONYABB --- */
+    /* --- PRO 3D BILLENTYŰZET --- */
     #kbContainer {
         display: block;
         position: fixed; 
@@ -256,11 +354,12 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
         <span class="search-icon">🔍</span>
         <input id="keres" type="text" placeholder="Kezdj gépelni..." autocomplete="off" />
         <span class="clear-btn" id="clearBtn" onclick="clearSearch()">✕</span>
+        
         <div id="suggest"></div>
     </div>
     
-    <div id="historySection" style="display:none;">
-        <div class="history-title">Előzmények</div>
+    <div id="historySection">
+        <div class="history-title">Legutóbbi keresések</div>
         <div class="history-chips" id="historyChips"></div>
     </div>
 </div>
@@ -268,7 +367,6 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
 <div id="eredmeny"></div>
 
 <div id="kbContainer">
-    
     <div id="viewNumeric">
         <div class="k-btn abc-switch" onclick="toggleKbMode()">ABC</div>
         <div class="k-btn func" onclick="typeKey('-')">-</div>
@@ -306,8 +404,7 @@ input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgb
         <div class="k-btn red" onclick="clearSearch()">🗑</div>
     </div>
 
-    <div id="viewAlpha">
-        </div>
+    <div id="viewAlpha"></div>
 </div>
 
 <script>
@@ -331,6 +428,7 @@ function getModelColor(m){
 function highlight(text, term) {
     if(!text) return "";
     if(!term || term.length < 1) return text;
+    // A találat legyen vastag és aláhúzott a listában
     return text.toString().replace(new RegExp(`(${term})`, 'gi'), '<span class="hl">$1</span>');
 }
 
@@ -339,6 +437,7 @@ window.clearSearch = function() {
     inp.value = ''; 
     searchFinalized = false; 
     inp.classList.remove('search-ready'); 
+    inp.classList.remove('suggestions-active');
     if(window.innerWidth >= 1024) inp.focus(); else inp.blur();
     document.getElementById('clearBtn').style.display = 'none';
     document.getElementById('suggest').style.display = 'none';
@@ -372,20 +471,37 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
     window.addEventListener('resize', checkDeviceMode);
 
     document.getElementById('eredmeny').innerHTML='';
-    renderHistory();
+    renderHistory(); // Megjeleníti az előzményeket betöltéskor
     
+    // Gépelés figyelése
     inp.addEventListener('input',function(){
         const v=this.value.toUpperCase();
         clearBtn.style.display = v.length > 0 ? 'block' : 'none';
-        if(v.length === 0) searchFinalized = false;
+        if(v.length === 0) {
+            searchFinalized = false;
+            this.classList.remove('suggestions-active');
+        }
+        
         if(v.length<2){ 
             document.getElementById('suggest').style.display='none'; 
             document.getElementById('eredmeny').innerHTML=''; 
+            this.classList.remove('suggestions-active');
             return;
         }
+        
+        // Csak PC-n jelenjen meg a javaslat gépelés közben
         if(window.innerWidth >= 1024) updateSuggest(v);
+        
         clearTimeout(keresIdozito); 
         keresIdozito=setTimeout(()=>keres(v),100);
+    });
+
+    // Ha PC-n elhagyja a mezőt, zárjuk be a javaslatokat kis késleltetéssel (hogy rá lehessen kattintani)
+    inp.addEventListener('blur', function() {
+        setTimeout(() => {
+            document.getElementById('suggest').style.display = 'none';
+            document.getElementById('keres').classList.remove('suggestions-active');
+        }, 200);
     });
 
     inp.addEventListener('click', function(e) {
@@ -412,25 +528,54 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
 
 function feldolgoz(t){return t.split('\n').map(s=>s.replace(/"/g,'').trim()).filter(s=>s).slice(1).map(s=>s.split(';').map(e=>e.trim()));}
 
+// --- JAVASLATOK GENERÁLÁSA ---
 function updateSuggest(v){
-    const b=document.getElementById('suggest'); const m=[];
-    for(let i=0;i<uniqueIdsArr.length;i++){ if(uniqueIdsArr[i].includes(v)){ m.push(uniqueIdsArr[i]); if(m.length>=6)break; }}
-    if(m.length>0){ b.innerHTML=m.map(x=>`<div class="s-item" onclick="selectSuggest('${x}')">${highlight(x, v)}</div>`).join(''); b.style.display='block'; }
-    else{ b.style.display='none'; }
+    const b=document.getElementById('suggest'); 
+    const inp=document.getElementById('keres');
+    const m=[];
+    
+    // Keresünk max 8 egyezést
+    for(let i=0;i<uniqueIdsArr.length;i++){ 
+        if(uniqueIdsArr[i].includes(v)){ 
+            m.push(uniqueIdsArr[i]); 
+            if(m.length>=8)break; 
+        }
+    }
+    
+    if(m.length>0){ 
+        b.innerHTML=m.map(x=>`<div class="s-item" onmousedown="selectSuggest('${x}')">${highlight(x, v)}</div>`).join(''); 
+        b.style.display='block'; 
+        inp.classList.add('suggestions-active'); // Szögletes alj
+    } else { 
+        b.style.display='none'; 
+        inp.classList.remove('suggestions-active');
+    }
 }
 
+// --- JAVASLAT KIVÁLASZTÁSA ---
 window.selectSuggest=function(c){ 
-    const i=document.getElementById('keres'); i.value=c; 
+    const i=document.getElementById('keres'); 
+    i.value=c; 
     document.getElementById('suggest').style.display='none'; 
+    i.classList.remove('suggestions-active');
     document.getElementById('clearBtn').style.display = 'block'; 
     searchFinalized = false; 
     keres(c); 
 };
 
+// --- ELŐZMÉNYEK MEGJELENÍTÉSE ---
 function renderHistory(){
-    const c=document.getElementById('historyChips'),s=document.getElementById('historySection');
-    if(!searchHistory.length){s.style.display='none';return;} s.style.display='block';
-    c.innerHTML=searchHistory.map(x=>`<div class="chip" onclick="selectSuggest('${x}')">${x}</div>`).join('');
+    const c=document.getElementById('historyChips'), s=document.getElementById('historySection');
+    
+    // Csak akkor rajzoljuk ki, ha PC nézetben vagyunk (CSS kezeli) és van adat
+    if(!searchHistory.length){ s.style.display='none'; return; }
+    
+    // PC-n 'flex', mobilon a CSS miatt 'none !important' marad
+    s.style.display = 'block'; 
+    
+    c.innerHTML = searchHistory.map(x => 
+        `<div class="chip" onclick="selectSuggest('${x}')">${x}</div>`
+    ).join('');
 }
 
 function keres(k){
@@ -475,11 +620,14 @@ function keres(k){
         });
     }
 
+    // Ha van pontos találat, mentsük az előzményekbe
     if(idSet.has(k)){
-        searchHistory=[k,...searchHistory.filter(c=>c!==k)].slice(0,5);
-        localStorage.setItem('searchHistory',JSON.stringify(searchHistory));
-        renderHistory();
+        // Hozzáadjuk az elejére, eltávolítjuk a duplikációt
+        searchHistory = [k, ...searchHistory.filter(c => c !== k)].slice(0, 5);
+        localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+        renderHistory(); // Frissítjük a kijelzőt
     }
+    
     e.innerHTML=h||`<div style="text-align:center; padding:30px; color:#64748b;">Nincs találat: "${k}"</div>`;
 }
 
