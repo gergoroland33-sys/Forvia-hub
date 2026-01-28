@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Forvia Bank Scan Mobil Ver6.0 (Manual Slider)</title>
+<title>Forvia Bank Scan Mobil Ver7.0 (Camera Selector)</title>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <style>
@@ -45,20 +45,36 @@ body {
     overflow-y: auto; align-items: center; width: 100%; -webkit-overflow-scrolling: touch;
 }
 
-/* --- ÚJ SLIDER STÍLUS --- */
-.slider-wrapper {
+/* --- KAMERA BEÁLLÍTÁSOK PANEL --- */
+.settings-panel {
     width: 100%; max-width: 300px; margin-bottom: 15px;
-    background: rgba(30, 41, 59, 0.6); padding: 12px 16px; border-radius: 20px;
+    background: rgba(30, 41, 59, 0.6); padding: 10px; border-radius: 16px;
     border: 1px solid var(--glass-border); backdrop-filter: blur(4px);
-    display: flex; flex-direction: column; gap: 5px;
+    display: flex; flex-direction: column; gap: 8px;
+}
+.settings-label { font-size: 0.75rem; color: var(--text-muted); font-weight: bold; text-transform: uppercase; margin-bottom: 2px;}
+
+/* Kameraválasztó legördülő */
+select#cameraSelection {
+    width: 100%; background: #0f172a; color: white; border: 1px solid #475569;
+    padding: 8px; border-radius: 8px; font-size: 0.85rem; outline: none;
+}
+
+.reset-cam-btn {
+    background: transparent; border: 1px dashed #64748b; color: #94a3b8;
+    padding: 6px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; text-transform: uppercase;
+}
+
+/* SLIDER */
+.slider-wrapper {
+    width: 100%; display: flex; flex-direction: column; gap: 5px; margin-top: 5px;
 }
 .slider-header {
     display: flex; justify-content: space-between; align-items: center;
-    font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;
+    font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;
 }
 .slider-val { color: var(--accent); font-weight: bold; }
 
-/* Range Slider Customization */
 input[type=range] {
     -webkit-appearance: none; width: 100%; background: transparent; margin-top: 5px;
 }
@@ -68,10 +84,11 @@ input[type=range]::-webkit-slider-runnable-track {
     background: #475569; border-radius: 3px;
 }
 input[type=range]::-webkit-slider-thumb {
-    height: 20px; width: 20px; border-radius: 50%;
+    height: 18px; width: 18px; border-radius: 50%;
     background: var(--accent); cursor: pointer; -webkit-appearance: none;
-    margin-top: -7px; box-shadow: 0 0 10px var(--accent-glow); border: 2px solid white;
+    margin-top: -6px; box-shadow: 0 0 10px var(--accent-glow); border: 2px solid white;
 }
+
 /* -------------------------- */
 
 #reader {
@@ -160,12 +177,20 @@ input[type=text] {
 <div class="main-content" id="screen">
     <div id="loadMsg" class="load-msg">Adatbázis betöltése...</div>
 
-    <div class="slider-wrapper">
-        <div class="slider-header">
-            <span>Keret mérete</span>
-            <span id="sliderValueDisplay" class="slider-val">200px</span>
+    <div class="settings-panel">
+        <div class="settings-label">Kamera kiválasztása</div>
+        <select id="cameraSelection" onchange="onCameraSelectChange()">
+            <option value="auto">Keresés...</option>
+        </select>
+        <button class="reset-cam-btn" onclick="resetCameraSettings()">Visszaállít (Auto/Reset)</button>
+
+        <div class="slider-wrapper">
+            <div class="slider-header">
+                <span>Keret mérete</span>
+                <span id="sliderValueDisplay" class="slider-val">200px</span>
+            </div>
+            <input type="range" id="boxSizeSlider" min="100" max="350" step="10" value="200">
         </div>
-        <input type="range" id="boxSizeSlider" min="100" max="350" step="10" value="200">
     </div>
 
     <div id="reader"></div>
@@ -199,7 +224,7 @@ input[type=text] {
 
 <script>
 /* ========================================================
-   LOGIKA - DATA MATRIX + KÉZI KERET ÁLLÍTÁS
+   LOGIKA - DATA MATRIX + KÉZI KERET + KAMERA VÁLASZTÁS
    ======================================================== */
 const input = document.getElementById('barcodeInput');
 const resultsWrapper = document.getElementById('resultsWrapper');
@@ -210,37 +235,32 @@ const stopIcon = document.getElementById('stopIcon');
 const scanBtn = document.querySelector('.scan-btn');
 const readerDiv = document.getElementById('reader');
 
-// Slider elemek
+// Beállítások elemei
 const boxSizeSlider = document.getElementById('boxSizeSlider');
 const sliderValueDisplay = document.getElementById('sliderValueDisplay');
+const cameraSelect = document.getElementById('cameraSelection');
 
 let html5QrCode = null;
 let isCameraRunning = false;
 let bankDB = [];
+let camerasList = [];
 
 // --- SLIDER LOGIKA ---
-// Betöltjük a mentett értéket
 const savedSize = localStorage.getItem('scanBoxSize');
 if(savedSize) {
     boxSizeSlider.value = savedSize;
     sliderValueDisplay.innerText = savedSize + "px";
 }
 
-// Ha mozgatod a csúszkát
 boxSizeSlider.addEventListener('input', (e) => {
     const newVal = e.target.value;
     sliderValueDisplay.innerText = newVal + "px";
-    localStorage.setItem('scanBoxSize', newVal); // Elmentjük
-
-    // Ha épp megy a kamera, újraindítjuk az új mérettel, hogy lásd az eredményt
+    localStorage.setItem('scanBoxSize', newVal);
     if(isCameraRunning) {
-        // Kis késleltetés, hogy ne villogjon, ha gyorsan húzod
         if(this.restartTimeout) clearTimeout(this.restartTimeout);
         this.restartTimeout = setTimeout(() => {
-            forceStopCamera().then(() => {
-                startCamera();
-            });
-        }, 300);
+            forceStopCamera().then(() => startCamera());
+        }, 500);
     }
 });
 
@@ -251,6 +271,72 @@ async function init() {
         loadMsg.style.color = "#10b981";
     }
     renderHistory(); 
+    
+    // Kamerák lekérdezése indításkor
+    loadCameras();
+}
+
+// --- KAMERA LISTA BETÖLTÉSE ---
+function loadCameras() {
+    Html5Qrcode.getCameras().then(devices => {
+        if (devices && devices.length) {
+            camerasList = devices;
+            renderCameraOptions();
+        }
+    }).catch(err => {
+        console.warn("Nem sikerült lekérni a kamerákat (jogosultság?)", err);
+        cameraSelect.innerHTML = '<option value="auto">Auto (Default)</option>';
+    });
+}
+
+function renderCameraOptions() {
+    // Csak a mentett ID, ha van
+    const savedCamId = localStorage.getItem('selectedCameraId');
+    
+    let html = '<option value="auto">-- Auto (Alapértelmezett) --</option>';
+    
+    camerasList.forEach((camera, index) => {
+        // Szűrjük ki az előlapi kamerákat, ha a label tartalmazza a "front" szót
+        // De ha a felhasználó nagyon akarja, hagyjuk benne, csak a "back" a fontos.
+        // Itt most mindet betesszük, de jelöljük.
+        const label = camera.label || `Camera ${index + 1}`;
+        // Ha előlapi, kihagyhatjuk, vagy jelezhetjük. Most kiszűrjük a "front" szót tartalmazókat az egyszerűségért
+        // Ha iPhone 15, akkor "Back Camera" lesz több is.
+        
+        if(!label.toLowerCase().includes('front') && !label.toLowerCase().includes('előlap')) {
+             const isSelected = (savedCamId === camera.id) ? 'selected' : '';
+             html += `<option value="${camera.id}" ${isSelected}>${label}</option>`;
+        }
+    });
+
+    cameraSelect.innerHTML = html;
+}
+
+// --- KAMERA VÁLASZTÁS VÁLTOZÁS ---
+function onCameraSelectChange() {
+    const selectedId = cameraSelect.value;
+    
+    if(selectedId === 'auto') {
+        localStorage.removeItem('selectedCameraId');
+    } else {
+        localStorage.setItem('selectedCameraId', selectedId);
+    }
+
+    // Ha fut a kamera, újraindítjuk az új beállítással
+    if(isCameraRunning) {
+        forceStopCamera().then(() => {
+            startCamera();
+        });
+    }
+}
+
+function resetCameraSettings() {
+    localStorage.removeItem('selectedCameraId');
+    cameraSelect.value = 'auto';
+    alert("Kamera visszaállítva automatikusra!");
+    if(isCameraRunning) {
+        forceStopCamera().then(() => startCamera());
+    }
 }
 
 async function loadBankCSV() {
@@ -330,7 +416,7 @@ function search(code) {
     }
 }
 
-// --- KAMERA LOGIKA ---
+// --- KAMERA INDÍTÁS MÓDOSÍTVA ---
 function handleCameraButton() {
     resultsWrapper.innerHTML = ''; 
     input.value = '';
@@ -338,13 +424,15 @@ function handleCameraButton() {
     if (isCameraRunning) {
         forceStopCamera();
     } else {
-        setTimeout(() => {
-            startCamera();
-        }, 200); 
+        // Ha még nincs engedély, most fogja kérni, utána frissítjük a listát
+        startCamera().then(() => {
+            // Ha ez az első indítás, most már van engedély, kérjük le a listát újra
+            if(camerasList.length === 0) loadCameras();
+        });
     }
 }
 
-function startCamera() {
+async function startCamera() {
     readerDiv.style.display = 'block';
     camIcon.style.display = 'none';
     stopIcon.style.display = 'block';
@@ -354,37 +442,56 @@ function startCamera() {
         html5QrCode = new Html5Qrcode("reader");
     }
 
-    // LEKÉRJÜK A CSÚSZKA JELENLEGI ÉRTÉKÉT
     const currentBoxSize = parseInt(boxSizeSlider.value);
     
-    // --- BIZTONSÁGOS BEÁLLÍTÁSOK ---
-    // Nincs 'constraints' variálás, így nem omlik össze iPhone-on.
-    // A méretet szoftveresen (qrbox) oldjuk meg.
+    // --- ÚJ RÉSZ: CONSTRAINT KIVÁLASZTÁSA ---
+    const savedCamId = localStorage.getItem('selectedCameraId');
+    let videoConstraints;
+
+    if (savedCamId && savedCamId !== 'auto') {
+        // Ha van mentett ID, azt használjuk
+        videoConstraints = { 
+            deviceId: { exact: savedCamId },
+            // Opcionális: fókusz mód kényszerítése, ha a böngésző engedi
+            focusMode: "continuous"
+        };
+    } else {
+        // Alapértelmezett: hátsó kamera
+        videoConstraints = { facingMode: "environment" };
+    }
+
     const config = { 
         fps: 25, 
         qrbox: { width: currentBoxSize, height: currentBoxSize }, 
         formatsToSupport: [ Html5QrcodeSupportedFormats.DATA_MATRIX ] 
     };
 
-    const constraints = { facingMode: "environment" };
-    
-    html5QrCode.start(
-        constraints, 
-        config,
-        (decodedText) => {
-            forceStopCamera().then(() => {
-                input.value = decodedText;
-                search(decodedText.trim().toUpperCase());
-            });
-        },
-        (errorMessage) => {}
-    ).then(() => {
+    try {
+        await html5QrCode.start(
+            videoConstraints, 
+            config,
+            (decodedText) => {
+                forceStopCamera().then(() => {
+                    input.value = decodedText;
+                    search(decodedText.trim().toUpperCase());
+                });
+            },
+            (errorMessage) => {}
+        );
         isCameraRunning = true;
-    }).catch(err => {
+    } catch (err) {
         console.error("Kamera start hiba:", err);
+        // Ha a mentett ID-val nem indul (pl. másik telefon), töröljük és újrapróbáljuk auto módban
+        if(savedCamId) {
+            console.log("Mentett kamera nem található, visszaállás autora...");
+            localStorage.removeItem('selectedCameraId');
+            cameraSelect.value = 'auto';
+            // Rekurzív hívás auto móddal
+            return startCamera(); 
+        }
         forceStopCamera();
-        alert("Kamera hiba! Frissítsd az oldalt.");
-    });
+        alert("Kamera hiba! Próbáld frissíteni vagy Resetelni.");
+    }
 }
 
 function forceStopCamera() {
@@ -419,14 +526,11 @@ function playSound(ok) {
     snd.currentTime = 0; snd.play().catch(()=>{});
 }
 
-// --- ELŐZMÉNY KEZELÉS ---
 function saveToHistory(code, ok) {
     const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     let history = JSON.parse(localStorage.getItem('scanHistory') || '[]');
-    
     history.unshift({ code, ok, time });
     if(history.length > 30) history.pop();
-    
     localStorage.setItem('scanHistory', JSON.stringify(history));
     renderHistory();
 }
@@ -448,13 +552,12 @@ function clearHistory() {
     }
 }
 
-// --- AUTOMATA INDÍTÁS ---
 function checkAutoStart() {
     const urlParams = new URLSearchParams(window.location.search);
     if(urlParams.get('autostart') === 'true') {
         setTimeout(() => {
             if(!isCameraRunning) {
-                let btn = document.querySelector("button"); 
+                let btn = document.querySelector(".scan-btn"); 
                 if(btn) btn.click();
             }
         }, 500); 
