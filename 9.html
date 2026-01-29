@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Forvia Bank Scan Pro (Smart Cam)</title>
+<title>Forvia Bank Scan Pro (Smart Fix)</title>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <style>
@@ -376,7 +376,7 @@ function removeDefaultOverlay() {
     unwanted.forEach(el => { el.style.display = 'none'; el.style.border = 'none'; });
 }
 
-// --- INTELLIGENS KAMERA VÁLASZTÓ (iOS 0.5x Ultra Wide támogatás) ---
+// --- INTELLIGENS KAMERA VÁLASZTÓ (JAVÍTOTT: Csak Back kamera!) ---
 async function startCamera() {
     document.body.classList.add('scanning-mode');
     sliderContainer.appendChild(mainSlider);
@@ -387,44 +387,40 @@ async function startCamera() {
     }
 
     const currentBoxSize = parseInt(boxSizeSlider.value);
-    // Alap config
     let config = { 
         fps: 25, 
         qrbox: { width: currentBoxSize, height: currentBoxSize }, 
         formatsToSupport: [ Html5QrcodeSupportedFormats.DATA_MATRIX ] 
     };
 
-    // 1. Megpróbáljuk megtalálni az Ultra Wide kamerát
     let specificDeviceId = null;
     try {
         const devices = await Html5Qrcode.getCameras();
         if (devices && devices.length > 0) {
-            // Keressük a kulcsszavakat a kamera nevében
+            // SZIGORÚ SZŰRÉS: Csak akkor jó, ha benne van a "back" ÉS az "ultra" szó is.
+            // Ez kizárja az "Front Ultra Wide" kamerákat.
             const ultraWideCam = devices.find(d => {
                 const label = d.label.toLowerCase();
-                return label.includes("ultra") || label.includes("0.5") || label.includes("wide");
+                return label.includes("back") && (label.includes("ultra") || label.includes("0.5"));
             });
 
-            // Csak akkor használjuk az ID-t, ha biztosan találtunk ilyet, és ez iOS
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            if (isIOS && ultraWideCam) {
+            if (ultraWideCam) {
                 specificDeviceId = ultraWideCam.id;
-                console.log("Ultra Wide kamera kiválasztva:", ultraWideCam.label);
+                console.log("Hátsó Ultra Wide kamera kiválasztva:", ultraWideCam.label);
             }
         }
     } catch (e) {
-        console.warn("Nem sikerült lekérni a kamera listát, marad az alapértelmezett.", e);
+        console.warn("Kamera lista hiba, fallback...", e);
     }
 
-    // 2. Beállítjuk a constraints-t (vagy ID alapján, vagy environment)
     let constraints;
     if (specificDeviceId) {
         constraints = { deviceId: { exact: specificDeviceId } };
     } else {
+        // Ha nincs speciális találat, marad a biztonságos HÁTSÓ kamera
         constraints = { facingMode: "environment" };
     }
 
-    // 3. Kamera indítása (Hiba esetén fallback a sima módra)
     try {
         await html5QrCode.start(
             constraints, 
@@ -437,33 +433,27 @@ async function startCamera() {
             },
             (errorMessage) => {}
         );
-        // Siker esetén
         isCameraRunning = true;
         cleanupInterval = setInterval(removeDefaultOverlay, 100);
 
     } catch (err) {
-        console.error("Hiba a választott kamerával, visszaváltás alapra...", err);
-        // HA a specifikus kamera nem indult el, újrapróbáljuk a sima 'environment' móddal
-        if (specificDeviceId) {
-             try {
-                await html5QrCode.start(
-                    { facingMode: "environment" }, 
-                    config,
-                    (decodedText) => {
-                        forceStopCamera().then(() => {
-                            input.value = decodedText;
-                            search(decodedText.trim().toUpperCase());
-                        });
-                    },
-                    (errorMessage) => {}
-                );
-                isCameraRunning = true;
-                cleanupInterval = setInterval(removeDefaultOverlay, 100);
-             } catch (retryErr) {
-                 alert("Kamera hiba! (Retry failed)");
-                 forceStopCamera();
-             }
-        } else {
+        console.error("Kamera indítás hiba, visszaváltás alapra...", err);
+        // Hiba esetén garantáltan a sima hátsó kamerát indítjuk
+        try {
+            await html5QrCode.start(
+                { facingMode: "environment" }, 
+                config,
+                (decodedText) => {
+                    forceStopCamera().then(() => {
+                        input.value = decodedText;
+                        search(decodedText.trim().toUpperCase());
+                    });
+                },
+                (errorMessage) => {}
+            );
+            isCameraRunning = true;
+            cleanupInterval = setInterval(removeDefaultOverlay, 100);
+        } catch (retryErr) {
             alert("Kamera hiba! Frissítsd az oldalt.");
             forceStopCamera();
         }
@@ -494,7 +484,6 @@ function playSound(ok) {
 function saveToHistory(code, ok) {
     const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     let history = JSON.parse(localStorage.getItem('scanHistory') || '[]');
-    // Ellenőrzés, hogy ne mentsük el ugyanazt duplán egymás után
     if(history.length === 0 || history[0].code !== code) {
         history.unshift({ code, ok, time });
         if(history.length > 30) history.pop();
