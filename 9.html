@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Forvia Bank Scan Pro (Full Screen)</title>
+<title>Forvia Bank Scan Pro (Clean View)</title>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <style>
@@ -123,7 +123,7 @@ input[type=text] {
 .h-time { font-size: 0.75rem; color: #64748b; font-weight: bold; white-space: nowrap; }
 
 /* ==========================================================================
-   FULL SCREEN SCAN MODE STYLES (A VARÁZSLAT)
+   FULL SCREEN SCAN MODE STYLES (JAVÍTOTT - DUPLA KERET ELTÁVOLÍTÁSA)
    ========================================================================== */
 
 /* --- 1. A SÖTÉTÍTŐ ÉS A KERET --- */
@@ -143,10 +143,14 @@ input[type=text] {
 .bl { bottom: -2px; left: -2px; border-top: 0; border-right: 0; border-bottom-left-radius: 12px; }
 .br { bottom: -2px; right: -2px; border-top: 0; border-left: 0; border-bottom-right-radius: 12px; }
 
-/* --- 2. A FEHÉR KERET ELTÜNTETÉSE --- */
-/* Ez a kulcs: elrejtjük a html5-qrcode által generált belső keretet */
-#html5-qrcode-anchor-scan-region {
+/* --- 2. A DUPLA KERET JAVÍTÁSA (EZ AZ ÚJ RÉSZ) --- */
+/* Itt célozzuk meg a library által generált összes lehetséges szemetet */
+#reader__scan_region, 
+#reader div[style*="border: 2px solid"] {
     display: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    opacity: 0 !important;
 }
 
 /* --- 3. VEZÉRLŐK KONTÉNERE SZKENNELÉSKOR --- */
@@ -165,7 +169,7 @@ body.scanning-mode #resultsWrapper,
 body.scanning-mode .footer-history,
 body.scanning-mode .load-msg,
 body.scanning-mode .no-result,
-body.scanning-mode .input-wrapper { /* Az eredeti input-wrapper-t elrejtjük */
+body.scanning-mode .input-wrapper { 
     display: none !important;
 }
 
@@ -179,24 +183,22 @@ body.scanning-mode #reader {
 body.scanning-mode #scanOverlay { display: flex; }
 body.scanning-mode .scan-controls-container { display: flex; }
 
-/* --- 4. GOMBOK STÍLUSA SZKENNELÉSKOR (Profi, lebegő hatás) --- */
+/* --- 4. GOMBOK STÍLUSA SZKENNELÉSKOR --- */
 
-/* A Csúszka stílusa szkennelés közben */
 body.scanning-mode .slider-wrapper {
-    background: rgba(30, 41, 59, 0.95); /* Sötétebb, kevésbé átlátszó */
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5); /* Erősebb árnyék */
+    background: rgba(30, 41, 59, 0.95); 
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
     border: 1px solid rgba(255, 255, 255, 0.2);
     width: 80%; max-width: 300px; margin: 0;
 }
 body.scanning-mode input[type=range]::-webkit-slider-thumb {
-    box-shadow: 0 0 15px var(--accent); /* Erősebb ragyogás a gombon */
+    box-shadow: 0 0 15px var(--accent); 
 }
 
-/* A STOP gomb stílusa szkennelés közben */
 body.scanning-mode .scan-btn.stop-btn {
     background: var(--err-color);
-    box-shadow: 0 0 20px var(--err-glow); /* Élénk piros ragyogás */
-    width: 70px; height: 70px; border-radius: 20px; /* Kicsit nagyobb */
+    box-shadow: 0 0 20px var(--err-glow); 
+    width: 70px; height: 70px; border-radius: 20px; 
 }
 body.scanning-mode .scan-btn.stop-btn svg { width: 32px; height: 32px; }
 </style>
@@ -265,7 +267,7 @@ body.scanning-mode .scan-btn.stop-btn svg { width: 32px; height: 32px; }
 
 <script>
 /* ========================================================
-   LOGIKA - DATA MATRIX + KÉZI KERET ÁLLÍTÁS
+   LOGIKA
    ======================================================== */
 const input = document.getElementById('barcodeInput');
 const resultsWrapper = document.getElementById('resultsWrapper');
@@ -274,12 +276,9 @@ const loadMsg = document.getElementById('loadMsg');
 const readerDiv = document.getElementById('reader');
 const visualTarget = document.getElementById('visualTarget');
 
-// Elemek a mozgatáshoz
 const mainSlider = document.getElementById('mainSlider');
 const sliderContainer = document.getElementById('sliderContainer');
 const mainContent = document.querySelector('.main-content');
-
-// Slider elemek
 const boxSizeSlider = document.getElementById('boxSizeSlider');
 const sliderValueDisplay = document.getElementById('sliderValueDisplay');
 
@@ -404,7 +403,6 @@ function search(code) {
     }
 }
 
-// --- KAMERA LOGIKA ---
 function handleCameraButton() {
     resultsWrapper.innerHTML = ''; 
     input.value = '';
@@ -420,7 +418,6 @@ function handleCameraButton() {
 
 function startCamera() {
     document.body.classList.add('scanning-mode');
-    // Slidert átmozgatjuk a lebegő konténerbe
     sliderContainer.appendChild(mainSlider);
     
     readerDiv.style.display = 'block';
@@ -477,7 +474,6 @@ function forceStopCamera() {
 
 function cleanupUI() {
     document.body.classList.remove('scanning-mode');
-    // Slidert visszamozgatjuk az eredeti helyére
     mainContent.insertBefore(mainSlider, readerDiv);
 
     html5QrCode = null;
@@ -490,7 +486,6 @@ function playSound(ok) {
     snd.currentTime = 0; snd.play().catch(()=>{});
 }
 
-// --- ELŐZMÉNY KEZELÉS ---
 function saveToHistory(code, ok) {
     const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     let history = JSON.parse(localStorage.getItem('scanHistory') || '[]');
@@ -519,7 +514,6 @@ function clearHistory() {
     }
 }
 
-// --- AUTOMATA INDÍTÁS ---
 function checkAutoStart() {
     const urlParams = new URLSearchParams(window.location.search);
     if(urlParams.get('autostart') === 'true') {
