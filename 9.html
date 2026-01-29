@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Forvia Bank Scan Pro (Clean View)</title>
+<title>Forvia Bank Scan Pro (Left Controls)</title>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <style>
@@ -123,13 +123,13 @@ input[type=text] {
 .h-time { font-size: 0.75rem; color: #64748b; font-weight: bold; white-space: nowrap; }
 
 /* ==========================================================================
-   FULL SCREEN SCAN MODE STYLES (JAVÍTOTT - DUPLA KERET ELTÁVOLÍTÁSA)
+   FULL SCREEN SCAN MODE STYLES
    ========================================================================== */
 
 /* --- 1. A SÖTÉTÍTŐ ÉS A KERET --- */
 #scanOverlay {
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    z-index: 99; /* A videó felett */
+    z-index: 99; 
     pointer-events: none; justify-content: center; align-items: center;
 }
 .scan-target {
@@ -143,53 +143,55 @@ input[type=text] {
 .bl { bottom: -2px; left: -2px; border-top: 0; border-right: 0; border-bottom-left-radius: 12px; }
 .br { bottom: -2px; right: -2px; border-top: 0; border-left: 0; border-bottom-right-radius: 12px; }
 
-/* --- 2. A DUPLA KERET JAVÍTÁSA (EZ AZ ÚJ RÉSZ) --- */
-/* Itt célozzuk meg a library által generált összes lehetséges szemetet */
+/* --- 2. FEHÉR KERET TÖRLÉSE (AGRESSZÍV CSS) --- */
 #reader__scan_region, 
-#reader div[style*="border: 2px solid"] {
+#html5-qrcode-anchor-scan-region,
+div[id*="scan_region"],
+#reader > div:not(video):not(canvas) {
     display: none !important;
     border: none !important;
-    box-shadow: none !important;
     opacity: 0 !important;
+    width: 0 !important; height: 0 !important;
 }
 
-/* --- 3. VEZÉRLŐK KONTÉNERE SZKENNELÉSKOR --- */
+/* --- 3. VEZÉRLŐK KONTÉNERE (BAL ALUL) --- */
 .scan-controls-container {
-    position: fixed; bottom: 30px; left: 0; width: 100%;
-    display: none; flex-direction: column; align-items: center; gap: 20px;
-    z-index: 1000; /* Kiemeljük a sötét réteg fölé */
-    pointer-events: auto; /* Hogy lehessen kattintani */
+    position: fixed; 
+    bottom: 25px; 
+    left: 20px; /* Balra igazítva */
+    width: auto;
+    display: none; 
+    flex-direction: column; 
+    align-items: flex-start; /* Balra igazítva */
+    gap: 15px;
+    z-index: 1000;
+    pointer-events: auto;
     padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* --- AMIKOR A KAMERA AKTÍV (body.scanning-mode) --- */
-
+/* --- AMIKOR A KAMERA AKTÍV --- */
 body.scanning-mode .header, 
 body.scanning-mode #resultsWrapper, 
 body.scanning-mode .footer-history,
 body.scanning-mode .load-msg,
 body.scanning-mode .no-result,
-body.scanning-mode .input-wrapper { 
-    display: none !important;
-}
+body.scanning-mode .input-wrapper { display: none !important; }
 
 body.scanning-mode #reader {
     display: block !important;
     position: fixed; top: 0; left: 0; width: 100vw !important; height: 100vh !important;
-    max-width: none; margin: 0; border: none; border-radius: 0;
-    z-index: 0;
+    max-width: none; margin: 0; border: none; border-radius: 0; z-index: 0;
 }
-
 body.scanning-mode #scanOverlay { display: flex; }
 body.scanning-mode .scan-controls-container { display: flex; }
 
-/* --- 4. GOMBOK STÍLUSA SZKENNELÉSKOR --- */
-
+/* --- GOMBOK ÉS SLIDER SZKENNELÉSKOR --- */
 body.scanning-mode .slider-wrapper {
     background: rgba(30, 41, 59, 0.95); 
     box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
     border: 1px solid rgba(255, 255, 255, 0.2);
-    width: 80%; max-width: 300px; margin: 0;
+    width: 250px; /* Fix szélesség a sarokban */
+    margin: 0;
 }
 body.scanning-mode input[type=range]::-webkit-slider-thumb {
     box-shadow: 0 0 15px var(--accent); 
@@ -199,8 +201,8 @@ body.scanning-mode .scan-btn.stop-btn {
     background: var(--err-color);
     box-shadow: 0 0 20px var(--err-glow); 
     width: 70px; height: 70px; border-radius: 20px; 
+    margin-left: 5px; /* Kicsi igazítás */
 }
-body.scanning-mode .scan-btn.stop-btn svg { width: 32px; height: 32px; }
 </style>
 </head>
 <body>
@@ -222,7 +224,7 @@ body.scanning-mode .scan-btn.stop-btn svg { width: 32px; height: 32px; }
 <div class="scan-controls-container">
     <div id="sliderContainer"></div>
     <button class="scan-btn stop-btn" onclick="handleCameraButton()" title="Kamera leállítása">
-        <svg viewBox="0 0 24 24">
+        <svg viewBox="0 0 24 24" fill="white">
             <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
         </svg>
     </button>
@@ -285,6 +287,7 @@ const sliderValueDisplay = document.getElementById('sliderValueDisplay');
 let html5QrCode = null;
 let isCameraRunning = false;
 let bankDB = [];
+let cleanupInterval = null; // A takarító időzítő
 
 // --- SLIDER LOGIKA ---
 const savedSize = localStorage.getItem('scanBoxSize');
@@ -416,10 +419,21 @@ function handleCameraButton() {
     }
 }
 
+// --- ÚJ: A Fehér keret szoftveres eltávolítása ---
+function removeDefaultOverlay() {
+    // Folyamatosan keresi és törli a library által beszúrt szemetet
+    const unwanted = document.querySelectorAll('#html5-qrcode-anchor-scan-region, #reader__scan_region, #reader > div:not(video):not(canvas)');
+    unwanted.forEach(el => {
+        el.style.display = 'none';
+        el.style.border = 'none';
+        // Ha nagyon makacs, töröljük a DOM-ból:
+        // el.remove(); 
+    });
+}
+
 function startCamera() {
     document.body.classList.add('scanning-mode');
     sliderContainer.appendChild(mainSlider);
-    
     readerDiv.style.display = 'block';
 
     if (html5QrCode === null) {
@@ -447,6 +461,8 @@ function startCamera() {
         (errorMessage) => {}
     ).then(() => {
         isCameraRunning = true;
+        // INDÍTUNK EGY IDŐZÍTŐT, AMI MÁSODPERCENKÉNT TÖRLI A FEHÉR KERETET
+        cleanupInterval = setInterval(removeDefaultOverlay, 100);
     }).catch(err => {
         console.error("Kamera start hiba:", err);
         forceStopCamera();
@@ -456,6 +472,8 @@ function startCamera() {
 
 function forceStopCamera() {
     return new Promise((resolve) => {
+        if(cleanupInterval) clearInterval(cleanupInterval);
+        
         if (html5QrCode) {
             html5QrCode.stop().then(() => {
                 html5QrCode.clear();
