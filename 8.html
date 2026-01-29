@@ -370,7 +370,7 @@
                     const isHoliday = holidays2026.includes(`${m+1}-${d}`);
                     const isToday = isCurrentMonth && d === currentDay;
                     const cls = (v && !isNaN(parseFloat(v.replace(',','.')))) ? 'cell-S' : (v==='BÁ'?'cell-BA':v==='IG'?'cell-IG':v==='TU'?'cell-TU':v.startsWith('KÉ')?'cell-KE':'');
-                    row += `<td class="${isWeekend||isHoliday?'weekend':''} ${isHoliday?'holiday-bg':''} ${cls} ${isToday?`today-base today-${currentShift}`:''}"><input type="text" value="${v}" onfocus="this.select(); highlight(this,${d},true)" onblur="highlight(this,${d},false); update(${e.id},'${k}',this.value,this)" class="input-cell" inputmode="text"></td>`;
+                    row += `<td class="${isWeekend||isHoliday?'weekend':''} ${isHoliday?'holiday-bg':''} ${cls} ${isToday?`today-base today-${currentShift}`:''}"><input type="text" value="${v}" onfocus="this.select(); highlight(this,${d},true)" onblur="highlight(this,${d},false); update(${e.id},'${k}',this.value,this)" onkeydown="if(event.key==='Enter'){this.blur();}" class="input-cell" inputmode="text"></td>`;
                 }
                 return row + "</tr>";
             }).join('');
@@ -415,15 +415,13 @@
         function addEmp() { const n = prompt("Név:"); if(n) { employees.push({id:Date.now(), name:n, yearlyQuota:160, data:{}}); save(); render(); } }
         function delEmp(id) { if(confirm("Biztos törlöd?")) { employees = employees.filter(x => x.id != id); save(); render(); } }
         
-        // AUTOMATIKUS GÖRGETÉS MOBILON (BILLENTYŰZET KEZELÉS)
-        // Ez az új rész, ami biztosítja, hogy a mező ne takaródjon ki
+        // AUTOMATIKUS GÖRGETÉS MOBILON + ENTER GOMB KEZELÉS
         document.addEventListener('focusin', function(e) {
             if (e.target && e.target.classList.contains('input-cell')) {
-                // Várunk 300ms-t, amíg a billentyűzet felcsúszik
                 setTimeout(function() {
                     e.target.scrollIntoView({
                         behavior: 'smooth',
-                        block: 'center', // Ez emeli a képernyő KÖZEPÉRE a mezőt
+                        block: 'center', 
                         inline: 'nearest'
                     });
                 }, 300);
