@@ -13,13 +13,14 @@
 :root {
     --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
     --accent: #3b82f6;
-    --accent-glow: rgba(59, 130, 246, 0.5);
+    --accent-glow: rgba(59, 130, 246, 0.6);
     --glass: rgba(255, 255, 255, 0.05);
     --glass-border: rgba(255, 255, 255, 0.1);
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
     --ok-color: #10b981;
     --err-color: #ef4444;
+    --err-glow: rgba(239, 68, 68, 0.6);
 }
 
 body {
@@ -44,7 +45,7 @@ body {
 .main-content {
     flex: 1; display: flex; flex-direction: column; padding: 20px;
     overflow-y: auto; align-items: center; width: 100%; -webkit-overflow-scrolling: touch;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.3s ease; position: relative;
 }
 
 /* --- SLIDER --- */
@@ -53,7 +54,6 @@ body {
     background: rgba(30, 41, 59, 0.8); padding: 12px 16px; border-radius: 20px;
     border: 1px solid var(--glass-border); backdrop-filter: blur(4px);
     display: flex; flex-direction: column; gap: 5px;
-    z-index: 101; /* Hogy kamera módban is látszódjon */
     transition: all 0.3s ease;
 }
 .slider-header {
@@ -65,7 +65,7 @@ body {
 input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; margin-top: 5px; }
 input[type=range]:focus { outline: none; }
 input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #475569; border-radius: 3px; }
-input[type=range]::-webkit-slider-thumb { height: 20px; width: 20px; border-radius: 50%; background: var(--accent); cursor: pointer; -webkit-appearance: none; margin-top: -7px; box-shadow: 0 0 10px var(--accent-glow); border: 2px solid white; }
+input[type=range]::-webkit-slider-thumb { height: 20px; width: 20px; border-radius: 50%; background: var(--accent); cursor: pointer; -webkit-appearance: none; margin-top: -7px; box-shadow: 0 0 10px var(--accent-glow); border: 2px solid white; transition: box-shadow 0.3s ease; }
 
 /* --- KAMERA DOBOZ (Alaphelyzet) --- */
 #reader {
@@ -78,7 +78,7 @@ input[type=range]::-webkit-slider-thumb { height: 20px; width: 20px; border-radi
 /* --- INPUT ÉS GOMBOK --- */
 .input-wrapper { 
     width: 100%; max-width: 500px; display: flex; gap: 12px; margin-bottom: 25px; flex-shrink: 0; 
-    transition: all 0.3s ease; z-index: 102;
+    transition: all 0.3s ease;
 }
 input[type=text] {
     flex: 1; background: var(--glass); border: 1px solid var(--glass-border);
@@ -88,11 +88,10 @@ input[type=text] {
 .scan-btn {
     width: 60px; height: 60px; border-radius: 16px; border: none;
     background: var(--accent); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 15px var(--accent-glow); flex-shrink: 0; transition: all 0.2s;
+    box-shadow: 0 4px 15px var(--accent-glow); flex-shrink: 0; transition: all 0.3s ease;
 }
 .scan-btn:active { transform: scale(0.92); }
 .scan-btn svg { width: 28px; height: 28px; fill: white; }
-.scan-btn.active { background: var(--err-color); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.5); }
 
 /* --- EREDMÉNYEK --- */
 #resultsWrapper { width: 100%; max-width: 500px; padding-bottom: 20px; }
@@ -127,28 +126,37 @@ input[type=text] {
    FULL SCREEN SCAN MODE STYLES (A VARÁZSLAT)
    ========================================================================== */
 
-/* Ez a réteg felel a sötétítésért és a keretért */
+/* --- 1. A SÖTÉTÍTŐ ÉS A KERET --- */
 #scanOverlay {
-    display: none; /* Alapból rejtve */
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    z-index: 99; /* A videó felett, de a gombok alatt */
-    pointer-events: none; /* Átkattintható */
-    justify-content: center; align-items: center;
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 99; /* A videó felett */
+    pointer-events: none; justify-content: center; align-items: center;
 }
 .scan-target {
-    position: relative;
-    width: 200px; height: 200px; /* JS állítja majd */
-    border-radius: 20px;
-    /* A trükk: hatalmas árnyék, ami sötétít mindent a kereten kívül */
-    box-shadow: 0 0 0 200vmax rgba(0, 0, 0, 0.75); 
+    position: relative; width: 200px; height: 200px; border-radius: 20px;
+    box-shadow: 0 0 0 200vmax rgba(0, 0, 0, 0.75); /* Sötétítés */
     border: 2px solid rgba(255, 255, 255, 0.4);
 }
-/* Sarkok díszítésnek (QR Bot stílus) */
 .scan-corner { position: absolute; width: 30px; height: 30px; border: 4px solid var(--accent); border-radius: 4px; }
 .tl { top: -2px; left: -2px; border-bottom: 0; border-right: 0; border-top-left-radius: 12px; }
 .tr { top: -2px; right: -2px; border-bottom: 0; border-left: 0; border-top-right-radius: 12px; }
 .bl { bottom: -2px; left: -2px; border-top: 0; border-right: 0; border-bottom-left-radius: 12px; }
 .br { bottom: -2px; right: -2px; border-top: 0; border-left: 0; border-bottom-right-radius: 12px; }
+
+/* --- 2. A FEHÉR KERET ELTÜNTETÉSE --- */
+/* Ez a kulcs: elrejtjük a html5-qrcode által generált belső keretet */
+#html5-qrcode-anchor-scan-region {
+    display: none !important;
+}
+
+/* --- 3. VEZÉRLŐK KONTÉNERE SZKENNELÉSKOR --- */
+.scan-controls-container {
+    position: fixed; bottom: 30px; left: 0; width: 100%;
+    display: none; flex-direction: column; align-items: center; gap: 20px;
+    z-index: 1000; /* Kiemeljük a sötét réteg fölé */
+    pointer-events: auto; /* Hogy lehessen kattintani */
+    padding-bottom: env(safe-area-inset-bottom);
+}
 
 /* --- AMIKOR A KAMERA AKTÍV (body.scanning-mode) --- */
 
@@ -156,39 +164,41 @@ body.scanning-mode .header,
 body.scanning-mode #resultsWrapper, 
 body.scanning-mode .footer-history,
 body.scanning-mode .load-msg,
-body.scanning-mode .no-result {
-    display: none !important; /* Minden mást elrejtünk */
+body.scanning-mode .no-result,
+body.scanning-mode .input-wrapper { /* Az eredeti input-wrapper-t elrejtjük */
+    display: none !important;
 }
 
 body.scanning-mode #reader {
     display: block !important;
     position: fixed; top: 0; left: 0; width: 100vw !important; height: 100vh !important;
     max-width: none; margin: 0; border: none; border-radius: 0;
-    z-index: 0; /* Legalulra kerül a videó */
+    z-index: 0;
 }
 
-body.scanning-mode #scanOverlay {
-    display: flex; /* Megjelenik a célkereszt */
-}
+body.scanning-mode #scanOverlay { display: flex; }
+body.scanning-mode .scan-controls-container { display: flex; }
 
-/* Vezérlők pozicionálása szkenneléskor */
-body.scanning-mode .main-content {
-    justify-content: flex-end; /* Aljára igazítás */
-    padding-bottom: 40px;
-}
+/* --- 4. GOMBOK STÍLUSA SZKENNELÉSKOR (Profi, lebegő hatás) --- */
 
-body.scanning-mode .input-wrapper {
-    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-    width: auto; margin: 0;
-}
-body.scanning-mode input[type=text] {
-    display: none; /* A szövegbevitelt elrejtjük szkenneléskor, csak a STOP gomb marad */
-}
-
+/* A Csúszka stílusa szkennelés közben */
 body.scanning-mode .slider-wrapper {
-    position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%);
-    width: 80%; max-width: 300px;
+    background: rgba(30, 41, 59, 0.95); /* Sötétebb, kevésbé átlátszó */
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5); /* Erősebb árnyék */
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    width: 80%; max-width: 300px; margin: 0;
 }
+body.scanning-mode input[type=range]::-webkit-slider-thumb {
+    box-shadow: 0 0 15px var(--accent); /* Erősebb ragyogás a gombon */
+}
+
+/* A STOP gomb stílusa szkennelés közben */
+body.scanning-mode .scan-btn.stop-btn {
+    background: var(--err-color);
+    box-shadow: 0 0 20px var(--err-glow); /* Élénk piros ragyogás */
+    width: 70px; height: 70px; border-radius: 20px; /* Kicsit nagyobb */
+}
+body.scanning-mode .scan-btn.stop-btn svg { width: 32px; height: 32px; }
 </style>
 </head>
 <body>
@@ -207,10 +217,19 @@ body.scanning-mode .slider-wrapper {
     </div>
 </div>
 
+<div class="scan-controls-container">
+    <div id="sliderContainer"></div>
+    <button class="scan-btn stop-btn" onclick="handleCameraButton()" title="Kamera leállítása">
+        <svg viewBox="0 0 24 24">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+        </svg>
+    </button>
+</div>
+
 <div class="main-content" id="screen">
     <div id="loadMsg" class="load-msg">Adatbázis betöltése...</div>
 
-    <div class="slider-wrapper">
+    <div class="slider-wrapper" id="mainSlider">
         <div class="slider-header">
             <span>Keret mérete</span>
             <span id="sliderValueDisplay" class="slider-val">200px</span>
@@ -226,9 +245,6 @@ body.scanning-mode .slider-wrapper {
             <svg id="camIcon" viewBox="0 0 24 24">
                 <path d="M4 6h2v12H4zm14 0h2v12h-2zm-4 0h2v12h-2zm-4 0h2v12h-2zM2 4v16h20V4H2zm18 14H4V6h16v12z"/>
                 <path d="M0 0h24v24H0z" fill="none"/>
-            </svg>
-            <svg id="stopIcon" viewBox="0 0 24 24" style="display:none;">
-                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
             </svg>
         </button>
     </div>
@@ -255,11 +271,13 @@ const input = document.getElementById('barcodeInput');
 const resultsWrapper = document.getElementById('resultsWrapper');
 const historyList = document.getElementById('historyList');
 const loadMsg = document.getElementById('loadMsg');
-const camIcon = document.getElementById('camIcon');
-const stopIcon = document.getElementById('stopIcon');
-const scanBtn = document.querySelector('.scan-btn');
 const readerDiv = document.getElementById('reader');
-const visualTarget = document.getElementById('visualTarget'); // ÚJ: A célkereszt eleme
+const visualTarget = document.getElementById('visualTarget');
+
+// Elemek a mozgatáshoz
+const mainSlider = document.getElementById('mainSlider');
+const sliderContainer = document.getElementById('sliderContainer');
+const mainContent = document.querySelector('.main-content');
 
 // Slider elemek
 const boxSizeSlider = document.getElementById('boxSizeSlider');
@@ -270,23 +288,19 @@ let isCameraRunning = false;
 let bankDB = [];
 
 // --- SLIDER LOGIKA ---
-// Betöltjük a mentett értéket
 const savedSize = localStorage.getItem('scanBoxSize');
 if(savedSize) {
     boxSizeSlider.value = savedSize;
     sliderValueDisplay.innerText = savedSize + "px";
-    updateVisualTarget(savedSize); // Frissítjük a vizuális keretet is
+    updateVisualTarget(savedSize);
 }
 
-// Ha mozgatod a csúszkát
 boxSizeSlider.addEventListener('input', (e) => {
     const newVal = e.target.value;
     sliderValueDisplay.innerText = newVal + "px";
-    localStorage.setItem('scanBoxSize', newVal); // Elmentjük
-    
-    updateVisualTarget(newVal); // Vizuálisan is átméretezzük a keretet azonnal
+    localStorage.setItem('scanBoxSize', newVal);
+    updateVisualTarget(newVal);
 
-    // Ha épp megy a kamera, újraindítjuk az új mérettel
     if(isCameraRunning) {
         if(this.restartTimeout) clearTimeout(this.restartTimeout);
         this.restartTimeout = setTimeout(() => {
@@ -405,22 +419,17 @@ function handleCameraButton() {
 }
 
 function startCamera() {
-    // UI VÁLTÁS: Teljes képernyős mód aktiválása
     document.body.classList.add('scanning-mode');
+    // Slidert átmozgatjuk a lebegő konténerbe
+    sliderContainer.appendChild(mainSlider);
     
     readerDiv.style.display = 'block';
-    camIcon.style.display = 'none';
-    stopIcon.style.display = 'block';
-    scanBtn.classList.add('active');
 
     if (html5QrCode === null) {
         html5QrCode = new Html5Qrcode("reader");
     }
 
-    // LEKÉRJÜK A CSÚSZKA JELENLEGI ÉRTÉKÉT
     const currentBoxSize = parseInt(boxSizeSlider.value);
-    
-    // Config: A qrbox mérete megegyezik a vizuális keret méretével
     const config = { 
         fps: 25, 
         qrbox: { width: currentBoxSize, height: currentBoxSize }, 
@@ -467,15 +476,13 @@ function forceStopCamera() {
 }
 
 function cleanupUI() {
-    // UI VÁLTÁS: Vissza a normál nézetbe
     document.body.classList.remove('scanning-mode');
+    // Slidert visszamozgatjuk az eredeti helyére
+    mainContent.insertBefore(mainSlider, readerDiv);
 
     html5QrCode = null;
     isCameraRunning = false;
     readerDiv.style.display = 'none';
-    camIcon.style.display = 'block';
-    stopIcon.style.display = 'none';
-    scanBtn.classList.remove('active');
 }
 
 function playSound(ok) {
@@ -518,8 +525,7 @@ function checkAutoStart() {
     if(urlParams.get('autostart') === 'true') {
         setTimeout(() => {
             if(!isCameraRunning) {
-                let btn = document.querySelector("button"); 
-                if(btn) btn.click();
+                handleCameraButton();
             }
         }, 500); 
     }
