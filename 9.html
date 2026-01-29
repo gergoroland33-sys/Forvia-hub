@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Forvia Bank Scan Pro (Smart Fix)</title>
+<title>Forvia Bank Scan Pro (Clean Menu)</title>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <style>
@@ -48,7 +48,7 @@ body {
     transition: opacity 0.3s ease; position: relative;
 }
 
-/* --- SLIDER (Rejtett a menüben) --- */
+/* --- SLIDER (Alaphelyzet) --- */
 .slider-wrapper {
     width: 100%; max-width: 300px; margin-bottom: 15px;
     background: rgba(30, 41, 59, 0.8); padding: 12px 16px; border-radius: 20px;
@@ -56,7 +56,12 @@ body {
     display: flex; flex-direction: column; gap: 5px;
     transition: all 0.3s ease;
 }
-.main-content .slider-wrapper { display: none !important; }
+
+/* ÚJ SZABÁLY: ELREJTJÜK A SLIDERT A FŐOLDALON */
+/* Amikor a .slider-wrapper a .main-content belsejében van, legyen láthatatlan */
+.main-content .slider-wrapper {
+    display: none !important;
+}
 
 .slider-header {
     display: flex; justify-content: space-between; align-items: center;
@@ -69,7 +74,7 @@ input[type=range]:focus { outline: none; }
 input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #475569; border-radius: 3px; }
 input[type=range]::-webkit-slider-thumb { height: 20px; width: 20px; border-radius: 50%; background: var(--accent); cursor: pointer; -webkit-appearance: none; margin-top: -7px; box-shadow: 0 0 10px var(--accent-glow); border: 2px solid white; transition: box-shadow 0.3s ease; }
 
-/* --- KAMERA DOBOZ --- */
+/* --- KAMERA DOBOZ (Alaphelyzet) --- */
 #reader {
     width: 100%; max-width: 300px; aspect-ratio: 1 / 1; border-radius: 20px;
     overflow: hidden; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -124,7 +129,8 @@ input[type=text] {
     padding: 8px 12px; margin-bottom: 6px; 
     background: rgba(255,255,255,0.03); border-radius: 8px; font-size: 0.85rem; 
     border-left: 3px solid #555;
-    cursor: pointer; transition: background 0.2s;
+    cursor: pointer; /* ÚJ: Jelzi hogy kattintható */
+    transition: background 0.2s;
 }
 .h-item:active { background: rgba(255,255,255,0.1); }
 .h-ok { border-left-color: var(--ok-color); }
@@ -137,7 +143,8 @@ input[type=text] {
 
 #scanOverlay {
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    z-index: 99; pointer-events: none; justify-content: center; align-items: center;
+    z-index: 99; 
+    pointer-events: none; justify-content: center; align-items: center;
 }
 .scan-target {
     position: relative; width: 200px; height: 200px; border-radius: 20px;
@@ -150,37 +157,73 @@ input[type=text] {
 .bl { bottom: -2px; left: -2px; border-top: 0; border-right: 0; border-bottom-left-radius: 12px; }
 .br { bottom: -2px; right: -2px; border-top: 0; border-left: 0; border-bottom-right-radius: 12px; }
 
-#reader__scan_region, #html5-qrcode-anchor-scan-region,
-div[id*="scan_region"], #reader > div:not(video):not(canvas) {
-    display: none !important; border: none !important; opacity: 0 !important; width: 0 !important; height: 0 !important;
+/* FEHÉR KERET TÖRLÉSE */
+#reader__scan_region, 
+#html5-qrcode-anchor-scan-region,
+div[id*="scan_region"],
+#reader > div:not(video):not(canvas) {
+    display: none !important; border: none !important; opacity: 0 !important;
+    width: 0 !important; height: 0 !important;
 }
 
+/* --- VEZÉRLŐK KONTÉNERE (FULL WIDTH LAYOUT) --- */
 .scan-controls-container {
-    position: fixed; bottom: 30px; left: 0; width: 100%; height: 0;
-    display: none; z-index: 1000; pointer-events: none;
+    position: fixed; 
+    bottom: 30px; 
+    left: 0; 
+    width: 100%; /* Teljes szélesség */
+    height: 0; /* Ne takarjon, a gyerekek abszolút pozicionáltak */
+    display: none; 
+    z-index: 1000;
+    pointer-events: none; /* Átkattintható, csak a gombok aktívak */
 }
 
+/* --- ELEMEK POZICIONÁLÁSA --- */
+
+/* 1. STOP GOMB -> BALRA LENT */
 body.scanning-mode .scan-btn.stop-btn {
-    position: absolute; bottom: 0; left: 20px;
-    background: var(--err-color); box-shadow: 0 0 20px var(--err-glow); 
-    width: 70px; height: 70px; border-radius: 20px; pointer-events: auto;
+    position: absolute;
+    bottom: 0;
+    left: 20px;
+    background: var(--err-color);
+    box-shadow: 0 0 20px var(--err-glow); 
+    width: 70px; height: 70px; border-radius: 20px; 
+    pointer-events: auto; /* Ez legyen kattintható */
 }
 
+/* 2. SLIDER -> KÖZÉPRE LENT (A gombok közé) */
 body.scanning-mode .slider-wrapper {
-    display: flex !important; position: absolute; bottom: 0; left: 50%;
-    transform: translateX(-50%); background: rgba(30, 41, 59, 0.95); 
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid rgba(255, 255, 255, 0.2);
-    width: 200px; margin: 0; margin-bottom: 5px; pointer-events: auto;
+    /* Fontos: Scanning módban láthatónak kell lennie! */
+    display: flex !important; 
+    
+    position: absolute;
+    bottom: 0; /* Egy vonalban a gombbal */
+    left: 50%;
+    transform: translateX(-50%); /* Pontosan középre igazítás */
+    
+    background: rgba(30, 41, 59, 0.95); 
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    width: 200px; /* Kompakt szélesség */
+    margin: 0;
+    margin-bottom: 5px; /* Kicsit feljebb, hogy szép legyen */
+    pointer-events: auto;
 }
-body.scanning-mode input[type=range]::-webkit-slider-thumb { box-shadow: 0 0 15px var(--accent); }
+body.scanning-mode input[type=range]::-webkit-slider-thumb {
+    box-shadow: 0 0 15px var(--accent); 
+}
 
-body.scanning-mode .header, body.scanning-mode #resultsWrapper, 
-body.scanning-mode .footer-history, body.scanning-mode .load-msg,
-body.scanning-mode .no-result, body.scanning-mode .input-wrapper { display: none !important; }
+/* --- MŰKÖDÉSI OSZTÁLYOK --- */
+body.scanning-mode .header, 
+body.scanning-mode #resultsWrapper, 
+body.scanning-mode .footer-history,
+body.scanning-mode .load-msg,
+body.scanning-mode .no-result,
+body.scanning-mode .input-wrapper { display: none !important; }
 
 body.scanning-mode #reader {
-    display: block !important; position: fixed; top: 0; left: 0; 
-    width: 100vw !important; height: 100vh !important;
+    display: block !important;
+    position: fixed; top: 0; left: 0; width: 100vw !important; height: 100vh !important;
     max-width: none; margin: 0; border: none; border-radius: 0; z-index: 0;
 }
 body.scanning-mode #scanOverlay { display: flex; }
@@ -259,6 +302,7 @@ const historyList = document.getElementById('historyList');
 const loadMsg = document.getElementById('loadMsg');
 const readerDiv = document.getElementById('reader');
 const visualTarget = document.getElementById('visualTarget');
+
 const mainSlider = document.getElementById('mainSlider');
 const sliderContainer = document.getElementById('sliderContainer');
 const mainContent = document.querySelector('.main-content');
@@ -283,10 +327,13 @@ boxSizeSlider.addEventListener('input', (e) => {
     sliderValueDisplay.innerText = newVal + "px";
     localStorage.setItem('scanBoxSize', newVal);
     updateVisualTarget(newVal);
+
     if(isCameraRunning) {
         if(this.restartTimeout) clearTimeout(this.restartTimeout);
         this.restartTimeout = setTimeout(() => {
-            forceStopCamera().then(() => startCamera());
+            forceStopCamera().then(() => {
+                startCamera();
+            });
         }, 300);
     }
 });
@@ -314,6 +361,7 @@ async function loadBankCSV() {
         const lines = data.split('\n');
         const headers = lines[0].split(';');
         let modelIdx = headers.findIndex(h => h.trim().toLowerCase().includes('model'));
+
         lines.slice(1).forEach(line => {
             const cols = line.split(';');
             if (cols.length < 2) return;
@@ -343,6 +391,7 @@ input.addEventListener('keypress', (e) => {
 function search(code) {
     resultsWrapper.innerHTML = '';
     const matches = bankDB.filter(i => (code.includes(i.id) || i.id.includes(code)) && i.id.length > 2);
+
     if (matches.length > 0) {
         playSound(true);
         matches.forEach(m => {
@@ -350,12 +399,28 @@ function search(code) {
             card.className = 'result-card';
             card.innerHTML = `
                 <div class="res-grid">
-                    <div class="res-cell res-full"><span class="res-label">Modell</span><span class="res-value">${m.model}</span></div>
-                    <div class="res-cell"><span class="res-label">Gép</span><span class="res-value">${m.gep}</span></div>
-                    <div class="res-cell"><span class="res-label">Pozíció</span><span class="res-value res-highlight">#${m.poz}</span></div>
-                    <div class="res-cell"><span class="res-label">Azonosító (ID)</span><span class="res-value" style="font-size:0.9rem;">${m.id}</span></div>
-                    <div class="res-cell"><span class="res-label">MSD</span><span class="res-value res-ok">${m.msd}</span></div>
-                </div>`;
+                    <div class="res-cell res-full">
+                        <span class="res-label">Modell</span>
+                        <span class="res-value">${m.model}</span>
+                    </div>
+                    <div class="res-cell">
+                        <span class="res-label">Gép</span>
+                        <span class="res-value">${m.gep}</span>
+                    </div>
+                    <div class="res-cell">
+                        <span class="res-label">Pozíció</span>
+                        <span class="res-value res-highlight">#${m.poz}</span>
+                    </div>
+                    <div class="res-cell">
+                        <span class="res-label">Azonosító (ID)</span>
+                        <span class="res-value" style="font-size:0.9rem;">${m.id}</span>
+                    </div>
+                    <div class="res-cell">
+                        <span class="res-label">MSD</span>
+                        <span class="res-value res-ok">${m.msd}</span>
+                    </div>
+                </div>
+            `;
             resultsWrapper.appendChild(card);
         });
         saveToHistory(code, true);
@@ -367,17 +432,26 @@ function search(code) {
 }
 
 function handleCameraButton() {
-    resultsWrapper.innerHTML = ''; input.value = '';
-    if (isCameraRunning) { forceStopCamera(); } else { setTimeout(() => startCamera(), 200); }
+    resultsWrapper.innerHTML = ''; 
+    input.value = '';
+
+    if (isCameraRunning) {
+        forceStopCamera();
+    } else {
+        setTimeout(() => {
+            startCamera();
+        }, 200); 
+    }
 }
 
 function removeDefaultOverlay() {
     const unwanted = document.querySelectorAll('#html5-qrcode-anchor-scan-region, #reader__scan_region, #reader > div:not(video):not(canvas)');
-    unwanted.forEach(el => { el.style.display = 'none'; el.style.border = 'none'; });
+    unwanted.forEach(el => {
+        el.style.display = 'none'; el.style.border = 'none';
+    });
 }
 
-// --- INTELLIGENS KAMERA VÁLASZTÓ (JAVÍTOTT: Csak Back kamera!) ---
-async function startCamera() {
+function startCamera() {
     document.body.classList.add('scanning-mode');
     sliderContainer.appendChild(mainSlider);
     readerDiv.style.display = 'block';
@@ -387,93 +461,60 @@ async function startCamera() {
     }
 
     const currentBoxSize = parseInt(boxSizeSlider.value);
-    let config = { 
+    const config = { 
         fps: 25, 
         qrbox: { width: currentBoxSize, height: currentBoxSize }, 
         formatsToSupport: [ Html5QrcodeSupportedFormats.DATA_MATRIX ] 
     };
 
-    let specificDeviceId = null;
-    try {
-        const devices = await Html5Qrcode.getCameras();
-        if (devices && devices.length > 0) {
-            // SZIGORÚ SZŰRÉS: Csak akkor jó, ha benne van a "back" ÉS az "ultra" szó is.
-            // Ez kizárja az "Front Ultra Wide" kamerákat.
-            const ultraWideCam = devices.find(d => {
-                const label = d.label.toLowerCase();
-                return label.includes("back") && (label.includes("ultra") || label.includes("0.5"));
+    const constraints = { facingMode: "environment" };
+    
+    html5QrCode.start(
+        constraints, 
+        config,
+        (decodedText) => {
+            forceStopCamera().then(() => {
+                input.value = decodedText;
+                search(decodedText.trim().toUpperCase());
             });
-
-            if (ultraWideCam) {
-                specificDeviceId = ultraWideCam.id;
-                console.log("Hátsó Ultra Wide kamera kiválasztva:", ultraWideCam.label);
-            }
-        }
-    } catch (e) {
-        console.warn("Kamera lista hiba, fallback...", e);
-    }
-
-    let constraints;
-    if (specificDeviceId) {
-        constraints = { deviceId: { exact: specificDeviceId } };
-    } else {
-        // Ha nincs speciális találat, marad a biztonságos HÁTSÓ kamera
-        constraints = { facingMode: "environment" };
-    }
-
-    try {
-        await html5QrCode.start(
-            constraints, 
-            config,
-            (decodedText) => {
-                forceStopCamera().then(() => {
-                    input.value = decodedText;
-                    search(decodedText.trim().toUpperCase());
-                });
-            },
-            (errorMessage) => {}
-        );
+        },
+        (errorMessage) => {}
+    ).then(() => {
         isCameraRunning = true;
         cleanupInterval = setInterval(removeDefaultOverlay, 100);
-
-    } catch (err) {
-        console.error("Kamera indítás hiba, visszaváltás alapra...", err);
-        // Hiba esetén garantáltan a sima hátsó kamerát indítjuk
-        try {
-            await html5QrCode.start(
-                { facingMode: "environment" }, 
-                config,
-                (decodedText) => {
-                    forceStopCamera().then(() => {
-                        input.value = decodedText;
-                        search(decodedText.trim().toUpperCase());
-                    });
-                },
-                (errorMessage) => {}
-            );
-            isCameraRunning = true;
-            cleanupInterval = setInterval(removeDefaultOverlay, 100);
-        } catch (retryErr) {
-            alert("Kamera hiba! Frissítsd az oldalt.");
-            forceStopCamera();
-        }
-    }
+    }).catch(err => {
+        console.error("Kamera start hiba:", err);
+        forceStopCamera();
+        alert("Kamera hiba! Frissítsd az oldalt.");
+    });
 }
 
 function forceStopCamera() {
     return new Promise((resolve) => {
         if(cleanupInterval) clearInterval(cleanupInterval);
         if (html5QrCode) {
-            html5QrCode.stop().then(() => { html5QrCode.clear(); cleanupUI(); resolve(); })
-            .catch(err => { cleanupUI(); resolve(); });
-        } else { cleanupUI(); resolve(); }
+            html5QrCode.stop().then(() => {
+                html5QrCode.clear();
+                cleanupUI();
+                resolve();
+            }).catch(err => {
+                cleanupUI();
+                resolve();
+            });
+        } else {
+            cleanupUI();
+            resolve();
+        }
     });
 }
 
 function cleanupUI() {
     document.body.classList.remove('scanning-mode');
     mainContent.insertBefore(mainSlider, readerDiv);
-    html5QrCode = null; isCameraRunning = false; readerDiv.style.display = 'none';
+
+    html5QrCode = null;
+    isCameraRunning = false;
+    readerDiv.style.display = 'none';
 }
 
 function playSound(ok) {
@@ -484,11 +525,9 @@ function playSound(ok) {
 function saveToHistory(code, ok) {
     const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     let history = JSON.parse(localStorage.getItem('scanHistory') || '[]');
-    if(history.length === 0 || history[0].code !== code) {
-        history.unshift({ code, ok, time });
-        if(history.length > 30) history.pop();
-        localStorage.setItem('scanHistory', JSON.stringify(history));
-    }
+    history.unshift({ code, ok, time });
+    if(history.length > 30) history.pop();
+    localStorage.setItem('scanHistory', JSON.stringify(history));
     renderHistory();
 }
 
@@ -512,11 +551,16 @@ function clearHistory() {
 function checkAutoStart() {
     const urlParams = new URLSearchParams(window.location.search);
     if(urlParams.get('autostart') === 'true') {
-        setTimeout(() => { if(!isCameraRunning) { handleCameraButton(); } }, 500); 
+        setTimeout(() => {
+            if(!isCameraRunning) {
+                handleCameraButton();
+            }
+        }, 500); 
     }
 }
 
-init().then(() => { checkAutoStart(); });
+init().then(() => {
+    checkAutoStart();
+});
 </script>
 </body>
-</html>
