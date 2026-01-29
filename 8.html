@@ -82,7 +82,6 @@
             padding: 0 6px !important;
             box-shadow: 4px 0 8px rgba(0,0,0,0.3);
             box-sizing: border-box;
-            /* JAVÍTÁS: Eredeti állapot visszaállítása a mozgatáshoz */
             touch-action: none !important;
             -webkit-user-select: none;
             user-select: none;
@@ -415,6 +414,22 @@
         function changeMonth(v) { date.setMonth(date.getMonth() + v); render(); }
         function addEmp() { const n = prompt("Név:"); if(n) { employees.push({id:Date.now(), name:n, yearlyQuota:160, data:{}}); save(); render(); } }
         function delEmp(id) { if(confirm("Biztos törlöd?")) { employees = employees.filter(x => x.id != id); save(); render(); } }
+        
+        // AUTOMATIKUS GÖRGETÉS MOBILON (BILLENTYŰZET KEZELÉS)
+        // Ez az új rész, ami biztosítja, hogy a mező ne takaródjon ki
+        document.addEventListener('focusin', function(e) {
+            if (e.target && e.target.classList.contains('input-cell')) {
+                // Várunk 300ms-t, amíg a billentyűzet felcsúszik
+                setTimeout(function() {
+                    e.target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center', // Ez emeli a képernyő KÖZEPÉRE a mezőt
+                        inline: 'nearest'
+                    });
+                }, 300);
+            }
+        });
+
         window.onload = () => changeShift(currentShift);
     </script>
 </body>
