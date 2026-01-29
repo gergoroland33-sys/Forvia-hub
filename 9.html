@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Forvia Bank Scan Pro (Center Slider)</title>
+<title>Forvia Bank Scan Pro (Clean Menu)</title>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <style>
@@ -56,6 +56,13 @@ body {
     display: flex; flex-direction: column; gap: 5px;
     transition: all 0.3s ease;
 }
+
+/* ÚJ SZABÁLY: ELREJTJÜK A SLIDERT A FŐOLDALON */
+/* Amikor a .slider-wrapper a .main-content belsejében van, legyen láthatatlan */
+.main-content .slider-wrapper {
+    display: none !important;
+}
+
 .slider-header {
     display: flex; justify-content: space-between; align-items: center;
     font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;
@@ -117,7 +124,15 @@ input[type=text] {
 .history-header { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; }
 .history-title { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: bold; }
 .clear-btn { color: var(--err-color); font-size: 0.75rem; cursor: pointer; text-transform: uppercase; font-weight: bold; border: 1px solid var(--err-color); padding: 2px 8px; border-radius: 4px; }
-.h-item { display: flex; align-items: center; justify-content: flex-start; gap: 30px; padding: 8px 12px; margin-bottom: 6px; background: rgba(255,255,255,0.03); border-radius: 8px; font-size: 0.85rem; border-left: 3px solid #555; }
+.h-item { 
+    display: flex; align-items: center; justify-content: flex-start; gap: 30px; 
+    padding: 8px 12px; margin-bottom: 6px; 
+    background: rgba(255,255,255,0.03); border-radius: 8px; font-size: 0.85rem; 
+    border-left: 3px solid #555;
+    cursor: pointer; /* ÚJ: Jelzi hogy kattintható */
+    transition: background 0.2s;
+}
+.h-item:active { background: rgba(255,255,255,0.1); }
 .h-ok { border-left-color: var(--ok-color); }
 .h-err { border-left-color: var(--err-color); }
 .h-time { font-size: 0.75rem; color: #64748b; font-weight: bold; white-space: nowrap; }
@@ -178,6 +193,9 @@ body.scanning-mode .scan-btn.stop-btn {
 
 /* 2. SLIDER -> KÖZÉPRE LENT (A gombok közé) */
 body.scanning-mode .slider-wrapper {
+    /* Fontos: Scanning módban láthatónak kell lennie! */
+    display: flex !important; 
+    
     position: absolute;
     bottom: 0; /* Egy vonalban a gombbal */
     left: 50%;
@@ -516,7 +534,7 @@ function saveToHistory(code, ok) {
 function renderHistory() {
     const history = JSON.parse(localStorage.getItem('scanHistory') || '[]');
     historyList.innerHTML = history.map(item => `
-        <div class="h-item ${item.ok ? 'h-ok' : 'h-err'}">
+        <div class="h-item ${item.ok ? 'h-ok' : 'h-err'}" onclick="search('${item.code}')">
             <span class="h-time">${item.time}</span>
             <span><b>${item.code}</b></span>
         </div>
