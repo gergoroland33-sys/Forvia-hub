@@ -173,7 +173,7 @@
 <body>
 
     <header class="no-print">
-        <h1>🏭 SMT Monitor <span style="font-size:0.8em; opacity:0.8; font-weight:normal;">| Live</span></h1>
+        <h1>🏭 SMT Monitor <span style="font-size:0.8em; opacity:0.8; font-weight:normal;">| Élő</span></h1>
         <div class="controls">
             <select id="lineSelector" onchange="renderDashboard()">
                 <option value="F04">SOR: F04</option>
@@ -289,14 +289,15 @@
                 let errorCount = 0;
                 Object.keys(lineErrors).forEach(k => { if(k.includes(`M${m.id}_`)) errorCount++; });
                 
+                // ITT TÖRTÉNT A VÁLTOZTATÁS (Side -> Oldal)
                 card.innerHTML = `
                     <div class="machine-header">
                         <span>Gép #${m.id}</span>
                         <span style="${errorCount > 0 ? 'color:var(--danger)' : 'color:var(--success)'}">${errorCount > 0 ? '⚠️' : '✅'} ${errorCount} hiba</span>
                     </div>
                     <div class="machine-body">
-                        <div class="side-col"><div class="side-label">Side 1</div>${generateGridHTML(line, m.id, 1, m.s1, lineErrors)}</div>
-                        <div class="side-col" style="border-left:1px solid #eee;"><div class="side-label">Side 2</div>${generateGridHTML(line, m.id, 2, m.s2, lineErrors)}</div>
+                        <div class="side-col"><div class="side-label">1. Oldal</div>${generateGridHTML(line, m.id, 1, m.s1, lineErrors)}</div>
+                        <div class="side-col" style="border-left:1px solid #eee;"><div class="side-label">2. Oldal</div>${generateGridHTML(line, m.id, 2, m.s2, lineErrors)}</div>
                     </div>`;
                 container.appendChild(card);
             });
@@ -316,7 +317,8 @@
             currentSelection = { line, key, mId, side, nId };
             const error = (globalData[line] || {})[key];
             document.getElementById('modalTitle').innerText = error ? 'Hiba Szerkesztése' : 'Hiba Bejelentése';
-            document.getElementById('modalSubtitle').innerText = `${line} / Gép ${mId} / S${side} / N${nId}`;
+            // Itt is magyarítva, hogy S1 helyett Oldal 1 legyen a feliratban
+            document.getElementById('modalSubtitle').innerText = `${line} / Gép ${mId} / ${side}. Oldal / Nozzle ${nId}`;
             
             document.getElementById('errorReason').value = 'Nozzle kicsúszott';
             document.getElementById('otherInputContainer').style.display = 'none';
@@ -376,9 +378,13 @@
                 const err = errors[k];
                 const parts = k.split('_'); // M1, S1, N1
                 const mId = parts[0].replace('M','');
+                const sideNum = parts[1].replace('S','');
+                const nozzleNum = parts[2].replace('N','');
+                
                 reasons[err.reason] = (reasons[err.reason] || 0) + 1;
                 mCounts[mId]++;
-                tbody.innerHTML += `<tr><td>Gép ${mId}</td><td>${parts[1]}/${parts[2]}</td><td><strong>${err.reason}</strong></td><td>${new Date(err.timestamp).toLocaleTimeString()}</td></tr>`;
+                // Riportban is magyarítottam: Oldal/Pozíció
+                tbody.innerHTML += `<tr><td>Gép ${mId}</td><td>${sideNum}. Oldal / ${nozzleNum}</td><td><strong>${err.reason}</strong></td><td>${new Date(err.timestamp).toLocaleTimeString()}</td></tr>`;
             });
 
             const pList = document.getElementById('predictionList');
