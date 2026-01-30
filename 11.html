@@ -28,7 +28,6 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            /* A fejléc fix marad */
             position: sticky;
             top: 0;
             z-index: 100;
@@ -47,7 +46,7 @@
         .controls { display: flex; gap: 10px; align-items: center; }
         select { padding: 8px 15px; border-radius: 20px; border: none; font-weight: 600; cursor: pointer; outline: none; background: white; color: var(--primary); }
 
-        /* --- NAVIGATION TABS (RÖGZÍTVE) --- */
+        /* --- NAVIGATION TABS --- */
         .nav-tabs {
             display: flex;
             justify-content: center;
@@ -55,9 +54,8 @@
             padding: 10px 0;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             margin-bottom: 20px;
-            /* RÖGZÍTÉS */
             position: sticky;
-            top: 73px; /* A fejléc magassága alá tapad */
+            top: 73px; 
             z-index: 90;
         }
         .nav-btn {
@@ -76,7 +74,6 @@
         @media (max-width: 900px) {
             .stats-charts { grid-template-columns: 1fr; }
             .controls { flex-direction: column; align-items: flex-end; }
-            /* Mobilon a sticky top érték igazítása, ha a fejléc kisebb */
             .nav-tabs { top: 85px; } 
         }
 
@@ -121,7 +118,6 @@
         .status-off { background: #fadbd8; color: #c0392b; }
         .status-on { background: #d5f5e3; color: #27ae60; }
 
-        /* Törlés gomb stílus */
         .btn-delete {
             background: #e74c3c; color: white; border: none; width: 25px; height: 25px;
             border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -148,7 +144,7 @@
             .no-print { display: none !important; }
             .chart-container { page-break-inside: avoid; border: 1px solid #ccc; height: auto; }
             .stats-charts { grid-template-columns: 1fr 1fr !important; }
-            .btn-delete { display: none; } /* Nyomtatásban ne látszódjon a törlés gomb */
+            .btn-delete { display: none; }
         }
     </style>
 </head>
@@ -168,6 +164,7 @@
                 <option value="F05">SOR: F05</option>
                 <option value="F06">SOR: F06</option>
                 <option value="F08">SOR: F08</option>
+                <option value="ALL" id="opt-all" hidden style="font-weight:bold; color:#2c3e50;">--- ÖSSZES GÉPSOR ---</option>
             </select>
         </div>
     </header>
@@ -213,7 +210,7 @@
                         <tr>
                             <th>Időpont</th>
                             <th>Típus</th>
-                            <th>Hely</th>
+                            <th>Hely (Sor / Gép)</th>
                             <th>Hiba oka / Megjegyzés</th>
                             <th class="no-print">Művelet</th>
                         </tr>
@@ -296,12 +293,30 @@
         let chart1 = null;
         let chart2 = null;
 
-        // --- NÉZETVÁLTÁS ---
+        // --- NÉZETVÁLTÁS ÉS OPCIÓ KEZELÉS ---
         window.switchTab = function(tabName) {
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             document.querySelectorAll('.view-section').forEach(div => div.classList.remove('active'));
             document.getElementById(`view-${tabName}`).classList.add('active');
+
+            // --- DINAMIKUS "ÖSSZES" OPCIÓ KEZELÉSE ---
+            const allOption = document.getElementById('opt-all');
+            const selector = document.getElementById('lineSelector');
+
+            if (tabName === 'monitor') {
+                // Élő Monitor: elrejtjük az Összes opciót
+                allOption.hidden = true;
+                // Ha véletlenül az ALL volt kiválasztva, visszadobjuk F04-re
+                if(selector.value === 'ALL') {
+                    selector.value = 'F04';
+                    renderDashboard(); // Frissítjük a nézetet
+                }
+            } else {
+                // Statisztika: megjelenítjük az Összes opciót
+                allOption.hidden = false;
+            }
+
             if(tabName === 'history') loadHistoryData();
         }
 
@@ -322,6 +337,8 @@
             const line = document.getElementById('lineSelector').value;
             const container = document.getElementById('dashboard');
             container.innerHTML = '';
+
+            // Itt már nem kell ALL ellenőrzés, mert a switchTab elintézi, hogy ne lehessen kiválasztani
             const lineErrors = globalData[line] || {};
 
             machines.forEach(m => {
@@ -358,7 +375,6 @@
             currentSelection = { line, key, mId, side, nId };
             const error = (globalData[line] || {})[key];
             document.getElementById('modalTitle').innerText = error ? 'Hiba Szerkesztése' : 'Hiba Bejelentése';
-            // Itt is "Nozzle"-ra cserélve
             document.getElementById('modalSubtitle').innerText = `${line} / Gép ${mId} / ${side}. Oldal / Nozzle ${nId}`;
             document.getElementById('errorReason').value = 'Nozzle kicsúszott';
             document.getElementById('otherInputContainer').style.display = 'none';
@@ -397,50 +413,62 @@
             }).then(() => window.closeModal());
         }
 
-        // --- LOG TÖRLÉSE (ÚJ FUNKCIÓ) ---
+        // --- LOG TÖRLÉSE ---
         window.deleteLog = function(line, logId) {
             if(confirm("⚠️ Biztosan végleg törölni szeretnéd ezt a bejegyzést a naplóból?")) {
                 remove(ref(db, `smt_logs/${line}/${logId}`))
                 .then(() => {
-                    loadHistoryData(); // Frissítés törlés után
+                    loadHistoryData(); 
                 })
                 .catch(e => alert("Hiba a törlésnél: " + e.message));
             }
         }
 
-        // --- STATISZTIKA ---
+        // --- STATISZTIKA (ÖSSZESÍTŐ LOGIKÁVAL) ---
         window.loadHistoryData = async function() {
             const line = document.getElementById('lineSelector').value;
-            document.getElementById('statsLineTitle').innerText = line;
-            const snapshot = await get(child(ref(db), `smt_logs/${line}`));
+            document.getElementById('statsLineTitle').innerText = (line === 'ALL') ? "ÖSSZES GÉPSOR" : line;
             
-            // Itt kell az ID is a törléshez, ezért Object.entries-t használunk
-            const entries = snapshot.exists() ? Object.entries(snapshot.val()) : [];
-            // Rendezés idő szerint
-            entries.sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp));
+            let allEntries = [];
+            const linesToList = (line === 'ALL') ? ["F04", "F05", "F06", "F08"] : [line];
+
+            const snapshotRoot = await get(child(ref(db), `smt_logs`));
+            const rootData = snapshotRoot.exists() ? snapshotRoot.val() : {};
+
+            linesToList.forEach(currLine => {
+                if(rootData[currLine]) {
+                    Object.entries(rootData[currLine]).forEach(([logId, log]) => {
+                        allEntries.push({ ...log, _line: currLine, _id: logId });
+                    });
+                }
+            });
+
+            allEntries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
             const tbody = document.getElementById('historyTableBody');
             tbody.innerHTML = '';
             let reasons = {};
             let mCounts = {1:0, 2:0, 3:0, 4:0};
 
-            entries.forEach(([key, log]) => {
+            allEntries.forEach(log => {
                 const dateStr = new Date(log.timestamp).toLocaleString('hu-HU');
                 const isError = log.type === 'DISABLE';
+                
                 if(isError) {
                     reasons[log.reason] = (reasons[log.reason] || 0) + 1;
                     mCounts[log.machineId] = (mCounts[log.machineId] || 0) + 1;
                 }
                 
-                // Itt írtam át N-ről Nozzle-re és adtam hozzá a törlés gombot
+                const locationPrefix = (line === 'ALL') ? `<strong style="color:#3498db;">[${log._line}]</strong> ` : '';
+
                 tbody.innerHTML += `
                     <tr>
                         <td>${dateStr}</td>
                         <td><span class="status-badge ${isError ? 'status-off' : 'status-on'}">${isError ? 'LEÁLLÍTÁS' : 'ÚJRAINDÍTÁS'}</span></td>
-                        <td>Gép ${log.machineId} / ${log.side}. Old / Nozzle ${log.nozzle}</td>
+                        <td>${locationPrefix}Gép ${log.machineId} / ${log.side}. Old / Nozzle ${log.nozzle}</td>
                         <td>${log.reason}</td>
                         <td class="no-print" style="text-align:center;">
-                            <button class="btn-delete" onclick="window.deleteLog('${line}', '${key}')" title="Bejegyzés törlése">✕</button>
+                            <button class="btn-delete" onclick="window.deleteLog('${log._line}', '${log._id}')" title="Bejegyzés törlése">✕</button>
                         </td>
                     </tr>`;
             });
@@ -450,7 +478,7 @@
 
             chart1 = new Chart(document.getElementById('chartReasons'), {
                 type: 'doughnut',
-                data: { labels: Object.keys(reasons), datasets: [{ data: Object.values(reasons), backgroundColor: ['#e74c3c','#3498db','#f1c40f', '#9b59b6'] }] },
+                data: { labels: Object.keys(reasons), datasets: [{ data: Object.values(reasons), backgroundColor: ['#e74c3c','#3498db','#f1c40f', '#9b59b6', '#34495e'] }] },
                 options: { responsive: true, maintainAspectRatio: false }
             });
 
