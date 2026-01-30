@@ -19,7 +19,7 @@
 
         body { font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; background-color: var(--bg); margin: 0; padding: 0; color: #333; }
 
-        /* --- HEADER & STATUS --- */
+        /* --- HEADER --- */
         header {
             background: linear-gradient(135deg, var(--primary), var(--accent));
             color: white;
@@ -28,33 +28,26 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            /* A fejléc fix marad */
             position: sticky;
             top: 0;
             z-index: 100;
         }
         .header-left h1 { margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
         
-        /* Kapcsolat indikátor */
         .connection-status {
-            font-size: 0.75rem;
-            background: rgba(0,0,0,0.2);
-            padding: 4px 8px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-top: 4px;
+            font-size: 0.75rem; background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 12px;
+            display: flex; align-items: center; gap: 6px; margin-top: 4px;
         }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #ccc; }
         .status-dot.online { background-color: #2ecc71; box-shadow: 0 0 8px #2ecc71; animation: blink 2s infinite; }
         .status-dot.offline { background-color: #e74c3c; }
-        
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
         .controls { display: flex; gap: 10px; align-items: center; }
         select { padding: 8px 15px; border-radius: 20px; border: none; font-weight: 600; cursor: pointer; outline: none; background: white; color: var(--primary); }
 
-        /* --- NAVIGATION TABS --- */
+        /* --- NAVIGATION TABS (RÖGZÍTVE) --- */
         .nav-tabs {
             display: flex;
             justify-content: center;
@@ -62,6 +55,10 @@
             padding: 10px 0;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             margin-bottom: 20px;
+            /* RÖGZÍTÉS */
+            position: sticky;
+            top: 73px; /* A fejléc magassága alá tapad */
+            z-index: 90;
         }
         .nav-btn {
             background: transparent; border: none; padding: 10px 20px; font-size: 16px; font-weight: bold;
@@ -70,29 +67,17 @@
         .nav-btn.active { color: var(--accent); border-bottom: 3px solid var(--accent); }
         .nav-btn:hover { color: var(--primary); }
 
-        /* --- VIEWS & RESPONSIVE LAYOUT --- */
+        /* --- LAYOUT --- */
         .view-section { display: none; padding: 20px; max-width: 1600px; margin: 0 auto; }
         .view-section.active { display: block; }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        /* Statisztika Reszponzivitás */
-        .stats-charts { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; /* Alapból egymás mellett */
-            gap: 20px; 
-            margin-bottom: 30px; 
-        }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .stats-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
 
         @media (max-width: 900px) {
-            .stats-charts { grid-template-columns: 1fr; } /* Telefonon egymás alatt */
+            .stats-charts { grid-template-columns: 1fr; }
             .controls { flex-direction: column; align-items: flex-end; }
-            h1 { font-size: 1rem; }
-            .nav-btn { font-size: 14px; padding: 8px 10px; }
+            /* Mobilon a sticky top érték igazítása, ha a fejléc kisebb */
+            .nav-tabs { top: 85px; } 
         }
 
         /* --- MACHINE CARD --- */
@@ -109,7 +94,6 @@
         .nozzle-grid { display: grid; gap: 6px; width: 100%; }
         .grid-15 { grid-template-columns: repeat(3, 1fr); }
         .grid-3 { grid-template-columns: 1fr; }
-
         .nozzle-btn {
             background: #ecf0f1; border: 1px solid #bdc3c7; border-radius: 6px; cursor: pointer;
             font-weight: bold; color: #7f8c8d; transition: all 0.2s; display: flex; align-items: center; justify-content: center;
@@ -123,20 +107,27 @@
         }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); } 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
 
-        /* --- HISTORY / STATS VIEW --- */
+        /* --- STATS & TABLE --- */
         .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .btn-print { background: var(--primary); color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; display: flex; align-items: center; gap: 8px; }
-        
         .chart-container { background: white; padding: 20px; border-radius: 8px; box-shadow: var(--shadow); height: 300px; position: relative; }
+        .history-table-container { background: white; padding: 20px; border-radius: 8px; box-shadow: var(--shadow); overflow-x: auto; }
         
-        .history-table-container { background: white; padding: 20px; border-radius: 8px; box-shadow: var(--shadow); overflow-x: auto; /* Görgetés mobilon */ }
-        .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 600px; /* Minimum szélesség, hogy ne nyomódjon össze */ }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 600px; }
         .data-table th { background: #f1f2f6; padding: 12px; text-align: left; border-bottom: 2px solid #ddd; }
         .data-table td { padding: 10px; border-bottom: 1px solid #eee; }
         
         .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: bold; white-space: nowrap; }
         .status-off { background: #fadbd8; color: #c0392b; }
         .status-on { background: #d5f5e3; color: #27ae60; }
+
+        /* Törlés gomb stílus */
+        .btn-delete {
+            background: #e74c3c; color: white; border: none; width: 25px; height: 25px;
+            border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; transition: background 0.2s;
+        }
+        .btn-delete:hover { background: #c0392b; }
 
         /* --- MODAL --- */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; backdrop-filter: blur(3px); justify-content: center; align-items: center; }
@@ -156,7 +147,8 @@
             #history-content { position: absolute; left: 0; top: 0; width: 100%; }
             .no-print { display: none !important; }
             .chart-container { page-break-inside: avoid; border: 1px solid #ccc; height: auto; }
-            .stats-charts { grid-template-columns: 1fr 1fr !important; } /* Nyomtatáskor legyen egymás mellett */
+            .stats-charts { grid-template-columns: 1fr 1fr !important; }
+            .btn-delete { display: none; } /* Nyomtatásban ne látszódjon a törlés gomb */
         }
     </style>
 </head>
@@ -223,6 +215,7 @@
                             <th>Típus</th>
                             <th>Hely</th>
                             <th>Hiba oka / Megjegyzés</th>
+                            <th class="no-print">Művelet</th>
                         </tr>
                     </thead>
                     <tbody id="historyTableBody">
@@ -276,9 +269,8 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- KAPCSOLAT FIGYELÉSE (AUTO MENTÉS STATUS) ---
-        const connectedRef = ref(db, ".info/connected");
-        onValue(connectedRef, (snap) => {
+        // --- KAPCSOLAT FIGYELÉSE ---
+        onValue(ref(db, ".info/connected"), (snap) => {
             const statusDot = document.getElementById("statusDot");
             const statusText = document.getElementById("statusText");
             if (snap.val() === true) {
@@ -366,6 +358,7 @@
             currentSelection = { line, key, mId, side, nId };
             const error = (globalData[line] || {})[key];
             document.getElementById('modalTitle').innerText = error ? 'Hiba Szerkesztése' : 'Hiba Bejelentése';
+            // Itt is "Nozzle"-ra cserélve
             document.getElementById('modalSubtitle').innerText = `${line} / Gép ${mId} / ${side}. Oldal / Nozzle ${nId}`;
             document.getElementById('errorReason').value = 'Nozzle kicsúszott';
             document.getElementById('otherInputContainer').style.display = 'none';
@@ -404,27 +397,52 @@
             }).then(() => window.closeModal());
         }
 
+        // --- LOG TÖRLÉSE (ÚJ FUNKCIÓ) ---
+        window.deleteLog = function(line, logId) {
+            if(confirm("⚠️ Biztosan végleg törölni szeretnéd ezt a bejegyzést a naplóból?")) {
+                remove(ref(db, `smt_logs/${line}/${logId}`))
+                .then(() => {
+                    loadHistoryData(); // Frissítés törlés után
+                })
+                .catch(e => alert("Hiba a törlésnél: " + e.message));
+            }
+        }
+
         // --- STATISZTIKA ---
         window.loadHistoryData = async function() {
             const line = document.getElementById('lineSelector').value;
             document.getElementById('statsLineTitle').innerText = line;
             const snapshot = await get(child(ref(db), `smt_logs/${line}`));
-            const logs = snapshot.exists() ? Object.values(snapshot.val()) : [];
-            logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            // Itt kell az ID is a törléshez, ezért Object.entries-t használunk
+            const entries = snapshot.exists() ? Object.entries(snapshot.val()) : [];
+            // Rendezés idő szerint
+            entries.sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp));
 
             const tbody = document.getElementById('historyTableBody');
             tbody.innerHTML = '';
             let reasons = {};
             let mCounts = {1:0, 2:0, 3:0, 4:0};
 
-            logs.forEach(log => {
+            entries.forEach(([key, log]) => {
                 const dateStr = new Date(log.timestamp).toLocaleString('hu-HU');
                 const isError = log.type === 'DISABLE';
                 if(isError) {
                     reasons[log.reason] = (reasons[log.reason] || 0) + 1;
                     mCounts[log.machineId] = (mCounts[log.machineId] || 0) + 1;
                 }
-                tbody.innerHTML += `<tr><td>${dateStr}</td><td><span class="status-badge ${isError ? 'status-off' : 'status-on'}">${isError ? 'LEÁLLÍTÁS' : 'ÚJRAINDÍTÁS'}</span></td><td>Gép ${log.machineId} / ${log.side}. Old / N${log.nozzle}</td><td>${log.reason}</td></tr>`;
+                
+                // Itt írtam át N-ről Nozzle-re és adtam hozzá a törlés gombot
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${dateStr}</td>
+                        <td><span class="status-badge ${isError ? 'status-off' : 'status-on'}">${isError ? 'LEÁLLÍTÁS' : 'ÚJRAINDÍTÁS'}</span></td>
+                        <td>Gép ${log.machineId} / ${log.side}. Old / Nozzle ${log.nozzle}</td>
+                        <td>${log.reason}</td>
+                        <td class="no-print" style="text-align:center;">
+                            <button class="btn-delete" onclick="window.deleteLog('${line}', '${key}')" title="Bejegyzés törlése">✕</button>
+                        </td>
+                    </tr>`;
             });
 
             if(chart1) chart1.destroy();
