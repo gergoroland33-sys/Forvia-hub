@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+l<!DOCTYPE html>
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
@@ -157,16 +157,19 @@
             }
             .no-print { display: none !important; }
         }
-        .report-page { width: 210mm; height: 290mm; margin: auto; background: white; display: flex; flex-direction: column; gap: 20px; }
+        .report-page { width: 210mm; min-height: 290mm; margin: auto; background: white; display: flex; flex-direction: column; gap: 20px; }
         .report-header { border-bottom: 4px solid var(--primary); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-end; }
         .report-title { font-size: 24px; font-weight: bold; color: var(--primary); }
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-        .stat-box { border: 1px solid #eee; padding: 15px; border-radius: 8px; }
+        .stat-box { border: 1px solid #eee; padding: 15px; border-radius: 8px; page-break-inside: avoid; }
         .stat-title { font-weight: bold; color: var(--accent); margin-bottom: 10px; border-bottom: 1px solid #eee; }
-        .prediction-box { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 15px; border-radius: 8px; font-size: 0.9rem; }
-        .table-compact { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .prediction-box { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 15px; border-radius: 8px; font-size: 0.9rem; page-break-inside: avoid; }
+        
+        .table-compact { width: 100%; border-collapse: collapse; font-size: 11px; }
         .table-compact th { background: #f8f9fa; text-align: left; padding: 5px; border-bottom: 2px solid #ddd; }
-        .table-compact td { padding: 5px; border-bottom: 1px solid #eee; }
+        .table-compact td { padding: 4px; border-bottom: 1px solid #eee; }
+        .badge-off { color: #e74c3c; font-weight: bold; }
+        .badge-on { color: #27ae60; font-weight: bold; }
 
     </style>
 </head>
@@ -181,7 +184,7 @@
                 <option value="F06">SOR: F06</option>
                 <option value="F08">SOR: F08</option>
             </select>
-            <button class="btn-report" onclick="generateReport()">📊 Statisztika & Print</button>
+            <button class="btn-report" onclick="generateReport()">📊 Teljes Napló & Print</button>
         </div>
     </header>
 
@@ -218,33 +221,53 @@
         <div class="report-page">
             <div class="report-header">
                 <div>
-                    <div class="report-title">SMT Sor Statisztika</div>
+                    <div class="report-title">SMT Eseménynapló & Riport</div>
                     <div style="font-size:16px; margin-top:5px;">Sor: <span id="reportLineName">F04</span></div>
                 </div>
                 <div class="report-meta">
-                    Dátum: <span id="reportDate"></span><br>Generálta: SMT Monitor System
+                    Lekérdezés ideje: <span id="reportDate"></span><br>Rendszer: SMT Monitor Pro
                 </div>
             </div>
+            
             <div class="stats-grid">
-                <div class="stat-box"><div class="stat-title">Hibák eloszlása</div><canvas id="chartReasons"></canvas></div>
-                <div class="stat-box"><div class="stat-title">Legkritikusabb Gépek</div><canvas id="chartMachines"></canvas></div>
+                <div class="stat-box">
+                    <div class="stat-title">Hibák Eloszlása (Összesített)</div>
+                    <canvas id="chartReasons"></canvas>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-title">Legkritikusabb Gépek</div>
+                    <canvas id="chartMachines"></canvas>
+                </div>
             </div>
+
+            <div class="prediction-box">
+                <strong>🤖 Elemzés:</strong>
+                <ul id="predictionList" style="margin:5px 0 0 20px; padding:0;"></ul>
+            </div>
+
             <div class="stat-box">
-                <div class="stat-title">Aktuális Leállások</div>
+                <div class="stat-title">Részletes Eseménynapló (History Log)</div>
                 <table class="table-compact">
-                    <thead><tr><th>Gép</th><th>Pozíció</th><th>Hiba Oka</th><th>Időpont</th></tr></thead>
-                    <tbody id="reportTableBody"></tbody>
+                    <thead>
+                        <tr>
+                            <th>Időpont</th>
+                            <th>Esemény</th>
+                            <th>Gép</th>
+                            <th>Pozíció</th>
+                            <th>Hiba Oka / Megjegyzés</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportTableBody">
+                        </tbody>
                 </table>
             </div>
-            <div class="prediction-box"><strong>🤖 Elemzés:</strong><ul id="predictionList" style="margin:5px 0 0 20px; padding:0;"></ul></div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, set, onValue, remove, push, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // --- AZ ADATAID BEILLESZTVE ---
         const firebaseConfig = {
             apiKey: "AIzaSyBL1VWdfWW2d_GEWL2Jen1qX5PCvBcsV4s",
             authDomain: "smt-monitor-ad310.firebaseapp.com",
@@ -255,7 +278,6 @@
             appId: "1:841387955927:web:0c36a1e1ca5d975d11c292"
         };
 
-        // Start App
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
@@ -269,7 +291,7 @@
         let globalData = {};
         let currentSelection = null;
 
-        // VALÓS IDEJŰ FIGYELÉS
+        // VALÓS IDEJŰ FIGYELÉS (Csak az aktív hibák)
         const dbRef = ref(db, 'smt_errors');
         onValue(dbRef, (snapshot) => {
             const data = snapshot.val();
@@ -289,7 +311,6 @@
                 let errorCount = 0;
                 Object.keys(lineErrors).forEach(k => { if(k.includes(`M${m.id}_`)) errorCount++; });
                 
-                // ITT TÖRTÉNT A VÁLTOZTATÁS (Side -> Oldal)
                 card.innerHTML = `
                     <div class="machine-header">
                         <span>Gép #${m.id}</span>
@@ -317,7 +338,6 @@
             currentSelection = { line, key, mId, side, nId };
             const error = (globalData[line] || {})[key];
             document.getElementById('modalTitle').innerText = error ? 'Hiba Szerkesztése' : 'Hiba Bejelentése';
-            // Itt is magyarítva, hogy S1 helyett Oldal 1 legyen a feliratban
             document.getElementById('modalSubtitle').innerText = `${line} / Gép ${mId} / ${side}. Oldal / Nozzle ${nId}`;
             
             document.getElementById('errorReason').value = 'Nozzle kicsúszott';
@@ -343,66 +363,117 @@
                 document.getElementById('errorReason').value === 'Egyéb' ? 'block' : 'none';
         }
 
+        // --- ÚJ MENTÉSI LOGIKA (LOGOLÁSSAL) ---
         window.saveError = function() {
             if(!currentSelection) return;
             let reason = document.getElementById('errorReason').value;
             if(reason === 'Egyéb') reason = document.getElementById('otherReasonText').value;
             
-            const path = `smt_errors/${currentSelection.line}/${currentSelection.key}`;
-            set(ref(db, path), { reason: reason, timestamp: new Date().toISOString() })
-                .then(() => window.closeModal())
-                .catch(e => alert("Hiba: " + e.message));
+            const timestamp = new Date().toISOString();
+            
+            // 1. Mentés az aktív hibák közé (Realtime View)
+            const pathError = `smt_errors/${currentSelection.line}/${currentSelection.key}`;
+            set(ref(db, pathError), { reason: reason, timestamp: timestamp });
+
+            // 2. Mentés a TÖRTÉNETI NAPLÓBA (History Log)
+            const pathLog = `smt_logs/${currentSelection.line}`;
+            push(ref(db, pathLog), {
+                type: 'DISABLE',
+                machineId: currentSelection.mId,
+                side: currentSelection.side,
+                nozzle: currentSelection.nId,
+                reason: reason,
+                timestamp: timestamp
+            });
+
+            window.closeModal();
         }
 
         window.resetNozzle = function() {
             if(!currentSelection) return;
-            remove(ref(db, `smt_errors/${currentSelection.line}/${currentSelection.key}`))
-                .then(() => window.closeModal());
+            const timestamp = new Date().toISOString();
+
+            // 1. Törlés az aktív hibák közül
+            remove(ref(db, `smt_errors/${currentSelection.line}/${currentSelection.key}`));
+
+            // 2. Bejegyzés a NAPLÓBA (Visszakapcsolás)
+            const pathLog = `smt_logs/${currentSelection.line}`;
+            push(ref(db, pathLog), {
+                type: 'ENABLE',
+                machineId: currentSelection.mId,
+                side: currentSelection.side,
+                nozzle: currentSelection.nId,
+                reason: 'Visszakapcsolva (OK)',
+                timestamp: timestamp
+            }).then(() => window.closeModal());
         }
 
-        // REPORT
+        // --- STATISZTIKA ÉS NAPLÓ GENERÁLÁS ---
         let reasonChart, machineChart;
-        window.generateReport = function() {
+        
+        window.generateReport = async function() {
             const line = document.getElementById('lineSelector').value;
-            const errors = globalData[line] || {};
-            const keys = Object.keys(errors);
-
             document.getElementById('reportLineName').innerText = line;
             document.getElementById('reportDate').innerText = new Date().toLocaleString('hu-HU');
+
+            // Adatok lekérése a LOG-ból (nem csak az aktuális hibákból)
+            const snapshot = await get(child(ref(db), `smt_logs/${line}`));
+            const logs = snapshot.exists() ? Object.values(snapshot.val()) : [];
             
+            // Rendezés: Legfrissebb elől
+            logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
             const tbody = document.getElementById('reportTableBody');
             tbody.innerHTML = '';
-            let reasons = {}, mCounts = {1:0, 2:0, 3:0, 4:0};
+            
+            let reasons = {};
+            let mCounts = {1:0, 2:0, 3:0, 4:0};
+            let totalErrors = 0;
 
-            keys.forEach(k => {
-                const err = errors[k];
-                const parts = k.split('_'); // M1, S1, N1
-                const mId = parts[0].replace('M','');
-                const sideNum = parts[1].replace('S','');
-                const nozzleNum = parts[2].replace('N','');
+            logs.forEach(log => {
+                const dateObj = new Date(log.timestamp);
+                const timeStr = dateObj.toLocaleString('hu-HU');
+                const isError = log.type === 'DISABLE';
                 
-                reasons[err.reason] = (reasons[err.reason] || 0) + 1;
-                mCounts[mId]++;
-                // Riportban is magyarítottam: Oldal/Pozíció
-                tbody.innerHTML += `<tr><td>Gép ${mId}</td><td>${sideNum}. Oldal / ${nozzleNum}</td><td><strong>${err.reason}</strong></td><td>${new Date(err.timestamp).toLocaleTimeString()}</td></tr>`;
+                // Csak a hibákat számoljuk a grafikonhoz
+                if(isError) {
+                    reasons[log.reason] = (reasons[log.reason] || 0) + 1;
+                    mCounts[log.machineId] = (mCounts[log.machineId] || 0) + 1;
+                    totalErrors++;
+                }
+
+                const badgeClass = isError ? 'badge-off' : 'badge-on';
+                const eventText = isError ? 'KIKAPCSOLÁS' : 'VISSZAKAPCSOLÁS';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${timeStr}</td>
+                        <td class="${badgeClass}">${eventText}</td>
+                        <td>Gép ${log.machineId}</td>
+                        <td>${log.side}. Oldal / ${log.nozzle}</td>
+                        <td>${log.reason}</td>
+                    </tr>
+                `;
             });
 
+            // Elemzés szöveg
             const pList = document.getElementById('predictionList');
-            pList.innerHTML = keys.length === 0 ? '<li>✅ Nincs hiba.</li>' : '';
-            if(reasons['PickUp Hiba'] > 2) pList.innerHTML += '<li style="color:#d35400">⚠️ Magas PickUp hiba: Vákuum ellenőrzés!</li>';
-            for(let m in mCounts) if(mCounts[m]>3) pList.innerHTML += `<li>🔴 Gép ${m} kritikus!</li>`;
-
+            pList.innerHTML = logs.length === 0 ? '<li>✅ Nincs rögzített adat a naplóban.</li>' : '';
+            if(reasons['PickUp Hiba'] > 5) pList.innerHTML += '<li style="color:#d35400">⚠️ Sok a PickUp hiba a naplóban: Vákuum ellenőrzés javasolt!</li>';
+            
+            // Grafikonok
             if(reasonChart) reasonChart.destroy();
             if(machineChart) machineChart.destroy();
 
             reasonChart = new Chart(document.getElementById('chartReasons'), {
                 type: 'doughnut',
-                data: { labels: Object.keys(reasons), datasets: [{ data: Object.values(reasons), backgroundColor: ['#e74c3c','#3498db','#f1c40f'] }] }
+                data: { labels: Object.keys(reasons), datasets: [{ data: Object.values(reasons), backgroundColor: ['#e74c3c','#3498db','#f1c40f', '#9b59b6'] }] }
             });
             machineChart = new Chart(document.getElementById('chartMachines'), {
                 type: 'bar',
-                data: { labels: ['Gép 1','Gép 2','Gép 3','Gép 4'], datasets: [{ label:'Hibák', data: Object.values(mCounts), backgroundColor:'#2ecc71' }] }
+                data: { labels: ['Gép 1','Gép 2','Gép 3','Gép 4'], datasets: [{ label:'Összes Hiba', data: Object.values(mCounts), backgroundColor:'#2ecc71' }] }
             });
+
             setTimeout(() => window.print(), 500);
         }
     </script>
