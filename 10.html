@@ -206,8 +206,17 @@
         heroContainer.innerHTML = '';
         listContainer.innerHTML = '';
 
-        let today = new Date();
-        today.setHours(0,0,0,0);
+        // --- ÚJ LOGIKA: 06:00-KOR VAN NAPVÁLTÁS ---
+        let now = new Date();
+        // Ha reggel 6 előtt vagyunk, vonjunk le egy napot, 
+        // hogy még a "tegnapi" (éjszakás) műszakot lássuk.
+        if (now.getHours() < 6) {
+            now.setDate(now.getDate() - 1);
+        }
+
+        let today = now;
+        today.setHours(0,0,0,0); // Nullázzuk, hogy csak a dátum számítson
+        // ---------------------------------------------
 
         let diffTime = today - CYCLE_START;
         let totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
