@@ -232,17 +232,15 @@
         }
         .nav-item:active { background: var(--accent) !important; color: white !important; transform: scale(0.98); }
 
-        /* --- PRO "SMART DOCK" 3.0 --- */
+        /* --- PRO "SMART DOCK" --- */
         .smart-dock {
             position: fixed;
-            bottom: 30px; 
+            bottom: 30px; /* ALAPÉRTELMEZETT (HOME) */
             right: 30px; 
             z-index: 2147483647;
             display: flex;
             
-            /* JAVÍTÁS: A sorrend mostantól: Felül: Frissítés, Alul: Menü */
-            /* A HTML sorrend: Refresh, aztán Menu. A Flex Column pedig fentről lefelé rakja őket. */
-            /* Így a Menü lesz alul, a Frissítés pedig felette. */
+            /* Felül: Frissítés, Alul: Menü */
             flex-direction: column; 
             
             align-items: center;
@@ -307,7 +305,6 @@
             transition: transform 0.2s;
             -webkit-user-select: none; user-select: none;
             -webkit-touch-callout: none;
-            /* Ez a második elem a flexben, tehát ez van alul */
         }
         .menu-fab:active { transform: scale(0.92); box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4); }
         .menu-fab span { font-size: 28px; color: white; line-height: 1; pointer-events: none; }
@@ -321,23 +318,24 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             cursor: pointer; border: 1px solid var(--border);
             transition: all 0.3s;
-            /* Ez az első elem a flexben, tehát ez van felül. Így visszaállt az eredeti rend. */
         }
         .refresh-fab:active { transform: rotate(180deg) scale(0.9); }
         .refresh-fab span { font-size: 22px; color: var(--accent); line-height: 1; font-weight: bold; pointer-events: none; }
 
-        /* --- SPECIÁLIS POZÍCIÓ (1.HTML - Search Mode) --- */
-        /* Itt az eredeti kérés szerint: Menü felül, Frissítés alatta. */
-        /* Normál módban: Frissítés felül, Menü alatta. */
-        /* Tehát Search módban megfordítjuk a sorrendet. */
+        /* --- SPECIÁLIS POZÍCIÓ: ALKATRÉSZ KERESŐ (1.HTML) --- */
         body.search-mode-active .smart-dock {
             bottom: auto;
             top: 420px; 
             flex-direction: column-reverse; /* Megfordítjuk: Menü fel, Frissítés le */
         }
-        
         body.search-mode-active .refresh-fab {
-            margin-top: 10px; /* Hézag */
+            margin-top: 10px;
+        }
+
+        /* --- ÚJ: ERGONÓMIKUS POZÍCIÓ (MINDEN MÁS MODULBAN) --- */
+        /* Ha aktív egy modul, DE NEM a kereső, akkor feljebb tesszük */
+        body.module-active:not(.search-mode-active) .smart-dock {
+            bottom: 160px; /* Ideális hüvelykujj pozíció */
         }
 
         /* ------------------------------------------- */
@@ -585,7 +583,7 @@
         icon.innerText = sidebar.classList.contains('open') ? '✕' : '☰';
     }
 
-    // --- SMART DOCK LOGIKA AUTO-HIDE-DAL ---
+    // --- SMART DOCK LOGIKA ---
     let dockTimeout;
 
     function toggleDockState(forceCollapse = null) {
@@ -607,10 +605,10 @@
         const isHomeScreen = document.getElementById('home-screen').style.display !== 'none';
         
         if (!dock.classList.contains('hidden') && !isHomeScreen) {
-            // 3 másodperc múlva automata elrejtés
+            // 6 másodperc múlva automata elrejtés (Dupla idő)
             dockTimeout = setTimeout(() => {
                 dock.classList.add('hidden');
-            }, 3000);
+            }, 6000);
         }
     }
     // ----------------------------------------
@@ -651,6 +649,9 @@
         totalActivity++;
         localStorage.setItem('fv_total_activity', totalActivity);
 
+        // Modul aktív flag beállítása
+        document.body.classList.add('module-active');
+
         if (url === '1.html') {
             document.body.classList.add('search-mode-active');
         } else {
@@ -675,6 +676,7 @@
         if(caller) caller.blur();
         
         document.body.classList.remove('search-mode-active');
+        document.body.classList.remove('module-active'); // Reseteljük a modult
         
         // --- AUTOMATA MEGJELENÉS ÉS TIMER TÖRLÉS ---
         clearTimeout(dockTimeout);
