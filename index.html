@@ -232,73 +232,72 @@
         }
         .nav-item:active { background: var(--accent) !important; color: white !important; transform: scale(0.98); }
 
-        /* --- PRO "SMART DOCK" RENDSZER --- */
+        /* --- PRO "SMART DOCK" 3.0 --- */
         .smart-dock {
             position: fixed;
-            /* Eredeti pozíciók alapján: Menu bottom: 30px. 
-               A konténer alja a 30px-nél van. */
             bottom: 30px; 
             right: 30px; 
             z-index: 2147483647;
             display: flex;
-            flex-direction: column-reverse; /* Alul a menü, felette a frissítés */
-            align-items: center;
-            gap: 20px; /* Ez a gap adja ki az eredeti 110px magasságot a frissítés gombnak */
             
-            /* Animáció a kicsúszáshoz */
+            /* JAVÍTÁS: A sorrend mostantól: Felül: Frissítés, Alul: Menü */
+            /* A HTML sorrend: Refresh, aztán Menu. A Flex Column pedig fentről lefelé rakja őket. */
+            /* Így a Menü lesz alul, a Frissítés pedig felette. */
+            flex-direction: column; 
+            
+            align-items: center;
+            gap: 20px; 
+            
             transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.4s, bottom 0.4s;
         }
 
-        /* Amikor "Lopakodó" (Hidden) módban van */
+        /* Rejtett állapot (Hidden) */
         .smart-dock.hidden {
-            transform: translateX(calc(100% + 40px)); /* Teljesen kimegy jobbra */
+            transform: translateX(calc(100% + 40px)); /* Kimegy jobbra */
         }
 
         /* --- MODERN ELŐHÍVÓ FÜL (HANDLE) --- */
         .dock-handle {
             position: absolute;
-            left: -32px; /* Kicsit kijjebb lóg */
-            bottom: 12px; /* Menü gomb közepéhez igazítva */
+            left: -32px; 
+            bottom: 12px; /* A Menü gomb (ami alul van) magasságához igazítva */
             
-            width: 8px; /* Keskeny, elegáns csík */
+            width: 8px; 
             height: 40px;
-            background: rgba(59, 130, 246, 0.6); /* Forvia Kék */
+            background: rgba(59, 130, 246, 0.6); 
             border-radius: 4px;
-            box-shadow: 0 0 10px rgba(59, 130, 246, 0.6); /* Neon effekt */
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.6); 
             
             cursor: pointer;
-            opacity: 0; /* Alapból láthatatlan (Kezdőlapon) */
+            opacity: 0; 
             pointer-events: none;
             transition: all 0.3s ease;
             z-index: 2000;
         }
         
-        /* A "Touch Area" növelése mobilon, hogy könnyű legyen eltalálni */
+        /* Nagyobb érintési terület (Touch Area) */
         .dock-handle::after {
             content: '';
             position: absolute;
             top: -15px; bottom: -15px;
-            left: -25px; right: 15px; /* Nagyobb érintési felület */
+            left: -25px; right: 15px; 
             background: transparent;
         }
 
-        /* Csak akkor látszik a fül, ha a Dock el van rejtve */
         .smart-dock.hidden .dock-handle {
             opacity: 1;
             pointer-events: auto;
-            transform: translateX(-10px); /* Kicsit beúszik a széléről */
+            transform: translateX(-10px); 
         }
         
-        /* Aktív állapot (érintéskor) */
         .dock-handle:active {
             background: #ffffff;
             box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
             transform: translateX(-10px) scaleY(1.2);
         }
 
-        /* --- GOMBOK RESETELÉSE A DOCK-HOZ --- */
+        /* --- GOMBOK RESETELÉSE --- */
         .menu-fab {
-            /* Reset pozíció, a flex kezeli */
             position: relative !important; bottom: auto !important; right: auto !important; top: auto !important;
             width: 60px; height: 60px; 
             background: var(--accent);
@@ -308,12 +307,12 @@
             transition: transform 0.2s;
             -webkit-user-select: none; user-select: none;
             -webkit-touch-callout: none;
+            /* Ez a második elem a flexben, tehát ez van alul */
         }
         .menu-fab:active { transform: scale(0.92); box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4); }
         .menu-fab span { font-size: 28px; color: white; line-height: 1; pointer-events: none; }
 
         .refresh-fab {
-            /* Reset pozíció */
             position: relative !important; bottom: auto !important; right: auto !important; top: auto !important;
             width: 45px; height: 45px; 
             background: rgba(30, 41, 59, 0.9);
@@ -322,31 +321,23 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             cursor: pointer; border: 1px solid var(--border);
             transition: all 0.3s;
-            /* A flex gap miatt ez pont jó helyre kerül */
+            /* Ez az első elem a flexben, tehát ez van felül. Így visszaállt az eredeti rend. */
         }
         .refresh-fab:active { transform: rotate(180deg) scale(0.9); }
         .refresh-fab span { font-size: 22px; color: var(--accent); line-height: 1; font-weight: bold; pointer-events: none; }
 
-        /* --- SPECIÁLIS POZÍCIÓK (1.HTML - Search Mode) --- */
-        /* Eredetileg: Menu top 420px. 
-           Most a Dock konténert mozgatjuk oda. */
+        /* --- SPECIÁLIS POZÍCIÓ (1.HTML - Search Mode) --- */
+        /* Itt az eredeti kérés szerint: Menü felül, Frissítés alatta. */
+        /* Normál módban: Frissítés felül, Menü alatta. */
+        /* Tehát Search módban megfordítjuk a sorrendet. */
         body.search-mode-active .smart-dock {
             bottom: auto;
-            top: 420px; /* Ez a menu-fab teteje lesz a flex miatt */
-            flex-direction: column; /* Megfordítjuk a sorrendet, hogy lefelé terjeszkedjen? Nem, maradjon a menu alul. */
-            /* Várj, az eredetiben a menu volt felül (420px) és refresh alatta (490px)? 
-               Nem, általában refresh van felül. 
-               Ha search módban: Menu top: 420px. Refresh top: 490px.
-               Tehát a Menü van felül, Refresh alatta. */
+            top: 420px; 
+            flex-direction: column-reverse; /* Megfordítjuk: Menü fel, Frissítés le */
         }
         
-        /* Search mode korrekció: A sorrend megfordul */
-        body.search-mode-active .smart-dock {
-            flex-direction: column; /* Menu felül, Refresh alul */
-        }
-        /* Search mode-ban a refreshnek kis gap kell */
         body.search-mode-active .refresh-fab {
-            margin-top: 10px;
+            margin-top: 10px; /* Hézag */
         }
 
         /* ------------------------------------------- */
@@ -594,21 +585,35 @@
         icon.innerText = sidebar.classList.contains('open') ? '✕' : '☰';
     }
 
-    // --- SMART DOCK LOGIKA ---
+    // --- SMART DOCK LOGIKA AUTO-HIDE-DAL ---
+    let dockTimeout;
+
     function toggleDockState(forceCollapse = null) {
         const dock = document.getElementById('smartDock');
         
+        // Timer törlése interakciónál
+        clearTimeout(dockTimeout);
+
         if (forceCollapse === true) {
             dock.classList.add('hidden');
         } else if (forceCollapse === false) {
             dock.classList.remove('hidden');
         } else {
-            // Manual toggle (ha rákattint a csíkra)
             if(navigator.vibrate) navigator.vibrate(10);
             dock.classList.toggle('hidden');
         }
+
+        // Ha épp nyitva van (nincs rajta hidden) ÉS nem a kezdőlapon vagyunk
+        const isHomeScreen = document.getElementById('home-screen').style.display !== 'none';
+        
+        if (!dock.classList.contains('hidden') && !isHomeScreen) {
+            // 3 másodperc múlva automata elrejtés
+            dockTimeout = setTimeout(() => {
+                dock.classList.add('hidden');
+            }, 3000);
+        }
     }
-    // -------------------------
+    // ----------------------------------------
 
     const moduleNames = {
         '1.html': '🔍 Alkatrész Kereső',
@@ -652,9 +657,9 @@
             document.body.classList.remove('search-mode-active');
         }
         
-        // --- AUTOMATA ELREJTÉS MODULNÁL ---
-        toggleDockState(true); // Behúzzuk a dockot
-        // -----------------------------------
+        // --- AUTOMATA ELREJTÉS ---
+        toggleDockState(true); 
+        // -------------------------
 
         document.getElementById('home-screen').style.display = 'none';
         const frame = document.getElementById('content-frame');
@@ -671,9 +676,10 @@
         
         document.body.classList.remove('search-mode-active');
         
-        // --- AUTOMATA MEGJELENÉS KEZDŐLAPON ---
-        toggleDockState(false); // Kinyitjuk a dockot
-        // --------------------------------------
+        // --- AUTOMATA MEGJELENÉS ÉS TIMER TÖRLÉS ---
+        clearTimeout(dockTimeout);
+        toggleDockState(false); 
+        // -------------------------------------------
 
         document.getElementById('home-screen').style.display = 'flex';
         const frame = document.getElementById('content-frame');
