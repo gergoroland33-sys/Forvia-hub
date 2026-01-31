@@ -232,119 +232,98 @@
         }
         .nav-item:active { background: var(--accent) !important; color: white !important; transform: scale(0.98); }
 
-        /* --- SMART DOCK STYLES (ÚJ PRO MEGOLDÁS) --- */
+        /* --- PRO "LOPAKODÓ" DOCK --- */
         .smart-dock {
             position: fixed;
             bottom: 30px;
-            right: 30px;
+            right: 30px; /* Alapállapotban itt vannak a gombok */
             z-index: 2147483647;
             display: flex;
-            flex-direction: column-reverse;
+            flex-direction: column;
             align-items: center;
             gap: 15px;
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), bottom 0.3s, top 0.3s;
-            /* Biztosítjuk, hogy a gombok benne maradjanak a layoutban */
-            pointer-events: none; /* A container átenged, a gombok klikkelhetők */
+            /* Profi animációs görbe (ruganyos) */
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), top 0.4s, bottom 0.4s;
         }
 
-        /* Gombok interakciója */
-        .smart-dock > * { pointer-events: auto; }
-
-        /* A behúzott állapot */
+        /* Ha elrejtjük (collapsed), kitoljuk jobbra a képernyőről */
         .smart-dock.collapsed {
-            transform: translateX(calc(100% - 15px)); /* Csak a nyíl látszik */
+            transform: translateX(120px); /* Teljesen kitolva */
         }
 
-        /* Nyíl gomb stílusa */
-        .dock-toggle {
-            width: 32px;
-            height: 40px;
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(8px);
-            border: 1px solid var(--border);
+        /* Ez a behúzó fül (Handle) */
+        .dock-handle {
+            position: absolute;
+            left: -44px; /* Kilóg a containerből balra */
+            bottom: 10px; /* Menü gomb magasságában */
+            width: 44px;
+            height: 48px;
+            background: var(--accent); /* Feltűnő FORVIA Kék */
+            border: 1px solid rgba(255,255,255,0.2);
             border-right: none;
-            border-radius: 8px 0 0 8px;
+            border-radius: 12px 0 0 12px; /* Lekerekített fül forma */
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--accent);
             cursor: pointer;
-            position: absolute;
-            left: -32px;
-            bottom: 15px; /* A menü gombhoz igazítva */
-            box-shadow: -5px 5px 15px rgba(0,0,0,0.2);
-            font-size: 16px;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            z-index: 2000;
-        }
-
-        .smart-dock.collapsed .dock-toggle {
-            background: var(--accent);
+            box-shadow: -4px 4px 15px rgba(0,0,0,0.4);
             color: white;
-            box-shadow: -2px 2px 10px rgba(59, 130, 246, 0.5);
-            width: 40px; /* Kicsit szélesebb ha csukva van, könnyebb eltalálni */
-            left: -40px;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 2000;
+            transition: all 0.3s ease;
+            opacity: 0.6; /* Kicsit halvány, ha nyitva van */
         }
         
-        .dock-arrow-icon {
-            transition: transform 0.4s ease;
-            display: inline-block;
-        }
-        .smart-dock.collapsed .dock-arrow-icon { transform: rotate(180deg); }
-
-        /* --- Eredeti gombok felülírása a Dock-on belül --- */
-        .menu-fab {
-            /* Reseteljük a fix pozíciót, mert most a dock kezeli */
-            position: relative !important; 
-            bottom: auto !important; 
-            right: auto !important;
-            top: auto !important;
-            width: 60px; height: 60px; 
+        /* Amikor be van csukva (lopakodó mód), a fül legyen élénkebb és "hívogató" */
+        .smart-dock.collapsed .dock-handle {
             background: var(--accent);
+            opacity: 1; /* Teljes fényerő */
+            width: 50px; /* Kicsit szélesebb lesz, hogy könnyű legyen eltalálni */
+            left: -50px;
+            box-shadow: -2px 0 20px rgba(59, 130, 246, 0.6); /* Izzó effekt */
+        }
+        
+        .dock-handle:active { transform: scale(0.95); }
+
+        .handle-icon {
+            display: inline-block;
+            transition: transform 0.4s ease;
+        }
+        
+        /* Nyíl forgatása: Ha bent van (collapsed), balra mutat (húzd ki) */
+        .smart-dock.collapsed .handle-icon { transform: rotate(180deg); } /* Alapból jobbra mutat (csukd be), forgatva balra */
+
+        /* Gombok resetelése a dock-hoz */
+        .menu-fab {
+            position: relative !important; bottom: auto !important; right: auto !important; top: auto !important;
+            width: 60px; height: 60px; background: var(--accent);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
             box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5), inset 0 2px 5px rgba(255,255,255,0.2);
-            cursor: pointer; 
-            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer; border: 1px solid rgba(255,255,255,0.1);
             transition: transform 0.2s;
-            -webkit-user-select: none; user-select: none;
-            -webkit-touch-callout: none; outline: none; -webkit-tap-highlight-color: transparent;
+            margin-top: 5px;
         }
-        .menu-fab:active { transform: scale(0.92); box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4); }
+        .menu-fab:active { transform: scale(0.92); }
         .menu-fab span { font-size: 28px; color: white; line-height: 1; pointer-events: none; }
 
         .refresh-fab {
-            /* Reseteljük a fix pozíciót */
-            position: relative !important;
-            bottom: auto !important;
-            right: auto !important;
-            top: auto !important;
-            width: 45px; height: 45px;
-            background: rgba(30, 41, 59, 0.9);
-            backdrop-filter: blur(5px);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            position: relative !important; bottom: auto !important; right: auto !important; top: auto !important;
+            width: 45px; height: 45px; background: rgba(30, 41, 59, 0.9);
+            backdrop-filter: blur(5px); border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            cursor: pointer; 
-            border: 1px solid var(--border);
+            cursor: pointer; border: 1px solid var(--border);
             transition: all 0.3s;
-            -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
-            margin-bottom: 5px; /* Kis hézag a menü gomb felett */
         }
         .refresh-fab:active { transform: rotate(180deg) scale(0.9); }
         .refresh-fab span { font-size: 22px; color: var(--accent); line-height: 1; font-weight: bold; pointer-events: none; }
 
-        /* --- SPECIÁLIS POZÍCIÓK KEZELÉSE A DOCK-KAL --- */
-        /* Ha a search-mode-active be van kapcsolva, a Dock-ot mozgatjuk, nem a gombokat */
+        /* --- SPECIÁLIS POZÍCIÓK (Search Mode) --- */
         body.search-mode-active .smart-dock {
             bottom: auto;
             top: 420px;
         }
-        /* A dock nyíl igazítása ilyenkor */
-        body.search-mode-active .dock-toggle {
-             /* Ha fent van, lehet középre igazítjuk a gombokhoz */
-             top: 50%; transform: translateY(-50%); bottom: auto;
-        }
-
         /* ------------------------------------------- */
 
         .overlay {
@@ -433,8 +412,8 @@
 </aside>
 
 <div id="smartDock" class="smart-dock">
-    <div class="dock-toggle" onclick="toggleDockState()">
-        <span class="dock-arrow-icon">➜</span>
+    <div class="dock-handle" onclick="toggleDockState()">
+        <span class="handle-icon">➜</span>
     </div>
     
     <div class="refresh-fab" onclick="window.location.reload()">
@@ -534,7 +513,6 @@
             daysBadge.innerText = `${daysLeft} NAP`;
         }
 
-        // --- PRO MŰSZAK INFO MEGJELENÍTÉSE ---
         const oldInfo = document.getElementById('shift-info-display');
         if (oldInfo) oldInfo.remove();
 
@@ -593,9 +571,10 @@
         icon.innerText = sidebar.classList.contains('open') ? '✕' : '☰';
     }
 
-    // --- ÚJ DOCK FUNKCIÓK ---
+    // --- SMART DOCK LOGIKA ---
     function toggleDockState(forceCollapse = null) {
         const dock = document.getElementById('smartDock');
+        
         if (forceCollapse === true) {
             dock.classList.add('collapsed');
         } else if (forceCollapse === false) {
@@ -644,16 +623,15 @@
         totalActivity++;
         localStorage.setItem('fv_total_activity', totalActivity);
 
-        // --- MÓDOSÍTÁS: Ha az 1.html van megnyitva, kapcsoljuk be a felső gomb pozíciót ---
         if (url === '1.html') {
             document.body.classList.add('search-mode-active');
         } else {
             document.body.classList.remove('search-mode-active');
         }
         
-        // --- AUTOMATA DOCK BEHÚZÁS: Ha modulba lépünk, behúzzuk ---
+        // --- AUTOMATA ELREJTÉS MODULNÁL ---
         toggleDockState(true); 
-        // ---------------------------------------------------------------------------------
+        // -----------------------------------
 
         document.getElementById('home-screen').style.display = 'none';
         const frame = document.getElementById('content-frame');
@@ -668,11 +646,11 @@
         if(navigator.vibrate) navigator.vibrate(15);
         if(caller) caller.blur();
         
-        // --- MÓDOSÍTÁS: Kezdőlapra lépéskor visszaállítjuk ---
         document.body.classList.remove('search-mode-active');
-        // --- AUTOMATA DOCK KINYITÁS: Ha hazajövünk, kinyitjuk ---
+        
+        // --- AUTOMATA MEGJELENÉS KEZDŐLAPON ---
         toggleDockState(false);
-        // ---------------------------------------------------------------
+        // --------------------------------------
 
         document.getElementById('home-screen').style.display = 'flex';
         const frame = document.getElementById('content-frame');
