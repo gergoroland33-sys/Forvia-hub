@@ -244,7 +244,7 @@
             flex-direction: column; 
             
             align-items: center;
-            gap: 12px; /* Közelebb hozva (20px -> 12px) */
+            gap: 12px; 
             
             transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.4s, bottom 0.4s;
         }
@@ -273,13 +273,15 @@
             z-index: 2000;
         }
         
-        /* Nagyobb érintési terület (Touch Area) */
+        /* --- PRO LÁTHATATLAN HITBOX (OPTIMALIZÁLVA) --- */
+        /* Pontosított méret: elég nagy az ujjnak, de nem takar ki mást */
         .dock-handle::after {
             content: '';
             position: absolute;
-            top: -15px; bottom: -15px;
-            left: -25px; right: 15px; 
+            top: -15px; bottom: -15px; /* Függőlegesen +15px */
+            left: -20px; right: 10px;   /* Balra +20px (ujj irányába) */
             background: transparent;
+            z-index: 2002;
         }
 
         .smart-dock.hidden .dock-handle {
@@ -326,11 +328,9 @@
         body.search-mode-active .smart-dock {
             bottom: auto;
             top: 420px; 
-            /* SORREND: Marad az eredeti (Felül Frissítés, Alul Menü), nem fordítjuk meg */
         }
         
         /* --- ERGONÓMIKUS POZÍCIÓ (MINDEN MÁS MODULBAN) --- */
-        /* Ha aktív egy modul, DE NEM a kereső, akkor feljebb tesszük */
         body.module-active:not(.search-mode-active) .smart-dock {
             bottom: 160px; 
         }
@@ -582,33 +582,48 @@
 
     // --- SMART DOCK LOGIKA ---
     let dockTimeout;
+    const dockElement = document.getElementById('smartDock');
 
     function toggleDockState(forceCollapse = null) {
-        const dock = document.getElementById('smartDock');
-        
         // Timer törlése interakciónál
         clearTimeout(dockTimeout);
 
         if (forceCollapse === true) {
-            dock.classList.add('hidden');
+            dockElement.classList.add('hidden');
         } else if (forceCollapse === false) {
-            dock.classList.remove('hidden');
+            dockElement.classList.remove('hidden');
         } else {
             if(navigator.vibrate) navigator.vibrate(10);
-            dock.classList.toggle('hidden');
+            dockElement.classList.toggle('hidden');
         }
 
-        // Ha épp nyitva van (nincs rajta hidden) ÉS nem a kezdőlapon vagyunk
-        const isHomeScreen = document.getElementById('home-screen').style.display !== 'none';
-        
-        if (!dock.classList.contains('hidden') && !isHomeScreen) {
-            // 6 másodperc múlva automata elrejtés
+        // --- MINDENHOL INDUL A TIMER (KEZDŐLAPON IS) ---
+        // Ha épp nyitva van (nincs rajta hidden), akkor időzítjük a bezárást
+        if (!dockElement.classList.contains('hidden')) {
             dockTimeout = setTimeout(() => {
-                dock.classList.add('hidden');
+                dockElement.classList.add('hidden');
             }, 6000);
         }
     }
-    // ----------------------------------------
+
+    // --- LAPTOP HOVER FUNKCIÓ ---
+    // Ha az egér rávisz -> Azonnal megjelenik és törli a visszaszámlálást
+    dockElement.addEventListener('mouseenter', () => {
+        clearTimeout(dockTimeout);
+        dockElement.classList.remove('hidden');
+    });
+
+    // Ha az egér lemegy róla -> Indul a 6mp visszaszámlálás
+    dockElement.addEventListener('mouseleave', () => {
+        if (!dockElement.classList.contains('hidden')) {
+            dockTimeout = setTimeout(() => {
+                dockElement.classList.add('hidden');
+            }, 6000);
+        }
+    });
+    
+    // Kezdeti állapot beállítása (hogy betöltéskor elinduljon a timer)
+    toggleDockState(false); 
 
     const moduleNames = {
         '1.html': '🔍 Alkatrész Kereső',
@@ -675,7 +690,7 @@
         document.body.classList.remove('search-mode-active');
         document.body.classList.remove('module-active'); // Reseteljük a modult
         
-        // --- AUTOMATA MEGJELENÉS ÉS TIMER TÖRLÉS ---
+        // --- KEZDŐLAPON IS ELINDUL AZ IDŐZÍTŐ ---
         clearTimeout(dockTimeout);
         toggleDockState(false); 
         // -------------------------------------------
