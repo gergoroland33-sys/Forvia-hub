@@ -248,7 +248,8 @@
     <script>
         let currentShift = localStorage.getItem('fv_shift_final') || 'A';
         const DB = "https://forviastaff-default-rtdb.firebaseio.com/";
-        let date = new Date(2026, 0, 1);
+        // ITT VALTOZTATTAM: Automatikusan a jelenlegi honapot allitja be
+        let date = new Date(2026, new Date().getMonth(), 1);
         let employees = [];
         const monthNames = ["Január", "Február", "Március", "Április", "Május", "Június", "Július", "Augusztus", "Szeptember", "Október", "November", "December"];
         const dayNamesShort = ["V", "H", "K", "Sze", "Cs", "P", "Szo"];
@@ -415,7 +416,6 @@
         function addEmp() { const n = prompt("Név:"); if(n) { employees.push({id:Date.now(), name:n, yearlyQuota:160, data:{}}); save(); render(); } }
         function delEmp(id) { if(confirm("Biztos törlöd?")) { employees = employees.filter(x => x.id != id); save(); render(); } }
         
-        // AUTOMATIKUS GÖRGETÉS MOBILON + ENTER GOMB KEZELÉS
         document.addEventListener('focusin', function(e) {
             if (e.target && e.target.classList.contains('input-cell')) {
                 setTimeout(function() {
@@ -428,7 +428,15 @@
             }
         });
 
-        window.onload = () => changeShift(currentShift);
+        // ITT VALTOZTATTAM: Window onload esemeny most mar automatikusan odagorget a mai naphoz betoltes utan
+        window.onload = async () => {
+            await changeShift(currentShift);
+            setTimeout(() => {
+                const el = document.getElementById('today-header'); 
+                const container = document.querySelector('.table-container');
+                if(el && container) container.scrollTo({ left: el.offsetLeft - 260, behavior: 'smooth' });
+            }, 500);
+        };
     </script>
 </body>
 </html>
