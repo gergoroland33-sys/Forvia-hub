@@ -1,745 +1,777 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <title>FORVIA HUB - MASTER SHELL</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forvia SMT Managerial Dashboard v3.6 + Pro Eval</title>
+<style>
+/* --- DESIGN SYSTEM --- */
+:root {
+    --bg-app: #0f172a;       
+    --bg-card: #1e293b;      
+    --bg-modal: rgba(15, 23, 42, 0.95);
+    --primary: #3b82f6;      
+    --text-main: #f8fafc;    
+    --text-muted: #94a3b8;   
+    --danger: #ef4444;       
+    --warning: #f59e0b;      
+    --success: #10b981;      
+    --border: #334155;       
+    --purple: #8b5cf6; /* Új változó a bővítéshez */
+}
 
-    <link rel="icon" type="image/png" href="icon.png">
-    <link rel="apple-touch-icon" href="icon.png">
+* { box-sizing: border-box; }
+
+body {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-app);
+    color: var(--text-main);
+    margin: 0; padding: 15px;
+    font-size: 14px;
+}
+
+.container { max-width: 1400px; margin: 0 auto; }
+
+/* HEADER */
+header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-bottom: 15px; border-bottom: 1px solid var(--border); margin-bottom: 20px;
+    flex-wrap: wrap; gap: 10px;
+}
+.brand h1 { margin: 0; font-size: 1.5rem; text-transform: uppercase; letter-spacing: 1px; color: white; }
+.brand span { color: var(--primary); font-weight: 900; }
+.brand .subtitle { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+
+/* ÚJ ELEM: AKTÍV SOR KIÍRÁSA */
+#activeLineLabel {
+    display: none; /* Alapból rejtve, JS kapcsolja be */
+    margin-top: 5px;
+    font-size: 0.9rem;
+    color: var(--primary);
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.header-actions { display: flex; gap: 15px; align-items: center; }
+
+/* DÁTUM MEGJELENÍTŐ */
+.date-display {
+    text-align: right;
+    border-right: 1px solid var(--border);
+    padding-right: 15px;
+}
+.date-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+.date-value { font-size: 1rem; font-weight: 700; color: white; }
+
+/* HELP BUTTON */
+.help-btn {
+    background: transparent; border: 1px solid var(--border); color: var(--text-muted);
+    padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;
+    display: flex; align-items: center; gap: 5px; transition: 0.2s;
+}
+.help-btn:hover { background: var(--bg-card); color: white; border-color: var(--primary); }
+
+/* --- ÚJ GOMB STÍLUSA (HOZZÁADVA) --- */
+.eval-btn {
+    background: var(--purple); color: white; border: none;
+    padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; gap: 8px; box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
+    transition: 0.2s;
+}
+.eval-btn:hover { background: #7c3aed; box-shadow: 0 0 15px rgba(139, 92, 246, 0.6); transform: translateY(-1px); }
+
+/* CONTROLS AREA */
+.controls-area {
+    display: flex; gap: 15px; margin-bottom: 20px; align-items: flex-start; flex-wrap: wrap;
+}
+.upload-btn {
+    background: var(--primary); color: white; border: none; padding: 10px 20px;
+    border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center;
+    white-space: nowrap; height: 42px;
+}
+.upload-btn:hover { background: #2563eb; }
+
+.filter-bar {
+    display: flex; gap: 10px; background: var(--bg-card);
+    padding: 10px; border-radius: 8px; border: 1px solid var(--border); flex: 1;
+    flex-wrap: wrap;
+}
+.filter-group { flex: 1; min-width: 140px; }
+.filter-group label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 4px; }
+select {
+    background: var(--bg-app); color: white; border: 1px solid var(--border);
+    padding: 6px; border-radius: 4px; font-size: 0.9rem; width: 100%; height: 30px;
+}
+
+/* KPI CARDS */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+.kpi-card {
+    background: var(--bg-card); padding: 15px; border-radius: 10px;
+    border: 1px solid var(--border); position: relative;
+    display: flex; flex-direction: column; justify-content: space-between;
+}
+.kpi-card h3 { margin: 0 0 5px 0; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); }
+
+.kpi-main-val { font-size: 1.8rem; font-weight: 800; display: block; line-height: 1.1; margin-bottom: 4px; }
+.kpi-sub-val { font-size: 1rem; font-weight: 600; opacity: 0.9; display: block; }
+
+.kpi-footer { font-size: 0.75rem; margin-top: 10px; font-weight: 500; display: flex; align-items: center; gap: 6px; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;}
+.badge-ppm {
+    background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px; font-size: 0.7rem; font-weight: normal;
+}
+
+/* PANELS */
+.analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.panel { background: var(--bg-card); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; }
+.panel-header {
+    padding: 10px 15px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2);
+}
+.panel-title { font-size: 0.9rem; font-weight: 700; text-transform: uppercase; margin: 0; display: flex; align-items: center; gap: 8px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+.alert-banner {
+    margin: 10px 10px 0 10px; padding: 8px 12px; border-radius: 6px;
+    font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center;
+    border-left: 3px solid;
+}
+
+/* TABLE */
+table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+th { text-align: left; padding: 8px 12px; color: var(--text-muted); font-size: 0.65rem; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
+
+.item-name { font-weight: 700; color: #fff; display: block; }
+.item-loc { font-size: 0.7rem; color: var(--primary); background: rgba(59, 130, 246, 0.1); padding: 1px 4px; border-radius: 3px; display: inline-block; margin-top: 2px;}
+.stat-primary { font-weight: 800; font-size: 0.9rem; text-align: right; }
+.stat-secondary { font-size: 0.7rem; color: var(--text-muted); text-align: right; }
+.prog-track { width: 100%; height: 3px; background: rgba(255,255,255,0.1); margin-top: 5px; border-radius: 2px; }
+.prog-fill { height: 100%; border-radius: 2px; }
+
+/* MODAL (HELP) */
+.modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--bg-modal); z-index: 1000; justify-content: center; align-items: center;
+    padding: 20px;
+}
+.modal-content {
+    background: var(--bg-card); max-width: 600px; width: 100%; border-radius: 12px;
+    border: 1px solid var(--border); padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    max-height: 90vh; overflow-y: auto;
+}
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;}
+.modal-close { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; }
+.help-section { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.help-section:last-child { border-bottom: none; }
+.help-title { color: var(--primary); font-weight: bold; font-size: 1rem; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+.help-text { font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; }
+.help-text strong { color: white; }
+.help-text ul { margin: 5px 0 0 0; padding-left: 20px; }
+.help-text li { margin-bottom: 4px; }
+.formula { 
+    background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; 
+    font-family: 'Courier New', monospace; color: #fff; display: block; 
+    margin-top: 8px; border: 1px solid var(--border);
+}
+
+/* --- ÚJ ELEMZŐ MODAL STÍLUSOK (HOZZÁADVA) --- */
+.eval-container { max-width: 1000px !important; }
+.eval-summary-box {
+    background: rgba(139, 92, 246, 0.1); border: 1px solid var(--purple);
+    padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;
+}
+.eval-summary-title { font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; }
+.eval-summary-value { font-size: 1.5rem; color: white; font-weight: bold; margin: 5px 0; }
+/* Narratíva stílus */
+.eval-narrative {
+    font-size: 0.95rem; color: #e2e8f0; margin-top: 10px; padding-top: 10px; 
+    border-top: 1px solid rgba(139, 92, 246, 0.3); line-height: 1.5; font-style: italic;
+}
+.highlight-num { color: #fff; font-weight: bold; }
+
+.eval-chart-row { display: flex; align-items: center; margin-bottom: 12px; font-size: 0.85rem; }
+.eval-chart-label { width: 180px; text-align: right; padding-right: 15px; font-weight: bold; color: #cbd5e1; }
+.eval-chart-area { flex: 1; height: 24px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; display: flex; position: relative; }
+.eval-bar-pick { height: 100%; background: var(--danger); transition: width 1s; }
+.eval-bar-vis { height: 100%; background: var(--warning); transition: width 1s; }
+.eval-chart-value { width: 80px; padding-left: 10px; font-weight: bold; color: white; }
+.chart-legend { display: flex; justify-content: center; gap: 20px; margin-bottom: 15px; font-size: 0.8rem; }
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-box { width: 12px; height: 12px; border-radius: 2px; }
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+    body { padding: 10px; }
+    .header-actions { width: 100%; justify-content: space-between; margin-top: 10px; }
+    .date-display { border-right: none; padding-right: 0; }
+    .controls-area { flex-direction: column; }
+    .upload-btn { width: 100%; justify-content: center; }
+    .filter-bar { width: 100%; flex-direction: column; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; } 
+    .analysis-grid { grid-template-columns: 1fr; }
+    .eval-chart-label { width: 100px; font-size: 0.7rem; } /* ÚJ */
+}
+@media (max-width: 480px) {
+    .kpi-grid { grid-template-columns: 1fr; } 
+}
+
+/* --- NYOMTATÁS (LAPTOP - ÁLLÓ A4 - 1 OLDAL) - PRO FEJLÉC --- */
+@media print {
+    @page { size: A4 portrait; margin: 10mm 5mm 5mm 5mm; }
+    body { 
+        background: white !important; color: black !important; padding: 0 !important; 
+        zoom: 75% !important;
+        -webkit-print-color-adjust: exact !important;
+    }
     
-    <meta name="apple-mobile-web-app-title" content="Forvia Hub">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="mobile-web-app-capable" content="yes">
-    <style>
-        :root {
-            --bg: #0b1120; --card: #1e293b; --accent: #3b82f6;
-            --text: #f3f4f6; --text-dim: #94a3b8; --border: #334155;
-            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
-        }
+    /* ÚJ: Eltüntetjük a kiértékelés gombot nyomtatáskor */
+    .eval-btn, .modal-overlay { display: none !important; }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    .container { max-width: 100% !important; margin: 0 !important; }
+    .controls-area, .help-btn, .modal-overlay { display: none !important; }
 
-        body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background: #0f172a; color: var(--text);
-            margin: 0; height: 100dvh; overflow: hidden;
-            display: flex; flex-direction: column;
-            padding-top: env(safe-area-inset-top);
-            -webkit-user-select: none; user-select: none;
-        }
+    /* FEJLÉC PROFESSZIONÁLIS IGAZÍTÁSA (KÖZÉPRE) */
+    header {
+        display: block !important;
+        text-align: center !important;
+        margin-bottom: 30px !important;
+        border-bottom: 2px solid #333 !important;
+        padding-bottom: 15px !important;
+    }
 
-        #content-frame {
-            border: none; width: 100%; height: 100%;
-            display: none; 
-            background: #0f172a;
-        }
+    .brand {
+        display: block !important;
+        margin-bottom: 10px !important;
+    }
+    .brand h1 {
+        font-size: 24px !important;
+        color: #000 !important;
+        letter-spacing: 2px !important;
+    }
+    .brand .subtitle {
+        color: #555 !important;
+        font-size: 10px !important;
+    }
+    
+    /* AKTÍV SOR NYOMTATÁSI STÍLUS */
+    #activeLineLabel {
+        color: #000 !important;
+        font-size: 14px !important;
+        margin-top: 8px !important;
+        border: 1px solid #000;
+        padding: 4px 10px;
+        display: inline-block !important; /* Ha a JS engedélyezte, itt blokkosítjuk */
+    }
 
-        /* --- Görgethetőség beállítása laptopra --- */
-        #home-screen {
-            flex-grow: 1; display: flex; flex-direction: column;
-            align-items: center; 
-            text-align: center;
-            background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 45%),
-            radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.05), transparent 45%), #0b1120;
-            padding: 20px; position: relative; width: 100%; height: 100%;
-            overflow-y: auto; 
-            padding-bottom: 60px;
-        }
+    .header-actions {
+        display: block !important;
+        text-align: center !important;
+        width: 100% !important;
+        margin-top: 10px !important;
+    }
 
-        .glass-card {
-            background: rgba(30, 41, 59, 0.4); 
-            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-top: 1px solid rgba(255, 255, 255, 0.15); 
-            padding: 40px 30px; border-radius: 24px;
-            box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6);
-            max-width: 500px; width: 100%; animation: fadeIn 0.8s ease-out;
-            position: relative; 
-            margin: auto; 
-        }
+    .date-display {
+        border-right: none !important;
+        padding-right: 0 !important;
+        text-align: center !important;
+    }
+    .date-label { color: #555 !important; font-size: 10px !important; }
+    .date-value { color: #000 !important; font-size: 14px !important; margin-top: 2px !important; }
 
-        .share-card-btn {
-            position: absolute; top: 20px; right: 20px;
-            width: 40px; height: 40px; border-radius: 50%;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: var(--text-dim); display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: all 0.3s ease; z-index: 10;
-        }
-        .share-card-btn:active {
-            background: var(--accent); color: white; border-color: var(--accent);
-            transform: scale(0.95);
-        }
+    /* TÖBBI NYOMTATÁSI BEÁLLÍTÁS */
+    .kpi-card, .panel { 
+        background: white !important; border: 1px solid #ccc !important; 
+        box-shadow: none !important; break-inside: avoid; 
+    }
+    .panel-header { background: #f0f0f0 !important; border-bottom: 1px solid #ccc !important; }
+    .item-name { color: #000 !important; }
+    td { border-bottom: 1px solid #eee !important; }
+    .item-loc { background: #eff6ff !important; color: #1d4ed8 !important; border: 1px solid #bfdbfe !important; }
+    .text-danger { color: #dc2626 !important; }
+    .text-warning { color: #d97706 !important; }
+    .text-success { color: #059669 !important; }
+    .bg-danger-sub { background: #fef2f2 !important; border-color: #dc2626 !important; color: #991b1b !important; }
+    .bg-warning-sub { background: #fffbeb !important; border-color: #d97706 !important; color: #92400e !important; }
+    .kpi-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 10px !important; }
+    .analysis-grid { grid-template-columns: 1fr 1fr !important; gap: 15px !important; }
+    .kpi-main-val { font-size: 1.6rem !important; }
+    .kpi-footer { border-top: 1px solid #eee !important; color: #555 !important; }
+    .badge-ppm { border: 1px solid #ddd !important; background: #fff !important; }
+}
 
-        .share-icon-svg { width: 20px; height: 20px; fill: currentColor; }
-
-        .welcome-title {
-            font-size: 2.2rem; font-weight: 800; margin: 0;
-            color: white; letter-spacing: -1px; margin-bottom: 5px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
-        .highlight-blue { 
-            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .current-date {
-            color: var(--text-dim); font-size: 0.95rem; margin-bottom: 30px; font-weight: 500; line-height: 1.5;
-        }
-        .nameday-text { color: var(--accent); font-weight: 600; display: block; margin-top: 4px; font-size: 0.85rem; letter-spacing: 0.5px; }
-
-        .calendar-box {
-            background: linear-gradient(145deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
-            padding: 18px 22px;
-            margin-bottom: 30px;
-            text-align: left;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            border-left: 4px solid var(--accent);
-            display: inline-block; width: 100%;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-        }
-
-        .cal-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-        .cal-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: #64748b; font-weight: 700; }
-        
-        .cal-main-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-        .cal-date-text { font-size: 1.4rem; font-weight: 800; color: white; letter-spacing: -0.5px; }
-        
-        .cal-badge { 
-            font-size: 0.75rem; padding: 6px 12px; border-radius: 20px; 
-            font-weight: 700; text-transform: uppercase; white-space: nowrap;
-            letter-spacing: 0.5px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
-        .cal-event-name { font-size: 0.95rem; color: #94a3b8; font-weight: 500; }
-        
-        .cal-badge.holiday { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
-        .cal-badge.workday { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
-        
-        .calendar-box.type-holiday { border-left-color: #34d399; }
-        .calendar-box.type-workday { border-left-color: #fbbf24; }
-
-        .shift-info-box {
-            margin-top: 15px;
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(59, 130, 246, 0.2); 
-            border-radius: 12px;
-            overflow: hidden;
-            animation: fadeIn 0.5s ease;
-        }
-        .shift-header-row {
-            background: rgba(59, 130, 246, 0.1);
-            border-bottom: 1px solid rgba(59, 130, 246, 0.1);
-            padding: 8px 12px;
-            color: #60a5fa; 
-            font-size: 0.65rem; font-weight: 800;
-            text-transform: uppercase; letter-spacing: 1.2px;
-            display: flex; align-items: center; justify-content: center;
-            gap: 6px;
-        }
-        .shift-content-row {
-            display: flex; 
-            justify-content: center;
-            gap: 40px;
-            padding: 12px 14px;
-        }
-        .shift-col { 
-            display: flex; flex-direction: column; gap: 4px; 
-            align-items: center;
-        }
-        .shift-label-sub { font-size: 0.7rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; }
-        
-        .shift-value-main { 
-            font-size: 0.9rem; font-weight: 700; letter-spacing: 0.3px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-        }
-        .text-right { text-align: right; }
-
-        .instruction-text {
-            font-size: 1rem; line-height: 1.6; color: #cbd5e1; margin-bottom: 30px;
-        }
-        .instruction-highlight { color: var(--accent); font-weight: 600; }
-
-        .device-info {
-            font-size: 0.8rem; color: #64748b;
-            border-top: 1px solid rgba(255,255,255,0.08);
-            padding-top: 20px; margin-top: 10px;
-        }
-        .good-luck {
-            display: block; margin-top: 5px; color: var(--success); font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
-        }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        .ticker-wrap {
-            position: fixed; bottom: 0; left: 0; width: 100%; overflow: hidden; height: 36px;
-            background-color: rgba(15, 23, 42, 0.95); border-top: 1px solid var(--accent);
-            z-index: 1000; backdrop-filter: blur(5px);
-            padding-left: 100%; box-sizing: content-box;
-        }
-        .ticker-move {
-            display: inline-block; height: 36px; line-height: 36px; white-space: nowrap;
-            padding-right: 100%; box-sizing: content-box;
-            animation: ticker 30s linear infinite;
-        }
-        .ticker-item {
-            display: inline-block; padding: 0 2rem; font-size: 0.9rem; color: #fbbf24;
-            font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
-        }
-        @keyframes ticker {
-            0% { transform: translate3d(0, 0, 0); }
-            100% { transform: translate3d(-100%, 0, 0); }
-        }
-
-        .sidebar {
-            position: fixed; left: 0; top: 0;
-            width: 280px; height: 100%; background: #111827;
-            border-right: 1px solid var(--border);
-            display: flex; flex-direction: column;
-            transform: translateX(-100%);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 2000;
-            padding-top: env(safe-area-inset-top);
-        }
-        .sidebar.open { transform: translateX(0); box-shadow: 20px 0 50px rgba(0,0,0,0.8); }
-
-        .sidebar-header {
-            padding: 25px 20px;
-            border-bottom: 1px solid var(--border);
-            background: rgba(255,255,255,0.02);
-        }
-        .sidebar-header h2 {
-            font-size: 1.3rem; margin: 0; letter-spacing: 1px; font-weight: 700;
-        }
-
-        .nav-list { padding: 20px; flex-grow: 1; overflow-y: auto; }
-
-        .nav-item {
-            display: flex; align-items: center; padding: 14px 15px;
-            margin-bottom: 8px; border-radius: 12px; text-decoration: none;
-            color: var(--text-dim); font-weight: 500; transition: background 0.1s; cursor: pointer;
-        }
-        .nav-item i { width: 30px; font-style: normal; text-align: center; font-size: 1.2rem; }
-        
-        @media (hover: hover) {
-            .nav-item:hover { background: rgba(59, 130, 246, 0.2); color: white; }
-        }
-        .nav-item:active { background: var(--accent) !important; color: white !important; transform: scale(0.98); }
-
-        /* --- PRO "SMART DOCK" --- */
-        .smart-dock {
-            position: fixed;
-            bottom: 30px; /* Alapállapot (Home) */
-            right: 30px; 
-            z-index: 2147483647;
-            display: flex;
-            
-            /* MINDENHOL: Felül Frissítés, Alul Menü */
-            flex-direction: column; 
-            
-            align-items: center;
-            gap: 12px; 
-            
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.4s, bottom 0.4s;
-        }
-
-        /* Rejtett állapot (Hidden) */
-        .smart-dock.hidden {
-            transform: translateX(calc(100% + 40px)); /* Kimegy jobbra */
-        }
-
-        /* --- MODERN ELŐHÍVÓ FÜL (HANDLE) --- */
-        .dock-handle {
-            position: absolute;
-            left: -32px; 
-            bottom: 12px; /* A Menü gomb (alsó) magasságához igazítva */
-            
-            width: 8px; 
-            height: 40px;
-            /* SZÍNVÁLTÁS: Sötétebb, telítettebb kék */
-            background: rgba(29, 78, 216, 0.8); 
-            border-radius: 4px;
-            box-shadow: 0 0 10px rgba(29, 78, 216, 0.5); 
-            
-            cursor: pointer;
-            opacity: 0; 
-            pointer-events: none;
-            transition: all 0.3s ease;
-            z-index: 2000;
-        }
-        
-        /* --- PRO LÁTHATATLAN HITBOX (OPTIMALIZÁLVA) --- */
-        /* Pontosított méret: elég nagy az ujjnak, de nem takar ki mást */
-        .dock-handle::after {
-            content: '';
-            position: absolute;
-            top: -15px; bottom: -15px; /* Függőlegesen +15px */
-            left: -20px; right: 10px;   /* Balra +20px (ujj irányába) */
-            background: transparent;
-            z-index: 2002;
-        }
-
-        .smart-dock.hidden .dock-handle {
-            opacity: 1;
-            pointer-events: auto;
-            transform: translateX(-10px); 
-        }
-        
-        .dock-handle:active {
-            background: #ffffff;
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
-            transform: translateX(-10px) scaleY(1.2);
-        }
-
-        /* --- GOMBOK RESETELÉSE --- */
-        .menu-fab {
-            position: relative !important; bottom: auto !important; right: auto !important; top: auto !important;
-            width: 60px; height: 60px; 
-            background: var(--accent);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5), inset 0 2px 5px rgba(255,255,255,0.2);
-            cursor: pointer; border: 1px solid rgba(255,255,255,0.1);
-            transition: transform 0.2s;
-            -webkit-user-select: none; user-select: none;
-            -webkit-touch-callout: none;
-        }
-        .menu-fab:active { transform: scale(0.92); box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4); }
-        .menu-fab span { font-size: 28px; color: white; line-height: 1; pointer-events: none; }
-
-        .refresh-fab {
-            position: relative !important; bottom: auto !important; right: auto !important; top: auto !important;
-            width: 45px; height: 45px; 
-            background: rgba(30, 41, 59, 0.9);
-            backdrop-filter: blur(5px); border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            cursor: pointer; border: 1px solid var(--border);
-            transition: all 0.3s;
-        }
-        .refresh-fab:active { transform: rotate(180deg) scale(0.9); }
-        .refresh-fab span { font-size: 22px; color: var(--accent); line-height: 1; font-weight: bold; pointer-events: none; }
-
-        /* --- SPECIÁLIS POZÍCIÓ: ALKATRÉSZ KERESŐ (1.HTML) --- */
-        body.search-mode-active .smart-dock {
-            bottom: auto;
-            top: 420px; 
-        }
-        
-        /* --- ERGONÓMIKUS POZÍCIÓ (MINDEN MÁS MODULBAN) --- */
-        body.module-active:not(.search-mode-active) .smart-dock {
-            bottom: 160px; 
-        }
-
-        /* ------------------------------------------- */
-
-        .overlay {
-            display: none; position: fixed; inset: 0;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 1500;
-        }
-        .overlay.active { display: block; }
-
-        footer { padding: 20px; border-top: 1px solid var(--border); text-align: center; color: #64748b; font-size: 0.75rem; }
-    </style>
+/* UTILS */
+.text-danger { color: var(--danger); }
+.text-warning { color: var(--warning); }
+.text-success { color: var(--success); }
+.bg-danger-sub { background: rgba(239, 68, 68, 0.1); color: var(--danger); border-color: var(--danger); }
+.bg-warning-sub { background: rgba(245, 158, 11, 0.1); color: var(--warning); border-color: var(--warning); }
+</style>
 </head>
 <body>
 
-<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
-
-<div id="home-screen">
-    <div class="glass-card">
-        <div class="share-card-btn" onclick="shareApp(this)" title="App megosztása">
-            <svg class="share-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
-            </svg>
+<div class="container">
+    <header>
+        <div class="brand">
+            <h1>Forvia <span>SMT Analytics</span></h1>
+            <div class="subtitle">Production Quality & Attrition Dashboard by: Fajcsik Valér 2026</div>
+            <div id="activeLineLabel"></div>
         </div>
-
-        <h1 class="welcome-title">Üdv <span class="highlight-blue">Felhasználó!</span></h1>
-        <div id="display-date" class="current-date">
-            <span id="date-text">0000. 00. 00.</span><br>
-            <span id="name-day" class="nameday-text">...</span>
-        </div>
-
-        <div id="calendar-widget" class="calendar-box">
-            <div class="cal-header">
-                <span id="cal-type-icon">📅</span> 
-                <span id="cal-label" class="cal-label">KÖVETKEZŐ ESEMÉNY</span>
+        <div class="header-actions">
+            <button class="eval-btn" onclick="generateEvaluation()">
+                📊 RÉSZLETES KIÉRTÉKELÉS
+            </button>
+            <div class="date-display">
+                <div class="date-label">Elemzett Időszak</div>
+                <div class="date-value" id="reportDate">MAI NAP</div>
             </div>
-            <div class="cal-main-row">
-                <span id="cal-date" class="cal-date-text">...</span>
-                <span id="cal-days-left" class="cal-badge">...</span>
+            <button class="help-btn" onclick="toggleModal(true)">❓ MAGYARÁZAT</button>
+        </div>
+    </header>
+
+    <div class="controls-area">
+        <div class="upload-btn" onclick="document.getElementById('fileInput').click()">
+            📂 Adatfájl (CSV)
+        </div>
+        <input type="file" id="fileInput" accept=".csv,.txt" style="display:none">
+
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label>Gépsor</label>
+                <select id="filterLine" onchange="filterLineChanged()"><option value="mind">Teljes Gyár</option></select>
             </div>
-            <div id="cal-name" class="cal-event-name">Betöltés...</div>
+            <div class="filter-group">
+                <label>Beültető Gép</label>
+                <select id="filterMachine" onchange="updateView()"><option value="mind">Minden Gép</option></select>
+            </div>
+            <div class="filter-group">
+                <label>Toplista Méret</label>
+                <select id="topLimit" onchange="updateView()">
+                    <option value="5">Top 5</option>
+                    <option value="10" selected>Top 10</option>
+                    <option value="15">Top 15</option>
+                </select>
+            </div>
+        </div>
+        <button onclick="window.print()" style="background:#334155; color:white; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:bold;">🖨️ PDF</button>
+    </div>
+
+    <div class="kpi-grid">
+        <div class="kpi-card" style="border-top: 4px solid var(--primary);">
+            <h3>Gyártott Mennyiség</h3>
+            <div>
+                <span class="kpi-main-val" id="kpiTotal">0</span>
+            </div>
+            <div class="kpi-footer">Beültetett (Jó) darab</div>
+        </div>
+        
+        <div class="kpi-card" style="border-top: 4px solid var(--success);">
+            <h3>FPY / Kihozatal</h3>
+            <div>
+                <span class="kpi-main-val text-success" id="kpiYield">100%</span>
+            </div>
+            <div class="kpi-footer">First Pass Yield</div>
         </div>
 
-        <p class="instruction-text">
-            Használd a jobb oldalon lévő <span class="instruction-highlight">menügombot</span><br>
-            a használat megkezdéséhez.
-        </p>
+        <div class="kpi-card" style="border-top: 4px solid var(--danger);">
+            <h3>Felvételi Hiba (Pick)</h3>
+            <div>
+                <span class="kpi-main-val text-danger" id="kpiPickCount">0 db</span>
+                <span class="kpi-sub-val text-danger" id="kpiPickRate">0.00%</span>
+            </div>
+            <div class="kpi-footer">
+                <span id="kpiPickPPM" class="badge-ppm">0 PPM</span>
+                <span>veszteség</span>
+            </div>
+        </div>
 
-        <div class="device-info">
-            Forvia SMT 2026
-            <span class="good-luck">Jó munkát!</span>
+        <div class="kpi-card" style="border-top: 4px solid var(--warning);">
+            <h3>Felismerési Hiba (Vision)</h3>
+            <div>
+                <span class="kpi-main-val text-warning" id="kpiVisCount">0 db</span>
+                <span class="kpi-sub-val text-warning" id="kpiVisRate">0.00%</span>
+            </div>
+            <div class="kpi-footer">
+                <span id="kpiVisPPM" class="badge-ppm">0 PPM</span>
+                <span>veszteség</span>
+            </div>
         </div>
     </div>
 
-    <div class="ticker-wrap">
-        <div class="ticker-move">
-            <div class="ticker-item">🚧 Folyamatos fejlesztés alatt...🔧</div>
+    <div class="analysis-grid">
+        <div class="panel">
+            <div class="panel-header">
+                <h3 class="panel-title text-danger"><span class="dot" style="background:var(--danger)"></span> KRITIKUS FELVÉTELI HIBÁK</h3>
+            </div>
+            <div id="alertPick" class="alert-banner bg-danger-sub" style="display:none"></div>
+            <table id="tablePick">
+                <thead><tr><th>Cikkszám</th><th style="text-align:right">Elszóródás / Részarány</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <h3 class="panel-title text-warning"><span class="dot" style="background:var(--warning)"></span> KRITIKUS FELISMERÉSI HIBÁK</h3>
+            </div>
+            <div id="alertVis" class="alert-banner bg-warning-sub" style="display:none"></div>
+            <table id="tableVis">
+                <thead><tr><th>Cikkszám</th><th style="text-align:right">Elszóródás / Részarány</th></tr></thead>
+                <tbody></tbody>
+            </table>
         </div>
     </div>
 </div>
 
-<iframe id="content-frame" name="appFrame"></iframe>
+<div id="helpModal" class="modal-overlay" onclick="if(event.target===this) toggleModal(false)">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 style="margin:0">Forvia Analytics - Szakmai Útmutató</h2>
+            <button class="modal-close" onclick="toggleModal(false)">&times;</button>
+        </div>
+        
+        <div class="help-section">
+            <div class="help-title">1. A Számítás Módszertana (Scrap Rate)</div>
+            <div class="help-text">
+                Ez a dashboard a <strong>valós anyagveszteséget</strong> (Scrap Rate) mutatja, amely a teljes betárazott (felhasznált) mennyiséghez viszonyít.
+                Ez eltér az egyszerű "hiba per jó darab" számítástól, mert tartalmazza magát a selejtet is a nevezőben.
+                <span class="formula">Elszóródás % = Hiba darab / (Jó darab + Hiba darab) * 100</span>
+                <em>Miért fontos ez?</em> Mert így pontosan látható, hogy a raktárból kiadott anyag hány százaléka végezte a hulladékban.
+            </div>
+        </div>
 
-<aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <h2>
-            <span style="color: white;">FORVIA</span>
-            <span style="color: var(--accent);">SMT</span>
-        </h2>
+        <div class="help-section">
+            <div class="help-title">2. KPI Mutatók Értelmezése</div>
+            <div class="help-text">
+                <ul>
+                    <li><strong>FPY (First Pass Yield):</strong> Kihozatal. Azt mutatja, hogy a folyamatba belépő alkatrészek hány százaléka került sikeresen beültetésre első próbálkozásra. Cél: >99.8%.</li>
+                    <li><strong>PPM (Parts Per Million):</strong> Az autóipar standard mutatója. Azt fejezi ki, hogy <strong>egymillió</strong> alkatrészből mennyi lenne a selejt az adott aránnyal.
+                        <br><em>Példa: Ha a hibaarány 0.1%, az 1000 PPM-et jelent.</em>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="help-section">
+            <div class="help-title">3. Hiba Típusok és Teendők</div>
+            <div class="help-text">
+                <ul>
+                    <li><strong><span style="color:var(--danger)">FELVÉTELI HIBA (Pick Error):</span></strong> 
+                        A gép meg sem tudta fogni az alkatrészt, vagy elejtette a kamera előtt.
+                        <br><strong>Gyakori okok:</strong> Feeder hiba (kopás), Nozzle eltömődés, Vákuum hiba, Cover tape probléma.
+                    </li>
+                    <li><strong><span style="color:var(--warning)">FELISMERÉSI HIBA (Vision Error):</span></strong> 
+                        A gép felvette az alkatrészt, de a kamera visszautasította.
+                        <br><strong>Gyakori okok:</strong> Sérült alkatrész, Alkatrész fordítva van a szalagban (flip), Rossz lábgeometria, Szennyezett kamera.
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="help-section">
+            <div class="help-title">4. Táblázatok (Pareto Elemzés)</div>
+            <div class="help-text">
+                A listák csökkenő sorrendben mutatják a hibákat. A jobb oldali <strong>"Részarány"</strong> (Share) a legfontosabb mutató a döntéshozáshoz:
+                azt mutatja meg, hogy az <em>összes</em> gépállásból az az egyetlen alkatrész felelős a hibák hány százalékáért.
+                <br><em>Ha egy alkatrész részaránya magas (>20%), a karbantartást azonnal oda kell irányítani!</em>
+            </div>
+        </div>
+        
+        <button onclick="toggleModal(false)" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold; font-size:1rem;">ÉRTEM, KÖSZÖNÖM</button>
     </div>
+</div>
 
-    <nav class="nav-list">
-        <div onclick="showHome(this)" class="nav-item"><i>🏠</i> Kezdőlap</div>
-        <div onclick="loadModule('1.html', false, this)" class="nav-item"><i>🔍</i> Alkatrész Kereső</div>
-        <div onclick="loadModule('2.html', false, this)" class="nav-item"><i>💰</i> Bérkalkulátor</div>
-        <div onclick="loadModule('3.html', false, this)" class="nav-item"><i>📅</i> Műszaknaptár</div>
-        <div onclick="loadModule('4.html', false, this)" class="nav-item"><i>📝</i> Napi Jelentés segédlet</div>
-        <div onclick="loadModule('5.html', false, this)" class="nav-item"><i>🎭</i> Maszk kereső</div>
-        <div onclick="openSecureLink(this)" class="nav-item"><i>⚙️</i>Adatgeneráló 🔐</div>
-        <div onclick="loadModule('7.html', false, this)" class="nav-item"><i>📊</i> Hiba Analízis</div>
-        <div onclick="openStaffPro(this)" class="nav-item"><i>👥</i> Szabadságok 2026 🔐</div>
-        <div onclick="loadModule('9.html', false, this)" class="nav-item"><i>📷</i> Operátori Barcode Scan </div>
-        <div onclick="loadModule('10.html', false, this)" class="nav-item"><i>🚮</i> Szemétkihordás Terv</div>
-        <div onclick="loadModule('11.html', false, this)" class="nav-item"><i>❌</i> Szárak kikapcsolása</div>
-    </nav>
+<div id="evalModal" class="modal-overlay" onclick="if(event.target===this) toggleEvalModal(false)">
+    <div class="modal-content eval-container">
+        <div class="modal-header">
+            <h2 style="margin:0; color:var(--purple);">📊 GÉPEK ÉS TELJESÍTMÉNY ELEMZÉS</h2>
+            <button class="modal-close" onclick="toggleEvalModal(false)">&times;</button>
+        </div>
+        
+        <div class="eval-summary-box">
+            <div class="eval-summary-title">FIGYELEM: A LEGGYENGÉBBEN TELJESÍTŐ GÉP</div>
+            <div class="eval-summary-value" id="evalWorstMachine">-</div>
+            <div class="eval-narrative" id="evalNarrativeText">
+                Az adatok betöltése után itt olvasható a részletes elemzés.
+            </div>
+        </div>
 
-    <footer>Szoftverfejlesztő:<br><strong style="color:white">GERGŐ ROLAND</strong><br>2026</footer>
-</aside>
+        <div class="chart-legend">
+            <div class="legend-item"><div class="legend-box" style="background:var(--danger)"></div> Pick (Felvétel)</div>
+            <div class="legend-item"><div class="legend-box" style="background:var(--warning)"></div> Vision (Kamera)</div>
+        </div>
 
-<div id="smartDock" class="smart-dock">
-    <div class="dock-handle" onclick="toggleDockState()"></div>
-    
-    <div class="refresh-fab" onclick="window.location.reload()">
-        <span>↻</span>
-    </div>
+        <div class="help-title">GÉPEK RANGSORA (HIBA DB SZERINT CSÖKKENŐ)</div>
+        <div id="machineChartContainer" style="margin-bottom: 30px; max-height:400px; overflow-y:auto; padding-right:10px;">
+            </div>
 
-    <div class="menu-fab" id="menuFab" onclick="toggleMenu()" oncontextmenu="return false;">
-        <span id="menuIcon">☰</span>
+        <div class="help-title">JAVASOLT INTÉZKEDÉSI TERV</div>
+        <div class="help-text" id="evalActionPlan">
+            Az adatok betöltése után itt jelenik meg a javaslat.
+        </div>
+
+        <button onclick="toggleEvalModal(false)" style="width:100%; padding:12px; background:var(--purple); color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold; margin-top:20px;">VISSZA A FŐOLDALRA</button>
     </div>
 </div>
 
 <script>
-    const nevnapok = {
-        "01-01": "Alpár", "01-02": "Ábel", "01-03": "Genovéva, Benjámin", "01-04": "Titusz, Leona", "01-05": "Simon", "01-06": "Boldizsár", "01-07": "Attila, Ramóna", "01-08": "Gyöngyvér", "01-09": "Marcell", "01-10": "Melánia", "01-11": "Ágota", "01-12": "Ernő", "01-13": "Veronika", "01-14": "Bódog", "01-15": "Lóránt, Loránd", "01-16": "Gusztáv", "01-17": "Antal, Antónia", "01-18": "Piroska", "01-19": "Sára, Márió", "01-20": "Fábián, Sebestyén", "01-21": "Ágnes", "01-22": "Vince", "01-23": "Zelma, Rajmund", "01-24": "Timót", "01-25": "Pál", "01-26": "Vanda, Paula", "01-27": "Angelika", "01-28": "Károly, Karola", "01-29": "Adél", "01-30": "Martina, Gerda", "01-31": "Marcella",
-        "02-01": "Ignác", "02-02": "Karolina, Aida", "02-03": "Balázs", "02-04": "Ráhel, Csenge", "02-05": "Ágota, Ingrid", "02-06": "Dorottya, Dóra", "02-07": "Tódor, Rómeó", "02-08": "Aranka", "02-09": "Abigél, Alex", "02-10": "Elvira", "02-11": "Bertold, Marietta", "02-12": "Lívia, Lídia", "02-13": "Ella, Linda", "02-14": "Bálint, Valentin", "02-15": "Kolos, Georgina", "02-16": "Julianna, Lilla", "02-17": "Donát", "02-18": "Bernadett", "02-19": "Zsuzsanna", "02-20": "Aladár, Álmos", "02-21": "Eleonóra", "02-22": "Gerzson", "02-23": "Alfréd", "02-24": "Mátyás", "02-25": "Géza", "02-26": "Viktor, Győző", "02-27": "Gábor, Edina", "02-28": "Elemér", "02-29": "Auguszta",
-        "03-01": "Albin", "03-02": "Lujza", "03-03": "Kornélia", "03-04": "Kázmér", "03-05": "Adorján, Adrián", "03-06": "Leonóra, Inez", "03-07": "Tamás", "03-08": "Zoltán", "03-09": "Franciska, Fanni", "03-10": "Ildikó", "03-11": "Szilárd", "03-12": "Gergely", "03-13": "Krisztián, Ajtony", "03-14": "Matild", "03-15": "Kristóf", "03-16": "Henrietta", "03-17": "Gertrúd, Patrik", "03-18": "Sándor, Ede", "03-19": "József, Bánk", "03-20": "Klaudia", "03-21": "Benedek", "03-22": "Beáta, Izolda", "03-23": "Emőke", "03-24": "Gábor, Karina", "03-25": "Irén, Irisz", "03-26": "Emánuel", "03-27": "Hajnalka", "03-28": "Gedeon, Johanna", "03-29": "Auguszta", "03-30": "Zalán", "03-31": "Árpád",
-        "04-01": "Hugó", "04-02": "Áron", "04-03": "Buda, Richárd", "04-04": "Izidor", "04-05": "Vince", "04-06": "Vilmos, Bíborka", "04-07": "Herman", "04-08": "Dénes", "04-09": "Erhard", "04-10": "Zsolt", "04-11": "Leó, Szaniszló", "04-12": "Gyula", "04-13": "Ida", "04-14": "Tibor", "04-15": "Anasztázia, Tas", "04-16": "Csongor", "04-17": "Rudolf", "04-18": "Andrea, Ilma", "04-19": "Emma", "04-20": "Tivadar", "04-21": "Konrád", "04-22": "Csilla, Noémi", "04-23": "Béla, Adalbert", "04-24": "György", "04-25": "Márk", "04-26": "Ervin", "04-27": "Zita, Mariann", "04-28": "Valéria", "04-29": "Péter", "04-30": "Katalin, Kitti",
-        "05-01": "Fülöp, Jakab", "05-02": "Zsigmond", "05-03": "Tímea, Irma", "05-04": "Mónika, Flórián", "05-05": "Györgyi", "05-06": "Ivett, Frida", "05-07": "Gizella", "05-08": "Mihály", "05-09": "Gergely", "05-10": "Ármin, Pálma", "05-11": "Ferenc", "05-12": "Pongrác", "05-13": "Szervác, Imola", "05-14": "Bonifác", "05-15": "Zsófia, Szonja", "05-16": "Mózes, Botond", "05-17": "Paszkál", "05-18": "Erik, Alexandra", "05-19": "Ivó, Milán", "05-20": "Bernát, Felícia", "05-21": "Konstantin", "05-22": "Júlia, Rita", "05-23": "Dezső", "05-24": "Eszter, Eliza", "05-25": "Orbán", "05-26": "Fülöp, Evelin", "05-27": "Hella", "05-28": "Emil, Csanád", "05-29": "Magdolna", "05-30": "Janka, Zsanett", "05-31": "Angéla, Petronella",
-        "06-01": "Tünde", "06-02": "Kármen, Anita", "06-03": "Klothild", "06-04": "Bulcsú", "06-05": "Fatime, Bonifác", "06-06": "Norbert, Cintia", "06-07": "Róbert", "06-08": "Medárd", "06-09": "Félix", "06-10": "Margit, Gréta", "06-11": "Barnabás", "06-12": "Villő", "06-13": "Antal, Anett", "06-14": "Vazul", "06-15": "Jolán, Vid", "06-16": "Jusztin", "06-17": "Laura, Alida", "06-18": "Arnold, Levente", "06-19": "Gyárfás", "06-20": "Rafael", "06-21": "Alajos, Leila", "06-22": "Paulina", "06-23": "Zoltán", "06-24": "Iván", "06-25": "Vilmos", "06-26": "János, Pál", "06-27": "László", "06-28": "Levente, Irén", "06-29": "Péter, Pál", "06-30": "Pál",
-        "07-01": "Tihamér, Annamária", "07-02": "Ottó", "07-03": "Kornél, Soma", "07-04": "Ulrik", "07-05": "Emese, Sarolta", "07-06": "Csaba", "07-07": "Apollónia", "07-08": "Ellák", "07-09": "Lukrécia", "07-10": "Amália", "07-11": "Nóra, Lili", "07-12": "Izabella, Dalma", "07-13": "Jenő", "07-14": "Örs, Stella", "07-15": "Henrik, Roland", "07-16": "Valter", "07-17": "Endre, Elek", "07-18": "Frigyes", "07-19": "Emília", "07-20": "Illés", "07-21": "Dániel, Daniella", "07-22": "Magdolna", "07-23": "Lenke", "07-24": "Kinga, Kincső", "07-25": "Kristóf, Jakab", "07-26": "Anna, Anikó", "07-27": "Olga, Liliána", "07-28": "Szabolcs", "07-29": "Márta, Flóra", "07-30": "Judit, Xénia", "07-31": "Oszkár",
-        "08-01": "Boglárka", "08-02": "Lehel", "08-03": "Hermina", "08-04": "Domonkos, Dominika", "08-05": "Krisztina", "08-06": "Berta, Bettina", "08-07": "Ibolya", "08-08": "László", "08-09": "Emőd", "08-10": "Lőrinc", "08-11": "Zsuzsanna, Tiborc", "08-12": "Klára", "08-13": "Ipoly", "08-14": "Marcell", "08-15": "Mária", "08-16": "Ábrahám", "08-17": "Jácint", "08-18": "Ilona", "08-19": "Huba", "08-20": "István", "08-21": "Sámuel, Hajna", "08-22": "Menyhért, Mirjam", "08-23": "Bence", "08-24": "Bertalan", "08-25": "Lajos, Patrícia", "08-26": "Izsó", "08-27": "Gáspár", "08-28": "Ágoston", "08-29": "Beatrix, Erna", "08-30": "Rózsa", "08-31": "Erika, Bella",
-        "09-01": "Egyed, Egon", "09-02": "Rebeka, Dorina", "09-03": "Hilda", "09-04": "Rozália", "09-05": "Viktor, Lőrinc", "09-06": "Zakariás", "09-07": "Regina", "09-08": "Mária, Adrienn", "09-09": "Ádám", "09-10": "Nikolett, Hunor", "09-11": "Teodóra", "09-12": "Mária", "09-13": "Kornél", "09-14": "Szeréna, Roxána", "09-15": "Enikő, Melitta", "09-16": "Edit", "09-17": "Zsófia", "09-18": "Diána", "09-19": "Vilhelmina", "09-20": "Friderika", "09-21": "Máté, Mirella", "09-22": "Móric", "09-23": "Tekla", "09-24": "Gellért, Mercédesz", "09-25": "Eufrozina, Kende", "09-26": "Jusztina", "09-27": "Adalbert", "09-28": "Vencel", "09-29": "Mihály", "09-30": "Jeromos",
-        "10-01": "Malvin", "10-02": "Petra", "10-03": "Helga", "10-04": "Ferenc", "10-05": "Aurél", "10-06": "Brúnó, Renáta", "10-07": "Amália", "10-08": "Koppány", "10-09": "Dénes", "10-10": "Gedeon", "10-11": "Brigitta", "10-12": "Miksa", "10-13": "Kálmán, Ede", "10-14": "Helén", "10-15": "Teréz", "10-16": "Gál", "10-17": "Hedvig", "10-18": "Lukács", "10-19": "Pelbárt", "10-20": "Vendel", "10-21": "Orsolya", "10-22": "Előd", "10-23": "Gyöngyvér", "10-24": "Salamon", "10-25": "Blanka, Bianka", "10-26": "Dömötör", "10-27": "Szabina", "10-28": "Simon, Júdás", "10-29": "Nárcisz", "10-30": "Alfonz", "10-31": "Farkas",
-        "11-01": "Marianna", "11-02": "Achilles", "11-03": "Győző", "11-04": "Károly", "11-05": "Imre", "11-06": "Lénárd", "11-07": "Rezső", "11-08": "Zsombor", "11-09": "Tivadar", "11-10": "Réka", "11-11": "Márton", "11-12": "Jónás, Renátó", "11-13": "Szilvia", "11-14": "Aliz", "11-15": "Albert, Lipót", "11-16": "Ödön", "11-17": "Hortenzia, Gergő", "11-18": "Jenő", "11-19": "Erzsébet", "11-20": "Jolán", "11-21": "Olivér", "11-22": "Cecília", "11-23": "Kelemen, Kolos", "11-24": "Emma", "11-25": "Katalin", "11-26": "Virág", "11-27": "Virgil", "11-28": "Stefánia", "11-29": "Taksony", "11-30": "András, Andor",
-        "12-01": "Elza", "12-02": "Melinda, Vivien", "12-03": "Ferenc, Olívia", "12-04": "Borbála, Barbara", "12-05": "Vilma", "12-06": "Miklós", "12-07": "Ambrus", "12-08": "Mária", "12-09": "Natália", "12-10": "Judit", "12-11": "Árpád", "12-12": "Gabriella", "12-13": "Luca, Otília", "12-14": "Szilárda", "12-15": "Valér", "12-16": "Etelka, Aletta", "12-17": "Lázár, Olimpia", "12-18": "Auguszta", "12-19": "Viola", "12-20": "Teofil", "12-21": "Tamás", "12-22": "Zénó", "12-23": "Viktória", "12-24": "Ádám, Éva", "12-25": "Eugénia", "12-26": "István", "12-27": "János", "12-28": "Kamilla", "12-29": "Tamás, Tamara", "12-30": "Dávid", "12-31": "Szilveszter"
-    };
+let rawData = [];
+let lineMachineMap = {}; 
+document.getElementById('reportDate').innerText = new Date().toLocaleDateString('hu-HU');
 
-    const calendarEvents = [
-        { date: "2026-03-15", name: "Nemzeti Ünnep (Vasárnap)", type: "holiday", shiftDay: "C", shiftNight: "D" },
-        { date: "2026-04-03", name: "Nagypéntek", type: "holiday", shiftDay: "A", shiftNight: "B" },
-        { date: "2026-04-05", name: "Húsvétvasárnap", type: "holiday", shiftDay: "A", shiftNight: "B" },
-        { date: "2026-04-06", name: "Húsvéthétfő", type: "holiday", shiftDay: "C", shiftNight: "D" },
-        { date: "2026-05-01", name: "Munka Ünnepe (Péntek)", type: "holiday", shiftDay: "C", shiftNight: "D" },
-        { date: "2026-05-24", name: "Pünkösdvasárnap", type: "holiday", shiftDay: "C", shiftNight: "D" },
-        { date: "2026-05-25", name: "Pünkösdhétfő", type: "holiday", shiftDay: "C", shiftNight: "D" },
-        { date: "2026-08-20", name: "Államalapítás Ünnepe", type: "holiday", shiftDay: "B", shiftNight: "A" },
-        { date: "2026-08-21", name: "Pihenőnap (Hosszú hétvége)", type: "holiday", shiftDay: "B", shiftNight: "A" },
-        { date: "2026-08-29", name: "SZOMBATI MUNKANAP (Aug. 21 helyett)", type: "workday" },
-        { date: "2026-10-23", name: "1956-os Forradalom (Péntek)", type: "holiday", shiftDay: "D", shiftNight: "C" },
-        { date: "2026-11-01", name: "Mindenszentek (Vasárnap)", type: "holiday", shiftDay: "B", shiftNight: "A" },
-        { date: "2026-12-12", name: "SZOMBATI MUNKANAP (Dec. 24 helyett)", type: "workday" },
-        { date: "2026-12-24", name: "Szenteste (Pihenőnap)", type: "holiday", shiftDay: "A", shiftNight: "B" },
-        { date: "2026-12-25", name: "Karácsony", type: "holiday", shiftDay: "A", shiftNight: "B" },
-        { date: "2026-12-26", name: "Karácsony", type: "holiday", shiftDay: "C", shiftNight: "D" }
-    ];
+function toggleModal(show) { document.getElementById('helpModal').style.display = show ? 'flex' : 'none'; }
+// ÚJ: Külön függvény az új ablaknak
+function toggleEvalModal(show) { document.getElementById('evalModal').style.display = show ? 'flex' : 'none'; }
 
-    function updateCalendarWidget() {
-        const now = new Date();
-        now.setHours(0, 0, 0, 0);
+document.getElementById('fileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
 
-        let nextEvent = calendarEvents.find(e => {
-            const eventDate = new Date(e.date);
-            return eventDate >= now;
+    // Dátum kinyerése a fájlnévből (...)
+    const fileName = file.name;
+    const dateMatch = fileName.match(/\((.*?)\)/); 
+    
+    if(dateMatch && dateMatch[1]) {
+        document.getElementById('reportDate').innerText = dateMatch[1];
+        document.getElementById('reportDate').style.color = "var(--primary)";
+    } else {
+        document.getElementById('reportDate').innerText = new Date().toLocaleDateString('hu-HU');
+        document.getElementById('reportDate').style.color = "white";
+    }
+
+    const reader = new FileReader();
+    reader.onload = (ev) => processData(ev.target.result);
+    reader.readAsText(file);
+});
+
+function processData(csvText) {
+    const lines = csvText.split('\n').map(x => x.trim()).filter(x => x);
+    if(lines.length < 2) return;
+    const sep = lines[0].indexOf(';') > -1 ? ';' : ',';
+    rawData = []; lineMachineMap = {};
+    for(let i=1; i<lines.length; i++) {
+        const col = lines[i].split(sep);
+        if(col.length < 4) continue;
+        const line = col[0] ? col[0].trim() : "Egyéb";
+        const machine = col[1] ? col[1].trim() : "Egyéb";
+        if(!lineMachineMap[line]) lineMachineMap[line] = new Set();
+        lineMachineMap[line].add(machine);
+        rawData.push({
+            line: line, machine: machine, part: col[2] ? col[2].trim() : "Unknown",
+            good: parseInt(col[3]) || 0,
+            pickErr: parseInt(col[4]) || 0,
+            visErr: parseInt(col[5]) || 0
         });
-
-        if (!nextEvent) {
-            nextEvent = { date: "2027-01-01", name: "Újév", type: "holiday", shiftDay: "-", shiftNight: "-" };
-        }
-
-        const eventDate = new Date(nextEvent.date);
-        const timeDiff = eventDate - now;
-        const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-
-        const box = document.getElementById('calendar-widget');
-        const label = document.getElementById('cal-label');
-        const dateDisplay = document.getElementById('cal-date');
-        const daysBadge = document.getElementById('cal-days-left');
-        const nameDisplay = document.getElementById('cal-name');
-        const icon = document.getElementById('cal-type-icon');
-
-        const monthNames = ["Január", "Február", "Március", "Április", "Május", "Június", "Július", "Augusztus", "Szeptember", "Október", "November", "December"];
-        const formattedDate = `${monthNames[eventDate.getMonth()]} ${eventDate.getDate()}.`;
-
-        dateDisplay.innerText = formattedDate;
-        nameDisplay.innerText = nextEvent.name;
-
-        box.className = "calendar-box"; 
-        daysBadge.className = "cal-badge"; 
-
-        if (nextEvent.type === 'workday') {
-            box.classList.add('type-workday');
-            daysBadge.classList.add('workday');
-            label.innerText = "KÖTELEZŐ MUNKANAP";
-            icon.innerText = "⚠️";
-        } else {
-            box.classList.add('type-holiday');
-            daysBadge.classList.add('holiday');
-            label.innerText = "KÖVETKEZŐ ÜNNEP";
-            icon.innerText = "📅";
-        }
-
-        if (daysLeft === 0) {
-            daysBadge.innerText = "MA!";
-        } else if (daysLeft === 1) {
-            daysBadge.innerText = "HOLNAP";
-        } else {
-            daysBadge.innerText = `${daysLeft} NAP`;
-        }
-
-        const oldInfo = document.getElementById('shift-info-display');
-        if (oldInfo) oldInfo.remove();
-
-        if (nextEvent.shiftDay && nextEvent.shiftNight) {
-            const shiftDiv = document.createElement('div');
-            shiftDiv.id = 'shift-info-display';
-            shiftDiv.className = 'shift-info-box';
-            shiftDiv.innerHTML = `
-                <div class="shift-header-row">
-                    <span>ÉRINTETT MŰSZAKOK</span>
-                </div>
-                <div class="shift-content-row">
-                    <div class="shift-col">
-                        <span class="shift-label-sub">Nappal</span>
-                        <span class="shift-value-main">
-                            <span style="color:white; font-size:1.1rem;">${nextEvent.shiftDay}</span> 
-                            <span style="color:#60a5fa; font-size:0.8rem; text-transform: uppercase;">műszak</span>
-                        </span>
-                    </div>
-                    <div class="shift-col">
-                        <span class="shift-label-sub">Éjszaka</span>
-                        <span class="shift-value-main">
-                            <span style="color:white; font-size:1.1rem;">${nextEvent.shiftNight}</span> 
-                            <span style="color:#60a5fa; font-size:0.8rem; text-transform: uppercase;">műszak</span>
-                        </span>
-                    </div>
-                </div>
-            `;
-            box.appendChild(shiftDiv);
-        }
     }
+    initFilters();
+    updateView();
+}
 
-    function updateInfo() {
-        const now = new Date();
-        const napok = ["Vasárnap", "Hétfő", "Kedd", "Szerda", "Csütörtök", "Péntek", "Szombat"];
-        const napNeve = napok[now.getDay()];
-        const dateStr = now.getFullYear() + ". " + String(now.getMonth() + 1).padStart(2, '0') + ". " + String(now.getDate()).padStart(2, '0') + ". " + napNeve;
-        
-        document.getElementById('date-text').innerText = dateStr;
+function initFilters() {
+    const s = document.getElementById('filterLine');
+    s.innerHTML = '<option value="mind">Teljes Gyár</option>';
+    Object.keys(lineMachineMap).sort().forEach(l => s.innerHTML += `<option value="${l}">${l}</option>`);
+    filterLineChanged(); 
+}
 
-        const honapNap = String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
-        const maiNevnap = nevnapok[honapNap] || "---";
-        document.getElementById('name-day').innerText = "Névnap: " + maiNevnap;
-
-        updateCalendarWidget();
+function filterLineChanged() {
+    const sLine = document.getElementById('filterLine').value;
+    const mSelect = document.getElementById('filterMachine');
+    mSelect.innerHTML = '<option value="mind">Minden Gép</option>';
+    if (sLine !== 'mind' && lineMachineMap[sLine]) {
+        Array.from(lineMachineMap[sLine]).sort().forEach(m => mSelect.innerHTML += `<option value="${m}">${m}</option>`);
+    } else {
+        const allM = new Set();
+        Object.values(lineMachineMap).forEach(s => s.forEach(m => allM.add(m)));
+        Array.from(allM).sort().forEach(m => mSelect.innerHTML += `<option value="${m}">${m}</option>`);
     }
-    updateInfo();
+    updateView();
+}
 
-    function toggleMenu() {
-        if(navigator.vibrate) navigator.vibrate(15);
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('overlay');
-        const icon = document.getElementById('menuIcon');
-        sidebar.classList.toggle('open');
-        overlay.classList.toggle('active');
-        icon.innerText = sidebar.classList.contains('open') ? '✕' : '☰';
+function updateView() {
+    if(rawData.length === 0) return;
+    const sLine = document.getElementById('filterLine').value;
+    const sMach = document.getElementById('filterMachine').value;
+    const limit = parseInt(document.getElementById('topLimit').value);
+    
+    // --- ÚJ RÉSZ: AKTÍV SOR KIJELZÉSE ---
+    const lineLabel = document.getElementById('activeLineLabel');
+    if(sLine !== 'mind') {
+        lineLabel.innerText = "Kiválasztott Sor: " + sLine;
+        lineLabel.style.display = 'block';
+    } else {
+        lineLabel.innerText = "Teljes Gyár"; // HOZZÁADÁS: Így nyomtatásnál megjelenik, de képernyőn rejtve marad
+        lineLabel.style.display = 'none';
     }
+    // -------------------------------------
 
-    // --- SMART DOCK LOGIKA ---
-    let dockTimeout;
-    const dockElement = document.getElementById('smartDock');
+    const data = rawData.filter(d => (sLine === 'mind' || d.line === sLine) && (sMach === 'mind' || d.machine === sMach));
 
-    function toggleDockState(forceCollapse = null) {
-        // Timer törlése interakciónál
-        clearTimeout(dockTimeout);
+    let sumGood=0, sumPick=0, sumVis=0;
+    let pMap={}, vMap={}, lMap={};
 
-        if (forceCollapse === true) {
-            dockElement.classList.add('hidden');
-        } else if (forceCollapse === false) {
-            dockElement.classList.remove('hidden');
-        } else {
-            if(navigator.vibrate) navigator.vibrate(10);
-            dockElement.classList.toggle('hidden');
+    data.forEach(d => {
+        sumGood += d.good; sumPick += d.pickErr; sumVis += d.visErr;
+        if(d.pickErr > 0) pMap[d.part] = (pMap[d.part]||0) + d.pickErr;
+        if(d.visErr > 0) vMap[d.part] = (vMap[d.part]||0) + d.visErr;
+        if(d.pickErr > 0 || d.visErr > 0) {
+            if(!lMap[d.part]) lMap[d.part] = new Set();
+            lMap[d.part].add(`${d.machine}`);
         }
-
-        // --- MINDENHOL INDUL A TIMER (KEZDŐLAPON IS) ---
-        // Ha épp nyitva van (nincs rajta hidden), akkor időzítjük a bezárást
-        if (!dockElement.classList.contains('hidden')) {
-            dockTimeout = setTimeout(() => {
-                dockElement.classList.add('hidden');
-            }, 6000);
-        }
-    }
-
-    // --- LAPTOP HOVER FUNKCIÓ ---
-    // Ha az egér rávisz -> Azonnal megjelenik és törli a visszaszámlálást
-    dockElement.addEventListener('mouseenter', () => {
-        clearTimeout(dockTimeout);
-        dockElement.classList.remove('hidden');
     });
 
-    // Ha az egér lemegy róla -> Indul a 6mp visszaszámlálás
-    dockElement.addEventListener('mouseleave', () => {
-        if (!dockElement.classList.contains('hidden')) {
-            dockTimeout = setTimeout(() => {
-                dockElement.classList.add('hidden');
-            }, 6000);
-        }
+    const totalUsage = sumGood + sumPick + sumVis;
+    const pickRate = totalUsage > 0 ? (sumPick/totalUsage)*100 : 0;
+    const visRate = totalUsage > 0 ? (sumVis/totalUsage)*100 : 0;
+    const pickPPM = totalUsage > 0 ? Math.round((sumPick/totalUsage)*1000000) : 0;
+    const visPPM = totalUsage > 0 ? Math.round((sumVis/totalUsage)*1000000) : 0;
+    const yieldVal = totalUsage > 0 ? (sumGood/totalUsage)*100 : 100;
+
+    document.getElementById('kpiTotal').innerText = sumGood.toLocaleString();
+    
+    const yieldEl = document.getElementById('kpiYield');
+    yieldEl.innerText = yieldVal.toFixed(2) + "%";
+    
+    if (yieldVal < 99.98) {
+        yieldEl.classList.remove('text-success');
+        yieldEl.classList.add('text-danger');
+    } else {
+        yieldEl.classList.remove('text-danger');
+        yieldEl.classList.add('text-success');
+    }
+    
+    document.getElementById('kpiPickCount').innerText = sumPick.toLocaleString() + " db";
+    document.getElementById('kpiPickRate').innerText = pickRate.toFixed(2) + "%";
+    document.getElementById('kpiPickPPM').innerText = pickPPM.toLocaleString() + " PPM";
+    
+    document.getElementById('kpiVisCount').innerText = sumVis.toLocaleString() + " db";
+    document.getElementById('kpiVisRate').innerText = visRate.toFixed(2) + "%";
+    document.getElementById('kpiVisPPM').innerText = visPPM.toLocaleString() + " PPM";
+
+    renderTable('tablePick', pMap, lMap, sumPick, limit, 'alertPick', 'text-danger', 'var(--danger)');
+    renderTable('tableVis', vMap, lMap, sumVis, limit, 'alertVis', 'text-warning', 'var(--warning)');
+}
+
+function renderTable(tid, dMap, lMap, total, limit, aid, tCls, col) {
+    const tbody = document.getElementById(tid).querySelector('tbody');
+    tbody.innerHTML = "";
+    const sorted = Object.entries(dMap).sort((a,b) => b[1]-a[1]);
+    
+    const aEl = document.getElementById(aid);
+    if(sorted.length > 0) {
+        const share = total>0 ? ((sorted[0][1]/total)*100).toFixed(1) : 0;
+        aEl.style.display = "flex";
+        aEl.innerHTML = `<span><strong>TOP HIBA:</strong> ${sorted[0][0]}</span><span>A hibák <strong>${share}%</strong>-a!</span>`;
+    } else { aEl.style.display = "none"; }
+
+    const maxVal = sorted.length > 0 ? sorted[0][1] : 1;
+    sorted.slice(0, limit).forEach((it, i) => {
+        const locs = Array.from(lMap[it[0]]||["-"]);
+        let lStr = locs.slice(0,2).join(", ");
+        if(locs.length>2) lStr += ` (+${locs.length-2})`;
+        const share = total>0 ? ((it[1]/total)*100).toFixed(1) : "0.0";
+        tbody.innerHTML += `
+        <tr>
+            <td>
+                <span class="item-name">${i+1}. ${it[0]}</span>
+                <span class="item-loc">${lStr}</span>
+                <div class="prog-track"><div class="prog-fill" style="width:${(it[1]/maxVal)*100}%; background:${col}"></div></div>
+            </td>
+            <td style="vertical-align:top">
+                <div class="stat-primary ${tCls}">${it[1].toLocaleString()}</div>
+                <div class="stat-secondary">${share}% részarány</div>
+            </td>
+        </tr>`;
     });
+}
+
+// --- ÚJ FUNKCIÓ: KIÉRTÉKELÉS GENERÁLÁSA (HOZZÁADVA) ---
+function generateEvaluation() {
+    if(rawData.length === 0) { alert("Kérlek tölts be egy fájlt először!"); return; }
+
+    const sLine = document.getElementById('filterLine').value;
+    const chartContainer = document.getElementById('machineChartContainer');
+    chartContainer.innerHTML = "";
+
+    // Adatok összegzése gépenként (JÓ darabokkal együtt!)
+    let machStats = {};
+    rawData.forEach(d => {
+        if(sLine !== 'mind' && d.line !== sLine) return;
+        let key = d.machine;
+        if(sLine === 'mind') key = d.line + " - " + d.machine;
+
+        if(!machStats[key]) machStats[key] = { good:0, p:0, v:0, errTotal:0 };
+        machStats[key].good += d.good;
+        machStats[key].p += d.pickErr;
+        machStats[key].v += d.visErr;
+        machStats[key].errTotal += (d.pickErr + d.visErr);
+    });
+
+    // Rendezés (Legtöbb hiba elől)
+    let sortedMach = Object.entries(machStats).sort((a,b) => b[1].errTotal - a[1].errTotal);
     
-    // Kezdeti állapot beállítása (hogy betöltéskor elinduljon a timer)
-    toggleDockState(false); 
+    if(sortedMach.length === 0) { alert("Nincs megjeleníthető adat a szűrés alapján."); return; }
 
-    const moduleNames = {
-        '1.html': '🔍 Alkatrész Kereső',
-        '2.html': '💰 Bérkalkulátor',
-        '3.html': '📅 Műszaknaptár',
-        '4.html': '📝 Napi Jelentés segédlet',
-        '5.html': '🎭 Maszk kereső',
-        '6.html': '⚙️ Adatgeneráló',
-        '7.html': '📊 Hiba Analízis',
-        '8.html': '👥 Szabadságok (Staff Pro)',
-        '9.html': '📷 Barcode Scan',
-        '10.html': '🗑️ Szemétkihordás Terv',
-        '11.html': '🔌 Szárak kikapcsolása',
-        'home':   '🏠 Kezdőlap'
-    };
-
-    let discordQueue = [];
-    let isSending = false;
-    let deviceID = localStorage.getItem('fv_device_id') || Math.floor(Math.random() * 0x10000).toString(16).toUpperCase();
-    if (!localStorage.getItem('fv_device_id')) localStorage.setItem('fv_device_id', deviceID);
+    // Legrosszabb gép elemzése
+    const worst = sortedMach[0];
+    const wName = worst[0];
+    const wData = worst[1];
     
-    let totalActivity = parseInt(localStorage.getItem('fv_total_activity') || 0);
+    // Számítások a narratívához
+    const wTotalOps = wData.good + wData.p + wData.v;
+    const pPerc = wTotalOps > 0 ? ((wData.p / wTotalOps)*100).toFixed(2) : "0.00";
+    const vPerc = wTotalOps > 0 ? ((wData.v / wTotalOps)*100).toFixed(2) : "0.00";
+    const errPerc = wTotalOps > 0 ? ((wData.errTotal / wTotalOps)*100).toFixed(2) : "0.00";
 
-    function sendDiscordLog(actionName, colorCode = 3883766) {
-        console.log("Log kikapcsolva: " + actionName);
+    document.getElementById('evalWorstMachine').innerText = wName;
+    
+    // Narratíva generálása
+    const narrativeEl = document.getElementById('evalNarrativeText');
+    narrativeEl.innerHTML = `
+        A gép összesen <span class="highlight-num">${wTotalOps.toLocaleString()}</span> beültetést kísérelt meg.<br>
+        A magas, <span class="highlight-num" style="color:var(--danger)">${errPerc}%</span>-os hibaarány abból adódik, hogy 
+        <span class="highlight-num">${wData.p.toLocaleString()}</span> db (${pPerc}%) volt a hibás felvétel (Pick), 
+        míg <span class="highlight-num">${wData.v.toLocaleString()}</span> db (${vPerc}%) a kamera (Vision) hiba.
+    `;
+
+    // Javaslat generálása
+    const actionDiv = document.getElementById('evalActionPlan');
+    let actionHTML = "<ul>";
+    actionHTML += `<li><strong style='color:var(--danger)'>Sürgős beavatkozás:</strong> A <strong>${wName}</strong> felelős a jelenlegi hibák jelentős részéért.</li>`;
+    
+    if(wData.p > wData.v) {
+        actionHTML += `<li><strong>Domináns hiba:</strong> <span style='color:var(--danger)'>PICK (Felvételi)</span>. Ellenőrizd a Feedereket, Nozzle-öket és a Vákuumot!</li>`;
+    } else {
+        actionHTML += `<li><strong>Domináns hiba:</strong> <span style='color:var(--warning)'>VISION (Kamera)</span>. Ellenőrizd a kamerákat és alkatrész definíciókat!</li>`;
     }
+    actionHTML += "</ul>";
+    actionDiv.innerHTML = actionHTML;
 
-    function processDiscordQueue() {
-        return;
-    }
+    // Diagramok kirajzolása (Relatív szélesség)
+    const maxErr = wData.errTotal > 0 ? wData.errTotal : 1;
 
-    function loadModule(url, autoStart = false, caller = null) {
-        if(navigator.vibrate) navigator.vibrate(15);
-        if(caller) caller.blur();
-        totalActivity++;
-        localStorage.setItem('fv_total_activity', totalActivity);
-
-        // Modul aktív flag beállítása
-        document.body.classList.add('module-active');
-
-        if (url === '1.html') {
-            document.body.classList.add('search-mode-active');
-        } else {
-            document.body.classList.remove('search-mode-active');
-        }
+    sortedMach.forEach(m => {
+        const mName = m[0];
+        const d = m[1];
+        const totErr = d.errTotal;
         
-        // --- AUTOMATA ELREJTÉS ---
-        toggleDockState(true); 
-        // -------------------------
+        const totalWidthPercent = (totErr / maxErr) * 100;
+        const pShare = totErr > 0 ? (d.p / totErr) * 100 : 0;
+        const vShare = totErr > 0 ? (d.v / totErr) * 100 : 0;
 
-        document.getElementById('home-screen').style.display = 'none';
-        const frame = document.getElementById('content-frame');
-        frame.style.display = 'block';
-        frame.src = url + "?v=" + new Date().getTime() + (autoStart ? "&autostart=true" : "");
-        
-        if(document.getElementById('sidebar').classList.contains('open')) toggleMenu();
-        sendDiscordLog(`📂 Modul: ${moduleNames[url] || url}`, 3066993);
-    }
+        const html = `
+        <div class="eval-chart-row">
+            <div class="eval-chart-label">${mName}</div>
+            <div class="eval-chart-area" style="width: ${totalWidthPercent}%">
+                <div class="eval-bar-pick" style="width:${pShare}%"></div>
+                <div class="eval-bar-vis" style="width:${vShare}%"></div>
+            </div>
+            <div class="eval-chart-value">${totErr} db</div>
+        </div>`;
+        chartContainer.innerHTML += html;
+    });
 
-    function showHome(caller = null) {
-        if(navigator.vibrate) navigator.vibrate(15);
-        if(caller) caller.blur();
-        
-        document.body.classList.remove('search-mode-active');
-        document.body.classList.remove('module-active'); // Reseteljük a modult
-        
-        // --- KEZDŐLAPON IS ELINDUL AZ IDŐZÍTŐ ---
-        clearTimeout(dockTimeout);
-        toggleDockState(false); 
-        // -------------------------------------------
-
-        document.getElementById('home-screen').style.display = 'flex';
-        const frame = document.getElementById('content-frame');
-        frame.style.display = 'none';
-        frame.src = ""; 
-        if(document.getElementById('sidebar').classList.contains('open')) toggleMenu();
-        sendDiscordLog("🏠 Kezdőlap", 10070709);
-    }
-
-    function openSecureLink(caller) {
-        if(navigator.vibrate) navigator.vibrate(15);
-        if(caller) caller.blur();
-        
-        let pin = prompt("Adatgeneráló - Biztonsági kód:");
-        if (pin === "general") {
-            loadModule('6.html'); 
-            sendDiscordLog("🔐 ADMIN: Adatgeneráló (Belső)", 65280);
-        } else if (pin !== null) {
-            alert("Hibás kód!");
-            sendDiscordLog("🚨 HIBÁS PIN: Adatgeneráló", 16711680);
-        }
-    }
-
-    function openStaffPro(caller) {
-        if(navigator.vibrate) navigator.vibrate(15);
-        if(caller) caller.blur();
-        let pin = prompt("Staff Pro 2026 - Biztonsági kód:");
-        if (pin === "smtforvia2026") {
-            loadModule('8.html');
-        } else if (pin !== null) {
-            alert("Hibás kód!");
-            sendDiscordLog("🚨 HIBÁS PIN: Szabadságok", 16711680);
-        }
-    }
-
-    async function shareApp(caller) {
-        if(navigator.vibrate) navigator.vibrate(15);
-        if(caller) caller.blur();
-        sendDiscordLog("📤 Megosztás", 3066993);
-        const shareData = { title: 'Forvia Hub', text: 'Forvia SMT app', url: window.location.href };
-        if (navigator.share) { try { await navigator.share(shareData); } catch (err) {} } 
-        else { try { await navigator.clipboard.writeText(window.location.href); alert("Link másolva!"); } catch (err) {} }
-    }
-
-    document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
+    toggleEvalModal(true);
+}
 </script>
 </body>
 </html>
