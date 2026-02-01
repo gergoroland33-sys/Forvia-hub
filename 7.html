@@ -9,7 +9,7 @@
 :root {
     --bg-app: #0f172a;       
     --bg-card: #1e293b;      
-    --bg-modal: rgba(15, 23, 42, 0.98); /* Sötétebb az elemzéshez */
+    --bg-modal: rgba(15, 23, 42, 0.98); 
     --primary: #3b82f6;      
     --text-main: #f8fafc;    
     --text-muted: #94a3b8;   
@@ -17,7 +17,7 @@
     --warning: #f59e0b;      
     --success: #10b981;      
     --border: #334155; 
-    --purple: #8b5cf6; /* Új szín az elemzéshez */      
+    --purple: #8b5cf6; /* Új szín a gombhoz */      
 }
 
 * { box-sizing: border-box; }
@@ -169,9 +169,7 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
 }
 
 /* --- ÚJ ELEMZŐ MODAL STÍLUSOK (PRO DIAGRAMOK) --- */
-.eval-container {
-    max-width: 1000px !important;
-}
+.eval-container { max-width: 1000px !important; }
 .eval-summary-box {
     background: rgba(139, 92, 246, 0.1); border: 1px solid var(--purple);
     padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;
@@ -197,7 +195,7 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
 .bg-danger-sub { background: rgba(239, 68, 68, 0.1); color: var(--danger); border-color: var(--danger); }
 .bg-warning-sub { background: rgba(245, 158, 11, 0.1); color: var(--warning); border-color: var(--warning); }
 
-/* RESPONSIVE */
+/* --- RESPONSIVE --- */
 @media (max-width: 768px) {
     body { padding: 10px; }
     .header-actions { width: 100%; justify-content: space-between; margin-top: 10px; }
@@ -209,16 +207,90 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
     .analysis-grid { grid-template-columns: 1fr; }
     .eval-chart-label { width: 100px; font-size: 0.7rem; }
 }
+
+/* --- EREDETI NYOMTATÁSI KÓD VISSZAÁLLÍTVA --- */
 @media print {
-    /* (Nyomtatási beállítások az eredetiből megőrizve, csak a gombokat rejtjük) */
+    @page { size: A4 portrait; margin: 10mm 5mm 5mm 5mm; }
+    
+    /* Az új gombot elrejtjük nyomtatáskor */
     .eval-btn { display: none !important; }
-    @page { size: A4 portrait; margin: 10mm; }
-    body { background: white !important; color: black !important; zoom: 75%; }
+
+    body { 
+        background: white !important; color: black !important; padding: 0 !important; 
+        zoom: 75% !important;
+        -webkit-print-color-adjust: exact !important;
+    }
+    
     .container { max-width: 100% !important; margin: 0 !important; }
     .controls-area, .help-btn, .modal-overlay { display: none !important; }
-    .kpi-card, .panel { border: 1px solid #ccc !important; box-shadow: none !important; }
-    header { border-bottom: 2px solid #000 !important; text-align: center !important; display: block !important; }
-    .brand h1 { color: #000 !important; }
+
+    /* FEJLÉC PROFESSZIONÁLIS IGAZÍTÁSA (KÖZÉPRE) */
+    header {
+        display: block !important;
+        text-align: center !important;
+        margin-bottom: 30px !important;
+        border-bottom: 2px solid #333 !important;
+        padding-bottom: 15px !important;
+    }
+
+    .brand {
+        display: block !important;
+        margin-bottom: 10px !important;
+    }
+    .brand h1 {
+        font-size: 24px !important;
+        color: #000 !important;
+        letter-spacing: 2px !important;
+    }
+    .brand .subtitle {
+        color: #555 !important;
+        font-size: 10px !important;
+    }
+    
+    /* AKTÍV SOR NYOMTATÁSI STÍLUS */
+    #activeLineLabel {
+        color: #000 !important;
+        font-size: 14px !important;
+        margin-top: 8px !important;
+        border: 1px solid #000;
+        padding: 4px 10px;
+        display: inline-block !important;
+    }
+
+    .header-actions {
+        display: block !important;
+        text-align: center !important;
+        width: 100% !important;
+        margin-top: 10px !important;
+    }
+
+    .date-display {
+        border-right: none !important;
+        padding-right: 0 !important;
+        text-align: center !important;
+    }
+    .date-label { color: #555 !important; font-size: 10px !important; }
+    .date-value { color: #000 !important; font-size: 14px !important; margin-top: 2px !important; }
+
+    /* TÖBBI NYOMTATÁSI BEÁLLÍTÁS */
+    .kpi-card, .panel { 
+        background: white !important; border: 1px solid #ccc !important; 
+        box-shadow: none !important; break-inside: avoid; 
+    }
+    .panel-header { background: #f0f0f0 !important; border-bottom: 1px solid #ccc !important; }
+    .item-name { color: #000 !important; }
+    td { border-bottom: 1px solid #eee !important; }
+    .item-loc { background: #eff6ff !important; color: #1d4ed8 !important; border: 1px solid #bfdbfe !important; }
+    .text-danger { color: #dc2626 !important; }
+    .text-warning { color: #d97706 !important; }
+    .text-success { color: #059669 !important; }
+    .bg-danger-sub { background: #fef2f2 !important; border-color: #dc2626 !important; color: #991b1b !important; }
+    .bg-warning-sub { background: #fffbeb !important; border-color: #d97706 !important; color: #92400e !important; }
+    .kpi-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 10px !important; }
+    .analysis-grid { grid-template-columns: 1fr 1fr !important; gap: 15px !important; }
+    .kpi-main-val { font-size: 1.6rem !important; }
+    .kpi-footer { border-top: 1px solid #eee !important; color: #555 !important; }
+    .badge-ppm { border: 1px solid #ddd !important; background: #fff !important; }
 }
 </style>
 </head>
