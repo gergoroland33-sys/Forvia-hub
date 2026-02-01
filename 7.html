@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Forvia SMT Managerial Dashboard v3.7 Pro</title>
+<title>Forvia SMT Managerial Dashboard v3.8 Pro</title>
 <style>
 /* --- EREDETI DESIGN SYSTEM (ÉRINTETLEN) --- */
 :root {
@@ -17,7 +17,7 @@
     --warning: #f59e0b;      
     --success: #10b981;      
     --border: #334155; 
-    --purple: #8b5cf6; /* Új szín a gombhoz */      
+    --purple: #8b5cf6;      
 }
 
 * { box-sizing: border-box; }
@@ -69,7 +69,7 @@ header {
 }
 .help-btn:hover { background: var(--bg-card); color: white; border-color: var(--primary); }
 
-/* --- ÚJ ELEMZÉS GOMB STÍLUS --- */
+/* --- ELEMZÉS GOMB STÍLUS --- */
 .eval-btn {
     background: var(--purple); color: white; border: none;
     padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: 700; font-size: 0.85rem;
@@ -168,7 +168,7 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
     margin-top: 8px; border: 1px solid var(--border);
 }
 
-/* --- ÚJ ELEMZŐ MODAL STÍLUSOK (PRO DIAGRAMOK) --- */
+/* --- ELEMZŐ MODAL STÍLUSOK (PRO DIAGRAMOK + NARRATÍVA) --- */
 .eval-container { max-width: 1000px !important; }
 .eval-summary-box {
     background: rgba(139, 92, 246, 0.1); border: 1px solid var(--purple);
@@ -176,6 +176,19 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
 }
 .eval-summary-title { font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; }
 .eval-summary-value { font-size: 1.5rem; color: white; font-weight: bold; margin: 5px 0; }
+
+/* ÚJ: Narratív magyarázat stílusa */
+.eval-narrative {
+    font-size: 0.95rem; 
+    color: #e2e8f0; 
+    margin-top: 10px; 
+    padding-top: 10px; 
+    border-top: 1px solid rgba(139, 92, 246, 0.3);
+    line-height: 1.5;
+    font-style: italic;
+}
+.highlight-num { color: #fff; font-weight: bold; }
+
 .eval-chart-row {
     display: flex; align-items: center; margin-bottom: 12px; font-size: 0.85rem;
 }
@@ -208,11 +221,10 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
     .eval-chart-label { width: 100px; font-size: 0.7rem; }
 }
 
-/* --- EREDETI NYOMTATÁSI KÓD VISSZAÁLLÍTVA --- */
+/* --- NYOMTATÁS (PDF) - EREDETI ÁLLAPOT --- */
 @media print {
     @page { size: A4 portrait; margin: 10mm 5mm 5mm 5mm; }
     
-    /* Az új gombot elrejtjük nyomtatáskor */
     .eval-btn { display: none !important; }
 
     body { 
@@ -224,7 +236,6 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
     .container { max-width: 100% !important; margin: 0 !important; }
     .controls-area, .help-btn, .modal-overlay { display: none !important; }
 
-    /* FEJLÉC PROFESSZIONÁLIS IGAZÍTÁSA (KÖZÉPRE) */
     header {
         display: block !important;
         text-align: center !important;
@@ -233,50 +244,21 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
         padding-bottom: 15px !important;
     }
 
-    .brand {
-        display: block !important;
-        margin-bottom: 10px !important;
-    }
-    .brand h1 {
-        font-size: 24px !important;
-        color: #000 !important;
-        letter-spacing: 2px !important;
-    }
-    .brand .subtitle {
-        color: #555 !important;
-        font-size: 10px !important;
-    }
+    .brand { display: block !important; margin-bottom: 10px !important; }
+    .brand h1 { font-size: 24px !important; color: #000 !important; letter-spacing: 2px !important; }
+    .brand .subtitle { color: #555 !important; font-size: 10px !important; }
     
-    /* AKTÍV SOR NYOMTATÁSI STÍLUS */
     #activeLineLabel {
-        color: #000 !important;
-        font-size: 14px !important;
-        margin-top: 8px !important;
-        border: 1px solid #000;
-        padding: 4px 10px;
-        display: inline-block !important;
+        color: #000 !important; font-size: 14px !important; margin-top: 8px !important;
+        border: 1px solid #000; padding: 4px 10px; display: inline-block !important;
     }
 
-    .header-actions {
-        display: block !important;
-        text-align: center !important;
-        width: 100% !important;
-        margin-top: 10px !important;
-    }
-
-    .date-display {
-        border-right: none !important;
-        padding-right: 0 !important;
-        text-align: center !important;
-    }
+    .header-actions { display: block !important; text-align: center !important; width: 100% !important; margin-top: 10px !important; }
+    .date-display { border-right: none !important; padding-right: 0 !important; text-align: center !important; }
     .date-label { color: #555 !important; font-size: 10px !important; }
     .date-value { color: #000 !important; font-size: 14px !important; margin-top: 2px !important; }
 
-    /* TÖBBI NYOMTATÁSI BEÁLLÍTÁS */
-    .kpi-card, .panel { 
-        background: white !important; border: 1px solid #ccc !important; 
-        box-shadow: none !important; break-inside: avoid; 
-    }
+    .kpi-card, .panel { background: white !important; border: 1px solid #ccc !important; box-shadow: none !important; break-inside: avoid; }
     .panel-header { background: #f0f0f0 !important; border-bottom: 1px solid #ccc !important; }
     .item-name { color: #000 !important; }
     td { border-bottom: 1px solid #eee !important; }
@@ -423,7 +405,10 @@ td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertica
         <div class="eval-summary-box">
             <div class="eval-summary-title">FIGYELEM: A LEGGYENGÉBBEN TELJESÍTŐ GÉP</div>
             <div class="eval-summary-value" id="evalWorstMachine">-</div>
-            <div style="font-size:0.9rem; color:#cbd5e1" id="evalWorstReason">-</div>
+            
+            <div class="eval-narrative" id="evalNarrativeText">
+                Az adatok betöltése után itt olvasható a részletes elemzés.
+            </div>
         </div>
 
         <div class="chart-legend">
@@ -449,7 +434,6 @@ let rawData = [];
 let lineMachineMap = {}; 
 document.getElementById('reportDate').innerText = new Date().toLocaleDateString('hu-HU');
 
-// Módosított modal kezelő, hogy több ablakot kezeljen
 function toggleModal(id, show) { 
     document.getElementById(id).style.display = show ? 'flex' : 'none'; 
 }
@@ -570,38 +554,7 @@ function updateView() {
     renderTable('tableVis', vMap, lMap, sumVis, limit, 'alertVis', 'text-warning', 'var(--warning)');
 }
 
-function renderTable(tid, dMap, lMap, total, limit, aid, tCls, col) {
-    const tbody = document.getElementById(tid).querySelector('tbody');
-    tbody.innerHTML = "";
-    const sorted = Object.entries(dMap).sort((a,b) => b[1]-a[1]);
-    const aEl = document.getElementById(aid);
-    if(sorted.length > 0) {
-        const share = total>0 ? ((sorted[0][1]/total)*100).toFixed(1) : 0;
-        aEl.style.display = "flex";
-        aEl.innerHTML = `<span><strong>TOP HIBA:</strong> ${sorted[0][0]}</span><span>A hibák <strong>${share}%</strong>-a!</span>`;
-    } else { aEl.style.display = "none"; }
-    const maxVal = sorted.length > 0 ? sorted[0][1] : 1;
-    sorted.slice(0, limit).forEach((it, i) => {
-        const locs = Array.from(lMap[it[0]]||["-"]);
-        let lStr = locs.slice(0,2).join(", ");
-        if(locs.length>2) lStr += ` (+${locs.length-2})`;
-        const share = total>0 ? ((it[1]/total)*100).toFixed(1) : "0.0";
-        tbody.innerHTML += `
-        <tr>
-            <td>
-                <span class="item-name">${i+1}. ${it[0]}</span>
-                <span class="item-loc">${lStr}</span>
-                <div class="prog-track"><div class="prog-fill" style="width:${(it[1]/maxVal)*100}%; background:${col}"></div></div>
-            </td>
-            <td style="vertical-align:top">
-                <div class="stat-primary ${tCls}">${it[1].toLocaleString()}</div>
-                <div class="stat-secondary">${share}% részarány</div>
-            </td>
-        </tr>`;
-    });
-}
-
-// --- ÚJ FUNKCIÓ: RÉSZLETES KIÉRTÉKELÉS GENERÁLÁSA ---
+// --- KIÉRTÉKELÉS GENERÁLÁSA (JAVÍTOTT LOGIKA) ---
 function generateEvaluation() {
     if(rawData.length === 0) { alert("Kérlek tölts be egy fájlt először!"); return; }
 
@@ -609,64 +562,74 @@ function generateEvaluation() {
     const chartContainer = document.getElementById('machineChartContainer');
     chartContainer.innerHTML = "";
 
-    // 1. Adatok összegzése gépenként
+    // 1. Adatok összegzése gépenként (JÓ darabokkal együtt!)
     let machStats = {};
     rawData.forEach(d => {
-        // Ha van szűrés, csak azokat vegyük figyelembe
         if(sLine !== 'mind' && d.line !== sLine) return;
-
         let key = d.machine;
-        // Ha több sor van, tegyük elé a sor nevét
         if(sLine === 'mind') key = d.line + " - " + d.machine;
 
-        if(!machStats[key]) machStats[key] = { p:0, v:0, total:0 };
+        if(!machStats[key]) machStats[key] = { good:0, p:0, v:0, errTotal:0 };
+        machStats[key].good += d.good;
         machStats[key].p += d.pickErr;
         machStats[key].v += d.visErr;
-        machStats[key].total += (d.pickErr + d.visErr);
+        machStats[key].errTotal += (d.pickErr + d.visErr);
     });
 
-    // 2. Rendezés (Legrosszabb elől)
-    let sortedMach = Object.entries(machStats).sort((a,b) => b[1].total - a[1].total);
+    // 2. Rendezés (Legtöbb hiba elől)
+    let sortedMach = Object.entries(machStats).sort((a,b) => b[1].errTotal - a[1].errTotal);
     
     if(sortedMach.length === 0) { alert("Nincs megjeleníthető adat a szűrés alapján."); return; }
 
-    // 3. Legrosszabb gép kiemelése
+    // 3. Legrosszabb gép elemzése
     const worst = sortedMach[0];
-    const worstTotal = worst[1].total;
-    const worstName = worst[0];
-    const pPerc = worstTotal > 0 ? Math.round((worst[1].p / worstTotal)*100) : 0;
+    const wName = worst[0];
+    const wData = worst[1];
     
-    document.getElementById('evalWorstMachine').innerText = worstName;
-    document.getElementById('evalWorstReason').innerText = 
-        `${worstTotal} db hiba (${pPerc}% Felvételi, ${100-pPerc}% Vision)`;
+    // Számítások a narratívához
+    const wTotalOps = wData.good + wData.p + wData.v;
+    const pPerc = wTotalOps > 0 ? ((wData.p / wTotalOps)*100).toFixed(2) : "0.00";
+    const vPerc = wTotalOps > 0 ? ((wData.v / wTotalOps)*100).toFixed(2) : "0.00";
+    const errPerc = wTotalOps > 0 ? ((wData.errTotal / wTotalOps)*100).toFixed(2) : "0.00";
 
-    // 4. Javaslat generálása
+    document.getElementById('evalWorstMachine').innerText = wName;
+    
+    // 4. Narratíva generálása (A kért magyarázat)
+    const narrativeEl = document.getElementById('evalNarrativeText');
+    narrativeEl.innerHTML = `
+        A gép összesen <span class="highlight-num">${wTotalOps.toLocaleString()}</span> beültetést kísérelt meg.<br>
+        A magas, <span class="highlight-num" style="color:var(--danger)">${errPerc}%</span>-os hibaarány abból adódik, hogy 
+        <span class="highlight-num">${wData.p.toLocaleString()}</span> db (${pPerc}%) volt a hibás felvétel (Pick), 
+        míg <span class="highlight-num">${wData.v.toLocaleString()}</span> db (${vPerc}%) a kamera (Vision) hiba.
+    `;
+
+    // 5. Javaslat generálása
     const actionDiv = document.getElementById('evalActionPlan');
     let actionHTML = "<ul>";
-    actionHTML += `<li><strong style='color:var(--danger)'>Sürgős beavatkozás:</strong> A <strong>${worstName}</strong> gép felelős a jelenlegi hibák jelentős részéért.</li>`;
+    actionHTML += `<li><strong style='color:var(--danger)'>Sürgős beavatkozás:</strong> A <strong>${wName}</strong> felelős a jelenlegi hibák jelentős részéért.</li>`;
     
-    if(worst[1].p > worst[1].v) {
-        actionHTML += `<li><strong>Hiba jellege:</strong> Túlnyomórészt <span style='color:var(--danger)'>PICK (Felvételi)</span> hiba. Ellenőrizd a Feedereket, Nozzle-öket és a Vákuum szintet ezen a gépen!</li>`;
+    if(wData.p > wData.v) {
+        actionHTML += `<li><strong>Domináns hiba:</strong> <span style='color:var(--danger)'>PICK (Felvételi)</span>. Ellenőrizd a Feedereket, Nozzle-öket és a Vákuumot!</li>`;
     } else {
-        actionHTML += `<li><strong>Hiba jellege:</strong> Túlnyomórészt <span style='color:var(--warning)'>VISION (Kamera)</span> hiba. Ellenőrizd a kamerák tisztaságát és az alkatrész definíciókat!</li>`;
+        actionHTML += `<li><strong>Domináns hiba:</strong> <span style='color:var(--warning)'>VISION (Kamera)</span>. Ellenőrizd a kamerákat és alkatrész definíciókat!</li>`;
     }
     actionHTML += "</ul>";
     actionDiv.innerHTML = actionHTML;
 
-    // 5. Diagramok kirajzolása (Max értékhez viszonyítva)
-    const maxVal = worstTotal > 0 ? worstTotal : 1;
+    // 6. Diagramok kirajzolása (Relatív szélesség)
+    const maxErr = wData.errTotal > 0 ? wData.errTotal : 1;
 
     sortedMach.forEach(m => {
         const mName = m[0];
-        const pVal = m[1].p;
-        const vVal = m[1].v;
-        const tot = m[1].total;
+        const d = m[1];
+        const totErr = d.errTotal;
         
-        // Százalékos szélesség a diagramon (a legrosszabbhoz képest)
-        const totalWidthPercent = (tot / maxVal) * 100;
-        // Belső arányok (Pick vs Vision)
-        const pShare = tot > 0 ? (pVal / tot) * 100 : 0;
-        const vShare = tot > 0 ? (vVal / tot) * 100 : 0;
+        // Diagram szélessége a legrosszabb gép hibaszámához viszonyítva
+        const totalWidthPercent = (totErr / maxErr) * 100;
+        
+        // Belső arányok (Pick vs Vision) a hibákon belül
+        const pShare = totErr > 0 ? (d.p / totErr) * 100 : 0;
+        const vShare = totErr > 0 ? (d.v / totErr) * 100 : 0;
 
         const html = `
         <div class="eval-chart-row">
@@ -675,7 +638,7 @@ function generateEvaluation() {
                 <div class="eval-bar-pick" style="width:${pShare}%"></div>
                 <div class="eval-bar-vis" style="width:${vShare}%"></div>
             </div>
-            <div class="eval-chart-value">${tot} db</div>
+            <div class="eval-chart-value">${totErr} db</div>
         </div>`;
         chartContainer.innerHTML += html;
     });
