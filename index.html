@@ -79,42 +79,54 @@
             font-size: 2.2rem; font-weight: 800; margin: 0;
             color: white; letter-spacing: -1px; margin-bottom: 5px;
             text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            /* Fontos: A JS fogja manipulálni, de alapból legyen látható */
             position: relative;
+            min-height: 42px; /* Hogy ne ugráljon a layout */
         }
         
-        /* --- PRO TEXT DROP ANIMÁCIÓ CSS --- */
+        /* --- PRO TEXT PHYSICS ANIMATION --- */
         .char-anim {
             display: inline-block;
-            white-space: pre; /* Hogy a szóközök megmaradjanak */
+            white-space: pre; 
             position: relative;
-            transform-origin: center;
-            will-change: transform, opacity;
+            transform-origin: center center;
+            will-change: transform;
         }
 
-        /* 1. Fázis: Lepotyogás (Drop) */
-        .char-drop {
-            animation: dropDownPhase 1.2s cubic-bezier(0.6, 0.04, 0.98, 0.335) forwards;
+        /* 1. Fázis: Zuhanás (Gravity) */
+        .char-fall {
+            animation: gravityFall 1s cubic-bezier(0.5, 0.05, 1, 0.5) forwards;
         }
 
-        /* 2. Fázis: Visszaépülés (Restore) */
+        /* 2. Fázis: Visszahúzás (Elastic Restore) */
         .char-restore {
-            opacity: 0; /* Kezdetben láthatatlan, hogy az animáció hozza be */
-            animation: restorePhase 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            animation: elasticRestore 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
 
-        @keyframes dropDownPhase {
-            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+        @keyframes gravityFall {
+            0% { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 1; }
             100% { 
-                /* Változók a JS-ből jönnek (random X elmozdulás és forgás) */
-                transform: translate(var(--rx), 300px) rotate(var(--rr)); 
-                opacity: 0; 
+                /* Lényeg: 85vh-t esik lefelé, azaz a képernyő aljára */
+                transform: translate3d(var(--rx), 85vh, 0) rotate(var(--rr)); 
+                opacity: 1; /* LÁTHATÓ MARAD LENT */
             }
         }
 
-        @keyframes restorePhase {
-            0% { transform: translateY(-50px) scale(0.5); opacity: 0; }
-            100% { transform: translateY(0) scale(1); opacity: 1; }
+        @keyframes elasticRestore {
+            0% { 
+                /* Innen indul vissza (a lenti pozícióból) */
+                transform: translate3d(var(--rx), 85vh, 0) rotate(var(--rr)); 
+                opacity: 1;
+            }
+            100% { 
+                transform: translate3d(0, 0, 0) rotate(0); 
+                opacity: 1;
+            }
+        }
+        
+        /* Ez a stílus csak animáció közben él, hogy ne legyen fekete a szöveg */
+        .temp-blue {
+            color: #60a5fa !important;
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
         }
         /* ------------------------------------- */
 
@@ -773,62 +785,67 @@
         else { try { await navigator.clipboard.writeText(window.location.href); alert("Link másolva!"); } catch (err) {} }
     }
 
-    // --- ÚJ FUNKCIÓ: ÜDV SZÖVEG ANIMÁLÁSA (DROP & RESTORE) ---
+    // --- JAVÍTOTT FUNKCIÓ: ÜDV SZÖVEG FIZIKAI ANIMÁCIÓ ---
     function initWelcomeAnimation() {
         const target = document.getElementById('welcome-text-target');
         if (!target) return;
 
-        const text = target.innerText; // "Üdv Felhasználó!"
-        const htmlContent = target.innerHTML; // Tartalmazhat spant (kék szín)
-
-        // 1. Feldaraboljuk a szöveget betűkre, megőrizve a struktúrát
-        // Egyszerűsített megoldás: Az egész HTML tartalom újraépítése karakterekkel
-        
-        // Mivel van benne egy <span class="highlight-blue">, ezt óvatosan kell kezelni.
-        // Szétválasztjuk a két részt: "Üdv " és "Felhasználó!"
-        
         const part1 = "Üdv ";
         const part2 = "Felhasználó!";
         
         let newHtml = "";
 
-        // Part 1 feldolgozása
+        // Part 1
         for (let i = 0; i < part1.length; i++) {
             const char = part1[i];
-            const delay = Math.random() * 0.5; // Random késleltetés 0-0.5s
-            const rotation = (Math.random() * 60) - 30; // Random forgás -30 és +30 fok között
-            const xOffset = (Math.random() * 100) - 50; // Random X elmozdulás
-            
-            newHtml += `<span class="char-anim char-drop" style="animation-delay: ${delay}s; --rr: ${rotation}deg; --rx: ${xOffset}px">${char}</span>`;
-        }
-
-        // Part 2 feldolgozása (highlight-blue span-on belül)
-        newHtml += `<span class="highlight-blue">`;
-        for (let i = 0; i < part2.length; i++) {
-            const char = part2[i];
-            const delay = Math.random() * 0.5 + 0.1; // Kicsit később indulhatnak
-            const rotation = (Math.random() * 60) - 30;
+            const delay = Math.random() * 0.4;
+            const rotation = (Math.random() * 120) - 60; // Nagyobb forgás
             const xOffset = (Math.random() * 100) - 50;
             
-            newHtml += `<span class="char-anim char-drop" style="animation-delay: ${delay}s; --rr: ${rotation}deg; --rx: ${xOffset}px">${char}</span>`;
+            newHtml += `<span class="char-anim char-fall" style="animation-delay: ${delay}s; --rr: ${rotation}deg; --rx: ${xOffset}px">${char}</span>`;
         }
-        newHtml += `</span>`;
 
+        // Part 2 (KÉK RÉSZ - JAVÍTVA)
+        // Fontos: Itt a 'temp-blue' class-t adjuk hozzá, hogy animáció alatt is kék legyen
+        // és ne tűnjön el (ne legyen fekete árnyék).
+        for (let i = 0; i < part2.length; i++) {
+            const char = part2[i];
+            const delay = Math.random() * 0.4 + 0.1;
+            const rotation = (Math.random() * 120) - 60;
+            const xOffset = (Math.random() * 100) - 50;
+            
+            newHtml += `<span class="char-anim char-fall temp-blue" style="animation-delay: ${delay}s; --rr: ${rotation}deg; --rx: ${xOffset}px">${char}</span>`;
+        }
+        
         target.innerHTML = newHtml;
 
-        // 2. Várakozás a drop animáció végéig (kb 1.7s a legrosszabb esetben)
+        // Várakozás, amíg mindenki leesett és lent pihent
         setTimeout(() => {
             const chars = document.querySelectorAll('.char-anim');
             chars.forEach((char, index) => {
-                char.classList.remove('char-drop');
+                char.classList.remove('char-fall');
                 char.classList.add('char-restore');
-                // A visszaépülésnél legyen egy pici "hullám" effekt
-                char.style.animationDelay = (index * 0.03) + "s";
+                
+                // Visszahúzás után töröljük a temp-blue osztályt, 
+                // hogy visszakapja a szép gradiens effektet a containerből
+                if(char.classList.contains('temp-blue')) {
+                     setTimeout(() => {
+                        char.classList.remove('temp-blue');
+                     }, 800); // Animáció vége után
+                }
+                
+                // Hullámzó visszaépülés
+                char.style.animationDelay = (index * 0.04) + "s";
             });
-        }, 1800);
+            
+            // Végső tisztítás: Visszaállítjuk az eredeti HTML struktúrát a tökéletes gradienshez
+            setTimeout(() => {
+                 target.innerHTML = `Üdv <span class="highlight-blue">Felhasználó!</span>`;
+            }, 1500); // Biztonsági ráhagyás
+
+        }, 2200); // 2.2 másodpercig maradnak lent/potyognak
     }
 
-    // Indítás az oldal betöltésekor
     window.onload = function() {
         initWelcomeAnimation();
     };
