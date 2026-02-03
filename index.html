@@ -89,27 +89,76 @@
         .current-date {
             color: var(--text-dim); font-size: 0.95rem; margin-bottom: 30px; font-weight: 500; line-height: 1.5;
         }
-        .nameday-text { color: var(--accent); font-weight: 600; display: block; margin-top: 4px; font-size: 0.85rem; letter-spacing: 0.5px; }
+        
+        /* --- MÓDOSÍTÁS: STÍLUSOS ANIMÁCIÓ A NÉVNAPRA --- */
+        .nameday-text { 
+            color: var(--accent); 
+            font-weight: 600; 
+            display: inline-block; /* Fontos a transformhoz */
+            margin-top: 6px; 
+            font-size: 0.9rem; 
+            letter-spacing: 0.5px;
+            
+            /* Pro Pulse Animáció */
+            animation: namedayPulse 4s ease-in-out infinite;
+        }
 
+        @keyframes namedayPulse {
+            0%, 100% { 
+                transform: scale(1); 
+                opacity: 0.85; 
+                text-shadow: 0 0 0 rgba(59, 130, 246, 0);
+            }
+            50% { 
+                transform: scale(1.15); 
+                opacity: 1; 
+                color: #60a5fa;
+                text-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+            }
+        }
+        /* ------------------------------------------------ */
+
+        /* --- MÓDOSÍTÁS: KÖZÉPRE IGAZÍTOTT NAPTÁR DOBOZ --- */
         .calendar-box {
             background: linear-gradient(145deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 16px;
-            padding: 18px 22px;
+            padding: 20px 22px; /* Kicsit több padding */
             margin-bottom: 30px;
-            text-align: left;
+            
             position: relative;
             overflow: hidden;
             transition: all 0.3s ease;
+            
             border-left: 4px solid var(--accent);
-            display: inline-block; width: 100%;
+            display: flex;             /* Flexbox a középhez */
+            flex-direction: column;    /* Egymás alá */
+            align-items: center;       /* Vízszintes közép */
+            text-align: center;        /* Szöveg közép */
+            
+            width: 100%;
             box-shadow: 0 4px 20px rgba(0,0,0,0.2);
         }
 
-        .cal-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+        .cal-header { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; /* Fejléc ikon+szöveg középre */
+            gap: 8px; 
+            margin-bottom: 12px; 
+            width: 100%;
+        }
         .cal-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: #64748b; font-weight: 700; }
         
-        .cal-main-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .cal-main-row { 
+            display: flex; 
+            justify-content: center; /* Dátum és Badge középre */
+            align-items: center; 
+            gap: 12px;               /* Space-between helyett gap */
+            margin-bottom: 6px; 
+            width: 100%;
+            flex-wrap: wrap;         /* Ha hosszú, tördeljen szépen */
+        }
         .cal-date-text { font-size: 1.4rem; font-weight: 800; color: white; letter-spacing: -0.5px; }
         
         .cal-badge { 
@@ -118,6 +167,7 @@
             letter-spacing: 0.5px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
         .cal-event-name { font-size: 0.95rem; color: #94a3b8; font-weight: 500; }
+        /* -------------------------------------------------- */
         
         .cal-badge.holiday { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
         .cal-badge.workday { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
@@ -127,6 +177,7 @@
 
         .shift-info-box {
             margin-top: 15px;
+            width: 100%; /* Teljes szélesség */
             background: rgba(15, 23, 42, 0.6);
             border: 1px solid rgba(59, 130, 246, 0.2); 
             border-radius: 12px;
