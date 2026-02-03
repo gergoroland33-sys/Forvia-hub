@@ -232,14 +232,15 @@
         }
         .nav-item:active { background: var(--accent) !important; color: white !important; transform: scale(0.98); }
 
-        /* --- PRO "SMART DOCK" (ÚJ, FÜGGŐLEGES KAPSZULA) --- */
+        /* --- PRO "SMART DOCK" (FÜGGŐLEGES KAPSZULA) --- */
         .smart-dock {
             position: fixed;
+            /* Alapértelmezett pozíció (Kezdőlap, és nem definiált modulok) */
             bottom: 30px;
             right: 30px;
             z-index: 2147483647;
             display: flex;
-            flex-direction: column; /* Függőleges elrendezés */
+            flex-direction: column; /* Alap: Függőleges */
             align-items: center;
             gap: 10px;
             
@@ -248,54 +249,69 @@
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.12);
             padding: 8px;
-            border-radius: 30px; /* Kapszula forma */
+            border-radius: 30px; 
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255,255,255,0.1);
             
-            /* Ruganyos Belépő Animáció */
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             animation: dockPopUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
 
         @keyframes dockPopUp {
-            0% { transform: translateY(100px) scale(0.8); opacity: 0; }
-            100% { transform: translateY(0) scale(1); opacity: 1; }
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
-        /* --- GOMBOK RESETELÉSE ÉS ÚJ STÍLUS (KISEBB, UNIFORM) --- */
+        /* --- EGYEDI POZÍCIÓK MODULONKÉNT --- */
+
+        /* KÖZÉP-JOBB (Alkatrész, Bér, Szemét) */
+        /* top: 50% és margin-top korrekció a középhez igazításhoz */
+        body.active-mod-1 .smart-dock,
+        body.active-mod-2 .smart-dock,
+        body.active-mod-10 .smart-dock {
+            bottom: auto;
+            top: 50%;
+            margin-top: -55px; /* Kapszula fele magassága */
+        }
+
+        /* VÍZSZINTES és LEJJEBB (Szabadságok) */
+        body.active-mod-8 .smart-dock {
+            flex-direction: row; /* Vízszintes elrendezés */
+            bottom: 15px; /* Kicsit lejjebb */
+            right: 20px;
+        }
+
+        /* FELJEBB (Barcode Scan) - Kb egy menünyivel (100px) */
+        body.active-mod-9 .smart-dock {
+            bottom: 140px; 
+        }
+
+        /* ------------------------------------------- */
+
         .menu-fab, .refresh-fab {
             position: relative !important; bottom: auto !important; right: auto !important; top: auto !important;
-            width: 42px; height: 42px; /* Kisebb, egységes méret */
+            width: 42px; height: 42px; 
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
             cursor: pointer; 
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             -webkit-user-select: none; user-select: none;
             -webkit-touch-callout: none;
-            border: none; /* A konténer adja a keretet */
-            box-shadow: none; /* A konténer adja az árnyékot */
+            border: none; 
+            box-shadow: none;
         }
 
-        /* Kék Menü Gomb */
         .menu-fab {
             background: var(--accent);
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); /* Finom belső ragyogás */
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); 
         }
         .menu-fab:active { transform: scale(0.92); box-shadow: 0 2px 5px rgba(59, 130, 246, 0.5); }
         .menu-fab span { font-size: 24px; color: white; line-height: 1; pointer-events: none; transition: transform 0.3s ease; }
 
-        /* Sötét Frissítés Gomb */
         .refresh-fab {
             background: rgba(255, 255, 255, 0.05);
             color: var(--accent);
         }
         .refresh-fab:active { transform: rotate(180deg) scale(0.9); background: rgba(255, 255, 255, 0.1); }
         .refresh-fab span { font-size: 20px; color: var(--accent); line-height: 1; font-weight: bold; pointer-events: none; }
-
-        /* Pozíció igazítás modul nézetben */
-        body.search-mode-active .smart-dock,
-        body.module-active .smart-dock {
-            bottom: 30px; /* Mindig ugyanott marad */
-        }
-
-        /* ------------------------------------------- */
 
         .overlay {
             display: none; position: fixed; inset: 0;
@@ -536,12 +552,8 @@
         sidebar.classList.toggle('open');
         overlay.classList.toggle('active');
         icon.innerText = sidebar.classList.contains('open') ? '✕' : '☰';
-        // Ikon animáció
         icon.style.transform = sidebar.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
     }
-
-    // --- SMART DOCK LOGIKA (EGYSZERŰSÍTVE: NINCS TIMER, NINCS SLIDE) ---
-    // A dokkoló mostantól fix, nem kell JS a mozgatásához.
    
     const moduleNames = {
         '1.html': '🔍 Alkatrész Kereső',
@@ -579,19 +591,25 @@
         totalActivity++;
         localStorage.setItem('fv_total_activity', totalActivity);
 
-        // Modul aktív flag beállítása
+        // Reseteljük a modul specifikus osztályokat
+        document.body.className = document.body.className.replace(/active-mod-\d+/g, '').trim();
+
+        // Modul aktív flag
         document.body.classList.add('module-active');
 
+        // Speciális osztály hozzáadása az adott modulhoz a pozicionáláshoz
+        if (url.includes('.html')) {
+            const modNum = url.split('.')[0];
+            document.body.classList.add(`active-mod-${modNum}`);
+        }
+
+        // Search mode flag megtartása a régebbi kompatibilitás miatt (opcionális)
         if (url === '1.html') {
             document.body.classList.add('search-mode-active');
         } else {
             document.body.classList.remove('search-mode-active');
         }
         
-        // --- AUTOMATA ELREJTÉS KIVÉVE ---
-        // toggleDockState(true);  <-- TÖRÖLVE
-        // -------------------------
-
         document.getElementById('home-screen').style.display = 'none';
         const frame = document.getElementById('content-frame');
         frame.style.display = 'block';
@@ -605,14 +623,11 @@
         if(navigator.vibrate) navigator.vibrate(15);
         if(caller) caller.blur();
         
+        // Resetelünk minden módosító osztályt
         document.body.classList.remove('search-mode-active');
-        document.body.classList.remove('module-active'); // Reseteljük a modult
+        document.body.classList.remove('module-active');
+        document.body.className = document.body.className.replace(/active-mod-\d+/g, '').trim();
         
-        // --- IDŐZÍTŐ TÖRLÉS KIVÉVE ---
-        // clearTimeout(dockTimeout); <-- TÖRÖLVE
-        // toggleDockState(false);  <-- TÖRÖLVE
-        // -------------------------------------------
-
         document.getElementById('home-screen').style.display = 'flex';
         const frame = document.getElementById('content-frame');
         frame.style.display = 'none';
