@@ -235,7 +235,7 @@
         /* --- PRO "SMART DOCK" (FÜGGŐLEGES KAPSZULA) --- */
         .smart-dock {
             position: fixed;
-            /* Alapértelmezett pozíció (Kezdőlap, és nem definiált modulok) */
+            /* Alapértelmezett pozíció */
             bottom: 30px;
             right: 30px;
             z-index: 2147483647;
@@ -264,7 +264,6 @@
         /* --- EGYEDI POZÍCIÓK MODULONKÉNT --- */
 
         /* KÖZÉP-JOBB (Alkatrész, Bér, Szemét) */
-        /* top: 50% és margin-top korrekció a középhez igazításhoz */
         body.active-mod-1 .smart-dock,
         body.active-mod-2 .smart-dock,
         body.active-mod-10 .smart-dock {
@@ -273,12 +272,27 @@
             margin-top: -55px; /* Kapszula fele magassága */
         }
 
-        /* VÍZSZINTES és LEJJEBB (Szabadságok) */
+        /* --- SPECIÁLIS: SZABADSÁGOK (VÉKONYÍTOTT VERZIÓ) --- */
         body.active-mod-8 .smart-dock {
-            flex-direction: row; /* Vízszintes elrendezés */
-            bottom: 15px; /* Kicsit lejjebb */
+            flex-direction: row; /* Vízszintes */
+            bottom: 10px;        /* Kicsit lejjebb */
             right: 20px;
+            /* SLIM PRO STÍLUS */
+            padding: 4px;        /* Vékonyabb keret */
+            gap: 8px;            /* Kisebb köz */
+            border-radius: 40px;
         }
+
+        /* Csak a Szabadság modulban a gombok is kisebbek */
+        body.active-mod-8 .smart-dock .menu-fab,
+        body.active-mod-8 .smart-dock .refresh-fab {
+            width: 35px;       /* Alapértelmezett 42px helyett */
+            height: 35px;
+        }
+        /* Ikonok átméretezése a kis gombokhoz */
+        body.active-mod-8 .smart-dock .menu-fab span { font-size: 18px; }
+        body.active-mod-8 .smart-dock .refresh-fab span { font-size: 16px; }
+
 
         /* FELJEBB (Barcode Scan) - Kb egy menünyivel (100px) */
         body.active-mod-9 .smart-dock {
