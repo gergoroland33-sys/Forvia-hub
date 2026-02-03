@@ -80,10 +80,11 @@
             color: white; letter-spacing: -1px; margin-bottom: 5px;
             text-shadow: 0 2px 10px rgba(0,0,0,0.3);
             position: relative;
-            min-height: 42px; /* Hogy ne ugráljon a layout */
+            min-height: 42px; 
+            z-index: 100; /* Hogy a kártya felett legyen ha leesik */
         }
         
-        /* --- PRO TEXT PHYSICS ANIMATION --- */
+        /* --- PRO PHYSICS ANIMATION V2 (BOUNCE & CHAOS) --- */
         .char-anim {
             display: inline-block;
             white-space: pre; 
@@ -92,41 +93,57 @@
             will-change: transform;
         }
 
-        /* 1. Fázis: Zuhanás (Gravity) */
+        /* Zuhanás pattogással */
         .char-fall {
-            animation: gravityFall 1s cubic-bezier(0.5, 0.05, 1, 0.5) forwards;
+            animation: physicsBounce 1.5s cubic-bezier(0.19, 1, 0.22, 1) forwards;
         }
 
-        /* 2. Fázis: Visszahúzás (Elastic Restore) */
+        /* Visszahúzás a helyére */
         .char-restore {
-            animation: elasticRestore 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            animation: magnetRestore 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
         }
 
-        @keyframes gravityFall {
+        /* A fizikai zuhanás és pattanás kulcskockái */
+        @keyframes physicsBounce {
             0% { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 1; }
+            40% { 
+                /* Becsapódás a földre (gyors) */
+                transform: translate3d(var(--rx), var(--dy), 0) rotate(var(--rr)); 
+                animation-timing-function: ease-out;
+            }
+            60% {
+                /* Visszapattanás kicsit feljebb */
+                transform: translate3d(var(--rx), calc(var(--dy) - 40px), 0) rotate(var(--rr));
+                animation-timing-function: ease-in;
+            }
+            80% {
+                /* Második becsapódás */
+                transform: translate3d(var(--rx), var(--dy), 0) rotate(var(--rr));
+            }
             100% { 
-                /* Lényeg: 85vh-t esik lefelé, azaz a képernyő aljára */
-                transform: translate3d(var(--rx), 85vh, 0) rotate(var(--rr)); 
-                opacity: 1; /* LÁTHATÓ MARAD LENT */
+                /* Nyugvópont lent: "Káosz" pozíció */
+                transform: translate3d(var(--rx), var(--dy), 0) rotate(var(--rr)); 
+                opacity: 1; 
             }
         }
 
-        @keyframes elasticRestore {
+        @keyframes magnetRestore {
             0% { 
-                /* Innen indul vissza (a lenti pozícióból) */
-                transform: translate3d(var(--rx), 85vh, 0) rotate(var(--rr)); 
+                /* Innen indul vissza (a lenti káoszból) */
+                transform: translate3d(var(--rx), var(--dy), 0) rotate(var(--rr)); 
                 opacity: 1;
             }
             100% { 
+                /* Vissza a rendbe */
                 transform: translate3d(0, 0, 0) rotate(0); 
                 opacity: 1;
             }
         }
         
-        /* Ez a stílus csak animáció közben él, hogy ne legyen fekete a szöveg */
+        /* Színmegtartás zuhanás alatt */
         .temp-blue {
             color: #60a5fa !important;
-            text-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+            text-shadow: 0 0 15px rgba(59, 130, 246, 0.8);
         }
         /* ------------------------------------- */
 
@@ -477,7 +494,7 @@
         </div>
     </div>
 
-    <div class="ticker-wrap">
+    <div class="ticker-wrap" id="ticker-bar">
         <div class="ticker-move">
             <div class="ticker-item">🚧 Folyamatos fejlesztés alatt...🔧</div>
         </div>
@@ -785,10 +802,19 @@
         else { try { await navigator.clipboard.writeText(window.location.href); alert("Link másolva!"); } catch (err) {} }
     }
 
-    // --- JAVÍTOTT FUNKCIÓ: ÜDV SZÖVEG FIZIKAI ANIMÁCIÓ ---
+    // --- JAVÍTOTT FUNKCIÓ: PRO PHYSICS ANIMATION (VALÓS ZUHANÁS ÉS MEGÁLLÁS) ---
     function initWelcomeAnimation() {
         const target = document.getElementById('welcome-text-target');
-        if (!target) return;
+        const ticker = document.getElementById('ticker-bar');
+        if (!target || !ticker) return;
+
+        // Számoljuk ki a távolságot a cím és a lábléc (ticker) között
+        // Hogy pontosan ráessenek.
+        const titleRect = target.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        // Kb 40px a ticker magassága + padding. 
+        // A dropDistance azt jelenti, mennyit kell "utaznia" lefelé a betűnek.
+        const dropDistance = windowHeight - titleRect.top - 60; // 60px ráhagyás a sáv tetejére
 
         const part1 = "Üdv ";
         const part2 = "Felhasználó!";
@@ -798,52 +824,53 @@
         // Part 1
         for (let i = 0; i < part1.length; i++) {
             const char = part1[i];
-            const delay = Math.random() * 0.4;
-            const rotation = (Math.random() * 120) - 60; // Nagyobb forgás
-            const xOffset = (Math.random() * 100) - 50;
+            const delay = Math.random() * 0.8; // Nagyobb szórás, hogy egyesével essenek
+            const rotation = (Math.random() * 180) - 90; // Durvább forgás (káosz)
+            const xOffset = (Math.random() * 120) - 60;  // Nagyobb szóródás oldalra
             
-            newHtml += `<span class="char-anim char-fall" style="animation-delay: ${delay}s; --rr: ${rotation}deg; --rx: ${xOffset}px">${char}</span>`;
+            // CSS változók átadása az animációnak
+            newHtml += `<span class="char-anim char-fall" style="animation-delay: ${delay}s; --rr: ${rotation}deg; --rx: ${xOffset}px; --dy: ${dropDistance}px">${char}</span>`;
         }
 
-        // Part 2 (KÉK RÉSZ - JAVÍTVA)
-        // Fontos: Itt a 'temp-blue' class-t adjuk hozzá, hogy animáció alatt is kék legyen
-        // és ne tűnjön el (ne legyen fekete árnyék).
+        // Part 2 (KÉK RÉSZ)
         for (let i = 0; i < part2.length; i++) {
             const char = part2[i];
-            const delay = Math.random() * 0.4 + 0.1;
-            const rotation = (Math.random() * 120) - 60;
-            const xOffset = (Math.random() * 100) - 50;
+            const delay = Math.random() * 0.8 + 0.3; // Később indulnak
+            const rotation = (Math.random() * 180) - 90;
+            const xOffset = (Math.random() * 120) - 60;
             
-            newHtml += `<span class="char-anim char-fall temp-blue" style="animation-delay: ${delay}s; --rr: ${rotation}deg; --rx: ${xOffset}px">${char}</span>`;
+            newHtml += `<span class="char-anim char-fall temp-blue" style="animation-delay: ${delay}s; --rr: ${rotation}deg; --rx: ${xOffset}px; --dy: ${dropDistance}px">${char}</span>`;
         }
         
         target.innerHTML = newHtml;
 
-        // Várakozás, amíg mindenki leesett és lent pihent
+        // Várakozás: Megvárjuk amíg mind leesik (kb 1.5s + delay), 
+        // Aztán várunk még a "földön" (pl 3 másodpercet),
+        // Majd visszahúzzuk őket.
+        
+        // Teljes ciklus: kb 5-6 másodperc
         setTimeout(() => {
             const chars = document.querySelectorAll('.char-anim');
             chars.forEach((char, index) => {
+                // Levesszük a zuhanást, rátesszük a visszahúzást
                 char.classList.remove('char-fall');
                 char.classList.add('char-restore');
                 
-                // Visszahúzás után töröljük a temp-blue osztályt, 
-                // hogy visszakapja a szép gradiens effektet a containerből
+                // Szín visszaállítása
                 if(char.classList.contains('temp-blue')) {
-                     setTimeout(() => {
-                        char.classList.remove('temp-blue');
-                     }, 800); // Animáció vége után
+                     setTimeout(() => { char.classList.remove('temp-blue'); }, 800);
                 }
                 
                 // Hullámzó visszaépülés
-                char.style.animationDelay = (index * 0.04) + "s";
+                char.style.animationDelay = (index * 0.05) + "s";
             });
             
-            // Végső tisztítás: Visszaállítjuk az eredeti HTML struktúrát a tökéletes gradienshez
+            // HTML Clean up
             setTimeout(() => {
                  target.innerHTML = `Üdv <span class="highlight-blue">Felhasználó!</span>`;
-            }, 1500); // Biztonsági ráhagyás
+            }, 1800); 
 
-        }, 2200); // 2.2 másodpercig maradnak lent/potyognak
+        }, 3500); // 3.5 másodpercig maradnak a földön (káosz állapot)
     }
 
     window.onload = function() {
