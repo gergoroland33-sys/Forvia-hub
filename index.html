@@ -79,7 +79,45 @@
             font-size: 2.2rem; font-weight: 800; margin: 0;
             color: white; letter-spacing: -1px; margin-bottom: 5px;
             text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            /* Fontos: A JS fogja manipulálni, de alapból legyen látható */
+            position: relative;
         }
+        
+        /* --- PRO TEXT DROP ANIMÁCIÓ CSS --- */
+        .char-anim {
+            display: inline-block;
+            white-space: pre; /* Hogy a szóközök megmaradjanak */
+            position: relative;
+            transform-origin: center;
+            will-change: transform, opacity;
+        }
+
+        /* 1. Fázis: Lepotyogás (Drop) */
+        .char-drop {
+            animation: dropDownPhase 1.2s cubic-bezier(0.6, 0.04, 0.98, 0.335) forwards;
+        }
+
+        /* 2. Fázis: Visszaépülés (Restore) */
+        .char-restore {
+            opacity: 0; /* Kezdetben láthatatlan, hogy az animáció hozza be */
+            animation: restorePhase 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes dropDownPhase {
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            100% { 
+                /* Változók a JS-ből jönnek (random X elmozdulás és forgás) */
+                transform: translate(var(--rx), 300px) rotate(var(--rr)); 
+                opacity: 0; 
+            }
+        }
+
+        @keyframes restorePhase {
+            0% { transform: translateY(-50px) scale(0.5); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        /* ------------------------------------- */
+
         .highlight-blue { 
             background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
             -webkit-background-clip: text;
@@ -90,16 +128,14 @@
             color: var(--text-dim); font-size: 0.95rem; margin-bottom: 30px; font-weight: 500; line-height: 1.5;
         }
         
-        /* --- MÓDOSÍTÁS: STÍLUSOS ANIMÁCIÓ A NÉVNAPRA --- */
+        /* --- NÉVNAP PULZÁLÁS (Pro Pulse) --- */
         .nameday-text { 
             color: var(--accent); 
             font-weight: 600; 
-            display: inline-block; /* Fontos a transformhoz */
+            display: inline-block; 
             margin-top: 6px; 
             font-size: 0.9rem; 
             letter-spacing: 0.5px;
-            
-            /* Pro Pulse Animáció */
             animation: namedayPulse 4s ease-in-out infinite;
         }
 
@@ -116,14 +152,13 @@
                 text-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
             }
         }
-        /* ------------------------------------------------ */
+        /* ------------------------------------ */
 
-        /* --- MÓDOSÍTÁS: KÖZÉPRE IGAZÍTOTT NAPTÁR DOBOZ --- */
         .calendar-box {
             background: linear-gradient(145deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 16px;
-            padding: 20px 22px; /* Kicsit több padding */
+            padding: 20px 22px; 
             margin-bottom: 30px;
             
             position: relative;
@@ -131,10 +166,10 @@
             transition: all 0.3s ease;
             
             border-left: 4px solid var(--accent);
-            display: flex;             /* Flexbox a középhez */
-            flex-direction: column;    /* Egymás alá */
-            align-items: center;       /* Vízszintes közép */
-            text-align: center;        /* Szöveg közép */
+            display: flex;             
+            flex-direction: column;    
+            align-items: center;       
+            text-align: center;        
             
             width: 100%;
             box-shadow: 0 4px 20px rgba(0,0,0,0.2);
@@ -143,7 +178,7 @@
         .cal-header { 
             display: flex; 
             align-items: center; 
-            justify-content: center; /* Fejléc ikon+szöveg középre */
+            justify-content: center; 
             gap: 8px; 
             margin-bottom: 12px; 
             width: 100%;
@@ -152,12 +187,12 @@
         
         .cal-main-row { 
             display: flex; 
-            justify-content: center; /* Dátum és Badge középre */
+            justify-content: center; 
             align-items: center; 
-            gap: 12px;               /* Space-between helyett gap */
+            gap: 12px;               
             margin-bottom: 6px; 
             width: 100%;
-            flex-wrap: wrap;         /* Ha hosszú, tördeljen szépen */
+            flex-wrap: wrap;         
         }
         .cal-date-text { font-size: 1.4rem; font-weight: 800; color: white; letter-spacing: -0.5px; }
         
@@ -167,7 +202,6 @@
             letter-spacing: 0.5px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
         .cal-event-name { font-size: 0.95rem; color: #94a3b8; font-weight: 500; }
-        /* -------------------------------------------------- */
         
         .cal-badge.holiday { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
         .cal-badge.workday { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
@@ -177,7 +211,7 @@
 
         .shift-info-box {
             margin-top: 15px;
-            width: 100%; /* Teljes szélesség */
+            width: 100%; 
             background: rgba(15, 23, 42, 0.6);
             border: 1px solid rgba(59, 130, 246, 0.2); 
             border-radius: 12px;
@@ -399,7 +433,10 @@
             </svg>
         </div>
 
-        <h1 class="welcome-title">Üdv <span class="highlight-blue">Felhasználó!</span></h1>
+        <h1 class="welcome-title">
+            <span id="welcome-text-target">Üdv <span class="highlight-blue">Felhasználó!</span></span>
+        </h1>
+
         <div id="display-date" class="current-date">
             <span id="date-text">0000. 00. 00.</span><br>
             <span id="name-day" class="nameday-text">...</span>
@@ -735,6 +772,66 @@
         if (navigator.share) { try { await navigator.share(shareData); } catch (err) {} } 
         else { try { await navigator.clipboard.writeText(window.location.href); alert("Link másolva!"); } catch (err) {} }
     }
+
+    // --- ÚJ FUNKCIÓ: ÜDV SZÖVEG ANIMÁLÁSA (DROP & RESTORE) ---
+    function initWelcomeAnimation() {
+        const target = document.getElementById('welcome-text-target');
+        if (!target) return;
+
+        const text = target.innerText; // "Üdv Felhasználó!"
+        const htmlContent = target.innerHTML; // Tartalmazhat spant (kék szín)
+
+        // 1. Feldaraboljuk a szöveget betűkre, megőrizve a struktúrát
+        // Egyszerűsített megoldás: Az egész HTML tartalom újraépítése karakterekkel
+        
+        // Mivel van benne egy <span class="highlight-blue">, ezt óvatosan kell kezelni.
+        // Szétválasztjuk a két részt: "Üdv " és "Felhasználó!"
+        
+        const part1 = "Üdv ";
+        const part2 = "Felhasználó!";
+        
+        let newHtml = "";
+
+        // Part 1 feldolgozása
+        for (let i = 0; i < part1.length; i++) {
+            const char = part1[i];
+            const delay = Math.random() * 0.5; // Random késleltetés 0-0.5s
+            const rotation = (Math.random() * 60) - 30; // Random forgás -30 és +30 fok között
+            const xOffset = (Math.random() * 100) - 50; // Random X elmozdulás
+            
+            newHtml += `<span class="char-anim char-drop" style="animation-delay: ${delay}s; --rr: ${rotation}deg; --rx: ${xOffset}px">${char}</span>`;
+        }
+
+        // Part 2 feldolgozása (highlight-blue span-on belül)
+        newHtml += `<span class="highlight-blue">`;
+        for (let i = 0; i < part2.length; i++) {
+            const char = part2[i];
+            const delay = Math.random() * 0.5 + 0.1; // Kicsit később indulhatnak
+            const rotation = (Math.random() * 60) - 30;
+            const xOffset = (Math.random() * 100) - 50;
+            
+            newHtml += `<span class="char-anim char-drop" style="animation-delay: ${delay}s; --rr: ${rotation}deg; --rx: ${xOffset}px">${char}</span>`;
+        }
+        newHtml += `</span>`;
+
+        target.innerHTML = newHtml;
+
+        // 2. Várakozás a drop animáció végéig (kb 1.7s a legrosszabb esetben)
+        setTimeout(() => {
+            const chars = document.querySelectorAll('.char-anim');
+            chars.forEach((char, index) => {
+                char.classList.remove('char-drop');
+                char.classList.add('char-restore');
+                // A visszaépülésnél legyen egy pici "hullám" effekt
+                char.style.animationDelay = (index * 0.03) + "s";
+            });
+        }, 1800);
+    }
+
+    // Indítás az oldal betöltésekor
+    window.onload = function() {
+        initWelcomeAnimation();
+    };
 
     document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
 </script>
