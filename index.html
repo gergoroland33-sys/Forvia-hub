@@ -90,7 +90,7 @@
             color: var(--text-dim); font-size: 0.95rem; margin-bottom: 30px; font-weight: 500; line-height: 1.5;
         }
         
-        /* --- VISSZAÁLLÍTVA: EGYSZERŰ NÉVNAP STÍLUS --- */
+        /* --- EGYSZERŰ NÉVNAP STÍLUS (Eredeti) --- */
         .nameday-text { 
             color: var(--accent); 
             font-weight: 600; 
@@ -269,7 +269,7 @@
         .smart-dock {
             position: fixed;
             bottom: 30px;
-            right: 16px; /* Marad a kért pozíció */
+            right: 16px; 
             z-index: 2147483647;
             display: flex;
             flex-direction: column; 
@@ -458,6 +458,18 @@
 </div>
 
 <script>
+    // --- JAVÍTÁS: Céges Proxy URL tisztító ---
+    function cleanUrlOnLoad() {
+        // Ellenőrizzük, van-e bármilyen query paraméter (pl. ?mwg_rnd=...)
+        if (window.location.search.length > 0) {
+            // Újratöltés nélkül tisztítjuk a címsort az eredetire
+            const clean = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({}, document.title, clean);
+        }
+    }
+    cleanUrlOnLoad(); // Azonnali futtatás
+    // -----------------------------------------
+
     const nevnapok = {
         "01-01": "Alpár", "01-02": "Ábel", "01-03": "Genovéva, Benjámin", "01-04": "Titusz, Leona", "01-05": "Simon", "01-06": "Boldizsár", "01-07": "Attila, Ramóna", "01-08": "Gyöngyvér", "01-09": "Marcell", "01-10": "Melánia", "01-11": "Ágota", "01-12": "Ernő", "01-13": "Veronika", "01-14": "Bódog", "01-15": "Lóránt, Loránd", "01-16": "Gusztáv", "01-17": "Antal, Antónia", "01-18": "Piroska", "01-19": "Sára, Márió", "01-20": "Fábián, Sebestyén", "01-21": "Ágnes", "01-22": "Vince", "01-23": "Zelma, Rajmund", "01-24": "Timót", "01-25": "Pál", "01-26": "Vanda, Paula", "01-27": "Angelika", "01-28": "Károly, Karola", "01-29": "Adél", "01-30": "Martina, Gerda", "01-31": "Marcella",
         "02-01": "Ignác", "02-02": "Karolina, Aida", "02-03": "Balázs", "02-04": "Ráhel, Csenge", "02-05": "Ágota, Ingrid", "02-06": "Dorottya, Dóra", "02-07": "Tódor, Rómeó", "02-08": "Aranka", "02-09": "Abigél, Alex", "02-10": "Elvira", "02-11": "Bertold, Marietta", "02-12": "Lívia, Lídia", "02-13": "Ella, Linda", "02-14": "Bálint, Valentin", "02-15": "Kolos, Georgina", "02-16": "Julianna, Lilla", "02-17": "Donát", "02-18": "Bernadett", "02-19": "Zsuzsanna", "02-20": "Aladár, Álmos", "02-21": "Eleonóra", "02-22": "Gerzson", "02-23": "Alfréd", "02-24": "Mátyás", "02-25": "Géza", "02-26": "Viktor, Győző", "02-27": "Gábor, Edina", "02-28": "Elemér", "02-29": "Auguszta",
