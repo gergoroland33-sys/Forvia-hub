@@ -16,41 +16,16 @@
             color: #e2e8f0; 
             margin: 0; 
             height: 100vh; 
-            overflow: hidden; /* Desktopon görgetés tiltva alapból, konténer görög */
+            overflow: hidden; 
             display: flex;
             flex-direction: column;
         }
 
-        /* --- DESKTOP STYLES (A te eredeti stílusaid) --- */
-        header.desktop-header { 
-            flex: none; 
-            background: linear-gradient(to bottom, #111827, #0f172a); 
-            border-bottom: 1px solid #1e293b; 
-            z-index: 60;
-        }
-        
-        main.desktop-main { 
-            flex-grow: 1; 
-            position: relative; 
-            overflow: hidden; 
-            background: #111827;
-        }
-
-        footer.desktop-footer {
-            flex: none;
-            background: #0f172a;
-            border-top: 1px solid #1e293b;
-            padding: 8px;
-            z-index: 60;
-        }
-
-        .table-container { 
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            overflow: auto; 
-            -webkit-overflow-scrolling: touch; 
-        }
-
+        /* --- DESKTOP STYLES (ÉRINTETLEN) --- */
+        header.desktop-header { flex: none; background: linear-gradient(to bottom, #111827, #0f172a); border-bottom: 1px solid #1e293b; z-index: 60; }
+        main.desktop-main { flex-grow: 1; position: relative; overflow: hidden; background: #111827; }
+        footer.desktop-footer { flex: none; background: #0f172a; border-top: 1px solid #1e293b; padding: 8px; z-index: 60; }
+        .table-container { position: absolute; top: 0; left: 0; right: 0; bottom: 0; overflow: auto; -webkit-overflow-scrolling: touch; }
         .matrix-table { border-collapse: separate; border-spacing: 0; table-layout: fixed; }
         .matrix-table thead th { position: sticky; top: 0; z-index: 30; background: #1e293b; height: 40px; box-shadow: 0 1px 0 #2d3748; padding: 2px 0; width: 36px; min-width: 36px; box-sizing: border-box; }
         .name-col { position: sticky !important; left: 0 !important; z-index: 40 !important; width: 140px !important; min-width: 140px !important; max-width: 140px !important; background: #1e293b !important; border-right: 2px solid #3b82f6 !important; cursor: grab; padding: 0 6px !important; box-shadow: 4px 0 8px rgba(0,0,0,0.3); box-sizing: border-box; touch-action: none !important; -webkit-user-select: none; user-select: none; }
@@ -92,7 +67,7 @@
         thead th.today-D { color: #8b5cf6 !important; border-bottom: 2px solid rgba(139, 92, 246, 0.4) !important; background-color: #1e293b !important; }
         .sortable-fallback { opacity: 0.8 !important; background: #1e293b !important; border: 1px solid #3b82f6; }
 
-        /* --- MOBILE APP VIEW STYLES (ÚJ) --- */
+        /* --- MOBILE APP VIEW STYLES --- */
         #mobile-app-container { display: none; width: 100%; height: 100%; background: #0b0f1a; flex-direction: column; }
         
         .m-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; transition: transform 0.1s; }
@@ -110,13 +85,14 @@
         .m-big-input { width: 100%; background: #0f172a; border: 2px solid #334155; color: white; font-size: 24px; font-weight: 900; text-align: center; padding: 15px; border-radius: 12px; outline: none; text-transform: uppercase; }
         .m-big-input:focus { border-color: #3b82f6; }
 
+        .m-no-data { text-align: center; padding: 40px 20px; color: #64748b; font-weight: 900; text-transform: uppercase; font-size: 14px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .m-no-data i { font-size: 32px; opacity: 0.5; }
+
         /* --- RESPONSIVE SWITCH --- */
         @media (max-width: 768px) {
-            /* REJTSÜK EL A DESKTOP ELEMEKET */
             .desktop-header, .desktop-main, .desktop-footer { display: none !important; }
-            /* MUTASSUK A MOBIL ELEMEKET */
             #mobile-app-container { display: flex !important; }
-            body { overflow: hidden; } /* Mobilon nincs görgetés a body-n belül */
+            body { overflow: hidden; } 
         }
 
         @media print {
@@ -126,7 +102,7 @@
             table { border-collapse: collapse; border: 2px solid black; }
             th, td { border: 1px solid black !important; color: black !important; }
             .table-container { position: static !important; overflow: visible !important; height: auto !important; }
-            footer, #mobile-app-container { display: none !important; } /* Mobil nézet ne látszódjon nyomtatáskor */
+            footer, #mobile-app-container { display: none !important; } 
         }
     </style>
 </head>
@@ -234,7 +210,13 @@
                 <button onclick="deleteCurrentMobileUser()" class="p-2 text-red-500/50 hover:text-red-500"><i class="fas fa-trash"></i></button>
             </div>
 
-            <div class="flex-grow overflow-y-auto p-2">
+            <div class="flex-grow overflow-y-auto p-2" id="m-cal-scroll-container">
+                <div class="flex items-center justify-between bg-slate-900/50 rounded-lg p-1 border border-slate-800/50 mb-2 mt-2">
+                    <button onclick="changeMonth(-1)" class="p-2 text-blue-400 w-12"><i class="fas fa-chevron-left"></i></button>
+                    <span id="m-detail-monthDisp" class="font-black text-sm uppercase text-white"></span>
+                    <button onclick="changeMonth(1)" class="p-2 text-blue-400 w-12"><i class="fas fa-chevron-right"></i></button>
+                </div>
+
                 <div class="flex justify-between px-2 py-1 text-[10px] font-bold text-slate-500 uppercase">
                     <span>H</span><span>K</span><span>Sze</span><span>Cs</span><span>P</span><span>Szo</span><span>V</span>
                 </div>
@@ -411,7 +393,7 @@
                 return row + "</tr>";
             }).join('');
             
-            // Ha mobilon is meg van nyitva valaki, frissítsük a nézetét, mert a data változhatott
+            // Ha mobilon is meg van nyitva valaki, frissítsük a nézetét
             if(mSelectedUserIndex > -1) renderMobileCalendar(); 
         }
 
@@ -453,8 +435,19 @@
         function changeMonth(v) { 
             date.setMonth(date.getMonth() + v); 
             render(); 
-            renderMobileList(); // Mobil nézet frissítése hónapváltáskor
+            renderMobileList(); // Mobil nézet frissítése
+            
+            // Ha éppen a RÉSZLETES nézetben vagyunk, frissítsük a naptárat is
+            if(!document.getElementById('m-detail-view').classList.contains('hidden')) {
+                renderMobileCalendar();
+                // Ha lapozunk, jelöljük ki elsejét, kivéve ha visszatértünk az aktuális hónapra
+                const today = new Date();
+                const isCurrentMonth = today.getFullYear() === 2026 && today.getMonth() === date.getMonth();
+                const dayToSelect = isCurrentMonth ? today.getDate() : 1;
+                selectMobileDate(dayToSelect);
+            }
         }
+        
         function addEmp() { const n = prompt("Név:"); if(n) { employees.push({id:Date.now(), name:n, yearlyQuota:160, data:{}}); save(); render(); renderMobileList(); } }
         function delEmp(id) { if(confirm("Biztos törlöd?")) { employees = employees.filter(x => x.id != id); save(); render(); renderMobileList(); } }
         
@@ -474,6 +467,18 @@
             const m = date.getMonth();
             document.getElementById('m-monthDisp').innerText = monthNames[m];
             const listEl = document.getElementById('m-emp-list');
+            
+            // ÜRES MŰSZAK KEZELÉSE
+            if(employees.length === 0) {
+                listEl.innerHTML = `
+                <div class="m-no-data">
+                    <i class="fas fa-users-slash"></i>
+                    <span>Nincs adat ebben a műszakban</span>
+                    <button onclick="addEmp()" class="bg-blue-600/30 text-blue-400 px-4 py-2 rounded-lg text-xs mt-2">Dolgózó hozzáadása</button>
+                </div>`;
+                return;
+            }
+
             const today = new Date();
             const todayKey = `2026-${m+1}-${today.getDate()}`;
             const isCurrentMonth = today.getFullYear() === 2026 && today.getMonth() === m;
@@ -523,6 +528,9 @@
             
             renderMobileCalendar();
             selectMobileDate(dayToSelect);
+
+            // Görgessen a tetejére (Scroll to top)
+            document.getElementById('m-cal-scroll-container').scrollTop = 0;
         }
 
         function closeMobileDetail() {
@@ -549,6 +557,8 @@
 
         function renderMobileCalendar() {
             const m = date.getMonth();
+            document.getElementById('m-detail-monthDisp').innerText = monthNames[m];
+            
             const daysInMonth = new Date(2026, m + 1, 0).getDate();
             const firstDayIndex = new Date(2026, m, 1).getDay(); // 0=Sun, 1=Mon
             const offset = firstDayIndex === 0 ? 6 : firstDayIndex - 1; // Adjust to Mon start
@@ -571,7 +581,6 @@
                 const val = (emp.data && emp.data[k]) ? emp.data[k] : "";
                 const isToday = isCurrentMonth && d === today.getDate();
                 const isHoliday = holidays2026.includes(`${m+1}-${d}`);
-                const isWeekend = [0,6].includes(new Date(2026, m, d).getDay());
                 
                 let dotColor = "hidden";
                 if(val) {
@@ -585,7 +594,7 @@
                 let classes = "m-day";
                 if(isToday) classes += " today";
                 if(val) classes += " has-data";
-                if(isHoliday) classes += " holiday-text holiday-bg"; // reuse desktop classes for holiday color
+                if(isHoliday) classes += " holiday-text holiday-bg"; 
                 
                 html += `
                 <div class="${classes}" id="m-day-${d}" onclick="selectMobileDate(${d})">
