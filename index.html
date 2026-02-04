@@ -52,22 +52,84 @@
             padding-bottom: 60px;
         }
         
-        /* Háttér lélegző animáció */
         @keyframes bgPulse {
             0% { background-size: 100% 100%; background-position: center; }
             100% { background-size: 130% 130%; background-position: center; }
         }
 
+        /* --- ÚJ PRO ANIMÁLT KERET DEFINÍCIÓ --- */
+        @property --angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false;
+        }
+
         .glass-card {
+            /* Alap üveg stílus */
             background: rgba(30, 41, 59, 0.4); 
             backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-top: 1px solid rgba(255, 255, 255, 0.15); 
+            
+            /* Eltávolítva a régi fix border, helyette padding a keretnek */
+            border: none; 
             padding: 40px 30px; border-radius: 24px;
             box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6);
             max-width: 500px; width: 100%; animation: fadeIn 0.8s ease-out;
             position: relative; 
-            margin: auto; 
+            margin: auto;
+            
+            /* Interakció miatt */
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .glass-card:active {
+            transform: scale(0.99);
+        }
+
+        /* Ez a pszeudo-elem hozza létre a forgó keretet */
+        .glass-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 24px;
+            padding: 2px; /* A keret vastagsága */
+            
+            /* A mágia: Forgó gradiens */
+            background: conic-gradient(from var(--angle), 
+                rgba(255,255,255,0.1), 
+                var(--accent), 
+                white, 
+                var(--accent), 
+                rgba(255,255,255,0.1)
+            );
+            
+            /* Maszkolás, hogy csak a keret látszódjon */
+            -webkit-mask: 
+                linear-gradient(#fff 0 0) content-box, 
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            
+            pointer-events: none; /* Átengedjük a kattintást */
+            z-index: 2;
+            
+            /* Animáció */
+            animation: spinBorder 4s linear infinite;
+        }
+        
+        /* Belső finom szegély a mélységérzetért */
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        @keyframes spinBorder {
+            to { --angle: 360deg; }
         }
 
         .share-card-btn {
@@ -96,49 +158,12 @@
             -webkit-text-fill-color: transparent;
         }
 
-        /* MÓDOSÍTOTT: Interaktív kurzor */
+        /* MÓDOSÍTOTT: Sima Dátum (Óra funkció kivéve) */
         .current-date {
             color: var(--text-dim); font-size: 0.95rem; margin-bottom: 30px; font-weight: 500; line-height: 1.5;
-            cursor: pointer; 
             user-select: none;
-            /* Biztosítjuk a helyet az animációnak */
-            min-height: 50px; 
-            display: flex; align-items: center; justify-content: center;
-        }
-        
-        /* ÚJ: Pro Switch Animáció */
-        .animate-pop {
-            animation: popSwitch 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        @keyframes popSwitch {
-            0% { transform: scale(1); opacity: 1; filter: blur(0); }
-            50% { transform: scale(0.92); opacity: 0.4; filter: blur(2px); }
-            100% { transform: scale(1); opacity: 1; filter: blur(0); }
-        }
-
-        /* ÚJ: PRO ÓRA STÍLUS (Javított) */
-        .clock-display {
-            font-family: 'Inter', sans-serif; /* Modern font */
-            font-size: 2.4rem;
-            font-weight: 800;
-            letter-spacing: -1px;
-            font-variant-numeric: tabular-nums; /* Hogy ne ugráljanak a számok */
-            
-            /* Színátmenet a szövegen */
-            background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            
-            /* Neon glow effekt */
-            filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.4));
-            
-            display: block;
-            margin-top: 5px;
-            margin-bottom: 5px;
-            line-height: 1;
-        }
-        
         /* --- EGYSZERŰ NÉVNAP STÍLUS (Eredeti) --- */
         .nameday-text { 
             color: var(--accent); 
@@ -170,6 +195,8 @@
             
             width: 100%;
             box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            /* Fontos: A kártya felett legyen */
+            z-index: 5; 
         }
 
         .cal-header { 
@@ -425,7 +452,7 @@
 <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
 <div id="home-screen">
-    <div class="glass-card">
+    <div id="main-card" class="glass-card" onclick="toggleBorderDirection(this)">
         <div class="share-card-btn" onclick="shareApp(this)" title="App megosztása">
             <svg class="share-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
@@ -434,11 +461,9 @@
 
         <h1 class="welcome-title"><span id="greeting-text">Üdv</span> <span class="highlight-blue">Felhasználó!</span></h1>
         
-        <div id="display-date" class="current-date" onclick="toggleTimeMode()" title="Kattints az óra/dátum váltáshoz">
-            <span id="date-content-wrapper">
-                <span id="date-text">0000. 00. 00.</span><br>
-                <span id="name-day" class="nameday-text">...</span>
-            </span>
+        <div id="display-date" class="current-date">
+            <span id="date-text">0000. 00. 00.</span><br>
+            <span id="name-day" class="nameday-text">...</span>
         </div>
 
         <div id="calendar-widget" class="calendar-box">
@@ -639,28 +664,46 @@
         }
     }
 
-    // --- INTERAKTÍV RÉSZEK (FRISSÍTVE) ---
+    // --- ÚJ INTERAKTÍV KERET IRÁNYVÁLTÓ ---
     
-    let isClockMode = false;
-
-    function toggleTimeMode() {
-        if(navigator.vibrate) navigator.vibrate(10);
+    function toggleBorderDirection(card) {
+        // Vibrálás visszajelzés (ha támogatott)
+        if(navigator.vibrate) navigator.vibrate(5);
         
-        // Animációs osztály hozzáadása (reseteljük, hogy minden kattintásnál lefusson)
-        const wrapper = document.getElementById('date-content-wrapper');
-        wrapper.classList.remove('animate-pop');
-        void wrapper.offsetWidth; // Trigger reflow
-        wrapper.classList.add('animate-pop');
+        // Jelenlegi irány lekérdezése a computed style-ból nem megbízható animációnál,
+        // ezért egy egyszerű data attribútumot vagy class-t használunk.
+        const currentDir = card.style.getPropertyValue('--anim-dir') || 'normal';
+        const newDir = currentDir === 'normal' ? 'reverse' : 'normal';
         
-        isClockMode = !isClockMode;
-        updateInfo(); // Azonnal frissít
+        // CSS változóba írjuk az irányt, de mivel a keyframe animáció nem mindig reagál jól
+        // a futás közbeni irányváltásra, közvetlenül a stílust állítjuk.
+        // Trükk: A pszeudo-elem animációját célozzuk meg.
+        
+        // Egyszerűbb megoldás: Egy class-t kapcsolgatunk
+        if (card.classList.contains('reverse-spin')) {
+            card.classList.remove('reverse-spin');
+            // Hack a pszeudo-elem elérésére: style taget injektálunk (nem szép), 
+            // VAGY egyszerűen JavaScripttel állítjuk a pszeudo elem animációját? Nem lehet.
+            // MEGOLDÁS: A CSS-ben definiálunk egy .reverse-spin osztályt.
+        } else {
+            card.classList.add('reverse-spin');
+        }
     }
+    
+    // Ezt a CSS-hez hozzá kell adni dinamikusan vagy a style blokkba
+    const styleSheet = document.createElement("style");
+    styleSheet.innerText = `
+        .glass-card.reverse-spin::after {
+            animation-direction: reverse !important;
+        }
+    `;
+    document.head.appendChild(styleSheet);
+
 
     function updateGreeting() {
         const hour = new Date().getHours();
         let greeting = "Üdv";
         
-        // ÚJ LOGIKA (6-9, 9-18, 18-6)
         if (hour >= 6 && hour < 9) {
             greeting = "Jó reggelt";
         } else if (hour >= 9 && hour < 18) {
@@ -674,30 +717,20 @@
 
     function updateInfo() {
         const now = new Date();
-        const container = document.getElementById('date-content-wrapper');
-
+        
+        // Köszöntés frissítése
         updateGreeting();
 
-        if (isClockMode) {
-            // PRO Digitális óra mód
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            container.innerHTML = `<span class="clock-display">${hours}:${minutes}:${seconds}</span>`;
-        } else {
-            // Dátum mód
-            const napok = ["Vasárnap", "Hétfő", "Kedd", "Szerda", "Csütörtök", "Péntek", "Szombat"];
-            const napNeve = napok[now.getDay()];
-            const dateStr = now.getFullYear() + ". " + String(now.getMonth() + 1).padStart(2, '0') + ". " + String(now.getDate()).padStart(2, '0') + ". " + napNeve;
-            
-            const honapNap = String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
-            const maiNevnap = nevnapok[honapNap] || "---";
+        // Sima dátum logika (Interaktivitás nélkül)
+        const napok = ["Vasárnap", "Hétfő", "Kedd", "Szerda", "Csütörtök", "Péntek", "Szombat"];
+        const napNeve = napok[now.getDay()];
+        const dateStr = now.getFullYear() + ". " + String(now.getMonth() + 1).padStart(2, '0') + ". " + String(now.getDate()).padStart(2, '0') + ". " + napNeve;
+        
+        const honapNap = String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
+        const maiNevnap = nevnapok[honapNap] || "---";
 
-            container.innerHTML = `
-                <span id="date-text">${dateStr}</span><br>
-                <span id="name-day" class="nameday-text">Névnap: ${maiNevnap}</span>
-            `;
-        }
+        document.getElementById('date-text').innerText = dateStr;
+        document.getElementById('name-day').innerText = "Névnap: " + maiNevnap;
     }
 
     updateInfo();
