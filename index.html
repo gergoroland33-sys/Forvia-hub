@@ -17,6 +17,9 @@
             --bg: #0b1120; --card: #1e293b; --accent: #3b82f6;
             --text: #f3f4f6; --text-dim: #94a3b8; --border: #334155;
             --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            /* ÚJ SZÍNEK */
+            --neon-blue: #0066ff;
+            --neon-purple: #bd34fe;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -56,7 +59,7 @@
             100% { background-size: 130% 130%; background-position: center; }
         }
 
-        /* --- PRO ANIMÁLT KERET DEFINÍCIÓ --- */
+        /* --- PRO DUPLA ANIMÁLT KERET --- */
         @property --angle {
             syntax: '<angle>';
             initial-value: 0deg;
@@ -64,7 +67,7 @@
         }
 
         .glass-card {
-            background: rgba(30, 41, 59, 0.4); 
+            background: rgba(30, 41, 59, 0.6); /* Kicsit sötétebb alap a kontraszt miatt */
             backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
             border: none; 
             padding: 40px 30px; border-radius: 24px;
@@ -74,59 +77,76 @@
             margin: auto;
             cursor: pointer;
             transition: transform 0.1s;
+            /* Fontos a maszkoláshoz */
+            z-index: 1;
         }
 
         .glass-card:active {
             transform: scale(0.99);
         }
 
-        /* MÓDOSÍTOTT: Látványosabb, futófény effekt */
-        .glass-card::after {
+        /* KÖZÖS TULAJDONSÁGOK A KERETEKHEZ */
+        .glass-card::after, .glass-card::before {
             content: '';
             position: absolute;
-            inset: 0;
-            border-radius: 24px;
-            padding: 2px; /* Vastagság maradt */
+            inset: -2px; /* Kicsit kijjebb lóg, hogy keret legyen */
+            border-radius: 26px; /* Nagyobb sugár */
+            padding: 2px; /* Keret vastagsága */
+            z-index: -1; /* Tartalom mögé */
             
-            /* A mágia: Élesebb, kontrasztosabb gradiens a futó hatáshoz */
-            background: conic-gradient(from var(--angle), 
-                transparent 0%,    /* A kör nagy része sötét marad */
-                transparent 65%,   /* Eddig semmi */
-                var(--accent) 85%, /* Kék csóva megjelenik */
-                white 95%,         /* Vakító fehér "fej" - a legfényesebb pont */
-                var(--accent) 100% /* Kék lezárás a loophoz */
-            );
-            
-            /* Enyhe elmosás a "neon" ragyogás hatáshoz */
-            filter: blur(0.8px);
-
-            /* Maszkolás, hogy csak a keret látszódjon */
+            /* Maszkolás: Lyuk a közepén */
             -webkit-mask: 
                 linear-gradient(#fff 0 0) content-box, 
                 linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor;
             mask-composite: exclude;
-            
-            pointer-events: none;
-            z-index: 2;
-            
-            /* Animáció */
-            animation: spinBorder 3s linear infinite; /* Kicsit gyorsabb a dinamizmusért */
-        }
-        
-        .glass-card::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            pointer-events: none;
-            z-index: 3;
         }
 
-        @keyframes spinBorder {
+        /* 1. RÉTEG: ERŐS KÉK (::after) */
+        .glass-card::after {
+            background: conic-gradient(from var(--angle), 
+                transparent 40%, 
+                var(--neon-blue) 80%, 
+                white 95%, 
+                var(--neon-blue) 100%
+            );
+            filter: blur(1px) drop-shadow(0 0 5px var(--neon-blue));
+            animation: spinBlue 3s linear infinite;
+        }
+
+        /* 2. RÉTEG: METÁL LILA (::before) */
+        .glass-card::before {
+            background: conic-gradient(from var(--angle), 
+                transparent 40%, 
+                var(--neon-purple) 80%, 
+                #e9d5ff 95%, 
+                var(--neon-purple) 100%
+            );
+            filter: blur(1px) drop-shadow(0 0 5px var(--neon-purple));
+            /* Alapból ELLENTÉTES irány */
+            animation: spinPurple 3s linear infinite reverse; 
+            
+            /* Fúziós effekt: Ha találkoznak, kifényesedik */
+            mix-blend-mode: screen; 
+        }
+
+        /* Forgási animációk */
+        @keyframes spinBlue {
             to { --angle: 360deg; }
         }
+        @keyframes spinPurple {
+            to { --angle: 360deg; }
+        }
+
+        /* INTERAKCIÓ: Érintésre szétválnak (azaz egy irányba forognak, de fáziseltolással) */
+        .glass-card.separated::after {
+            animation-direction: normal; /* Kék marad */
+        }
+        .glass-card.separated::before {
+            animation-direction: normal; /* Lila megfordul -> Kergetőzés */
+            animation-duration: 3.2s; /* Kicsit más sebesség, hogy sose érjék utol teljesen egymást */
+        }
+
 
         .share-card-btn {
             position: absolute; top: 20px; right: 20px;
@@ -658,21 +678,12 @@
 
     function toggleBorderDirection(card) {
         if(navigator.vibrate) navigator.vibrate(5);
-        if (card.classList.contains('reverse-spin')) {
-            card.classList.remove('reverse-spin');
+        if (card.classList.contains('separated')) {
+            card.classList.remove('separated');
         } else {
-            card.classList.add('reverse-spin');
+            card.classList.add('separated');
         }
     }
-    
-    const styleSheet = document.createElement("style");
-    styleSheet.innerText = `
-        .glass-card.reverse-spin::after {
-            animation-direction: reverse !important;
-        }
-    `;
-    document.head.appendChild(styleSheet);
-
 
     function updateGreeting() {
         const hour = new Date().getHours();
