@@ -70,9 +70,9 @@
         /* --- MOBILE APP VIEW STYLES --- */
         #mobile-app-container { display: none; width: 100%; height: 100%; background: #0b0f1a; flex-direction: column; }
         
-        .m-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; transition: transform 0.1s; }
+        .m-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; transition: transform 0.1s; }
         .m-card:active { transform: scale(0.98); background: #334155; }
-        .m-avatar { width: 40px; height: 40px; border-radius: 50%; background: #3b82f6; display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; margin-right: 12px; }
+        .m-avatar { width: 40px; height: 40px; border-radius: 50%; background: #3b82f6; display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; margin-right: 12px; flex-shrink: 0; }
         
         .m-calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 10px; }
         .m-day { aspect-ratio: 1; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; background: #1e293b; color: #94a3b8; border: 1px solid #334155; position: relative; }
@@ -87,6 +87,10 @@
 
         .m-no-data { text-align: center; padding: 40px 20px; color: #64748b; font-weight: 900; text-transform: uppercase; font-size: 14px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
         .m-no-data i { font-size: 32px; opacity: 0.5; }
+
+        .m-status-pill { font-size: 9px; font-weight: 900; padding: 2px 6px; border-radius: 4px; text-align: center; width: 32px; }
+        .m-status-row { display: flex; align-items: center; justify-content: flex-end; gap: 6px; margin-bottom: 2px; }
+        .m-status-label { font-size: 9px; color: #64748b; font-weight: 700; width: 20px; text-align: right; }
 
         /* --- RESPONSIVE SWITCH --- */
         @media (max-width: 768px) {
@@ -486,31 +490,52 @@
                 return;
             }
 
-            const today = new Date();
-            const todayKey = `2026-${m+1}-${today.getDate()}`;
-            const isCurrentMonth = today.getFullYear() === 2026 && today.getMonth() === m;
+            // Dátumok előkészítése (Ma, Holnap, Holnapután)
+            const today = new Date(); // Ma
+            const d1 = new Date(); d1.setDate(today.getDate() + 1); // Holnap
+            const d2 = new Date(); d2.setDate(today.getDate() + 2); // Holnapután
+            
+            // Kulcsok generálása (YYYY-M-D)
+            // Figyelem: A JSON-ben 1-alapú hónapok vannak (pl. 2026-2-4)
+            const k0 = `2026-${today.getMonth()+1}-${today.getDate()}`;
+            const k1 = `2026-${d1.getMonth()+1}-${d1.getDate()}`;
+            const k2 = `2026-${d2.getMonth()+1}-${d2.getDate()}`;
 
             listEl.innerHTML = employees.map((e, index) => {
                 let s = 0; if(e.data) Object.values(e.data).forEach(v => { let n=parseFloat(String(v).replace(',','.')); if(!isNaN(n)) s+=n; });
                 let remaining = (e.yearlyQuota || 160) - s;
-                let todayVal = (isCurrentMonth && e.data && e.data[todayKey]) ? e.data[todayKey] : "-";
                 
-                // Color for today status
-                let statusColor = "bg-slate-800 text-slate-500";
-                if(todayVal !== "-") statusColor = "bg-blue-600 text-white";
+                // Segédfüggvény a szín és szöveg meghatározásához
+                const getStatusHtml = (key, label) => {
+                    const val = (e.data && e.data[key]) ? e.data[key] : "-";
+                    let bg = "bg-slate-800 text-slate-500";
+                    if(val !== "-") {
+                        if(!isNaN(parseFloat(val))) bg = "bg-emerald-600 text-white";
+                        else if(val === 'BÁ') bg = "bg-orange-600 text-white";
+                        else if(val === 'TU') bg = "bg-blue-600 text-white";
+                        else if(val === 'IG') bg = "bg-violet-600 text-white";
+                        else bg = "bg-slate-600 text-white";
+                    }
+                    return `
+                    <div class="m-status-row">
+                        <span class="m-status-label">${label}</span>
+                        <div class="m-status-pill ${bg}">${val}</div>
+                    </div>`;
+                };
 
                 return `
                 <div class="m-card" onclick="openMobileUser(${index})">
-                    <div class="flex items-center">
+                    <div class="flex items-center flex-grow overflow-hidden">
                         <div class="m-avatar">${e.name.charAt(0)}</div>
-                        <div>
-                            <div class="font-black text-white text-lg leading-tight uppercase">${e.name}</div>
-                            <div class="text-[10px] text-emerald-400 font-bold uppercase mt-1">Maradék: ${remaining} óra</div>
+                        <div class="min-w-0 pr-2">
+                            <div class="font-black text-white text-lg leading-tight uppercase truncate">${e.name}</div>
+                            <div class="text-[10px] text-emerald-400 font-bold uppercase mt-1">Maradék: ${remaining}</div>
                         </div>
                     </div>
-                    <div class="flex flex-col items-center">
-                        <span class="text-[9px] text-slate-500 font-bold mb-1">MA</span>
-                        <div class="px-2 py-1 rounded text-xs font-black ${statusColor} min-w-[30px] text-center">${todayVal}</div>
+                    <div class="flex flex-col flex-none">
+                        ${getStatusHtml(k0, "MA")}
+                        ${getStatusHtml(k1, "HOL")}
+                        ${getStatusHtml(k2, "KÖV")}
                     </div>
                 </div>
                 `;
