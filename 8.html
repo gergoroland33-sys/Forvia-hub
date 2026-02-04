@@ -264,6 +264,19 @@
         let mSelectedDate = null;
 
         async function changeShift(s) {
+            // --- UI AZONNALI TÖRLÉSE ÉS VISSZAJELZÉS ---
+            // Ez garantálja, hogy a régi adat eltűnik, és látszik hogy dolgozik a rendszer
+            document.getElementById('m-emp-list').innerHTML = `
+                <div class="flex flex-col items-center justify-center pt-20">
+                    <i class="fas fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i>
+                    <span class="text-slate-400 font-bold text-sm uppercase tracking-widest">Adatok betöltése...</span>
+                </div>
+            `;
+            employees = []; // Memória ürítése
+            
+            // --- DESKTOPON IS TÖRLÜNK EGY PILLANATRA ---
+            render(); 
+
             currentShift = s; localStorage.setItem('fv_shift_final', s);
             
             // Desktop UI frissítés
@@ -285,21 +298,14 @@
         }
 
         async function load() {
-            // --- JAVÍTÁS KEZDETE: AZONNALI TÖRLÉS VÁLTÁSKOR ---
-            employees = []; 
-            render(); // Desktop ürítés
-            renderMobileList(); // Mobil ürítés (így azonnal "Nincs adat"-ra vált, amíg tölt)
-            // --- JAVÍTÁS VÉGE ---
-
             try {
                 const res = await fetch(`${DB}shift_${currentShift}.json`);
                 const data = await res.json();
                 employees = Array.isArray(data) ? data : [];
             } catch(e) { 
-                // Ha hiba van (pl. üres adatbázis), akkor is maradjon üres a lista
                 employees = []; 
             } finally {
-                // Akár sikerült, akár nem, rajzoljuk ki
+                // Betöltés kész, most rajzolunk
                 render(); 
                 renderMobileList(); 
                 
@@ -501,7 +507,7 @@
         // === SUPER PRO MOBILE LOGIC (ELKÜLÖNÍTVE) ===
         // -------------------------------------------------------------
 
-        // --- ÚJ RÉSZ: AUTOMATIKUS FRISSÍTÉS ÉBREDÉSKOR ---
+        // --- AUTOMATIKUS FRISSÍTÉS ÉBREDÉSKOR ---
         document.addEventListener('visibilitychange', function() {
             if (document.visibilityState === 'visible') {
                 load();
