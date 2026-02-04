@@ -41,7 +41,7 @@
             flex-grow: 1; display: flex; flex-direction: column;
             align-items: center; 
             text-align: center;
-            /* PRO ANIMÁCIÓ HOZZÁADVA: background-size változik */
+            /* PRO ANIMÁCIÓ: background-size változik */
             background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 45%),
             radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.05), transparent 45%), #0b1120;
             background-size: 120% 120%;
@@ -52,7 +52,7 @@
             padding-bottom: 60px;
         }
         
-        /* ÚJ: Háttér lélegző animáció */
+        /* Háttér lélegző animáció */
         @keyframes bgPulse {
             0% { background-size: 100% 100%; background-position: center; }
             100% { background-size: 130% 130%; background-position: center; }
@@ -99,23 +99,44 @@
         /* MÓDOSÍTOTT: Interaktív kurzor */
         .current-date {
             color: var(--text-dim); font-size: 0.95rem; margin-bottom: 30px; font-weight: 500; line-height: 1.5;
-            cursor: pointer; /* Jelzi, hogy kattintható */
-            transition: transform 0.2s;
+            cursor: pointer; 
             user-select: none;
+            /* Biztosítjuk a helyet az animációnak */
+            min-height: 50px; 
+            display: flex; align-items: center; justify-content: center;
         }
-        .current-date:active { transform: scale(0.95); color: white; }
+        
+        /* ÚJ: Pro Switch Animáció */
+        .animate-pop {
+            animation: popSwitch 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
 
-        /* ÚJ: Óra stílus */
+        @keyframes popSwitch {
+            0% { transform: scale(1); opacity: 1; filter: blur(0); }
+            50% { transform: scale(0.92); opacity: 0.4; filter: blur(2px); }
+            100% { transform: scale(1); opacity: 1; filter: blur(0); }
+        }
+
+        /* ÚJ: PRO ÓRA STÍLUS (Javított) */
         .clock-display {
-            font-family: 'Monaco', 'Courier New', monospace;
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--text);
-            letter-spacing: 2px;
-            text-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+            font-family: 'Inter', sans-serif; /* Modern font */
+            font-size: 2.4rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            font-variant-numeric: tabular-nums; /* Hogy ne ugráljanak a számok */
+            
+            /* Színátmenet a szövegen */
+            background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            
+            /* Neon glow effekt */
+            filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.4));
+            
             display: block;
-            margin-top: 10px;
-            margin-bottom: 10px;
+            margin-top: 5px;
+            margin-bottom: 5px;
+            line-height: 1;
         }
         
         /* --- EGYSZERŰ NÉVNAP STÍLUS (Eredeti) --- */
@@ -618,12 +639,19 @@
         }
     }
 
-    // --- ÚJ INTERAKTÍV RÉSZEK ---
+    // --- INTERAKTÍV RÉSZEK (FRISSÍTVE) ---
     
     let isClockMode = false;
 
     function toggleTimeMode() {
         if(navigator.vibrate) navigator.vibrate(10);
+        
+        // Animációs osztály hozzáadása (reseteljük, hogy minden kattintásnál lefusson)
+        const wrapper = document.getElementById('date-content-wrapper');
+        wrapper.classList.remove('animate-pop');
+        void wrapper.offsetWidth; // Trigger reflow
+        wrapper.classList.add('animate-pop');
+        
         isClockMode = !isClockMode;
         updateInfo(); // Azonnal frissít
     }
@@ -632,12 +660,13 @@
         const hour = new Date().getHours();
         let greeting = "Üdv";
         
-        if (hour >= 4 && hour < 9) {
+        // ÚJ LOGIKA (6-9, 9-18, 18-6)
+        if (hour >= 6 && hour < 9) {
             greeting = "Jó reggelt";
         } else if (hour >= 9 && hour < 18) {
             greeting = "Szép napot";
-        } else if (hour >= 18 || hour < 4) {
-            greeting = "Jó pihenést";
+        } else {
+            greeting = "Jó estét";
         }
         
         document.getElementById('greeting-text').innerText = greeting;
@@ -647,17 +676,16 @@
         const now = new Date();
         const container = document.getElementById('date-content-wrapper');
 
-        // Időalapú köszöntés frissítése
         updateGreeting();
 
         if (isClockMode) {
-            // Digitális óra mód
+            // PRO Digitális óra mód
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
             container.innerHTML = `<span class="clock-display">${hours}:${minutes}:${seconds}</span>`;
         } else {
-            // Dátum mód (eredeti)
+            // Dátum mód
             const napok = ["Vasárnap", "Hétfő", "Kedd", "Szerda", "Csütörtök", "Péntek", "Szombat"];
             const napNeve = napok[now.getDay()];
             const dateStr = now.getFullYear() + ". " + String(now.getMonth() + 1).padStart(2, '0') + ". " + String(now.getDate()).padStart(2, '0') + ". " + napNeve;
@@ -672,11 +700,8 @@
         }
     }
 
-    // Inicializálás és időzítő beállítása
     updateInfo();
     updateCalendarWidget();
-    
-    // Minden másodpercben frissíti az órát/dátumot
     setInterval(updateInfo, 1000); 
 
     function animateAndReload(btn) {
