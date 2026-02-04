@@ -90,36 +90,46 @@
             color: var(--text-dim); font-size: 0.95rem; margin-bottom: 30px; font-weight: 500; line-height: 1.5;
         }
         
-        /* --- MÓDOSÍTÁS: BILLEGŐ ANIMÁCIÓ A NÉVNAPRA --- */
+        /* --- MÓDOSÍTÁS: VARÁZSLATOS "FÜST" TRANSZFORMÁCIÓ --- */
+        .nameday-container {
+            height: 24px; /* Fix magasság a ugrálás elkerülésére */
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            margin-top: 6px;
+        }
+
         .nameday-text { 
             color: var(--accent); 
             font-weight: 600; 
-            display: inline-block; /* Fontos a transformhoz */
-            margin-top: 6px; 
             font-size: 0.9rem; 
             letter-spacing: 0.5px;
-            
-            /* Új Billegő (Wobble) Animáció - Gyorsabb (2s) */
-            animation: namedayWobble 2s ease-in-out infinite;
+            display: inline-block;
+            white-space: nowrap;
+
+            /* A "Magic" alapállapota */
+            opacity: 1;
+            transform: scale(1);
+            filter: blur(0px);
+            transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        @keyframes namedayWobble {
-            0% { transform: rotate(0deg); }
-            15% { transform: rotate(-4deg); }
-            30% { transform: rotate(4deg); }
-            45% { transform: rotate(-2deg); }
-            60% { transform: rotate(2deg); }
-            75% { transform: rotate(0deg); }
-            100% { transform: rotate(0deg); } /* Kis szünet a végén */
+        /* Amikor eltűnik (Füstté válik) */
+        .nameday-text.vanish {
+            opacity: 0;
+            transform: scale(1.15) translateY(-5px); /* Enyhén nő és felfelé száll */
+            filter: blur(8px); /* Elhomályosodik */
+            letter-spacing: 6px; /* Szétcsúsznak a betűk */
+            text-shadow: 0 0 15px rgba(59, 130, 246, 0.8); /* Fénylik */
         }
         /* ------------------------------------------------ */
 
-        /* --- MÓDOSÍTÁS: KÖZÉPRE IGAZÍTOTT NAPTÁR DOBOZ --- */
+        /* --- KÖZÉPRE IGAZÍTOTT NAPTÁR DOBOZ --- */
         .calendar-box {
             background: linear-gradient(145deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 16px;
-            padding: 20px 22px; /* Kicsit több padding */
+            padding: 20px 22px; 
             margin-bottom: 30px;
             
             position: relative;
@@ -127,10 +137,10 @@
             transition: all 0.3s ease;
             
             border-left: 4px solid var(--accent);
-            display: flex;             /* Flexbox a középhez */
-            flex-direction: column;    /* Egymás alá */
-            align-items: center;       /* Vízszintes közép */
-            text-align: center;        /* Szöveg közép */
+            display: flex;             
+            flex-direction: column;    
+            align-items: center;       
+            text-align: center;        
             
             width: 100%;
             box-shadow: 0 4px 20px rgba(0,0,0,0.2);
@@ -139,7 +149,7 @@
         .cal-header { 
             display: flex; 
             align-items: center; 
-            justify-content: center; /* Fejléc ikon+szöveg középre */
+            justify-content: center; 
             gap: 8px; 
             margin-bottom: 12px; 
             width: 100%;
@@ -148,12 +158,12 @@
         
         .cal-main-row { 
             display: flex; 
-            justify-content: center; /* Dátum és Badge középre */
+            justify-content: center; 
             align-items: center; 
-            gap: 12px;               /* Space-between helyett gap */
+            gap: 12px;               
             margin-bottom: 6px; 
             width: 100%;
-            flex-wrap: wrap;         /* Ha hosszú, tördeljen szépen */
+            flex-wrap: wrap;         
         }
         .cal-date-text { font-size: 1.4rem; font-weight: 800; color: white; letter-spacing: -0.5px; }
         
@@ -163,7 +173,6 @@
             letter-spacing: 0.5px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
         .cal-event-name { font-size: 0.95rem; color: #94a3b8; font-weight: 500; }
-        /* -------------------------------------------------- */
         
         .cal-badge.holiday { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
         .cal-badge.workday { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
@@ -173,7 +182,7 @@
 
         .shift-info-box {
             margin-top: 15px;
-            width: 100%; /* Teljes szélesség */
+            width: 100%; 
             background: rgba(15, 23, 42, 0.6);
             border: 1px solid rgba(59, 130, 246, 0.2); 
             border-radius: 12px;
@@ -279,20 +288,17 @@
         }
         .nav-item:active { background: var(--accent) !important; color: white !important; transform: scale(0.98); }
 
-        /* --- PRO "SMART DOCK" (FÜGGŐLEGES KAPSZULA) --- */
+        /* --- PRO "SMART DOCK" --- */
         .smart-dock {
             position: fixed;
-            /* Alapértelmezett pozíció */
             bottom: 30px;
-            /* MÓDOSÍTÁS: JOBBRA IGAZÍTÁS KÉPERNYŐ SZÉLÉHEZ (30px helyett 16px) */
-            right: 16px;
+            right: 16px; /* Marad a kért pozíció */
             z-index: 2147483647;
             display: flex;
-            flex-direction: column; /* Alap: Függőleges */
+            flex-direction: column; 
             align-items: center;
             gap: 10px;
             
-            /* PRO Kapszula Stílus */
             background: rgba(30, 41, 59, 0.65);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.12);
@@ -310,40 +316,34 @@
         }
 
         /* --- EGYEDI POZÍCIÓK MODULONKÉNT --- */
-
-        /* KÖZÉP-JOBB (Alkatrész, Bér, Szemét) */
         body.active-mod-1 .smart-dock,
         body.active-mod-2 .smart-dock,
         body.active-mod-10 .smart-dock {
             bottom: auto;
             top: 50%;
-            margin-top: -55px; /* Kapszula fele magassága */
+            margin-top: -55px; 
         }
 
-        /* --- SPECIÁLIS: SZABADSÁGOK (VÉKONYÍTOTT VERZIÓ) --- */
+        /* SZABADSÁGOK (VÉKONYÍTOTT VERZIÓ) */
         body.active-mod-8 .smart-dock {
-            flex-direction: row; /* Vízszintes */
-            bottom: 10px;        /* Kicsit lejjebb */
-            /* Itt is közelebb a széléhez a konzisztencia miatt (20px helyett 10px) */
+            flex-direction: row; 
+            bottom: 10px;        
             right: 10px;
-            /* SLIM PRO STÍLUS */
-            padding: 4px;        /* Vékonyabb keret */
-            gap: 8px;            /* Kisebb köz */
+            padding: 4px;        
+            gap: 8px;            
             border-radius: 40px;
         }
 
-        /* Csak a Szabadság modulban a gombok is kisebbek */
         body.active-mod-8 .smart-dock .menu-fab,
         body.active-mod-8 .smart-dock .refresh-fab {
-            width: 35px;       /* Alapértelmezett 42px helyett */
+            width: 35px;       
             height: 35px;
         }
-        /* Ikonok átméretezése a kis gombokhoz */
         body.active-mod-8 .smart-dock .menu-fab span { font-size: 18px; }
         body.active-mod-8 .smart-dock .refresh-fab span { font-size: 16px; }
 
 
-        /* FELJEBB (Barcode Scan) - Kb egy menünyivel (100px) */
+        /* BARCODE SCAN - FELJEBB */
         body.active-mod-9 .smart-dock {
             bottom: 140px; 
         }
@@ -374,7 +374,6 @@
             color: var(--accent);
         }
         
-        /* MÓDOSÍTÁS: Frissítés Animáció */
         @keyframes rotate-center {
             0% { transform: rotate(0); }
             100% { transform: rotate(360deg); }
@@ -410,7 +409,9 @@
         <h1 class="welcome-title">Üdv <span class="highlight-blue">Felhasználó!</span></h1>
         <div id="display-date" class="current-date">
             <span id="date-text">0000. 00. 00.</span><br>
-            <span id="name-day" class="nameday-text">...</span>
+            <div class="nameday-container">
+                <span id="name-day" class="nameday-text">...</span>
+            </div>
         </div>
 
         <div id="calendar-widget" class="calendar-box">
@@ -609,12 +610,49 @@
         
         document.getElementById('date-text').innerText = dateStr;
 
+        // Mai dátum kulcs
         const honapNap = String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
         const maiNevnap = nevnapok[honapNap] || "---";
-        document.getElementById('name-day').innerText = "Névnap: " + maiNevnap;
+
+        // Holnapi dátum kulcs
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const holnapHonapNap = String(tomorrow.getMonth() + 1).padStart(2, '0') + "-" + String(tomorrow.getDate()).padStart(2, '0');
+        const holnapiNevnap = nevnapok[holnapHonapNap] || "---";
+
+        // Varázslatos névnap ciklus indítása
+        startNameDayCycle("Névnap: " + maiNevnap, "Holnap: " + holnapiNevnap);
 
         updateCalendarWidget();
     }
+
+    // Új logikai a füst effektes váltáshoz
+    function startNameDayCycle(textToday, textTomorrow) {
+        const el = document.getElementById('name-day');
+        let showingToday = true;
+
+        // Első beállítás
+        el.innerText = textToday;
+
+        setInterval(() => {
+            // 1. Lépés: Eltűnés (Füst)
+            el.classList.add('vanish');
+
+            // 2. Lépés: Szövegcsere és visszatérés (amikor már "eltűnt")
+            setTimeout(() => {
+                showingToday = !showingToday;
+                el.innerText = showingToday ? textToday : textTomorrow;
+                
+                // Szín módosítás a holnapihoz, hogy megkülönböztethető legyen (opcionális, de szép)
+                if(!showingToday) el.style.color = "#94a3b8"; // Halványabb a holnapi
+                else el.style.color = "var(--accent)"; // Kék a mai
+
+                el.classList.remove('vanish');
+            }, 1200); // 1.2s (a CSS transition ideje)
+
+        }, 6000 + 1200); // 6 másodperc várakozás + animációs idő
+    }
+
     updateInfo();
 
     function animateAndReload(btn) {
@@ -622,7 +660,7 @@
         btn.classList.add('active-anim');
         setTimeout(() => {
             window.location.reload();
-        }, 550); // Hagyjuk, hogy az animáció nagyrészt lefusson
+        }, 550); 
     }
 
     function toggleMenu() {
@@ -672,19 +710,14 @@
         totalActivity++;
         localStorage.setItem('fv_total_activity', totalActivity);
 
-        // Reseteljük a modul specifikus osztályokat
         document.body.className = document.body.className.replace(/active-mod-\d+/g, '').trim();
-
-        // Modul aktív flag
         document.body.classList.add('module-active');
 
-        // Speciális osztály hozzáadása az adott modulhoz a pozicionáláshoz
         if (url.includes('.html')) {
             const modNum = url.split('.')[0];
             document.body.classList.add(`active-mod-${modNum}`);
         }
 
-        // Search mode flag megtartása a régebbi kompatibilitás miatt (opcionális)
         if (url === '1.html') {
             document.body.classList.add('search-mode-active');
         } else {
@@ -704,7 +737,6 @@
         if(navigator.vibrate) navigator.vibrate(15);
         if(caller) caller.blur();
         
-        // Resetelünk minden módosító osztályt
         document.body.classList.remove('search-mode-active');
         document.body.classList.remove('module-active');
         document.body.className = document.body.className.replace(/active-mod-\d+/g, '').trim();
