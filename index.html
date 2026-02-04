@@ -90,92 +90,51 @@
             color: var(--text-dim); font-size: 0.95rem; margin-bottom: 30px; font-weight: 500; line-height: 1.5;
         }
         
-        /* --- MÓDOSÍTÁS: IGAZI KÉK FÜST (SMOKE) EFFEKT --- */
+        /* --- MÓDOSÍTÁS: FOLYAMATOS KÉK FÜSTÖLÉS (LÁNGOLÁS) --- */
         .nameday-container {
-            height: 30px; /* Hely a füstnek */
+            height: 30px; 
             display: flex; 
             align-items: center; 
             justify-content: center;
-            margin-top: 6px;
+            margin-top: 8px; /* Kicsit több hely a füstnek */
             position: relative;
         }
 
         .nameday-text { 
-            color: var(--accent); 
-            font-weight: 700; 
-            font-size: 1rem; 
-            letter-spacing: 1px;
+            /* Alap színátmenet a betű testének */
+            background: linear-gradient(to bottom, #ffffff 30%, #60a5fa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            
+            font-weight: 800; 
+            font-size: 1.1rem; /* Kicsit vastagabb, hogy jobban látszódjon a láng */
+            letter-spacing: 1.5px;
             display: inline-block;
             white-space: nowrap;
             position: relative;
             
-            /* Alap állapot */
-            opacity: 1;
-            filter: blur(0px);
-            transform: scale(1);
-            transition: opacity 1.5s ease; /* Csak az opacity-t kezeljük itt */
+            /* A folyamatos füst animáció */
+            animation: blueSmoke 3s infinite alternate ease-in-out;
         }
 
-        /* Amikor aktiválódik a "vanish" osztály, elindul a füst animáció.
-           Nem transition-t használunk, hanem keyframe animációt a kontrollált mozgásért.
-        */
-        .nameday-text.vanish {
-            animation: smokeEvaporate 2s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-
-        @keyframes smokeEvaporate {
+        @keyframes blueSmoke {
             0% {
-                opacity: 1;
-                transform: rotate(0deg) scale(1) translateY(0);
-                filter: blur(0px);
-                text-shadow: 0 0 0 rgba(0,0,0,0);
-                color: var(--accent);
-            }
-            30% {
-                /* Elkezd "izzani" kéken és elmosódni */
-                color: transparent; /* A betű eltűnik */
+                /* Kezdő állapot: Kisebb láng/füst */
                 text-shadow: 
-                    0 0 10px #60a5fa,
-                    0 -5px 15px #3b82f6;
-                filter: blur(2px);
-                transform: scale(1.1);
+                    0 0 2px rgba(255, 255, 255, 0.8),   /* Fehér izzás (mag) */
+                    0 -2px 5px rgba(96, 165, 250, 0.6), /* Világoskék láng */
+                    0 -5px 10px rgba(59, 130, 246, 0.4); /* Forvia kék füst alja */
+                filter: blur(0.3px);
+                transform: scale(1);
             }
             100% {
-                /* Teljes füstté válás */
-                opacity: 0;
-                color: transparent;
-                /* A füst felfelé száll (-30px) és szétoszlik */
+                /* Végállapot: A füst felcsap */
                 text-shadow: 
-                    0 -40px 30px #60a5fa,   /* Fő füst */
-                    -10px -60px 50px #22d3ee, /* Cián árnyalat a szélen */
-                    10px -50px 40px #3b82f6;
-                filter: blur(15px); /* Erős elmosás */
-                transform: rotate(-2deg) scale(1.4) translateY(-25px);
-                letter-spacing: 8px; /* Szétcsúsznak a betűk */
-            }
-        }
-        
-        /* A visszatéréshez egy finom "lecsapódás" animáció */
-        .nameday-text.condense {
-            animation: smokeCondense 2s forwards ease-out;
-        }
-        
-        @keyframes smokeCondense {
-            0% {
-                opacity: 0;
-                filter: blur(15px);
-                transform: scale(1.4) translateY(-20px);
-                letter-spacing: 5px;
-                color: transparent;
-                text-shadow: 0 0 30px #60a5fa;
-            }
-            100% {
-                opacity: 1;
-                filter: blur(0px);
-                transform: scale(1) translateY(0);
-                letter-spacing: 1px;
-                color: var(--accent); /* Visszaáll az eredeti szín */
-                text-shadow: none;
+                    0 0 4px rgba(255, 255, 255, 0.9),    /* Erősebb izzás */
+                    0 -5px 12px rgba(59, 130, 246, 0.8), /* Erős Forvia kék láng */
+                    0 -15px 25px rgba(34, 211, 238, 0.5); /* Cián füst ami elszáll */
+                filter: blur(0.8px); /* A szélek elmosódnak a hőtől */
+                transform: scale(1.02); /* Minimális "lélegzés" */
             }
         }
         /* ------------------------------------------------ */
@@ -670,46 +629,11 @@
         const honapNap = String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
         const maiNevnap = nevnapok[honapNap] || "---";
 
-        // Holnapi dátum kulcs
-        const tomorrow = new Date(now);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const holnapHonapNap = String(tomorrow.getMonth() + 1).padStart(2, '0') + "-" + String(tomorrow.getDate()).padStart(2, '0');
-        const holnapiNevnap = nevnapok[holnapHonapNap] || "---";
-
-        // Varázslatos névnap ciklus indítása
-        startNameDayCycle("Névnap: " + maiNevnap, "Holnap: " + holnapiNevnap);
+        // Csak a mai névnapot állítjuk be
+        const el = document.getElementById('name-day');
+        el.innerText = "Névnap: " + maiNevnap;
 
         updateCalendarWidget();
-    }
-
-    // Új logikai a füst effektes váltáshoz
-    function startNameDayCycle(textToday, textTomorrow) {
-        const el = document.getElementById('name-day');
-        let showingToday = true;
-
-        // Első beállítás
-        el.innerText = textToday;
-
-        setInterval(() => {
-            // 1. Lépés: Eltűnés (Füst)
-            el.classList.remove('condense');
-            el.classList.add('vanish');
-
-            // 2. Lépés: Szövegcsere és visszatérés (amikor már "eltűnt")
-            setTimeout(() => {
-                showingToday = !showingToday;
-                el.innerText = showingToday ? textToday : textTomorrow;
-                
-                // Szín módosítás a holnapihoz, hogy megkülönböztethető legyen (opcionális, de szép)
-                if(!showingToday) el.style.color = "#94a3b8"; // Halványabb a holnapi
-                else el.style.color = "var(--accent)"; // Kék a mai
-
-                // Reset és Lecsapódás (Condense)
-                el.classList.remove('vanish');
-                el.classList.add('condense');
-            }, 2000); // 2s (az animáció hossza)
-
-        }, 6000 + 2000); // 6 másodperc várakozás + animációs idő
     }
 
     updateInfo();
