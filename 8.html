@@ -201,7 +201,7 @@
         </div>
 
         <div id="m-detail-view" class="hidden absolute inset-0 bg-[#0b0f1a] z-50 flex flex-col h-full">
-            <div class="p-4 bg-[#0f172a] border-b border-slate-800 flex items-center gap-3 shadow-lg">
+            <div class="p-4 bg-[#0f172a] border-b border-slate-800 flex items-center gap-3 shadow-lg flex-none">
                 <button onclick="closeMobileDetail()" class="p-2 text-slate-400 hover:text-white"><i class="fas fa-arrow-left text-xl"></i></button>
                 <div class="flex-grow overflow-hidden">
                     <h2 id="m-detail-name" class="font-black text-xl text-white truncate">Név</h2>
@@ -223,16 +223,23 @@
                 <div id="m-calendar-grid" class="m-calendar-grid pb-4"></div>
             </div>
 
-            <div class="m-input-area shadow-[0_-5px_15px_rgba(0,0,0,0.5)]">
+            <div class="m-input-area shadow-[0_-5px_15px_rgba(0,0,0,0.5)] z-20 pb-12">
                 <div class="flex justify-between items-center mb-2">
                     <span id="m-selected-date" class="text-sm font-bold text-blue-400 uppercase">MAI NAP</span>
                     <span id="m-status-text" class="text-xs font-bold text-slate-500">Státusz</span>
                 </div>
-                <input type="text" id="m-input" class="m-big-input" placeholder="--" autocomplete="off">
                 
-                <div class="grid grid-cols-2 gap-4 mt-4">
-                    <button onclick="navMobileUser(-1)" class="py-3 rounded-xl bg-slate-800 text-slate-300 font-bold text-sm border border-slate-700 flex items-center justify-center gap-2"><i class="fas fa-arrow-left"></i> Előző</button>
-                    <button onclick="navMobileUser(1)" class="py-3 rounded-xl bg-slate-800 text-slate-300 font-bold text-sm border border-slate-700 flex items-center justify-center gap-2">Következő <i class="fas fa-arrow-right"></i></button>
+                <div class="flex gap-2">
+                    <input type="text" id="m-input" class="m-big-input flex-grow" placeholder="--" autocomplete="off">
+                    <button onclick="manualSaveAndClose()" class="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl px-4 font-black text-xs uppercase shadow-lg flex flex-col items-center justify-center w-24">
+                        <i class="fas fa-check text-xl mb-1"></i>
+                        MENTÉS
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mt-6">
+                    <button onclick="navMobileUser(-1)" class="py-3 rounded-xl bg-slate-800 text-slate-300 font-bold text-sm border border-slate-700 flex items-center justify-center gap-2 shadow-lg"><i class="fas fa-arrow-left"></i> Előző</button>
+                    <button onclick="navMobileUser(1)" class="py-3 rounded-xl bg-slate-800 text-slate-300 font-bold text-sm border border-slate-700 flex items-center justify-center gap-2 shadow-lg">Következő <i class="fas fa-arrow-right"></i></button>
                 </div>
             </div>
         </div>
@@ -529,8 +536,9 @@
             renderMobileCalendar();
             selectMobileDate(dayToSelect);
 
-            // Görgessen a tetejére (Scroll to top)
+            // Görgessen a tetejére (Scroll to top) - KÉT HELYEN IS BIZTOSÍTVA
             document.getElementById('m-cal-scroll-container').scrollTop = 0;
+            document.getElementById('m-detail-view').scrollTop = 0;
         }
 
         function closeMobileDetail() {
@@ -627,8 +635,41 @@
             input.focus();
         }
 
+        // --- ÚJ FUNKCIÓ: Manuális mentés és kilépés gomb ---
+        async function manualSaveAndClose() {
+             await forceSave();
+             closeMobileDetail();
+        }
+
+        // --- ÚJ FUNKCIÓ: Azonnali mentés debounce nélkül ---
+        async function forceSave() {
+            if(mSelectedUserIndex === -1 || !mSelectedDate) return;
+            // Biztosítjuk, hogy az aktuális input érték bekerüljön
+            const val = document.getElementById('m-input').value.toUpperCase();
+            const k = `2026-${date.getMonth()+1}-${mSelectedDate}`;
+            const emp = employees[mSelectedUserIndex];
+            
+            emp.data = emp.data || {};
+            if(val === "") delete emp.data[k];
+            else emp.data[k] = val;
+
+            document.getElementById('m-status-text').innerText = "MENTÉS...";
+            await save(); // Várunk a válaszra
+            document.getElementById('m-status-text').innerText = "MENTVE";
+        }
+
         // Mobile Input Handler
-        document.getElementById('m-input').addEventListener('input', function(e) {
+        const inputEl = document.getElementById('m-input');
+        
+        // --- ÚJ FUNKCIÓ: ENTER billentyű figyelése ---
+        inputEl.addEventListener('keydown', function(e) {
+            if(e.key === 'Enter') {
+                e.preventDefault(); // Ne új sort csináljon
+                manualSaveAndClose();
+            }
+        });
+
+        inputEl.addEventListener('input', function(e) {
             if(mSelectedUserIndex === -1 || !mSelectedDate) return;
             
             const val = e.target.value.toUpperCase();
