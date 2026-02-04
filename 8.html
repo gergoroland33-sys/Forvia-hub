@@ -291,6 +291,25 @@
                 employees = Array.isArray(data) ? data : [];
                 render(); // Desktop render
                 renderMobileList(); // Mobil render
+                
+                // --- ÚJ RÉSZ: AUTOMATIKUS FRISSÍTÉS HA MEG VAN NYITVA A RÉSZLETES NÉZET ---
+                if(!document.getElementById('m-detail-view').classList.contains('hidden') && mSelectedUserIndex > -1) {
+                    // Ha valakinek az adatlapját nézzük épp, akkor frissítsük a naptárát
+                    // hogy a legújabb adatok látszódjanak (pl. ha a háttérben frissült)
+                    renderMobileCalendar();
+                    // És ha van kiválasztva nap, frissítsük az input mező tartalmát is
+                    if(mSelectedDate) {
+                        const k = `2026-${date.getMonth()+1}-${mSelectedDate}`;
+                        const emp = employees[mSelectedUserIndex];
+                        const val = (emp && emp.data && emp.data[k]) ? emp.data[k] : "";
+                        const input = document.getElementById('m-input');
+                        if(input && document.activeElement !== input) { // Csak ha nem épp írunk bele
+                            input.value = val;
+                            document.getElementById('m-status-text').innerText = val ? "MENTVE (Frissítve)" : "ÜRES";
+                        }
+                    }
+                }
+                
                 initSortable();
             } catch(e) { console.error("Load hiba"); }
         }
@@ -473,6 +492,15 @@
         // -------------------------------------------------------------
         // === SUPER PRO MOBILE LOGIC (ELKÜLÖNÍTVE) ===
         // -------------------------------------------------------------
+
+        // --- ÚJ RÉSZ: AUTOMATIKUS FRISSÍTÉS ÉBREDÉSKOR ---
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible') {
+                // Ha a felhasználó visszatért az oldalra (pl. zsebből vette elő),
+                // töltsük le az adatokat újra, hogy biztosan a legfrissebbet lássa.
+                load();
+            }
+        });
 
         function renderMobileList() {
             const m = date.getMonth();
