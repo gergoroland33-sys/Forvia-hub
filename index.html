@@ -90,52 +90,33 @@
             color: var(--text-dim); font-size: 0.95rem; margin-bottom: 30px; font-weight: 500; line-height: 1.5;
         }
         
-        /* --- MÓDOSÍTÁS: FOLYAMATOS KÉK FÜSTÖLÉS (LÁNGOLÁS) --- */
+        /* --- MÓDOSÍTÁS: IGAZI SVG TŰZ EFFEKT (CSS) --- */
         .nameday-container {
             height: 30px; 
             display: flex; 
             align-items: center; 
             justify-content: center;
-            margin-top: 8px; /* Kicsit több hely a füstnek */
+            margin-top: 8px;
             position: relative;
         }
 
         .nameday-text { 
-            /* Alap színátmenet a betű testének */
-            background: linear-gradient(to bottom, #ffffff 30%, #60a5fa 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            
             font-weight: 800; 
-            font-size: 1.1rem; /* Kicsit vastagabb, hogy jobban látszódjon a láng */
+            font-size: 1.15rem; 
             letter-spacing: 1.5px;
             display: inline-block;
             white-space: nowrap;
-            position: relative;
             
-            /* A folyamatos füst animáció */
-            animation: blueSmoke 3s infinite alternate ease-in-out;
-        }
-
-        @keyframes blueSmoke {
-            0% {
-                /* Kezdő állapot: Kisebb láng/füst */
-                text-shadow: 
-                    0 0 2px rgba(255, 255, 255, 0.8),   /* Fehér izzás (mag) */
-                    0 -2px 5px rgba(96, 165, 250, 0.6), /* Világoskék láng */
-                    0 -5px 10px rgba(59, 130, 246, 0.4); /* Forvia kék füst alja */
-                filter: blur(0.3px);
-                transform: scale(1);
-            }
-            100% {
-                /* Végállapot: A füst felcsap */
-                text-shadow: 
-                    0 0 4px rgba(255, 255, 255, 0.9),    /* Erősebb izzás */
-                    0 -5px 12px rgba(59, 130, 246, 0.8), /* Erős Forvia kék láng */
-                    0 -15px 25px rgba(34, 211, 238, 0.5); /* Cián füst ami elszáll */
-                filter: blur(0.8px); /* A szélek elmosódnak a hőtől */
-                transform: scale(1.02); /* Minimális "lélegzés" */
-            }
+            /* A tűz színe (Core -> Inner -> Outer -> Smoke) */
+            color: #ffffff; /* Fehér mag */
+            text-shadow: 
+                0 0 4px #ffffff,           /* Izzó közép */
+                0 -5px 8px #22d3ee,        /* Cián belső láng */
+                0 -12px 20px #3b82f6,      /* Forvia kék külső láng */
+                0 -25px 40px rgba(30, 58, 138, 0.8); /* Sötétkék füst */
+            
+            /* Ez kapcsolja össze a lenti SVG szűrővel */
+            filter: url(#blueFlame); 
         }
         /* ------------------------------------------------ */
 
@@ -769,5 +750,16 @@
 
     document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
 </script>
+
+<svg style="width:0;height:0;position:absolute;">
+  <filter id="blueFlame">
+    <feTurbulence type="fractalNoise" baseFrequency="0.05 0.05" numOctaves="3" result="noise">
+         <animate attributeName="baseFrequency" values="0.05 0.05; 0.05 0.08; 0.05 0.05" dur="3s" repeatCount="indefinite" />
+    </feTurbulence>
+    <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" />
+    <feGaussianBlur stdDeviation="0.5" />
+  </filter>
+</svg>
+
 </body>
 </html>
