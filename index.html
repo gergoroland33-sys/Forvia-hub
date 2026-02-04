@@ -41,7 +41,6 @@
             flex-grow: 1; display: flex; flex-direction: column;
             align-items: center; 
             text-align: center;
-            /* PRO ANIMÁCIÓ: background-size változik */
             background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 45%),
             radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.05), transparent 45%), #0b1120;
             background-size: 120% 120%;
@@ -57,7 +56,7 @@
             100% { background-size: 130% 130%; background-position: center; }
         }
 
-        /* --- ÚJ PRO ANIMÁLT KERET DEFINÍCIÓ --- */
+        /* --- PRO ANIMÁLT KERET DEFINÍCIÓ --- */
         @property --angle {
             syntax: '<angle>';
             initial-value: 0deg;
@@ -65,19 +64,14 @@
         }
 
         .glass-card {
-            /* Alap üveg stílus */
             background: rgba(30, 41, 59, 0.4); 
             backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            
-            /* Eltávolítva a régi fix border, helyette padding a keretnek */
             border: none; 
             padding: 40px 30px; border-radius: 24px;
             box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6);
             max-width: 500px; width: 100%; animation: fadeIn 0.8s ease-out;
             position: relative; 
             margin: auto;
-            
-            /* Interakció miatt */
             cursor: pointer;
             transition: transform 0.1s;
         }
@@ -86,23 +80,26 @@
             transform: scale(0.99);
         }
 
-        /* Ez a pszeudo-elem hozza létre a forgó keretet */
+        /* MÓDOSÍTOTT: Látványosabb, futófény effekt */
         .glass-card::after {
             content: '';
             position: absolute;
             inset: 0;
             border-radius: 24px;
-            padding: 2px; /* A keret vastagsága */
+            padding: 2px; /* Vastagság maradt */
             
-            /* A mágia: Forgó gradiens */
+            /* A mágia: Élesebb, kontrasztosabb gradiens a futó hatáshoz */
             background: conic-gradient(from var(--angle), 
-                rgba(255,255,255,0.1), 
-                var(--accent), 
-                white, 
-                var(--accent), 
-                rgba(255,255,255,0.1)
+                transparent 0%,    /* A kör nagy része sötét marad */
+                transparent 65%,   /* Eddig semmi */
+                var(--accent) 85%, /* Kék csóva megjelenik */
+                white 95%,         /* Vakító fehér "fej" - a legfényesebb pont */
+                var(--accent) 100% /* Kék lezárás a loophoz */
             );
             
+            /* Enyhe elmosás a "neon" ragyogás hatáshoz */
+            filter: blur(0.8px);
+
             /* Maszkolás, hogy csak a keret látszódjon */
             -webkit-mask: 
                 linear-gradient(#fff 0 0) content-box, 
@@ -110,14 +107,13 @@
             -webkit-mask-composite: xor;
             mask-composite: exclude;
             
-            pointer-events: none; /* Átengedjük a kattintást */
+            pointer-events: none;
             z-index: 2;
             
             /* Animáció */
-            animation: spinBorder 4s linear infinite;
+            animation: spinBorder 3s linear infinite; /* Kicsit gyorsabb a dinamizmusért */
         }
         
-        /* Belső finom szegély a mélységérzetért */
         .glass-card::before {
             content: '';
             position: absolute;
@@ -158,7 +154,6 @@
             -webkit-text-fill-color: transparent;
         }
 
-        /* MÓDOSÍTOTT: Sima Dátum (Óra funkció kivéve) */
         .current-date {
             color: var(--text-dim); font-size: 0.95rem; margin-bottom: 30px; font-weight: 500; line-height: 1.5;
             user-select: none;
@@ -195,7 +190,6 @@
             
             width: 100%;
             box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            /* Fontos: A kártya felett legyen */
             z-index: 5; 
         }
 
@@ -535,7 +529,6 @@
 </div>
 
 <script>
-    // --- JAVÍTÁS: Céges Proxy URL tisztító ---
     function cleanUrlOnLoad() {
         if (window.location.search.length > 0) {
             const clean = window.location.protocol + "//" + window.location.host + window.location.pathname;
@@ -543,7 +536,6 @@
         }
     }
     cleanUrlOnLoad(); 
-    // -----------------------------------------
 
     const nevnapok = {
         "01-01": "Alpár", "01-02": "Ábel", "01-03": "Genovéva, Benjámin", "01-04": "Titusz, Leona", "01-05": "Simon", "01-06": "Boldizsár", "01-07": "Attila, Ramóna", "01-08": "Gyöngyvér", "01-09": "Marcell", "01-10": "Melánia", "01-11": "Ágota", "01-12": "Ernő", "01-13": "Veronika", "01-14": "Bódog", "01-15": "Lóránt, Loránd", "01-16": "Gusztáv", "01-17": "Antal, Antónia", "01-18": "Piroska", "01-19": "Sára, Márió", "01-20": "Fábián, Sebestyén", "01-21": "Ágnes", "01-22": "Vince", "01-23": "Zelma, Rajmund", "01-24": "Timót", "01-25": "Pál", "01-26": "Vanda, Paula", "01-27": "Angelika", "01-28": "Károly, Karola", "01-29": "Adél", "01-30": "Martina, Gerda", "01-31": "Marcella",
@@ -664,33 +656,15 @@
         }
     }
 
-    // --- ÚJ INTERAKTÍV KERET IRÁNYVÁLTÓ ---
-    
     function toggleBorderDirection(card) {
-        // Vibrálás visszajelzés (ha támogatott)
         if(navigator.vibrate) navigator.vibrate(5);
-        
-        // Jelenlegi irány lekérdezése a computed style-ból nem megbízható animációnál,
-        // ezért egy egyszerű data attribútumot vagy class-t használunk.
-        const currentDir = card.style.getPropertyValue('--anim-dir') || 'normal';
-        const newDir = currentDir === 'normal' ? 'reverse' : 'normal';
-        
-        // CSS változóba írjuk az irányt, de mivel a keyframe animáció nem mindig reagál jól
-        // a futás közbeni irányváltásra, közvetlenül a stílust állítjuk.
-        // Trükk: A pszeudo-elem animációját célozzuk meg.
-        
-        // Egyszerűbb megoldás: Egy class-t kapcsolgatunk
         if (card.classList.contains('reverse-spin')) {
             card.classList.remove('reverse-spin');
-            // Hack a pszeudo-elem elérésére: style taget injektálunk (nem szép), 
-            // VAGY egyszerűen JavaScripttel állítjuk a pszeudo elem animációját? Nem lehet.
-            // MEGOLDÁS: A CSS-ben definiálunk egy .reverse-spin osztályt.
         } else {
             card.classList.add('reverse-spin');
         }
     }
     
-    // Ezt a CSS-hez hozzá kell adni dinamikusan vagy a style blokkba
     const styleSheet = document.createElement("style");
     styleSheet.innerText = `
         .glass-card.reverse-spin::after {
@@ -718,10 +692,8 @@
     function updateInfo() {
         const now = new Date();
         
-        // Köszöntés frissítése
         updateGreeting();
 
-        // Sima dátum logika (Interaktivitás nélkül)
         const napok = ["Vasárnap", "Hétfő", "Kedd", "Szerda", "Csütörtök", "Péntek", "Szombat"];
         const napNeve = napok[now.getDay()];
         const dateStr = now.getFullYear() + ". " + String(now.getMonth() + 1).padStart(2, '0') + ". " + String(now.getDate()).padStart(2, '0') + ". " + napNeve;
