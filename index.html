@@ -90,34 +90,14 @@
             color: var(--text-dim); font-size: 0.95rem; margin-bottom: 30px; font-weight: 500; line-height: 1.5;
         }
         
-        /* --- MÓDOSÍTÁS: ÉLESEBB, KISEBB, FORVIA KÉK LÁNG --- */
-        .nameday-container {
-            height: 30px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            margin-top: 6px;
-            position: relative;
-        }
-
+        /* --- VISSZAÁLLÍTVA: EGYSZERŰ NÉVNAP STÍLUS --- */
         .nameday-text { 
-            font-weight: 800; 
-            font-size: 0.95rem; /* Kisebb méret (volt 1.15) */
-            letter-spacing: 1px;
+            color: var(--accent); 
+            font-weight: 600; 
+            font-size: 0.9rem; 
+            letter-spacing: 0.5px;
             display: inline-block;
-            white-space: nowrap;
-            
-            /* Éles Forvia Kék betűszín */
-            color: #3b82f6; 
-            
-            /* Keményebb árnyékok a "Blur" helyett */
-            text-shadow: 
-                0 0 1px #ffffff,           /* Éles fehér mag */
-                0 -3px 5px #22d3ee,        /* Cián lángnyelv */
-                0 -8px 12px #3b82f6;       /* Forvia kék lángtest */
-            
-            /* SVG szűrő hívása */
-            filter: url(#blueFlameSharp); 
+            margin-top: 6px;
         }
         /* ------------------------------------------------ */
 
@@ -406,9 +386,7 @@
         <h1 class="welcome-title">Üdv <span class="highlight-blue">Felhasználó!</span></h1>
         <div id="display-date" class="current-date">
             <span id="date-text">0000. 00. 00.</span><br>
-            <div class="nameday-container">
-                <span id="name-day" class="nameday-text">...</span>
-            </div>
+            <span id="name-day" class="nameday-text">...</span>
         </div>
 
         <div id="calendar-widget" class="calendar-box">
@@ -611,9 +589,8 @@
         const honapNap = String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
         const maiNevnap = nevnapok[honapNap] || "---";
 
-        // Csak a mai névnapot állítjuk be
-        const el = document.getElementById('name-day');
-        el.innerText = "Névnap: " + maiNevnap;
+        // Visszaállítva: Csak egyszerű szöveg beállítása
+        document.getElementById('name-day').innerText = "Névnap: " + maiNevnap;
 
         updateCalendarWidget();
     }
@@ -751,15 +728,5 @@
 
     document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
 </script>
-
-<svg style="width:0;height:0;position:absolute;">
-  <filter id="blueFlameSharp">
-    <feTurbulence type="fractalNoise" baseFrequency="0.1 0.1" numOctaves="1" result="noise">
-         <animate attributeName="baseFrequency" values="0.1 0.1; 0.1 0.2; 0.1 0.1" dur="2s" repeatCount="indefinite" />
-    </feTurbulence>
-    <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" />
-    </filter>
-</svg>
-
 </body>
 </html>
