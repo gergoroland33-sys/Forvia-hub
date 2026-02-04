@@ -90,7 +90,7 @@
             color: var(--text-dim); font-size: 0.95rem; margin-bottom: 30px; font-weight: 500; line-height: 1.5;
         }
         
-        /* --- MÓDOSÍTÁS: STÍLUSOS ANIMÁCIÓ A NÉVNAPRA --- */
+        /* --- MÓDOSÍTÁS: BILLEGŐ ANIMÁCIÓ A NÉVNAPRA --- */
         .nameday-text { 
             color: var(--accent); 
             font-weight: 600; 
@@ -99,22 +99,18 @@
             font-size: 0.9rem; 
             letter-spacing: 0.5px;
             
-            /* Pro Pulse Animáció */
-            animation: namedayPulse 4s ease-in-out infinite;
+            /* Új Billegő (Wobble) Animáció - Gyorsabb (2s) */
+            animation: namedayWobble 2s ease-in-out infinite;
         }
 
-        @keyframes namedayPulse {
-            0%, 100% { 
-                transform: scale(1); 
-                opacity: 0.85; 
-                text-shadow: 0 0 0 rgba(59, 130, 246, 0);
-            }
-            50% { 
-                transform: scale(1.15); 
-                opacity: 1; 
-                color: #60a5fa;
-                text-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
-            }
+        @keyframes namedayWobble {
+            0% { transform: rotate(0deg); }
+            15% { transform: rotate(-4deg); }
+            30% { transform: rotate(4deg); }
+            45% { transform: rotate(-2deg); }
+            60% { transform: rotate(2deg); }
+            75% { transform: rotate(0deg); }
+            100% { transform: rotate(0deg); } /* Kis szünet a végén */
         }
         /* ------------------------------------------------ */
 
@@ -288,7 +284,8 @@
             position: fixed;
             /* Alapértelmezett pozíció */
             bottom: 30px;
-            right: 30px;
+            /* MÓDOSÍTÁS: JOBBRA IGAZÍTÁS KÉPERNYŐ SZÉLÉHEZ (30px helyett 16px) */
+            right: 16px;
             z-index: 2147483647;
             display: flex;
             flex-direction: column; /* Alap: Függőleges */
@@ -327,7 +324,8 @@
         body.active-mod-8 .smart-dock {
             flex-direction: row; /* Vízszintes */
             bottom: 10px;        /* Kicsit lejjebb */
-            right: 20px;
+            /* Itt is közelebb a széléhez a konzisztencia miatt (20px helyett 10px) */
+            right: 10px;
             /* SLIM PRO STÍLUS */
             padding: 4px;        /* Vékonyabb keret */
             gap: 8px;            /* Kisebb köz */
@@ -375,7 +373,17 @@
             background: rgba(255, 255, 255, 0.05);
             color: var(--accent);
         }
-        .refresh-fab:active { transform: rotate(180deg) scale(0.9); background: rgba(255, 255, 255, 0.1); }
+        
+        /* MÓDOSÍTÁS: Frissítés Animáció */
+        @keyframes rotate-center {
+            0% { transform: rotate(0); }
+            100% { transform: rotate(360deg); }
+        }
+        .refresh-fab.active-anim {
+            animation: rotate-center 0.6s ease-in-out both;
+        }
+        
+        .refresh-fab:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.1); }
         .refresh-fab span { font-size: 20px; color: var(--accent); line-height: 1; font-weight: bold; pointer-events: none; }
 
         .overlay {
@@ -464,7 +472,7 @@
 </aside>
 
 <div id="smartDock" class="smart-dock">
-    <div class="refresh-fab" onclick="window.location.reload()">
+    <div class="refresh-fab" onclick="animateAndReload(this)">
         <span>↻</span>
     </div>
 
@@ -608,6 +616,14 @@
         updateCalendarWidget();
     }
     updateInfo();
+
+    function animateAndReload(btn) {
+        if(navigator.vibrate) navigator.vibrate(20);
+        btn.classList.add('active-anim');
+        setTimeout(() => {
+            window.location.reload();
+        }, 550); // Hagyjuk, hogy az animáció nagyrészt lefusson
+    }
 
     function toggleMenu() {
         if(navigator.vibrate) navigator.vibrate(15);
