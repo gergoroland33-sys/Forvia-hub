@@ -29,7 +29,7 @@
             overflow: hidden;
         }
 
-        /* --- FELSŐ RÉSZ: MAI NAP (HERO) - VÁLTOZATLAN --- */
+        /* --- FELSŐ RÉSZ: MAI NAP (HERO) --- */
         .hero-section {
             flex: 1;
             display: flex; flex-direction: column;
@@ -77,27 +77,24 @@
             box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
         }
 
-        /* --- ALSÓ RÉSZ: LISTA (MÓDOSÍTVA) --- */
+        /* --- ALSÓ RÉSZ: LISTA --- */
         .list-container {
-            height: 45vh; /* Kicsit több hely a listának */
-            /* Háttér és keret eltávolítva a lebegő hatáshoz */
+            height: 45vh; 
             background: transparent; 
             box-shadow: none;
             border-radius: 0;
-            
             overflow-y: auto;
             padding: 20px 25px;
             position: relative; z-index: 2;
-            /* Maszkolás, hogy felül szépen tűnjön el */
             mask-image: linear-gradient(to bottom, transparent 0%, black 10%);
             -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%);
         }
 
         .list-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 15px; letter-spacing: 1px; text-align: center; }
 
-        /* --- ÚJ, LENYITHATÓ LEBEGŐ KÁRTYÁK --- */
+        /* --- LENYITHATÓ LEBEGŐ KÁRTYÁK --- */
         .list-card {
-            background: rgba(255, 255, 255, 0.05); /* Nagyon halvány alap */
+            background: rgba(255, 255, 255, 0.05); 
             backdrop-filter: blur(5px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 16px;
@@ -108,14 +105,12 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
         
-        /* Aktív (lenyitott) állapot */
         .list-card.active {
             background: var(--card-glass);
             border-color: var(--primary-glow);
             box-shadow: 0 8px 25px rgba(139, 92, 246, 0.2);
         }
 
-        /* Kártya Fejléc (Mindig látszik) */
         .lc-header {
             display: flex; align-items: center; justify-content: space-between;
             padding: 15px 20px;
@@ -134,7 +129,6 @@
         .lc-arrow { color: var(--text-dim); transition: transform 0.3s ease; }
         .list-card.active .lc-arrow { transform: rotate(180deg); color: var(--primary); }
 
-        /* Kártya Tartalom (Lenyitható rész) */
         .lc-details {
             max-height: 0;
             opacity: 0;
@@ -143,7 +137,7 @@
         }
 
         .list-card.active .lc-details {
-            max-height: 100px; /* Elég hely a neveknek */
+            max-height: 100px;
             opacity: 1;
             padding-bottom: 20px;
         }
@@ -188,17 +182,42 @@
         return config.names.split(',').map(n => n.trim()).filter(n => n !== "");
     }
 
-    // --- A JAVÍTOTT, SZIGORÚ SZÁMOLÁS (Változatlan) ---
+    // =========================================================
+    // ✅ JAVÍTOTT, OKOS PÁROSÍTÓ ALGORITMUS
+    // =========================================================
     function getPairForShiftIndex(shiftIndex) {
         let list = getCleanNames();
         let n = list.length;
-        if(n < 2) return "Kevés név!";
         
-        let slot1 = (shiftIndex * 2) % n;
-        let slot2 = (shiftIndex * 2 + 1) % n;
+        if(n < 2) return "Kevés név!";
 
-        return `${list[slot1]} & ${list[slot2]}`;
+        // 1. Az "Első ember" kiválasztása
+        // Kettesével ugrunk, hogy meglegyen a pihenőidő.
+        let p1_index = (shiftIndex * 2) % n;
+
+        // 2. A "Második ember" (a Pár) kiválasztása
+        // ITT A TITOK: Nem fixen a következő embert vesszük, hanem
+        // attól függően, hányadik "nagykörben" járunk, változtatjuk a távolságot.
+        
+        // Hányadik alkalommal megyünk körbe a teljes névsoron?
+        let cycle = Math.floor((shiftIndex * 2) / n);
+        
+        // Minél több kört mentünk, annál távolabbi embert választunk párnak.
+        // Kezdetben offset = 1 (szomszéd), aztán 2, aztán 3...
+        let p2_offset = 1 + cycle; 
+        
+        let p2_index = (p1_index + p2_offset) % n;
+
+        // Biztonsági ellenőrzés:
+        // Ha véletlenül magával kerülne párba valaki (ritka matek egybeesésnél),
+        // akkor eggyel arrébb toljuk a párt.
+        if (p1_index === p2_index) {
+            p2_index = (p2_index + 1) % n;
+        }
+
+        return `${list[p1_index]} & ${list[p2_index]}`;
     }
+    // =========================================================
 
     function renderSchedule() {
         const heroContainer = document.getElementById('heroContainer');
@@ -206,17 +225,14 @@
         heroContainer.innerHTML = '';
         listContainer.innerHTML = '';
 
-        // --- ÚJ LOGIKA: 06:00-KOR VAN NAPVÁLTÁS ---
+        // --- NAPVÁLTÁS 06:00-KOR ---
         let now = new Date();
-        // Ha reggel 6 előtt vagyunk, vonjunk le egy napot, 
-        // hogy még a "tegnapi" (éjszakás) műszakot lássuk.
         if (now.getHours() < 6) {
             now.setDate(now.getDate() - 1);
         }
 
         let today = now;
-        today.setHours(0,0,0,0); // Nullázzuk, hogy csak a dátum számítson
-        // ---------------------------------------------
+        today.setHours(0,0,0,0);
 
         let diffTime = today - CYCLE_START;
         let totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -297,7 +313,6 @@
         return count;
     }
 
-    // Lista generálása (MÓDOSÍTVA: Új HTML szerkezet a lenyithatósághoz)
     function fillUpcomingList(startDate, container) {
         let countFound = 0;
         let iterDate = new Date(startDate);
@@ -320,11 +335,9 @@
                 let idx = calculateShiftIndex(iterDate);
                 let pair = getPairForShiftIndex(idx);
                 
-                // Dátum formázás az új kártyához
                 let dayShort = iterDate.toLocaleDateString('hu-HU', { weekday: 'short' });
                 let dateFull = iterDate.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric' });
 
-                // ÚJ HTML SZERKEZET (Header + Details + Onclick)
                 container.innerHTML += `
                     <div class="list-card" onclick="this.classList.toggle('active')">
                         <div class="lc-header">
