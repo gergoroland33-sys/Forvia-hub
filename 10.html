@@ -6,16 +6,13 @@
     <title>Szemétkihordás Pro</title>
     <style>
         :root {
-            /* Sötét, modern paletta */
             --bg-dark: #09090b;
             --surface: #18181b;
-            --surface-highlight: #27272a;
             --primary: #8b5cf6;
             --accent: #06b6d4;
             --text-main: #ffffff;
             --text-dim: #a1a1aa;
             --card-glass: rgba(255, 255, 255, 0.08);
-            --card-border: rgba(255, 255, 255, 0.1);
         }
 
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -29,7 +26,7 @@
             overflow: hidden;
         }
 
-        /* --- FELSŐ RÉSZ: MAI NAP (HERO) --- */
+        /* HERO SZEKCIÓ */
         .hero-section {
             flex: 1;
             display: flex; flex-direction: column;
@@ -56,7 +53,6 @@
             text-align: center;
             animation: float 6s ease-in-out infinite;
         }
-
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
         .today-label { font-size: 0.9rem; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 5px; }
@@ -77,12 +73,9 @@
             box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
         }
 
-        /* --- ALSÓ RÉSZ: LISTA --- */
+        /* LISTA SZEKCIÓ */
         .list-container {
-            height: 45vh; 
-            background: transparent; 
-            box-shadow: none;
-            border-radius: 0;
+            height: 45vh;
             overflow-y: auto;
             padding: 20px 25px;
             position: relative; z-index: 2;
@@ -92,9 +85,8 @@
 
         .list-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 15px; letter-spacing: 1px; text-align: center; }
 
-        /* --- LENYITHATÓ LEBEGŐ KÁRTYÁK --- */
         .list-card {
-            background: rgba(255, 255, 255, 0.05); 
+            background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(5px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 16px;
@@ -102,54 +94,22 @@
             overflow: hidden;
             transition: all 0.3s ease;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
         
-        .list-card.active {
-            background: var(--card-glass);
-            border-color: var(--primary-glow);
-            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.2);
-        }
+        .list-card.active { background: var(--card-glass); box-shadow: 0 8px 25px rgba(139, 92, 246, 0.2); }
 
-        .lc-header {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 15px 20px;
-        }
-        
-        .lc-date-summary {
-            display: flex; align-items: center; gap: 12px;
-        }
-        .lc-day-badge {
-            background: rgba(6, 182, 212, 0.15); color: var(--accent);
-            font-weight: 700; font-size: 0.8rem; padding: 4px 8px; border-radius: 6px; text-transform: uppercase;
-        }
+        .lc-header { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; }
+        .lc-date-summary { display: flex; align-items: center; gap: 12px; }
+        .lc-day-badge { background: rgba(6, 182, 212, 0.15); color: var(--accent); font-weight: 700; font-size: 0.8rem; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
         .lc-date-text { font-weight: 600; color: var(--text-dim); }
         .list-card.active .lc-date-text { color: #fff; }
-
         .lc-arrow { color: var(--text-dim); transition: transform 0.3s ease; }
         .list-card.active .lc-arrow { transform: rotate(180deg); color: var(--primary); }
 
-        .lc-details {
-            max-height: 0;
-            opacity: 0;
-            transition: all 0.3s ease-in-out;
-            padding: 0 20px;
-        }
-
-        .list-card.active .lc-details {
-            max-height: 100px;
-            opacity: 1;
-            padding-bottom: 20px;
-        }
-
-        .lc-names {
-            font-size: 1.3rem; font-weight: 800; color: #fff;
-            text-align: center;
-            background: linear-gradient(to right, #fff, #a5b4fc);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-
-        .list-container::-webkit-scrollbar { width: 0px; background: transparent; }
+        .lc-details { max-height: 0; opacity: 0; transition: all 0.3s ease-in-out; padding: 0 20px; }
+        .list-card.active .lc-details { max-height: 100px; opacity: 1; padding-bottom: 20px; }
+        .lc-names { font-size: 1.3rem; font-weight: 800; color: #fff; text-align: center; background: linear-gradient(to right, #fff, #a5b4fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
         .rest-view { text-align: center; margin-top: 50px; opacity: 0.7; }
     </style>
 </head>
@@ -171,10 +131,7 @@
         names: "Dani,Laci,Jani,Patrik,Zsuzsa,Peti,Barbi,Reni,Böbe,Kriszti"
     };
 
-    // ==========================================
-    // 🛑 PROGRAMKÓD
-    // ==========================================
-    const CYCLE_START = new Date(2025, 6, 31); 
+    const CYCLE_START = new Date(2025, 6, 31); // Referencia dátum
 
     document.addEventListener('DOMContentLoaded', renderSchedule);
 
@@ -183,40 +140,89 @@
     }
 
     // =========================================================
-    // ✅ JAVÍTOTT, OKOS PÁROSÍTÓ ALGORITMUS
+    // 🎩 A "KALAP MÓDSZER" ALGORITMUS (Fair Shuffle)
     // =========================================================
-    function getPairForShiftIndex(shiftIndex) {
-        let list = getCleanNames();
-        let n = list.length;
-        
+    
+    // Pszeudo-véletlen szám generátor (hogy mindig ugyanaz jöjjön ki adott napra)
+    function mulberry32(a) {
+        return function() {
+            var t = a += 0x6D2B79F5;
+            t = Math.imul(t ^ (t >>> 15), t | 1);
+            t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        }
+    }
+
+    // Ez a függvény szimulálja a húzásokat a kezdetektől a kért napig
+    function getPairForShiftIndex(targetShiftIndex) {
+        let namesBase = getCleanNames();
+        let n = namesBase.length;
         if(n < 2) return "Kevés név!";
 
-        // 1. Az "Első ember" kiválasztása
-        // Kettesével ugrunk, hogy meglegyen a pihenőidő.
-        let p1_index = (shiftIndex * 2) % n;
+        // Generáljuk le a sorrendet addig, amíg el nem érjük a kért indexet
+        // Mivel 2 ember kell per műszak, a szükséges nevek száma: (targetShiftIndex + 1) * 2
+        let neededCount = (targetShiftIndex + 1) * 2;
+        
+        let generatedStream = [];
+        let round = 0;
+        
+        // Addig generáljuk a köröket ("töltjük újra a kalapot"), amíg nincs elég név a listában
+        while (generatedStream.length < neededCount + 2) { // +2 biztonsági tartalék
+            
+            // 1. "Bedobjuk a neveket a kalapba" (másolat készítése)
+            let currentDeck = [...namesBase];
+            
+            // 2. "Megkeverjük a kalapot" (Determinikus keverés a kör száma alapján)
+            let rng = mulberry32(12345 + round); // A seed a kör sorszáma, így reprodukálható
+            
+            // Fisher-Yates keverés
+            for (let i = currentDeck.length - 1; i > 0; i--) {
+                const j = Math.floor(rng() * (i + 1));
+                [currentDeck[i], currentDeck[j]] = [currentDeck[j], currentDeck[i]];
+            }
 
-        // 2. A "Második ember" (a Pár) kiválasztása
-        // ITT A TITOK: Nem fixen a következő embert vesszük, hanem
-        // attól függően, hányadik "nagykörben" járunk, változtatjuk a távolságot.
-        
-        // Hányadik alkalommal megyünk körbe a teljes névsoron?
-        let cycle = Math.floor((shiftIndex * 2) / n);
-        
-        // Minél több kört mentünk, annál távolabbi embert választunk párnak.
-        // Kezdetben offset = 1 (szomszéd), aztán 2, aztán 3...
-        let p2_offset = 1 + cycle; 
-        
-        let p2_index = (p1_index + p2_offset) % n;
+            // 3. 🛡️ BIZTONSÁGI ELLENŐRZÉS (Egymást követő napok tiltása)
+            // Ha ez nem az első kör, nézzük meg, ki volt az előző kör utolsó embere.
+            // Ha az új kör első embere UGYANAZ, mint az előző kör utolsója (vagy párja), cseréljük el!
+            if (generatedStream.length > 0) {
+                let lastPerson = generatedStream[generatedStream.length - 1];
+                let secondLastPerson = generatedStream[generatedStream.length - 2];
 
-        // Biztonsági ellenőrzés:
-        // Ha véletlenül magával kerülne párba valaki (ritka matek egybeesésnél),
-        // akkor eggyel arrébb toljuk a párt.
-        if (p1_index === p2_index) {
-            p2_index = (p2_index + 1) % n;
+                // Ha az új pakli első embere épp most volt...
+                if (currentDeck[0] === lastPerson || currentDeck[0] === secondLastPerson) {
+                    // Cseréljük el az első embert a pakli közepén lévővel
+                    let swapIdx = Math.floor(currentDeck.length / 2);
+                    [currentDeck[0], currentDeck[swapIdx]] = [currentDeck[swapIdx], currentDeck[0]];
+                }
+                
+                // Ha az új pakli második embere épp most volt...
+                if (currentDeck[1] === lastPerson || currentDeck[1] === secondLastPerson) {
+                     let swapIdx = Math.floor(currentDeck.length / 2) + 1;
+                     if(swapIdx < currentDeck.length) {
+                        [currentDeck[1], currentDeck[swapIdx]] = [currentDeck[swapIdx], currentDeck[1]];
+                     }
+                }
+            }
+
+            // Hozzáadjuk a megkevert paklit a hosszú listához
+            generatedStream = generatedStream.concat(currentDeck);
+            round++;
         }
 
-        return `${list[p1_index]} & ${list[p2_index]}`;
+        // Most, hogy megvan a hosszú lista, egyszerűen kivesszük a kért indexhez tartozó 2 nevet
+        let p1 = generatedStream[targetShiftIndex * 2];
+        let p2 = generatedStream[targetShiftIndex * 2 + 1];
+
+        // Ha véletlenül a páratlan létszám miatt a lista végén magával kerülne párba (nagyon ritka, de lekezeljük)
+        if (p1 === p2) {
+             p2 = generatedStream[targetShiftIndex * 2 + 2];
+        }
+
+        return `${p1} & ${p2}`;
     }
+
+    // =========================================================
+    // MEGJELENÍTÉS ÉS DÁTUM SZÁMÍTÁS (Változatlan)
     // =========================================================
 
     function renderSchedule() {
@@ -225,12 +231,8 @@
         heroContainer.innerHTML = '';
         listContainer.innerHTML = '';
 
-        // --- NAPVÁLTÁS 06:00-KOR ---
         let now = new Date();
-        if (now.getHours() < 6) {
-            now.setDate(now.getDate() - 1);
-        }
-
+        if (now.getHours() < 6) now.setDate(now.getDate() - 1);
         let today = now;
         today.setHours(0,0,0,0);
 
@@ -248,7 +250,6 @@
         let shiftTypeFull = (config.shift === shifts.day) ? "☀️ NAPPAL (06-18)" : "🌙 ÉJSZAKA (18-06)";
         const headerHTML = `<div class="header-pill">${config.shift} MŰSZAK BEOSZTÁS</div>`;
 
-        // 1. MAI NAP (HA PIHENŐ)
         if (!isWorking) {
             heroContainer.innerHTML = `
                 ${headerHTML}
@@ -262,9 +263,8 @@
             return;
         }
 
-        // 2. MAI NAP (HA MUNKA)
         let currentShiftIndex = calculateShiftIndex(today);
-        let todayPair = getPairForShiftIndex(currentShiftIndex);
+        let todayPair = getPairForShiftIndex(currentShiftIndex); // Itt hívjuk az új logikát
         
         let dateOptions = { month: 'long', day: 'numeric', weekday: 'long' };
         let todayStr = today.toLocaleDateString('hu-HU', dateOptions);
@@ -281,7 +281,6 @@
             </div>
         `;
 
-        // 3. JÖVŐ LISTA
         fillUpcomingList(today, listContainer);
     }
 
@@ -293,19 +292,14 @@
             let dTime = iterDate - CYCLE_START;
             let dDays = Math.floor(dTime / (1000 * 60 * 60 * 24));
             let cIdx = ((dDays % 12) + 12) % 12;
-            
             let bStart = 0;
             if (cIdx >= 3) bStart = 3;
             if (cIdx >= 6) bStart = 6;
             if (cIdx >= 9) bStart = 9;
-            
             let s = getShifts(bStart);
             let work = (config.shift === s.day || config.shift === s.night);
-            
             if(work) {
-                if(iterDate.getTime() === targetDate.getTime()) {
-                    return count;
-                }
+                if(iterDate.getTime() === targetDate.getTime()) return count;
                 count++;
             }
             iterDate.setDate(iterDate.getDate() + 1);
@@ -322,19 +316,16 @@
             let dTime = iterDate - CYCLE_START;
             let dDays = Math.floor(dTime / (1000 * 60 * 60 * 24));
             let cIdx = ((dDays % 12) + 12) % 12;
-            
             let bStart = 0;
             if (cIdx >= 3) bStart = 3;
             if (cIdx >= 6) bStart = 6;
             if (cIdx >= 9) bStart = 9;
-            
             let s = getShifts(bStart);
             let work = (config.shift === s.day || config.shift === s.night);
             
             if(work) {
                 let idx = calculateShiftIndex(iterDate);
-                let pair = getPairForShiftIndex(idx);
-                
+                let pair = getPairForShiftIndex(idx); // Új logika
                 let dayShort = iterDate.toLocaleDateString('hu-HU', { weekday: 'short' });
                 let dateFull = iterDate.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric' });
 
