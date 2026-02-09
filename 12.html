@@ -3,41 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TSDB V16 Pro</title>
+    <title>TSDB V21 Industrial</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600;700;800;900&display=swap');
         body { background-color: #0f172a; font-family: 'Inter', sans-serif; color: #f1f5f9; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
         
-        /* OVEN TABLE PRO */
-        .oven-grid { display: grid; border: 1px solid #334155; border-radius: 8px; overflow: hidden; font-size: 0.8rem; background: #1e293b; }
-        .og-head { background: #0f172a; color: #94a3b8; font-weight: 700; padding: 6px; text-align: center; border-bottom: 1px solid #334155; border-right: 1px solid #334155; }
-        .og-cell { padding: 6px; text-align: center; font-family: 'JetBrains Mono'; font-weight: bold; border-right: 1px solid #334155; border-bottom: 1px solid #334155; }
-        .og-row-label { background: #1e293b; color: #cbd5e1; text-transform: uppercase; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; }
+        /* NEW INDUSTRIAL OVEN TABLE */
+        .oven-container {
+            border: 1px solid #334155;
+            border-radius: 8px;
+            background: #1e293b;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .oven-params {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 1px;
+            background: #334155;
+            border-bottom: 1px solid #334155;
+        }
+        .p-box { background: #0f172a; padding: 8px; text-align: center; }
+        .p-lbl { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; display: block; }
+        .p-val { font-family: 'JetBrains Mono'; font-weight: bold; color: #f1f5f9; font-size: 0.9rem; }
+
+        .oven-scroll-area { overflow-x: auto; position: relative; }
+        .ot { width: 100%; border-collapse: collapse; font-size: 0.8rem; min-width: 800px; }
+        .ot th, .ot td { border: 1px solid #334155; padding: 10px 4px; text-align: center; }
+        .ot th { background: #1e293b; color: #94a3b8; text-transform: uppercase; font-size: 0.7rem; }
         
-        .heat-val { color: #fca5a5; background: rgba(239, 68, 68, 0.05); }
-        .cool-val { color: #6ee7b7; background: rgba(16, 185, 129, 0.05); }
-        .bot-val { color: #93c5fd; background: rgba(59, 130, 246, 0.05); }
+        /* STICKY LEFT COLUMN FOR MOBILE */
+        .ot .sticky-col { 
+            position: sticky; left: 0; z-index: 10; 
+            background: #0f172a; 
+            border-right: 2px solid #334155;
+            width: 140px; min-width: 140px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+        }
+        
+        .row-top { background: rgba(239, 68, 68, 0.03); }
+        .row-bot { background: rgba(59, 130, 246, 0.03); }
+        
+        .val { font-family: 'JetBrains Mono'; font-weight: 700; }
+        .v-top { color: #fca5a5; }
+        .v-bot { color: #93c5fd; }
+        .v-cool { color: #6ee7b7; }
 
-        /* TAB UI */
-        .tab-btn { padding: 8px 24px; font-weight: 800; color: #94a3b8; transition: 0.2s; border-radius: 8px; text-transform: uppercase; border: 1px solid transparent; }
-        .tab-btn.active { background: #3b82f6; color: white; border-color: #2563eb; box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
-        .tab-btn:hover:not(.active) { background: rgba(255,255,255,0.05); }
-        .tab-content { display: none; animation: slideDown 0.3s ease-out; }
+        /* TABS */
+        .tab-wrap { display: flex; gap: 4px; background: #020617; padding: 4px; border-radius: 10px; border: 1px solid #334155; }
+        .tab-wrap.multi { animation: pulseBorder 2s infinite; border-color: #3b82f6; }
+        @keyframes pulseBorder { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); } 70% { box-shadow: 0 0 0 8px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
+        
+        .tab-btn { padding: 10px 24px; border-radius: 8px; font-weight: 800; color: #94a3b8; cursor: pointer; transition: 0.2s; border: 1px solid transparent; text-transform: uppercase; }
+        .tab-btn:hover { color: white; background: rgba(255,255,255,0.05); }
+        .tab-btn.active { background: #2563eb; color: white; border-color: #1d4ed8; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); }
+        
+        .tab-content { display: none; animation: slideIn 0.3s ease-out; }
         .tab-content.active { display: block; }
-        @keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
-
-        /* PROCESS ALERT */
-        .proc-alert { animation: pulseAlert 2s infinite; }
-        @keyframes pulseAlert { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* SEARCH */
-        .s-box { background: #1e293b; border: 2px solid #334155; color: white; padding: 14px 14px 14px 48px; border-radius: 12px; width: 100%; outline: none; transition: 0.2s; font-size: 1.1rem; }
-        .s-box:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2); }
-        .s-list { position: absolute; top: 100%; left: 0; right: 0; background: #1e293b; border: 1px solid #334155; border-radius: 12px; margin-top: 8px; max-height: 350px; overflow-y: auto; z-index: 50; box-shadow: 0 20px 40px rgba(0,0,0,0.5); display: none; }
-        .s-item { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+        .s-container { position: relative; width: 100%; z-index: 50; }
+        .s-input { width: 100%; background: #1e293b; border: 2px solid #334155; color: white; padding: 16px 16px 16px 50px; border-radius: 14px; font-size: 1.2rem; outline: none; transition: 0.2s; }
+        .s-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2); }
+        .s-list { position: absolute; top: 100%; left: 0; right: 0; background: #1e293b; border: 1px solid #334155; border-radius: 12px; margin-top: 8px; max-height: 400px; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.5); display: none; }
+        .s-item { padding: 14px 20px; cursor: pointer; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; transition: 0.1s; }
         .s-item:hover { background: #2563eb; }
         .s-hl { color: #60a5fa; font-weight: bold; }
         .s-item:hover .s-hl { color: white; }
@@ -46,11 +79,14 @@
 <body class="flex flex-col min-h-screen">
 
     <header class="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 p-4 shadow-xl">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-4">
-            <div class="font-black text-2xl text-white tracking-tighter">TSDB<span class="text-orange-500">.V16</span></div>
-            <div class="flex-1 w-full relative">
-                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
-                <input type="text" id="s" placeholder="Keresés: Modell név vagy Panel szám..." class="s-box" autocomplete="off">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-6">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-gradient-to-br from-cyan-600 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-2xl shadow-lg">V21</div>
+                <div class="font-black text-3xl text-white tracking-tighter hidden md:block">TSDB<span class="text-cyan-500">.PRO</span></div>
+            </div>
+            <div class="flex-1 s-container">
+                <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 text-xl pointer-events-none"></i>
+                <input type="text" id="s" placeholder="Keresés: Modell név vagy Panel szám..." class="s-input" autocomplete="off">
                 <div id="sugg" class="s-list"></div>
             </div>
         </div>
@@ -60,7 +96,7 @@
         <div id="out" class="max-w-7xl mx-auto">
             <div class="text-center py-32 opacity-40">
                 <i class="fas fa-microchip text-8xl mb-6 text-slate-700"></i>
-                <h2 class="text-2xl font-bold text-slate-500">Kezdj el gépelni...</h2>
+                <h2 class="text-3xl font-bold text-slate-500">Készenlétben...</h2>
             </div>
         </div>
     </main>
@@ -71,39 +107,35 @@
         const sugg = document.getElementById('sugg');
         const out = document.getElementById('out');
 
-        // SEARCH
         inp.addEventListener('input', (e) => {
             const v = e.target.value.toLowerCase().trim();
             if(v.length < 1) { sugg.style.display = 'none'; return; }
-            const hits = DB.filter(x => x.id.toLowerCase().includes(v) || x.p.toLowerCase().includes(v));
-            const uniq = [...new Set(hits.map(m => m.id))].slice(0, 15);
-            
+            const matches = DB.filter(x => x.id.toLowerCase().includes(v) || x.p.toLowerCase().includes(v));
+            const uniq = [...new Set(matches.map(m => m.id))].slice(0, 15);
             if(uniq.length > 0) {
-                sugg.innerHTML = uniq.map(u => {
-                    const i = hits.find(x => x.id === u);
-                    const h1 = u.replace(new RegExp(v,'gi'), m=>`<span class="s-hl">${m}</span>`);
-                    const h2 = i.p.replace(new RegExp(v,'gi'), m=>`<span class="s-hl">${m}</span>`);
-                    return `<div class="s-item" onclick="sel('${u}')"><div><div class="font-bold text-white text-lg">${h1}</div><div class="text-xs text-slate-400 font-mono">PCB: ${h2}</div></div><i class="fas fa-chevron-right text-slate-500"></i></div>`;
+                sugg.innerHTML = uniq.map(uid => {
+                    const item = matches.find(m => m.id === uid);
+                    const hlId = uid.replace(new RegExp(v, 'gi'), m => `<span class="s-hl">${m}</span>`);
+                    const hlPcb = item.p.replace(new RegExp(v, 'gi'), m => `<span class="s-hl">${m}</span>`);
+                    return `<div class="s-item" onclick="sel('${uid}')"><div><div class="font-bold text-white text-lg">${hlId}</div><div class="text-xs text-slate-400 font-mono font-bold mt-1">PCB: ${hlPcb}</div></div><i class="fas fa-chevron-right text-slate-500"></i></div>`;
                 }).join('');
                 sugg.style.display = 'block';
-            } else sugg.style.display = 'none';
+            } else { sugg.style.display = 'none'; }
         });
-        document.addEventListener('click', e => { if(!e.target.closest('header')) sugg.style.display = 'none'; });
+        document.addEventListener('click', e => { if(!e.target.closest('.s-container')) sugg.style.display = 'none'; });
 
-        // RENDER
         window.sel = (mid) => {
             inp.value = mid; sugg.style.display = 'none';
             const vars = DB.filter(x => x.id === mid).sort((a,b) => (a.pr||'').localeCompare(b.pr||''));
-            if(vars.length) renderCard(vars);
+            if(vars.length) renderMain(vars);
         }
 
         const ok = v => (v && v!=='0' && v!=='-' && v!=='NA' && v!=='N/A' && String(v).trim()!=='');
 
-        function renderCard(vars) {
+        function renderMain(vars) {
             const main = vars[0];
             const isMulti = vars.length > 1;
             let tabs = '', content = '';
-
             vars.forEach((v, idx) => {
                 const act = idx === 0 ? 'active' : '';
                 tabs += `<button class="tab-btn ${act}" onclick="tab(this, ${idx})">${v.pr || 'ALAP'}</button>`;
@@ -111,34 +143,28 @@
             });
 
             out.innerHTML = `
-            <div class="bg-slate-800/80 backdrop-blur-md border border-slate-700 rounded-3xl overflow-hidden shadow-2xl">
-                <div class="bg-slate-900 p-6 md:p-8 border-b border-slate-700 flex flex-col xl:flex-row justify-between gap-6">
+            <div class="bg-slate-800/90 backdrop-blur-md border border-slate-700 rounded-3xl overflow-hidden shadow-2xl animate-[slideIn_0.4s]">
+                <div class="bg-slate-900 p-8 border-b border-slate-700 flex flex-col xl:flex-row justify-between gap-8">
                     <div>
-                        <h1 class="text-4xl md:text-5xl font-black text-white tracking-tight mb-4">${main.id}</h1>
+                        <h1 class="text-5xl font-black text-white tracking-tight mb-4 leading-none">${main.id}</h1>
                         <div class="flex flex-wrap items-center gap-4">
-                            <div class="bg-blue-900/30 border border-blue-500/30 px-4 py-2 rounded-xl flex items-center gap-3">
-                                <span class="text-xs text-blue-400 font-bold uppercase tracking-wider">PANEL SZÁM</span>
-                                <span class="text-2xl font-mono font-bold text-white tracking-wide">${main.p}</span>
+                            <div class="bg-blue-600 px-5 py-3 rounded-2xl shadow-lg shadow-blue-900/50 flex flex-col">
+                                <span class="text-[10px] text-blue-100 font-bold uppercase tracking-widest opacity-80">PANEL SZÁM</span>
+                                <span class="text-3xl font-mono font-bold text-white tracking-wide">${main.p}</span>
                             </div>
-                            <div class="flex gap-4 text-sm font-mono text-slate-400 bg-slate-800 px-4 py-3 rounded-xl border border-slate-700">
-                                <span>REV: <b class="text-white">${main.rev||'-'}</b></span>
-                                <span class="w-px h-4 bg-slate-600"></span>
-                                <span>BAR: <b class="text-white">${main.bar||'-'}</b></span>
+                            <div class="bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 flex items-center gap-6 h-full">
+                                <div><div class="text-[10px] text-slate-500 font-bold uppercase">REVÍZIÓ</div><div class="text-white font-mono font-bold">${main.rev||'-'}</div></div>
+                                <div class="w-px h-8 bg-slate-800"></div>
+                                <div><div class="text-[10px] text-slate-500 font-bold uppercase">BARCODE</div><div class="text-white font-mono font-bold">${main.bar||'-'}</div></div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="flex flex-col items-end gap-2">
-                        ${isMulti ? '<div class="text-[10px] text-blue-400 font-bold uppercase animate-pulse"><i class="fas fa-exclamation-circle mr-1"></i> TÖBB FOLYAMAT ELÉRHETŐ</div>' : ''}
-                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex gap-2 ${isMulti?'proc-alert border-blue-600':''} flex-wrap justify-end">
-                            ${tabs}
-                        </div>
+                    <div class="flex flex-col items-end gap-2 justify-center">
+                        ${isMulti ? '<div class="text-[10px] text-blue-400 font-black uppercase animate-pulse tracking-widest"><i class="fas fa-exclamation-triangle mr-1"></i> FOLYAMAT KIVÁLASZTÁSA KÖTELEZŐ</div>' : ''}
+                        <div class="tab-wrap ${isMulti?'multi':''}">${tabs}</div>
                     </div>
                 </div>
-                
-                <div class="p-6 md:p-8 bg-gradient-to-b from-slate-800 to-slate-900">
-                    ${content}
-                </div>
+                <div class="p-8 bg-gradient-to-b from-slate-800 to-slate-900">${content}</div>
             </div>`;
         }
 
@@ -153,13 +179,12 @@
             const d = i.d||{}, m = d.mat||{}, dm = d.dim||{}, pg = i.pg||{};
             const msk = (d.msk&&d.msk.length) ? d.msk.map(x => `<span class="bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 px-3 py-1 rounded font-mono font-bold text-lg shadow-lg">${x}</span>`).join(' ') : '-';
             
-            const r = (l,v) => ok(v) ? `<div class="flex justify-between border-b border-slate-700/50 pb-2 mb-2 last:border-0"><span class="text-slate-400 text-xs font-bold uppercase pt-1">${l}</span><span class="text-white font-mono font-medium text-right">${v}</span></div>` : '';
+            const r = (l,v) => ok(v) ? `<div class="flex justify-between border-b border-slate-700/50 pb-2 mb-2 last:border-0 hover:bg-white/5 px-2 rounded transition"><span class="text-slate-400 text-xs font-bold uppercase pt-1">${l}</span><span class="text-white font-mono font-medium text-right">${v}</span></div>` : '';
             const pb = (l,v) => ok(v) ? `<div class="bg-slate-900/50 border border-slate-700 px-3 py-2 rounded flex justify-between items-center mb-2"><span class="text-[10px] text-slate-500 font-bold uppercase">${l}</span><span class="text-cyan-400 font-mono font-bold text-xs truncate max-w-[150px]" title="${v}">${v}</span></div>` : '';
 
-            // Programs
-            const prn = ok(pg.pt) ? `<div class="mt-2 pt-2 border-t border-slate-700/50"><div class="text-[9px] text-purple-400 uppercase font-bold mb-1">PRINTER PROG</div><div class="font-mono text-white text-xs bg-purple-900/20 px-2 py-1 rounded border border-purple-500/30">${pg.pt}</div></div>` : '';
-            const gl = ok(pg.g) ? `<div class="mt-2 pt-2 border-t border-slate-700/50"><div class="text-[9px] text-purple-400 uppercase font-bold mb-1">GLUE PROG</div><div class="font-mono text-white text-xs bg-purple-900/20 px-2 py-1 rounded border border-purple-500/30">${pg.g}</div></div>` : '';
-            const ovn = ok(pg.o) ? `<div class="mb-4 bg-orange-900/20 border border-orange-500/30 p-3 rounded-lg flex justify-between items-center shadow-lg"><span class="text-orange-400 text-xs font-bold uppercase"><i class="fas fa-fire mr-1"></i> OVEN RECIPE</span><span class="text-white font-mono font-bold">${pg.o}</span></div>` : '';
+            const prn = ok(pg.pt) ? `<div class="mt-2 pt-2 border-t border-slate-700/50"><div class="text-[9px] text-purple-400 uppercase font-bold mb-1">NYOMTATÓ PROG</div><div class="font-mono text-white text-xs bg-purple-900/20 px-2 py-1 rounded border border-purple-500/30">${pg.pt}</div></div>` : '';
+            const gl = ok(pg.g) ? `<div class="mt-2 pt-2 border-t border-slate-700/50"><div class="text-[9px] text-purple-400 uppercase font-bold mb-1">RAGASZTÓ PROG</div><div class="font-mono text-white text-xs bg-purple-900/20 px-2 py-1 rounded border border-purple-500/30">${pg.g}</div></div>` : '';
+            const ovn = ok(pg.o) ? `<div class="mb-4 bg-orange-900/20 border border-orange-500/30 p-3 rounded-lg flex justify-between items-center shadow-lg"><span class="text-orange-400 text-xs font-bold uppercase"><i class="fas fa-fire mr-1"></i> KEMENCE RECEPT</span><span class="text-white font-mono font-bold">${pg.o}</span></div>` : '';
 
             return `
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -168,7 +193,7 @@
                         <h3 class="text-blue-500 text-xs font-black uppercase mb-4 border-b border-blue-500/20 pb-2"><i class="fas fa-ruler-combined mr-2"></i> FIZIKAI ADATOK</h3>
                         ${r('Méret', (ok(dm.w)&&ok(dm.l)) ? `${dm.w} x ${dm.l} mm` : null)}
                         ${r('Vastagság', dm.t ? dm.t+' mm' : null)}
-                        ${r('Blokk / Pnl', dm.sh)}
+                        ${r('Sheet/Panel', dm.sh)}
                         ${r('Címke', m.l)}
                     </div>
                     <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-md bg-yellow-900/5">
@@ -187,7 +212,7 @@
                 </div>
                 <div class="lg:col-span-3 space-y-2">
                     <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-md h-full">
-                        <h3 class="text-purple-500 text-xs font-black uppercase mb-4 border-b border-purple-500/20 pb-2"><i class="fas fa-code mr-2"></i> PROGRAMOK</h3>
+                        <h3 class="text-purple-500 text-xs font-black uppercase mb-4 border-b border-purple-500/20 pb-2"><i class="fas fa-code mr-2"></i> ÖSSZES PROGRAM</h3>
                         ${pb('Lézer', pg.n)} ${pb('Nyomtató', pg.pt)} ${pb('SPI', pg.s)} ${pb('Beültető', pg.sm)}
                         ${pb('Kemence', pg.o)} ${pb('InLine', pg.i)} ${pb('Ragasztó', pg.g)} ${pb('3D AOI', pg.a)}
                     </div>
@@ -203,46 +228,39 @@
         function mkOven(o, z) {
             if(!o || (!o.t.some(ok) && !o.b.some(ok))) return '';
             
-            // Grid Builder
-            let cols = z + 2; // Zones + C1 + C2
+            // Header
+            let cols = z + 2; 
             let head = '', topR = '', botR = '';
-            
             for(let i=1; i<=z; i++) {
-                head += `<div class="og-head">${i}</div>`;
-                topR += `<div class="og-cell heat-val">${o.t[i-1]||'-'}</div>`;
-                botR += `<div class="og-cell bot-val">${o.b[i-1]||'-'}</div>`;
+                head += `<th>${i}</th>`;
+                topR += `<td class="val val-top">${o.t[i-1]||'-'}</td>`;
+                botR += `<td class="val val-bot">${o.b[i-1]||'-'}</td>`;
             }
-            
-            // Cooling
-            const ct = z===8 ? o.ct : o.ct;
-            const cb = z===8 ? ['-','-'] : o.cb;
-            
-            head += `<div class="og-head text-teal-400">C1</div><div class="og-head text-teal-400">C2</div>`;
-            topR += `<div class="og-cell cool-val">${ct[0]||'-'}</div><div class="og-cell cool-val">${ct[1]||'-'}</div>`;
-            botR += `<div class="og-cell cool-val">${cb[0]||'-'}</div><div class="og-cell cool-val">${cb[1]||'-'}</div>`;
+            const ct = z===8?o.ct:o.ct, cb = z===8?['-','-']:o.cb;
+            head += `<th>C1</th><th>C2</th>`;
+            topR += `<td class="val val-cool">${ct[0]||'-'}</td><td class="val val-cool">${ct[1]||'-'}</td>`;
+            botR += `<td class="val val-cool">${cb[0]||'-'}</td><td class="val val-cool">${cb[1]||'-'}</td>`;
+
+            // Paraméterek (V21 Panel design)
+            const p1 = ok(o.sp) ? `<div class="p-box"><span class="p-lbl">SEBESSÉG</span><span class="p-val">${o.sp}</span></div>` : '';
+            const p2 = ok(o.o2) ? `<div class="p-box"><span class="p-lbl">O2 (PPM)</span><span class="p-val">${o.o2}</span></div>` : '';
+            const p3 = ok(o.w) ? `<div class="p-box"><span class="p-lbl">SZÉLESSÉG</span><span class="p-val">${o.w}</span></div>` : '';
+            const p4 = ok(o.su) ? `<div class="p-box"><span class="p-lbl">SUPPORT</span><span class="p-val">${o.su}</span></div>` : '';
 
             return `
-            <div class="bg-slate-800 p-1 rounded-2xl border border-slate-700 shadow-md overflow-hidden">
-                <div class="px-4 py-3 flex justify-between items-center border-b border-slate-700 mb-1 bg-slate-800">
-                    <div class="text-xs font-black text-orange-500 uppercase"><i class="fas fa-fire-alt mr-2"></i> ${z} ZÓNÁS PROFIL</div>
-                    <div class="text-[10px] font-mono text-slate-400 flex gap-3">
-                        <span class="bg-slate-900 px-2 py-1 rounded border border-slate-700">SPD: <b class="text-white">${o.sp||'-'}</b></span>
-                        <span class="bg-slate-900 px-2 py-1 rounded border border-slate-700">O2: <b class="text-white">${o.o2||'-'}</b></span>
-                        <span class="bg-slate-900 px-2 py-1 rounded border border-slate-700">W: <b class="text-white">${o.w||'-'}</b></span>
-                        <span class="bg-slate-900 px-2 py-1 rounded border border-slate-700">SUP: <b class="text-white">${o.su||'-'}</b></span>
-                    </div>
+            <div class="oven-container shadow-lg">
+                <div class="bg-slate-900 px-4 py-3 border-b border-slate-700 flex justify-between items-center">
+                    <div class="text-xs font-black text-white uppercase"><i class="fas fa-fire-alt text-orange-500 mr-2"></i> ${z} ZÓNÁS KEMENCE</div>
                 </div>
-                <div class="overflow-x-auto p-2">
-                    <div class="oven-grid" style="grid-template-columns: 50px repeat(${cols}, minmax(40px, 1fr));">
-                        <div class="og-head bg-slate-900 border-none"></div>
-                        ${head}
-                        
-                        <div class="og-row-label">FEL</div>
-                        ${topR}
-                        
-                        <div class="og-row-label">AL</div>
-                        ${botR}
-                    </div>
+                <div class="oven-params">${p1}${p2}${p3}${p4}</div>
+                <div class="oven-scroll-area">
+                    <table class="ot">
+                        <thead><tr><th class="sticky-col bg-slate-800 text-white z-20"></th>${head}</tr></thead>
+                        <tbody>
+                            <tr class="row-top"><td class="sticky-col lbl-row text-red-400 border-r-2 border-slate-700">FELSŐ ZÓNÁK</td>${topR}</tr>
+                            <tr class="row-bot"><td class="sticky-col lbl-row text-blue-400 border-r-2 border-slate-700">ALSÓ ZÓNÁK</td>${botR}</tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>`;
         }
