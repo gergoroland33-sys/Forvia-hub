@@ -3,100 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TSDB V21 Industrial</title>
+    <title>TSDB V25 Masterpiece</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600;700;800;900&display=swap');
-        body { background-color: #0f172a; font-family: 'Inter', sans-serif; color: #f1f5f9; }
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+       
+        body { background-color: #020617; font-family: 'Inter', sans-serif; color: #f8fafc; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
-        
-        /* NEW INDUSTRIAL OVEN TABLE */
-        .oven-container {
-            border: 1px solid #334155;
-            border-radius: 8px;
-            background: #1e293b;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-        .oven-params {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 1px;
-            background: #334155;
-            border-bottom: 1px solid #334155;
-        }
-        .p-box { background: #0f172a; padding: 8px; text-align: center; }
-        .p-lbl { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; display: block; }
-        .p-val { font-family: 'JetBrains Mono'; font-weight: bold; color: #f1f5f9; font-size: 0.9rem; }
+       
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
 
-        .oven-scroll-area { overflow-x: auto; position: relative; }
-        .ot { width: 100%; border-collapse: collapse; font-size: 0.8rem; min-width: 800px; }
-        .ot th, .ot td { border: 1px solid #334155; padding: 10px 4px; text-align: center; }
-        .ot th { background: #1e293b; color: #94a3b8; text-transform: uppercase; font-size: 0.7rem; }
-        
-        /* STICKY LEFT COLUMN FOR MOBILE */
-        .ot .sticky-col { 
-            position: sticky; left: 0; z-index: 10; 
-            background: #0f172a; 
-            border-right: 2px solid #334155;
-            width: 140px; min-width: 140px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.2);
-        }
-        
-        .row-top { background: rgba(239, 68, 68, 0.03); }
-        .row-bot { background: rgba(59, 130, 246, 0.03); }
-        
-        .val { font-family: 'JetBrains Mono'; font-weight: 700; }
-        .v-top { color: #fca5a5; }
-        .v-bot { color: #93c5fd; }
-        .v-cool { color: #6ee7b7; }
+        /* V24 VERTICAL OVEN TABLE (FIXED) */
+        .oven-container { border: 1px solid #1e293b; border-radius: 12px; background: #0f172a; overflow: hidden; margin-top: 12px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
+        .v-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .v-table th, .v-table td { padding: 10px 12px; border-bottom: 1px solid #1e293b; text-align: center; }
+        .v-table th { background: #1e293b; color: #94a3b8; font-weight: 800; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; }
+        .v-table tr:last-child td { border-bottom: none; }
+       
+        .z-col { font-weight: 800; color: #cbd5e1; background: #1e293b; width: 60px; border-right: 1px solid #334155; }
+        .t-col { color: #fca5a5; font-family: 'JetBrains Mono'; font-weight: bold; background: rgba(239, 68, 68, 0.05); }
+        .b-col { color: #93c5fd; font-family: 'JetBrains Mono'; font-weight: bold; background: rgba(59, 130, 246, 0.05); }
+        .c-col { color: #6ee7b7; font-family: 'JetBrains Mono'; font-weight: bold; background: rgba(52, 211, 153, 0.05); }
 
-        /* TABS */
-        .tab-wrap { display: flex; gap: 4px; background: #020617; padding: 4px; border-radius: 10px; border: 1px solid #334155; }
-        .tab-wrap.multi { animation: pulseBorder 2s infinite; border-color: #3b82f6; }
-        @keyframes pulseBorder { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); } 70% { box-shadow: 0 0 0 8px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
-        
-        .tab-btn { padding: 10px 24px; border-radius: 8px; font-weight: 800; color: #94a3b8; cursor: pointer; transition: 0.2s; border: 1px solid transparent; text-transform: uppercase; }
+        /* PROCESS TABS - SUPER PULSE */
+        @keyframes superPulse {
+            0% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.7); border-color: #ec4899; }
+            70% { box-shadow: 0 0 0 10px rgba(236, 72, 153, 0); border-color: #be185d; }
+            100% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0); border-color: #ec4899; }
+        }
+       
+        .tab-wrap { display: flex; gap: 6px; background: #0f172a; padding: 6px; border-radius: 12px; border: 2px solid #334155; overflow-x: auto; white-space: nowrap; flex-wrap: wrap; justify-content: flex-end; }
+        .tab-wrap.multi { animation: superPulse 2s infinite; border-color: #ec4899; }
+       
+        .tab-btn { padding: 10px 24px; border-radius: 8px; font-weight: 800; color: #94a3b8; cursor: pointer; transition: 0.2s; text-transform: uppercase; font-size: 0.85rem; border: 1px solid transparent; }
         .tab-btn:hover { color: white; background: rgba(255,255,255,0.05); }
-        .tab-btn.active { background: #2563eb; color: white; border-color: #1d4ed8; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); }
-        
-        .tab-content { display: none; animation: slideIn 0.3s ease-out; }
+        .tab-btn.active { background: #4f46e5; color: white; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4); border-color: #4338ca; }
+        .tab-content { display: none; animation: fadeIn 0.4s ease-out; }
         .tab-content.active { display: block; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* SEARCH */
+        /* SEARCH BAR */
         .s-container { position: relative; width: 100%; z-index: 50; }
-        .s-input { width: 100%; background: #1e293b; border: 2px solid #334155; color: white; padding: 16px 16px 16px 50px; border-radius: 14px; font-size: 1.2rem; outline: none; transition: 0.2s; }
-        .s-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2); }
-        .s-list { position: absolute; top: 100%; left: 0; right: 0; background: #1e293b; border: 1px solid #334155; border-radius: 12px; margin-top: 8px; max-height: 400px; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.5); display: none; }
+        .s-input { width: 100%; background: #1e293b; border: 1px solid #334155; color: white; padding: 16px 16px 16px 50px; border-radius: 16px; font-size: 1.1rem; outline: none; transition: 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
+        .s-input:focus { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2), inset 0 2px 4px rgba(0,0,0,0.2); background: #0f172a; }
+       
+        .s-list { position: absolute; top: 100%; left: 0; right: 0; background: #1e293b/95; backdrop-filter: blur(10px); border: 1px solid #334155; border-radius: 16px; margin-top: 8px; max-height: 400px; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.6); display: none; z-index: 100; }
         .s-item { padding: 14px 20px; cursor: pointer; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; transition: 0.1s; }
-        .s-item:hover { background: #2563eb; }
-        .s-hl { color: #60a5fa; font-weight: bold; }
+        .s-item:last-child { border-bottom: none; }
+        .s-item:hover { background: #334155; }
+        .s-hl { color: #818cf8; font-weight: bold; }
         .s-item:hover .s-hl { color: white; }
+
+        /* DATA ROWS (NO TRUNCATE) */
+        .d-row { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid rgba(51,65,85,0.5); padding-bottom: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+        .d-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .d-lbl { color: #64748b; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; min-width: 80px; }
+        .d-val { color: #f1f5f9; font-size: 0.9rem; font-weight: 500; text-align: right; font-family: 'JetBrains Mono'; word-break: break-word; flex: 1; margin-left: 10px; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
 
-    <header class="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 p-4 shadow-xl">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-6">
-            <div class="flex items-center gap-3">
-                <div class="w-12 h-12 bg-gradient-to-br from-cyan-600 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-2xl shadow-lg">V21</div>
-                <div class="font-black text-3xl text-white tracking-tighter hidden md:block">TSDB<span class="text-cyan-500">.PRO</span></div>
+    <header class="sticky top-0 z-50 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800 p-4 shadow-2xl">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-4">
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <div class="w-12 h-12 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-lg ring-1 ring-white/10">T</div>
+                <div class="font-black text-2xl text-white tracking-tighter">TSDB<span class="text-indigo-500">.PRO</span></div>
             </div>
-            <div class="flex-1 s-container">
-                <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 text-xl pointer-events-none"></i>
-                <input type="text" id="s" placeholder="Keresés: Modell név vagy Panel szám..." class="s-input" autocomplete="off">
+            <div class="flex-1 w-full s-container">
+                <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 text-xl pointer-events-none"></i>
+                <input type="text" id="s" placeholder="Modell, Panel vagy Maszk keresése..." class="s-input" autocomplete="off">
                 <div id="sugg" class="s-list"></div>
             </div>
         </div>
     </header>
 
-    <main class="flex-1 p-4 md:p-8">
+    <main class="flex-1 p-2 md:p-8">
         <div id="out" class="max-w-7xl mx-auto">
-            <div class="text-center py-32 opacity-40">
-                <i class="fas fa-microchip text-8xl mb-6 text-slate-700"></i>
-                <h2 class="text-3xl font-bold text-slate-500">Készenlétben...</h2>
+            <div class="text-center py-32 opacity-30 select-none">
+                <i class="fas fa-search-location text-9xl mb-6 text-slate-800 animate-pulse"></i>
+                <h2 class="text-3xl font-black text-slate-700 uppercase tracking-widest">Adatbázis Betöltve</h2>
             </div>
         </div>
     </main>
@@ -111,13 +101,13 @@
             const v = e.target.value.toLowerCase().trim();
             if(v.length < 1) { sugg.style.display = 'none'; return; }
             const matches = DB.filter(x => x.id.toLowerCase().includes(v) || x.p.toLowerCase().includes(v));
-            const uniq = [...new Set(matches.map(m => m.id))].slice(0, 15);
+            const uniq = [...new Set(matches.map(m => m.id))].slice(0, 20);
             if(uniq.length > 0) {
                 sugg.innerHTML = uniq.map(uid => {
                     const item = matches.find(m => m.id === uid);
                     const hlId = uid.replace(new RegExp(v, 'gi'), m => `<span class="s-hl">${m}</span>`);
                     const hlPcb = item.p.replace(new RegExp(v, 'gi'), m => `<span class="s-hl">${m}</span>`);
-                    return `<div class="s-item" onclick="sel('${uid}')"><div><div class="font-bold text-white text-lg">${hlId}</div><div class="text-xs text-slate-400 font-mono font-bold mt-1">PCB: ${hlPcb}</div></div><i class="fas fa-chevron-right text-slate-500"></i></div>`;
+                    return `<div class="s-item" onclick="sel('${uid}')"><div><div class="font-bold text-white text-lg">${hlId}</div><div class="text-xs text-slate-400 font-mono font-bold mt-1">PCB: ${hlPcb}</div></div><i class="fas fa-chevron-right text-slate-600"></i></div>`;
                 }).join('');
                 sugg.style.display = 'block';
             } else { sugg.style.display = 'none'; }
@@ -143,28 +133,32 @@
             });
 
             out.innerHTML = `
-            <div class="bg-slate-800/90 backdrop-blur-md border border-slate-700 rounded-3xl overflow-hidden shadow-2xl animate-[slideIn_0.4s]">
-                <div class="bg-slate-900 p-8 border-b border-slate-700 flex flex-col xl:flex-row justify-between gap-8">
-                    <div>
-                        <h1 class="text-5xl font-black text-white tracking-tight mb-4 leading-none">${main.id}</h1>
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl animate-[fadeIn_0.3s_ease-out]">
+                <div class="bg-slate-950 p-6 md:p-10 border-b border-slate-800 flex flex-col xl:flex-row justify-between gap-8 relative">
+                    <div class="absolute top-0 right-0 p-32 bg-indigo-600/10 blur-[100px] rounded-full pointer-events-none"></div>
+                    <div class="relative z-10 w-full">
+                        <h1 class="text-3xl sm:text-4xl md:text-6xl font-black text-white tracking-tight mb-6 leading-tight break-words">${main.id}</h1>
                         <div class="flex flex-wrap items-center gap-4">
-                            <div class="bg-blue-600 px-5 py-3 rounded-2xl shadow-lg shadow-blue-900/50 flex flex-col">
-                                <span class="text-[10px] text-blue-100 font-bold uppercase tracking-widest opacity-80">PANEL SZÁM</span>
-                                <span class="text-3xl font-mono font-bold text-white tracking-wide">${main.p}</span>
+                            <div class="bg-indigo-600 px-4 py-3 rounded-2xl shadow-lg shadow-indigo-900/50 flex flex-col min-w-[140px] border border-indigo-500/50">
+                                <span class="text-[10px] text-indigo-100 font-bold uppercase tracking-widest opacity-80 mb-1">PANEL SZÁM</span>
+                                <span class="text-xl md:text-3xl font-mono font-bold text-white tracking-wide break-all leading-none">${main.p}</span>
                             </div>
-                            <div class="bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 flex items-center gap-6 h-full">
-                                <div><div class="text-[10px] text-slate-500 font-bold uppercase">REVÍZIÓ</div><div class="text-white font-mono font-bold">${main.rev||'-'}</div></div>
-                                <div class="w-px h-8 bg-slate-800"></div>
-                                <div><div class="text-[10px] text-slate-500 font-bold uppercase">BARCODE</div><div class="text-white font-mono font-bold">${main.bar||'-'}</div></div>
+                            <div class="flex flex-col sm:flex-row gap-3 text-sm font-mono text-slate-400 bg-slate-900 px-5 py-3 rounded-2xl border border-slate-800">
+                                <div class="flex flex-col"><span class="text-[9px] font-bold uppercase text-slate-600">REVÍZIÓ</span><b class="text-white text-lg">${main.rev||'-'}</b></div>
+                                <div class="w-px h-8 bg-slate-800 hidden sm:block"></div>
+                                <div class="h-px w-full bg-slate-800 sm:hidden"></div>
+                                <div class="flex flex-col"><span class="text-[9px] font-bold uppercase text-slate-600">BARCODE</span><b class="text-white text-lg break-all">${main.bar||'-'}</b></div>
                             </div>
                         </div>
                     </div>
-                    <div class="flex flex-col items-end gap-2 justify-center">
-                        ${isMulti ? '<div class="text-[10px] text-blue-400 font-black uppercase animate-pulse tracking-widest"><i class="fas fa-exclamation-triangle mr-1"></i> FOLYAMAT KIVÁLASZTÁSA KÖTELEZŐ</div>' : ''}
-                        <div class="tab-wrap ${isMulti?'multi':''}">${tabs}</div>
+                   
+                    <div class="relative z-10 flex flex-col items-start xl:items-end justify-center gap-3 w-full xl:w-auto">
+                        ${isMulti ? '<div class="flex items-center gap-2 text-xs font-bold text-pink-500 uppercase animate-pulse bg-pink-950/30 px-3 py-1.5 rounded-lg border border-pink-900/50"><i class="fas fa-exclamation-circle"></i> Válassz Folyamatot</div>' : ''}
+                        <div class="tab-wrap w-full xl:w-auto ${isMulti?'multi':''} overflow-x-auto">${tabs}</div>
                     </div>
                 </div>
-                <div class="p-8 bg-gradient-to-b from-slate-800 to-slate-900">${content}</div>
+               
+                <div class="p-4 md:p-10 bg-gradient-to-b from-slate-900 to-slate-950">${content}</div>
             </div>`;
         }
 
@@ -177,47 +171,52 @@
 
         function build(i) {
             const d = i.d||{}, m = d.mat||{}, dm = d.dim||{}, pg = i.pg||{};
-            const msk = (d.msk&&d.msk.length) ? d.msk.map(x => `<span class="bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 px-3 py-1 rounded font-mono font-bold text-lg shadow-lg">${x}</span>`).join(' ') : '-';
-            
-            const r = (l,v) => ok(v) ? `<div class="flex justify-between border-b border-slate-700/50 pb-2 mb-2 last:border-0 hover:bg-white/5 px-2 rounded transition"><span class="text-slate-400 text-xs font-bold uppercase pt-1">${l}</span><span class="text-white font-mono font-medium text-right">${v}</span></div>` : '';
-            const pb = (l,v) => ok(v) ? `<div class="bg-slate-900/50 border border-slate-700 px-3 py-2 rounded flex justify-between items-center mb-2"><span class="text-[10px] text-slate-500 font-bold uppercase">${l}</span><span class="text-cyan-400 font-mono font-bold text-xs truncate max-w-[150px]" title="${v}">${v}</span></div>` : '';
+            const msk = (d.msk&&d.msk.length) ? d.msk.map(x => `<span class="bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 px-3 py-1.5 rounded-lg font-mono font-bold text-base md:text-lg shadow-sm inline-block mb-2 mr-2 break-all">${x}</span>`).join('') : '-';
+           
+            const r = (l,v) => ok(v) ? `<div class="d-row"><span class="d-lbl">${l}</span><span class="d-val">${v}</span></div>` : '';
+            const pb = (l,v) => ok(v) ? `<div class="bg-slate-900 border border-slate-800 px-4 py-3 rounded-xl flex flex-col justify-center mb-3 shadow-sm hover:border-indigo-500/50 transition-colors"><span class="text-[9px] text-slate-500 font-bold uppercase tracking-wider mb-1">${l}</span><span class="text-indigo-300 font-mono font-bold text-sm md:text-base break-words">${v}</span></div>` : '';
 
-            const prn = ok(pg.pt) ? `<div class="mt-2 pt-2 border-t border-slate-700/50"><div class="text-[9px] text-purple-400 uppercase font-bold mb-1">NYOMTATÓ PROG</div><div class="font-mono text-white text-xs bg-purple-900/20 px-2 py-1 rounded border border-purple-500/30">${pg.pt}</div></div>` : '';
-            const gl = ok(pg.g) ? `<div class="mt-2 pt-2 border-t border-slate-700/50"><div class="text-[9px] text-purple-400 uppercase font-bold mb-1">RAGASZTÓ PROG</div><div class="font-mono text-white text-xs bg-purple-900/20 px-2 py-1 rounded border border-purple-500/30">${pg.g}</div></div>` : '';
-            const ovn = ok(pg.o) ? `<div class="mb-4 bg-orange-900/20 border border-orange-500/30 p-3 rounded-lg flex justify-between items-center shadow-lg"><span class="text-orange-400 text-xs font-bold uppercase"><i class="fas fa-fire mr-1"></i> KEMENCE RECEPT</span><span class="text-white font-mono font-bold">${pg.o}</span></div>` : '';
+            const prn = ok(pg.pt) ? `<div class="mt-3 pt-3 border-t border-slate-700/50"><div class="text-[9px] text-purple-400 uppercase font-bold mb-1">NYOMTATÓ PROGRAM</div><div class="font-mono text-white text-sm bg-purple-900/20 px-3 py-2 rounded-lg border border-purple-500/30 break-all">${pg.pt}</div></div>` : '';
+            const gl = ok(pg.g) ? `<div class="mt-3 pt-3 border-t border-slate-700/50"><div class="text-[9px] text-purple-400 uppercase font-bold mb-1">RAGASZTÓ PROGRAM</div><div class="font-mono text-white text-sm bg-purple-900/20 px-3 py-2 rounded-lg border border-purple-500/30 break-all">${pg.g}</div></div>` : '';
+            const ovn = ok(pg.o) ? `<div class="mb-6 bg-orange-900/20 border border-orange-500/30 p-4 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center shadow-lg gap-2"><span class="text-orange-400 text-xs font-bold uppercase flex items-center"><i class="fas fa-fire mr-2"></i> KEMENCE RECEPT</span><span class="text-white font-mono font-bold text-lg break-all">${pg.o}</span></div>` : '';
 
             return `
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <div class="lg:col-span-3 space-y-6">
-                    <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-md">
-                        <h3 class="text-blue-500 text-xs font-black uppercase mb-4 border-b border-blue-500/20 pb-2"><i class="fas fa-ruler-combined mr-2"></i> FIZIKAI ADATOK</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-10">
+                <div class="lg:col-span-4 space-y-8">
+                    <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700 shadow-md backdrop-blur-sm">
+                        <h3 class="text-blue-400 text-xs font-black uppercase mb-5 border-b border-blue-500/20 pb-3 tracking-widest"><i class="fas fa-ruler-combined mr-2"></i> FIZIKAI ADATOK</h3>
                         ${r('Méret', (ok(dm.w)&&ok(dm.l)) ? `${dm.w} x ${dm.l} mm` : null)}
                         ${r('Vastagság', dm.t ? dm.t+' mm' : null)}
                         ${r('Sheet/Panel', dm.sh)}
                         ${r('Címke', m.l)}
                     </div>
-                    <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-md bg-yellow-900/5">
-                        <h4 class="text-yellow-500 text-xs font-black uppercase mb-3"><i class="fas fa-mask mr-2"></i> STENCIL / MASZK</h4>
-                        <div class="flex flex-wrap gap-2">${msk}</div>
+                   
+                    <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700 shadow-md backdrop-blur-sm relative overflow-hidden">
+                        <div class="absolute inset-0 bg-yellow-500/5 pointer-events-none"></div>
+                        <h4 class="text-yellow-500 text-xs font-black uppercase mb-4 relative z-10 tracking-widest"><i class="fas fa-mask mr-2"></i> STENCIL / MASZK</h4>
+                        <div class="relative z-10">${msk}</div>
                     </div>
-                    <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-md">
-                        <h4 class="text-emerald-500 text-xs font-black uppercase mb-4 border-b border-emerald-500/20 pb-2"><i class="fas fa-vial mr-2"></i> ANYAGOK</h4>
+
+                    <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700 shadow-md backdrop-blur-sm">
+                        <h4 class="text-emerald-400 text-xs font-black uppercase mb-5 border-b border-emerald-500/20 pb-3 tracking-widest"><i class="fas fa-vial mr-2"></i> ANYAGOK</h4>
                         ${r('Paszta', m.p)}${prn}
-                        <div class="my-3"></div>
+                        <div class="my-4 border-t border-slate-700/50"></div>
                         ${r('Ragasztó', m.g)}${gl}
-                        <div class="my-3 border-t border-slate-700/50"></div>
+                        <div class="my-4 border-t border-slate-700/50"></div>
                         ${r('MPM Supp', m.m)}
                         ${r('Juki Supp', m.j)}
                     </div>
                 </div>
-                <div class="lg:col-span-3 space-y-2">
-                    <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-md h-full">
-                        <h3 class="text-purple-500 text-xs font-black uppercase mb-4 border-b border-purple-500/20 pb-2"><i class="fas fa-code mr-2"></i> ÖSSZES PROGRAM</h3>
+
+                <div class="lg:col-span-3 space-y-3">
+                    <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700 shadow-md h-full backdrop-blur-sm">
+                        <h3 class="text-purple-400 text-xs font-black uppercase mb-5 border-b border-purple-500/20 pb-3 tracking-widest"><i class="fas fa-code mr-2"></i> ÖSSZES PROGRAM</h3>
                         ${pb('Lézer', pg.n)} ${pb('Nyomtató', pg.pt)} ${pb('SPI', pg.s)} ${pb('Beültető', pg.sm)}
                         ${pb('Kemence', pg.o)} ${pb('InLine', pg.i)} ${pb('Ragasztó', pg.g)} ${pb('3D AOI', pg.a)}
                     </div>
                 </div>
-                <div class="lg:col-span-6 space-y-6">
+
+                <div class="lg:col-span-5 space-y-8">
                     ${ovn}
                     ${mkOven(d.o8, 8)}
                     ${mkOven(d.o10, 10)}
@@ -227,41 +226,34 @@
 
         function mkOven(o, z) {
             if(!o || (!o.t.some(ok) && !o.b.some(ok))) return '';
-            
-            // Header
-            let cols = z + 2; 
-            let head = '', topR = '', botR = '';
+           
+            // Vertical Rows (Z1, Z2...)
+            let rows = '';
             for(let i=1; i<=z; i++) {
-                head += `<th>${i}</th>`;
-                topR += `<td class="val val-top">${o.t[i-1]||'-'}</td>`;
-                botR += `<td class="val val-bot">${o.b[i-1]||'-'}</td>`;
+                rows += `<tr><td class="z-col text-slate-400">Z${i}</td><td class="t-col">${o.t[i-1]||'-'}</td><td class="b-col">${o.b[i-1]||'-'}</td></tr>`;
             }
+            // Cooling
             const ct = z===8?o.ct:o.ct, cb = z===8?['-','-']:o.cb;
-            head += `<th>C1</th><th>C2</th>`;
-            topR += `<td class="val val-cool">${ct[0]||'-'}</td><td class="val val-cool">${ct[1]||'-'}</td>`;
-            botR += `<td class="val val-cool">${cb[0]||'-'}</td><td class="val val-cool">${cb[1]||'-'}</td>`;
+            rows += `<tr><td class="z-col text-teal-500 border-t-2 border-slate-700">C1</td><td class="c-col border-t-2 border-slate-700">${ct[0]||'-'}</td><td class="c-col border-t-2 border-slate-700">${cb[0]||'-'}</td></tr>`;
+            rows += `<tr><td class="z-col text-teal-500">C2</td><td class="c-col">${ct[1]||'-'}</td><td class="c-col">${cb[1]||'-'}</td></tr>`;
 
-            // Paraméterek (V21 Panel design)
-            const p1 = ok(o.sp) ? `<div class="p-box"><span class="p-lbl">SEBESSÉG</span><span class="p-val">${o.sp}</span></div>` : '';
-            const p2 = ok(o.o2) ? `<div class="p-box"><span class="p-lbl">O2 (PPM)</span><span class="p-val">${o.o2}</span></div>` : '';
-            const p3 = ok(o.w) ? `<div class="p-box"><span class="p-lbl">SZÉLESSÉG</span><span class="p-val">${o.w}</span></div>` : '';
-            const p4 = ok(o.su) ? `<div class="p-box"><span class="p-lbl">SUPPORT</span><span class="p-val">${o.su}</span></div>` : '';
+            // Params (Grid)
+            const pBox = (l, v) => ok(v) ? `<div class="bg-slate-950 p-2 rounded-lg border border-slate-800 text-center"><div class="text-[9px] text-slate-500 font-bold uppercase">${l}</div><div class="text-white text-xs font-bold font-mono">${v}</div></div>` : '';
 
             return `
-            <div class="oven-container shadow-lg">
-                <div class="bg-slate-900 px-4 py-3 border-b border-slate-700 flex justify-between items-center">
-                    <div class="text-xs font-black text-white uppercase"><i class="fas fa-fire-alt text-orange-500 mr-2"></i> ${z} ZÓNÁS KEMENCE</div>
+            <div class="bg-slate-800/80 p-1 rounded-2xl border border-slate-700 shadow-md overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-700 bg-slate-900">
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="text-xs font-black text-orange-500 uppercase tracking-widest"><i class="fas fa-fire-alt mr-2"></i> ${z} ZÓNÁS</div>
+                    </div>
+                    <div class="grid grid-cols-4 gap-2">
+                        ${pBox('SEBESSÉG', o.sp)} ${pBox('O2 PPM', o.o2)} ${pBox('SZÉLESSÉG', o.w)} ${pBox('SUPPORT', o.su)}
+                    </div>
                 </div>
-                <div class="oven-params">${p1}${p2}${p3}${p4}</div>
-                <div class="oven-scroll-area">
-                    <table class="ot">
-                        <thead><tr><th class="sticky-col bg-slate-800 text-white z-20"></th>${head}</tr></thead>
-                        <tbody>
-                            <tr class="row-top"><td class="sticky-col lbl-row text-red-400 border-r-2 border-slate-700">FELSŐ ZÓNÁK</td>${topR}</tr>
-                            <tr class="row-bot"><td class="sticky-col lbl-row text-blue-400 border-r-2 border-slate-700">ALSÓ ZÓNÁK</td>${botR}</tr>
-                        </tbody>
-                    </table>
-                </div>
+                <table class="v-table">
+                    <thead><tr><th class="z-col border-r border-slate-700">#</th><th class="text-red-400 w-1/2">FELSŐ</th><th class="text-blue-400 w-1/2">ALSÓ</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
             </div>`;
         }
     </script>
