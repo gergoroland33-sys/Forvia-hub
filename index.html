@@ -17,6 +17,7 @@
             --bg: #0b1120; --card: #1e293b; --accent: #3b82f6;
             --text: #f3f4f6; --text-dim: #94a3b8; --border: #334155;
             --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --day-color: #fbbf24; --night-color: #818cf8;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -133,7 +134,7 @@
             width: 100%;
             box-shadow: 0 4px 20px rgba(0,0,0,0.2);
             
-            /* --- ÚJ: Interaktivitás --- */
+            /* Interaktivitás */
             cursor: pointer;
             transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), border-left-color 1s ease;
         }
@@ -173,45 +174,48 @@
         .cal-badge.holiday { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
         .cal-badge.workday { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
         
-        /* .type-holiday törölve a statikus színből, JS kezeli dinamikusan */
         .calendar-box.type-workday { border-left-color: #fbbf24 !important; }
 
+        /* --- PRO SHIFT INFO BOX --- */
         .shift-info-box {
-            margin-top: 15px;
-            width: 100%; 
+            margin-top: 15px; width: 100%; 
             background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(59, 130, 246, 0.2); 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
             border-radius: 12px;
             overflow: hidden;
             animation: fadeIn 0.5s ease;
+            display: flex; flex-direction: column;
         }
         .shift-header-row {
-            background: rgba(59, 130, 246, 0.1);
-            border-bottom: 1px solid rgba(59, 130, 246, 0.1);
-            padding: 8px 12px;
-            color: #60a5fa; 
-            font-size: 0.65rem; font-weight: 800;
-            text-transform: uppercase; letter-spacing: 1.2px;
-            display: flex; align-items: center; justify-content: center;
-            gap: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 8px;
+            color: #94a3b8; 
+            font-size: 0.65rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1.5px;
         }
         .shift-content-row {
-            display: flex; 
-            justify-content: center;
-            gap: 40px;
-            padding: 12px 14px;
+            display: flex; width: 100%;
         }
-        .shift-col { 
-            display: flex; flex-direction: column; gap: 4px; 
-            align-items: center;
+        .shift-cell {
+            flex: 1; padding: 10px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
         }
-        .shift-label-sub { font-size: 0.7rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; }
+        .shift-cell:last-child { border-right: none; }
         
-        .shift-value-main { 
-            font-size: 0.9rem; font-weight: 700; letter-spacing: 0.3px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        .shift-cell-label { 
+            font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; font-weight: 600; 
         }
-        .text-right { text-align: right; }
+        .shift-cell-val { font-size: 1.1rem; font-weight: 800; }
+
+        /* Day / Night Colors for Pro Look */
+        .theme-day .shift-cell-label { color: var(--day-color); opacity: 0.8; }
+        .theme-day .shift-cell-val { color: var(--day-color); text-shadow: 0 0 10px rgba(251, 191, 36, 0.2); }
+        
+        .theme-night .shift-cell-label { color: var(--night-color); opacity: 0.8; }
+        .theme-night .shift-cell-val { color: var(--night-color); text-shadow: 0 0 10px rgba(129, 140, 248, 0.2); }
 
         .instruction-text {
             font-size: 1rem; line-height: 1.6; color: #cbd5e1; margin-bottom: 30px;
@@ -389,7 +393,7 @@
 
         footer { padding: 20px; border-top: 1px solid var(--border); text-align: center; color: #64748b; font-size: 0.75rem; }
 
-        /* --- ÚJ: HOLIDAY MODAL STÍLUSOK --- */
+        /* --- ÚJ: HOLIDAY MODAL STÍLUSOK (PROFI VERZIÓ) --- */
         .holiday-modal-backdrop {
             position: fixed; inset: 0; z-index: 3000;
             background: rgba(11, 17, 32, 0.95);
@@ -440,11 +444,21 @@
         
         .hm-info { flex-grow: 1; padding: 0 15px; }
         .hm-name { font-size: 0.9rem; font-weight: 600; color: #e2e8f0; line-height: 1.3; }
-        .hm-shifts { display: flex; gap: 8px; margin-top: 4px; }
-        .hm-shift-pill { 
-            font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; 
-            background: rgba(255,255,255,0.05); color: #94a3b8; font-weight: 700;
+        .hm-shifts { display: flex; gap: 8px; margin-top: 6px; }
+        
+        /* ÚJ: PRO SHIFT TAGS (BADGES) */
+        .hm-shift-badge {
+            display: flex; align-items: center; gap: 6px;
+            padding: 4px 8px; border-radius: 6px;
+            font-size: 0.7rem; font-weight: 700;
+            border: 1px solid rgba(255,255,255,0.1);
         }
+        .hm-shift-badge.day { background: rgba(251, 191, 36, 0.1); border-color: rgba(251, 191, 36, 0.3); color: var(--day-color); }
+        .hm-shift-badge.night { background: rgba(129, 140, 248, 0.1); border-color: rgba(129, 140, 248, 0.3); color: var(--night-color); }
+
+        .hm-shift-label { opacity: 0.7; font-size: 0.6rem; text-transform: uppercase; }
+        .hm-shift-val { font-size: 0.85rem; }
+
     </style>
 </head>
 <body>
@@ -582,10 +596,12 @@
         { date: "2026-05-25", name: "Pünkösdhétfő", type: "holiday", shiftDay: "C", shiftNight: "D" },
         { date: "2026-08-20", name: "Államalapítás Ünnepe", type: "holiday", shiftDay: "B", shiftNight: "A" },
         { date: "2026-08-21", name: "Pihenőnap (Hosszú hétvége)", type: "holiday", shiftDay: "B", shiftNight: "A" },
-        { date: "2026-08-29", name: "SZOMBATI MUNKANAP (Aug. 21 helyett)", type: "workday" },
+        /* ITT HOZZÁADTUK A MŰSZAKOKAT A SZOMBATI MUNKANAPOKHOZ IS */
+        { date: "2026-08-29", name: "SZOMBATI MUNKANAP (Aug. 21 helyett)", type: "workday", shiftDay: "B", shiftNight: "A" },
         { date: "2026-10-23", name: "1956-os Forradalom (Péntek)", type: "holiday", shiftDay: "D", shiftNight: "C" },
         { date: "2026-11-01", name: "Mindenszentek (Vasárnap)", type: "holiday", shiftDay: "B", shiftNight: "A" },
-        { date: "2026-12-12", name: "SZOMBATI MUNKANAP (Dec. 24 helyett)", type: "workday" },
+        /* ITT HOZZÁADTUK A MŰSZAKOKAT A SZOMBATI MUNKANAPOKHOZ IS */
+        { date: "2026-12-12", name: "SZOMBATI MUNKANAP (Dec. 24 helyett)", type: "workday", shiftDay: "A", shiftNight: "B" },
         { date: "2026-12-24", name: "Szenteste (Pihenőnap)", type: "holiday", shiftDay: "A", shiftNight: "B" },
         { date: "2026-12-25", name: "Karácsony", type: "holiday", shiftDay: "A", shiftNight: "B" },
         { date: "2026-12-26", name: "Karácsony", type: "holiday", shiftDay: "C", shiftNight: "D" }
@@ -635,15 +651,11 @@
             label.innerText = "KÖVETKEZŐ ÜNNEP";
             icon.innerText = "📅";
             
-            // --- ÚJ: Dinamikus színváltó napi szinten ---
-            // A dátumból és az év napjából generálunk egy árnyalatot
+            // Dinamikus színváltó napi szinten
             const startOfYear = new Date(now.getFullYear(), 0, 0);
             const diff = now - startOfYear;
             const oneDay = 1000 * 60 * 60 * 24;
             const dayOfYear = Math.floor(diff / oneDay);
-            
-            // Hue (színárnyalat) forgatása az év napja alapján, hogy minden nap más legyen
-            // 120 (zöld) körül indítunk, és lassan forgatjuk
             const dynamicHue = (100 + (dayOfYear * 2)) % 360; 
             box.style.borderLeftColor = `hsl(${dynamicHue}, 70%, 55%)`;
         }
@@ -656,35 +668,34 @@
             daysBadge.innerText = `${daysLeft} NAP`;
         }
 
-        const oldInfo = document.getElementById('shift-info-display');
-        if (oldInfo) oldInfo.remove();
+        let shiftDiv = document.getElementById('shift-info-display');
 
         if (nextEvent.shiftDay && nextEvent.shiftNight) {
-            const shiftDiv = document.createElement('div');
-            shiftDiv.id = 'shift-info-display';
-            shiftDiv.className = 'shift-info-box';
+            if (!shiftDiv) {
+                shiftDiv = document.createElement('div');
+                shiftDiv.id = 'shift-info-display';
+                shiftDiv.className = 'shift-info-box';
+                box.appendChild(shiftDiv);
+            }
+            
+            // --- PRO MEGJELENÉS (Nincs Napocska/Hold) ---
             shiftDiv.innerHTML = `
                 <div class="shift-header-row">
                     <span>ÉRINTETT MŰSZAKOK</span>
                 </div>
                 <div class="shift-content-row">
-                    <div class="shift-col">
-                        <span class="shift-label-sub">Nappal</span>
-                        <span class="shift-value-main">
-                            <span style="color:white; font-size:1.1rem;">${nextEvent.shiftDay}</span> 
-                            <span style="color:#60a5fa; font-size:0.8rem; text-transform: uppercase;">műszak</span>
-                        </span>
+                    <div class="shift-cell theme-day">
+                        <span class="shift-cell-label">NAPPALOS</span>
+                        <span class="shift-cell-val">${nextEvent.shiftDay}</span>
                     </div>
-                    <div class="shift-col">
-                        <span class="shift-label-sub">Éjszaka</span>
-                        <span class="shift-value-main">
-                            <span style="color:white; font-size:1.1rem;">${nextEvent.shiftNight}</span> 
-                            <span style="color:#60a5fa; font-size:0.8rem; text-transform: uppercase;">műszak</span>
-                        </span>
+                    <div class="shift-cell theme-night">
+                        <span class="shift-cell-label">ÉJSZAKÁS</span>
+                        <span class="shift-cell-val">${nextEvent.shiftNight}</span>
                     </div>
                 </div>
             `;
-            box.appendChild(shiftDiv);
+        } else {
+            if (shiftDiv) shiftDiv.remove();
         }
     }
 
@@ -718,13 +729,10 @@
         document.getElementById('date-text').innerText = dateStr;
         document.getElementById('name-day').innerText = "Névnap: " + maiNevnap;
 
-        // --- ÚJ: Itt hívjuk meg a naptár frissítést is, 
-        // így éjfélkor automatikusan átvált a visszaszámláló gombnyomás nélkül.
         updateCalendarWidget();
     }
 
     updateInfo();
-    // updateCalendarWidget(); // Már benne van az updateInfo-ban
     setInterval(updateInfo, 1000); 
 
     function animateAndReload(btn) {
@@ -746,7 +754,7 @@
         icon.style.transform = sidebar.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
     }
 
-    // --- ÚJ: Ünnepnap Lista Modal Logika ---
+    // --- ÚJ: Ünnepnap Lista Modal Logika (PRO DESIGN) ---
     function openHolidayList() {
         if(navigator.vibrate) navigator.vibrate(10);
         
@@ -766,22 +774,28 @@
             if(isPast) rowClass += ' past';
             if(isToday) rowClass += ' current';
 
-            // Dátum formázás
             const monthNames = ["JAN", "FEB", "MÁR", "ÁPR", "MÁJ", "JÚN", "JÚL", "AUG", "SZEP", "OKT", "NOV", "DEC"];
             const mName = monthNames[evDate.getMonth()];
             const dNum = evDate.getDate();
 
-            // Műszak infó HTML
+            // PRO SHIFT TAG GENERATION
             let shiftHtml = '';
             if(event.shiftDay && event.shiftNight) {
                 shiftHtml = `
                     <div class="hm-shifts">
-                        <span class="hm-shift-pill">🌞 ${event.shiftDay}</span>
-                        <span class="hm-shift-pill">🌙 ${event.shiftNight}</span>
+                        <div class="hm-shift-badge day">
+                            <span class="hm-shift-label">NAPPAL</span>
+                            <span class="hm-shift-val">${event.shiftDay}</span>
+                        </div>
+                        <div class="hm-shift-badge night">
+                            <span class="hm-shift-label">ÉJSZAKA</span>
+                            <span class="hm-shift-val">${event.shiftNight}</span>
+                        </div>
                     </div>
                 `;
             } else if (event.type === 'workday') {
-                 shiftHtml = `<div class="hm-shifts"><span class="hm-shift-pill" style="color:#fbbf24;">⚠️ MUNKANAP</span></div>`;
+                 // Ha véletlenül nincs megadva műszak, akkor is jelezze
+                 shiftHtml = `<div class="hm-shifts"><span style="color:#fbbf24; font-weight:700; font-size:0.75rem;">⚠️ KÖTELEZŐ</span></div>`;
             }
 
             const html = `
