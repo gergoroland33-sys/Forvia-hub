@@ -114,6 +114,22 @@
         }
         /* ------------------------------------------------ */
 
+        /* --- ÚJ: ELEKTROMOS KIRÁLYKÉK ANIMÁCIÓ --- */
+        @keyframes electricFlow {
+            0% { 
+                border-left-color: #1e3a8a; /* Sötétkék alap */
+                box-shadow: -2px 0 8px rgba(30, 58, 138, 0.1), 0 4px 20px rgba(0,0,0,0.2);
+            }
+            50% { 
+                border-left-color: #4169E1; /* Királykék (RoyalBlue) csúcs */
+                box-shadow: -5px 0 25px rgba(65, 105, 225, 0.8), inset 3px 0 15px rgba(65, 105, 225, 0.4), 0 4px 20px rgba(0,0,0,0.2);
+            }
+            100% { 
+                border-left-color: #1e3a8a; 
+                box-shadow: -2px 0 8px rgba(30, 58, 138, 0.1), 0 4px 20px rgba(0,0,0,0.2);
+            }
+        }
+
         /* --- KÖZÉPRE IGAZÍTOTT NAPTÁR DOBOZ --- */
         .calendar-box {
             background: linear-gradient(145deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%);
@@ -125,18 +141,22 @@
             position: relative;
             overflow: hidden;
             
-            border-left: 4px solid var(--accent);
+            border-left: 4px solid transparent; /* JS/Animation kezeli */
             display: flex;             
             flex-direction: column;    
             align-items: center;       
             text-align: center;        
             
             width: 100%;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            /* box-shadow: az animációban van kezelve ha elektromos */
             
             /* Interaktivitás */
             cursor: pointer;
-            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), border-left-color 1s ease;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .calendar-box.electric-blue {
+            animation: electricFlow 2.5s infinite ease-in-out;
         }
         
         .calendar-box:active {
@@ -174,7 +194,12 @@
         .cal-badge.holiday { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
         .cal-badge.workday { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
         
-        .calendar-box.type-workday { border-left-color: #fbbf24 !important; }
+        /* A sárga munkanap felülírja az elektromos kéket */
+        .calendar-box.type-workday { 
+            border-left-color: #fbbf24 !important; 
+            animation: none !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;
+        }
 
         /* --- PRO SHIFT INFO BOX --- */
         .shift-info-box {
@@ -637,8 +662,10 @@
         dateDisplay.innerText = formattedDate;
         nameDisplay.innerText = nextEvent.name;
 
+        // Alaphelyzetbe állítás
         box.className = "calendar-box"; 
         daysBadge.className = "cal-badge"; 
+        box.style.borderLeftColor = ''; // Reset inline styles
 
         if (nextEvent.type === 'workday') {
             box.classList.add('type-workday');
@@ -651,13 +678,9 @@
             label.innerText = "KÖVETKEZŐ ÜNNEP";
             icon.innerText = "📅";
             
-            // Dinamikus színváltó napi szinten
-            const startOfYear = new Date(now.getFullYear(), 0, 0);
-            const diff = now - startOfYear;
-            const oneDay = 1000 * 60 * 60 * 24;
-            const dayOfYear = Math.floor(diff / oneDay);
-            const dynamicHue = (100 + (dayOfYear * 2)) % 360; 
-            box.style.borderLeftColor = `hsl(${dynamicHue}, 70%, 55%)`;
+            // --- MÓDOSÍTÁS: Elektromos Királykék Hatás ---
+            // Dinamikus számolás törölve, helyette fix class
+            box.classList.add('electric-blue');
         }
 
         if (daysLeft === 0) {
