@@ -301,7 +301,10 @@
             try {
                 const res = await fetch(`${DB}shift_${currentShift}.json`);
                 const data = await res.json();
-                employees = Array.isArray(data) ? data : [];
+                
+                // JAVÍTÁS: Kiszűrjük a null értékeket, hogy ne akadjon meg a betöltés
+                employees = Array.isArray(data) ? data.filter(e => e != null) : [];
+                
             } catch(e) { 
                 employees = []; 
             } finally {
@@ -311,16 +314,22 @@
                 
                 // Ha meg van nyitva a részletes nézet mobilon, frissítsük
                 if(!document.getElementById('m-detail-view').classList.contains('hidden') && mSelectedUserIndex > -1) {
-                    renderMobileCalendar();
-                    if(mSelectedDate) {
-                        const k = `2026-${date.getMonth()+1}-${mSelectedDate}`;
-                        const emp = employees[mSelectedUserIndex];
-                        const val = (emp && emp.data && emp.data[k]) ? emp.data[k] : "";
-                        const input = document.getElementById('m-input');
-                        if(input && document.activeElement !== input) { 
-                            input.value = val;
-                            document.getElementById('m-status-text').innerText = val ? "MENTVE (Frissítve)" : "ÜRES";
+                    // Biztonsági ellenőrzés: létezik-e az ember?
+                    if (employees[mSelectedUserIndex]) {
+                        renderMobileCalendar();
+                        if(mSelectedDate) {
+                            const k = `2026-${date.getMonth()+1}-${mSelectedDate}`;
+                            const emp = employees[mSelectedUserIndex];
+                            const val = (emp && emp.data && emp.data[k]) ? emp.data[k] : "";
+                            const input = document.getElementById('m-input');
+                            if(input && document.activeElement !== input) { 
+                                input.value = val;
+                                document.getElementById('m-status-text').innerText = val ? "MENTVE (Frissítve)" : "ÜRES";
+                            }
                         }
+                    } else {
+                         // Ha a felhasználó "eltűnt" (pl. hiba miatt), zárjuk be a részleteket
+                         closeMobileDetail();
                     }
                 }
                 
