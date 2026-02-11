@@ -2,8 +2,8 @@
 <html lang="hu" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TSDB V30 Print Master</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TSDB App V35</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -11,94 +11,81 @@
         body { background-color: #020617; font-family: 'Inter', sans-serif; color: #f8fafc; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
         
-        /* SCROLLBAR */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        ::-webkit-scrollbar-thumb { background: #7c3aed; border-radius: 4px; }
 
-        /* V24 VERTICAL OVEN TABLE */
-        .oven-container { border: 1px solid #1e293b; border-radius: 12px; background: #0f172a; overflow: hidden; margin-top: 12px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
-        .v-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        .v-table th, .v-table td { padding: 10px 12px; border-bottom: 1px solid #1e293b; text-align: center; }
-        .v-table th { background: #1e293b; color: #94a3b8; font-weight: 800; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; }
-        .v-table tr:last-child td { border-bottom: none; }
-        
-        .z-col { font-weight: 800; color: #cbd5e1; background: #1e293b; width: 60px; border-right: 1px solid #334155; }
-        .t-col { color: #fca5a5; font-family: 'JetBrains Mono'; font-weight: bold; background: rgba(239, 68, 68, 0.05); }
-        .b-col { color: #93c5fd; font-family: 'JetBrains Mono'; font-weight: bold; background: rgba(59, 130, 246, 0.05); }
-        .c-col { color: #6ee7b7; font-family: 'JetBrains Mono'; font-weight: bold; background: rgba(52, 211, 153, 0.05); }
-
-        /* PROCESS TABS - SUPER PULSE */
-        @keyframes superPulse { 
-            0% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.7); border-color: #ec4899; } 
-            70% { box-shadow: 0 0 0 10px rgba(236, 72, 153, 0); border-color: #be185d; } 
-            100% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0); border-color: #ec4899; } 
-        }
-        
-        .tab-wrap { display: flex; gap: 6px; background: #0f172a; padding: 6px; border-radius: 12px; border: 2px solid #334155; overflow-x: auto; white-space: nowrap; flex-wrap: wrap; justify-content: flex-end; }
-        .tab-wrap.multi { animation: superPulse 2s infinite; border-color: #ec4899; }
-        
-        .tab-btn { padding: 10px 24px; border-radius: 8px; font-weight: 800; color: #94a3b8; cursor: pointer; transition: 0.2s; text-transform: uppercase; font-size: 0.85rem; border: 1px solid transparent; }
-        .tab-btn:hover { color: white; background: rgba(255,255,255,0.05); }
-        .tab-btn.active { background: #4f46e5; color: white; border-color: #4338ca; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4); }
+        /* NEON RED PULSE ALERT FOR TABS */
+        @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        .tab-wrap { display: flex; gap: 6px; background: #0f172a; padding: 6px; border-radius: 12px; border: 2px solid #334155; overflow-x: auto; white-space: nowrap; }
+        .tab-wrap.multi { animation: pulseRed 2s infinite; border-color: #ef4444; }
+        .tab-btn { padding: 8px 16px; border-radius: 8px; font-weight: 800; color: #94a3b8; cursor: pointer; transition: 0.2s; text-transform: uppercase; border: 1px solid transparent; font-size: 0.8rem; }
+        .tab-btn.active { background: #7c3aed; color: white; border-color: #6d28d9; box-shadow: 0 4px 10px rgba(124, 58, 237, 0.4); }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        /* SEARCH BAR */
+        /* V31 SEARCH STYLE RESTORED */
         .s-container { position: relative; width: 100%; z-index: 50; }
-        .s-input { width: 100%; background: #1e293b; border: 1px solid #334155; color: white; padding: 16px 16px 16px 50px; border-radius: 16px; font-size: 1.1rem; outline: none; transition: 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
-        .s-input:focus { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2), inset 0 2px 4px rgba(0,0,0,0.2); background: #0f172a; }
+        .s-input { width: 100%; background: #1e293b; border: 1px solid #334155; color: white; padding: 14px 44px 14px 44px; border-radius: 14px; font-size: 1rem; outline: none; transition: 0.3s; font-weight: 500; }
+        .s-input:focus { border-color: #a855f7; box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.2), inset 0 2px 4px rgba(0,0,0,0.2); background: #0f172a; }
         
-        /* SOLID SUGGESTION LIST */
-        .s-list { 
-            position: absolute; top: 100%; left: 0; right: 0; 
-            background: #1e293b; /* SOLID COLOR */
-            border: 1px solid #334155; border-radius: 16px; 
-            margin-top: 8px; max-height: 400px; overflow-y: auto; 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.8); 
-            display: none; z-index: 100; 
-        }
-        .s-item { padding: 14px 20px; cursor: pointer; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; transition: 0.1s; }
-        .s-item:last-child { border-bottom: none; }
-        .s-item:hover { background: #334155; }
-        .s-hl { color: #818cf8; font-weight: bold; }
-        .s-item:hover .s-hl { color: white; }
+        /* PURPLE X BUTTON */
+        .s-clear { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #a855f7; cursor: pointer; display: none; font-size: 1.2rem; transition: 0.2s; }
+        .s-clear:hover { color: #fff; transform: scale(1.1) translateY(-45%); }
+        
+        /* PURPLE HIGHLIGHTS */
+        .s-list { position: absolute; top: 100%; left: 0; right: 0; background: #1e293b; border: 1px solid #334155; border-radius: 16px; margin-top: 8px; max-height: 350px; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.9); display: none; z-index: 100; }
+        .s-item { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; transition: 0.1s; }
+        .s-item:hover { background: #2e1065; }
+        .s-hl { color: #c084fc; font-weight: 900; text-shadow: 0 0 10px rgba(192, 132, 252, 0.3); }
 
         /* DATA ROWS (NO WRAP) */
-        .d-row { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid rgba(51,65,85,0.5); padding-bottom: 8px; margin-bottom: 8px; flex-wrap: wrap; }
-        .d-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-        .d-lbl { color: #64748b; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; min-width: 80px; }
-        .d-val { color: #f1f5f9; font-size: 0.9rem; font-weight: 500; text-align: right; font-family: 'JetBrains Mono'; word-break: break-word; flex: 1; margin-left: 10px; }
+        .d-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 8px 0; }
+        .d-row:last-child { border-bottom: none; }
+        .d-lbl { color: #94a3b8; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; min-width: 80px; }
+        .d-val { color: #fff; font-size: 0.85rem; font-weight: 600; text-align: right; font-family: 'JetBrains Mono'; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-left: 10px; }
+
+        /* VERTICAL OVEN TABLE */
+        .v-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        .v-table th, .v-table td { padding: 8px 6px; border-bottom: 1px solid #1e293b; text-align: center; }
+        .v-table th { background: #1e293b; color: #94a3b8; font-weight: 800; font-size: 0.7rem; }
+        .z-col { font-weight: 800; color: #94a3b8; background: #1e293b; width: 40px; border-right: 1px solid #334155; }
+        .t-col { color: #f87171; font-family: 'JetBrains Mono'; font-weight: 800; background: rgba(239, 68, 68, 0.05); }
+        .b-col { color: #60a5fa; font-family: 'JetBrains Mono'; font-weight: 800; background: rgba(59, 130, 246, 0.05); }
+        .c-col { color: #34d399; font-family: 'JetBrains Mono'; font-weight: 800; background: rgba(52, 211, 153, 0.05); }
 
         /* FLASH ANIMATION */
-        @keyframes textFlash { 0% { color: #ffffff; text-shadow: none; } 50% { color: #4ade80; text-shadow: 0 0 10px #4ade80; } 100% { color: #ffffff; text-shadow: none; } }
-        @keyframes bodyFlash { 0% { opacity: 1; transform: translateY(0); } 50% { opacity: 0.5; transform: translateY(2px); } 100% { opacity: 1; transform: translateY(0); } }
+        @keyframes textFlash { 0%, 100% { color: white; } 50% { color: #d8b4fe; text-shadow: 0 0 10px #d8b4fe; } }
+        @keyframes bodyFlash { 0% { opacity: 1; } 50% { opacity: 0.5; transform: translateY(2px); } 100% { opacity: 1; transform: translateY(0); } }
         .data-flash { animation: textFlash 0.4s ease-out; }
         .body-flash { animation: bodyFlash 0.3s ease-out; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
 
-    <header class="sticky top-0 z-50 bg-slate-950 border-b border-slate-800 p-4 shadow-2xl">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-4">
-            <div class="flex items-center gap-3 w-full md:w-auto">
-                <div class="w-12 h-12 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-lg ring-1 ring-white/10">T</div>
-                <div class="font-black text-2xl text-white tracking-tighter">TSDB<span class="text-indigo-500">.PRO</span></div>
+    <header class="sticky top-0 z-50 bg-[#020617]/95 backdrop-blur-xl border-b border-slate-800 p-3 shadow-2xl">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-3">
+            <div class="flex items-center gap-3 w-full md:w-auto justify-center md:justify-start">
+                <div class="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg ring-1 ring-white/10">T</div>
+                <div class="font-black text-2xl text-white tracking-tighter">TSDB<span class="text-purple-500">.PRO</span></div>
             </div>
             <div class="flex-1 w-full s-container">
-                <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 text-xl pointer-events-none"></i>
-                <input type="text" id="s" placeholder="Gépelj panel vagy model nevet.." class="s-input" autocomplete="off">
+                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-lg pointer-events-none"></i>
+                <input type="text" id="s" placeholder="" class="s-input" autocomplete="off">
+                <i id="clr" class="fas fa-times s-clear" onclick="clearS()"></i>
                 <div id="sugg" class="s-list"></div>
             </div>
         </div>
     </header>
 
-    <main class="flex-1 p-2 md:p-8">
+    <main class="flex-1 p-3 md:p-6">
         <div id="out" class="max-w-7xl mx-auto">
-            <div class="text-center py-32 opacity-30 select-none">
-                <i class="fas fa-search-location text-9xl mb-6 text-slate-800 animate-pulse"></i>
-                <h2 class="text-3xl font-black text-slate-700 uppercase tracking-widest">Adatbázis Betöltve</h2>
+            <div id="wel" class="text-center py-24 select-none animate-[fadeIn_1s]">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-slate-900 border border-slate-800 mb-6 shadow-2xl">
+                    <i class="fas fa-search text-4xl text-purple-500 animate-pulse"></i>
+                </div>
+                <h2 class="text-xl md:text-3xl font-black text-white uppercase tracking-tight mb-2">Adatbázis Betöltve</h2>
+                <p class="text-slate-400 font-mono text-xs md:text-sm">Keress <span class="text-purple-400 font-bold">Modellnév</span> vagy <span class="text-purple-400 font-bold">Panel Szám</span> alapján</p>
             </div>
         </div>
     </main>
@@ -108,26 +95,34 @@
         const inp = document.getElementById('s');
         const sugg = document.getElementById('sugg');
         const out = document.getElementById('out');
+        const clr = document.getElementById('clr');
+        const wel = document.getElementById('wel');
 
-        inp.addEventListener('input', (e) => {
-            const v = e.target.value.toLowerCase().trim();
-            if(v.length < 1) { sugg.style.display = 'none'; return; }
+        window.clearS = () => { inp.value=''; inp.focus(); upd(''); }
+        inp.addEventListener('input', (e) => upd(e.target.value.toLowerCase().trim()));
+
+        function upd(v) {
+            clr.style.display = v.length > 0 ? 'block' : 'none';
+            if(v.length < 1) { sugg.style.display = 'none'; out.innerHTML = ''; out.appendChild(wel); wel.style.display = 'block'; return; }
+            wel.style.display = 'none';
+            
             const matches = DB.filter(x => x.id.toLowerCase().includes(v) || x.p.toLowerCase().includes(v));
-            const uniq = [...new Set(matches.map(m => m.id))].slice(0, 20);
+            const uniq = [...new Set(matches.map(m => m.id))].slice(0, 15);
+            
             if(uniq.length > 0) {
                 sugg.innerHTML = uniq.map(uid => {
-                    const item = matches.find(m => m.id === uid);
-                    const hlId = uid.replace(new RegExp(v, 'gi'), m => `<span class="s-hl">${m}</span>`);
-                    const hlPcb = item.p.replace(new RegExp(v, 'gi'), m => `<span class="s-hl">${m}</span>`);
-                    return `<div class="s-item" onclick="sel('${uid}')"><div><div class="font-bold text-white text-lg">${hlId}</div><div class="text-xs text-slate-400 font-mono font-bold mt-1">PCB: ${hlPcb}</div></div><i class="fas fa-chevron-right text-slate-600"></i></div>`;
+                    const i = matches.find(m => m.id === uid);
+                    const h1 = uid.replace(new RegExp(v,'gi'), m=>`<span class="s-hl">${m}</span>`);
+                    const h2 = i.p.replace(new RegExp(v,'gi'), m=>`<span class="s-hl">${m}</span>`);
+                    return `<div class="s-item" onclick="sel('${uid}')"><div><div class="font-bold text-white text-base">${h1}</div><div class="text-xs text-slate-400 font-mono font-bold mt-0.5">PCB: ${h2}</div></div><i class="fas fa-chevron-right text-purple-500"></i></div>`;
                 }).join('');
                 sugg.style.display = 'block';
-            } else { sugg.style.display = 'none'; }
-        });
+            } else sugg.style.display = 'none';
+        }
         document.addEventListener('click', e => { if(!e.target.closest('.s-container')) sugg.style.display = 'none'; });
 
         window.sel = (mid) => {
-            inp.value = mid; sugg.style.display = 'none';
+            inp.value = mid; sugg.style.display = 'none'; clr.style.display = 'block';
             const vars = DB.filter(x => x.id === mid).sort((a,b) => (a.pr||'').localeCompare(b.pr||''));
             if(vars.length) renderMain(vars);
         }
@@ -140,133 +135,109 @@
             let tabs = '', content = '';
             vars.forEach((v, idx) => {
                 const act = idx === 0 ? 'active' : '';
-                tabs += `<button class="tab-btn ${act}" onclick="tab(this, ${idx})" 
-                    data-pcb="${v.p}" 
-                    data-rev="${v.rev||'-'}" 
-                    data-bar="${v.bar||'-'}">
-                    ${v.pr || 'ALAP'}
-                </button>`;
+                tabs += `<button class="tab-btn ${act}" onclick="tab(this, ${idx})" data-p="${v.p}" data-r="${v.rev||'-'}" data-b="${v.bar||'-'}">${v.pr || 'ALAP'}</button>`;
                 content += `<div class="tab-content ${act}" id="t-${idx}">${build(v)}</div>`;
             });
 
             out.innerHTML = `
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl animate-[fadeIn_0.3s_ease-out]">
-                <div class="bg-slate-950 p-6 md:p-10 border-b border-slate-800 flex flex-col xl:flex-row justify-between gap-8 relative">
-                    <div class="absolute top-0 right-0 p-32 bg-indigo-600/10 blur-[100px] rounded-full pointer-events-none"></div>
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl animate-[fadeIn_0.3s]">
+                <div class="bg-[#0f172a] p-5 md:p-8 border-b border-slate-800 flex flex-col xl:flex-row justify-between gap-6 relative overflow-hidden">
                     <div class="relative z-10 w-full">
-                        <h1 class="text-3xl sm:text-4xl md:text-6xl font-black text-white tracking-tight mb-6 leading-tight break-words">${main.id}</h1>
-                        <div class="flex flex-wrap items-center gap-4">
-                            <div class="bg-indigo-600 px-4 py-3 rounded-2xl shadow-lg shadow-indigo-900/50 flex flex-col min-w-[140px] border border-indigo-500/50">
-                                <span class="text-[10px] text-indigo-100 font-bold uppercase tracking-widest opacity-80 mb-1">PANEL SZÁM</span>
-                                <span id="h-pcb" class="text-xl md:text-3xl font-mono font-bold text-white tracking-wide break-all leading-none">${main.p}</span>
+                        <h1 class="text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight mb-4 leading-tight whitespace-nowrap overflow-hidden text-ellipsis" title="${main.id}">${main.id}</h1>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <div class="bg-purple-600 px-4 py-2 rounded-xl shadow-lg shadow-purple-900/50 flex flex-col min-w-[120px] border border-purple-500/50">
+                                <span class="text-[9px] text-purple-100 font-bold uppercase tracking-widest opacity-80 mb-1">PANEL SZÁM</span>
+                                <span id="h-pcb" class="text-lg md:text-xl font-mono font-bold text-white tracking-wide whitespace-nowrap overflow-hidden text-ellipsis">${main.p}</span>
                             </div>
-                            <div class="flex flex-col sm:flex-row gap-3 text-sm font-mono text-slate-400 bg-slate-900 px-5 py-3 rounded-2xl border border-slate-800">
-                                <div class="flex flex-col"><span class="text-[9px] font-bold uppercase text-slate-600">REVÍZIÓ</span><b id="h-rev" class="text-white text-lg">${main.rev||'-'}</b></div>
-                                <div class="w-px h-8 bg-slate-800 hidden sm:block"></div>
-                                <div class="h-px w-full bg-slate-800 sm:hidden"></div>
-                                <div class="flex flex-col"><span class="text-[9px] font-bold uppercase text-slate-600">BARCODE</span><b id="h-bar" class="text-white text-lg break-all">${main.bar||'-'}</b></div>
+                            <div class="flex flex-col sm:flex-row gap-3 text-xs font-mono text-slate-400 bg-slate-800/80 px-4 py-2 rounded-xl border border-slate-700">
+                                <div><span class="block text-[9px] font-bold text-slate-500 uppercase">REVÍZIÓ</span><b id="h-rev" class="text-white text-base">${main.rev||'-'}</b></div>
+                                <div class="hidden sm:block w-px h-8 bg-slate-700"></div>
+                                <div><span class="block text-[9px] font-bold text-slate-500 uppercase">BARCODE</span><b id="h-bar" class="text-white text-base whitespace-nowrap overflow-hidden text-ellipsis block max-w-[150px]">${main.bar||'-'}</b></div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="relative z-10 flex flex-col items-start xl:items-end justify-center gap-3 w-full xl:w-auto">
-                        ${isMulti ? '<div class="flex items-center gap-2 text-xs font-bold text-pink-500 uppercase animate-pulse bg-pink-950/30 px-3 py-1.5 rounded-lg border border-pink-900/50"><i class="fas fa-exclamation-circle"></i> Válassz Folyamatot</div>' : ''}
+                    <div class="relative z-10 flex flex-col items-start xl:items-end justify-center gap-2 w-full xl:w-auto mt-2 xl:mt-0">
+                        ${isMulti ? '<div class="flex items-center gap-2 text-[10px] font-bold text-red-400 uppercase animate-pulse bg-red-950/30 px-2 py-1 rounded border border-red-500/30"><i class="fas fa-exclamation-triangle"></i> VÁLASSZ FOLYAMATOT</div>' : ''}
                         <div class="tab-wrap w-full xl:w-auto ${isMulti?'multi':''} overflow-x-auto">${tabs}</div>
                     </div>
                 </div>
-                
-                <div id="content-area" class="p-4 md:p-10 bg-gradient-to-b from-slate-900 to-slate-950">${content}</div>
+                <div id="content-area" class="p-3 md:p-8 bg-gradient-to-b from-[#0f172a] to-[#020617]">${content}</div>
             </div>`;
         }
 
         window.tab = (btn, idx) => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.getElementById('t-'+idx).classList.add('active');
-            
-            const area = document.getElementById('content-area');
-            area.classList.remove('body-flash');
-            void area.offsetWidth; 
-            area.classList.add('body-flash');
-
-            updateHeader('h-pcb', btn.getAttribute('data-pcb'));
-            updateHeader('h-rev', btn.getAttribute('data-rev'));
-            updateHeader('h-bar', btn.getAttribute('data-bar'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.getElementById('t-'+idx).classList.add('active');
+            const area = document.getElementById('content-area'); area.classList.remove('body-flash'); void area.offsetWidth; area.classList.add('body-flash');
+            updH('h-pcb', btn.getAttribute('data-p')); updH('h-rev', btn.getAttribute('data-r')); updH('h-bar', btn.getAttribute('data-b'));
         }
 
-        function updateHeader(id, newVal) {
-            const el = document.getElementById(id);
-            if(el) {
-                el.innerText = newVal;
-                el.classList.remove('data-flash');
-                void el.offsetWidth; 
-                el.classList.add('data-flash');
-            }
-        }
+        function updH(id, val) { const el = document.getElementById(id); if(el) { el.innerText = val; el.classList.remove('data-flash'); void el.offsetWidth; el.classList.add('data-flash'); } }
 
         function build(i) {
             const d = i.d||{}, m = d.mat||{}, dm = d.dim||{}, pg = i.pg||{}, pp = d.mpm_pars||{};
-            const msk = (d.msk&&d.msk.length) ? d.msk.map(x => `<span class="bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 px-3 py-1.5 rounded-lg font-mono font-bold text-base md:text-lg shadow-sm inline-block mb-2 mr-2 break-all">${x}</span>`).join('') : '-';
+            const msk = (d.msk&&d.msk.length) ? d.msk.map(x => `<span class="bg-purple-900/30 text-purple-300 border border-purple-500/30 px-2 py-1 rounded font-mono font-bold text-sm inline-block mr-1 mb-1">${x}</span>`).join('') : '-';
             
-            const r = (l,v) => ok(v) ? `<div class="d-row"><span class="d-lbl">${l}</span><span class="d-val">${v}</span></div>` : '';
-            const pb = (l,v) => ok(v) ? `<div class="bg-slate-900 border border-slate-800 px-4 py-3 rounded-xl flex flex-col justify-center mb-3 shadow-sm hover:border-indigo-500/50 transition-colors"><span class="text-[9px] text-slate-500 font-bold uppercase tracking-wider mb-1">${l}</span><span class="text-indigo-300 font-mono font-bold text-sm md:text-base break-words">${v}</span></div>` : '';
+            const r = (l,v) => ok(v) ? `<div class="d-row"><span class="d-lbl">${l}</span><span class="d-val" title="${v}">${v}</span></div>` : '';
+            const pb = (l,v) => ok(v) ? `<div class="bg-slate-900 border border-slate-700 px-3 py-2 rounded-lg flex flex-col justify-center mb-2 hover:border-purple-500/50 transition"><span class="text-[9px] text-slate-500 font-bold uppercase tracking-wider">${l}</span><span class="text-white font-mono font-bold text-sm whitespace-nowrap overflow-hidden text-ellipsis" title="${v}">${v}</span></div>` : '';
 
-            const prn = ok(pg.pt) ? `<div class="mt-3 pt-3 border-t border-slate-700/50"><div class="text-[9px] text-purple-400 uppercase font-bold mb-1">NYOMTATÓ PROGRAM</div><div class="font-mono text-white text-sm bg-purple-900/20 px-3 py-2 rounded-lg border border-purple-500/30 break-all">${pg.pt}</div></div>` : '';
-            const gl = ok(pg.g) ? `<div class="mt-3 pt-3 border-t border-slate-700/50"><div class="text-[9px] text-purple-400 uppercase font-bold mb-1">RAGASZTÓ PROGRAM</div><div class="font-mono text-white text-sm bg-purple-900/20 px-3 py-2 rounded-lg border border-purple-500/30 break-all">${pg.g}</div></div>` : '';
-            const ovn = ok(pg.o) ? `<div class="mb-6 bg-orange-900/20 border border-orange-500/30 p-4 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center shadow-lg gap-2"><span class="text-orange-400 text-xs font-bold uppercase flex items-center"><i class="fas fa-fire mr-2"></i> KEMENCE RECEPT</span><span class="text-white font-mono font-bold text-lg break-all">${pg.o}</span></div>` : '';
-
-            // --- MPM PARAMÉTER BLOCK ---
-            let mpmHtml = '';
+            const prn = ok(pg.pt) ? `<div class="mt-4 pt-3 border-t border-slate-700/50"><div class="text-[9px] text-purple-400 uppercase font-bold mb-1">NYOMTATÓ PROGRAM</div><div class="font-mono text-white text-sm bg-purple-900/20 px-3 py-2 rounded border border-purple-500/30 whitespace-nowrap overflow-hidden text-ellipsis">${pg.pt}</div></div>` : '';
+            
+            let mpmExtra = '';
             if (ok(pp.p) || ok(pp.s) || ok(pp.sd) || ok(pp.ss) || ok(pp.w)) {
-                mpmHtml = `
-                <div class="mt-4 bg-slate-900/50 p-4 rounded-xl border border-slate-700/50">
-                    <div class="text-[10px] text-blue-400 font-bold uppercase mb-3 border-b border-slate-700/50 pb-2 tracking-wide"><i class="fas fa-sliders-h mr-1"></i> MPM PARAMÉTEREK</div>
-                    ${r('NYOMÁS (KG)', pp.p)}
-                    ${r('SEBESSÉG (MM/S)', pp.s)}
-                    ${r('SNAP-OFF (MM)', pp.sd)}
-                    ${r('SNAP-SPD (MM/S)', pp.ss)}
-                    ${r('TÖRLÉS PROFIL', pp.w)}
-                </div>`;
+                mpmExtra = `<div class="mt-4 bg-[#1e1b4b]/50 p-3 rounded-xl border border-purple-500/30"><div class="text-[9px] text-purple-400 font-bold uppercase mb-2 border-b border-purple-500/20 pb-1 flex items-center"><i class="fas fa-sliders-h mr-1"></i> PARAMÉTEREK</div>${r('NYOMÁS (KG)', pp.p)}${r('SEBESSÉG (MM/S)', pp.s)}${r('SNAP-OFF (MM)', pp.sd)}${r('SNAP-SPD (MM/S)', pp.ss)}${r('TÖRLÉS PROFIL', pp.w)}</div>`;
             }
 
+            const ovn = ok(pg.o) ? `<div class="mb-4 bg-orange-900/10 border border-orange-500/30 p-3 rounded-xl flex items-center justify-between shadow-sm"><span class="text-orange-400 text-xs font-bold uppercase flex items-center"><i class="fas fa-fire mr-2"></i> KEMENCE RECEPT</span><span class="text-white font-mono font-bold text-base whitespace-nowrap overflow-hidden text-ellipsis max-w-[180px]">${pg.o}</span></div>` : '';
+
             return `
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-10">
-                <div class="lg:col-span-4 space-y-8">
-                    <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700 shadow-md backdrop-blur-sm">
-                        <h3 class="text-blue-400 text-xs font-black uppercase mb-5 border-b border-blue-500/20 pb-3 tracking-widest"><i class="fas fa-ruler-combined mr-2"></i> FIZIKAI ADATOK</h3>
-                        ${r('Méret', (ok(dm.w)&&ok(dm.l)) ? `${dm.w} x ${dm.l} mm` : null)}
-                        ${r('Vastagság', dm.t ? dm.t+' mm' : null)}
-                        ${r('Sheet/Panel', dm.sh)}
-                        ${r('Címke', m.l)}
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
+                <div class="lg:col-span-3 space-y-4">
+                    <div class="bg-slate-800/40 p-4 lg:p-5 rounded-2xl border border-slate-700/50 shadow-sm">
+                        <h3 class="text-blue-400 text-xs font-black uppercase mb-3 border-b border-blue-500/20 pb-2"><i class="fas fa-ruler-combined mr-2"></i> FIZIKAI ADATOK</h3>
+                        <div class="flex gap-2 mb-2">
+                            <div class="flex-1 bg-slate-900/50 p-2 rounded border border-slate-700 text-center"><span class="text-[9px] text-slate-500 font-bold block">SZÉLESSÉG</span><span class="text-white font-mono font-bold">${dm.w||'-'}</span></div>
+                            <div class="flex-1 bg-slate-900/50 p-2 rounded border border-slate-700 text-center"><span class="text-[9px] text-slate-500 font-bold block">HOSSZÚSÁG</span><span class="text-white font-mono font-bold">${dm.l||'-'}</span></div>
+                        </div>
+                        ${r('VASTAGSÁG (MM)', dm.t)} ${r('PANEL / BLOKK', dm.sh)} ${r('CÍMKE', m.l)}
                     </div>
                     
-                    <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700 shadow-md backdrop-blur-sm relative overflow-hidden">
-                        <div class="absolute inset-0 bg-yellow-500/5 pointer-events-none"></div>
-                        <h4 class="text-yellow-500 text-xs font-black uppercase mb-4 relative z-10 tracking-widest"><i class="fas fa-mask mr-2"></i> STENCIL / MASZK</h4>
-                        <div class="relative z-10">${msk}</div>
-                    </div>
-
-                    <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700 shadow-md backdrop-blur-sm">
-                        <h4 class="text-emerald-400 text-xs font-black uppercase mb-5 border-b border-emerald-500/20 pb-3 tracking-widest"><i class="fas fa-vial mr-2"></i> ANYAGOK</h4>
-                        ${r('Paszta', m.p)}${prn}${mpmHtml}
-                        <div class="my-4 border-t border-slate-700/50"></div>
-                        ${r('Ragasztó', m.g)}${gl}
-                        <div class="my-4 border-t border-slate-700/50"></div>
-                        ${r('MPM Supp', m.m)}
-                        ${r('Juki Supp', m.j)}
+                    <div class="bg-slate-800/40 p-4 lg:p-5 rounded-2xl border border-slate-700/50 shadow-sm">
+                        <h3 class="text-purple-400 text-xs font-black uppercase mb-3 border-b border-purple-500/20 pb-2"><i class="fas fa-cogs mr-2"></i> EGYÉB FOLYAMATOK</h3>
+                        ${pb('RAGASZTÓ PROG', pg.g)} ${r('RAGASZTÓ TÍPUS', m.g)}
+                        <div class="my-2 border-t border-white/5"></div>
+                        ${pb('LÉZER PROG', pg.n)} ${pb('SPI PROG', pg.s)} ${pb('BEÜLTETŐ PROG', pg.sm)} ${pb('AOI PROG', pg.a)}
+                        <div class="my-2 border-t border-white/5"></div>
+                        ${r('JUKI SUPPORT', m.j)}
                     </div>
                 </div>
 
-                <div class="lg:col-span-3 space-y-3">
-                    <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700 shadow-md h-full backdrop-blur-sm">
-                        <h3 class="text-purple-400 text-xs font-black uppercase mb-5 border-b border-purple-500/20 pb-3 tracking-widest"><i class="fas fa-code mr-2"></i> ÖSSZES PROGRAM</h3>
-                        ${pb('Lézer', pg.n)} ${pb('Nyomtató', pg.pt)} ${pb('SPI', pg.s)} ${pb('Beültető', pg.sm)}
-                        ${pb('Kemence', pg.o)} ${pb('InLine', pg.i)} ${pb('Ragasztó', pg.g)} ${pb('3D AOI', pg.a)}
+                <div class="lg:col-span-4">
+                    <div class="bg-gradient-to-b from-slate-800/60 to-slate-900/60 p-4 lg:p-6 rounded-2xl border border-purple-500/30 shadow-lg relative overflow-hidden h-full">
+                        <div class="absolute top-0 right-0 p-12 bg-purple-500/5 blur-2xl rounded-full pointer-events-none"></div>
+                        <h3 class="text-purple-400 text-sm font-black uppercase mb-4 border-b border-purple-500/30 pb-2 tracking-widest flex items-center relative z-10"><i class="fas fa-print mr-3 text-lg"></i> MPM NYOMTATÁS</h3>
+                        
+                        <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700/50 mb-3 shadow-inner">
+                            <span class="text-[9px] text-emerald-400 font-bold uppercase block mb-1">FORRASZTÓ PASZTA</span>
+                            <span class="text-white font-mono font-bold text-sm block break-words">${m.p || '-'}</span>
+                        </div>
+
+                        <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700/50 mb-3 shadow-inner relative overflow-hidden">
+                            <div class="absolute inset-0 bg-yellow-500/5 pointer-events-none"></div>
+                            <span class="text-[9px] text-yellow-400 font-bold uppercase block mb-2 relative z-10">STENCIL / MASZK</span>
+                            <div class="relative z-10">${msk}</div>
+                        </div>
+
+                        ${prn}
+                        ${mpmExtra}
+                        
+                        <div class="mt-4 pt-3 border-t border-slate-700/50">
+                            ${r('MPM SUPPORT', m.m)}
+                        </div>
                     </div>
                 </div>
 
-                <div class="lg:col-span-5 space-y-8">
+                <div class="lg:col-span-5 space-y-6">
                     ${ovn}
                     ${mkOven(d.o8, 8)}
                     ${mkOven(d.o10, 10)}
@@ -285,16 +256,16 @@
             rows += `<tr><td class="z-col text-teal-500 border-t-2 border-slate-700">C1</td><td class="c-col border-t-2 border-slate-700">${ct[0]||'-'}</td><td class="c-col border-t-2 border-slate-700">${cb[0]||'-'}</td></tr>`;
             rows += `<tr><td class="z-col text-teal-500">C2</td><td class="c-col">${ct[1]||'-'}</td><td class="c-col">${cb[1]||'-'}</td></tr>`;
 
-            const pBox = (l, v) => ok(v) ? `<div class="bg-slate-950 p-2 rounded-lg border border-slate-800 text-center"><div class="text-[9px] text-slate-500 font-bold uppercase">${l}</div><div class="text-white text-xs font-bold font-mono">${v}</div></div>` : '';
+            const pBox = (l, v) => ok(v) ? `<div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-center"><div class="text-[9px] text-slate-500 font-bold uppercase">${l}</div><div class="text-white text-xs font-bold font-mono">${v}</div></div>` : '';
 
             return `
             <div class="bg-slate-800/80 p-1 rounded-2xl border border-slate-700 shadow-md overflow-hidden">
-                <div class="px-5 py-4 border-b border-slate-700 bg-slate-900">
+                <div class="px-4 py-3 border-b border-slate-700 bg-slate-900">
                     <div class="flex justify-between items-center mb-3">
                         <div class="text-xs font-black text-orange-500 uppercase tracking-widest"><i class="fas fa-fire-alt mr-2"></i> ${z} ZÓNÁS</div>
                     </div>
                     <div class="grid grid-cols-4 gap-2">
-                        ${pBox('SEBESSÉG', o.sp)} ${pBox('O2 PPM', o.o2)} ${pBox('SZÉLESSÉG', o.w)} ${pBox('SUPPORT', o.su)}
+                        ${pBox('SEB', o.sp)} ${pBox('O2', o.o2)} ${pBox('SZÉL', o.w)} ${pBox('SUP', o.su)}
                     </div>
                 </div>
                 <table class="v-table">
