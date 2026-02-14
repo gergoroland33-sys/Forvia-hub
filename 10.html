@@ -46,28 +46,30 @@
 
 <script>
     // ==========================================
-    // ⚙️ BEÁLLÍTÁSOK - ITT FIGYELJ!
+    // ⚙️ BEÁLLÍTÁSOK - ITT SZERKESZD A KÓDOT!
     // ==========================================
     const config = {
         shift: "C", 
-        // 1. NEVEK: Írd be a neveket, ÚJ EMBER a végére!
-        names: "Martina,Dani,Laci,Jani,Patrik,Zsuzsa,Peti,Barbi,Reni,Böbe,Kriszti,ÚJ_TAG"
+        
+        // 1. NEVEK LISTÁJA
+        // Akit előre írsz, az jön hamarabb. ÚJ EMBERT a VÉGÉRE írd!
+        names: "Laci,Jani,Patrik,Zsuzsa,Peti,Barbi,Reni,Böbe,Martina,Kriszti,Dani"
     };
 
-    // 2. MŰSZAK START (EZT NE BÁNTSD, vagy írd vissza a régire!)
-    // Ez felel azért, hogy a gép tudja, ma pihenőnap van.
-    // Visszaírtam az eredeti dátumot, ami a legelső kódodban volt.
+    // 2. MŰSZAK KEZDET (ROTÁCIÓ)
+    // Ezt hagyd a RERGI dátumon, ami akkor volt, amikor még jó volt a "Pihenő/Munka" kijelzés!
+    // Visszaírtam az eredetire. Ha ez nem jó, írd át arra, ami régen volt.
     const SHIFT_START = new Date(2025, 6, 31); 
 
-    // 3. NÉVSOR START (RESET)
-    // Ide írd a MAI dátumot! Ettől a naptól indul az új névsor.
-    // (Év, Hónap-1, Nap) -> Január=0, Február=1
+    // 3. NÉVSOR ÚJRAINDÍTÁS
+    // Ide írd a MAI DÁTUMOT! (Év, Hónap-1, Nap)
+    // Ettől a naptól kezdve számolja újra a párokat a fenti lista alapján.
     const NAME_START = new Date(2025, 1, 14); 
 
-    // ==========================================
-    // LOGIKA
-    // ==========================================
 
+    // ==========================================
+    // LOGIKA - NE NYÚLJ HOZZÁ
+    // ==========================================
     let scheduleCache = [];
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -88,38 +90,55 @@
         }
     }
 
+    // 🧠 TÖKÉLETESÍTETT SORSOLÁS (Garantáltan mindenki sorra kerül)
     function precalculateSchedule() {
         const names = getCleanNames();
-        const maxShifts = 1000; 
         scheduleCache = [];
         const rng = mulberry32(123456); 
-        let personStream = []; 
-        let neededPeopleCount = maxShifts * 2; 
-        let round = 0;
+        
+        // Két "vödör": 
+        // 1. pool: Ebből vesszük ki az embereket.
+        // 2. deck: Ez az eredeti lista a keveréshez.
+        let pool = [...names]; // Első kör: fix sorrend
+        let lastPerson = "";
 
-        while (personStream.length < neededPeopleCount + 20) {
-            let deck = [...names];
-            // Első kör (round 0) fix, utána kever
-            if (round > 0) {
-                for (let i = deck.length - 1; i > 0; i--) {
-                    const j = Math.floor(rng() * (i + 1));
-                    [deck[i], deck[j]] = [deck[j], deck[i]];
+        // 1000 műszakra előre számolunk
+        for(let i=0; i<1000; i++) {
+            let p1, p2;
+
+            // --- ELSŐ EMBER HÚZÁSA ---
+            if(pool.length === 0) {
+                // Ha kiürült a vödör, újratöltjük és keverjük
+                pool = [...names];
+                for (let k = pool.length - 1; k > 0; k--) {
+                    const j = Math.floor(rng() * (k + 1));
+                    [pool[k], pool[j]] = [pool[j], pool[k]];
+                }
+                // Ha ugyanaz kezdene, aki befejezte, cserélünk
+                if(pool[0] === lastPerson) {
+                    let swapIdx = Math.floor(pool.length / 2);
+                    [pool[0], pool[swapIdx]] = [pool[swapIdx], pool[0]];
                 }
             }
-            if (personStream.length > 0 && round > 0) {
-                let lastPerson = personStream[personStream.length - 1];
-                if (deck[0] === lastPerson) {
-                    let swapIdx = Math.floor(deck.length / 2);
-                    [deck[0], deck[swapIdx]] = [deck[swapIdx], deck[0]];
+            p1 = pool.shift(); // Kivesszük az elsőt
+
+            // --- MÁSODIK EMBER HÚZÁSA ---
+            if(pool.length === 0) {
+                // Ha pont most ürült ki (pl. páratlan létszám), újra kell tölteni
+                pool = [...names];
+                for (let k = pool.length - 1; k > 0; k--) {
+                    const j = Math.floor(rng() * (k + 1));
+                    [pool[k], pool[j]] = [pool[j], pool[k]];
+                }
+                // Ha ugyanazt húznánk mellé, aki ő maga (duplázás), cserélünk
+                if(pool[0] === p1) {
+                    let swapIdx = Math.floor(pool.length / 2);
+                    [pool[0], pool[swapIdx]] = [pool[swapIdx], pool[0]];
                 }
             }
-            personStream = personStream.concat(deck);
-            round++;
-        }
+            p2 = pool.shift(); // Kivesszük a másodikat
 
-        for (let i = 0; i < maxShifts; i++) {
-            let p1 = personStream[i * 2];
-            let p2 = personStream[i * 2 + 1];
+            lastPerson = p2;
             scheduleCache.push(`${p1} & ${p2}`);
         }
     }
@@ -129,12 +148,13 @@
         return scheduleCache[idx % scheduleCache.length];
     }
 
-    // Segédfüggvény: Megmondja, hogy egy adott napon dolgozik-e a műszak
-    // A SHIFT_START alapján számol!
+    // Ez számolja ki, hogy a SHIFT_START óta épp milyen műszak van
     function isWorkingDay(date) {
         let diffTime = date - SHIFT_START;
         let totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        // Kezeljük a negatív dátumokat is korrekten
         let cycleIdx = ((totalDays % 12) + 12) % 12;
+        
         let blockStart = 0;
         if (cycleIdx >= 3) blockStart = 3;
         if (cycleIdx >= 6) blockStart = 6;
@@ -143,24 +163,27 @@
         return (config.shift === s.day || config.shift === s.night);
     }
 
-    // ÚJ LOGIKA: A NAME_START dátumtól számolja ki, hanyadik munkanapnál járunk
+    // Ez számolja ki, hogy a NAME_START óta hányadik MUNKANAPON járunk
     function calculateShiftIndex(targetDate) {
-        if (targetDate < NAME_START) return -1;
+        // Csak a dátumot nézzük, órát nem
+        let start = new Date(NAME_START); start.setHours(0,0,0,0);
+        let target = new Date(targetDate); target.setHours(0,0,0,0);
 
-        let count = 0;
-        let iterDate = new Date(NAME_START);
-        iterDate.setHours(0,0,0,0);
-        
-        let targetTime = targetDate.getTime();
+        if (target < start) return -1;
 
-        while(iterDate.getTime() <= targetTime) {
+        let workingShiftCount = 0;
+        let iterDate = new Date(start);
+
+        // Elszámolunk a céldátumig napról napra
+        while(iterDate.getTime() <= target.getTime()) {
             if(isWorkingDay(iterDate)) {
-                if(iterDate.getTime() === targetTime) return count;
-                count++;
+                // Ha elértünk a mához, visszaadjuk a számot
+                if(iterDate.getTime() === target.getTime()) return workingShiftCount;
+                workingShiftCount++;
             }
             iterDate.setDate(iterDate.getDate() + 1);
         }
-        return count;
+        return workingShiftCount;
     }
 
     function renderSchedule() {
@@ -176,7 +199,7 @@
 
         let isWorking = isWorkingDay(today);
         
-        // Műszak típusának meghatározása megjelenítéshez
+        // Kijelzés
         let diffTime = today - SHIFT_START;
         let totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
         let cycleIdx = ((totalDays % 12) + 12) % 12;
@@ -191,8 +214,8 @@
         const logicInfoHTML = `
             <div class="logic-info">
                 <strong>ℹ️ Beosztás Frissítve</strong>
-                Az új névsor a mai naptól (${NAME_START.toLocaleDateString('hu-HU')}) érvényes.
-                A sorrend először fix, aztán keveredik.
+                Sorrend: Fix lista (új tag a végén), utána kevert.
+                Pihenőnapokon a sorsolás áll.
             </div>
         `;
 
@@ -206,6 +229,7 @@
                 </div>
                 ${logicInfoHTML}
             `;
+            // Ha ma pihenő, a listát a holnapi naptól kezdjük keresni
             fillUpcomingList(today, listContainer); 
             return;
         }
