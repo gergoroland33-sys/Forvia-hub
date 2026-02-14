@@ -46,27 +46,26 @@
 
 <script>
     // ==========================================
-    // ⚙️ BEÁLLÍTÁSOK - ITT SZERKESZD A KÓDOT!
+    // ⚙️ BEÁLLÍTÁSOK - ITT FIGYELJ!
     // ==========================================
     const config = {
         shift: "C", 
-        
-        // 1. A NEVEK LISTÁJA
-        // Ide írd be a neveket a kívánt sorrendben!
-        // Akit előre írsz, az jön MA (vagy a következő műszakban).
-        // Az ÚJ EMBERT írd a legvégére, így ő lesz az utolsó a sorban.
+        // 1. NEVEK: Írd be a neveket, ÚJ EMBER a végére!
         names: "Martina,Dani,Laci,Jani,Patrik,Zsuzsa,Peti,Barbi,Reni,Böbe,Kriszti,ÚJ_TAG"
     };
 
-    // 2. A START DÁTUM (RESET GOMB)
-    // Írd át ezt a dátumot a MAI NAPRA!
-    // Ez indítja el az új számítást a fenti sorrend alapján.
-    // Formátum: (ÉV, HÓNAP-1, NAP) -> Tehát a január a 0, február az 1!
-    // Példa: 2025. Február 14 = new Date(2025, 1, 14);
-    const CYCLE_START = new Date(2025, 1, 14); 
+    // 2. MŰSZAK START (EZT NE BÁNTSD, vagy írd vissza a régire!)
+    // Ez felel azért, hogy a gép tudja, ma pihenőnap van.
+    // Visszaírtam az eredeti dátumot, ami a legelső kódodban volt.
+    const SHIFT_START = new Date(2025, 6, 31); 
+
+    // 3. NÉVSOR START (RESET)
+    // Ide írd a MAI dátumot! Ettől a naptól indul az új névsor.
+    // (Év, Hónap-1, Nap) -> Január=0, Február=1
+    const NAME_START = new Date(2025, 1, 14); 
 
     // ==========================================
-    // INNENTŐL NE NYÚLJ SEMMIHEZ! :)
+    // LOGIKA
     // ==========================================
 
     let scheduleCache = [];
@@ -93,32 +92,20 @@
         const names = getCleanNames();
         const maxShifts = 1000; 
         scheduleCache = [];
-        
-        // Fix véletlen szám, hogy a jövőbeli keverés mindig ugyanaz maradjon
         const rng = mulberry32(123456); 
-
         let personStream = []; 
         let neededPeopleCount = maxShifts * 2; 
         let round = 0;
 
-        // Paklik generálása
         while (personStream.length < neededPeopleCount + 20) {
-            
             let deck = [...names];
-
-            // ⚠️ A LÉNYEG:
-            // Ha round === 0 (első kör), akkor NEM keverünk.
-            // A sorrend pontosan az lesz, amit te beírtál.
-            // Minden további körben (round > 0) keverünk.
+            // Első kör (round 0) fix, utána kever
             if (round > 0) {
-                // Keverés (Fisher-Yates)
                 for (let i = deck.length - 1; i > 0; i--) {
                     const j = Math.floor(rng() * (i + 1));
                     [deck[i], deck[j]] = [deck[j], deck[i]];
                 }
             }
-
-            // Duplázás elleni védelem (csak a kevert köröknél)
             if (personStream.length > 0 && round > 0) {
                 let lastPerson = personStream[personStream.length - 1];
                 if (deck[0] === lastPerson) {
@@ -126,12 +113,10 @@
                     [deck[0], deck[swapIdx]] = [deck[swapIdx], deck[0]];
                 }
             }
-
             personStream = personStream.concat(deck);
             round++;
         }
 
-        // Párok képzése
         for (let i = 0; i < maxShifts; i++) {
             let p1 = personStream[i * 2];
             let p2 = personStream[i * 2 + 1];
@@ -144,9 +129,39 @@
         return scheduleCache[idx % scheduleCache.length];
     }
 
-    // =========================================================
-    // MEGJELENÍTÉS
-    // =========================================================
+    // Segédfüggvény: Megmondja, hogy egy adott napon dolgozik-e a műszak
+    // A SHIFT_START alapján számol!
+    function isWorkingDay(date) {
+        let diffTime = date - SHIFT_START;
+        let totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        let cycleIdx = ((totalDays % 12) + 12) % 12;
+        let blockStart = 0;
+        if (cycleIdx >= 3) blockStart = 3;
+        if (cycleIdx >= 6) blockStart = 6;
+        if (cycleIdx >= 9) blockStart = 9;
+        let s = getShifts(blockStart);
+        return (config.shift === s.day || config.shift === s.night);
+    }
+
+    // ÚJ LOGIKA: A NAME_START dátumtól számolja ki, hanyadik munkanapnál járunk
+    function calculateShiftIndex(targetDate) {
+        if (targetDate < NAME_START) return -1;
+
+        let count = 0;
+        let iterDate = new Date(NAME_START);
+        iterDate.setHours(0,0,0,0);
+        
+        let targetTime = targetDate.getTime();
+
+        while(iterDate.getTime() <= targetTime) {
+            if(isWorkingDay(iterDate)) {
+                if(iterDate.getTime() === targetTime) return count;
+                count++;
+            }
+            iterDate.setDate(iterDate.getDate() + 1);
+        }
+        return count;
+    }
 
     function renderSchedule() {
         const heroContainer = document.getElementById('heroContainer');
@@ -159,25 +174,25 @@
         let today = now;
         today.setHours(0,0,0,0);
 
-        let diffTime = today - CYCLE_START;
-        let totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        let isWorking = isWorkingDay(today);
         
+        // Műszak típusának meghatározása megjelenítéshez
+        let diffTime = today - SHIFT_START;
+        let totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
         let cycleIdx = ((totalDays % 12) + 12) % 12;
         let blockStart = 0;
         if (cycleIdx >= 3) blockStart = 3;
         if (cycleIdx >= 6) blockStart = 6;
         if (cycleIdx >= 9) blockStart = 9;
+        let s = getShifts(blockStart);
+        let shiftTypeFull = (config.shift === s.day) ? "☀️ NAPPAL (6:00-18:00)" : "🌙 ÉJSZAKA (18:00-6:00)";
 
-        let shifts = getShifts(blockStart);
-        let isWorking = (config.shift === shifts.day || config.shift === shifts.night);
-        let shiftTypeFull = (config.shift === shifts.day) ? "☀️ NAPPAL (6:00-18:00)" : "🌙 ÉJSZAKA (18:00-6:00)";
         const headerHTML = `<div class="header-pill">${config.shift} MŰSZAK BEOSZTÁS</div>`;
-
         const logicInfoHTML = `
             <div class="logic-info">
-                <strong>ℹ️ Beosztás Állapota:</strong>
-                A lista elején lévő nevek fix sorrendben mennek (új tag a végén).
-                A második körtől kezdve véletlenszerű sorsolás indul.
+                <strong>ℹ️ Beosztás Frissítve</strong>
+                Az új névsor a mai naptól (${NAME_START.toLocaleDateString('hu-HU')}) érvényes.
+                A sorrend először fix, aztán keveredik.
             </div>
         `;
 
@@ -217,47 +232,13 @@
         fillUpcomingList(today, listContainer);
     }
 
-    function calculateShiftIndex(targetDate) {
-        let count = 0;
-        let iterDate = new Date(CYCLE_START);
-        if (targetDate < iterDate) return -1;
-        
-        while(iterDate <= targetDate) {
-            let dTime = iterDate - CYCLE_START;
-            let dDays = Math.floor(dTime / (1000 * 60 * 60 * 24));
-            let cIdx = ((dDays % 12) + 12) % 12;
-            let bStart = 0;
-            if (cIdx >= 3) bStart = 3;
-            if (cIdx >= 6) bStart = 6;
-            if (cIdx >= 9) bStart = 9;
-            let s = getShifts(bStart);
-            let work = (config.shift === s.day || config.shift === s.night);
-            if(work) {
-                if(iterDate.getTime() === targetDate.getTime()) return count;
-                count++;
-            }
-            iterDate.setDate(iterDate.getDate() + 1);
-        }
-        return count;
-    }
-
     function fillUpcomingList(startDate, container) {
         let countFound = 0;
         let iterDate = new Date(startDate);
         iterDate.setDate(iterDate.getDate() + 1);
 
         while(countFound < 10) {
-            let dTime = iterDate - CYCLE_START;
-            let dDays = Math.floor(dTime / (1000 * 60 * 60 * 24));
-            let cIdx = ((dDays % 12) + 12) % 12;
-            let bStart = 0;
-            if (cIdx >= 3) bStart = 3;
-            if (cIdx >= 6) bStart = 6;
-            if (cIdx >= 9) bStart = 9;
-            let s = getShifts(bStart);
-            let work = (config.shift === s.day || config.shift === s.night);
-            
-            if(work) {
+            if(isWorkingDay(iterDate)) {
                 let idx = calculateShiftIndex(iterDate);
                 let pair = getPairForShiftIndex(idx); 
                 let dayShort = iterDate.toLocaleDateString('hu-HU', { weekday: 'short' });
