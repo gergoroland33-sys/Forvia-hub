@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Szemétkihordás Pro</title>
+    <title>Szemétkihordás - VBA Logic</title>
     <style>
         :root { --bg-dark: #09090b; --surface: #18181b; --primary: #8b5cf6; --accent: #06b6d4; --text-main: #ffffff; --text-dim: #a1a1aa; --card-glass: rgba(255, 255, 255, 0.08); }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -16,7 +16,6 @@
         .today-date { font-size: 1.1rem; color: var(--text-dim); margin-bottom: 20px; }
         .today-names { font-size: 2.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 25px; background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .shift-badge { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(90deg, var(--primary), #4c1d95); padding: 10px 20px; border-radius: 12px; font-weight: 600; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4); }
-        /* Egyszerűsített infó doboz stílusa */
         .logic-info { margin-top: 30px; padding: 12px 16px; background: rgba(0, 0, 0, 0.3); border-radius: 12px; font-size: 0.85rem; line-height: 1.4; color: var(--text-dim); max-width: 320px; text-align: center; border: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(5px); }
         .logic-info strong { color: var(--accent); display: block; margin-bottom: 4px; font-size: 0.9rem; }
         .list-container { height: 45vh; overflow-y: auto; padding: 20px 25px; position: relative; z-index: 2; mask-image: linear-gradient(to bottom, transparent 0%, black 10%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%); }
@@ -51,20 +50,20 @@
     // ==========================================
     const config = {
         shift: "C", 
-        
-        // 1. NEVEK: Akit előre írsz, az jön hamarabb.
-        names: "Laci,Jani,Patrik,Zsuzsa,Peti,Barbi,Reni,Böbe,Martina,Kriszti,Dani,"
+        // 1. NEVEK: Vesszővel elválasztva
+        names: "Martina,Dani,Laci,Jani,Patrik,Zsuzsa,Peti,Barbi,Reni,Böbe,Kriszti,ÚJ_TAG"
     };
 
-    // 2. MŰSZAK KEZDET (Ne bántsd, ha eddig jó volt a pihenőnap kijelzés!)
+    // 2. MŰSZAK CIKLUS START (A te VBA kódodban: #7/31/2025#)
+    // Ez határozza meg, hogy mikor van 'A', 'B', 'C', 'D' műszak.
     const SHIFT_START = new Date(2025, 6, 31); 
 
-    // 3. NÉVSOR START (RESET)
-    // Ide írd a MAI DÁTUMOT! (Év, Hónap-1, Nap)
+    // 3. NÉVSOR ROTÁCIÓ START (MAI DÁTUM)
+    // Ettől a naptól kezdve futtatjuk a VBA-s logikát (Index=0, Eltolás=0).
     const NAME_START = new Date(2025, 1, 14); 
 
     // ==========================================
-    // LOGIKA
+    // LOGIKA - A VBA KÓD ÁTÜLTETÉSE (1:1)
     // ==========================================
 
     document.addEventListener('DOMContentLoaded', renderSchedule);
@@ -73,62 +72,87 @@
         return config.names.split(',').map(n => n.trim()).filter(n => n !== "");
     }
 
-    // "CSÚSZÓ KÍGYÓ" ALGORITMUS (Fix sorrend, nincs véletlen)
-    function getPairForWorkingShift(shiftIndex) {
-        const names = getCleanNames();
-        const N = names.length;
-        if (N === 0) return "Nincs név";
-        
-        // Mennyit lépünk előre összesen? (Minden műszak 2 embert fogyaszt)
-        let totalSteps = shiftIndex * 2;
-        
-        // Hány teljes kört mentünk már le?
-        let laps = Math.floor(totalSteps / N);
-        
-        // Pozíció: lépések + csúsztatás (körönként +1)
-        let effectivePos = totalSteps + laps;
-        
-        // Kiválasztás
-        let p1Index = effectivePos % N;
-        let p2Index = (effectivePos + 1) % N;
-        
-        return `${names[p1Index]} & ${names[p2Index]}`;
-    }
-
-    // Munkanap számítás
+    // Ez a függvény számolja ki, hogy az adott napon dolgozik-e a műszak
+    // (Pontosan a VBA 'Select Case ciklusNap Mod 12' része)
     function isWorkingDay(date) {
         let diffTime = date - SHIFT_START;
         let totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        let cycleIdx = ((totalDays % 12) + 12) % 12;
-        // 0-1-2: Munka, 3-4-5: Pihenő, 6-7-8: Munka, 9-10-11: Pihenő
+        let cycleIdx = ((totalDays % 12) + 12) % 12; // Modulo korrekció negatív számokra is
         
-        let blockStart = 0;
-        if (cycleIdx >= 3) blockStart = 3;
-        if (cycleIdx >= 6) blockStart = 6;
-        if (cycleIdx >= 9) blockStart = 9;
+        // 0-2: Nappal=B, Éjjel=A
+        // 3-5: Nappal=D, Éjjel=C
+        // 6-8: Nappal=A, Éjjel=B
+        // 9-11: Nappal=C, Éjjel=D
         
-        let s = getShifts(blockStart);
-        return (config.shift === s.day || config.shift === s.night);
+        let nappalos = "", ejszakas = "";
+        
+        if (cycleIdx >= 0 && cycleIdx <= 2) { nappalos = "B"; ejszakas = "A"; }
+        else if (cycleIdx >= 3 && cycleIdx <= 5) { nappalos = "D"; ejszakas = "C"; }
+        else if (cycleIdx >= 6 && cycleIdx <= 8) { nappalos = "A"; ejszakas = "B"; }
+        else { nappalos = "C"; ejszakas = "D"; }
+
+        return (config.shift === nappalos || config.shift === ejszakas);
     }
 
-    // Névsor számláló
-    function calculateWorkingShiftCount(targetDate) {
-        let start = new Date(NAME_START); start.setHours(0,0,0,0);
-        let target = new Date(targetDate); target.setHours(0,0,0,0);
+    // A VBA "Generálás" ciklusának szimulációja
+    // Mivel a VBA 'eltolás' logikája az előző állapottól függ, 
+    // le kell szimulálnunk a napokat a NAME_START-tól a kért dátumig.
+    function getPairForDate(targetDate) {
+        let names = getCleanNames();
+        let n = names.length;
+        if (n === 0) return "Nincs név";
 
-        if (target < start) return -1; 
+        // VBA változók inicializálása
+        let rotIndex = 0;
+        let eltolas = 0;
+        
+        // Simítás kezdete: NAME_START
+        let simDate = new Date(NAME_START); 
+        simDate.setHours(0,0,0,0);
+        
+        let target = new Date(targetDate);
+        target.setHours(0,0,0,0);
 
-        let workingShiftCount = 0;
-        let iterDate = new Date(start);
+        // Ha a cél dátum régebbi, mint a start, nem tudunk mit tenni
+        if (target < simDate) return "Nincs adat";
 
-        while(iterDate.getTime() <= target.getTime()) {
-            if(isWorkingDay(iterDate)) {
-                if(iterDate.getTime() === target.getTime()) return workingShiftCount;
-                workingShiftCount++;
+        // Végigmegyünk napról napra, pont ahogy a makró tenné
+        while (simDate <= target) {
+            
+            // Csak akkor lépünk a listában, ha MUNKANAP van (ahogy a VBA 'If' ága)
+            if (isWorkingDay(simDate)) {
+                
+                // --- EZ A VBA LÉNYEGE ---
+                // nev1 = rotacio((rotIndex + eltolas) Mod (UBound(rotacio) + 1))
+                let idx1 = (rotIndex + eltolas) % n;
+                let p1 = names[idx1];
+                rotIndex++; // rotIndex = rotIndex + 1
+
+                // nev2 = rotacio((rotIndex + eltolas) Mod (UBound(rotacio) + 1))
+                let idx2 = (rotIndex + eltolas) % n;
+                let p2 = names[idx2];
+                rotIndex++; // rotIndex = rotIndex + 1
+
+                // If rotIndex >= UBound(rotacio) + 1 Then
+                //    rotIndex = 0
+                //    eltolas = (eltolas + 1) Mod ...
+                // End If
+                if (rotIndex >= n) {
+                    rotIndex = 0;
+                    eltolas = (eltolas + 1) % n;
+                }
+                // -----------------------
+
+                // Ha elértünk a cél dátumhoz, visszaadjuk az épp generált neveket
+                if (simDate.getTime() === target.getTime()) {
+                    return `${p1} & ${p2}`;
+                }
             }
-            iterDate.setDate(iterDate.getDate() + 1);
+            
+            // Következő nap
+            simDate.setDate(simDate.getDate() + 1);
         }
-        return workingShiftCount;
+        return "Hiba";
     }
 
     function renderSchedule() {
@@ -144,24 +168,24 @@
 
         let isWorking = isWorkingDay(today);
         
+        // Műszak típusának meghatározása (Csak design miatt)
         let diffTime = today - SHIFT_START;
         let totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
         let cycleIdx = ((totalDays % 12) + 12) % 12;
-        let blockStart = 0;
-        if (cycleIdx >= 3) blockStart = 3;
-        if (cycleIdx >= 6) blockStart = 6;
-        if (cycleIdx >= 9) blockStart = 9;
-        let s = getShifts(blockStart);
-        let shiftTypeFull = (config.shift === s.day) ? "☀️ NAPPAL (6:00-18:00)" : "🌙 ÉJSZAKA (18:00-6:00)";
+        let nappalos = "";
+        if (cycleIdx >= 0 && cycleIdx <= 2) nappalos = "B";
+        else if (cycleIdx >= 3 && cycleIdx <= 5) nappalos = "D";
+        else if (cycleIdx >= 6 && cycleIdx <= 8) nappalos = "A";
+        else nappalos = "C";
+        
+        let shiftTypeFull = (config.shift === nappalos) ? "☀️ NAPPAL (6:00-18:00)" : "🌙 ÉJSZAKA (18:00-6:00)";
 
         const headerHTML = `<div class="header-pill">${config.shift} MŰSZAK BEOSZTÁS</div>`;
-        
-        // --- EGYSZERŰSÍTETT SZÖVEG ---
         const logicInfoHTML = `
             <div class="logic-info">
-                <strong>⚖️ 100% Igazságos Rendszer</strong>
-                Nincs sorsolás, nincs véletlen.
-                Mindenki garantáltan sorra kerül szigorú sorrendben.
+                <strong>📊 VBA Excel Logika</strong>
+                A rendszer pontosan a beküldött Excel makró 
+                "csúszó eltolásos" logikáját használja.
             </div>
         `;
 
@@ -179,8 +203,7 @@
             return;
         }
 
-        let shiftIdx = calculateWorkingShiftCount(today);
-        let todayPair = getPairForWorkingShift(shiftIdx);
+        let todayPair = getPairForDate(today);
         
         let dateOptions = { month: 'long', day: 'numeric', weekday: 'long' };
         let todayStr = today.toLocaleDateString('hu-HU', dateOptions);
@@ -208,8 +231,7 @@
 
         while(countFound < 10) {
             if(isWorkingDay(iterDate)) {
-                let idx = calculateWorkingShiftCount(iterDate);
-                let pair = getPairForWorkingShift(idx); 
+                let pair = getPairForDate(iterDate); 
                 let dayShort = iterDate.toLocaleDateString('hu-HU', { weekday: 'short' });
                 let dateFull = iterDate.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric' });
 
@@ -232,13 +254,6 @@
             iterDate.setDate(iterDate.getDate() + 1);
             if(countFound === 0 && (iterDate - startDate) > 5000000000) break; 
         }
-    }
-
-    function getShifts(startIdx) {
-        if(startIdx === 0) return { day: "B", night: "A" };
-        if(startIdx === 3) return { day: "D", night: "C" };
-        if(startIdx === 6) return { day: "A", night: "B" };
-        return { day: "C", night: "D" }; 
     }
 </script>
 </body>
