@@ -16,8 +16,9 @@
         .today-date { font-size: 1.1rem; color: var(--text-dim); margin-bottom: 20px; }
         .today-names { font-size: 2.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 25px; background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .shift-badge { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(90deg, var(--primary), #4c1d95); padding: 10px 20px; border-radius: 12px; font-weight: 600; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4); }
-        .logic-info { margin-top: 30px; padding: 12px 16px; background: rgba(0, 0, 0, 0.3); border-radius: 12px; font-size: 0.75rem; line-height: 1.4; color: var(--text-dim); max-width: 320px; text-align: center; border: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(5px); }
-        .logic-info strong { color: var(--accent); display: block; margin-bottom: 4px; font-size: 0.8rem; }
+        /* Egyszerűsített infó doboz stílusa */
+        .logic-info { margin-top: 30px; padding: 12px 16px; background: rgba(0, 0, 0, 0.3); border-radius: 12px; font-size: 0.85rem; line-height: 1.4; color: var(--text-dim); max-width: 320px; text-align: center; border: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(5px); }
+        .logic-info strong { color: var(--accent); display: block; margin-bottom: 4px; font-size: 0.9rem; }
         .list-container { height: 45vh; overflow-y: auto; padding: 20px 25px; position: relative; z-index: 2; mask-image: linear-gradient(to bottom, transparent 0%, black 10%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%); }
         .list-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 15px; letter-spacing: 1px; text-align: center; }
         .list-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; margin-bottom: 12px; overflow: hidden; transition: all 0.3s ease; cursor: pointer; }
@@ -46,27 +47,24 @@
 
 <script>
     // ==========================================
-    // ⚙️ BEÁLLÍTÁSOK - ITT SZERKESZD A KÓDOT!
+    // ⚙️ BEÁLLÍTÁSOK
     // ==========================================
     const config = {
         shift: "C", 
         
-        // 1. NEVEK: Írd be a neveket. A sorrend számít!
-        // Az ÚJ EMBERT a végére írd, így ő lesz az utolsó az első körben.
-        names: "Martina,Dani,Laci,Jani,Patrik,Zsuzsa,Peti,Barbi,Reni,Böbe,Kriszti,ÚJ_TAG"
+        // 1. NEVEK: Akit előre írsz, az jön hamarabb.
+        names: "Laci,Jani,Patrik,Zsuzsa,Peti,Barbi,Reni,Böbe,Martina,Kriszti,Dani,"
     };
 
-    // 2. MŰSZAK KEZDET (Hagyd így!)
-    // Ez felel a 3 nap munka / 3 nap pihenő helyes számolásáért.
+    // 2. MŰSZAK KEZDET (Ne bántsd, ha eddig jó volt a pihenőnap kijelzés!)
     const SHIFT_START = new Date(2025, 6, 31); 
 
-    // 3. NÉVSOR KEZDET
-    // Ide írd a MAI dátumot! (Év, Hónap-1, Nap)
-    // Ettől a naptól indul az 1. pár a listáról.
+    // 3. NÉVSOR START (RESET)
+    // Ide írd a MAI DÁTUMOT! (Év, Hónap-1, Nap)
     const NAME_START = new Date(2025, 1, 14); 
 
     // ==========================================
-    // LOGIKA - NINCS TÖBB VÉLETLEN KEVERÉS
+    // LOGIKA
     // ==========================================
 
     document.addEventListener('DOMContentLoaded', renderSchedule);
@@ -75,46 +73,34 @@
         return config.names.split(',').map(n => n.trim()).filter(n => n !== "");
     }
 
-    // 🧠 A "CSÚSZÓ KÍGYÓ" ALGORITMUS
-    // Ez nem véletlen. Kiszámolja, hogy a hanyadik műszaknál járunk,
-    // és aszerint adja vissza a párokat a listából, folyamatos csúsztatással.
+    // "CSÚSZÓ KÍGYÓ" ALGORITMUS (Fix sorrend, nincs véletlen)
     function getPairForWorkingShift(shiftIndex) {
         const names = getCleanNames();
         const N = names.length;
-        
         if (N === 0) return "Nincs név";
-
-        // Kiszámoljuk a "köröket". Egy kör addig tart, amíg mindenki sorra nem kerül (kb N/2 műszak).
-        // Minden kör után 1-gyel eltoljuk az indítást ("csúsztatás").
-        // Így a párok mindig változnak, de kiszámíthatóan.
         
         // Mennyit lépünk előre összesen? (Minden műszak 2 embert fogyaszt)
         let totalSteps = shiftIndex * 2;
         
-        // Hány teljes kört mentünk már le? (Amikor körbeérünk a listán)
+        // Hány teljes kört mentünk már le?
         let laps = Math.floor(totalSteps / N);
         
-        // A tényleges pozíció: lépések + a csúsztatás (körönként +1)
+        // Pozíció: lépések + csúsztatás (körönként +1)
         let effectivePos = totalSteps + laps;
         
-        // Két ember kiválasztása a körkörös listából
+        // Kiválasztás
         let p1Index = effectivePos % N;
         let p2Index = (effectivePos + 1) % N;
         
         return `${names[p1Index]} & ${names[p2Index]}`;
     }
 
-    // Ez számolja ki, hogy a SHIFT_START óta épp milyen nap van (Munka/Pihenő)
+    // Munkanap számítás
     function isWorkingDay(date) {
         let diffTime = date - SHIFT_START;
         let totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        // Ciklus 12 napos: 3N-3P-3É-3P
         let cycleIdx = ((totalDays % 12) + 12) % 12;
-        
-        // 0-1-2: Nappal (Munka)
-        // 3-4-5: Pihenő
-        // 6-7-8: Éjszaka (Munka)
-        // 9-10-11: Pihenő
+        // 0-1-2: Munka, 3-4-5: Pihenő, 6-7-8: Munka, 9-10-11: Pihenő
         
         let blockStart = 0;
         if (cycleIdx >= 3) blockStart = 3;
@@ -125,18 +111,16 @@
         return (config.shift === s.day || config.shift === s.night);
     }
 
-    // Ez számolja ki, hogy a NAME_START óta hányadik MUNKANAPON járunk
-    // Ez köti össze a dátumot a névsorral.
+    // Névsor számláló
     function calculateWorkingShiftCount(targetDate) {
         let start = new Date(NAME_START); start.setHours(0,0,0,0);
         let target = new Date(targetDate); target.setHours(0,0,0,0);
 
-        if (target < start) return -1; // Még nem indult el az új rendszer
+        if (target < start) return -1; 
 
         let workingShiftCount = 0;
         let iterDate = new Date(start);
 
-        // Elszámolunk a céldátumig napról napra
         while(iterDate.getTime() <= target.getTime()) {
             if(isWorkingDay(iterDate)) {
                 if(iterDate.getTime() === target.getTime()) return workingShiftCount;
@@ -160,7 +144,6 @@
 
         let isWorking = isWorkingDay(today);
         
-        // Műszak típusának meghatározása
         let diffTime = today - SHIFT_START;
         let totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
         let cycleIdx = ((totalDays % 12) + 12) % 12;
@@ -172,11 +155,13 @@
         let shiftTypeFull = (config.shift === s.day) ? "☀️ NAPPAL (6:00-18:00)" : "🌙 ÉJSZAKA (18:00-6:00)";
 
         const headerHTML = `<div class="header-pill">${config.shift} MŰSZAK BEOSZTÁS</div>`;
+        
+        // --- EGYSZERŰSÍTETT SZÖVEG ---
         const logicInfoHTML = `
             <div class="logic-info">
-                <strong>ℹ️ Csúsztatott Beosztás</strong>
-                Nincs véletlen. A lista körbeforog, és minden kör végén egyet csúszik.
-                Így garantált a változatosság és a sorrend.
+                <strong>⚖️ 100% Igazságos Rendszer</strong>
+                Nincs sorsolás, nincs véletlen.
+                Mindenki garantáltan sorra kerül szigorú sorrendben.
             </div>
         `;
 
