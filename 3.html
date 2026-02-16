@@ -18,7 +18,7 @@ header p{margin:5px 0 0 0;color:var(--text-muted);font-size:0.8rem;}
 /* OPTIMALIZÁLT PANEL (ÁTLÁTSZÓBB, DE GYORS) */
 .filter-panel{position:sticky;top:10px;z-index:500;background:#1e293b;border:1px solid var(--card-border);box-shadow:0 5px 15px rgba(0,0,0,0.2);padding:15px;border-radius:16px;margin-bottom:25px;display:grid;grid-template-columns:1fr 1fr;gap:10px;transition:all 0.2s ease-out; transform: translateZ(0);}
 .filter-panel.scrolled{
-    background: rgba(15, 23, 42, 0.85); /* 85%-os átlátszóság (Blur nélkül gyors marad) */
+    background: rgba(15, 23, 42, 0.85);
     border-color: rgba(59, 130, 246, 0.6);
     border-bottom: 2px solid var(--primary);
     box-shadow: 0 15px 30px rgba(0,0,0,0.8);
@@ -73,9 +73,10 @@ select{width:100%;padding:10px;background:#0b1120;border:1px solid var(--card-bo
 /* NAPTÁR */
 .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:1000;align-items:center;justify-content:center;}
 .modal-content{background:#1e293b;width:95%;max-width:400px;border-radius:20px;padding:20px;border:1px solid var(--card-border);box-shadow:0 20px 50px rgba(0,0,0,0.8);}
-.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
-.cal-title{font-weight:800;font-size:1.2rem;text-transform:uppercase;color:white;}
-.cal-nav{background:none;border:none;color:var(--primary);font-size:1.5rem;cursor:pointer;padding:0 10px;}
+/* MODOSITOTT FEJLEC: Kisebb es kompaktabb */
+.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;padding-top:0;}
+.cal-title{font-weight:800;font-size:1rem;text-transform:uppercase;color:white;}
+.cal-nav{background:none;border:none;color:var(--primary);font-size:1.5rem;cursor:pointer;padding:0 5px;}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
 .cal-day-name{text-align:center;font-size:0.7rem;color:var(--text-muted);font-weight:bold;padding-bottom:5px;}
 .cal-cell{aspect-ratio:1/1;background:#0f172a;border-radius:8px;border:1px solid #334155;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;cursor:pointer;}
@@ -181,18 +182,7 @@ function showData(){
                     <span class="day-name">${getNapNeve(datum)}</span>
                 </div>`;
 
-                // --- ITT A MÓDOSÍTÁS KEZDETE ---
         const shifts = napok[datum];
-        
-        // Sorrendezés: Nappal -> Éjszaka -> Otthon
-        shifts.sort((a, b) => {
-            const sorrend = { 'nappal': 1, 'éjszaka': 2, 'otthon': 3 };
-            const helyA = a.hely.trim().toLowerCase(); // Kisbetűsítés és szóközök levágása
-            const helyB = b.hely.trim().toLowerCase();
-            return (sorrend[helyA] || 4) - (sorrend[helyB] || 4);
-        });
-        // --- MÓDOSÍTÁS VÉGE ---
-
         for (let j = 0; j < shifts.length; j++) {
             const r = shifts[j];
             const szovegLower = r.hely.trim().toLowerCase();
@@ -248,6 +238,7 @@ let calDate = new Date();
 document.getElementById('calendarBtn').addEventListener('click', () => { document.getElementById('calModal').style.display = 'flex'; renderCalendar(); });
 function closeCalendar(e) { if(e === null || e.target.id === 'calModal') { document.getElementById('calModal').style.display = 'none'; } }
 function changeCalMonth(delta) { calDate.setMonth(calDate.getMonth() + delta); renderCalendar(); }
+
 function renderCalendar() {
     const year = calDate.getFullYear(); const month = calDate.getMonth(); const today = new Date();
     const honapok = ["Január","Február","Március","Április","Május","Június","Július","Augusztus","Szeptember","Október","November","December"];
@@ -258,17 +249,36 @@ function renderCalendar() {
     const lastDay = new Date(year, month + 1, 0);
     let startDayIndex = firstDay.getDay() - 1; if(startDayIndex === -1) startDayIndex = 6;
     for(let i=0; i<startDayIndex; i++) { grid.innerHTML += `<div class="cal-cell cal-empty"></div>`; }
+    
     const currentFilterShift = document.getElementById('muszak').value;
+    
     for(let i=1; i<=lastDay.getDate(); i++) {
         const mm = String(month + 1).padStart(2, '0'); const dd = String(i).padStart(2, '0'); const compareDate = `${year}${mm}${dd}`;
         let shiftContent = ''; 
-        const dayShifts = muszakok.filter(m => m.datum.replace(/[^0-9]/g, '').startsWith(compareDate));
+        
+        // 1. Aznapi összes bejegyzés lekérése a CSV adatokból
+        let dayShifts = muszakok.filter(m => m.datum.replace(/[^0-9]/g, '').startsWith(compareDate));
+
+        // --- JAVÍTÁS ---
+        // 2. Csak azokat tartsuk meg, ahol TÉNYLEG dolgoznak (Nappal vagy Éjszaka)
+        // Ha a CSV-ben "Szabad", "Pihenő" vagy üres a hely, azt eldobjuk.
+        dayShifts = dayShifts.filter(m => {
+            const h = m.hely.toLowerCase();
+            return h.includes('nappal') || h.includes('éjszaka');
+        });
+
+        // 3. Megjelenítés logikája
         if (currentFilterShift === 'mind') {
+            // Ha MIND van kiválasztva: Mutassa az összes aznap dolgozót
             [...new Set(dayShifts.map(m => m.muszak))].sort().forEach(s => { shiftContent += `<span class="code-${s}">${s}</span>`; });
         } else {
-            const match = dayShifts.find(m => m.muszak === currentFilterShift);
-            if(match) { shiftContent = `<span class="code-${match.muszak}">${match.muszak}</span>`; }
+            // Ha SZŰRVE van (pl. C): Csak akkor jelenjen meg, ha a 'C' tényleg benne van a SZŰRT (dolgozós) listában
+            const isWorking = dayShifts.some(m => m.muszak === currentFilterShift);
+            if(isWorking) { 
+                shiftContent = `<span class="code-${currentFilterShift}">${currentFilterShift}</span>`; 
+            }
         }
+        
         let isTodayClass = (year === today.getFullYear() && month === today.getMonth() && i === today.getDate()) ? 'cal-today' : '';
         const cell = document.createElement('div'); cell.className = `cal-cell ${isTodayClass}`;
         cell.innerHTML = `<span class="cal-num">${i}</span><span class="cal-shift">${shiftContent}</span>`;
