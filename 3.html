@@ -182,7 +182,20 @@ function showData(){
                     <span class="day-name">${getNapNeve(datum)}</span>
                 </div>`;
 
+        // --- MÓDOSÍTÁS: RENDEZÉS LOGIKA ---
+        // Nappal -> 1, Éjszaka -> 2, Minden más -> 3
         const shifts = napok[datum];
+        shifts.sort((a, b) => {
+            const getRank = (str) => {
+                const s = str.hely.toLowerCase();
+                if (s.includes('nappal')) return 1;
+                if (s.includes('éjszaka')) return 2;
+                return 3;
+            };
+            return getRank(a) - getRank(b);
+        });
+        // ----------------------------------
+
         for (let j = 0; j < shifts.length; j++) {
             const r = shifts[j];
             const szovegLower = r.hely.trim().toLowerCase();
@@ -259,9 +272,7 @@ function renderCalendar() {
         // 1. Aznapi összes bejegyzés lekérése a CSV adatokból
         let dayShifts = muszakok.filter(m => m.datum.replace(/[^0-9]/g, '').startsWith(compareDate));
 
-        // --- JAVÍTÁS ---
         // 2. Csak azokat tartsuk meg, ahol TÉNYLEG dolgoznak (Nappal vagy Éjszaka)
-        // Ha a CSV-ben "Szabad", "Pihenő" vagy üres a hely, azt eldobjuk.
         dayShifts = dayShifts.filter(m => {
             const h = m.hely.toLowerCase();
             return h.includes('nappal') || h.includes('éjszaka');
