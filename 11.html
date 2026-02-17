@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMT Monitor Pro v2.2</title>
+    <title>SMT Monitor Pro v2.3</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -67,6 +68,16 @@
             transition: border 0.2s;
         }
         select:hover { border-color: var(--accent); }
+
+        /* ÚJ GOMB: KAMERA */
+        .btn-camera {
+            background: var(--primary-dark); color: white; border: none;
+            padding: 8px 15px; border-radius: 6px; cursor: pointer;
+            font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;
+            transition: background 0.2s;
+        }
+        .btn-camera:hover { background: var(--accent); }
+        .btn-camera:active { transform: scale(0.98); }
 
         /* --- NAVIGATION --- */
         .nav-tabs {
@@ -157,38 +168,23 @@
         }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
 
-        /* --- STATS & HISTORY (IMPROVED) --- */
+        /* --- STATS & HISTORY --- */
         .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
         .btn-print { background: var(--primary-light); color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
         
         .stats-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
         .chart-container { background: white; padding: 20px; border-radius: 10px; box-shadow: var(--shadow); height: 280px; }
         
-        /* ÚJ TÁBLÁZAT STÍLUS */
-        .history-table-container { 
-            background: transparent; 
-        }
-        .data-table { 
-            width: 100%; 
-            border-collapse: separate; 
-            border-spacing: 0 10px; /* Távolság a sorok között */
-        }
-        .data-table th { 
-            padding: 0 15px 10px 15px; text-align: left; 
-            color: #95a5a6; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;
-        }
-        .data-table tr.row-card {
-            background: white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-            transition: transform 0.1s;
-        }
+        .history-table-container { background: transparent; }
+        .data-table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
+        .data-table th { padding: 0 15px 10px 15px; text-align: left; color: #95a5a6; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; }
+        .data-table tr.row-card { background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: transform 0.1s; }
         .data-table tr.row-card:hover { transform: scale(1.005); }
         
         .data-table td { padding: 15px; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; }
         .data-table td:first-child { border-left: 5px solid transparent; border-top-left-radius: 8px; border-bottom-left-radius: 8px; border-left-width: 5px; }
         .data-table td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; border-right: 1px solid #f0f0f0; }
 
-        /* Színkódolás a sorok bal szélén */
         .row-error td:first-child { border-left-color: var(--danger); }
         .row-ok td:first-child { border-left-color: var(--success); }
 
@@ -224,6 +220,8 @@
             .dashboard-grid { grid-template-columns: 1fr; }
             .data-table { min-width: 600px; } 
             .history-table-container { overflow-x: scroll; }
+            /* Mobilon csak az ikon látszik */
+            .btn-camera span { display: none; }
         }
         @media print {
             body * { visibility: hidden; }
@@ -241,13 +239,18 @@
 
     <header class="no-print">
         <div class="header-left">
-            <h1>🏭 SMT PRO <small style="font-size:0.5em; opacity:0.6; font-weight:400;">v2.2</small></h1>
+            <h1>🏭 SMT PRO <small style="font-size:0.5em; opacity:0.6; font-weight:400;">v2.3</small></h1>
         </div>
         <div style="display:flex; align-items:center; gap:15px;">
             <div class="connection-status">
                 <div id="statusDot" class="status-dot"></div>
                 <span id="statusText">Kapcsolódás...</span>
             </div>
+            
+            <button class="btn-camera" onclick="window.saveScreenshot()" title="Teljes kép mentése">
+                📷 <span>FOTÓ MENTÉSE</span>
+            </button>
+
             <select id="lineSelector" onchange="changeLine()">
                 <option value="ALL">ÖSSZES GÉPSOR</option>
                 <option value="F04">SOR: F04</option>
@@ -264,7 +267,7 @@
     </div>
 
     <div id="view-monitor" class="view-section active">
-        <div id="monitor-content" style="padding-top:20px;"></div> 
+        <div id="monitor-content" style="padding-top:20px; padding-bottom: 20px;"></div> 
     </div>
 
     <div id="view-history" class="view-section">
@@ -404,7 +407,8 @@
         const dbRef = ref(db, 'smt_errors');
         onValue(dbRef, (snapshot) => {
             globalData = snapshot.val() || {};
-            if(document.getElementById('view-monitor').classList.contains('active')) {
+            // Csak akkor frissítünk, ha NEM screenshot készül éppen, vagy ha normál módban vagyunk
+            if(!window.isTakingScreenshot && document.getElementById('view-monitor').classList.contains('active')) {
                 renderDashboard();
             }
         });
@@ -449,7 +453,6 @@
                     const card = document.createElement('div');
                     card.className = 'machine-card';
                     
-                    // Státusz szöveg és %
                     let statusHtml = '';
                     if(machineErrors === 0) {
                         statusHtml = `<span class="error-info txt-ok">OK</span>`;
@@ -461,7 +464,6 @@
                             </span>`;
                     }
 
-                    // *** ITT TÖRTÉNT A VÁLTOZTATÁS: 100-as és 200-as oldal ***
                     card.innerHTML = `
                         <div class="machine-header">
                             <span class="machine-name">Gép #${m.id} <span style="font-weight:400; color:#ccc;">| ${m.name}</span></span>
@@ -493,6 +495,63 @@
                 html += `<div class="nozzle-btn ${isError}" onclick="window.openModal('${line}', '${key}', ${mId}, ${side}, ${i})">${i}</div>`;
             }
             return html + '</div>';
+        }
+
+        // --- ÚJ FUNKCIÓ: KÉPERNYŐFOTÓ MENTÉSE ---
+        window.isTakingScreenshot = false;
+
+        window.saveScreenshot = async function() {
+            // Ellenőrizzük, hogy a Monitor fülön vagyunk-e, ha nem, szólunk
+            if(!document.getElementById('view-monitor').classList.contains('active')) {
+                alert("Kérlek lépj vissza az 'Élő Monitor' fülre a fotózáshoz!");
+                return;
+            }
+
+            const btn = document.querySelector('.btn-camera');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ Mentés...';
+            btn.style.opacity = '0.7';
+            window.isTakingScreenshot = true;
+
+            // 1. Jelenlegi kiválasztás mentése
+            const originalSelection = document.getElementById('lineSelector').value;
+
+            // 2. Kényszerítjük, hogy MINDEN sor látszódjon a fotón
+            document.getElementById('lineSelector').value = 'ALL';
+            window.renderDashboard(); 
+
+            // Kis szünet, hogy a böngésző "kirajzolja" az összes sort
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // 3. Fotó készítése (html2canvas)
+            // scale: 2 = Retina minőség (élesebb kép)
+            const canvas = await html2canvas(document.getElementById('monitor-content'), {
+                scale: 2,
+                backgroundColor: '#f0f2f5',
+                useCORS: true
+            });
+
+            // 4. Dátum formázása fájlnévhez
+            const now = new Date();
+            const dateStr = now.getFullYear() + '-' + 
+                           String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                           String(now.getDate()).padStart(2, '0') + '_' + 
+                           String(now.getHours()).padStart(2, '0') + '-' + 
+                           String(now.getMinutes()).padStart(2, '0');
+
+            // 5. Letöltés indítása
+            const link = document.createElement('a');
+            link.download = `SMT_Statusz_${dateStr}.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+
+            // 6. Visszaállítás eredeti állapotra
+            document.getElementById('lineSelector').value = originalSelection;
+            window.renderDashboard();
+
+            btn.innerHTML = originalText;
+            btn.style.opacity = '1';
+            window.isTakingScreenshot = false;
         }
 
         // --- MODAL ---
