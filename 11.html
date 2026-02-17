@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMT Monitor Pro v2.3</title>
+    <title>SMT Monitor Pro v2.4</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-dark: #1a252f;
@@ -30,7 +30,7 @@
             padding-bottom: 60px;
         }
 
-        /* --- KOMPAKT HEADER --- */
+        /* --- HEADER --- */
         header {
             background: #ffffff;
             color: var(--text-main);
@@ -50,7 +50,6 @@
             display: flex; align-items: center; gap: 8px;
         }
         
-        /* Szolid státusz jelző */
         .connection-status {
             font-size: 0.7rem; font-weight: 600; 
             padding: 4px 10px; border-radius: 20px;
@@ -69,15 +68,15 @@
         }
         select:hover { border-color: var(--accent); }
 
-        /* ÚJ GOMB: KAMERA */
-        .btn-camera {
+        /* JELENTÉS GOMB */
+        .btn-report {
             background: var(--primary-dark); color: white; border: none;
             padding: 8px 15px; border-radius: 6px; cursor: pointer;
             font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;
             transition: background 0.2s;
         }
-        .btn-camera:hover { background: var(--accent); }
-        .btn-camera:active { transform: scale(0.98); }
+        .btn-report:hover { background: var(--accent); }
+        .btn-report:active { transform: scale(0.98); }
 
         /* --- NAVIGATION --- */
         .nav-tabs {
@@ -101,32 +100,19 @@
         .view-section.active { display: block; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* --- MONITOR: LINE WRAPPER --- */
-        .line-wrapper {
-            margin-bottom: 30px;
-            background: transparent;
-        }
+        /* --- MONITOR UI --- */
+        .line-wrapper { margin-bottom: 30px; }
         .line-header-strip {
-            background: transparent;
-            padding: 10px 5px;
-            display: flex;
-            align-items: center;
-            border-bottom: 2px solid #e1e4e8;
-            margin-bottom: 15px;
+            padding: 10px 5px; display: flex; align-items: center;
+            border-bottom: 2px solid #e1e4e8; margin-bottom: 15px;
         }
         .line-title { font-size: 1.1rem; font-weight: 900; color: var(--primary-light); display: flex; align-items: center; gap: 10px; }
         .line-err-badge { background: var(--danger); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 10px; }
         
-        .dashboard-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-            gap: 15px; 
-        }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
 
-        /* --- MACHINE CARD --- */
         .machine-card {
-            background: var(--card-bg); border-radius: 10px; 
-            box-shadow: var(--shadow); border: 1px solid white;
+            background: var(--card-bg); border-radius: 10px; box-shadow: var(--shadow); border: 1px solid white;
             display: flex; flex-direction: column; overflow: hidden;
         }
         .machine-header { 
@@ -144,7 +130,6 @@
         .side-col { flex: 1; display: flex; flex-direction: column; align-items: center; }
         .side-label { font-size: 0.65rem; text-transform: uppercase; color: #95a5a6; margin-bottom: 6px; font-weight: 700; letter-spacing: 0.5px; }
 
-        /* --- NOZZLE BUTTONS --- */
         .nozzle-grid { display: grid; gap: 5px; width: 100%; }
         .grid-15 { grid-template-columns: repeat(3, 1fr); }
         .grid-3 { grid-template-columns: 1fr; }
@@ -156,10 +141,8 @@
             box-shadow: 0 2px 0 #dfe4ea;
         }
         .nozzle-btn:active { transform: translateY(2px); box-shadow: none; }
-        
         .grid-15 .nozzle-btn { height: 32px; font-size: 0.8rem; }
         .grid-3 .nozzle-btn { height: 45px; font-size: 1.1rem; border-width: 2px; }
-        
         .nozzle-btn:hover { border-color: var(--accent); color: var(--accent); background: #fff; }
         
         .nozzle-btn.error { 
@@ -187,31 +170,53 @@
 
         .row-error td:first-child { border-left-color: var(--danger); }
         .row-ok td:first-child { border-left-color: var(--success); }
-
+        
         .log-date { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #555; }
         .log-loc { font-weight: 700; color: var(--primary-dark); font-size: 0.9rem; }
         .log-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
         .bg-err { background: #fadbd8; color: #c0392b; }
         .bg-ok { background: #d5f5e3; color: #27ae60; }
-
-        .btn-delete {
-            background: #fff; color: #e74c3c; border: 1px solid #fadbd8; 
-            width: 30px; height: 30px; border-radius: 50%; cursor: pointer; 
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.2s;
-        }
+        .btn-delete { background: #fff; color: #e74c3c; border: 1px solid #fadbd8; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .btn-delete:hover { background: #e74c3c; color: white; }
 
         /* --- MODAL --- */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; backdrop-filter: blur(2px); justify-content: center; align-items: center; }
         .modal-box { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
         .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 1rem; margin-top: 5px; }
-        
         .action-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
         .btn-modal { padding: 10px 20px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
         .btn-cancel { background: #f1f2f6; color: #7f8c8d; }
         .btn-confirm { background: var(--danger); color: white; }
         .btn-reset { width: 100%; margin-top: 15px; background: var(--success); color: white; padding: 12px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; }
+
+        /* --- GENERÁLT JELENTÉS (REJTETT) STÍLUS --- */
+        #report-generator-container {
+            position: fixed; left: -10000px; top: 0;
+            width: 1200px; /* Fix szélesség a jó minőséghez */
+            background-color: white;
+            z-index: 9999;
+            font-family: 'Roboto', sans-serif;
+            color: #2c3e50;
+        }
+        .rep-header { padding: 30px; background: #2c3e50; color: white; display:flex; justify-content: space-between; align-items:center; }
+        .rep-title { font-size: 2rem; font-weight: 900; }
+        .rep-meta { text-align: right; font-family: 'JetBrains Mono', monospace; opacity: 0.8; }
+        .rep-body { padding: 30px; background: #f4f6f8; }
+        .rep-line-section { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; overflow: hidden; }
+        .rep-line-title { background: #ecf0f1; padding: 15px 25px; font-size: 1.2rem; font-weight: 800; color: #34495e; border-bottom: 2px solid #bdc3c7; display: flex; justify-content: space-between; }
+        .rep-machines-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; } /* 4 gép egymás mellett */
+        .rep-machine { padding: 20px; border-right: 1px solid #f0f0f0; display: flex; flex-direction: column; }
+        .rep-machine:last-child { border-right: none; }
+        .rep-m-name { font-weight: 700; margin-bottom: 10px; font-size: 1.1rem; }
+        .rep-capacity-box { margin-bottom: 15px; }
+        .rep-cap-val { font-size: 2rem; font-weight: 900; color: #27ae60; }
+        .rep-cap-label { font-size: 0.7rem; text-transform: uppercase; color: #95a5a6; letter-spacing: 1px; }
+        .rep-cap-val.warning { color: #c0392b; }
+        
+        .rep-error-list { font-size: 0.8rem; background: #fff5f5; border: 1px solid #fed7d7; border-radius: 6px; padding: 10px; }
+        .rep-err-item { margin-bottom: 5px; color: #c53030; display: flex; gap: 6px; align-items: center; }
+        .rep-err-loc { font-weight: bold; font-family: 'JetBrains Mono', monospace; }
+        .rep-ok-badge { color: #27ae60; font-weight: bold; background: #f0fff4; padding: 5px 10px; border-radius: 6px; border: 1px solid #c6f6d5; display: inline-block; }
 
         @media (max-width: 600px) {
             .stats-charts { grid-template-columns: 1fr; }
@@ -220,18 +225,13 @@
             .dashboard-grid { grid-template-columns: 1fr; }
             .data-table { min-width: 600px; } 
             .history-table-container { overflow-x: scroll; }
-            /* Mobilon csak az ikon látszik */
-            .btn-camera span { display: none; }
+            .btn-report span { display: none; }
         }
         @media print {
             body * { visibility: hidden; }
             #history-content, #history-content * { visibility: visible; }
             #history-content { position: absolute; left: 0; top: 0; width: 100%; }
             .no-print { display: none !important; }
-            .chart-container { border: 1px solid #ccc; break-inside: avoid; }
-            .stats-charts { grid-template-columns: 1fr 1fr !important; }
-            .data-table { border-collapse: collapse; }
-            .data-table tr.row-card { box-shadow: none; border-bottom: 1px solid #ccc; }
         }
     </style>
 </head>
@@ -239,7 +239,7 @@
 
     <header class="no-print">
         <div class="header-left">
-            <h1>🏭 SMT PRO <small style="font-size:0.5em; opacity:0.6; font-weight:400;">v2.3</small></h1>
+            <h1>🏭 SMT PRO <small style="font-size:0.5em; opacity:0.6; font-weight:400;">v2.4</small></h1>
         </div>
         <div style="display:flex; align-items:center; gap:15px;">
             <div class="connection-status">
@@ -247,8 +247,8 @@
                 <span id="statusText">Kapcsolódás...</span>
             </div>
             
-            <button class="btn-camera" onclick="window.saveScreenshot()" title="Teljes kép mentése">
-                📷 <span>FOTÓ MENTÉSE</span>
+            <button class="btn-report" onclick="window.generateReport()" title="Képes Jelentés Generálása">
+                📊 <span>JELENTÉS KÉSZÍTÉSE</span>
             </button>
 
             <select id="lineSelector" onchange="changeLine()">
@@ -343,6 +343,8 @@
         </div>
     </div>
 
+    <div id="report-generator-container"></div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, onValue, remove, push, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -360,7 +362,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // STÁTUSZ JELZŐ (KICSI)
         onValue(ref(db, ".info/connected"), (snap) => {
             const statusDot = document.getElementById("statusDot");
             const statusText = document.getElementById("statusText");
@@ -391,7 +392,6 @@
             event.target.classList.add('active');
             document.querySelectorAll('.view-section').forEach(div => div.classList.remove('active'));
             document.getElementById(`view-${tabName}`).classList.add('active');
-
             if(tabName === 'monitor') renderDashboard(); 
             if(tabName === 'history') loadHistoryData();
         }
@@ -407,13 +407,12 @@
         const dbRef = ref(db, 'smt_errors');
         onValue(dbRef, (snapshot) => {
             globalData = snapshot.val() || {};
-            // Csak akkor frissítünk, ha NEM screenshot készül éppen, vagy ha normál módban vagyunk
-            if(!window.isTakingScreenshot && document.getElementById('view-monitor').classList.contains('active')) {
+            if(document.getElementById('view-monitor').classList.contains('active')) {
                 renderDashboard();
             }
         });
 
-        // --- DASHBOARD RENDERELÉS ---
+        // --- DASHBOARD RENDERELÉS (ÉRINTETLEN) ---
         window.renderDashboard = function() {
             const selectorValue = document.getElementById('lineSelector').value;
             const container = document.getElementById('monitor-content');
@@ -446,7 +445,6 @@
                 machines.forEach(m => {
                     let machineErrors = 0;
                     Object.keys(lineErrors).forEach(k => { if(k.includes(`M${m.id}_`)) machineErrors++; });
-
                     const totalNozzles = m.s1 + m.s2;
                     const errorPercent = machineErrors > 0 ? ((machineErrors / totalNozzles) * 100).toFixed(1) + '%' : '0%';
 
@@ -481,7 +479,6 @@
                         </div>`;
                     grid.appendChild(card);
                 });
-
                 lineWrapper.appendChild(grid);
                 container.appendChild(lineWrapper);
             });
@@ -497,74 +494,119 @@
             return html + '</div>';
         }
 
-        // --- ÚJ FUNKCIÓ: KÉPERNYŐFOTÓ MENTÉSE ---
-        window.isTakingScreenshot = false;
-
-        window.saveScreenshot = async function() {
-            // Ellenőrizzük, hogy a Monitor fülön vagyunk-e, ha nem, szólunk
-            if(!document.getElementById('view-monitor').classList.contains('active')) {
-                alert("Kérlek lépj vissza az 'Élő Monitor' fülre a fotózáshoz!");
-                return;
-            }
-
-            const btn = document.querySelector('.btn-camera');
+        // --- ÚJ GENERÁLT JELENTÉS FUNKCIÓ (MANAGEMENT REPORT) ---
+        window.generateReport = async function() {
+            const btn = document.querySelector('.btn-report');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '⏳ Mentés...';
-            btn.style.opacity = '0.7';
-            window.isTakingScreenshot = true;
+            btn.innerHTML = '⏳ Készítés...';
+            
+            const reportContainer = document.getElementById('report-generator-container');
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('hu-HU') + ' ' + now.toLocaleTimeString('hu-HU', {hour:'2-digit', minute:'2-digit'});
 
-            // 1. Jelenlegi kiválasztás mentése
-            const originalSelection = document.getElementById('lineSelector').value;
+            // 1. HTML SZERKEZET ÉPÍTÉSE
+            let html = `
+                <div class="rep-header">
+                    <div class="rep-title">SMT STÁTUSZ JELENTÉS</div>
+                    <div class="rep-meta">${dateStr}<br>Generálta: SMT Monitor Pro</div>
+                </div>
+                <div class="rep-body">
+            `;
 
-            // 2. Kényszerítjük, hogy MINDEN sor látszódjon a fotón
-            document.getElementById('lineSelector').value = 'ALL';
-            window.renderDashboard(); 
+            // Végigmegyünk az összes soron
+            allLines.forEach(lineId => {
+                const lineErrors = globalData[lineId] || {};
+                
+                html += `
+                    <div class="rep-line-section">
+                        <div class="rep-line-title">
+                            <span>${lineId} GÉPSOR</span>
+                        </div>
+                        <div class="rep-machines-grid">
+                `;
 
-            // Kis szünet, hogy a böngésző "kirajzolja" az összes sort
-            await new Promise(resolve => setTimeout(resolve, 500));
+                machines.forEach(m => {
+                    // Hibák összegyűjtése ehhez a géphez
+                    let machineErrorList = [];
+                    Object.entries(lineErrors).forEach(([key, errorData]) => {
+                        if(key.includes(`M${m.id}_`)) {
+                            // key formátum: M1_S1_N4
+                            const parts = key.split('_'); 
+                            const side = parts[1].replace('S','');
+                            const nozzle = parts[2].replace('N','');
+                            machineErrorList.push({ side, nozzle, reason: errorData.reason });
+                        }
+                    });
 
-            // 3. Fotó készítése (html2canvas)
-            // scale: 2 = Retina minőség (élesebb kép)
-            const canvas = await html2canvas(document.getElementById('monitor-content'), {
-                scale: 2,
-                backgroundColor: '#f0f2f5',
-                useCORS: true
+                    // Kapacitás számítás
+                    const totalNozzles = m.s1 + m.s2;
+                    const errorCount = machineErrorList.length;
+                    const capacity = (((totalNozzles - errorCount) / totalNozzles) * 100).toFixed(1);
+                    const isPerfect = errorCount === 0;
+
+                    let detailsHtml = '';
+                    if(isPerfect) {
+                        detailsHtml = `<div class="rep-ok-badge">✅ Teljes kapacitás</div>`;
+                    } else {
+                        detailsHtml = `<div class="rep-error-list">`;
+                        machineErrorList.forEach(err => {
+                            detailsHtml += `
+                                <div class="rep-err-item">
+                                    <span>⚠️</span> 
+                                    <span class="rep-err-loc">S${err.side}/N${err.nozzle}:</span> 
+                                    <span>${err.reason}</span>
+                                </div>`;
+                        });
+                        detailsHtml += `</div>`;
+                    }
+
+                    html += `
+                        <div class="rep-machine">
+                            <div class="rep-m-name">Gép ${m.id} (${m.name})</div>
+                            <div class="rep-capacity-box">
+                                <div class="rep-cap-label">Jelenlegi Kapacitás</div>
+                                <div class="rep-cap-val ${!isPerfect ? 'warning' : ''}">${capacity}%</div>
+                            </div>
+                            ${detailsHtml}
+                        </div>
+                    `;
+                });
+
+                html += `</div></div>`; // Grid és Section lezárása
             });
 
-            // 4. Dátum formázása fájlnévhez
-            const now = new Date();
-            const dateStr = now.getFullYear() + '-' + 
-                           String(now.getMonth() + 1).padStart(2, '0') + '-' + 
-                           String(now.getDate()).padStart(2, '0') + '_' + 
-                           String(now.getHours()).padStart(2, '0') + '-' + 
-                           String(now.getMinutes()).padStart(2, '0');
+            html += `</div>`; // Body lezárása
+            reportContainer.innerHTML = html;
 
-            // 5. Letöltés indítása
+            // 2. KÉP KÉSZÍTÉSE A LÁTHATATLAN KONTÉNERRŐL
+            // Várni kell picit a renderelésre
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            const canvas = await html2canvas(reportContainer, {
+                scale: 2, // Magas minőség
+                backgroundColor: '#ffffff'
+            });
+
+            // 3. LETÖLTÉS
+            const fileNameDate = now.toISOString().replace(/[:.]/g, '-').slice(0, 16);
             const link = document.createElement('a');
-            link.download = `SMT_Statusz_${dateStr}.png`;
+            link.download = `SMT_Jelentes_${fileNameDate}.png`;
             link.href = canvas.toDataURL("image/png");
             link.click();
 
-            // 6. Visszaállítás eredeti állapotra
-            document.getElementById('lineSelector').value = originalSelection;
-            window.renderDashboard();
-
+            // 4. TAKARÍTÁS
+            reportContainer.innerHTML = '';
             btn.innerHTML = originalText;
-            btn.style.opacity = '1';
-            window.isTakingScreenshot = false;
         }
 
-        // --- MODAL ---
+        // --- MODAL & ADATBÁZIS (ÉRINTETLEN) ---
         window.openModal = function(line, key, mId, side, nId) {
             currentSelection = { line, key, mId, side, nId };
             const error = (globalData[line] || {})[key];
-            
             document.getElementById('modalTitle').innerText = error ? 'Hiba Szerkesztése' : 'Hiba Bejelentése';
             document.getElementById('modalSubtitle').innerHTML = `<strong>${line}</strong> &bull; Gép ${mId} &bull; ${side}. Oldal &bull; Nozzle ${nId}`;
-            
             document.getElementById('errorReason').value = 'Nozzle kicsúszott';
             document.getElementById('otherInputContainer').style.display = 'none';
-            
             if(error) {
                 const standard = ["Nozzle kicsúszott", "PickUp Hiba", "Beültetési Hiba"];
                 if(standard.includes(error.reason)) { 
@@ -589,7 +631,6 @@
             let reason = document.getElementById('errorReason').value;
             if(reason === 'Egyéb') reason = document.getElementById('otherReasonText').value;
             if(!reason) reason = "Hiba";
-
             const timestamp = new Date().toISOString();
             set(ref(db, `smt_errors/${currentSelection.line}/${currentSelection.key}`), { reason: reason, timestamp: timestamp });
             push(ref(db, `smt_logs/${currentSelection.line}`), {
@@ -617,17 +658,13 @@
             }
         }
 
-        // --- STATISZTIKA (RENDEZETT) ---
         window.loadHistoryData = async function() {
             const line = document.getElementById('lineSelector').value;
             document.getElementById('statsLineTitle').innerText = (line === 'ALL') ? "ÖSSZES GÉPSOR" : line;
-            
             let allEntries = [];
             const linesToList = (line === 'ALL') ? allLines : [line];
-
             const snapshotRoot = await get(child(ref(db), `smt_logs`));
             const rootData = snapshotRoot.exists() ? snapshotRoot.val() : {};
-
             linesToList.forEach(currLine => {
                 if(rootData[currLine]) {
                     Object.entries(rootData[currLine]).forEach(([logId, log]) => {
@@ -635,31 +672,22 @@
                     });
                 }
             });
-
             allEntries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
             const tbody = document.getElementById('historyTableBody');
             tbody.innerHTML = '';
             let reasons = {};
             let mCounts = {1:0, 2:0, 3:0, 4:0};
-
             allEntries.forEach(log => {
                 const dateObj = new Date(log.timestamp);
                 const dateStr = dateObj.toLocaleDateString('hu-HU') + ' ' + dateObj.toLocaleTimeString('hu-HU', {hour:'2-digit', minute:'2-digit'});
                 const isError = log.type === 'DISABLE';
-                
                 if(isError) {
                     reasons[log.reason] = (reasons[log.reason] || 0) + 1;
                     mCounts[log.machineId] = (mCounts[log.machineId] || 0) + 1;
                 }
-                
                 const rowClass = isError ? 'row-error' : 'row-ok';
-                const badge = isError 
-                    ? `<span class="log-badge bg-err">LEÁLLÍTÁS</span>`
-                    : `<span class="log-badge bg-ok">AKTIVÁLÁS</span>`;
-
+                const badge = isError ? `<span class="log-badge bg-err">LEÁLLÍTÁS</span>` : `<span class="log-badge bg-ok">AKTIVÁLÁS</span>`;
                 const locationPrefix = (line === 'ALL') ? `<span style="color:var(--accent); font-weight:bold;">[${log._line}]</span> ` : '';
-
                 tbody.innerHTML += `
                     <tr class="row-card ${rowClass}">
                         <td class="log-date">${dateStr}</td>
@@ -671,16 +699,13 @@
                         </td>
                     </tr>`;
             });
-
             if(chart1) chart1.destroy();
             if(chart2) chart2.destroy();
-
             chart1 = new Chart(document.getElementById('chartReasons'), {
                 type: 'doughnut',
                 data: { labels: Object.keys(reasons), datasets: [{ data: Object.values(reasons), backgroundColor: ['#e74c3c','#3498db','#f1c40f','#9b59b6'], borderWidth:0 }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position:'right' } } }
             });
-
             chart2 = new Chart(document.getElementById('chartMachines'), {
                 type: 'bar',
                 data: { labels: ['Gép 1','Gép 2','Gép 3','Gép 4'], datasets: [{ label:'Hibák száma', data: Object.values(mCounts), backgroundColor:'#2c3e50', borderRadius:4 }] },
