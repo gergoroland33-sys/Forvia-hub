@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMT Monitor Pro v2.4</title>
+    <title>SMT Monitor Pro v2.5</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
@@ -239,7 +239,7 @@
 
     <header class="no-print">
         <div class="header-left">
-            <h1>🏭 SMT PRO <small style="font-size:0.5em; opacity:0.6; font-weight:400;">v2.4</small></h1>
+            <h1>🏭 SMT PRO <small style="font-size:0.5em; opacity:0.6; font-weight:400;">v2.5</small></h1>
         </div>
         <div style="display:flex; align-items:center; gap:15px;">
             <div class="connection-status">
@@ -494,7 +494,7 @@
             return html + '</div>';
         }
 
-        // --- ÚJ GENERÁLT JELENTÉS FUNKCIÓ (MANAGEMENT REPORT) ---
+        // --- JELENTÉS GENERÁLÓ (JAVÍTOTT FORMÁTUMMAL) ---
         window.generateReport = async function() {
             const btn = document.querySelector('.btn-report');
             const originalText = btn.innerHTML;
@@ -504,7 +504,7 @@
             const now = new Date();
             const dateStr = now.toLocaleDateString('hu-HU') + ' ' + now.toLocaleTimeString('hu-HU', {hour:'2-digit', minute:'2-digit'});
 
-            // 1. HTML SZERKEZET ÉPÍTÉSE
+            // HTML SZERKEZET ÉPÍTÉSE
             let html = `
                 <div class="rep-header">
                     <div class="rep-title">SMT STÁTUSZ JELENTÉS</div>
@@ -513,7 +513,6 @@
                 <div class="rep-body">
             `;
 
-            // Végigmegyünk az összes soron
             allLines.forEach(lineId => {
                 const lineErrors = globalData[lineId] || {};
                 
@@ -550,10 +549,13 @@
                     } else {
                         detailsHtml = `<div class="rep-error-list">`;
                         machineErrorList.forEach(err => {
+                            // *** ITT JAVÍTOTTAM A SZÖVEGEZÉST ***
+                            const sideLabel = (err.side === '1') ? '100. oldal' : '200. oldal';
+                            
                             detailsHtml += `
                                 <div class="rep-err-item">
                                     <span>⚠️</span> 
-                                    <span class="rep-err-loc">S${err.side}/N${err.nozzle}:</span> 
+                                    <span class="rep-err-loc">${sideLabel} / Nozzle ${err.nozzle}:</span> 
                                     <span>${err.reason}</span>
                                 </div>`;
                         });
@@ -572,29 +574,26 @@
                     `;
                 });
 
-                html += `</div></div>`; // Grid és Section lezárása
+                html += `</div></div>`;
             });
 
-            html += `</div>`; // Body lezárása
+            html += `</div>`;
             reportContainer.innerHTML = html;
 
-            // 2. KÉP KÉSZÍTÉSE A LÁTHATATLAN KONTÉNERRŐL
-            // Várni kell picit a renderelésre
+            // KÉP KÉSZÍTÉSE
             await new Promise(resolve => setTimeout(resolve, 300));
 
             const canvas = await html2canvas(reportContainer, {
-                scale: 2, // Magas minőség
+                scale: 2, 
                 backgroundColor: '#ffffff'
             });
 
-            // 3. LETÖLTÉS
             const fileNameDate = now.toISOString().replace(/[:.]/g, '-').slice(0, 16);
             const link = document.createElement('a');
             link.download = `SMT_Jelentes_${fileNameDate}.png`;
             link.href = canvas.toDataURL("image/png");
             link.click();
 
-            // 4. TAKARÍTÁS
             reportContainer.innerHTML = '';
             btn.innerHTML = originalText;
         }
