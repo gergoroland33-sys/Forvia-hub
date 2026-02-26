@@ -7,6 +7,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         
@@ -251,39 +256,48 @@
     </div>
 
     <script>
+        // --- FIREBASE INICIALIZÁLÁS (ÚJ BIZTONSÁGOS MÓDSZER) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyC9nfTSnV3wFsYjBpL8Cb7mVSt0eR_to3w",
+            authDomain: "forviastaff.firebaseapp.com",
+            databaseURL: "https://forviastaff-default-rtdb.firebaseio.com",
+            projectId: "forviastaff",
+            storageBucket: "forviastaff.firebasestorage.app",
+            messagingSenderId: "66796587956",
+            appId: "1:66796587956:web:bd134d3141f919c76800e1"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+
+        // --- GLOBÁLIS VÁLTOZÓK ---
         let currentShift = localStorage.getItem('fv_shift_final') || 'A';
-        const DB = "https://forviastaff-default-rtdb.firebaseio.com/";
         let date = new Date(2026, new Date().getMonth(), 1);
         let employees = [];
         const monthNames = ["Január", "Február", "Március", "Április", "Május", "Június", "Július", "Augusztus", "Szeptember", "Október", "November", "December"];
         const dayNamesShort = ["V", "H", "K", "Sze", "Cs", "P", "Szo"];
         const holidays2026 = ["1-1", "3-15", "4-3", "4-6", "5-1", "5-25", "8-20", "10-23", "11-1", "12-25", "12-26"];
 
-        // Globális változók a mobil nézethez
         let mSelectedUserIndex = -1;
         let mSelectedDate = null;
 
         async function changeShift(s) {
-            // --- UI AZONNALI TÖRLÉSE ÉS VISSZAJELZÉS ---
-            // Ez garantálja, hogy a régi adat eltűnik, és látszik hogy dolgozik a rendszer
             document.getElementById('m-emp-list').innerHTML = `
                 <div class="flex flex-col items-center justify-center pt-20">
                     <i class="fas fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i>
                     <span class="text-slate-400 font-bold text-sm uppercase tracking-widest">Adatok betöltése...</span>
                 </div>
             `;
-            employees = []; // Memória ürítése
-            
-            // --- DESKTOPON IS TÖRLÜNK EGY PILLANATRA ---
+            employees = []; 
             render(); 
 
             currentShift = s; localStorage.setItem('fv_shift_final', s);
             
-            // Desktop UI frissítés
             document.querySelectorAll('.shift-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`btn-shift-${s}`).classList.add('active');
             
-            // Mobile UI frissítés (Gombok)
             document.querySelectorAll('.m-shift-btn').forEach(b => {
                 b.classList.remove('text-white', 'border-blue-500', 'bg-blue-600'); 
                 b.classList.add('bg-slate-800', 'text-slate-400');
@@ -297,24 +311,22 @@
             await load();
         }
 
+        // --- ÚJ BIZTONSÁGOS BETÖLTÉS (FIREBASE SDK) ---
         async function load() {
             try {
-                const res = await fetch(`${DB}shift_${currentShift}.json`);
-                const data = await res.json();
+                const snapshot = await db.ref(`shift_${currentShift}`).once('value');
+                const data = snapshot.val();
                 
-                // JAVÍTÁS: Kiszűrjük a null értékeket, hogy ne akadjon meg a betöltés
                 employees = Array.isArray(data) ? data.filter(e => e != null) : [];
                 
             } catch(e) { 
+                console.error("Betöltési hiba:", e);
                 employees = []; 
             } finally {
-                // Betöltés kész, most rajzolunk
                 render(); 
                 renderMobileList(); 
                 
-                // Ha meg van nyitva a részletes nézet mobilon, frissítsük
                 if(!document.getElementById('m-detail-view').classList.contains('hidden') && mSelectedUserIndex > -1) {
-                    // Biztonsági ellenőrzés: létezik-e az ember?
                     if (employees[mSelectedUserIndex]) {
                         renderMobileCalendar();
                         if(mSelectedDate) {
@@ -328,23 +340,26 @@
                             }
                         }
                     } else {
-                         // Ha a felhasználó "eltűnt" (pl. hiba miatt), zárjuk be a részleteket
                          closeMobileDetail();
                     }
                 }
-                
                 initSortable();
             }
         }
 
+        // --- ÚJ BIZTONSÁGOS MENTÉS (FIREBASE SDK) ---
         async function save() {
             document.getElementById('sync').innerHTML = '<i class="fas fa-spin fa-sync"></i>';
             try {
-                await fetch(`${DB}shift_${currentShift}.json`, { method: 'PUT', body: JSON.stringify(employees) });
+                await db.ref(`shift_${currentShift}`).set(employees);
                 document.getElementById('sync').innerHTML = 'ONLINE';
-            } catch(e) { document.getElementById('sync').innerText = "HIBA!"; }
+            } catch(e) { 
+                console.error("Mentési hiba:", e);
+                document.getElementById('sync').innerText = "HIBA!"; 
+            }
         }
 
+        // --- ÚJ BIZTONSÁGOS MENTÉS A GÉPRE (FIREBASE SDK) ---
         async function backupAllData() {
             const btn = document.querySelector('button[title*="TELJES"]');
             const originalText = btn.innerHTML;
@@ -353,9 +368,8 @@
             let fullData = {};
             try {
                 await Promise.all(shifts.map(async (s) => {
-                    const res = await fetch(`${DB}shift_${s}.json`);
-                    const data = await res.json();
-                    fullData[s] = data || [];
+                    const snapshot = await db.ref(`shift_${s}`).once('value');
+                    fullData[s] = snapshot.val() || [];
                 }));
                 const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fullData));
                 const downloadAnchorNode = document.createElement('a');
@@ -364,7 +378,7 @@
                 document.body.appendChild(downloadAnchorNode);
                 downloadAnchorNode.click();
                 downloadAnchorNode.remove();
-            } catch (e) { alert("Hiba a mentésnél"); } finally { btn.innerHTML = originalText; }
+            } catch (e) { alert("Hiba a mentésnél: " + e.message); } finally { btn.innerHTML = originalText; }
         }
 
         function initSortable() {
@@ -400,7 +414,6 @@
             for(let r of rows) if(r.cells[dIdx+2]) r.cells[dIdx+2].classList.toggle('col-highlight', active);
         }
 
-        // DESKTOP Update Logic
         function update(id, key, val, el) {
             const emp = employees.find(e => e.id == id);
             const v = val.trim().toUpperCase();
@@ -415,7 +428,6 @@
             save();
         }
 
-        // DESKTOP Render
         function render() {
             const m = date.getMonth(); const days = new Date(2026, m+1, 0).getDate();
             document.getElementById('monthDisp').innerText = monthNames[m];
@@ -446,7 +458,6 @@
                 return row + "</tr>";
             }).join('');
             
-            // Ha mobilon is meg van nyitva valaki, frissítsük a nézetét
             if(mSelectedUserIndex > -1) renderMobileCalendar(); 
         }
 
@@ -488,12 +499,10 @@
         function changeMonth(v) { 
             date.setMonth(date.getMonth() + v); 
             render(); 
-            renderMobileList(); // Mobil nézet frissítése
+            renderMobileList();
             
-            // Ha éppen a RÉSZLETES nézetben vagyunk, frissítsük a naptárat is
             if(!document.getElementById('m-detail-view').classList.contains('hidden')) {
                 renderMobileCalendar();
-                // Ha lapozunk, jelöljük ki elsejét, kivéve ha visszatértünk az aktuális hónapra
                 const today = new Date();
                 const isCurrentMonth = today.getFullYear() === 2026 && today.getMonth() === date.getMonth();
                 const dayToSelect = isCurrentMonth ? today.getDate() : 1;
@@ -512,11 +521,6 @@
             }
         });
 
-        // -------------------------------------------------------------
-        // === SUPER PRO MOBILE LOGIC (ELKÜLÖNÍTVE) ===
-        // -------------------------------------------------------------
-
-        // --- AUTOMATIKUS FRISSÍTÉS ÉBREDÉSKOR ---
         document.addEventListener('visibilitychange', function() {
             if (document.visibilityState === 'visible') {
                 load();
@@ -528,7 +532,6 @@
             document.getElementById('m-monthDisp').innerText = monthNames[m];
             const listEl = document.getElementById('m-emp-list');
             
-            // ÜRES MŰSZAK KEZELÉSE
             if(employees.length === 0) {
                 listEl.innerHTML = `
                 <div class="m-no-data">
@@ -539,12 +542,10 @@
                 return;
             }
 
-            // Dátumok előkészítése (Ma, Holnap, Holnapután)
-            const today = new Date(); // Ma
-            const d1 = new Date(); d1.setDate(today.getDate() + 1); // Holnap
-            const d2 = new Date(); d2.setDate(today.getDate() + 2); // Holnapután
+            const today = new Date();
+            const d1 = new Date(); d1.setDate(today.getDate() + 1); 
+            const d2 = new Date(); d2.setDate(today.getDate() + 2); 
             
-            // Kulcsok generálása (YYYY-M-D)
             const k0 = `2026-${today.getMonth()+1}-${today.getDate()}`;
             const k1 = `2026-${d1.getMonth()+1}-${d1.getDate()}`;
             const k2 = `2026-${d2.getMonth()+1}-${d2.getDate()}`;
@@ -553,7 +554,6 @@
                 let s = 0; if(e.data) Object.values(e.data).forEach(v => { let n=parseFloat(String(v).replace(',','.')); if(!isNaN(n)) s+=n; });
                 let remaining = (e.yearlyQuota || 160) - s;
                 
-                // Segédfüggvény a szín és szöveg meghatározásához
                 const getStatusHtml = (key, label) => {
                     const val = (e.data && e.data[key]) ? e.data[key] : "-";
                     let bg = "bg-slate-800 text-slate-500";
@@ -597,11 +597,9 @@
             document.getElementById('m-detail-view').classList.remove('hidden');
             document.getElementById('m-detail-name').innerText = emp.name;
             
-            // Recalc remaining
             let s = 0; if(emp.data) Object.values(emp.data).forEach(v => { let n=parseFloat(String(v).replace(',','.')); if(!isNaN(n)) s+=n; });
             document.getElementById('m-detail-quota').innerText = `KERET: ${emp.yearlyQuota||160} | KIVEHETŐ: ${(emp.yearlyQuota||160)-s}`;
 
-            // Auto select today if current month, else 1st
             const today = new Date();
             const isCurrentMonth = today.getFullYear() === 2026 && today.getMonth() === date.getMonth();
             const dayToSelect = isCurrentMonth ? today.getDate() : 1;
@@ -609,7 +607,6 @@
             renderMobileCalendar();
             selectMobileDate(dayToSelect);
 
-            // Görgessen a tetejére (Scroll to top)
             document.getElementById('m-cal-scroll-container').scrollTop = 0;
             document.getElementById('m-detail-view').scrollTop = 0;
         }
@@ -617,7 +614,7 @@
         function closeMobileDetail() {
             document.getElementById('m-detail-view').classList.add('hidden');
             document.getElementById('m-list-view').classList.remove('hidden');
-            renderMobileList(); // Refresh list to show changes
+            renderMobileList();
         }
 
         function navMobileUser(dir) {
@@ -641,19 +638,17 @@
             document.getElementById('m-detail-monthDisp').innerText = monthNames[m];
             
             const daysInMonth = new Date(2026, m + 1, 0).getDate();
-            const firstDayIndex = new Date(2026, m, 1).getDay(); // 0=Sun, 1=Mon
-            const offset = firstDayIndex === 0 ? 6 : firstDayIndex - 1; // Adjust to Mon start
+            const firstDayIndex = new Date(2026, m, 1).getDay();
+            const offset = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
             
             const grid = document.getElementById('m-calendar-grid');
             let html = "";
             const emp = employees[mSelectedUserIndex];
 
-            // Empty slots
             for(let i=0; i<offset; i++) {
                 html += `<div class="m-day border-0 bg-transparent"></div>`;
             }
 
-            // Days
             const today = new Date();
             const isCurrentMonth = today.getFullYear() === 2026 && today.getMonth() === m;
             
@@ -665,7 +660,7 @@
                 
                 let dotColor = "hidden";
                 if(val) {
-                    dotColor = "bg-slate-400"; // default
+                    dotColor = "bg-slate-400";
                     if(!isNaN(parseFloat(val))) dotColor = "bg-emerald-500";
                     else if(val==='BÁ') dotColor = "bg-orange-500";
                     else if(val==='TU') dotColor = "bg-blue-500";
@@ -708,13 +703,11 @@
             input.focus();
         }
 
-        // --- Manuális mentés és kilépés gomb ---
         async function manualSaveAndClose() {
              await forceSave();
              closeMobileDetail();
         }
 
-        // --- Azonnali mentés debounce nélkül ---
         async function forceSave() {
             if(mSelectedUserIndex === -1 || !mSelectedDate) return;
             const val = document.getElementById('m-input').value.toUpperCase();
@@ -730,7 +723,6 @@
             document.getElementById('m-status-text').innerText = "MENTVE";
         }
 
-        // Mobile Input Handler
         const inputEl = document.getElementById('m-input');
         
         inputEl.addEventListener('keydown', function(e) {
@@ -764,14 +756,24 @@
             }, 500);
         });
 
-        // Init
-        window.onload = async () => {
-            await changeShift(currentShift);
-            setTimeout(() => {
-                const el = document.getElementById('today-header'); 
-                const container = document.querySelector('.table-container');
-                if(el && container) container.scrollTo({ left: el.offsetLeft - 260, behavior: 'smooth' });
-            }, 500);
+        // --- AUTOMATIKUS HITELESÍTÉS ÉS INDÍTÁS ---
+        window.onload = () => {
+            auth.signInAnonymously().then(async () => {
+                console.log("Firebase Auth: Anonim bejelentkezés sikeres!");
+                
+                await changeShift(currentShift);
+                
+                setTimeout(() => {
+                    const el = document.getElementById('today-header'); 
+                    const container = document.querySelector('.table-container');
+                    if(el && container) container.scrollTo({ left: el.offsetLeft - 260, behavior: 'smooth' });
+                }, 500);
+            }).catch(error => {
+                console.error("Firebase Auth hiba:", error);
+                document.getElementById('sync').innerText = "AUTH HIBA!";
+                document.getElementById('sync').classList.replace('text-emerald-500', 'text-red-500');
+                document.getElementById('sync').classList.replace('bg-emerald-500/10', 'bg-red-500/10');
+            });
         };
     </script>
 </body>
