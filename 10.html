@@ -3,44 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Szemétkihordás - PRO Automata</title>
+    <title>Szemétkihordás - PRO</title>
     <style>
         :root { --bg-dark: #09090b; --surface: #18181b; --primary: #8b5cf6; --accent: #06b6d4; --text-main: #ffffff; --text-dim: #a1a1aa; --card-glass: rgba(255, 255, 255, 0.08); }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg-dark); color: var(--text-main); margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
         .hero-section { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 70px 20px 20px 20px; position: relative; background: radial-gradient(circle at top right, #2e1065 0%, transparent 50%), radial-gradient(circle at bottom left, #1e1b4b 0%, transparent 50%); z-index: 1; }
-        .header-pill { position: absolute; top: 20px; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
+        
+        /* ADMIN GOMB (Most már láthatatlan/titkos) */
+        .header-pill { position: absolute; top: 20px; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); color: var(--text-dim); letter-spacing: 1px; }
         
         .today-card { width: 100%; max-width: 360px; text-align: center; animation: float 6s ease-in-out infinite; }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        .today-label { font-size: 0.9rem; color: var(--accent); font-weight: 700; margin-bottom: 5px; text-transform: uppercase; }
+        .today-label { font-size: 0.9rem; color: var(--accent); font-weight: 700; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;}
         .today-date { font-size: 1.1rem; color: var(--text-dim); margin-bottom: 15px; }
         
-        .shift-badge { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(90deg, var(--primary), #4c1d95); padding: 10px 20px; border-radius: 12px; font-weight: 600; font-size: 0.9rem; margin-bottom: 15px; }
+        /* INTERAKTÍV PILLE GOMBOK (Letisztult) */
+        .pill-container { display: flex; justify-content: center; align-items: center; gap: 12px; margin-bottom: 5px; flex-wrap: wrap; }
+        .worker-pill { display: inline-flex; justify-content: center; align-items: center; background: rgba(255,255,255,0.05); padding: 12px 25px; border-radius: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: all 0.2s ease; font-size: 1.5rem; font-weight: 800; color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 130px;}
+        .worker-pill:hover { background: rgba(255,255,255,0.1); border-color: var(--primary); transform: translateY(-2px); }
+        .instruction-text { font-size: 0.75rem; color: var(--text-dim); font-weight: normal; margin-top: 10px; opacity: 0.7; }
         
-        /* INTERAKTÍV PILLE GOMBOK */
-        .pill-container { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .worker-pill { display: inline-flex; align-items: center; background: rgba(255,255,255,0.08); padding: 12px 20px; border-radius: 25px; cursor: pointer; border: 1px solid rgba(255,255,255,0.15); transition: all 0.2s ease; font-size: 1.4rem; font-weight: 800; color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .worker-pill:hover { background: rgba(255,255,255,0.15); border-color: var(--accent); transform: scale(1.05); }
-        .pill-action { margin-left: 10px; font-size: 1rem; opacity: 0.8; }
-        
-        .absent-row { font-size: 0.9rem; color: #f87171; display:flex; justify-content:center; gap:8px; flex-wrap: wrap; margin-bottom: 10px; }
-        .absent-pill { cursor: pointer; background: rgba(248, 113, 113, 0.15); padding: 5px 12px; border-radius: 15px; border: 1px solid rgba(248, 113, 113, 0.3); transition: 0.2s; font-weight: bold;}
-        .absent-pill:hover { background: rgba(248, 113, 113, 0.3); }
+        .absent-row { font-size: 0.85rem; color: #f87171; display:flex; justify-content:center; gap:8px; flex-wrap: wrap; margin-bottom: 15px; }
+        .absent-pill { cursor: pointer; background: rgba(248, 113, 113, 0.1); padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(248, 113, 113, 0.2); transition: 0.2s; font-weight: 600;}
+        .absent-pill:hover { background: rgba(248, 113, 113, 0.2); }
 
         /* LISTA DESIGN */
         .list-container { height: 45vh; overflow-y: auto; padding: 20px 25px; position: relative; z-index: 2; mask-image: linear-gradient(to bottom, transparent 0%, black 10%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%); }
-        .list-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; margin-bottom: 12px; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .list-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; margin-bottom: 12px; padding: 15px; display: flex; flex-direction: column; gap: 10px; transition: all 0.2s; }
+        .list-card:hover { background: rgba(255, 255, 255, 0.06); }
         .lc-header { display: flex; justify-content: space-between; align-items: center; width: 100%; }
         .lc-date-text { font-weight: 600; color: var(--text-dim); font-size: 0.9rem; }
-        .lc-pills { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
-        .lc-worker-pill { display: inline-flex; align-items: center; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 12px; font-size: 0.9rem; font-weight: bold; cursor: pointer; border: 1px solid transparent; }
-        .lc-worker-pill:hover { border-color: var(--accent); }
+        .lc-pills { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+        .lc-worker-pill { display: inline-flex; align-items: center; background: rgba(255,255,255,0.05); padding: 6px 14px; border-radius: 8px; font-size: 0.9rem; font-weight: 700; cursor: pointer; border: 1px solid transparent; color: #fff; transition: all 0.2s;}
+        .lc-worker-pill:hover { border-color: var(--primary); background: rgba(255,255,255,0.1); }
 
         /* ADMIN PANEL UI */
         #adminPanel { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; padding: 20px; overflow-y: auto; }
-        .admin-box { background: var(--surface); padding: 20px; border-radius: 16px; max-width: 400px; margin: 40px auto; border: 1px solid var(--primary); }
+        .admin-box { background: var(--surface); padding: 20px; border-radius: 12px; max-width: 400px; margin: 40px auto; border: 1px solid var(--primary); }
         .admin-box h2 { color: var(--accent); margin-top: 0; }
         .admin-input { width: 100%; padding: 10px; margin-bottom: 15px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; }
         .admin-list { background: #000; padding: 10px; border-radius: 8px; max-height: 200px; overflow-y: auto; margin-bottom: 15px; }
@@ -52,17 +53,17 @@
 <body>
 
     <section class="hero-section" id="heroContainer">
-        <div style="text-align:center; margin-top:50px;">Betöltés a felhőből... ⏳</div>
+        <div style="text-align:center; margin-top:50px; color: var(--text-dim);">Betöltés a felhőből...</div>
     </section>
 
     <div class="list-container">
-        <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 15px; text-align: center;">Következő beosztások</div>
+        <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 15px; text-align: center; letter-spacing: 1px;">Következő beosztások</div>
         <div id="upcomingList"></div>
     </div>
 
     <div id="adminPanel">
         <div class="admin-box">
-            <h2>⚙️ Vezérlőpult</h2>
+            <h2>Vezérlőpult</h2>
             <label>Műszak Ciklus Kezdete (Fix alap):</label>
             <input type="date" id="setShiftStart" class="admin-input">
             <label>Rotáció Kezdete (Matek indulás):</label>
@@ -80,7 +81,7 @@
                 <button onclick="addNewWorker()" style="background:var(--accent); border:none; border-radius:8px; font-weight:bold; padding:0 15px; color:white;">+</button>
             </div>
             <div id="pendingWorkers" style="font-size:0.8rem; color:var(--text-dim); margin-bottom:15px;"></div>
-            <button class="btn-save" onclick="saveAdminSettings()">💾 Mentés a Felhőbe</button>
+            <button class="btn-save" onclick="saveAdminSettings()">Mentés a Felhőbe</button>
             <button class="btn-close" onclick="document.getElementById('adminPanel').style.display='none'">Mégsem</button>
         </div>
     </div>
@@ -89,7 +90,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
 
 <script>
-    // 🔴 FIREBASE KÓDOD JAVÍTVA (URL-el kiegészítve):
+    // 🔴 FIREBASE KÓD
     const firebaseConfig = {
       apiKey: "AIzaSyDtX_zGGjwEBgRK3-vKRm1tk80kLZbEm4Y",
       authDomain: "szemetkihordas-app.firebaseapp.com",
@@ -100,7 +101,6 @@
       appId: "1:978275677499:web:8114c6e4adbbb144f8731e"
     };
 
-    // Inicializálás
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
@@ -111,7 +111,7 @@
     const settingsRef = db.ref('settings');
     const absencesRef = db.ref('absences');
 
-    // Alap beállítások betöltése, ha üres a rendszer
+    // Inicializálás / Letöltés
     settingsRef.get().then((snapshot) => {
         if (!snapshot.exists()) {
             settingsRef.set({
@@ -121,10 +121,9 @@
             });
         }
     }).catch(err => {
-        document.getElementById('heroContainer').innerHTML = `<div style="text-align:center; padding: 20px; color: #f87171;">Hiba a Firebase kapcsolattal!<br><br>Menj a Firebase oldaladra -> Realtime Database -> Rules fül, és állítsd .read és .write értékét "true"-ra!</div>`;
+        document.getElementById('heroContainer').innerHTML = `<div style="text-align:center; padding: 20px; color: #f87171;">Hiba a Firebase kapcsolattal!</div>`;
     });
 
-    // Élő figyelés
     settingsRef.on('value', (snapshot) => {
         if (snapshot.exists()) {
             sysSettings = snapshot.val();
@@ -139,7 +138,7 @@
     });
 
     // ==========================================
-    // 🧠 INTELLIGENS MATEK MOTOR
+    // 🧠 INTELLIGENS MATEK MOTOR (Érintetlen!)
     // ==========================================
     function isWorkingDay(date) {
         let diffTime = date - new Date(sysSettings.shiftStart);
@@ -177,7 +176,7 @@
 
                 while (todayWorkers.length < 2) {
                     if (checkedToday.size >= roster.length + todayPushed.length) {
-                        todayWorkers.push("Nincs több ember!"); break; 
+                        todayWorkers.push("Nincs több!"); break; 
                     }
 
                     let candidate;
@@ -239,7 +238,7 @@
     // ⚡ INTERAKTÍV AKCIÓK
     // ==========================================
     window.markAbsent = function(dateKey, name) {
-        if(confirm(`Szeretnéd jelezni, hogy ${name} NINCS ITT?\n\nA gép automatikusan behívja a következőt, ${name} pedig átkerül a következő munkanapra!`)) {
+        if(confirm(`Szeretnéd jelezni, hogy ${name} hiányzik ezen a napon?\n\nA rendszer automatikusan behívja a következőt, ${name} pedig átkerül a következő munkanapra.`)) {
             db.ref(`absences/${dateKey}/${name}`).set(true);
         }
     };
@@ -260,37 +259,39 @@
         if (today.getHours() < 6) today.setDate(today.getDate() - 1);
         today.setHours(0,0,0,0);
 
-        const headerHTML = `<div class="header-pill" onclick="openAdmin()">⚙️ ADMIN PANEL (KATT IDE)</div>`;
+        // Láthatatlan Admin gomb
+        const headerHTML = `<div class="header-pill" onclick="openAdmin()">${sysSettings.shift} MŰSZAK BEOSZTÁS</div>`;
 
         if (!isWorkingDay(today)) {
             hero.innerHTML = `${headerHTML}
                 <div style="text-align: center; margin-top: 50px; opacity: 0.7;">
-                    <div style="font-size: 4rem; margin-bottom: 10px;">😴</div>
-                    <h2 style="color:white;">Pihenőnap</h2>
+                    <div style="font-size: 3rem; margin-bottom: 10px; filter: grayscale(100%);">😴</div>
+                    <h2 style="color:white; font-weight: 600;">Pihenőnap</h2>
                     <p style="color:var(--text-dim)">Ma nincs szemétkihordás.</p>
                 </div>`;
             fillUpcomingList(today, list); return;
         }
 
         let dateKey = getDateKey(today);
-        let workers = computedSchedule[dateKey] || ["Hiba", "Hiba"];
+        let workers = computedSchedule[dateKey] || ["-", "-"];
         let dailyAbs = absences[dateKey] || {};
         let todayStr = today.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric', weekday: 'long' });
 
         let absHTML = Object.keys(dailyAbs).length > 0 ? 
-            `<div class="absent-row">Szabin: ${Object.keys(dailyAbs).map(n => `<span class="absent-pill" onclick="undoAbsent('${dateKey}', '${n}')">${n} ↩</span>`).join('')}</div>` : '';
+            `<div class="absent-row">Hiányzik: ${Object.keys(dailyAbs).map(n => `<span class="absent-pill" onclick="undoAbsent('${dateKey}', '${n}')" title="Koppints a visszavonáshoz">${n} ↩</span>`).join('')}</div>` : '';
 
         hero.innerHTML = `
             ${headerHTML}
             <div class="today-card">
-                <div class="today-label">Mai Műszak (${sysSettings.shift})</div>
+                <div class="today-label">Mai Műszak</div>
                 <div class="today-date">${todayStr}</div>
                 ${absHTML}
                 <div class="pill-container">
-                    <div class="worker-pill" onclick="markAbsent('${dateKey}', '${workers[0]}')">${workers[0]} <span class="pill-action">🌴</span></div>
-                    <span style="font-size: 1.5rem; color:var(--text-dim);">&</span>
-                    <div class="worker-pill" onclick="markAbsent('${dateKey}', '${workers[1]}')">${workers[1]} <span class="pill-action">🌴</span></div>
+                    <div class="worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dateKey}', '${workers[0]}')">${workers[0]}</div>
+                    <span style="font-size: 1.5rem; color:var(--text-dim); font-weight:300;">&</span>
+                    <div class="worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dateKey}', '${workers[1]}')">${workers[1]}</div>
                 </div>
+                <div class="instruction-text">(Koppints a névre a hiányzás jelzéséhez)</div>
             </div>`;
 
         fillUpcomingList(today, list);
@@ -311,18 +312,18 @@
                 let dateFull = iterDate.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric' });
 
                 let absHTML = Object.keys(dailyAbs).length > 0 ? 
-                    `<div class="absent-row" style="justify-content:flex-end; font-size:0.75rem; margin:0;">${Object.keys(dailyAbs).map(n => `<span class="absent-pill" onclick="undoAbsent('${dKey}', '${n}')" style="padding:2px 6px;">${n} ↩</span>`).join('')}</div>` : '';
+                    `<div class="absent-row" style="justify-content:flex-end; font-size:0.75rem; margin:0; margin-top:5px;">${Object.keys(dailyAbs).map(n => `<span class="absent-pill" onclick="undoAbsent('${dKey}', '${n}')" style="padding:2px 8px;">${n} ↩</span>`).join('')}</div>` : '';
 
                 container.innerHTML += `
                     <div class="list-card">
                         <div class="lc-header">
                             <div>
-                                <span style="background:rgba(6,182,212,0.15); color:var(--accent); font-weight:700; font-size:0.8rem; padding:4px 8px; border-radius:6px;">${dayShort}</span>
-                                <span class="lc-date-text" style="margin-left:10px;">${dateFull}</span>
+                                <span style="background:rgba(6,182,212,0.1); color:var(--accent); font-weight:700; font-size:0.8rem; padding:4px 8px; border-radius:6px;">${dayShort}</span>
+                                <span class="lc-date-text" style="margin-left:8px;">${dateFull}</span>
                             </div>
                             <div class="lc-pills">
-                                <div class="lc-worker-pill" onclick="markAbsent('${dKey}', '${workers[0]}')">${workers[0]} 🌴</div>
-                                <div class="lc-worker-pill" onclick="markAbsent('${dKey}', '${workers[1]}')">${workers[1]} 🌴</div>
+                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dKey}', '${workers[0]}')">${workers[0]}</div>
+                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dKey}', '${workers[1]}')">${workers[1]}</div>
                             </div>
                         </div>
                         ${absHTML}
@@ -338,7 +339,7 @@
     // ⚙️ ADMIN FUNKCIÓK
     // ==========================================
     window.openAdmin = function() {
-        let pin = prompt("Admin PIN kód:");
+        let pin = prompt("Admin hitelesítés (PIN):");
         if (pin !== "1234") { if(pin) alert("Hibás PIN!"); return; }
         
         document.getElementById('adminPanel').style.display = 'block';
@@ -357,7 +358,7 @@
 
         let pHTML = "";
         if(sysSettings.pending && sysSettings.pending.length > 0) {
-            sysSettings.pending.forEach(p => { pHTML += `⏳ ${p.name} (Vár a kör végére...)<br>`; });
+            sysSettings.pending.forEach(p => { pHTML += `⏳ ${p.name} (Vár a ciklus végére...)<br>`; });
         }
         document.getElementById('pendingWorkers').innerHTML = pHTML;
     }
@@ -382,7 +383,6 @@
         sysSettings.nameStart = document.getElementById('setNameStart').value;
         sysSettings.shift = document.getElementById('setShiftType').value;
         db.ref('settings').set(sysSettings).then(() => {
-            alert("Sikeres mentés!");
             document.getElementById('adminPanel').style.display = 'none';
         });
     };
