@@ -348,6 +348,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, onValue, remove, push, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        // 1. ÚJ IMPORT: Auth modul hozzáadása
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBL1VWdfWW2d_GEWL2Jen1qX5PCvBcsV4s",
@@ -360,6 +362,17 @@
         };
 
         const app = initializeApp(firebaseConfig);
+        
+        // 2. ÚJ KÓD: Anonim bejelentkeztetés
+        const auth = getAuth(app);
+        signInAnonymously(auth)
+            .then(() => {
+                console.log("Anonim bejelentkezve - Adatbázis hozzáférés biztosítva");
+            })
+            .catch((error) => {
+                console.error("Auth hiba:", error);
+            });
+
         const db = getDatabase(app);
 
         onValue(ref(db, ".info/connected"), (snap) => {
@@ -412,7 +425,7 @@
             }
         });
 
-        // --- DASHBOARD RENDERELÉS (ÉRINTETLEN) ---
+        // --- DASHBOARD RENDERELÉS ---
         window.renderDashboard = function() {
             const selectorValue = document.getElementById('lineSelector').value;
             const container = document.getElementById('monitor-content');
@@ -494,7 +507,7 @@
             return html + '</div>';
         }
 
-        // --- JELENTÉS GENERÁLÓ (JAVÍTOTT FORMÁTUMMAL) ---
+        // --- JELENTÉS GENERÁLÓ ---
         window.generateReport = async function() {
             const btn = document.querySelector('.btn-report');
             const originalText = btn.innerHTML;
@@ -504,7 +517,6 @@
             const now = new Date();
             const dateStr = now.toLocaleDateString('hu-HU') + ' ' + now.toLocaleTimeString('hu-HU', {hour:'2-digit', minute:'2-digit'});
 
-            // HTML SZERKEZET ÉPÍTÉSE
             let html = `
                 <div class="rep-header">
                     <div class="rep-title">SMT STÁTUSZ JELENTÉS</div>
@@ -525,11 +537,9 @@
                 `;
 
                 machines.forEach(m => {
-                    // Hibák összegyűjtése ehhez a géphez
                     let machineErrorList = [];
                     Object.entries(lineErrors).forEach(([key, errorData]) => {
                         if(key.includes(`M${m.id}_`)) {
-                            // key formátum: M1_S1_N4
                             const parts = key.split('_'); 
                             const side = parts[1].replace('S','');
                             const nozzle = parts[2].replace('N','');
@@ -537,7 +547,6 @@
                         }
                     });
 
-                    // Kapacitás számítás
                     const totalNozzles = m.s1 + m.s2;
                     const errorCount = machineErrorList.length;
                     const capacity = (((totalNozzles - errorCount) / totalNozzles) * 100).toFixed(1);
@@ -549,9 +558,7 @@
                     } else {
                         detailsHtml = `<div class="rep-error-list">`;
                         machineErrorList.forEach(err => {
-                            // *** ITT JAVÍTOTTAM A SZÖVEGEZÉST ***
                             const sideLabel = (err.side === '1') ? '100. oldal' : '200. oldal';
-                            
                             detailsHtml += `
                                 <div class="rep-err-item">
                                     <span>⚠️</span> 
@@ -580,7 +587,6 @@
             html += `</div>`;
             reportContainer.innerHTML = html;
 
-            // KÉP KÉSZÍTÉSE
             await new Promise(resolve => setTimeout(resolve, 300));
 
             const canvas = await html2canvas(reportContainer, {
@@ -598,7 +604,7 @@
             btn.innerHTML = originalText;
         }
 
-        // --- MODAL & ADATBÁZIS (ÉRINTETLEN) ---
+        // --- MODAL & ADATBÁZIS ---
         window.openModal = function(line, key, mId, side, nId) {
             currentSelection = { line, key, mId, side, nId };
             const error = (globalData[line] || {})[key];
