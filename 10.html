@@ -3,256 +3,392 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Szemétkihordás - VBA Logic</title>
+    <title>Szemétkihordás - PRO Automata</title>
     <style>
         :root { --bg-dark: #09090b; --surface: #18181b; --primary: #8b5cf6; --accent: #06b6d4; --text-main: #ffffff; --text-dim: #a1a1aa; --card-glass: rgba(255, 255, 255, 0.08); }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg-dark); color: var(--text-main); margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
         .hero-section { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 70px 20px 20px 20px; position: relative; background: radial-gradient(circle at top right, #2e1065 0%, transparent 50%), radial-gradient(circle at bottom left, #1e1b4b 0%, transparent 50%); z-index: 1; }
-        .header-pill { position: absolute; top: 20px; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-dim); border: 1px solid rgba(255,255,255,0.05); z-index: 10; }
+        .header-pill { position: absolute; top: 20px; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
+        
         .today-card { width: 100%; max-width: 360px; text-align: center; animation: float 6s ease-in-out infinite; }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        .today-label { font-size: 0.9rem; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 5px; }
-        .today-date { font-size: 1.1rem; color: var(--text-dim); margin-bottom: 20px; }
-        .today-names { font-size: 2.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 25px; background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .shift-badge { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(90deg, var(--primary), #4c1d95); padding: 10px 20px; border-radius: 12px; font-weight: 600; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4); }
-        .logic-info { margin-top: 30px; padding: 12px 16px; background: rgba(0, 0, 0, 0.3); border-radius: 12px; font-size: 0.85rem; line-height: 1.4; color: var(--text-dim); max-width: 320px; text-align: center; border: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(5px); }
-        .logic-info strong { color: var(--accent); display: block; margin-bottom: 4px; font-size: 0.9rem; }
+        .today-label { font-size: 0.9rem; color: var(--accent); font-weight: 700; margin-bottom: 5px; text-transform: uppercase; }
+        .today-date { font-size: 1.1rem; color: var(--text-dim); margin-bottom: 15px; }
+        
+        .shift-badge { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(90deg, var(--primary), #4c1d95); padding: 10px 20px; border-radius: 12px; font-weight: 600; font-size: 0.9rem; margin-bottom: 15px; }
+        
+        /* INTERAKTÍV PILLE GOMBOK */
+        .pill-container { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .worker-pill { display: inline-flex; align-items: center; background: rgba(255,255,255,0.08); padding: 12px 20px; border-radius: 25px; cursor: pointer; border: 1px solid rgba(255,255,255,0.15); transition: all 0.2s ease; font-size: 1.4rem; font-weight: 800; color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .worker-pill:hover { background: rgba(255,255,255,0.15); border-color: var(--accent); transform: scale(1.05); }
+        .pill-action { margin-left: 10px; font-size: 1rem; opacity: 0.8; }
+        
+        .absent-row { font-size: 0.9rem; color: #f87171; display:flex; justify-content:center; gap:8px; flex-wrap: wrap; margin-bottom: 10px; }
+        .absent-pill { cursor: pointer; background: rgba(248, 113, 113, 0.15); padding: 5px 12px; border-radius: 15px; border: 1px solid rgba(248, 113, 113, 0.3); transition: 0.2s; font-weight: bold;}
+        .absent-pill:hover { background: rgba(248, 113, 113, 0.3); }
+
+        /* LISTA DESIGN */
         .list-container { height: 45vh; overflow-y: auto; padding: 20px 25px; position: relative; z-index: 2; mask-image: linear-gradient(to bottom, transparent 0%, black 10%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%); }
-        .list-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 15px; letter-spacing: 1px; text-align: center; }
-        .list-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; margin-bottom: 12px; overflow: hidden; transition: all 0.3s ease; cursor: pointer; }
-        .list-card.active { background: var(--card-glass); box-shadow: 0 8px 25px rgba(139, 92, 246, 0.2); }
-        .lc-header { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; }
-        .lc-date-summary { display: flex; align-items: center; gap: 12px; }
-        .lc-day-badge { background: rgba(6, 182, 212, 0.15); color: var(--accent); font-weight: 700; font-size: 0.8rem; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
-        .lc-date-text { font-weight: 600; color: var(--text-dim); }
-        .list-card.active .lc-date-text { color: #fff; }
-        .lc-arrow { color: var(--text-dim); transition: transform 0.3s ease; }
-        .list-card.active .lc-arrow { transform: rotate(180deg); color: var(--primary); }
-        .lc-details { max-height: 0; opacity: 0; transition: all 0.3s ease-in-out; padding: 0 20px; }
-        .list-card.active .lc-details { max-height: 100px; opacity: 1; padding-bottom: 20px; }
-        .lc-names { font-size: 1.3rem; font-weight: 800; color: #fff; text-align: center; background: linear-gradient(to right, #fff, #a5b4fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .rest-view { text-align: center; margin-top: 50px; opacity: 0.7; }
+        .list-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; margin-bottom: 12px; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .lc-header { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .lc-date-text { font-weight: 600; color: var(--text-dim); font-size: 0.9rem; }
+        .lc-pills { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+        .lc-worker-pill { display: inline-flex; align-items: center; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 12px; font-size: 0.9rem; font-weight: bold; cursor: pointer; border: 1px solid transparent; }
+        .lc-worker-pill:hover { border-color: var(--accent); }
+
+        /* ADMIN PANEL UI */
+        #adminPanel { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; padding: 20px; overflow-y: auto; }
+        .admin-box { background: var(--surface); padding: 20px; border-radius: 16px; max-width: 400px; margin: 40px auto; border: 1px solid var(--primary); }
+        .admin-box h2 { color: var(--accent); margin-top: 0; }
+        .admin-input { width: 100%; padding: 10px; margin-bottom: 15px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; }
+        .admin-list { background: #000; padding: 10px; border-radius: 8px; max-height: 200px; overflow-y: auto; margin-bottom: 15px; }
+        .admin-list-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #333; }
+        .btn-save { background: var(--primary); color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-close { background: transparent; color: var(--text-dim); width: 100%; padding: 10px; border: none; margin-top: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <section class="hero-section" id="heroContainer"></section>
+    <section class="hero-section" id="heroContainer">
+        <div style="text-align:center; margin-top:50px;">Betöltés a felhőből... ⏳</div>
+    </section>
 
     <div class="list-container">
-        <div class="list-title">Következő beosztás (Koppints a részletekért)</div>
+        <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 15px; text-align: center;">Következő beosztások</div>
         <div id="upcomingList"></div>
     </div>
 
-<script>
-    // ==========================================
-    // ⚙️ BEÁLLÍTÁSOK
-    // ==========================================
-    const config = {
-        shift: "C", 
-        // 1. NEVEK: Vesszővel elválasztva
-        names: "Laci,Jani,Patrik,Zsuzsa,Peti,Barbi,Reni,Böbe,Martina,Kriszti,Dani"
+    <div id="adminPanel">
+        <div class="admin-box">
+            <h2>⚙️ Vezérlőpult</h2>
+            <label>Műszak Ciklus Kezdete (Fix alap):</label>
+            <input type="date" id="setShiftStart" class="admin-input">
+            <label>Rotáció Kezdete (Matek indulás):</label>
+            <input type="date" id="setNameStart" class="admin-input">
+            <label>Jelenlegi Műszak:</label>
+            <select id="setShiftType" class="admin-input">
+                <option value="A">A Műszak</option><option value="B">B Műszak</option>
+                <option value="C">C Műszak</option><option value="D">D Műszak</option>
+            </select>
+            <label>Aktív Névsor (Katt a törléshez):</label>
+            <div class="admin-list" id="adminRosterList"></div>
+            <label>Új Dolgozó (Okos beillesztéssel):</label>
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <input type="text" id="newWorkerName" class="admin-input" style="margin-bottom:0;" placeholder="Név...">
+                <button onclick="addNewWorker()" style="background:var(--accent); border:none; border-radius:8px; font-weight:bold; padding:0 15px;">+</button>
+            </div>
+            <div id="pendingWorkers" style="font-size:0.8rem; color:var(--text-dim); margin-bottom:15px;"></div>
+            <button class="btn-save" onclick="saveAdminSettings()">💾 Mentés a Felhőbe</button>
+            <button class="btn-close" onclick="document.getElementById('adminPanel').style.display='none'">Mégsem</button>
+        </div>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+    // 🔴 FIREBASE KÓDOD:
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtX_zGGjwEBgRK3-vKRm1tk80kLZbEm4Y",
+      authDomain: "szemetkihordas-app.firebaseapp.com",
+      projectId: "szemetkihordas-app",
+      storageBucket: "szemetkihordas-app.firebasestorage.app",
+      messagingSenderId: "978275677499",
+      appId: "1:978275677499:web:8114c6e4adbbb144f8731e"
     };
 
-    // 2. MŰSZAK CIKLUS START (A te VBA kódodban: #7/31/2025#)
-    // Ez határozza meg, hogy mikor van 'A', 'B', 'C', 'D' műszak.
-    const SHIFT_START = new Date(2025, 6, 31); 
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-    // 3. NÉVSOR ROTÁCIÓ START (MAI DÁTUM)
-    // Ettől a naptól kezdve futtatjuk a VBA-s logikát (Index=0, Eltolás=0).
-    const NAME_START = new Date(2025, 1, 14); 
+    let sysSettings = null;
+    let absences = {}; // Firebase-ből jövő hiányzások: { "2026-02-26": { "Laci": true } }
+    let computedSchedule = {}; // Okos szimulátor által kiszámolt naptár
+
+    const settingsRef = ref(db, 'settings');
+    const absencesRef = ref(db, 'absences');
+
+    // Alap beállítások betöltése
+    get(settingsRef).then((snapshot) => {
+        if (!snapshot.exists()) {
+            set(settingsRef, {
+                shift: "C", shiftStart: "2025-07-31", nameStart: "2025-02-14",
+                roster: "Laci,Jani,Patrik,Zsuzsa,Peti,Barbi,Reni,Böbe,Martina,Kriszti,Dani".split(","),
+                pending: []
+            });
+        }
+    });
+
+    onValue(settingsRef, (snapshot) => {
+        if (snapshot.exists()) {
+            sysSettings = snapshot.val();
+            if(!sysSettings.pending) sysSettings.pending = [];
+            if(Object.keys(absences).length >= 0) { calculateAllSchedules(); renderUI(); }
+        }
+    });
+
+    onValue(absencesRef, (snapshot) => {
+        absences = snapshot.val() || {};
+        if(sysSettings) { calculateAllSchedules(); renderUI(); }
+    });
 
     // ==========================================
-    // LOGIKA - A VBA KÓD ÁTÜLTETÉSE (1:1)
+    // 🧠 INTELLIGENS MATEK MOTOR (A Varázslat)
     // ==========================================
-
-    document.addEventListener('DOMContentLoaded', renderSchedule);
-
-    function getCleanNames() {
-        return config.names.split(',').map(n => n.trim()).filter(n => n !== "");
-    }
-
-    // Ez a függvény számolja ki, hogy az adott napon dolgozik-e a műszak
-    // (Pontosan a VBA 'Select Case ciklusNap Mod 12' része)
     function isWorkingDay(date) {
-        let diffTime = date - SHIFT_START;
-        let totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        let cycleIdx = ((totalDays % 12) + 12) % 12; // Modulo korrekció negatív számokra is
-        
-        // 0-2: Nappal=B, Éjjel=A
-        // 3-5: Nappal=D, Éjjel=C
-        // 6-8: Nappal=A, Éjjel=B
-        // 9-11: Nappal=C, Éjjel=D
-        
-        let nappalos = "", ejszakas = "";
-        
-        if (cycleIdx >= 0 && cycleIdx <= 2) { nappalos = "B"; ejszakas = "A"; }
-        else if (cycleIdx >= 3 && cycleIdx <= 5) { nappalos = "D"; ejszakas = "C"; }
-        else if (cycleIdx >= 6 && cycleIdx <= 8) { nappalos = "A"; ejszakas = "B"; }
-        else { nappalos = "C"; ejszakas = "D"; }
-
-        return (config.shift === nappalos || config.shift === ejszakas);
+        let diffTime = date - new Date(sysSettings.shiftStart);
+        let cycleIdx = ((Math.floor(diffTime / 86400000) % 12) + 12) % 12;
+        let nap = "", ej = "";
+        if (cycleIdx <= 2) { nap = "B"; ej = "A"; }
+        else if (cycleIdx <= 5) { nap = "D"; ej = "C"; }
+        else if (cycleIdx <= 8) { nap = "A"; ej = "B"; }
+        else { nap = "C"; ej = "D"; }
+        return (sysSettings.shift === nap || sysSettings.shift === ej);
     }
 
-    // A VBA "Generálás" ciklusának szimulációja
-    // Mivel a VBA 'eltolás' logikája az előző állapottól függ, 
-    // le kell szimulálnunk a napokat a NAME_START-tól a kért dátumig.
-    function getPairForDate(targetDate) {
-        let names = getCleanNames();
-        let n = names.length;
-        if (n === 0) return "Nincs név";
-
-        // VBA változók inicializálása
+    // Ez a függvény legenerálja a jövőt a hiányzások és eltolások figyelembevételével!
+    function calculateAllSchedules() {
+        computedSchedule = {};
+        let roster = [...sysSettings.roster];
+        let pending = [...sysSettings.pending];
+        let n = roster.length;
         let rotIndex = 0;
-        let eltolas = 0;
-        
-        // Simítás kezdete: NAME_START
-        let simDate = new Date(NAME_START); 
+        let pushed = []; // Akik hiányoztak és átkerülnek a KÖVETKEZŐ napra
+
+        let simDate = new Date(sysSettings.nameStart);
         simDate.setHours(0,0,0,0);
-        
-        let target = new Date(targetDate);
-        target.setHours(0,0,0,0);
+        let endDate = new Date();
+        endDate.setDate(endDate.getDate() + 45); // Számoljunk előre 45 napot
+        endDate.setHours(0,0,0,0);
 
-        // Ha a cél dátum régebbi, mint a start, nem tudunk mit tenni
-        if (target < simDate) return "Nincs adat";
-
-        // Végigmegyünk napról napra, pont ahogy a makró tenné
-        while (simDate <= target) {
-            
-            // Csak akkor lépünk a listában, ha MUNKANAP van (ahogy a VBA 'If' ága)
+        while (simDate <= endDate) {
             if (isWorkingDay(simDate)) {
+                let dateKey = getDateKey(simDate);
+                let dailyAbsences = absences[dateKey] || {}; 
+                let todayWorkers = [];
+                let todayPushed = [...pushed];
+                pushed = [];
+                let checkedToday = new Set();
+
+                // 2 embert kell találnunk a napra
+                while (todayWorkers.length < 2) {
+                    if (checkedToday.size >= roster.length + todayPushed.length) {
+                        todayWorkers.push("Nincs több ember!"); break; // Végtelen ciklus védelem
+                    }
+
+                    let candidate;
+                    let isFromPushed = false;
+                    
+                    // Először azokat vizsgáljuk, akiket áttoltunk a múltkorról
+                    if (todayPushed.length > 0) {
+                        candidate = todayPushed[0];
+                        isFromPushed = true;
+                    } else {
+                        candidate = roster[rotIndex % n];
+                    }
+
+                    if (checkedToday.has(candidate)) {
+                         if (isFromPushed) { todayPushed.shift(); pushed.push(candidate); }
+                         else { rotIndex++; }
+                         continue;
+                    }
+                    checkedToday.add(candidate);
+
+                    // Hiányzik ma az illető?
+                    if (dailyAbsences[candidate]) {
+                        pushed.push(candidate); // Áttoljuk a KÖVETKEZŐ munkanapra!
+                        if (isFromPushed) todayPushed.shift();
+                        else {
+                            rotIndex++;
+                            checkSmartInsertion(); // Ha lezárul egy kör, megnézzük van-e új ember
+                        }
+                    } else {
+                        // Dolgozik ma!
+                        todayWorkers.push(candidate);
+                        if (isFromPushed) todayPushed.shift();
+                        else {
+                            rotIndex++;
+                            checkSmartInsertion();
+                        }
+                    }
+
+                    // Belső függvény az okos beillesztéshez
+                    function checkSmartInsertion() {
+                        if (!isFromPushed && rotIndex > 0 && rotIndex % n === 0) {
+                            if (pending.length > 0 && simDate.getTime() >= pending[0].addedDate) {
+                                roster.push(pending[0].name);
+                                n = roster.length;
+                                pending.shift();
+                            }
+                        }
+                    }
+                }
                 
-                // --- EZ A VBA LÉNYEGE ---
-                // nev1 = rotacio((rotIndex + eltolas) Mod (UBound(rotacio) + 1))
-                let idx1 = (rotIndex + eltolas) % n;
-                let p1 = names[idx1];
-                rotIndex++; // rotIndex = rotIndex + 1
-
-                // nev2 = rotacio((rotIndex + eltolas) Mod (UBound(rotacio) + 1))
-                let idx2 = (rotIndex + eltolas) % n;
-                let p2 = names[idx2];
-                rotIndex++; // rotIndex = rotIndex + 1
-
-                // If rotIndex >= UBound(rotacio) + 1 Then
-                //    rotIndex = 0
-                //    eltolas = (eltolas + 1) Mod ...
-                // End If
-                if (rotIndex >= n) {
-                    rotIndex = 0;
-                    eltolas = (eltolas + 1) % n;
-                }
-                // -----------------------
-
-                // Ha elértünk a cél dátumhoz, visszaadjuk az épp generált neveket
-                if (simDate.getTime() === target.getTime()) {
-                    return `${p1} & ${p2}`;
-                }
+                // Akiket ma nem vizsgáltunk a pushed listából, azok is mennek holnapra
+                pushed = pushed.concat(todayPushed);
+                computedSchedule[dateKey] = todayWorkers;
             }
-            
-            // Következő nap
             simDate.setDate(simDate.getDate() + 1);
         }
-        return "Hiba";
     }
 
-    function renderSchedule() {
-        const heroContainer = document.getElementById('heroContainer');
-        const listContainer = document.getElementById('upcomingList');
-        heroContainer.innerHTML = '';
-        listContainer.innerHTML = '';
+    function getDateKey(date) {
+        return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+    }
 
-        let now = new Date();
-        if (now.getHours() < 6) now.setDate(now.getDate() - 1);
-        let today = now;
+    // ==========================================
+    // ⚡ INTERAKTÍV AKCIÓK (Hiányzás jelentése)
+    // ==========================================
+    window.markAbsent = function(dateKey, name) {
+        if(confirm(`Szeretnéd jelezni, hogy ${name} ezen a napon NINCS ITT?\n\nA gép automatikusan behívja a következőt, ${name} pedig átkerül a következő munkanapra!`)) {
+            set(ref(db, `absences/${dateKey}/${name}`), true);
+        }
+    };
+
+    window.undoAbsent = function(dateKey, name) {
+        set(ref(db, `absences/${dateKey}/${name}`), null);
+    };
+
+    // ==========================================
+    // 🎨 KÉPERNYŐ RAJZOLÁSA
+    // ==========================================
+    function renderUI() {
+        const hero = document.getElementById('heroContainer');
+        const list = document.getElementById('upcomingList');
+        hero.innerHTML = ''; list.innerHTML = '';
+
+        let today = new Date();
+        if (today.getHours() < 6) today.setDate(today.getDate() - 1);
         today.setHours(0,0,0,0);
 
-        let isWorking = isWorkingDay(today);
-        
-        // Műszak típusának meghatározása (Csak design miatt)
-        let diffTime = today - SHIFT_START;
-        let totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        let cycleIdx = ((totalDays % 12) + 12) % 12;
-        let nappalos = "";
-        if (cycleIdx >= 0 && cycleIdx <= 2) nappalos = "B";
-        else if (cycleIdx >= 3 && cycleIdx <= 5) nappalos = "D";
-        else if (cycleIdx >= 6 && cycleIdx <= 8) nappalos = "A";
-        else nappalos = "C";
-        
-        let shiftTypeFull = (config.shift === nappalos) ? "☀️ NAPPAL (6:00-18:00)" : "🌙 ÉJSZAKA (18:00-6:00)";
+        const headerHTML = `<div class="header-pill" onclick="openAdmin()">⚙️ ADMIN PANEL (KATT IDE)</div>`;
 
-        const headerHTML = `<div class="header-pill">${config.shift} MŰSZAK BEOSZTÁS</div>`;
-        const logicInfoHTML = `
-            <div class="logic-info">
-                <strong>A rendszer igazságos eltolás modszerrel dolgozik!
-            </div>
-        `;
-
-        if (!isWorking) {
-            heroContainer.innerHTML = `
-                ${headerHTML}
-                <div class="rest-view">
+        if (!isWorkingDay(today)) {
+            hero.innerHTML = `${headerHTML}
+                <div style="text-align: center; margin-top: 50px; opacity: 0.7;">
                     <div style="font-size: 4rem; margin-bottom: 10px;">😴</div>
                     <h2 style="color:white;">Pihenőnap</h2>
                     <p style="color:var(--text-dim)">Ma nincs szemétkihordás.</p>
-                </div>
-                ${logicInfoHTML}
-            `;
-            fillUpcomingList(today, listContainer); 
-            return;
+                </div>`;
+            fillUpcomingList(today, list); return;
         }
 
-        let todayPair = getPairForDate(today);
-        
-        let dateOptions = { month: 'long', day: 'numeric', weekday: 'long' };
-        let todayStr = today.toLocaleDateString('hu-HU', dateOptions);
+        let dateKey = getDateKey(today);
+        let workers = computedSchedule[dateKey] || ["Hiba", "Hiba"];
+        let dailyAbs = absences[dateKey] || {};
+        let todayStr = today.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric', weekday: 'long' });
 
-        heroContainer.innerHTML = `
+        // Hiányzók visszavonó gombjai
+        let absHTML = Object.keys(dailyAbs).length > 0 ? 
+            `<div class="absent-row">Hiányzik: ${Object.keys(dailyAbs).map(n => `<span class="absent-pill" onclick="undoAbsent('${dateKey}', '${n}')">${n} ↩</span>`).join('')}</div>` : '';
+
+        hero.innerHTML = `
             ${headerHTML}
             <div class="today-card">
-                <div class="today-label">Mai Felelősök</div>
+                <div class="today-label">Mai Műszak (${sysSettings.shift})</div>
                 <div class="today-date">${todayStr}</div>
-                <div class="today-names">
-                    ${todayPair.replace(' & ', '<br>&<br>')}
+                ${absHTML}
+                <div class="pill-container">
+                    <div class="worker-pill" onclick="markAbsent('${dateKey}', '${workers[0]}')">${workers[0]} <span class="pill-action">🌴</span></div>
+                    <span style="font-size: 1.5rem; color:var(--text-dim);">&</span>
+                    <div class="worker-pill" onclick="markAbsent('${dateKey}', '${workers[1]}')">${workers[1]} <span class="pill-action">🌴</span></div>
                 </div>
-                <div class="shift-badge">${shiftTypeFull}</div>
-            </div>
-            ${logicInfoHTML}
-        `;
+            </div>`;
 
-        fillUpcomingList(today, listContainer);
+        fillUpcomingList(today, list);
     }
 
     function fillUpcomingList(startDate, container) {
-        let countFound = 0;
+        let count = 0;
         let iterDate = new Date(startDate);
         iterDate.setDate(iterDate.getDate() + 1);
 
-        while(countFound < 10) {
+        while(count < 10 && iterDate.getTime() < startDate.getTime() + 45 * 86400000) {
             if(isWorkingDay(iterDate)) {
-                let pair = getPairForDate(iterDate); 
+                let dKey = getDateKey(iterDate);
+                let workers = computedSchedule[dKey] || [];
+                let dailyAbs = absences[dKey] || {};
+                
                 let dayShort = iterDate.toLocaleDateString('hu-HU', { weekday: 'short' });
                 let dateFull = iterDate.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric' });
 
+                let absHTML = Object.keys(dailyAbs).length > 0 ? 
+                    `<div class="absent-row" style="justify-content:flex-end; font-size:0.75rem; margin:0;">${Object.keys(dailyAbs).map(n => `<span class="absent-pill" onclick="undoAbsent('${dKey}', '${n}')" style="padding:2px 6px;">${n} ↩</span>`).join('')}</div>` : '';
+
                 container.innerHTML += `
-                    <div class="list-card" onclick="this.classList.toggle('active')">
+                    <div class="list-card">
                         <div class="lc-header">
-                            <div class="lc-date-summary">
-                                <span class="lc-day-badge">${dayShort}</span>
-                                <span class="lc-date-text">${dateFull}</span>
+                            <div>
+                                <span style="background:rgba(6,182,212,0.15); color:var(--accent); font-weight:700; font-size:0.8rem; padding:4px 8px; border-radius:6px;">${dayShort}</span>
+                                <span class="lc-date-text" style="margin-left:10px;">${dateFull}</span>
                             </div>
-                            <div class="lc-arrow">▼</div>
+                            <div class="lc-pills">
+                                <div class="lc-worker-pill" onclick="markAbsent('${dKey}', '${workers[0]}')">${workers[0]} 🌴</div>
+                                <div class="lc-worker-pill" onclick="markAbsent('${dKey}', '${workers[1]}')">${workers[1]} 🌴</div>
+                            </div>
                         </div>
-                        <div class="lc-details">
-                            <div class="lc-names">${pair}</div>
-                        </div>
+                        ${absHTML}
                     </div>
                 `;
-                countFound++;
+                count++;
             }
             iterDate.setDate(iterDate.getDate() + 1);
-            if(countFound === 0 && (iterDate - startDate) > 5000000000) break; 
         }
     }
+
+    // ==========================================
+    // ⚙️ ADMIN FUNKCIÓK
+    // ==========================================
+    window.openAdmin = function() {
+        let pin = prompt("Admin PIN kód:");
+        if (pin !== "1234") { if(pin) alert("Hibás PIN!"); return; }
+        
+        document.getElementById('adminPanel').style.display = 'block';
+        document.getElementById('setShiftStart').value = sysSettings.shiftStart;
+        document.getElementById('setNameStart').value = sysSettings.nameStart;
+        document.getElementById('setShiftType').value = sysSettings.shift;
+        renderAdminRoster();
+    };
+
+    function renderAdminRoster() {
+        let html = "";
+        sysSettings.roster.forEach((name, i) => {
+            html += `<div class="admin-list-item"><span>${name}</span> <span style="color:red; cursor:pointer;" onclick="removeWorker(${i})">✖</span></div>`;
+        });
+        document.getElementById('adminRosterList').innerHTML = html;
+
+        let pHTML = "";
+        if(sysSettings.pending && sysSettings.pending.length > 0) {
+            sysSettings.pending.forEach(p => { pHTML += `⏳ ${p.name} (Vár a kör végére...)<br>`; });
+        }
+        document.getElementById('pendingWorkers').innerHTML = pHTML;
+    }
+
+    window.removeWorker = function(index) {
+        if(confirm("Biztos törlöd ezt a dolgozót a fő névsorból?")) {
+            sysSettings.roster.splice(index, 1);
+            renderAdminRoster();
+        }
+    };
+
+    window.addNewWorker = function() {
+        let name = document.getElementById('newWorkerName').value.trim();
+        if(name === "") return;
+        sysSettings.pending.push({ name: name, addedDate: new Date().getTime() });
+        document.getElementById('newWorkerName').value = "";
+        renderAdminRoster();
+    };
+
+    window.saveAdminSettings = function() {
+        sysSettings.shiftStart = document.getElementById('setShiftStart').value;
+        sysSettings.nameStart = document.getElementById('setNameStart').value;
+        sysSettings.shift = document.getElementById('setShiftType').value;
+        set(ref(db, 'settings'), sysSettings).then(() => {
+            alert("Sikeres mentés!");
+            document.getElementById('adminPanel').style.display = 'none';
+        });
+    };
 </script>
 </body>
 </html>
