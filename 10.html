@@ -45,8 +45,8 @@
         .admin-input { width: 100%; padding: 10px; margin-bottom: 15px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; }
         .admin-list { background: #000; padding: 10px; border-radius: 8px; max-height: 200px; overflow-y: auto; margin-bottom: 15px; }
         .admin-list-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #333; }
-        .btn-save { background: var(--primary); color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .btn-close { background: transparent; color: var(--text-dim); width: 100%; padding: 10px; border: none; margin-top: 10px; cursor: pointer; }
+        .btn-save { background: var(--primary); color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 10px;}
+        .btn-close { background: transparent; color: var(--text-dim); width: 100%; padding: 10px; border: 1px solid #333; border-radius: 8px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -77,7 +77,7 @@
             <label>Új Dolgozó (Okos beillesztéssel):</label>
             <div style="display:flex; gap:10px; margin-bottom:15px;">
                 <input type="text" id="newWorkerName" class="admin-input" style="margin-bottom:0;" placeholder="Név...">
-                <button onclick="addNewWorker()" style="background:var(--accent); border:none; border-radius:8px; font-weight:bold; padding:0 15px;">+</button>
+                <button onclick="addNewWorker()" style="background:var(--accent); border:none; border-radius:8px; font-weight:bold; padding:0 15px; color:white;">+</button>
             </div>
             <div id="pendingWorkers" style="font-size:0.8rem; color:var(--text-dim); margin-bottom:15px;"></div>
             <button class="btn-save" onclick="saveAdminSettings()">💾 Mentés a Felhőbe</button>
@@ -85,42 +85,47 @@
         </div>
     </div>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
 
-    // 🔴 FIREBASE KÓDOD:
+<script>
+    // 🔴 FIREBASE KÓDOD JAVÍTVA (URL-el kiegészítve):
     const firebaseConfig = {
       apiKey: "AIzaSyDtX_zGGjwEBgRK3-vKRm1tk80kLZbEm4Y",
       authDomain: "szemetkihordas-app.firebaseapp.com",
+      databaseURL: "https://szemetkihordas-app-default-rtdb.europe-west1.firebasedatabase.app",
       projectId: "szemetkihordas-app",
       storageBucket: "szemetkihordas-app.firebasestorage.app",
       messagingSenderId: "978275677499",
       appId: "1:978275677499:web:8114c6e4adbbb144f8731e"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    // Inicializálás
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
     let sysSettings = null;
-    let absences = {}; // Firebase-ből jövő hiányzások: { "2026-02-26": { "Laci": true } }
-    let computedSchedule = {}; // Okos szimulátor által kiszámolt naptár
+    let absences = {}; 
+    let computedSchedule = {}; 
 
-    const settingsRef = ref(db, 'settings');
-    const absencesRef = ref(db, 'absences');
+    const settingsRef = db.ref('settings');
+    const absencesRef = db.ref('absences');
 
-    // Alap beállítások betöltése
-    get(settingsRef).then((snapshot) => {
+    // Alap beállítások betöltése, ha üres a rendszer
+    settingsRef.get().then((snapshot) => {
         if (!snapshot.exists()) {
-            set(settingsRef, {
+            settingsRef.set({
                 shift: "C", shiftStart: "2025-07-31", nameStart: "2025-02-14",
                 roster: "Laci,Jani,Patrik,Zsuzsa,Peti,Barbi,Reni,Böbe,Martina,Kriszti,Dani".split(","),
                 pending: []
             });
         }
+    }).catch(err => {
+        document.getElementById('heroContainer').innerHTML = `<div style="text-align:center; padding: 20px; color: #f87171;">Hiba a Firebase kapcsolattal!<br><br>Menj a Firebase oldaladra -> Realtime Database -> Rules fül, és állítsd .read és .write értékét "true"-ra!</div>`;
     });
 
-    onValue(settingsRef, (snapshot) => {
+    // Élő figyelés
+    settingsRef.on('value', (snapshot) => {
         if (snapshot.exists()) {
             sysSettings = snapshot.val();
             if(!sysSettings.pending) sysSettings.pending = [];
@@ -128,13 +133,13 @@
         }
     });
 
-    onValue(absencesRef, (snapshot) => {
+    absencesRef.on('value', (snapshot) => {
         absences = snapshot.val() || {};
         if(sysSettings) { calculateAllSchedules(); renderUI(); }
     });
 
     // ==========================================
-    // 🧠 INTELLIGENS MATEK MOTOR (A Varázslat)
+    // 🧠 INTELLIGENS MATEK MOTOR
     // ==========================================
     function isWorkingDay(date) {
         let diffTime = date - new Date(sysSettings.shiftStart);
@@ -147,19 +152,18 @@
         return (sysSettings.shift === nap || sysSettings.shift === ej);
     }
 
-    // Ez a függvény legenerálja a jövőt a hiányzások és eltolások figyelembevételével!
     function calculateAllSchedules() {
         computedSchedule = {};
         let roster = [...sysSettings.roster];
         let pending = [...sysSettings.pending];
         let n = roster.length;
         let rotIndex = 0;
-        let pushed = []; // Akik hiányoztak és átkerülnek a KÖVETKEZŐ napra
+        let pushed = []; 
 
         let simDate = new Date(sysSettings.nameStart);
         simDate.setHours(0,0,0,0);
         let endDate = new Date();
-        endDate.setDate(endDate.getDate() + 45); // Számoljunk előre 45 napot
+        endDate.setDate(endDate.getDate() + 45); 
         endDate.setHours(0,0,0,0);
 
         while (simDate <= endDate) {
@@ -171,16 +175,14 @@
                 pushed = [];
                 let checkedToday = new Set();
 
-                // 2 embert kell találnunk a napra
                 while (todayWorkers.length < 2) {
                     if (checkedToday.size >= roster.length + todayPushed.length) {
-                        todayWorkers.push("Nincs több ember!"); break; // Végtelen ciklus védelem
+                        todayWorkers.push("Nincs több ember!"); break; 
                     }
 
                     let candidate;
                     let isFromPushed = false;
                     
-                    // Először azokat vizsgáljuk, akiket áttoltunk a múltkorról
                     if (todayPushed.length > 0) {
                         candidate = todayPushed[0];
                         isFromPushed = true;
@@ -195,16 +197,14 @@
                     }
                     checkedToday.add(candidate);
 
-                    // Hiányzik ma az illető?
                     if (dailyAbsences[candidate]) {
-                        pushed.push(candidate); // Áttoljuk a KÖVETKEZŐ munkanapra!
+                        pushed.push(candidate); 
                         if (isFromPushed) todayPushed.shift();
                         else {
                             rotIndex++;
-                            checkSmartInsertion(); // Ha lezárul egy kör, megnézzük van-e új ember
+                            checkSmartInsertion(); 
                         }
                     } else {
-                        // Dolgozik ma!
                         todayWorkers.push(candidate);
                         if (isFromPushed) todayPushed.shift();
                         else {
@@ -213,7 +213,6 @@
                         }
                     }
 
-                    // Belső függvény az okos beillesztéshez
                     function checkSmartInsertion() {
                         if (!isFromPushed && rotIndex > 0 && rotIndex % n === 0) {
                             if (pending.length > 0 && simDate.getTime() >= pending[0].addedDate) {
@@ -225,7 +224,6 @@
                     }
                 }
                 
-                // Akiket ma nem vizsgáltunk a pushed listából, azok is mennek holnapra
                 pushed = pushed.concat(todayPushed);
                 computedSchedule[dateKey] = todayWorkers;
             }
@@ -238,16 +236,16 @@
     }
 
     // ==========================================
-    // ⚡ INTERAKTÍV AKCIÓK (Hiányzás jelentése)
+    // ⚡ INTERAKTÍV AKCIÓK
     // ==========================================
     window.markAbsent = function(dateKey, name) {
-        if(confirm(`Szeretnéd jelezni, hogy ${name} ezen a napon NINCS ITT?\n\nA gép automatikusan behívja a következőt, ${name} pedig átkerül a következő munkanapra!`)) {
-            set(ref(db, `absences/${dateKey}/${name}`), true);
+        if(confirm(`Szeretnéd jelezni, hogy ${name} NINCS ITT?\n\nA gép automatikusan behívja a következőt, ${name} pedig átkerül a következő munkanapra!`)) {
+            db.ref(`absences/${dateKey}/${name}`).set(true);
         }
     };
 
     window.undoAbsent = function(dateKey, name) {
-        set(ref(db, `absences/${dateKey}/${name}`), null);
+        db.ref(`absences/${dateKey}/${name}`).set(null);
     };
 
     // ==========================================
@@ -279,9 +277,8 @@
         let dailyAbs = absences[dateKey] || {};
         let todayStr = today.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric', weekday: 'long' });
 
-        // Hiányzók visszavonó gombjai
         let absHTML = Object.keys(dailyAbs).length > 0 ? 
-            `<div class="absent-row">Hiányzik: ${Object.keys(dailyAbs).map(n => `<span class="absent-pill" onclick="undoAbsent('${dateKey}', '${n}')">${n} ↩</span>`).join('')}</div>` : '';
+            `<div class="absent-row">Szabin: ${Object.keys(dailyAbs).map(n => `<span class="absent-pill" onclick="undoAbsent('${dateKey}', '${n}')">${n} ↩</span>`).join('')}</div>` : '';
 
         hero.innerHTML = `
             ${headerHTML}
@@ -354,7 +351,7 @@
     function renderAdminRoster() {
         let html = "";
         sysSettings.roster.forEach((name, i) => {
-            html += `<div class="admin-list-item"><span>${name}</span> <span style="color:red; cursor:pointer;" onclick="removeWorker(${i})">✖</span></div>`;
+            html += `<div class="admin-list-item"><span>${name}</span> <span style="color:red; cursor:pointer; font-weight:bold; padding: 0 10px;" onclick="removeWorker(${i})">✖</span></div>`;
         });
         document.getElementById('adminRosterList').innerHTML = html;
 
@@ -384,7 +381,7 @@
         sysSettings.shiftStart = document.getElementById('setShiftStart').value;
         sysSettings.nameStart = document.getElementById('setNameStart').value;
         sysSettings.shift = document.getElementById('setShiftType').value;
-        set(ref(db, 'settings'), sysSettings).then(() => {
+        db.ref('settings').set(sysSettings).then(() => {
             alert("Sikeres mentés!");
             document.getElementById('adminPanel').style.display = 'none';
         });
