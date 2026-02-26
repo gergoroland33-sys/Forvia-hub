@@ -192,7 +192,7 @@
         /* --- GENERÁLT JELENTÉS (REJTETT) STÍLUS --- */
         #report-generator-container {
             position: fixed; left: -10000px; top: 0;
-            width: 1200px; /* Fix szélesség a jó minőséghez */
+            width: 1200px;
             background-color: white;
             z-index: 9999;
             font-family: 'Roboto', sans-serif;
@@ -204,7 +204,7 @@
         .rep-body { padding: 30px; background: #f4f6f8; }
         .rep-line-section { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; overflow: hidden; }
         .rep-line-title { background: #ecf0f1; padding: 15px 25px; font-size: 1.2rem; font-weight: 800; color: #34495e; border-bottom: 2px solid #bdc3c7; display: flex; justify-content: space-between; }
-        .rep-machines-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; } /* 4 gép egymás mellett */
+        .rep-machines-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; }
         .rep-machine { padding: 20px; border-right: 1px solid #f0f0f0; display: flex; flex-direction: column; }
         .rep-machine:last-child { border-right: none; }
         .rep-m-name { font-weight: 700; margin-bottom: 10px; font-size: 1.1rem; }
@@ -348,7 +348,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, onValue, remove, push, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-        // 1. ÚJ IMPORT: Auth modul hozzáadása
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -362,31 +361,10 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        
-        // 2. ÚJ KÓD: Anonim bejelentkeztetés
         const auth = getAuth(app);
-        signInAnonymously(auth)
-            .then(() => {
-                console.log("Anonim bejelentkezve - Adatbázis hozzáférés biztosítva");
-            })
-            .catch((error) => {
-                console.error("Auth hiba:", error);
-            });
-
         const db = getDatabase(app);
 
-        onValue(ref(db, ".info/connected"), (snap) => {
-            const statusDot = document.getElementById("statusDot");
-            const statusText = document.getElementById("statusText");
-            if (snap.val() === true) {
-                statusDot.className = "status-dot online";
-                statusText.innerText = "Mentés aktív";
-            } else {
-                statusDot.className = "status-dot offline";
-                statusText.innerText = "Nincs kapcsolat";
-            }
-        });
-
+        // Globális változók
         const machines = [
             { id: 1, name: 'High speed', s1: 15, s2: 15 },
             { id: 2, name: 'High speed', s1: 15, s2: 15 },
@@ -400,6 +378,44 @@
         let chart1 = null; 
         let chart2 = null;
 
+        // 1. ELŐSZÖR HITLESÍTÜNK...
+        signInAnonymously(auth)
+            .then(() => {
+                console.log("Anonim bejelentkezés sikeres - Adatok betöltése...");
+
+                // 2. CSAK SIKERES LOGIN UTÁN OLVASUNK AZ ADATBÁZISBÓL
+                onValue(ref(db, ".info/connected"), (snap) => {
+                    const statusDot = document.getElementById("statusDot");
+                    const statusText = document.getElementById("statusText");
+                    if (snap.val() === true) {
+                        statusDot.className = "status-dot online";
+                        statusText.innerText = "Mentés aktív";
+                    } else {
+                        statusDot.className = "status-dot offline";
+                        statusText.innerText = "Nincs kapcsolat";
+                    }
+                });
+
+                const dbRef = ref(db, 'smt_errors');
+                onValue(dbRef, (snapshot) => {
+                    globalData = snapshot.val() || {};
+                    // Ha a monitor nézeten vagyunk, frissítjük a kijelzőt
+                    if(document.getElementById('view-monitor').classList.contains('active')) {
+                        renderDashboard();
+                    }
+                });
+
+                // Alapértelmezett renderelés indítása
+                renderDashboard();
+            })
+            .catch((error) => {
+                console.error("Auth hiba:", error);
+                document.getElementById("statusText").innerText = "Hitelesítési hiba!";
+                document.getElementById("statusDot").className = "status-dot offline";
+            });
+
+
+        // --- UI FUNKCIÓK (Változatlanok, de a window objektumhoz kötjük őket) ---
         window.switchTab = function(tabName) {
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
@@ -417,15 +433,6 @@
             }
         }
 
-        const dbRef = ref(db, 'smt_errors');
-        onValue(dbRef, (snapshot) => {
-            globalData = snapshot.val() || {};
-            if(document.getElementById('view-monitor').classList.contains('active')) {
-                renderDashboard();
-            }
-        });
-
-        // --- DASHBOARD RENDERELÉS ---
         window.renderDashboard = function() {
             const selectorValue = document.getElementById('lineSelector').value;
             const container = document.getElementById('monitor-content');
@@ -435,8 +442,7 @@
 
             linesToShow.forEach(lineId => {
                 const lineErrors = globalData[lineId] || {};
-                let totalLineErrors = 0;
-                Object.keys(lineErrors).forEach(k => totalLineErrors++);
+                let totalLineErrors = Object.keys(lineErrors).length;
 
                 const lineWrapper = document.createElement('div');
                 lineWrapper.className = 'line-wrapper';
@@ -507,7 +513,6 @@
             return html + '</div>';
         }
 
-        // --- JELENTÉS GENERÁLÓ ---
         window.generateReport = async function() {
             const btn = document.querySelector('.btn-report');
             const originalText = btn.innerHTML;
@@ -604,7 +609,6 @@
             btn.innerHTML = originalText;
         }
 
-        // --- MODAL & ADATBÁZIS ---
         window.openModal = function(line, key, mId, side, nId) {
             currentSelection = { line, key, mId, side, nId };
             const error = (globalData[line] || {})[key];
