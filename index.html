@@ -940,17 +940,17 @@
 
     document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
 
-    // --- HOZZÁADOTT BIZTONSÁGOS DRAG & DROP FUNKCIÓ (KATTINTÁS BARÁT) ---
+    // --- HOZZÁADOTT BIZTONSÁGOS DRAG & DROP FUNKCIÓ (KATTINTÁS BARÁT, JAVÍTOTT) ---
     (function() {
         const nav = document.querySelector('.nav-list');
         if (!nav) return;
         
-        // CSS dinamikus betöltése, hogy az eredeti HTML érintetlen maradjon
+        // CSS dinamikus betöltése
         const style = document.createElement('style');
         style.innerHTML = `
             .nav-item { cursor: grab; -webkit-user-drag: element; }
             .nav-item:active { cursor: grabbing; }
-            .nav-item.mobile-dragging { opacity: 0.4 !important; border: 1px dashed var(--accent) !important; background: rgba(59, 130, 246, 0.1) !important; transform: scale(0.98); }
+            .nav-item.mobile-dragging { opacity: 1 !important; filter: brightness(0.6); border: 1px dashed var(--accent) !important; background: rgba(59, 130, 246, 0.2) !important; transform: scale(0.98); }
             .nav-item.drag-over { background: rgba(59, 130, 246, 0.3) !important; }
         `;
         document.head.appendChild(style);
@@ -975,7 +975,7 @@
                 dragEl = this;
                 e.dataTransfer.effectAllowed = 'move';
                 e.dataTransfer.setData('text/html', this.innerHTML);
-                setTimeout(() => this.style.opacity = '0.4', 0);
+                setTimeout(() => this.classList.add('mobile-dragging'), 0);
             });
             
             item.addEventListener('dragover', function(e) {
@@ -1000,8 +1000,12 @@
             });
             
             item.addEventListener('dragend', function(e) {
-                this.style.opacity = '1';
-                Array.from(nav.children).forEach(i => i.classList.remove('drag-over'));
+                this.classList.remove('mobile-dragging');
+                Array.from(nav.children).forEach(i => {
+                    i.classList.remove('drag-over');
+                    i.classList.remove('mobile-dragging'); // Biztosíték
+                });
+                dragEl = null;
             });
 
             // Mobil események (Védett logika a kattintás érdekében)
@@ -1012,20 +1016,20 @@
                 if(e.touches.length > 1) return;
                 isDragging = false;
                 dragEl = this;
-                // Hosszan nyomás aktiválja a húzást (fél másodperc)
+                // Hosszan nyomás aktiválja a húzást (MÓDOSÍTVA: 800ms)
                 pressTimer = setTimeout(() => {
                     isDragging = true;
-                    item.classList.add('mobile-dragging');
+                    dragEl.classList.add('mobile-dragging');
                     if(navigator.vibrate) navigator.vibrate(50);
-                }, 500); 
+                }, 800); 
             }, {passive: true});
 
             item.addEventListener('touchmove', function(e) {
                 if (!isDragging) {
-                    clearTimeout(pressTimer); // Ha gyorsan ujjat húz, az görgetés
+                    clearTimeout(pressTimer); 
                     return;
                 }
-                e.preventDefault(); // Csak húzáskor blokkoljuk a natív görgetést
+                e.preventDefault(); 
                 const touch = e.touches[0];
                 const target = document.elementFromPoint(touch.clientX, touch.clientY);
                 
@@ -1042,13 +1046,16 @@
             item.addEventListener('touchend', function(e) {
                 clearTimeout(pressTimer);
                 if (isDragging) {
-                    setTimeout(() => { isDragging = false; }, 100);
-                    item.classList.remove('mobile-dragging');
+                    // Tisztítás: eltávolítjuk a formázást mindenről
+                    Array.from(nav.children).forEach(i => i.classList.remove('mobile-dragging'));
+                    if (dragEl) dragEl.classList.remove('mobile-dragging');
                     saveOrder();
+                    
+                    // Késleltetjük az isDragging kikapcsolását, hogy a click eventet blokkolja
+                    setTimeout(() => { isDragging = false; dragEl = null; }, 100);
                 }
             });
             
-            // Ha éppen húztuk, megakadályozzuk, hogy rányomjon a gombra a végén
             item.addEventListener('click', function(e) {
                 if (isDragging) {
                     e.preventDefault();
