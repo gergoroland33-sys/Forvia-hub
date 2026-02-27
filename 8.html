@@ -614,6 +614,7 @@
         function closeMobileDetail() {
             document.getElementById('m-detail-view').classList.add('hidden');
             document.getElementById('m-list-view').classList.remove('hidden');
+            mSelectedUserIndex = -1; // <-- EZ LETT BEILLESZTVE A BIZTONSÁG ÉRDEKÉBEN
             renderMobileList();
         }
 
@@ -644,6 +645,8 @@
             const grid = document.getElementById('m-calendar-grid');
             let html = "";
             const emp = employees[mSelectedUserIndex];
+
+            if (!emp) return; // <-- EZ LETT BEILLESZTVE A BIZTONSÁG ÉRDEKÉBEN
 
             for(let i=0; i<offset; i++) {
                 html += `<div class="m-day border-0 bg-transparent"></div>`;
