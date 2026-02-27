@@ -469,21 +469,49 @@
         .hm-shift-label { opacity: 0.7; font-size: 0.6rem; text-transform: uppercase; }
         .hm-shift-val { font-size: 0.85rem; }
 
-        /* --- HOZZÁADVA: PIN MODAL STYLES (PROFI JELSZÓ BEKÉRŐ) --- */
+        /* --- HOZZÁADVA: PROFI JELSZÓ BEKÉRŐ (ÁTTERVEZVE) --- */
         .pin-modal-backdrop { position: fixed; inset: 0; z-index: 4000; background: rgba(11, 17, 32, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; }
         .pin-modal-backdrop.open { display: flex; opacity: 1; }
-        .pin-modal-card { background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; width: 90%; max-width: 350px; padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: scaleUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        
+        .pin-modal-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-top: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px; width: 90%; max-width: 320px; padding: 30px 25px;
+            box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6);
+            animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex; flex-direction: column; align-items: center;
+        }
         @keyframes scaleUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .pin-input { width: 100%; background: #0f172a; border: 2px solid #334155; color: white; font-size: 1.2rem; font-weight: bold; text-align: center; padding: 12px; border-radius: 8px; outline: none; margin-bottom: 15px; font-family: monospace; }
-        .pin-input:focus { border-color: var(--accent); box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); }
-        .remember-label { display: flex; align-items: center; gap: 10px; cursor: pointer; color: #cbd5e1; font-size: 0.85rem; user-select: none; margin-bottom: 20px; }
-        .pin-checkbox { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
-        .pin-btn { flex: 1; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 0.9rem; cursor: pointer; text-transform: uppercase; border: none; transition: 0.2s; }
-        .pin-btn.cancel { background: transparent; color: #94a3b8; border: 1px solid #334155; }
-        .pin-btn.cancel:active { background: #334155; }
-        .pin-btn.submit { background: var(--accent); color: white; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
-        .pin-btn.submit:active { transform: scale(0.95); }
-
+        
+        .pin-icon-wrap {
+            width: 50px; height: 50px; border-radius: 50%; background: rgba(59, 130, 246, 0.1);
+            color: var(--accent); display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; margin-bottom: 15px; border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .pin-input {
+            width: 100%; background: rgba(0, 0, 0, 0.2); border: none; border-bottom: 2px solid #334155;
+            color: white; font-size: 1.5rem; font-weight: 300; text-align: center; padding: 10px 5px;
+            outline: none; margin-bottom: 20px; font-family: monospace; letter-spacing: 5px; transition: 0.3s;
+        }
+        .pin-input:focus { border-bottom-color: var(--accent); }
+        
+        .remember-label {
+            display: flex; align-items: center; gap: 8px; cursor: pointer; color: #94a3b8; font-size: 0.8rem; user-select: none; margin-bottom: 25px; width: 100%; justify-content: center;
+        }
+        .remember-label input[type="checkbox"] { display: none; }
+        .custom-checkbox { width: 16px; height: 16px; border: 1px solid #64748b; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .remember-label input[type="checkbox"]:checked + .custom-checkbox { background: var(--accent); border-color: var(--accent); }
+        .custom-checkbox::after { content: '✔'; color: white; font-size: 10px; display: none; }
+        .remember-label input[type="checkbox"]:checked + .custom-checkbox::after { display: block; }
+        
+        .pin-btn-row { display: flex; gap: 12px; width: 100%; }
+        .pin-btn { flex: 1; padding: 12px; border-radius: 12px; font-weight: 600; font-size: 0.85rem; cursor: pointer; text-transform: uppercase; border: none; transition: 0.2s; letter-spacing: 0.5px; }
+        .pin-btn.cancel { background: rgba(255, 255, 255, 0.05); color: #cbd5e1; }
+        .pin-btn.cancel:active { background: rgba(255, 255, 255, 0.1); }
+        .pin-btn.submit { background: var(--accent); color: white; }
+        .pin-btn.submit:active { transform: scale(0.95); background: #2563eb; }
     </style>
 </head>
 <body>
@@ -503,17 +531,19 @@
 
 <div class="pin-modal-backdrop" id="pinModal">
     <div class="pin-modal-card">
-        <h3 style="margin-top:0; color:white; font-size:1.2rem; letter-spacing:1px; text-align: center;">🔒 Védett Modul</h3>
-        <p style="color:#94a3b8; font-size:0.85rem; margin-bottom:20px; text-align: center;">Kérlek, add meg a Staff Pro 2026 jelszót a folytatáshoz.</p>
+        <div class="pin-icon-wrap">🔐</div>
+        <h3 style="margin:0 0 5px 0; color:white; font-size:1.1rem; font-weight: 700; letter-spacing:0.5px;">Védett Modul</h3>
+        <p style="color:#94a3b8; font-size:0.75rem; margin-bottom:20px; text-align: center; line-height: 1.4;">A <b>Staff Pro 2026</b> megnyitásához hitelesítés szükséges.</p>
         
-        <input type="password" id="pinInput" placeholder="Jelszó..." class="pin-input">
+        <input type="password" id="pinInput" placeholder="••••••••" class="pin-input" autocomplete="off" onkeydown="if(event.key === 'Enter') submitPin();">
         
         <label class="remember-label">
-            <input type="checkbox" id="pinRemember" class="pin-checkbox">
-            <span>Jegyezze meg ezen az eszközön</span>
+            <input type="checkbox" id="pinRemember">
+            <div class="custom-checkbox"></div>
+            <span>Eszköz megjegyzése</span>
         </label>
         
-        <div style="display:flex; gap:10px;">
+        <div class="pin-btn-row">
             <button class="pin-btn cancel" onclick="closePinModal()">Mégse</button>
             <button class="pin-btn submit" onclick="submitPin()">Belépés</button>
         </div>
@@ -586,6 +616,7 @@
         <div onclick="loadModule('4.html', false, this)" class="nav-item"><i>📝</i> Napi Jelentés segédlet</div>
         <div onclick="loadModule('5.html', false, this)" class="nav-item"><i>🎭</i> Maszk kereső</div>
         <div onclick="openSecureLink(this)" class="nav-item"><i>⚙️</i>Adatgeneráló 🔐</div>
+        <div onclick="loadModule('7.html', false, this)" class="nav-item"><i>📊</i> Hiba Analízis</div>
         <div onclick="openStaffPro(this)" class="nav-item"><i>👥</i> Szabadságok 2026 🔐</div>
         <div onclick="loadModule('9.html', false, this)" class="nav-item"><i>📷</i> Operátori Barcode Scan </div>
         <div onclick="loadModule('10.html', false, this)" class="nav-item"><i>🚮</i> Szemétkihordás Terv</div>
@@ -967,7 +998,7 @@
         document.getElementById('pinRemember').checked = false; // Pipa kiszedése alapból
         modal.classList.add('open');
         
-        // Fókusz rárakása a mezőre kis késleltetéssel (hogy az animáció lefusson)
+        // Fókusz rárakása a mezőre
         setTimeout(() => document.getElementById('pinInput').focus(), 100);
     }
 
@@ -981,11 +1012,11 @@
         const remember = document.getElementById('pinRemember').checked;
         
         if (pin === "smtforvia2026") {
-            // CSAK AKKOR menti el, ha be volt pipálva az "Emlékezz rám"
+            // CSAK AKKOR menti el, ha be volt pipálva az "Eszköz megjegyzése"
             if (remember) {
                 localStorage.setItem('fv_staffpro_auth', 'true');
             } else {
-                localStorage.removeItem('fv_staffpro_auth'); // Biztos ami biztos töröljük
+                localStorage.removeItem('fv_staffpro_auth'); 
             }
             closePinModal();
             loadModule('8.html');
