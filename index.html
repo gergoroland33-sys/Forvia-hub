@@ -469,6 +469,21 @@
         .hm-shift-label { opacity: 0.7; font-size: 0.6rem; text-transform: uppercase; }
         .hm-shift-val { font-size: 0.85rem; }
 
+        /* --- HOZZÁADVA: PIN MODAL STYLES (PROFI JELSZÓ BEKÉRŐ) --- */
+        .pin-modal-backdrop { position: fixed; inset: 0; z-index: 4000; background: rgba(11, 17, 32, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; }
+        .pin-modal-backdrop.open { display: flex; opacity: 1; }
+        .pin-modal-card { background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; width: 90%; max-width: 350px; padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: scaleUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        @keyframes scaleUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .pin-input { width: 100%; background: #0f172a; border: 2px solid #334155; color: white; font-size: 1.2rem; font-weight: bold; text-align: center; padding: 12px; border-radius: 8px; outline: none; margin-bottom: 15px; font-family: monospace; }
+        .pin-input:focus { border-color: var(--accent); box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); }
+        .remember-label { display: flex; align-items: center; gap: 10px; cursor: pointer; color: #cbd5e1; font-size: 0.85rem; user-select: none; margin-bottom: 20px; }
+        .pin-checkbox { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+        .pin-btn { flex: 1; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 0.9rem; cursor: pointer; text-transform: uppercase; border: none; transition: 0.2s; }
+        .pin-btn.cancel { background: transparent; color: #94a3b8; border: 1px solid #334155; }
+        .pin-btn.cancel:active { background: #334155; }
+        .pin-btn.submit { background: var(--accent); color: white; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
+        .pin-btn.submit:active { transform: scale(0.95); }
+
     </style>
 </head>
 <body>
@@ -483,6 +498,25 @@
         </div>
         <div class="hm-body" id="holidayListContent">
             </div>
+    </div>
+</div>
+
+<div class="pin-modal-backdrop" id="pinModal">
+    <div class="pin-modal-card">
+        <h3 style="margin-top:0; color:white; font-size:1.2rem; letter-spacing:1px; text-align: center;">🔒 Védett Modul</h3>
+        <p style="color:#94a3b8; font-size:0.85rem; margin-bottom:20px; text-align: center;">Kérlek, add meg a Staff Pro 2026 jelszót a folytatáshoz.</p>
+        
+        <input type="password" id="pinInput" placeholder="Jelszó..." class="pin-input">
+        
+        <label class="remember-label">
+            <input type="checkbox" id="pinRemember" class="pin-checkbox">
+            <span>Jegyezze meg ezen az eszközön</span>
+        </label>
+        
+        <div style="display:flex; gap:10px;">
+            <button class="pin-btn cancel" onclick="closePinModal()">Mégse</button>
+            <button class="pin-btn submit" onclick="submitPin()">Belépés</button>
+        </div>
     </div>
 </div>
 
@@ -528,7 +562,7 @@
 
     <div class="ticker-wrap">
         <div class="ticker-move">
-            <div class="ticker-item">‼️A menü sorrend mostantol testreszabható lett! Tartsd nyomva és húzd ahova szeretnéd!‼️</div>
+            <div class="ticker-item">‼️Nyomj a frissítés gombra hogy mindig megkapd az újdonságokat ‼️</div>
         </div>
     </div>
 </div>
@@ -552,7 +586,6 @@
         <div onclick="loadModule('4.html', false, this)" class="nav-item"><i>📝</i> Napi Jelentés segédlet</div>
         <div onclick="loadModule('5.html', false, this)" class="nav-item"><i>🎭</i> Maszk kereső</div>
         <div onclick="openSecureLink(this)" class="nav-item"><i>⚙️</i>Adatgeneráló 🔐</div>
-        <div onclick="loadModule('7.html', false, this)" class="nav-item"><i>📊</i> Hiba Analízis</div>
         <div onclick="openStaffPro(this)" class="nav-item"><i>👥</i> Szabadságok 2026 🔐</div>
         <div onclick="loadModule('9.html', false, this)" class="nav-item"><i>📷</i> Operátori Barcode Scan </div>
         <div onclick="loadModule('10.html', false, this)" class="nav-item"><i>🚮</i> Szemétkihordás Terv</div>
@@ -917,17 +950,53 @@
         }
     }
 
+    // --- ÚJ PROFI JELSZÓ BEKÉRŐ RENDSZER ---
     function openStaffPro(caller) {
         if(navigator.vibrate) navigator.vibrate(15);
         if(caller) caller.blur();
-        let pin = prompt("Staff Pro 2026 - Biztonsági kód:");
-        if (pin === "smtforvia2026") {
+
+        // 1. Ellenőrizzük, hogy korábban bepipálta-e az "Emlékezz rám"-ot
+        if (localStorage.getItem('fv_staffpro_auth') === 'true') {
             loadModule('8.html');
-        } else if (pin !== null) {
+            return;
+        }
+
+        // 2. Ha nem, megjelenítjük a profi ablakot a prompt() helyett
+        const modal = document.getElementById('pinModal');
+        document.getElementById('pinInput').value = ''; // Mező űrítése
+        document.getElementById('pinRemember').checked = false; // Pipa kiszedése alapból
+        modal.classList.add('open');
+        
+        // Fókusz rárakása a mezőre kis késleltetéssel (hogy az animáció lefusson)
+        setTimeout(() => document.getElementById('pinInput').focus(), 100);
+    }
+
+    // --- A MODAL LOGIKÁJA ---
+    function closePinModal() {
+        document.getElementById('pinModal').classList.remove('open');
+    }
+
+    function submitPin() {
+        const pin = document.getElementById('pinInput').value;
+        const remember = document.getElementById('pinRemember').checked;
+        
+        if (pin === "smtforvia2026") {
+            // CSAK AKKOR menti el, ha be volt pipálva az "Emlékezz rám"
+            if (remember) {
+                localStorage.setItem('fv_staffpro_auth', 'true');
+            } else {
+                localStorage.removeItem('fv_staffpro_auth'); // Biztos ami biztos töröljük
+            }
+            closePinModal();
+            loadModule('8.html');
+        } else {
             alert("Hibás kód!");
             sendDiscordLog("🚨 HIBÁS PIN: Szabadságok", 16711680);
+            document.getElementById('pinInput').value = ''; // Ürítjük, hogy újra írhassa
+            document.getElementById('pinInput').focus();
         }
     }
+    // --- EDDIG TART AZ ÚJ LOGIKA ---
 
     async function shareApp(caller) {
         if(navigator.vibrate) navigator.vibrate(15);
