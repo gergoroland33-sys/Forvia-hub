@@ -226,17 +226,33 @@
         .rep-err-loc { font-weight: bold; font-family: 'JetBrains Mono', monospace; }
         .rep-ok-badge { color: #27ae60; font-weight: bold; background: #f0fff4; padding: 5px 10px; border-radius: 6px; border: 1px solid #c6f6d5; display: inline-block; }
 
-        @media (max-width: 600px) {
-            .stats-charts { grid-template-columns: 1fr; }
-            .header-left h1 { font-size: 1.1rem; }
-            .nav-tabs { top: 55px; }
-            .dashboard-grid { grid-template-columns: 1fr; }
-            .data-table { min-width: 600px; } 
-            .history-table-container { overflow-x: scroll; }
+        /* --- MOBIL RESZPONSZIVITÁS JAVÍTÁSA --- */
+        @media (max-width: 768px) {
+            header { flex-direction: column; align-items: stretch; padding: 12px 15px; gap: 12px; position: static; }
+            .header-left { justify-content: center; }
+            header > div:last-child { justify-content: space-between; flex-wrap: wrap; gap: 10px; width: 100%; }
+            .connection-status { flex: 1; justify-content: center; min-width: 120px; }
+            .btn-report { flex: 1; justify-content: center; min-width: 140px; }
             .btn-report span { display: none; }
-            .stats-header { flex-direction: column; align-items: flex-start; }
-            .date-filter-container { width: 100%; justify-content: space-between; }
+            #lineSelector { width: 100%; }
+            
+            .nav-tabs { position: static; padding: 10px 0; }
+            
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .stats-charts { grid-template-columns: 1fr; }
+            
+            .history-table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 20px; }
+            .data-table { min-width: 600px; } 
+            
+            .stats-header { flex-direction: column; align-items: stretch; gap: 15px; text-align: center; }
+            .stats-header > div:first-child { display: flex; flex-direction: column; align-items: center; }
+            
+            .date-filter-container { width: 100%; gap: 8px; justify-content: center; }
+            .filter-label { width: 100%; text-align: center; margin-bottom: 2px; }
+            .date-input { flex: 1; min-width: 110px; }
+            .btn-print { margin-left: 0 !important; width: 100%; justify-content: center; margin-top: 5px; }
         }
+        
         @media print {
             body * { visibility: hidden; }
             #history-content, #history-content * { visibility: visible; }
@@ -673,7 +689,6 @@
             }
         }
 
-        // ÚJ: Gomb a szűrés azonnali törléséhez
         window.clearDateFilter = function() {
             document.getElementById('filterDateFrom').value = '';
             document.getElementById('filterDateTo').value = '';
@@ -700,7 +715,6 @@
                 }
             });
 
-            // Csak akkor szűrünk, ha a felhasználó kifejezetten megadott egy dátumot
             if (filterFrom || filterTo) {
                 allEntries = allEntries.filter(log => {
                     const logTime = new Date(log.timestamp).getTime();
@@ -708,13 +722,13 @@
 
                     if (filterFrom) {
                         const fromDate = new Date(filterFrom);
-                        fromDate.setHours(0, 0, 0, 0); // Nap eleje
+                        fromDate.setHours(0, 0, 0, 0); 
                         if (logTime < fromDate.getTime()) isValid = false;
                     }
                     
                     if (filterTo) {
                         const toDate = new Date(filterTo);
-                        toDate.setHours(23, 59, 59, 999); // Nap vége, hogy az adott napi eseményeket ne vágja le!
+                        toDate.setHours(23, 59, 59, 999); 
                         if (logTime > toDate.getTime()) isValid = false;
                     }
                     return isValid;
