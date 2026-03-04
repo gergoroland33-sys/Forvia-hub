@@ -194,6 +194,8 @@
         .date-input { padding: 8px 12px; border: 1px solid #ced6e0; border-radius: 6px; font-size: 0.9rem; font-family: inherit; color: var(--primary-dark); outline: none; transition: border 0.2s; background: white; }
         .date-input:focus { border-color: var(--accent); }
         .filter-label { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+        .btn-clear-filter { background: none; border: none; cursor: pointer; font-size: 1.1rem; color: #e74c3c; padding: 0 5px; opacity: 0.6; transition: opacity 0.2s; }
+        .btn-clear-filter:hover { opacity: 1; }
 
         /* --- GENERÁLT JELENTÉS (REJTETT) STÍLUS --- */
         #report-generator-container {
@@ -287,10 +289,11 @@
                 </div>
                 
                 <div class="date-filter-container no-print">
-                    <span class="filter-label">Dátum:</span>
+                    <span class="filter-label">Dátum szűrés:</span>
                     <input type="date" id="filterDateFrom" class="date-input" onchange="loadHistoryData()">
                     <span style="color:#bdc3c7; font-weight:bold;">-</span>
                     <input type="date" id="filterDateTo" class="date-input" onchange="loadHistoryData()">
+                    <button class="btn-clear-filter" onclick="clearDateFilter()" title="Szűrés törlése">✖</button>
                     
                     <button class="btn-print" onclick="window.print()" style="margin-left:10px;">🖨️ Nyomtatás</button>
                 </div>
@@ -380,7 +383,6 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // Globális változók
         const machines = [
             { id: 1, name: 'High speed', s1: 15, s2: 15 },
             { id: 2, name: 'High speed', s1: 15, s2: 15 },
@@ -394,12 +396,8 @@
         let chart1 = null; 
         let chart2 = null;
 
-        // 1. ELŐSZÖR HITLESÍTÜNK...
         signInAnonymously(auth)
             .then(() => {
-                console.log("Anonim bejelentkezés sikeres - Adatok betöltése...");
-
-                // 2. CSAK SIKERES LOGIN UTÁN OLVASUNK AZ ADATBÁZISBÓL
                 onValue(ref(db, ".info/connected"), (snap) => {
                     const statusDot = document.getElementById("statusDot");
                     const statusText = document.getElementById("statusText");
@@ -423,7 +421,6 @@
                 renderDashboard();
             })
             .catch((error) => {
-                console.error("Auth hiba:", error);
                 document.getElementById("statusText").innerText = "Hitelesítési hiba!";
                 document.getElementById("statusDot").className = "status-dot offline";
             });
@@ -606,10 +603,7 @@
 
             await new Promise(resolve => setTimeout(resolve, 300));
 
-            const canvas = await html2canvas(reportContainer, {
-                scale: 2, 
-                backgroundColor: '#ffffff'
-            });
+            const canvas = await html2canvas(reportContainer, { scale: 2, backgroundColor: '#ffffff' });
 
             const fileNameDate = now.toISOString().replace(/[:.]/g, '-').slice(0, 16);
             const link = document.createElement('a');
@@ -679,11 +673,17 @@
             }
         }
 
+        // ÚJ: Gomb a szűrés azonnali törléséhez
+        window.clearDateFilter = function() {
+            document.getElementById('filterDateFrom').value = '';
+            document.getElementById('filterDateTo').value = '';
+            loadHistoryData();
+        }
+
         window.loadHistoryData = async function() {
             const line = document.getElementById('lineSelector').value;
             document.getElementById('statsLineTitle').innerText = (line === 'ALL') ? "ÖSSZES GÉPSOR" : line;
             
-            // Dátum szűrők beolvasása
             const filterFrom = document.getElementById('filterDateFrom').value;
             const filterTo = document.getElementById('filterDateTo').value;
 
@@ -700,24 +700,26 @@
                 }
             });
 
-            // ÚJ: Dátum alapú szűrés memóriában (nincs DB törlés!)
-            allEntries = allEntries.filter(log => {
-                const logDate = new Date(log.timestamp);
-                logDate.setHours(0,0,0,0); // Csak a napot vizsgáljuk, óra/percet levágjuk az összehasonlításhoz
+            // Csak akkor szűrünk, ha a felhasználó kifejezetten megadott egy dátumot
+            if (filterFrom || filterTo) {
+                allEntries = allEntries.filter(log => {
+                    const logTime = new Date(log.timestamp).getTime();
+                    let isValid = true;
 
-                if (filterFrom) {
-                    const fromDate = new Date(filterFrom);
-                    fromDate.setHours(0,0,0,0);
-                    if (logDate < fromDate) return false;
-                }
-                
-                if (filterTo) {
-                    const toDate = new Date(filterTo);
-                    toDate.setHours(0,0,0,0);
-                    if (logDate > toDate) return false;
-                }
-                return true;
-            });
+                    if (filterFrom) {
+                        const fromDate = new Date(filterFrom);
+                        fromDate.setHours(0, 0, 0, 0); // Nap eleje
+                        if (logTime < fromDate.getTime()) isValid = false;
+                    }
+                    
+                    if (filterTo) {
+                        const toDate = new Date(filterTo);
+                        toDate.setHours(23, 59, 59, 999); // Nap vége, hogy az adott napi eseményeket ne vágja le!
+                        if (logTime > toDate.getTime()) isValid = false;
+                    }
+                    return isValid;
+                });
+            }
 
             allEntries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
             
@@ -755,7 +757,6 @@
             if(chart1) chart1.destroy();
             if(chart2) chart2.destroy();
 
-            // ÚJ: Kördiagram (doughnut) lecserélve Oszlopdiagramra (bar)
             chart1 = new Chart(document.getElementById('chartReasons'), {
                 type: 'bar',
                 data: { 
@@ -770,7 +771,7 @@
                 options: { 
                     responsive: true, 
                     maintainAspectRatio: false, 
-                    plugins: { legend: { display: false } }, // Oszlopnál kikapcsoljuk a felesleges legendát
+                    plugins: { legend: { display: false } },
                     scales: { 
                         y: { beginAtZero: true, grid:{color:'#f0f0f0'}, ticks: { precision: 0 } }, 
                         x: { grid:{display:false} } 
