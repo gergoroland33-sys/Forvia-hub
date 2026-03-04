@@ -189,6 +189,12 @@
         .btn-confirm { background: var(--danger); color: white; }
         .btn-reset { width: 100%; margin-top: 15px; background: var(--success); color: white; padding: 12px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; }
 
+        /* --- DÁTUM SZŰRŐ STÍLUSOK --- */
+        .date-filter-container { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .date-input { padding: 8px 12px; border: 1px solid #ced6e0; border-radius: 6px; font-size: 0.9rem; font-family: inherit; color: var(--primary-dark); outline: none; transition: border 0.2s; background: white; }
+        .date-input:focus { border-color: var(--accent); }
+        .filter-label { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+
         /* --- GENERÁLT JELENTÉS (REJTETT) STÍLUS --- */
         #report-generator-container {
             position: fixed; left: -10000px; top: 0;
@@ -226,6 +232,8 @@
             .data-table { min-width: 600px; } 
             .history-table-container { overflow-x: scroll; }
             .btn-report span { display: none; }
+            .stats-header { flex-direction: column; align-items: flex-start; }
+            .date-filter-container { width: 100%; justify-content: space-between; }
         }
         @media print {
             body * { visibility: hidden; }
@@ -277,12 +285,20 @@
                     <h2 style="margin:0; color:var(--primary-dark);">Eseménynapló</h2>
                     <small style="color:var(--text-muted);">Szűrés: <strong id="statsLineTitle" style="color:var(--accent);">ÖSSZES GÉPSOR</strong></small>
                 </div>
-                <button class="btn-print no-print" onclick="window.print()">🖨️ Nyomtatás</button>
+                
+                <div class="date-filter-container no-print">
+                    <span class="filter-label">Dátum:</span>
+                    <input type="date" id="filterDateFrom" class="date-input" onchange="loadHistoryData()">
+                    <span style="color:#bdc3c7; font-weight:bold;">-</span>
+                    <input type="date" id="filterDateTo" class="date-input" onchange="loadHistoryData()">
+                    
+                    <button class="btn-print" onclick="window.print()" style="margin-left:10px;">🖨️ Nyomtatás</button>
+                </div>
             </div>
 
             <div class="stats-charts">
                 <div class="chart-container">
-                    <h3 style="margin-top:0; font-size:0.9rem; color:#95a5a6; text-transform:uppercase;">Hiba típusok</h3>
+                    <h3 style="margin-top:0; font-size:0.9rem; color:#95a5a6; text-transform:uppercase;">Hiba típusok megoszlása</h3>
                     <div style="height:230px; display:flex; justify-content:center;">
                         <canvas id="chartReasons"></canvas>
                     </div>
@@ -399,13 +415,11 @@
                 const dbRef = ref(db, 'smt_errors');
                 onValue(dbRef, (snapshot) => {
                     globalData = snapshot.val() || {};
-                    // Ha a monitor nézeten vagyunk, frissítjük a kijelzőt
                     if(document.getElementById('view-monitor').classList.contains('active')) {
                         renderDashboard();
                     }
                 });
 
-                // Alapértelmezett renderelés indítása
                 renderDashboard();
             })
             .catch((error) => {
@@ -414,8 +428,6 @@
                 document.getElementById("statusDot").className = "status-dot offline";
             });
 
-
-        // --- UI FUNKCIÓK (Változatlanok, de a window objektumhoz kötjük őket) ---
         window.switchTab = function(tabName) {
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
@@ -670,10 +682,16 @@
         window.loadHistoryData = async function() {
             const line = document.getElementById('lineSelector').value;
             document.getElementById('statsLineTitle').innerText = (line === 'ALL') ? "ÖSSZES GÉPSOR" : line;
+            
+            // Dátum szűrők beolvasása
+            const filterFrom = document.getElementById('filterDateFrom').value;
+            const filterTo = document.getElementById('filterDateTo').value;
+
             let allEntries = [];
             const linesToList = (line === 'ALL') ? allLines : [line];
             const snapshotRoot = await get(child(ref(db), `smt_logs`));
             const rootData = snapshotRoot.exists() ? snapshotRoot.val() : {};
+            
             linesToList.forEach(currLine => {
                 if(rootData[currLine]) {
                     Object.entries(rootData[currLine]).forEach(([logId, log]) => {
@@ -681,22 +699,47 @@
                     });
                 }
             });
+
+            // ÚJ: Dátum alapú szűrés memóriában (nincs DB törlés!)
+            allEntries = allEntries.filter(log => {
+                const logDate = new Date(log.timestamp);
+                logDate.setHours(0,0,0,0); // Csak a napot vizsgáljuk, óra/percet levágjuk az összehasonlításhoz
+
+                if (filterFrom) {
+                    const fromDate = new Date(filterFrom);
+                    fromDate.setHours(0,0,0,0);
+                    if (logDate < fromDate) return false;
+                }
+                
+                if (filterTo) {
+                    const toDate = new Date(filterTo);
+                    toDate.setHours(0,0,0,0);
+                    if (logDate > toDate) return false;
+                }
+                return true;
+            });
+
             allEntries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
             const tbody = document.getElementById('historyTableBody');
             tbody.innerHTML = '';
             let reasons = {};
             let mCounts = {1:0, 2:0, 3:0, 4:0};
+            
             allEntries.forEach(log => {
                 const dateObj = new Date(log.timestamp);
                 const dateStr = dateObj.toLocaleDateString('hu-HU') + ' ' + dateObj.toLocaleTimeString('hu-HU', {hour:'2-digit', minute:'2-digit'});
                 const isError = log.type === 'DISABLE';
+                
                 if(isError) {
                     reasons[log.reason] = (reasons[log.reason] || 0) + 1;
                     mCounts[log.machineId] = (mCounts[log.machineId] || 0) + 1;
                 }
+                
                 const rowClass = isError ? 'row-error' : 'row-ok';
                 const badge = isError ? `<span class="log-badge bg-err">LEÁLLÍTÁS</span>` : `<span class="log-badge bg-ok">AKTIVÁLÁS</span>`;
                 const locationPrefix = (line === 'ALL') ? `<span style="color:var(--accent); font-weight:bold;">[${log._line}]</span> ` : '';
+                
                 tbody.innerHTML += `
                     <tr class="row-card ${rowClass}">
                         <td class="log-date">${dateStr}</td>
@@ -708,17 +751,44 @@
                         </td>
                     </tr>`;
             });
+
             if(chart1) chart1.destroy();
             if(chart2) chart2.destroy();
+
+            // ÚJ: Kördiagram (doughnut) lecserélve Oszlopdiagramra (bar)
             chart1 = new Chart(document.getElementById('chartReasons'), {
-                type: 'doughnut',
-                data: { labels: Object.keys(reasons), datasets: [{ data: Object.values(reasons), backgroundColor: ['#e74c3c','#3498db','#f1c40f','#9b59b6'], borderWidth:0 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position:'right' } } }
+                type: 'bar',
+                data: { 
+                    labels: Object.keys(reasons), 
+                    datasets: [{ 
+                        label: 'Esetek száma',
+                        data: Object.values(reasons), 
+                        backgroundColor: ['#e74c3c','#3498db','#f1c40f','#9b59b6', '#1abc9c'], 
+                        borderRadius: 6 
+                    }] 
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } }, // Oszlopnál kikapcsoljuk a felesleges legendát
+                    scales: { 
+                        y: { beginAtZero: true, grid:{color:'#f0f0f0'}, ticks: { precision: 0 } }, 
+                        x: { grid:{display:false} } 
+                    } 
+                }
             });
+
             chart2 = new Chart(document.getElementById('chartMachines'), {
                 type: 'bar',
-                data: { labels: ['Gép 1','Gép 2','Gép 3','Gép 4'], datasets: [{ label:'Hibák száma', data: Object.values(mCounts), backgroundColor:'#2c3e50', borderRadius:4 }] },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid:{color:'#f0f0f0'} }, x: { grid:{display:false} } } }
+                data: { labels: ['Gép 1','Gép 2','Gép 3','Gép 4'], datasets: [{ label:'Hibák száma', data: Object.values(mCounts), backgroundColor:'#2c3e50', borderRadius:6 }] },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { 
+                        y: { beginAtZero: true, grid:{color:'#f0f0f0'}, ticks: { precision: 0 } }, 
+                        x: { grid:{display:false} } 
+                    } 
+                }
             });
         }
     </script>
