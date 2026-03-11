@@ -149,8 +149,10 @@
     settingsRef.on('value', (snapshot) => {
         if (snapshot.exists()) {
             sysSettings = snapshot.val();
-            if(!sysSettings.pending) sysSettings.pending = [];
+            // Biztonsági ellenőrzések: ha a Firebase törölte az üres tömböket, hozzuk létre őket!
             if(!sysSettings.roster) sysSettings.roster = [];
+            if(!sysSettings.pending) sysSettings.pending = [];
+            
             if(Object.keys(absences).length >= 0) { calculateAllSchedules(); renderUI(); }
         }
     });
@@ -189,10 +191,13 @@
 
     function calculateAllSchedules() {
         computedSchedule = {};
+        
+        // Biztonsági ellenőrzés: Ha senki sincs az aktív listán, leállítjuk a számolást.
+        if (!sysSettings || !sysSettings.roster || sysSettings.roster.length === 0) return; 
+        
         let roster = [...sysSettings.roster];
-        let pending = [...sysSettings.pending];
+        let pending = [...(sysSettings.pending || [])];
         let n = roster.length;
-        if (n === 0) return; // Ha üres a névsor, nincs mit számolni
         
         let rotIndex = 0;
         let pushed = []; 
@@ -215,7 +220,9 @@
 
                 while (todayWorkers.length < 2) {
                     if (checkedToday.size >= roster.length + todayPushed.length) {
-                        todayWorkers.push("Nincs több!"); break; 
+                        todayWorkers.push("-"); // Kötőjel, ha tényleg nincs több elérhető ember
+                        if(todayWorkers.length === 2) break; 
+                        continue;
                     }
 
                     let candidate;
@@ -281,7 +288,7 @@
     // ⚡ INTERAKTÍV AKCIÓK
     // ==========================================
     window.markAbsent = function(dateKey, name) {
-        if(name === "Nincs több!" || name === "-") return;
+        if(!name || name === "Nincs több!" || name === "-") return;
         if(confirm(`Szeretnéd jelezni, hogy ${name} hiányzik ezen a napon?\n\nA rendszer automatikusan behívja a következőt, ${name} pedig átkerül a következő munkanapra.`)) {
             db.ref(`absences/${dateKey}/${name}`).set(true);
         }
@@ -304,6 +311,17 @@
         today.setHours(0,0,0,0);
 
         const headerHTML = `<div class="header-pill" onclick="openAdmin()">${sysSettings.shift} MŰSZAK BEOSZTÁS</div>`;
+
+        // Ha üres az aktív lista
+        if (!sysSettings.roster || sysSettings.roster.length === 0) {
+            hero.innerHTML = `${headerHTML}
+                <div style="text-align: center; margin-top: 50px; opacity: 0.7;">
+                    <div style="font-size: 3rem; margin-bottom: 10px;">⚠️</div>
+                    <h2 style="color:white; font-weight: 600;">Üres a névsor</h2>
+                    <p style="color:var(--text-dim)">Lépj be az admin panelbe és vegyél fel dolgozókat!</p>
+                </div>`;
+            return;
+        }
 
         if (!isWorkingDay(today)) {
             hero.innerHTML = `${headerHTML}
@@ -348,7 +366,7 @@
         while(count < 10 && iterDate.getTime() < startDate.getTime() + 45 * 86400000) {
             if(isWorkingDay(iterDate)) {
                 let dKey = getDateKey(iterDate);
-                let workers = computedSchedule[dKey] || [];
+                let workers = computedSchedule[dKey] || ["-", "-"];
                 let dailyAbs = absences[dKey] || {};
                 
                 let dayShort = iterDate.toLocaleDateString('hu-HU', { weekday: 'short' });
@@ -365,8 +383,8 @@
                                 <span class="lc-date-text" style="margin-left:8px;">${dateFull}</span>
                             </div>
                             <div class="lc-pills">
-                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dKey}', '${workers[0]}')">${workers[0] || '-'}</div>
-                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dKey}', '${workers[1]}')">${workers[1] || '-'}</div>
+                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dKey}', '${workers[0]}')">${workers[0]}</div>
+                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dKey}', '${workers[1]}')">${workers[1]}</div>
                             </div>
                         </div>
                         ${absHTML}
@@ -394,6 +412,7 @@
 
     function renderAdminRoster() {
         let html = "";
+        if (!sysSettings.roster) sysSettings.roster = [];
         sysSettings.roster.forEach((name, i) => {
             html += `
             <div class="admin-list-item">
@@ -413,7 +432,10 @@
                 pHTML += `
                 <div class="admin-list-item">
                     <span style="color:var(--accent);">⏳ ${p.name}</span>
-                    <button class="btn-action btn-delete" onclick="removePending(${i})">Törlés</button>
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn-action" style="background:var(--primary);" title="Azonnali aktiválás" onclick="activatePending(${i})">⚡</button>
+                        <button class="btn-action btn-delete" title="Törlés" onclick="removePending(${i})">✖</button>
+                    </div>
                 </div>`; 
             });
         } else {
@@ -449,11 +471,28 @@
         }
     };
 
+    // ÚJ FUNKCIÓ: Várakozó azonnali áthelyezése az aktívak közé
+    window.activatePending = function(index) {
+        if (!sysSettings.roster) sysSettings.roster = [];
+        let worker = sysSettings.pending.splice(index, 1)[0];
+        sysSettings.roster.push(worker.name);
+        renderAdminRoster();
+    };
+
     window.addNewWorker = function() {
         let name = document.getElementById('newWorkerName').value.trim();
         if(name === "") return;
+        
+        if(!sysSettings.roster) sysSettings.roster = [];
         if(!sysSettings.pending) sysSettings.pending = [];
-        sysSettings.pending.push({ name: name, addedDate: new Date().getTime() });
+
+        // Ha az aktív lista teljesen üres, azonnal oda tesszük, hogy beinduljon a rendszer!
+        if (sysSettings.roster.length === 0) {
+            sysSettings.roster.push(name);
+        } else {
+            sysSettings.pending.push({ name: name, addedDate: new Date().getTime() });
+        }
+        
         document.getElementById('newWorkerName').value = "";
         renderAdminRoster();
     };
