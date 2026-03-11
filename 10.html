@@ -39,15 +39,23 @@
         .lc-worker-pill { display: inline-flex; align-items: center; background: rgba(255,255,255,0.05); padding: 6px 14px; border-radius: 8px; font-size: 0.9rem; font-weight: 700; cursor: pointer; border: 1px solid transparent; color: #fff; transition: all 0.2s;}
         .lc-worker-pill:hover { border-color: var(--primary); background: rgba(255,255,255,0.1); }
 
-        /* ADMIN PANEL UI */
-        #adminPanel { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; padding: 20px; overflow-y: auto; }
-        .admin-box { background: var(--surface); padding: 20px; border-radius: 12px; max-width: 400px; margin: 40px auto; border: 1px solid var(--primary); }
-        .admin-box h2 { color: var(--accent); margin-top: 0; }
-        .admin-input { width: 100%; padding: 10px; margin-bottom: 15px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; }
-        .admin-list { background: #000; padding: 10px; border-radius: 8px; max-height: 200px; overflow-y: auto; margin-bottom: 15px; }
-        .admin-list-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #333; }
-        .btn-save { background: var(--primary); color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 10px;}
-        .btn-close { background: transparent; color: var(--text-dim); width: 100%; padding: 10px; border: 1px solid #333; border-radius: 8px; cursor: pointer; }
+        /* ADMIN PANEL UI - PRO VERZIÓ */
+        #adminPanel { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; padding: 20px; overflow-y: auto; backdrop-filter: blur(5px); }
+        .admin-box { background: var(--surface); padding: 25px; border-radius: 16px; max-width: 450px; margin: 20px auto; border: 1px solid var(--primary); box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2); }
+        .admin-box h2 { color: var(--accent); margin-top: 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; font-weight: 800; letter-spacing: 1px;}
+        .admin-section { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; margin-bottom: 20px; }
+        .admin-section h3 { margin-top: 0; font-size: 0.9rem; color: var(--text-dim); text-transform: uppercase; margin-bottom: 15px; }
+        .admin-input { width: 100%; padding: 12px; margin-bottom: 15px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; transition: border 0.3s; }
+        .admin-input:focus { border-color: var(--primary); outline: none; }
+        .admin-list { background: #000; border-radius: 8px; max-height: 250px; overflow-y: auto; border: 1px solid #333; }
+        .admin-list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #222; }
+        .admin-list-item:last-child { border-bottom: none; }
+        .btn-action { background: rgba(255,255,255,0.1); border: none; color: white; border-radius: 6px; padding: 6px 12px; cursor: pointer; transition: 0.2s; font-size: 0.85rem; display: flex; align-items: center; justify-content: center;}
+        .btn-action:hover { background: var(--primary); }
+        .btn-delete { background: rgba(248, 113, 113, 0.1); color: #f87171; }
+        .btn-delete:hover { background: #f87171; color: white; }
+        .btn-save { background: var(--primary); color: white; width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 1rem;}
+        .btn-close { background: transparent; color: var(--text-dim); width: 100%; padding: 12px; border: 1px solid #333; border-radius: 8px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -63,24 +71,39 @@
 
     <div id="adminPanel">
         <div class="admin-box">
-            <h2>Vezérlőpult</h2>
-            <label>Műszak Ciklus Kezdete (Fix alap):</label>
-            <input type="date" id="setShiftStart" class="admin-input">
-            <label>Rotáció Kezdete (Matek indulás):</label>
-            <input type="date" id="setNameStart" class="admin-input">
-            <label>Jelenlegi Műszak:</label>
-            <select id="setShiftType" class="admin-input">
-                <option value="A">A Műszak</option><option value="B">B Műszak</option>
-                <option value="C">C Műszak</option><option value="D">D Műszak</option>
-            </select>
-            <label>Aktív Névsor (Katt a törléshez):</label>
-            <div class="admin-list" id="adminRosterList"></div>
-            <label>Új Dolgozó (Okos beillesztéssel):</label>
-            <div style="display:flex; gap:10px; margin-bottom:15px;">
-                <input type="text" id="newWorkerName" class="admin-input" style="margin-bottom:0;" placeholder="Név...">
-                <button onclick="addNewWorker()" style="background:var(--accent); border:none; border-radius:8px; font-weight:bold; padding:0 15px; color:white;">+</button>
+            <h2>PRO Vezérlőpult</h2>
+            
+            <div class="admin-section">
+                <h3>Alapbeállítások</h3>
+                <label style="font-size:0.8rem; color:var(--text-dim);">Műszak Ciklus Kezdete (Fix alap):</label>
+                <input type="date" id="setShiftStart" class="admin-input">
+                <label style="font-size:0.8rem; color:var(--text-dim);">Rotáció Kezdete (Matek indulás):</label>
+                <input type="date" id="setNameStart" class="admin-input">
+                <label style="font-size:0.8rem; color:var(--text-dim);">Jelenlegi Műszak:</label>
+                <select id="setShiftType" class="admin-input" style="margin-bottom:0;">
+                    <option value="A">A Műszak</option><option value="B">B Műszak</option>
+                    <option value="C">C Műszak</option><option value="D">D Műszak</option>
+                </select>
             </div>
-            <div id="pendingWorkers" style="font-size:0.8rem; color:var(--text-dim); margin-bottom:15px;"></div>
+
+            <div class="admin-section">
+                <h3>Aktív Névsor (Sorbarendezés / Törlés)</h3>
+                <div class="admin-list" id="adminRosterList"></div>
+            </div>
+
+            <div class="admin-section">
+                <h3>Új dolgozó hozzáadása</h3>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="newWorkerName" class="admin-input" style="margin-bottom:0;" placeholder="Új név...">
+                    <button onclick="addNewWorker()" style="background:var(--accent); border:none; border-radius:8px; font-weight:bold; padding:0 20px; color:white; font-size:1.2rem;">+</button>
+                </div>
+            </div>
+
+            <div class="admin-section">
+                <h3>Várakozó Dolgozók (Ciklus végén lépnek be)</h3>
+                <div class="admin-list" id="pendingWorkers"></div>
+            </div>
+
             <button class="btn-save" onclick="saveAdminSettings()">Mentés a Felhőbe</button>
             <button class="btn-close" onclick="document.getElementById('adminPanel').style.display='none'">Mégsem</button>
         </div>
@@ -90,7 +113,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
 
 <script>
-    // 🔴 FIREBASE KÓD
+    // 🔴 FIREBASE KÓD (Érintetlen config)
     const firebaseConfig = {
       apiKey: "AIzaSyDtX_zGGjwEBgRK3-vKRm1tk80kLZbEm4Y",
       authDomain: "szemetkihordas-app.firebaseapp.com",
@@ -127,6 +150,7 @@
         if (snapshot.exists()) {
             sysSettings = snapshot.val();
             if(!sysSettings.pending) sysSettings.pending = [];
+            if(!sysSettings.roster) sysSettings.roster = [];
             if(Object.keys(absences).length >= 0) { calculateAllSchedules(); renderUI(); }
         }
     });
@@ -137,7 +161,7 @@
     });
 
     // ==========================================
-    // 🧠 GOLYÓÁLLÓ DÁTUMSÁMOLÓ (Időzóna független)
+    // 🧠 GOLYÓÁLLÓ DÁTUMSÁMOLÓ ÉS LOGIKA
     // ==========================================
     function parseLocalDate(dateStr) {
         let p = dateStr.split('-');
@@ -168,6 +192,8 @@
         let roster = [...sysSettings.roster];
         let pending = [...sysSettings.pending];
         let n = roster.length;
+        if (n === 0) return; // Ha üres a névsor, nincs mit számolni
+        
         let rotIndex = 0;
         let pushed = []; 
 
@@ -204,7 +230,7 @@
 
                     if (checkedToday.has(candidate)) {
                          if (isFromPushed) { todayPushed.shift(); pushed.push(candidate); }
-                         else { rotIndex++; }
+                         else { advanceRotation(); }
                          continue;
                     }
                     checkedToday.add(candidate);
@@ -212,25 +238,29 @@
                     if (dailyAbsences[candidate]) {
                         pushed.push(candidate); 
                         if (isFromPushed) todayPushed.shift();
-                        else {
-                            rotIndex++;
-                            checkSmartInsertion(); 
-                        }
+                        else { advanceRotation(); }
                     } else {
                         todayWorkers.push(candidate);
                         if (isFromPushed) todayPushed.shift();
-                        else {
-                            rotIndex++;
-                            checkSmartInsertion();
-                        }
+                        else { advanceRotation(); }
                     }
 
-                    function checkSmartInsertion() {
-                        if (!isFromPushed && rotIndex > 0 && rotIndex % n === 0) {
+                    // Forgás logikája (Páros létszám fixálva!)
+                    function advanceRotation() {
+                        rotIndex++;
+                        // Ha egy teljes kör lement (mindenki sorra került)
+                        if (rotIndex > 0 && rotIndex % n === 0) {
+                            // Új dolgozó beillesztése a ciklus végén
                             if (pending.length > 0 && simDate.getTime() >= pending[0].addedDate) {
                                 roster.push(pending[0].name);
                                 n = roster.length;
                                 pending.shift();
+                            }
+                            
+                            // PRO FIX: Ha páros a létszám, csúsztatunk egyet, 
+                            // hogy a következő körben mással kerüljenek párba!
+                            if (n % 2 === 0) {
+                                rotIndex++; 
                             }
                         }
                     }
@@ -251,6 +281,7 @@
     // ⚡ INTERAKTÍV AKCIÓK
     // ==========================================
     window.markAbsent = function(dateKey, name) {
+        if(name === "Nincs több!" || name === "-") return;
         if(confirm(`Szeretnéd jelezni, hogy ${name} hiányzik ezen a napon?\n\nA rendszer automatikusan behívja a következőt, ${name} pedig átkerül a következő munkanapra.`)) {
             db.ref(`absences/${dateKey}/${name}`).set(true);
         }
@@ -272,7 +303,6 @@
         if (today.getHours() < 6) today.setDate(today.getDate() - 1);
         today.setHours(0,0,0,0);
 
-        // Láthatatlan Admin gomb
         const headerHTML = `<div class="header-pill" onclick="openAdmin()">${sysSettings.shift} MŰSZAK BEOSZTÁS</div>`;
 
         if (!isWorkingDay(today)) {
@@ -335,8 +365,8 @@
                                 <span class="lc-date-text" style="margin-left:8px;">${dateFull}</span>
                             </div>
                             <div class="lc-pills">
-                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dKey}', '${workers[0]}')">${workers[0]}</div>
-                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dKey}', '${workers[1]}')">${workers[1]}</div>
+                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dKey}', '${workers[0]}')">${workers[0] || '-'}</div>
+                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dKey}', '${workers[1]}')">${workers[1] || '-'}</div>
                             </div>
                         </div>
                         ${absHTML}
@@ -349,7 +379,7 @@
     }
 
     // ==========================================
-    // ⚙️ ADMIN FUNKCIÓK
+    // ⚙️ ADMIN FUNKCIÓK (PRO VERZIÓ)
     // ==========================================
     window.openAdmin = function() {
         let pin = prompt("Admin hitelesítés (PIN):");
@@ -365,20 +395,56 @@
     function renderAdminRoster() {
         let html = "";
         sysSettings.roster.forEach((name, i) => {
-            html += `<div class="admin-list-item"><span>${name}</span> <span style="color:red; cursor:pointer; font-weight:bold; padding: 0 10px;" onclick="removeWorker(${i})">✖</span></div>`;
+            html += `
+            <div class="admin-list-item">
+                <span style="font-weight:bold;">${name}</span>
+                <div style="display:flex; gap:5px;">
+                    <button class="btn-action" title="Fel" onclick="moveWorker(${i}, -1)">▲</button>
+                    <button class="btn-action" title="Le" onclick="moveWorker(${i}, 1)">▼</button>
+                    <button class="btn-action btn-delete" title="Törlés" onclick="removeWorker(${i})">✖</button>
+                </div>
+            </div>`;
         });
-        document.getElementById('adminRosterList').innerHTML = html;
+        document.getElementById('adminRosterList').innerHTML = html || "<div style='padding:15px; color:var(--text-dim); text-align:center;'>Nincs aktív dolgozó</div>";
 
         let pHTML = "";
         if(sysSettings.pending && sysSettings.pending.length > 0) {
-            sysSettings.pending.forEach(p => { pHTML += `⏳ ${p.name} (Vár a ciklus végére...)<br>`; });
+            sysSettings.pending.forEach((p, i) => { 
+                pHTML += `
+                <div class="admin-list-item">
+                    <span style="color:var(--accent);">⏳ ${p.name}</span>
+                    <button class="btn-action btn-delete" onclick="removePending(${i})">Törlés</button>
+                </div>`; 
+            });
+        } else {
+            pHTML = "<div style='padding:15px; color:var(--text-dim); text-align:center; font-size:0.85rem;'>Jelenleg senki sem várakozik.</div>";
         }
         document.getElementById('pendingWorkers').innerHTML = pHTML;
     }
 
+    window.moveWorker = function(index, direction) {
+        if (direction === -1 && index > 0) {
+            let temp = sysSettings.roster[index];
+            sysSettings.roster[index] = sysSettings.roster[index - 1];
+            sysSettings.roster[index - 1] = temp;
+        } else if (direction === 1 && index < sysSettings.roster.length - 1) {
+            let temp = sysSettings.roster[index];
+            sysSettings.roster[index] = sysSettings.roster[index + 1];
+            sysSettings.roster[index + 1] = temp;
+        }
+        renderAdminRoster(); 
+    };
+
     window.removeWorker = function(index) {
-        if(confirm("Biztos törlöd ezt a dolgozót a fő névsorból?")) {
+        if(confirm(`Biztos törlöd ${sysSettings.roster[index]}-t a fő névsorból?`)) {
             sysSettings.roster.splice(index, 1);
+            renderAdminRoster();
+        }
+    };
+
+    window.removePending = function(index) {
+        if(confirm(`Biztos törlöd a várakozólistáról?`)) {
+            sysSettings.pending.splice(index, 1);
             renderAdminRoster();
         }
     };
@@ -386,6 +452,7 @@
     window.addNewWorker = function() {
         let name = document.getElementById('newWorkerName').value.trim();
         if(name === "") return;
+        if(!sysSettings.pending) sysSettings.pending = [];
         sysSettings.pending.push({ name: name, addedDate: new Date().getTime() });
         document.getElementById('newWorkerName').value = "";
         renderAdminRoster();
