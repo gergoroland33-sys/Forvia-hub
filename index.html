@@ -333,11 +333,59 @@
             top: 50%;
             margin-top: -55px; 
         }
-        
-        /* CAD ELEMZŐ (13. modul) - BAL OLDALI DOCK */
+
+        /* --- CAD ELEMZŐ (13. modul) - BAL OLDALI DOCK (PRO INTERAKCIÓVAL) --- */
         body.active-mod-13 .smart-dock {
             right: auto;
-            left: 16px;
+            left: 0; /* A képernyő bal széléhez rögzítve */
+            bottom: 20px; /* Kissé lejjebb engedve az erdeti 30px helyett */
+            animation: none; /* Kikapcsolja a kezdeti beugrás animációját a simább működésért */
+            transform: translateX(calc(-100% + 14px)); /* Rejtve van, de 14px kint marad, ami a "fogantyú" területe */
+            border-radius: 0 30px 30px 0; /* Egyenes bal oldal, teljesen lekerekített jobb */
+            border-left: none; /* Nincs szél a képernyő peremén */
+            padding-left: 12px; /* Kicsit beljebb tolja a gombokat */
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15); /* Rugós "Sleek" becsúszás */
+        }
+
+        /* Egy elegáns kis kék neon "csík", ami mutatja, hogy itt elő lehet húzni */
+        body.active-mod-13 .smart-dock::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 4px;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 36px;
+            background: var(--accent);
+            border-radius: 10px;
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.8);
+            transition: opacity 0.3s ease;
+        }
+
+        /* Megnövelt láthatatlan érintési felület telefonokhoz, hogy könnyű legyen ujjal eltalálni */
+        body.active-mod-13 .smart-dock::before {
+            content: '';
+            position: absolute;
+            top: -15px;
+            right: -25px; /* Kilóg kifelé a "levegőbe" */
+            bottom: -15px;
+            width: 40px;
+            z-index: 10;
+            cursor: pointer;
+        }
+
+        /* Interakció: Hover (PC) vagy érintés (Mobil) hatására előcsúszik teljes valójában */
+        body.active-mod-13 .smart-dock:hover,
+        body.active-mod-13 .smart-dock:focus-within,
+        body.active-mod-13 .smart-dock:active {
+            transform: translateX(0);
+        }
+
+        /* Amikor meg van nyitva a menü, a kis kék csík finoman elhalványul a háttérben */
+        body.active-mod-13 .smart-dock:hover::after,
+        body.active-mod-13 .smart-dock:focus-within::after,
+        body.active-mod-13 .smart-dock:active::after {
+            opacity: 0.1;
         }
 
         /* SZABADSÁGOK (VÉKONYÍTOTT VERZIÓ) */
