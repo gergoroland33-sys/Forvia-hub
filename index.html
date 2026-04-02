@@ -334,7 +334,7 @@
             margin-top: -55px; 
         }
 
-        /* --- CAD ELEMZŐ (13. modul) - BAL OLDALI DOCK (PRO INTERAKCIÓVAL) --- */
+        /* --- CAD ELEMZŐ (13. modul) - BAL OLDALI DOCK (PRO INTERAKCIÓVAL ÉS PAJZSSAL) --- */
         body.active-mod-13 .smart-dock {
             right: auto;
             left: 0; /* A képernyő bal széléhez rögzítve */
@@ -362,16 +362,26 @@
             transition: opacity 0.3s ease;
         }
 
-        /* Megnövelt láthatatlan érintési felület telefonokhoz, hogy könnyű legyen ujjal eltalálni */
+        /* PRO VÉDŐPAJZS: Amíg csukva van, egy láthatatlan réteg fedi az EGÉSZ dockot és a gombokat.
+           Így ha a felhasználó megérinti, a pajzsot nyomja meg, ami "kinyitja" a menüt, de a gombot még nem aktiválja! */
         body.active-mod-13 .smart-dock::before {
             content: '';
             position: absolute;
             top: -15px;
-            right: -25px; /* Kilóg kifelé a "levegőbe" */
             bottom: -15px;
-            width: 40px;
-            z-index: 10;
+            left: 0;
+            right: -25px; /* Kilóg kifelé a "levegőbe" hogy könnyű legyen eltalálni */
+            z-index: 100; /* Ez a lényeg: a gombok FÖLÉ helyezi a láthatatlan pajzsot */
             cursor: pointer;
+        }
+
+        /* Amikor a dock kinyílik (hover/focus), a pajzs elhúzódik az útból a jobb szélre, 
+           így most már fizikailag hozzá lehet férni a gombokhoz, és meg lehet őket nyomni. */
+        body.active-mod-13 .smart-dock:hover::before,
+        body.active-mod-13 .smart-dock:focus-within::before,
+        body.active-mod-13 .smart-dock:active::before {
+            left: auto;
+            width: 35px; /* Csak a külső peremen marad meg, hogy a mobil ujjal is nyitva tartható legyen */
         }
 
         /* Interakció: Hover (PC) vagy érintés (Mobil) hatására előcsúszik teljes valójában */
