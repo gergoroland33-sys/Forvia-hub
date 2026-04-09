@@ -502,12 +502,62 @@
             });
         }
 
+        // ÚJ LOGIKA: Kiszámolja a műszakot dátum alapján, anélkül hogy az adatbázist módosítaná
+        function getShiftInfo(timestamp) {
+            if (!timestamp) return "Ismeretlen műszak";
+            const d = new Date(timestamp);
+            let logicalDate = new Date(d);
+            const hour = d.getHours();
+            
+            // Ha éjfél és reggel 6 között van, akkor az az előző nap éjszakás műszakjához tartozik
+            let isNight = false;
+            if (hour >= 18) {
+                isNight = true;
+            } else if (hour < 6) {
+                isNight = true;
+                logicalDate.setDate(logicalDate.getDate() - 1);
+            }
+            
+            // Horgony dátum: 2026. április 9. (Éjfél UTC szerint a biztonságos számoláshoz)
+            const utcLogical = Date.UTC(logicalDate.getFullYear(), logicalDate.getMonth(), logicalDate.getDate());
+            const utcAnchor = Date.UTC(2026, 3, 9); // Hónapok 0-tól indulnak, 3 = Április
+            
+            // 12 napos ciklus kiszámítása napokban
+            const diffDays = Math.floor((utcLogical - utcAnchor) / 86400000);
+            const cycleDay = ((diffDays % 12) + 12) % 12; // (0-11-ig indexel a 12 napos rendszer)
+            
+            let shiftName = "";
+            if (cycleDay >= 0 && cycleDay <= 2) {
+                shiftName = isNight ? "A" : "B"; // Ápr 9-10-11: Nappal B, Éjjel A
+            } else if (cycleDay >= 3 && cycleDay <= 5) {
+                shiftName = isNight ? "C" : "D"; // Ápr 12-13-14: Nappal D, Éjjel C
+            } else if (cycleDay >= 6 && cycleDay <= 8) {
+                shiftName = isNight ? "B" : "A"; // Ápr 15-16-17: Nappal A, Éjjel B
+            } else if (cycleDay >= 9 && cycleDay <= 11) {
+                shiftName = isNight ? "D" : "C"; // Ápr 18-19-20: Nappal C, Éjjel D
+            }
+            
+            return `${shiftName} Műszak (${isNight ? 'Éjszaka' : 'Nappal'})`;
+        }
+
+        // FRISSÍTETT GENERÁLÓ LOGIKA: Itt kapja meg a gomb az egeres (hover) információt
         function generateGridHTML(line, mId, side, count, errors) {
             let html = `<div class="nozzle-grid ${count === 3 ? 'grid-3' : 'grid-15'}">`;
             for(let i=1; i<=count; i++) {
                 const key = `M${mId}_S${side}_N${i}`;
-                const isError = errors[key] ? 'error' : '';
-                html += `<div class="nozzle-btn ${isError}" onclick="window.openModal('${line}', '${key}', ${mId}, ${side}, ${i})">${i}</div>`;
+                const errorData = errors[key];
+                const isError = errorData ? 'error' : '';
+                
+                // TOOLTIP (Címke) összeállítása hiba esetén
+                let tooltip = "";
+                if (errorData && errorData.timestamp) {
+                    const dateObj = new Date(errorData.timestamp);
+                    const timeStr = dateObj.toLocaleDateString('hu-HU') + ' ' + dateObj.toLocaleTimeString('hu-HU', {hour:'2-digit', minute:'2-digit'});
+                    const shiftStr = getShiftInfo(errorData.timestamp);
+                    tooltip = `title="Kikapcsolva: ${timeStr}&#10;Műszak: ${shiftStr}&#10;Ok: ${errorData.reason}"`;
+                }
+
+                html += `<div class="nozzle-btn ${isError}" ${tooltip} onclick="window.openModal('${line}', '${key}', ${mId}, ${side}, ${i})">${i}</div>`;
             }
             return html + '</div>';
         }
