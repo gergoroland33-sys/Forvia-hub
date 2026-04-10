@@ -102,19 +102,21 @@ input[type="file"] { display: none; }
 .model-name { font-family: monospace; font-size: 15px; color: #4338ca; }
 .pro-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #e9d5ff; padding-bottom: 15px; margin-bottom: 15px; }
 
-/* ÚJ: Gépsor badge stílus a PDF exportáláshoz */
+/* ÚJ: Gépsor badge stílus a PDF exportáláshoz (KÖZÉPRE, SZÉLESEN, MAGASAN) */
 .machine-badge-pro {
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
     color: #f8fafc;
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-size: 16px;
+    padding: 15px 30px;
+    border-radius: 12px;
+    font-size: 22px;
     font-weight: 900;
-    letter-spacing: 1px;
-    border-left: 4px solid var(--c-fpy);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    margin-bottom: 10px;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    letter-spacing: 2px;
+    border-bottom: 4px solid var(--c-fpy);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    margin-bottom: 25px;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    text-transform: uppercase;
 }
 </style>
 </head>
@@ -144,15 +146,17 @@ input[type="file"] { display: none; }
 </div>
 
 <div id="reportArea">
+    
+    <div id="machineBadge" class="machine-badge-pro" style="display:none;">
+        GÉPSOR: <span id="machineNameSpan" style="color: var(--c-fpy);"></span>
+    </div>
+
     <div style="display:flex; justify-content:space-between; align-items:flex-end; border-bottom: 3px solid var(--c-pass); padding-bottom: 15px; margin-bottom: 25px;">
         <div>
             <h2 style="margin:0; text-transform:uppercase;">SPI Gyártási Trend és FPY Riport</h2>
             <p id="reportPeriod" style="margin:5px 0; color:#7f8c8d; font-weight:bold;">Várakozás adatokra...</p>
         </div>
         <div style="text-align: right;">
-            <div id="machineBadge" class="machine-badge-pro" style="display:none;">
-                🏭 GÉPSOR: <span id="machineNameSpan" style="color: var(--c-fpy);"></span>
-            </div>
             <p id="reportFileName" style="margin:0; font-size:12px; font-weight:bold; color:var(--c-pass);">Fájl: -</p>
         </div>
     </div>
@@ -213,7 +217,7 @@ input[type="file"] { display: none; }
                 <th>Dátum</th><th>Napszak</th><th>Műszak</th>
                 <th style="color:var(--c-good)">Good</th><th style="color:var(--c-warning)">Warn</th>
                 <th style="color:var(--c-pass)">Pass</th><th style="color:var(--c-fail)">Fail</th>
-                <th style="background:#e8f4f8">Végösszeg</th><th>FPY %</th>
+                <th style="background:#e8f4f8; color:#2c3e50;">Végösszeg</th><th>FPY %</th>
             </tr>
         </thead>
         <tbody id="tableBody"></tbody>
@@ -566,13 +570,12 @@ function drawChart() {
 }
 
 function exportPDF() {
-    // ÚJ: Prompt megjelenítése és beállítása
     let machineInput = prompt("Kérem, adja meg a gépsor azonosítóját a PDF fejlécéhez (pl. F-05):", "");
     let badge = document.getElementById('machineBadge');
     
     if (machineInput && machineInput.trim() !== "") {
         document.getElementById('machineNameSpan').innerText = machineInput.trim().toUpperCase();
-        badge.style.display = "inline-block";
+        badge.style.display = "block"; /* Hogy teljes szélességű középre zárt blokk legyen */
     } else {
         badge.style.display = "none";
     }
