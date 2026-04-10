@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KohYoung Dashboard PRO v21.0 - Mester Elemző</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script> 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<style>
+:root {
+    --c-good: #27ae60; 
+    --c-pass: #4a72b0; 
+    --c-warning: #f39c12; 
+    --c-fail: #e74c3c; 
+    --c-total: #2c3e50; 
+    --c-fpy: #f4b142; 
+    --bg-color: #f1f5f9;
+    --card-bg: #ffffff;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--c-total);
+    margin: 0; padding: 0;
+}
+
+button, .file-upload-label { transition: all 0.3s ease; cursor: pointer; border: none; user-select: none; }
+button:active, .file-upload-label:active { transform: scale(0.95); filter: brightness(0.8); }
+
+.top-bar {
+    background: #1a252f; color: white; padding: 15px 30px;
+    display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.controls {
+    background: var(--card-bg); margin: 20px auto; padding: 20px;
+    border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap; max-width: 1100px; 
+}
+
+.control-group { display: flex; flex-direction: column; gap: 5px; }
+label.group-title { font-weight: bold; font-size: 11px; color: #7f8c8d; text-transform: uppercase; }
+
+input[type="date"], button {
+    padding: 10px 15px; border: 1px solid #dcdcdc; border-radius: 6px; font-size: 13px; font-weight: bold;
+}
+
+.btn-primary { background-color: var(--c-pass); color: white; }
+.btn-success { background-color: var(--c-good); color: white; padding: 12px 25px; }
+
+.btn-pro-toggle {
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    color: white; border: none; padding: 12px 25px;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    border-radius: 8px; font-weight: 800; letter-spacing: 0.5px;
+    display: flex; align-items: center; gap: 8px;
+}
+.btn-pro-toggle:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6); }
+
+input[type="file"] { display: none; }
+.file-upload-label { background-color: #34495e; color: white; padding: 10px 15px; border-radius: 6px; font-weight: bold; display: inline-block; }
+
+#reportArea {
+    background-color: white; width: 1100px; margin: 0 auto 50px auto; 
+    padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); box-sizing: border-box;
+}
+
+.kpi-container { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 30px; }
+.kpi-card { 
+    background: #f9fbfd; border: 1px solid #eef2f5; padding: 15px 5px; 
+    border-radius: 8px; text-align: center; border-bottom: 4px solid #cbd5e1;
+}
+
+.dashboard-layout { display: grid; grid-template-columns: 1fr 300px; gap: 25px; margin-bottom: 30px; }
+
+.ranking-panel { background: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; }
+.rank-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+.rank-table th { text-align: left; color: #64748b; font-size: 11px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; }
+.rank-table td { padding: 12px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold; }
+
+.pro-table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }
+.pro-table th { background: #2c3e50; color: white; padding: 12px; border: 1px solid #1a252f; }
+.pro-table td { padding: 10px; border: 1px solid #eef2f5; font-weight: bold; }
+
+.badge-win { background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 6px; }
+
+/* 🧠 PRO HIBAELEMZŐ STÍLUSOK */
+#proAnalysisArea {
+    display: none; background: #faf5ff; border: 1px solid #e9d5ff; 
+    padding: 25px; margin-bottom: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(168, 85, 247, 0.15);
+}
+.defect-badge { 
+    background: white; color: #475569; padding: 4px 10px; border-radius: 20px; 
+    font-size: 11px; margin: 3px 5px 3px 0; border: 1px solid #cbd5e1; display: inline-block;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.defect-badge b { color: #8b5cf6; }
+.model-name { font-family: monospace; font-size: 15px; color: #4338ca; }
+.pro-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #e9d5ff; padding-bottom: 15px; margin-bottom: 15px; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+    <h2 style="margin:0; font-size: 20px;">KohYoung Dashboard <span style="color:var(--c-fpy)">PRO 21.0</span></h2>
+    <button class="btn-success" onclick="exportPDF()">🖨️ PDF EXPORTÁLÁSA</button>
+</div>
+
+<div class="controls">
+    <div class="control-group">
+        <label class="group-title">Adatfájl</label>
+        <div>
+            <label class="file-upload-label">📄 Tallózás<input type="file" id="fileInput" accept=".txt,.csv" onchange="loadFile()"></label>
+            <span id="fileNameDisplay" style="margin-left:10px; font-weight:bold; color:var(--c-pass);">Nincs fájl</span>
+        </div>
+    </div>
+    <div class="control-group"><label class="group-title">TÓL</label><input type="date" id="dateStart" onchange="processData()"></div>
+    <div class="control-group"><label class="group-title">IG</label><input type="date" id="dateEnd" onchange="processData()"></div>
+    
+    <button class="btn-primary" onclick="processData()">🚀 FRISSÍTÉS</button>
+    <button class="btn-pro-toggle" onclick="toggleProAnalysis()" id="btnPro">
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        MÉRNÖKI ANALITIKA
+    </button>
+</div>
+
+<div id="reportArea">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; border-bottom: 3px solid var(--c-pass); padding-bottom: 15px; margin-bottom: 25px;">
+        <div>
+            <h2 style="margin:0; text-transform:uppercase;">SPI Gyártási Trend és FPY Riport</h2>
+            <p id="reportPeriod" style="margin:5px 0; color:#7f8c8d; font-weight:bold;">Várakozás adatokra...</p>
+        </div>
+        <p id="reportFileName" style="margin:0; font-size:12px; font-weight:bold; color:var(--c-pass);">Fájl: -</p>
+    </div>
+
+    <div id="proAnalysisArea" class="no-print">
+        <div class="pro-header">
+            <div>
+                <h3 style="margin:0; color:#6d28d9; font-size: 18px;">🧠 Részletes Modellelemző (Események Eloszlása)</h3>
+                <p style="margin:5px 0 0 0; font-size:12px; color:#64748b;">Azon modellek listája csökkenő sorrendben, ahol operátori beavatkozás (Fail/Pass) vagy Gép Riasztás (Warn) történt.</p>
+            </div>
+        </div>
+        
+        <table class="rank-table" style="text-align:center; width:100%; background:white; border-radius:8px; overflow:hidden; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
+            <thead style="background:#f1f5f9;">
+                <tr>
+                    <th style="text-align:left; padding-left:15px;">PCBNAME (Termék Neve)</th>
+                    <th style="text-align:center;">Események <br><span style="font-size:10px;">(<span style="color:var(--c-fail)">Fail</span> / <span style="color:var(--c-pass)">Pass</span> / <span style="color:var(--c-warning)">Warn</span>)</span></th>
+                    <th style="text-align:left;">Részletes Hibaok (Gép által exportált)</th>
+                    <th style="text-align:center;">Max TopFail(%)</th>
+                </tr>
+            </thead>
+            <tbody id="proInsightsContainer">
+                <tr><td colspan="4" style="padding:20px; color:#888;">Elemzéshez töltsön be adatokat...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="kpi-container">
+        <div class="kpi-card" style="border-bottom-color: var(--c-total);"><div style="font-size:10px; color:#95a5a6;">FPY VÉGÖSSZEG</div><div id="kpiFpyBase" style="font-size:22px; font-weight:bold;">0</div></div>
+        <div class="kpi-card" style="border-bottom-color: var(--c-good);"><div style="font-size:10px; color:#95a5a6;">GOOD</div><div id="kpiGood" style="font-size:22px; font-weight:bold; color:var(--c-good);">0</div></div>
+        <div class="kpi-card" style="border-bottom-color: var(--c-warning);"><div style="font-size:10px; color:#95a5a6;">WARNING</div><div id="kpiWarning" style="font-size:22px; font-weight:bold; color:var(--c-warning);">0</div></div>
+        <div class="kpi-card" style="border-bottom-color: var(--c-pass);"><div style="font-size:10px; color:#95a5a6;">PASS</div><div id="kpiPass" style="font-size:22px; font-weight:bold; color:var(--c-pass);">0</div></div>
+        <div class="kpi-card" style="border-bottom-color: var(--c-fail);"><div style="font-size:10px; color:#95a5a6;">FAIL</div><div id="kpiFail" style="font-size:22px; font-weight:bold; color:var(--c-fail);">0</div></div>
+        <div class="kpi-card" style="border-bottom-color: var(--c-fpy);"><div style="font-size:10px; color:#95a5a6;">FPY RATIO</div><div id="kpiYield" style="font-size:22px; font-weight:bold; color:var(--c-fpy);">0.0%</div></div>
+    </div>
+
+    <div class="dashboard-layout">
+        <div style="height: 400px; background: #fff; padding: 15px; border-radius: 10px; border: 1px solid #eef2f5;">
+            <canvas id="myChart"></canvas>
+        </div>
+        
+        <div class="ranking-panel">
+            <h3 style="margin:0 0 15px 0; font-size: 14px; color:#2c3e50; text-transform:uppercase;">🏆 Műszak Rangsor</h3>
+            <table class="rank-table" id="rankTable">
+                <thead><tr><th>Műszak</th><th>MENNY.</th><th>FPY %</th></tr></thead>
+                <tbody id="rankBody"></tbody>
+            </table>
+            <div id="insightBox" style="margin-top:20px; font-size:12px; color:#64748b; font-style:italic; border-top:1px solid #e2e8f0; padding-top:10px;">
+                Töltsön be adatot az elemzéshez...
+            </div>
+        </div>
+    </div>
+
+    <h3 style="text-transform:uppercase; font-size:16px; border-bottom:2px solid #eee; padding-bottom:10px;">📋 Részletes Műszakos Adatok</h3>
+    <table class="pro-table">
+        <thead>
+            <tr>
+                <th>Dátum</th><th>Napszak</th><th>Műszak</th>
+                <th style="color:var(--c-good)">Good</th><th style="color:var(--c-warning)">Warn</th>
+                <th style="color:var(--c-pass)">Pass</th><th style="color:var(--c-fail)">Fail</th>
+                <th style="background:#e8f4f8">Végösszeg</th><th>FPY %</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+</div>
+
+<script>
+Chart.register(ChartDataLabels);
+
+let fileLines = [];
+let dayStats = {}; 
+let shiftStats = {}; 
+let myChart = null;
+
+let modelDefectData = {}; 
+
+const refDateUTC = Date.UTC(2025, 11, 31); 
+const dayShifts = ['C', 'C', 'C', 'B', 'B', 'B', 'D', 'D', 'D', 'A', 'A', 'A'];
+const nightShifts = ['D', 'D', 'D', 'A', 'A', 'A', 'C', 'C', 'C', 'B', 'B', 'B'];
+
+function toggleProAnalysis() {
+    let area = document.getElementById('proAnalysisArea');
+    if(area.style.display === 'none' || area.style.display === '') {
+        area.style.display = 'block';
+    } else {
+        area.style.display = 'none';
+    }
+}
+
+function loadFile() {
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput.files.length === 0) return;
+    const file = fileInput.files[0];
+    document.getElementById('fileNameDisplay').innerText = file.name;
+    document.getElementById('reportFileName').innerText = "Adatfájl: " + file.name;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        fileLines = e.target.result.split('\n');
+        autoSetDatesAndProcess();
+    };
+    reader.readAsText(file);
+}
+
+function parseDateString(dateStr, timeStr) {
+    if (!dateStr || !timeStr) return null;
+    let dParts = dateStr.split(/[-./]/);
+    
+    let isPM = timeStr.toUpperCase().includes('PM');
+    let isAM = timeStr.toUpperCase().includes('AM');
+    let cleanTimeStr = timeStr.replace(/AM|PM/i, '').trim();
+    let tParts = cleanTimeStr.split(':');
+    
+    if (dParts.length !== 3 || tParts.length < 2) return null;
+    
+    let y, m, d;
+    
+    if (dParts[0].length === 4) { 
+        y = parseInt(dParts[0]); m = parseInt(dParts[1]) - 1; d = parseInt(dParts[2]);
+    } else { 
+        y = parseInt(dParts[2]);
+        let p0 = parseInt(dParts[0]);
+        let p1 = parseInt(dParts[1]);
+
+        if (parseDateString.cachedLinesCount !== fileLines.length) {
+            parseDateString.cachedLinesCount = fileLines.length;
+            parseDateString.isUSFormat = dateStr.includes('/'); 
+            
+            for (let i = 0; i < fileLines.length; i++) {
+                let match = fileLines[i].match(/\b(\d{1,2})[-./](\d{1,2})[-./](\d{4})\b/);
+                if (match) {
+                    if (parseInt(match[2]) > 12) { parseDateString.isUSFormat = true; break; }
+                    if (parseInt(match[1]) > 12) { parseDateString.isUSFormat = false; break; }
+                }
+            }
+        }
+
+        if (parseDateString.isUSFormat) {
+            m = p0 - 1; d = p1; 
+        } else {
+            d = p0; m = p1 - 1; 
+        }
+    }
+    
+    let hr = parseInt(tParts[0]), min = parseInt(tParts[1]);
+    
+    if (isPM && hr < 12) hr += 12;
+    if (isAM && hr === 12) hr = 0;
+    
+    return new Date(y, m, d, hr, min);
+}
+
+function autoSetDatesAndProcess() {
+    let minD = null, maxD = null;
+    let headers = { dateIdx: -1, timeIdx: -1 };
+    for(let i=0; i<fileLines.length; i++) {
+        let parts = fileLines[i].trim().split(fileLines[i].includes('\t') ? '\t' : /\s{2,}/);
+        if (headers.dateIdx === -1) {
+            headers.dateIdx = parts.findIndex(p => p.trim().toUpperCase() === 'DATE');
+            headers.timeIdx = parts.findIndex(p => p.trim().toUpperCase() === 'STARTTIME' || p.trim().toUpperCase() === 'TIME');
+            continue;
+        }
+        let parsed = parseDateString(parts[headers.dateIdx], parts[headers.timeIdx]);
+        if (parsed) {
+            let logicDate = new Date(parsed.getTime());
+            // Itt volt a hiba: A KohYoung már eleve kezeli a műszakdátumot, így a levonás felesleges és káros volt! Ezt kivettem.
+            if (!minD || logicDate < minD) minD = new Date(logicDate);
+            if (!maxD || logicDate > maxD) maxD = new Date(logicDate);
+        }
+    }
+    if (minD && maxD) {
+        let mY = minD.getFullYear(), mM = String(minD.getMonth()+1).padStart(2,'0'), mD = String(minD.getDate()).padStart(2,'0');
+        let mxY = maxD.getFullYear(), mxM = String(maxD.getMonth()+1).padStart(2,'0'), mxD = String(maxD.getDate()).padStart(2,'0');
+        document.getElementById('dateStart').value = `${mY}-${mM}-${mD}`;
+        document.getElementById('dateEnd').value = `${mxY}-${mxM}-${mxD}`;
+    }
+    processData();
+}
+
+function getShiftInfo(dateObj, isNight) {
+    let targetUTC = Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+    let diffDays = Math.round((targetUTC - refDateUTC) / (1000 * 3600 * 24));
+    
+    let cycleIndex = ((diffDays % 12) + 12) % 12;
+    let shiftLetter = isNight ? nightShifts[cycleIndex] : dayShifts[cycleIndex];
+    
+    let y = dateObj.getFullYear();
+    let m = String(dateObj.getMonth() + 1).padStart(2, '0');
+    let d = String(dateObj.getDate()).padStart(2, '0');
+    let ds = `${y}-${m}-${d}`;
+    
+    return { 
+        dayKey: ds, 
+        dayLabel: `${dateObj.getMonth()+1}.${dateObj.getDate()}.`,
+        shiftKey: `${ds}-${isNight?'N':'D'}`,
+        displayDate: ds.replace(/-/g, '.'),
+        shiftName: isNight ? 'Éjszaka' : 'Nappal',
+        team: shiftLetter 
+    };
+}
+
+function processData() {
+    if (fileLines.length === 0) return;
+    const dStart = document.getElementById('dateStart').value;
+    const dEnd = document.getElementById('dateEnd').value;
+    
+    dayStats = {}; shiftStats = {}; modelDefectData = {};
+    let teamTotals = { 'A': {ok:0, p:0, total:0}, 'B': {ok:0, p:0, total:0}, 'C': {ok:0, p:0, total:0}, 'D': {ok:0, p:0, total:0} };
+    
+    let headers = { dateIdx: -1, timeIdx: -1, resultIdx: -1, modelIdx: -1, defectIdx: -1, pctIdx: -1 };
+
+    for (let i = 0; i < fileLines.length; i++) {
+        let parts = fileLines[i].trim().split(fileLines[i].includes('\t') ? '\t' : /\s{2,}/);
+        if (headers.dateIdx === -1) {
+            let up = parts.map(x => x.trim().toUpperCase());
+            headers.dateIdx = up.indexOf('DATE');
+            headers.timeIdx = up.indexOf('STARTTIME') === -1 ? up.indexOf('TIME') : up.indexOf('STARTTIME');
+            headers.resultIdx = up.indexOf('RESULT');
+            headers.modelIdx = up.indexOf('PCBNAME'); 
+            headers.defectIdx = up.indexOf('DEFECTTYPE');
+            headers.pctIdx = up.indexOf('TOPFAIL(%)');
+            continue;
+        }
+
+        if (parts.length > headers.resultIdx) {
+            let parsedDate = parseDateString(parts[headers.dateIdx], parts[headers.timeIdx]);
+            if (!parsedDate) continue;
+            let res = parts[headers.resultIdx].trim().toUpperCase();
+            
+            let modelName = headers.modelIdx > -1 && parts[headers.modelIdx] ? parts[headers.modelIdx].trim() : "Ismeretlen";
+            let defectType = headers.defectIdx > -1 && parts[headers.defectIdx] ? parts[headers.defectIdx].trim() : "";
+            
+            let failPctStr = headers.pctIdx > -1 && parts[headers.pctIdx] ? parts[headers.pctIdx].replace('%','').trim() : "0";
+            let failPct = parseFloat(failPctStr);
+            if(isNaN(failPct)) failPct = 0;
+
+            let logicDate = new Date(parsedDate.getTime());
+            // Innét is kikerült a mínusz 1 nap levonása az éjfél utáni adatokból, így tökéletesen együtt marad a teljes éjszakai műszak.
+            let y = logicDate.getFullYear(), m = String(logicDate.getMonth()+1).padStart(2,'0'), d = String(logicDate.getDate()).padStart(2,'0');
+            let ds = `${y}-${m}-${d}`;
+
+            if (ds >= dStart && ds <= dEnd) {
+                let info = getShiftInfo(logicDate, (parsedDate.getHours() >= 18 || parsedDate.getHours() < 6));
+                
+                if (!dayStats[info.dayKey]) dayStats[info.dayKey] = { good: 0, pass: 0, warning: 0, fail: 0, label: info.dayLabel };
+                if (!shiftStats[info.shiftKey]) shiftStats[info.shiftKey] = { good: 0, pass: 0, warning: 0, fail: 0, date: info.displayDate, shiftName: info.shiftName, team: info.team };
+                
+                if (!modelDefectData[modelName]) modelDefectData[modelName] = { pass:0, warning:0, fail:0, good:0, defects: {}, maxFailPct: 0 };
+
+                let targetDay = dayStats[info.dayKey];
+                let targetShift = shiftStats[info.shiftKey];
+                let mData = modelDefectData[modelName];
+
+                if(failPct > mData.maxFailPct) mData.maxFailPct = failPct;
+
+                if (res === 'GOOD') { targetDay.good++; targetShift.good++; teamTotals[info.team].ok++; mData.good++; }
+                else if (res === 'PASS') { targetDay.pass++; targetShift.pass++; teamTotals[info.team].p++; mData.pass++; }
+                else if (res === 'WARNING') { targetDay.warning++; targetShift.warning++; teamTotals[info.team].ok++; mData.warning++; }
+                else { targetDay.fail++; targetShift.fail++; mData.fail++; }
+                
+                if(res !== 'GOOD' && res !== 'WARNING' && defectType !== "") {
+                    if(!mData.defects[defectType]) mData.defects[defectType] = 0;
+                    mData.defects[defectType]++;
+                }
+                
+                teamTotals[info.team].total++;
+            }
+        }
+    }
+    updateDashboard(teamTotals);
+    generateProInsights();
+}
+
+function updateDashboard(teamTotals) {
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = '';
+    
+    let sumGood=0, sumPass=0, sumWarning=0, sumFail=0;
+    let shiftKeys = Object.keys(shiftStats).sort();
+
+    shiftKeys.forEach(k => {
+        let s = shiftStats[k];
+        let fpyBaseCalc = s.good + s.warning + s.pass;
+        let fpyBaseDisplay = s.good + s.warning;
+        let fpy = fpyBaseCalc === 0 ? 0 : ((fpyBaseCalc - s.pass) / fpyBaseCalc) * 100;
+
+        sumGood+=s.good; sumPass+=s.pass; sumWarning+=s.warning; sumFail+=s.fail;
+
+        tbody.innerHTML += `<tr>
+            <td>${s.date}</td><td>${s.shiftName}</td><td>${s.team}</td>
+            <td style="color:var(--c-good)">${s.good}</td><td style="color:var(--c-warning)">${s.warning}</td>
+            <td style="color:var(--c-pass)">${s.pass}</td><td style="color:var(--c-fail)">${s.fail}</td>
+            <td style="background:#f8fafc">${fpyBaseDisplay}</td>
+            <td style="color:${fpy<95?'#e74c3c':'#27ae60'}">${fpy.toFixed(1)}%</td>
+        </tr>`;
+    });
+
+    let totalFpyBase = sumGood + sumWarning + sumPass;
+    let totalYield = totalFpyBase === 0 ? 0 : ((totalFpyBase - sumPass) / totalFpyBase) * 100;
+    
+    document.getElementById('kpiFpyBase').innerText = (sumGood + sumWarning).toLocaleString();
+    document.getElementById('kpiGood').innerText = sumGood.toLocaleString();
+    document.getElementById('kpiWarning').innerText = sumWarning.toLocaleString();
+    document.getElementById('kpiPass').innerText = sumPass.toLocaleString();
+    document.getElementById('kpiFail').innerText = sumFail.toLocaleString();
+    document.getElementById('kpiYield').innerText = totalYield.toFixed(1) + "%";
+    document.getElementById('reportPeriod').innerText = `Időszak: ${document.getElementById('dateStart').value} - ${document.getElementById('dateEnd').value}`;
+
+    updateRanking(teamTotals);
+    drawChart();
+}
+
+function generateProInsights() {
+    let container = document.getElementById('proInsightsContainer');
+    container.innerHTML = '';
+    
+    let sortedModels = Object.keys(modelDefectData).map(name => {
+        let d = modelDefectData[name];
+        let troubleScore = (d.fail * 100) + (d.pass * 10) + d.warning; 
+        return { name: name, data: d, score: troubleScore };
+    }).sort((a,b) => b.score - a.score).filter(m => m.score > 0); 
+
+    if(sortedModels.length === 0) {
+        container.innerHTML = "<tr><td colspan='4' style='padding:20px; color:#888;'>Nincs beavatkozás (Fail/Pass/Warn) a vizsgált időszakban.</td></tr>";
+        return;
+    }
+
+    sortedModels.forEach((model, index) => {
+        let defEntries = Object.entries(model.data.defects).sort((a,b) => b[1] - a[1]);
+        let defStr = defEntries.map(e => `<span class="defect-badge"><b>${e[0]}</b>: ${e[1]} db</span>`).join(' ');
+        
+        if(defStr === "") {
+            defStr = "<span style='color:#cbd5e1; font-weight:bold;'>-</span>";
+        }
+        
+        let maxPctStr = model.data.maxFailPct > 0 ? `<span style="color:#e74c3c; font-weight:bold;">${model.data.maxFailPct.toFixed(2)}%</span>` : "-";
+
+        let html = `
+        <tr style="background: ${index % 2 === 0 ? 'white' : '#f8fafc'};">
+            <td style="text-align:left; padding-left:15px;" class="model-name">${index+1}. ${model.name}</td>
+            <td style="text-align:center; font-size:13px; white-space:nowrap;">
+                <span style="display:inline-block; width:35px; padding:3px 0; background:#fee2e2; color:#e74c3c; border-radius:4px; font-weight:bold;" title="FAIL">${model.data.fail}</span>
+                <span style="display:inline-block; width:35px; padding:3px 0; background:#e0e7ff; color:#4a72b0; border-radius:4px; font-weight:bold; margin:0 4px;" title="PASS">${model.data.pass}</span>
+                <span style="display:inline-block; width:45px; padding:3px 0; background:#fef3c7; color:#f39c12; border-radius:4px; font-weight:bold;" title="WARNING">${model.data.warning}</span>
+            </td>
+            <td style="text-align:left; padding: 8px 5px; line-height:1.8;">${defStr}</td>
+            <td style="text-align:center;">${maxPctStr}</td>
+        </tr>`;
+        container.innerHTML += html;
+    });
+}
+
+function updateRanking(teamTotals) {
+    const rBody = document.getElementById('rankBody');
+    rBody.innerHTML = '';
+    let sorted = Object.keys(teamTotals).map(t => {
+        let base = teamTotals[t].ok + teamTotals[t].p;
+        let fpy = base === 0 ? 0 : (teamTotals[t].ok / base) * 100;
+        return { team: t, total: teamTotals[t].total, fpy: fpy };
+    }).sort((a,b) => b.fpy - a.fpy);
+
+    sorted.forEach(r => {
+        rBody.innerHTML += `<tr><td>${r.team} Műszak</td><td>${r.total}</td><td><span class="badge-win">${r.fpy.toFixed(1)}%</span></td></tr>`;
+    });
+    
+    document.getElementById('insightBox').innerText = `A vizsgált időszakban a(z) "${sorted[0].team}" Műszak érte el a legmagasabb minőséget.`;
+}
+
+function drawChart() {
+    let ctx = document.getElementById('myChart').getContext('2d');
+    if (myChart) myChart.destroy();
+    
+    let labels = [], cGood = [], cWarning = [], cPass = [], cFpy = [];
+    Object.keys(dayStats).sort().forEach(k => {
+        let s = dayStats[k];
+        let base = s.good + s.warning + s.pass;
+        labels.push(s.label);
+        cGood.push(s.good);
+        cWarning.push(s.warning);
+        cPass.push(s.pass);
+        cFpy.push(base === 0 ? 0 : ((base - s.pass) / base) * 100);
+    });
+
+    myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                { label: 'FPY %', data: cFpy, type: 'line', borderColor: '#f4b142', yAxisID: 'y1', tension: 0.2, borderWidth: 3 },
+                { label: 'Good', data: cGood, backgroundColor: '#27ae60', stack: 'S' },
+                { label: 'Warn', data: cWarning, backgroundColor: '#f39c12', stack: 'S' },
+                { label: 'Pass', data: cPass, backgroundColor: '#4a72b0', stack: 'S' }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: { y: { stacked: true }, y1: { position: 'right', min: 80, max: 100 } },
+            plugins: { datalabels: { display: false }, legend: { position: 'bottom' } }
+        },
+        plugins: [{
+            id: 'limitLine',
+            afterDraw: (chart) => {
+                const {ctx, scales: {y1}} = chart;
+                const yPos = y1.getPixelForValue(95);
+                ctx.save(); ctx.beginPath(); ctx.setLineDash([5, 5]); ctx.moveTo(chart.chartArea.left, yPos);
+                ctx.lineTo(chart.chartArea.right, yPos); ctx.strokeStyle = 'red'; ctx.stroke(); ctx.restore();
+            }
+        }]
+    });
+}
+
+function exportPDF() {
+    const proArea = document.getElementById('proAnalysisArea');
+    const wasVisible = proArea.style.display !== 'none';
+    proArea.style.display = 'none'; 
+
+    const element = document.getElementById('reportArea');
+    const opt = { margin: 10, filename: 'KohYoung_Riport.pdf', html2canvas: { scale: 2, useCORS: true }, jsPDF: { orientation: 'landscape' } };
+    
+    html2pdf().set(opt).from(element).save().then(() => {
+        if(wasVisible) proArea.style.display = 'block';
+    });
+}
+</script>
+</body>
+</html>
