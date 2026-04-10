@@ -101,6 +101,21 @@ input[type="file"] { display: none; }
 .defect-badge b { color: #8b5cf6; }
 .model-name { font-family: monospace; font-size: 15px; color: #4338ca; }
 .pro-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #e9d5ff; padding-bottom: 15px; margin-bottom: 15px; }
+
+/* ÚJ: Gépsor badge stílus a PDF exportáláshoz */
+.machine-badge-pro {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    color: #f8fafc;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    border-left: 4px solid var(--c-fpy);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    margin-bottom: 10px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
 </style>
 </head>
 <body>
@@ -134,7 +149,12 @@ input[type="file"] { display: none; }
             <h2 style="margin:0; text-transform:uppercase;">SPI Gyártási Trend és FPY Riport</h2>
             <p id="reportPeriod" style="margin:5px 0; color:#7f8c8d; font-weight:bold;">Várakozás adatokra...</p>
         </div>
-        <p id="reportFileName" style="margin:0; font-size:12px; font-weight:bold; color:var(--c-pass);">Fájl: -</p>
+        <div style="text-align: right;">
+            <div id="machineBadge" class="machine-badge-pro" style="display:none;">
+                🏭 GÉPSOR: <span id="machineNameSpan" style="color: var(--c-fpy);"></span>
+            </div>
+            <p id="reportFileName" style="margin:0; font-size:12px; font-weight:bold; color:var(--c-pass);">Fájl: -</p>
+        </div>
     </div>
 
     <div id="proAnalysisArea" class="no-print">
@@ -546,6 +566,17 @@ function drawChart() {
 }
 
 function exportPDF() {
+    // ÚJ: Prompt megjelenítése és beállítása
+    let machineInput = prompt("Kérem, adja meg a gépsor azonosítóját a PDF fejlécéhez (pl. F-05):", "");
+    let badge = document.getElementById('machineBadge');
+    
+    if (machineInput && machineInput.trim() !== "") {
+        document.getElementById('machineNameSpan').innerText = machineInput.trim().toUpperCase();
+        badge.style.display = "inline-block";
+    } else {
+        badge.style.display = "none";
+    }
+
     const proArea = document.getElementById('proAnalysisArea');
     const wasVisible = proArea.style.display !== 'none';
     proArea.style.display = 'none'; 
