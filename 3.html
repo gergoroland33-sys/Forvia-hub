@@ -1,312 +1,560 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Forvia SMT | Műszaknaptár 2026</title>
-<style>
-:root{--primary:#3b82f6;--bg:#0f172a;--card-bg:#1e293b;--card-border:#334155;--text-main:#f1f5f9;--text-muted:#94a3b8;--accent:#fbbf24;--color-A:#60a5fa;--color-B:#4ade80;--color-C:#fbbf24;--color-D:#f87171;}
-body{font-family:'Inter',-apple-system,sans-serif;background-color:var(--bg);background-image:radial-gradient(circle at top right,#1e293b,#0f172a);margin:0;padding:15px;color:var(--text-main);min-height:100vh;}
-.container{max-width:550px;margin:0 auto;}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Forvia SMT | Pro Műszaknaptár V4</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
-/* HEADER & SCROLL */
-header{text-align:center;margin-bottom:10px;padding-top:5px;transition:all 0.3s ease;opacity:1;transform:translateY(0);}
-header.hidden{opacity:0;transform:translateY(-20px);pointer-events:none;}
-header h1{font-size:1.6rem;font-weight:800;margin:0;background:linear-gradient(to right,#60a5fa,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-header p{margin:5px 0 0 0;color:var(--text-muted);font-size:0.8rem;}
+        :root {
+            /* Corporate SMT Színek */
+            --bg-base: #020617;
+            --bg-panel: #0f172a;
+            --bg-card: #1e293b;
+            --border: #334155;
+            --border-light: #475569;
+            
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --danger: #ef4444; /* Vörös a mai napnak */
+            
+            /* Műszak specifikus színek */
+            --shift-a: #3b82f6; /* Kék */
+            --shift-b: #10b981; /* Zöld */
+            --shift-c: #f59e0b; /* Sárga */
+            --shift-d: #ef4444; /* Piros */
+            
+            --day-bg: rgba(245, 158, 11, 0.1);
+            --day-txt: #fbbf24;
+            --night-bg: rgba(139, 92, 246, 0.1);
+            --night-txt: #a78bfa;
+        }
 
-/* OPTIMALIZÁLT PANEL (ÁTLÁTSZÓBB, DE GYORS) */
-.filter-panel{position:sticky;top:10px;z-index:500;background:#1e293b;border:1px solid var(--card-border);box-shadow:0 5px 15px rgba(0,0,0,0.2);padding:15px;border-radius:16px;margin-bottom:25px;display:grid;grid-template-columns:1fr 1fr;gap:10px;transition:all 0.2s ease-out; transform: translateZ(0);}
-.filter-panel.scrolled{
-    background: rgba(15, 23, 42, 0.85);
-    border-color: rgba(59, 130, 246, 0.6);
-    border-bottom: 2px solid var(--primary);
-    box-shadow: 0 15px 30px rgba(0,0,0,0.8);
-    margin-top: -60px;
-}
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-label{display:block;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:4px;}
-select{width:100%;padding:10px;background:#0b1120;border:1px solid var(--card-border);border-radius:10px;color:white;font-size:14px;outline:none;}
-.btn-group{grid-column:span 2;display:flex;gap:10px;margin-top:5px;}
-.gomb{flex:1;padding:12px;background:rgba(59,130,246,0.15);color:var(--primary);border:1px solid rgba(59,130,246,0.5);border-radius:10px;font-weight:700;font-size:0.9rem;cursor:pointer;transition:0.2s;}
-.gomb:hover{background:var(--primary);color:white;box-shadow:0 0 15px rgba(59,130,246,0.5);}
-.gomb:active{transform:scale(0.98);}
-.icon-btn{flex:0 0 45px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;}
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column;
+            height: 100dvh; /* Görgetés nélküli nézet */
+            overflow: hidden;
+        }
 
-/* KÁRTYÁK */
-.day-card{background:#1e293b;border-radius:20px;padding:2px;margin-bottom:25px;position:relative;box-shadow:0 5px 15px rgba(0,0,0,0.3);overflow:hidden;background:linear-gradient(145deg,#334155,#0f172a);scroll-margin-top:180px; transform: translateZ(0);}
-.day-card.today-active{background:linear-gradient(90deg,#3b82f6,#fbbf24,#3b82f6);background-size:200% 200%;animation:border-rotate 6s ease infinite;box-shadow:0 0 25px rgba(59,130,246,0.4);}
-@keyframes border-rotate{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
-.today-label{position:absolute;top:0;right:0;background:var(--primary);color:white;font-size:0.65rem;font-weight:800;padding:5px 15px;border-bottom-left-radius:15px;z-index:5;letter-spacing:1px;}
-.day-card-content{background:#1e293b;border-radius:18px;padding:20px;height:100%;}
-.date-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.1);}
-.date-text{font-size:1.1rem;font-weight:800;color:white;}
-.day-name{font-size:0.8rem;font-weight:600;color:var(--primary);text-transform:uppercase;letter-spacing:1px;}
-.weekend .day-name{color:var(--accent);}
+        /* --- APP HEADER --- */
+        .app-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 5px 15px; background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            height: 50px; flex-shrink: 0;
+        }
 
-/* PULZÁLÓ ANIMÁCIÓ (PRO) */
-.shift-row{
-    display:flex;align-items:center;justify-content:space-between;padding:12px;border-radius:12px;margin-bottom:8px;
-    background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.1);
-    position:relative;overflow:hidden;z-index:0; transition: all 0.3s;
-}
-.shift-row:last-child{margin-bottom:0;}
-.row-muszak-A{--shift-color:var(--color-A);} .row-muszak-B{--shift-color:var(--color-B);} .row-muszak-C{--shift-color:var(--color-C);} .row-muszak-D{--shift-color:var(--color-D);}
+        .logo-area h1 { margin: 0; font-size: 1.1rem; font-weight: 900; letter-spacing: 0.5px; }
+        .logo-area span { color: var(--accent); }
 
-@keyframes proPulse {
-    0% { box-shadow: inset 3px 0 0 var(--shift-color), 0 0 0 rgba(0,0,0,0); background: rgba(255,255,255,0.03); }
-    50% { box-shadow: inset 3px 0 0 var(--shift-color), 0 0 15px var(--shift-color); background: rgba(255,255,255,0.08); border-color: var(--shift-color); }
-    100% { box-shadow: inset 3px 0 0 var(--shift-color), 0 0 0 rgba(0,0,0,0); background: rgba(255,255,255,0.03); }
-}
+        .btn-today {
+            background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.5);
+            color: var(--danger); padding: 5px 12px; border-radius: 8px;
+            font-size: 0.75rem; font-weight: 800; cursor: pointer;
+            display: flex; align-items: center; gap: 6px; transition: 0.2s;
+            text-transform: uppercase; letter-spacing: 1px;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+        }
+        .btn-today:active { transform: scale(0.95); background: var(--danger); color: white; }
 
-.shift-row.active-shift {
-    animation: proPulse 2.5s infinite ease-in-out; 
-    border-left: none; 
-}
+        /* --- MŰSZAK GYORSVÁLTÓK (FÜLEK) --- */
+        .shift-tabs {
+            display: flex; gap: 8px; padding: 6px 15px;
+            background: var(--bg-base); overflow-x: auto;
+            border-bottom: 1px solid var(--border); flex-shrink: 0;
+            scrollbar-width: none;
+        }
+        .shift-tabs::-webkit-scrollbar { display: none; }
 
-.shift-details{display:flex;flex-direction:column;z-index:1;}
-.loc{font-weight:700;font-size:1rem;color:white;}
-.leader{font-size:0.75rem;color:rgba(255,255,255,0.7);}
-.badge{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1rem;background:rgba(0,0,0,0.3);z-index:1;}
-.row-muszak-A .badge{color:var(--color-A);} .row-muszak-B .badge{color:var(--color-B);} .row-muszak-C .badge{color:var(--color-C);} .row-muszak-D .badge{color:var(--color-D);}
+        .tab-btn {
+            background: var(--bg-panel); border: 2px solid var(--border);
+            color: var(--text-muted); padding: 6px 14px; border-radius: 20px;
+            font-size: 0.8rem; font-weight: 800; white-space: nowrap; cursor: pointer;
+            transition: 0.2s;
+        }
+        .tab-btn:active { transform: scale(0.92); }
+        
+        /* Színkódolt fülek */
+        .tab-btn.tab-ALL.active { background: var(--text-main); color: var(--bg-base); border-color: var(--text-main); }
+        .tab-btn.tab-A { border-color: rgba(59, 130, 246, 0.3); } .tab-btn.tab-A.active { background: var(--shift-a); color: white; border-color: var(--shift-a); box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4); }
+        .tab-btn.tab-B { border-color: rgba(16, 185, 129, 0.3); } .tab-btn.tab-B.active { background: var(--shift-b); color: white; border-color: var(--shift-b); box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4); }
+        .tab-btn.tab-C { border-color: rgba(245, 158, 11, 0.3); } .tab-btn.tab-C.active { background: var(--shift-c); color: white; border-color: var(--shift-c); box-shadow: 0 4px 10px rgba(245, 158, 11, 0.4); }
+        .tab-btn.tab-D { border-color: rgba(239, 68, 68, 0.3); }  .tab-btn.tab-D.active { background: var(--shift-d); color: white; border-color: var(--shift-d); box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4); }
 
-/* NAPTÁR */
-.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:1000;align-items:center;justify-content:center;}
-.modal-content{background:#1e293b;width:95%;max-width:400px;border-radius:20px;padding:20px;border:1px solid var(--card-border);box-shadow:0 20px 50px rgba(0,0,0,0.8);}
-/* MODOSITOTT FEJLEC: Kisebb es kompaktabb */
-.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;padding-top:0;}
-.cal-title{font-weight:800;font-size:1rem;text-transform:uppercase;color:white;}
-.cal-nav{background:none;border:none;color:var(--primary);font-size:1.5rem;cursor:pointer;padding:0 5px;}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
-.cal-day-name{text-align:center;font-size:0.7rem;color:var(--text-muted);font-weight:bold;padding-bottom:5px;}
-.cal-cell{aspect-ratio:1/1;background:#0f172a;border-radius:8px;border:1px solid #334155;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;cursor:pointer;}
-.cal-cell:hover{border-color:var(--primary);background:#1e293b;}
-.cal-num{font-size:0.9rem;font-weight:600;color:#cbd5e1;}
-.cal-shift{font-size:0.7rem;font-weight:800;position:absolute;bottom:3px;right:4px;color:var(--text-muted);display:flex;gap:2px;}
-.code-A{color:var(--color-A);} .code-B{color:var(--color-B);} .code-C{color:var(--color-C);} .code-D{color:var(--color-D);}
-.cal-today{border:2px solid var(--primary);background:rgba(59,130,246,0.1);}
-.cal-empty{background:transparent;border:none;cursor:default;}
-#eredmeny{padding-bottom:50px;}
-@media (max-width:480px){.filter-panel{grid-template-columns:1fr;}.btn-group{grid-column:span 1;}}
-</style>
+        /* --- NAPTÁR PANEL --- */
+        .calendar-panel {
+            flex: 1; display: flex; flex-direction: column;
+            padding: 5px 10px; overflow: hidden;
+        }
+
+        .cal-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 5px; padding: 0 5px;
+        }
+        .cal-nav-btn {
+            background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-main);
+            width: 32px; height: 32px; border-radius: 8px;
+            font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: 0.2s;
+        }
+        .cal-nav-btn:active { transform: scale(0.9); background: var(--border); }
+        .current-month-label { font-size: 1rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+
+        .weekdays {
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            text-align: center; margin-bottom: 5px;
+        }
+        .weekday-label { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
+
+        .calendar-grid {
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            gap: 4px; flex: 1; overflow-y: auto; align-content: start;
+            padding-right: 2px; padding-bottom: 5px;
+        }
+        .calendar-grid::-webkit-scrollbar { width: 4px; }
+        .calendar-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .cal-cell {
+            background: var(--bg-panel); border: 1px solid var(--border);
+            border-radius: 8px; display: flex; flex-direction: column;
+            padding: 4px; cursor: pointer; min-height: 48px;
+            transition: 0.15s; position: relative;
+        }
+        .cal-cell:active { transform: scale(0.92); }
+        .cal-cell.empty { background: transparent; border: none; cursor: default; }
+        
+        /* MAI NAP VÖRÖS KIEMELÉSE */
+        .cal-cell.is-today { 
+            border: 2px solid var(--danger); 
+            background: rgba(239, 68, 68, 0.1); 
+            box-shadow: inset 0 0 15px rgba(239, 68, 68, 0.2), 0 0 10px rgba(239, 68, 68, 0.3); 
+        }
+        .cal-cell.is-today .cell-date { color: var(--danger); }
+
+        .cell-top { display: flex; justify-content: space-between; align-items: flex-start; }
+        .cell-date { font-size: 0.8rem; font-weight: 900; color: var(--text-main); }
+        .cell-weekend .cell-date { color: var(--text-muted); }
+        
+        /* Ünnepnap kis pötty a naptárban */
+        .holiday-dot { width: 6px; height: 6px; background: var(--danger); border-radius: 50%; box-shadow: 0 0 5px var(--danger);}
+
+        /* Műszak kiírás a cellákban */
+        .cell-shifts { display: flex; flex-direction: column; gap: 2px; margin-top: auto; }
+        .s-tag {
+            font-size: 0.6rem; font-weight: 800; padding: 2px 4px; border-radius: 4px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .s-tag.day { background: var(--day-bg); color: var(--day-txt); border: 1px solid rgba(245, 158, 11, 0.2); }
+        .s-tag.night { background: var(--night-bg); color: var(--night-txt); border: 1px solid rgba(139, 92, 246, 0.2); }
+        .s-tag span { font-family: monospace; font-size: 0.65rem;}
+
+        /* Szűrt nézet (csak a keresett műszakot mutatja) */
+        .cal-cell.dimmed { opacity: 0.2; filter: grayscale(1); border-color: transparent; }
+        .s-tag.highlight { font-size: 0.7rem; padding: 4px; border-width: 2px; justify-content: center; }
+
+        /* --- INSPECTOR DRAWER (Oldalsó/Lenti Panel) --- */
+        .drawer-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+            z-index: 1500; opacity: 0; pointer-events: none; transition: 0.3s;
+            backdrop-filter: blur(2px);
+        }
+        .drawer-overlay.open { opacity: 1; pointer-events: all; }
+
+        .inspector-drawer {
+            position: fixed; top: 0; right: -400px;
+            width: 100%; max-width: 400px; height: 100dvh;
+            background: var(--bg-panel); border-left: 1px solid var(--border);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+            transition: right 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            z-index: 2000; display: flex; flex-direction: column;
+        }
+        .inspector-drawer.open { right: 0; }
+
+        /* Mobilon alulról jön be (Bottom Sheet) */
+        @media (max-width: 768px) {
+            .inspector-drawer {
+                top: auto; bottom: -100%; right: 0; max-width: 100%; height: auto; max-height: 90dvh;
+                border-left: none; border-top: 1px solid var(--border);
+                border-top-left-radius: 24px; border-top-right-radius: 24px;
+                transition: bottom 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            }
+            .inspector-drawer.open { bottom: 0; }
+        }
+
+        .drawer-handle { 
+            width: 40px; height: 5px; background: var(--border); 
+            border-radius: 10px; margin: 10px auto; display: none; 
+        }
+        @media (max-width: 768px) { .drawer-handle { display: block; } }
+
+        .insp-header { 
+            padding: 15px 20px; border-bottom: 1px solid var(--border); 
+            display: flex; justify-content: space-between; align-items: flex-start;
+            background: var(--bg-card);
+        }
+        .insp-date { font-size: 1.3rem; font-weight: 900; color: white; line-height: 1.2;}
+        .insp-sub { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-top: 5px;}
+        
+        .btn-close {
+            background: rgba(255,255,255,0.05); border: none; color: var(--text-muted);
+            width: 32px; height: 32px; border-radius: 50%; font-size: 1.2rem;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+        }
+        .btn-close:active { background: var(--danger); color: white; }
+
+        .insp-body { padding: 15px 20px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+
+        /* Ünnepnap és Névnap Kártyák */
+        .info-card {
+            background: rgba(0,0,0,0.2); border-radius: 12px; padding: 10px 15px;
+            display: flex; align-items: center; gap: 12px; border-left: 4px solid var(--accent);
+        }
+        .info-card.holiday { border-left-color: var(--danger); background: rgba(239, 68, 68, 0.05); }
+        .info-icon { font-size: 1.4rem; }
+        .info-text-title { font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 800; letter-spacing: 0.5px; }
+        .info-text-val { font-size: 0.95rem; font-weight: 800; color: white; margin-top: 2px; }
+        .info-card.holiday .info-text-val { color: var(--danger); }
+
+        /* Műszak Kártyák */
+        .shift-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 12px 15px; display: flex; align-items: center;
+            border-left: 4px solid transparent;
+        }
+        .shift-card.day { border-left-color: var(--day-txt); }
+        .shift-card.night { border-left-color: var(--night-txt); }
+        .shift-card.off { border-left-color: var(--border-light); opacity: 0.8; }
+
+        .shift-icon { width: 36px; text-align: center; font-size: 1.4rem; }
+        .shift-details { flex: 1; padding-left: 10px; }
+        .shift-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
+        .shift-time { font-size: 0.95rem; font-weight: 900; color: white; margin-top: 2px; }
+        
+        .badge-group { display: flex; gap: 6px; }
+        .s-badge {
+            width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.1rem; color: white; background: rgba(255,255,255,0.1);
+        }
+        .shift-A { color: var(--shift-a); } .shift-B { color: var(--shift-b); }
+        .shift-C { color: var(--shift-c); } .shift-D { color: var(--shift-d); }
+
+    </style>
 </head>
 <body>
-<div class="container">
-<header id="mainHeader"><h1>FORVIA SMT</h1><p>Digitális Műszaknaptár 2026</p></header>
-<div class="filter-panel">
-    <div><label>Hónap</label><select id="honap"><option value="mind">Összes hónap</option><option value="01">Január</option><option value="02">Február</option><option value="03">Március</option><option value="04">Április</option><option value="05">Május</option><option value="06">Június</option><option value="07">Július</option><option value="08">Augusztus</option><option value="09">Szeptember</option><option value="10">Október</option><option value="11">November</option><option value="12">December</option></select></div>
-    <div><label>Műszak</label><select id="muszak"><option value="mind">Mind</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
-    <div class="btn-group"><button class="gomb icon-btn" id="calendarBtn" title="Havi nézet">📅</button><button class="gomb" id="maigomb">Ugrás a mai naphoz</button></div>
-</div>
-<div id="eredmeny"></div>
-</div>
-<div class="modal-overlay" id="calModal" onclick="closeCalendar(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <div class="cal-header"><button class="cal-nav" onclick="changeCalMonth(-1)">&#8249;</button><div class="cal-title" id="calTitle">2026 JANUÁR</div><button class="cal-nav" onclick="changeCalMonth(1)">&#8250;</button></div>
-        <div class="cal-grid" id="calGrid"></div>
-        <div style="text-align:center;margin-top:15px;"><button class="gomb" style="padding:10px 20px;font-size:0.8rem;" onclick="closeCalendar(null)">Bezárás</button></div>
+
+    <header class="app-header">
+        <div class="logo-area">
+            <h1>FORVIA <span>SMT</span></h1>
+        </div>
+        <button class="btn-today" onclick="jumpToToday()">
+            📍 Mai Nap
+        </button>
+    </header>
+
+    <div class="shift-tabs">
+        <button class="tab-btn tab-ALL active" onclick="setFilter('ALL')">Mindenki</button>
+        <button class="tab-btn tab-A" onclick="setFilter('A')">"A" Műszak</button>
+        <button class="tab-btn tab-B" onclick="setFilter('B')">"B" Műszak</button>
+        <button class="tab-btn tab-C" onclick="setFilter('C')">"C" Műszak</button>
+        <button class="tab-btn tab-D" onclick="setFilter('D')">"D" Műszak</button>
     </div>
-</div>
+
+    <div class="calendar-panel">
+        <div class="cal-nav">
+            <button class="cal-nav-btn" onclick="changeMonth(-1)">&#10094;</button>
+            <div class="current-month-label" id="monthLabel">2026 JANUÁR</div>
+            <button class="cal-nav-btn" onclick="changeMonth(1)">&#10095;</button>
+        </div>
+        
+        <div class="weekdays">
+            <div class="weekday-label">H</div><div class="weekday-label">K</div><div class="weekday-label">Sze</div>
+            <div class="weekday-label">Cs</div><div class="weekday-label">P</div><div class="weekday-label">Szo</div><div class="weekday-label">V</div>
+        </div>
+        
+        <div class="calendar-grid" id="calGrid"></div>
+    </div>
+
+    <div class="drawer-overlay" id="drawerOverlay" onclick="closeInspector()"></div>
+    <div class="inspector-drawer" id="inspectorDrawer">
+        <div class="drawer-handle"></div>
+        <div class="insp-header">
+            <div>
+                <div class="insp-date" id="inspDate">2026. Jan 01.</div>
+                <div class="insp-sub" id="inspDayName">Csütörtök</div>
+            </div>
+            <button class="btn-close" onclick="closeInspector()">✕</button>
+        </div>
+        
+        <div class="insp-body" id="inspBody">
+            </div>
+    </div>
+
 <script>
-const muszakok = [{"datum":"2026.01.01","hely":"Otthon","muszak":"A"},{"datum":"2026.01.01","hely":"Otthon","muszak":"B"},{"datum":"2026.01.01","hely":"Nappal","muszak":"C"},{"datum":"2026.01.01","hely":"Éjszaka","muszak":"D"},{"datum":"2026.01.02","hely":"Otthon","muszak":"A"},{"datum":"2026.01.02","hely":"Otthon","muszak":"B"},{"datum":"2026.01.02","hely":"Nappal ","muszak":"C"},{"datum":"2026.01.02","hely":"Éjszaka","muszak":"D"},{"datum":"2026.01.03","hely":"Éjszaka","muszak":"A"},{"datum":"2026.01.03","hely":"Nappal","muszak":"B"},{"datum":"2026.01.03","hely":"Otthon","muszak":"C"},{"datum":"2026.01.03","hely":"Otthon","muszak":"D"},{"datum":"2026.01.04","hely":"Éjszaka","muszak":"A"},{"datum":"2026.01.04","hely":"Nappal","muszak":"B"},{"datum":"2026.01.04","hely":"Otthon","muszak":"C"},{"datum":"2026.01.04","hely":"Otthon","muszak":"D"},{"datum":"2026.01.05","hely":"Éjszaka","muszak":"A"},{"datum":"2026.01.05","hely":"Nappal","muszak":"B"},{"datum":"2026.01.05","hely":"Otthon","muszak":"C"},{"datum":"2026.01.05","hely":"Otthon","muszak":"D"},{"datum":"2026.01.06","hely":"Otthon","muszak":"A"},{"datum":"2026.01.06","hely":"Otthon","muszak":"B"},{"datum":"2026.01.06","hely":"Éjszaka","muszak":"C"},{"datum":"2026.01.06","hely":"Nappal ","muszak":"D"},{"datum":"2026.01.07","hely":"Otthon","muszak":"A"},{"datum":"2026.01.07","hely":"Otthon","muszak":"B"},{"datum":"2026.01.07","hely":"Éjszaka","muszak":"C"},{"datum":"2026.01.07","hely":"Nappal ","muszak":"D"},{"datum":"2026.01.08","hely":"Otthon","muszak":"A"},{"datum":"2026.01.08","hely":"Otthon","muszak":"B"},{"datum":"2026.01.08","hely":"Éjszaka","muszak":"C"},{"datum":"2026.01.08","hely":"Nappal ","muszak":"D"},{"datum":"2026.01.09","hely":"Nappal","muszak":"A"},{"datum":"2026.01.09","hely":"Éjszaka","muszak":"B"},{"datum":"2026.01.09","hely":"Otthon","muszak":"C"},{"datum":"2026.01.09","hely":"Otthon","muszak":"D"},{"datum":"2026.01.10","hely":"Nappal","muszak":"A"},{"datum":"2026.01.10","hely":"Éjszaka","muszak":"B"},{"datum":"2026.01.10","hely":"Otthon","muszak":"C"},{"datum":"2026.01.10","hely":"Otthon","muszak":"D"},{"datum":"2026.01.11","hely":"Nappal","muszak":"A"},{"datum":"2026.01.11","hely":"Éjszaka","muszak":"B"},{"datum":"2026.01.11","hely":"Otthon","muszak":"C"},{"datum":"2026.01.11","hely":"Otthon","muszak":"D"},{"datum":"2026.01.12","hely":"Otthon","muszak":"A"},{"datum":"2026.01.12","hely":"Otthon","muszak":"B"},{"datum":"2026.01.12","hely":"Nappal ","muszak":"C"},{"datum":"2026.01.12","hely":"Éjszaka","muszak":"D"},{"datum":"2026.01.13","hely":"Otthon","muszak":"A"},{"datum":"2026.01.13","hely":"Otthon","muszak":"B"},{"datum":"2026.01.13","hely":"Nappal ","muszak":"C"},{"datum":"2026.01.13","hely":"Éjszaka","muszak":"D"},{"datum":"2026.01.14","hely":"Otthon","muszak":"A"},{"datum":"2026.01.14","hely":"Otthon","muszak":"B"},{"datum":"2026.01.14","hely":"Nappal ","muszak":"C"},{"datum":"2026.01.14","hely":"Éjszaka","muszak":"D"},{"datum":"2026.01.15","hely":"Éjszaka","muszak":"A"},{"datum":"2026.01.15","hely":"Nappal","muszak":"B"},{"datum":"2026.01.15","hely":"Otthon","muszak":"C"},{"datum":"2026.01.15","hely":"Otthon","muszak":"D"},{"datum":"2026.01.16","hely":"Éjszaka","muszak":"A"},{"datum":"2026.01.16","hely":"Nappal","muszak":"B"},{"datum":"2026.01.16","hely":"Otthon","muszak":"C"},{"datum":"2026.01.16","hely":"Otthon","muszak":"D"},{"datum":"2026.01.17","hely":"Éjszaka","muszak":"A"},{"datum":"2026.01.17","hely":"Nappal","muszak":"B"},{"datum":"2026.01.17","hely":"Otthon","muszak":"C"},{"datum":"2026.01.17","hely":"Otthon","muszak":"D"},{"datum":"2026.01.18","hely":"Otthon","muszak":"A"},{"datum":"2026.01.18","hely":"Otthon","muszak":"B"},{"datum":"2026.01.18","hely":"Éjszaka","muszak":"C"},{"datum":"2026.01.18","hely":"Nappal ","muszak":"D"},{"datum":"2026.01.19","hely":"Otthon","muszak":"A"},{"datum":"2026.01.19","hely":"Otthon","muszak":"B"},{"datum":"2026.01.19","hely":"Éjszaka","muszak":"C"},{"datum":"2026.01.19","hely":"Nappal ","muszak":"D"},{"datum":"2026.01.20","hely":"Otthon","muszak":"A"},{"datum":"2026.01.20","hely":"Otthon","muszak":"B"},{"datum":"2026.01.20","hely":"Éjszaka","muszak":"C"},{"datum":"2026.01.20","hely":"Nappal ","muszak":"D"},{"datum":"2026.01.21","hely":"Nappal","muszak":"A"},{"datum":"2026.01.21","hely":"Éjszaka","muszak":"B"},{"datum":"2026.01.21","hely":"Otthon","muszak":"C"},{"datum":"2026.01.21","hely":"Otthon","muszak":"D"},{"datum":"2026.01.22","hely":"Nappal","muszak":"A"},{"datum":"2026.01.22","hely":"Éjszaka","muszak":"B"},{"datum":"2026.01.22","hely":"Otthon","muszak":"C"},{"datum":"2026.01.22","hely":"Otthon","muszak":"D"},{"datum":"2026.01.23","hely":"Nappal","muszak":"A"},{"datum":"2026.01.23","hely":"Éjszaka","muszak":"B"},{"datum":"2026.01.23","hely":"Otthon","muszak":"C"},{"datum":"2026.01.23","hely":"Otthon","muszak":"D"},{"datum":"2026.01.24","hely":"Otthon","muszak":"A"},{"datum":"2026.01.24","hely":"Otthon","muszak":"B"},{"datum":"2026.01.24","hely":"Nappal ","muszak":"C"},{"datum":"2026.01.24","hely":"Éjszaka","muszak":"D"},{"datum":"2026.01.25","hely":"Otthon","muszak":"A"},{"datum":"2026.01.25","hely":"Otthon","muszak":"B"},{"datum":"2026.01.25","hely":"Nappal ","muszak":"C"},{"datum":"2026.01.25","hely":"Éjszaka","muszak":"D"},{"datum":"2026.01.26","hely":"Otthon","muszak":"A"},{"datum":"2026.01.26","hely":"Otthon","muszak":"B"},{"datum":"2026.01.26","hely":"Nappal ","muszak":"C"},{"datum":"2026.01.26","hely":"Éjszaka","muszak":"D"},{"datum":"2026.01.27","hely":"Éjszaka","muszak":"A"},{"datum":"2026.01.27","hely":"Nappal","muszak":"B"},{"datum":"2026.01.27","hely":"Otthon","muszak":"C"},{"datum":"2026.01.27","hely":"Otthon","muszak":"D"},{"datum":"2026.01.28","hely":"Éjszaka","muszak":"A"},{"datum":"2026.01.28","hely":"Nappal","muszak":"B"},{"datum":"2026.01.28","hely":"Otthon","muszak":"C"},{"datum":"2026.01.28","hely":"Otthon","muszak":"D"},{"datum":"2026.01.29","hely":"Éjszaka","muszak":"A"},{"datum":"2026.01.29","hely":"Nappal","muszak":"B"},{"datum":"2026.01.29","hely":"Otthon","muszak":"C"},{"datum":"2026.01.29","hely":"Otthon","muszak":"D"},{"datum":"2026.01.30","hely":"Otthon","muszak":"A"},{"datum":"2026.01.30","hely":"Otthon","muszak":"B"},{"datum":"2026.01.30","hely":"Éjszaka","muszak":"C"},{"datum":"2026.01.30","hely":"Nappal ","muszak":"D"},{"datum":"2026.01.31","hely":"Otthon","muszak":"A"},{"datum":"2026.01.31","hely":"Otthon","muszak":"B"},{"datum":"2026.01.31","hely":"Éjszaka","muszak":"C"},{"datum":"2026.01.31","hely":"Nappal ","muszak":"D"},{"datum":"2026.02.01","hely":"Otthon","muszak":"A"},{"datum":"2026.02.01","hely":"Otthon","muszak":"B"},{"datum":"2026.02.01","hely":"Éjszaka","muszak":"C"},{"datum":"2026.02.01","hely":"Nappal ","muszak":"D"},{"datum":"2026.02.02","hely":"Nappal","muszak":"A"},{"datum":"2026.02.02","hely":"Éjszaka","muszak":"B"},{"datum":"2026.02.02","hely":"Otthon","muszak":"C"},{"datum":"2026.02.02","hely":"Otthon","muszak":"D"},{"datum":"2026.02.03","hely":"Nappal","muszak":"A"},{"datum":"2026.02.03","hely":"Éjszaka","muszak":"B"},{"datum":"2026.02.03","hely":"Otthon","muszak":"C"},{"datum":"2026.02.03","hely":"Otthon","muszak":"D"},{"datum":"2026.02.04","hely":"Nappal","muszak":"A"},{"datum":"2026.02.04","hely":"Éjszaka","muszak":"B"},{"datum":"2026.02.04","hely":"Otthon","muszak":"C"},{"datum":"2026.02.04","hely":"Otthon","muszak":"D"},{"datum":"2026.02.05","hely":"Otthon","muszak":"A"},{"datum":"2026.02.05","hely":"Otthon","muszak":"B"},{"datum":"2026.02.05","hely":"Nappal ","muszak":"C"},{"datum":"2026.02.05","hely":"Éjszaka","muszak":"D"},{"datum":"2026.02.06","hely":"Otthon","muszak":"A"},{"datum":"2026.02.06","hely":"Otthon","muszak":"B"},{"datum":"2026.02.06","hely":"Nappal ","muszak":"C"},{"datum":"2026.02.06","hely":"Éjszaka","muszak":"D"},{"datum":"2026.02.07","hely":"Otthon","muszak":"A"},{"datum":"2026.02.07","hely":"Otthon","muszak":"B"},{"datum":"2026.02.07","hely":"Nappal ","muszak":"C"},{"datum":"2026.02.07","hely":"Éjszaka","muszak":"D"},{"datum":"2026.02.08","hely":"Éjszaka","muszak":"A"},{"datum":"2026.02.08","hely":"Nappal","muszak":"B"},{"datum":"2026.02.08","hely":"Otthon","muszak":"C"},{"datum":"2026.02.08","hely":"Otthon","muszak":"D"},{"datum":"2026.02.09","hely":"Éjszaka","muszak":"A"},{"datum":"2026.02.09","hely":"Nappal","muszak":"B"},{"datum":"2026.02.09","hely":"Otthon","muszak":"C"},{"datum":"2026.02.09","hely":"Otthon","muszak":"D"},{"datum":"2026.02.10","hely":"Éjszaka","muszak":"A"},{"datum":"2026.02.10","hely":"Nappal","muszak":"B"},{"datum":"2026.02.10","hely":"Otthon","muszak":"C"},{"datum":"2026.02.10","hely":"Otthon","muszak":"D"},{"datum":"2026.02.11","hely":"Otthon","muszak":"A"},{"datum":"2026.02.11","hely":"Otthon","muszak":"B"},{"datum":"2026.02.11","hely":"Éjszaka","muszak":"C"},{"datum":"2026.02.11","hely":"Nappal ","muszak":"D"},{"datum":"2026.02.12","hely":"Otthon","muszak":"A"},{"datum":"2026.02.12","hely":"Otthon","muszak":"B"},{"datum":"2026.02.12","hely":"Éjszaka","muszak":"C"},{"datum":"2026.02.12","hely":"Nappal ","muszak":"D"},{"datum":"2026.02.13","hely":"Otthon","muszak":"A"},{"datum":"2026.02.13","hely":"Otthon","muszak":"B"},{"datum":"2026.02.13","hely":"Éjszaka","muszak":"C"},{"datum":"2026.02.13","hely":"Nappal ","muszak":"D"},{"datum":"2026.02.14","hely":"Nappal","muszak":"A"},{"datum":"2026.02.14","hely":"Éjszaka","muszak":"B"},{"datum":"2026.02.14","hely":"Otthon","muszak":"C"},{"datum":"2026.02.14","hely":"Otthon","muszak":"D"},{"datum":"2026.02.15","hely":"Nappal","muszak":"A"},{"datum":"2026.02.15","hely":"Éjszaka","muszak":"B"},{"datum":"2026.02.15","hely":"Otthon","muszak":"C"},{"datum":"2026.02.15","hely":"Otthon","muszak":"D"},{"datum":"2026.02.16","hely":"Nappal","muszak":"A"},{"datum":"2026.02.16","hely":"Éjszaka","muszak":"B"},{"datum":"2026.02.16","hely":"Otthon","muszak":"C"},{"datum":"2026.02.16","hely":"Otthon","muszak":"D"},{"datum":"2026.02.17","hely":"Otthon","muszak":"A"},{"datum":"2026.02.17","hely":"Otthon","muszak":"B"},{"datum":"2026.02.17","hely":"Nappal ","muszak":"C"},{"datum":"2026.02.17","hely":"Éjszaka","muszak":"D"},{"datum":"2026.02.18","hely":"Otthon","muszak":"A"},{"datum":"2026.02.18","hely":"Otthon","muszak":"B"},{"datum":"2026.02.18","hely":"Nappal ","muszak":"C"},{"datum":"2026.02.18","hely":"Éjszaka","muszak":"D"},{"datum":"2026.02.19","hely":"Otthon","muszak":"A"},{"datum":"2026.02.19","hely":"Otthon","muszak":"B"},{"datum":"2026.02.19","hely":"Nappal ","muszak":"C"},{"datum":"2026.02.19","hely":"Éjszaka","muszak":"D"},{"datum":"2026.02.20","hely":"Éjszaka","muszak":"A"},{"datum":"2026.02.20","hely":"Nappal","muszak":"B"},{"datum":"2026.02.20","hely":"Otthon","muszak":"C"},{"datum":"2026.02.20","hely":"Otthon","muszak":"D"},{"datum":"2026.02.21","hely":"Éjszaka","muszak":"A"},{"datum":"2026.02.21","hely":"Nappal","muszak":"B"},{"datum":"2026.02.21","hely":"Otthon","muszak":"C"},{"datum":"2026.02.21","hely":"Otthon","muszak":"D"},{"datum":"2026.02.22","hely":"Éjszaka","muszak":"A"},{"datum":"2026.02.22","hely":"Nappal","muszak":"B"},{"datum":"2026.02.22","hely":"Otthon","muszak":"C"},{"datum":"2026.02.22","hely":"Otthon","muszak":"D"},{"datum":"2026.02.23","hely":"Otthon","muszak":"A"},{"datum":"2026.02.23","hely":"Otthon","muszak":"B"},{"datum":"2026.02.23","hely":"Éjszaka","muszak":"C"},{"datum":"2026.02.23","hely":"Nappal ","muszak":"D"},{"datum":"2026.02.24","hely":"Otthon","muszak":"A"},{"datum":"2026.02.24","hely":"Otthon","muszak":"B"},{"datum":"2026.02.24","hely":"Éjszaka","muszak":"C"},{"datum":"2026.02.24","hely":"Nappal ","muszak":"D"},{"datum":"2026.02.25","hely":"Otthon","muszak":"A"},{"datum":"2026.02.25","hely":"Otthon","muszak":"B"},{"datum":"2026.02.25","hely":"Éjszaka","muszak":"C"},{"datum":"2026.02.25","hely":"Nappal ","muszak":"D"},{"datum":"2026.02.26","hely":"Nappal","muszak":"A"},{"datum":"2026.02.26","hely":"Éjszaka","muszak":"B"},{"datum":"2026.02.26","hely":"Otthon","muszak":"C"},{"datum":"2026.02.26","hely":"Otthon","muszak":"D"},{"datum":"2026.02.27","hely":"Nappal","muszak":"A"},{"datum":"2026.02.27","hely":"Éjszaka","muszak":"B"},{"datum":"2026.02.27","hely":"Otthon","muszak":"C"},{"datum":"2026.02.27","hely":"Otthon","muszak":"D"},{"datum":"2026.02.28","hely":"Nappal","muszak":"A"},{"datum":"2026.02.28","hely":"Éjszaka","muszak":"B"},{"datum":"2026.02.28","hely":"Otthon","muszak":"C"},{"datum":"2026.02.28","hely":"Otthon","muszak":"D"},{"datum":"2026.03.01","hely":"Otthon","muszak":"A"},{"datum":"2026.03.01","hely":"Otthon","muszak":"B"},{"datum":"2026.03.01","hely":"Nappal ","muszak":"C"},{"datum":"2026.03.01","hely":"Éjszaka","muszak":"D"},{"datum":"2026.03.02","hely":"Otthon","muszak":"A"},{"datum":"2026.03.02","hely":"Otthon","muszak":"B"},{"datum":"2026.03.02","hely":"Nappal ","muszak":"C"},{"datum":"2026.03.02","hely":"Éjszaka","muszak":"D"},{"datum":"2026.03.03","hely":"Otthon","muszak":"A"},{"datum":"2026.03.03","hely":"Otthon","muszak":"B"},{"datum":"2026.03.03","hely":"Nappal ","muszak":"C"},{"datum":"2026.03.03","hely":"Éjszaka","muszak":"D"},{"datum":"2026.03.04","hely":"Éjszaka","muszak":"A"},{"datum":"2026.03.04","hely":"Nappal","muszak":"B"},{"datum":"2026.03.04","hely":"Otthon","muszak":"C"},{"datum":"2026.03.04","hely":"Otthon","muszak":"D"},{"datum":"2026.03.05","hely":"Éjszaka","muszak":"A"},{"datum":"2026.03.05","hely":"Nappal","muszak":"B"},{"datum":"2026.03.05","hely":"Otthon","muszak":"C"},{"datum":"2026.03.05","hely":"Otthon","muszak":"D"},{"datum":"2026.03.06","hely":"Éjszaka","muszak":"A"},{"datum":"2026.03.06","hely":"Nappal","muszak":"B"},{"datum":"2026.03.06","hely":"Otthon","muszak":"C"},{"datum":"2026.03.06","hely":"Otthon","muszak":"D"},{"datum":"2026.03.07","hely":"Otthon","muszak":"A"},{"datum":"2026.03.07","hely":"Otthon","muszak":"B"},{"datum":"2026.03.07","hely":"Éjszaka","muszak":"C"},{"datum":"2026.03.07","hely":"Nappal ","muszak":"D"},{"datum":"2026.03.08","hely":"Otthon","muszak":"A"},{"datum":"2026.03.08","hely":"Otthon","muszak":"B"},{"datum":"2026.03.08","hely":"Éjszaka","muszak":"C"},{"datum":"2026.03.08","hely":"Nappal ","muszak":"D"},{"datum":"2026.03.09","hely":"Otthon","muszak":"A"},{"datum":"2026.03.09","hely":"Otthon","muszak":"B"},{"datum":"2026.03.09","hely":"Éjszaka","muszak":"C"},{"datum":"2026.03.09","hely":"Nappal ","muszak":"D"},{"datum":"2026.03.10","hely":"Nappal","muszak":"A"},{"datum":"2026.03.10","hely":"Éjszaka","muszak":"B"},{"datum":"2026.03.10","hely":"Otthon","muszak":"C"},{"datum":"2026.03.10","hely":"Otthon","muszak":"D"},{"datum":"2026.03.11","hely":"Nappal","muszak":"A"},{"datum":"2026.03.11","hely":"Éjszaka","muszak":"B"},{"datum":"2026.03.11","hely":"Otthon","muszak":"C"},{"datum":"2026.03.11","hely":"Otthon","muszak":"D"},{"datum":"2026.03.12","hely":"Nappal","muszak":"A"},{"datum":"2026.03.12","hely":"Éjszaka","muszak":"B"},{"datum":"2026.03.12","hely":"Otthon","muszak":"C"},{"datum":"2026.03.12","hely":"Otthon","muszak":"D"},{"datum":"2026.03.13","hely":"Otthon","muszak":"A"},{"datum":"2026.03.13","hely":"Otthon","muszak":"B"},{"datum":"2026.03.13","hely":"Nappal ","muszak":"C"},{"datum":"2026.03.13","hely":"Éjszaka","muszak":"D"},{"datum":"2026.03.14","hely":"Otthon","muszak":"A"},{"datum":"2026.03.14","hely":"Otthon","muszak":"B"},{"datum":"2026.03.14","hely":"Nappal ","muszak":"C"},{"datum":"2026.03.14","hely":"Éjszaka","muszak":"D"},{"datum":"2026.03.15","hely":"Otthon","muszak":"A"},{"datum":"2026.03.15","hely":"Otthon","muszak":"B"},{"datum":"2026.03.15","hely":"Nappal ","muszak":"C"},{"datum":"2026.03.15","hely":"Éjszaka","muszak":"D"},{"datum":"2026.03.16","hely":"Éjszaka","muszak":"A"},{"datum":"2026.03.16","hely":"Nappal","muszak":"B"},{"datum":"2026.03.16","hely":"Otthon","muszak":"C"},{"datum":"2026.03.16","hely":"Otthon","muszak":"D"},{"datum":"2026.03.17","hely":"Éjszaka","muszak":"A"},{"datum":"2026.03.17","hely":"Nappal","muszak":"B"},{"datum":"2026.03.17","hely":"Otthon","muszak":"C"},{"datum":"2026.03.17","hely":"Otthon","muszak":"D"},{"datum":"2026.03.18","hely":"Éjszaka","muszak":"A"},{"datum":"2026.03.18","hely":"Nappal","muszak":"B"},{"datum":"2026.03.18","hely":"Otthon","muszak":"C"},{"datum":"2026.03.18","hely":"Otthon","muszak":"D"},{"datum":"2026.03.19","hely":"Otthon","muszak":"A"},{"datum":"2026.03.19","hely":"Otthon","muszak":"B"},{"datum":"2026.03.19","hely":"Éjszaka","muszak":"C"},{"datum":"2026.03.19","hely":"Nappal ","muszak":"D"},{"datum":"2026.03.20","hely":"Otthon","muszak":"A"},{"datum":"2026.03.20","hely":"Otthon","muszak":"B"},{"datum":"2026.03.20","hely":"Éjszaka","muszak":"C"},{"datum":"2026.03.20","hely":"Nappal ","muszak":"D"},{"datum":"2026.03.21","hely":"Otthon","muszak":"A"},{"datum":"2026.03.21","hely":"Otthon","muszak":"B"},{"datum":"2026.03.21","hely":"Éjszaka","muszak":"C"},{"datum":"2026.03.21","hely":"Nappal ","muszak":"D"},{"datum":"2026.03.22","hely":"Nappal","muszak":"A"},{"datum":"2026.03.22","hely":"Éjszaka","muszak":"B"},{"datum":"2026.03.22","hely":"Otthon","muszak":"C"},{"datum":"2026.03.22","hely":"Otthon","muszak":"D"},{"datum":"2026.03.23","hely":"Nappal","muszak":"A"},{"datum":"2026.03.23","hely":"Éjszaka","muszak":"B"},{"datum":"2026.03.23","hely":"Otthon","muszak":"C"},{"datum":"2026.03.23","hely":"Otthon","muszak":"D"},{"datum":"2026.03.24","hely":"Nappal","muszak":"A"},{"datum":"2026.03.24","hely":"Éjszaka","muszak":"B"},{"datum":"2026.03.24","hely":"Otthon","muszak":"C"},{"datum":"2026.03.24","hely":"Otthon","muszak":"D"},{"datum":"2026.03.25","hely":"Otthon","muszak":"A"},{"datum":"2026.03.25","hely":"Otthon","muszak":"B"},{"datum":"2026.03.25","hely":"Nappal ","muszak":"C"},{"datum":"2026.03.25","hely":"Éjszaka","muszak":"D"},{"datum":"2026.03.26","hely":"Otthon","muszak":"A"},{"datum":"2026.03.26","hely":"Otthon","muszak":"B"},{"datum":"2026.03.26","hely":"Nappal ","muszak":"C"},{"datum":"2026.03.26","hely":"Éjszaka","muszak":"D"},{"datum":"2026.03.27","hely":"Otthon","muszak":"A"},{"datum":"2026.03.27","hely":"Otthon","muszak":"B"},{"datum":"2026.03.27","hely":"Nappal ","muszak":"C"},{"datum":"2026.03.27","hely":"Éjszaka","muszak":"D"},{"datum":"2026.03.28","hely":"Éjszaka","muszak":"A"},{"datum":"2026.03.28","hely":"Nappal","muszak":"B"},{"datum":"2026.03.28","hely":"Otthon","muszak":"C"},{"datum":"2026.03.28","hely":"Otthon","muszak":"D"},{"datum":"2026.03.29","hely":"Éjszaka","muszak":"A"},{"datum":"2026.03.29","hely":"Nappal","muszak":"B"},{"datum":"2026.03.29","hely":"Otthon","muszak":"C"},{"datum":"2026.03.29","hely":"Otthon","muszak":"D"},{"datum":"2026.03.30","hely":"Éjszaka","muszak":"A"},{"datum":"2026.03.30","hely":"Nappal","muszak":"B"},{"datum":"2026.03.30","hely":"Otthon","muszak":"C"},{"datum":"2026.03.30","hely":"Otthon","muszak":"D"},{"datum":"2026.03.31","hely":"Otthon","muszak":"A"},{"datum":"2026.03.31","hely":"Otthon","muszak":"B"},{"datum":"2026.03.31","hely":"Éjszaka","muszak":"C"},{"datum":"2026.03.31","hely":"Nappal ","muszak":"D"},{"datum":"2026.04.01","hely":"Otthon","muszak":"A"},{"datum":"2026.04.01","hely":"Otthon","muszak":"B"},{"datum":"2026.04.01","hely":"Éjszaka","muszak":"C"},{"datum":"2026.04.01","hely":"Nappal ","muszak":"D"},{"datum":"2026.04.02","hely":"Otthon","muszak":"A"},{"datum":"2026.04.02","hely":"Otthon","muszak":"B"},{"datum":"2026.04.02","hely":"Éjszaka","muszak":"C"},{"datum":"2026.04.02","hely":"Nappal ","muszak":"D"},{"datum":"2026.04.03","hely":"Nappal","muszak":"A"},{"datum":"2026.04.03","hely":"Éjszaka","muszak":"B"},{"datum":"2026.04.03","hely":"Otthon","muszak":"C"},{"datum":"2026.04.03","hely":"Otthon","muszak":"D"},{"datum":"2026.04.04","hely":"Nappal","muszak":"A"},{"datum":"2026.04.04","hely":"Éjszaka","muszak":"B"},{"datum":"2026.04.04","hely":"Otthon","muszak":"C"},{"datum":"2026.04.04","hely":"Otthon","muszak":"D"},{"datum":"2026.04.05","hely":"Nappal","muszak":"A"},{"datum":"2026.04.05","hely":"Éjszaka","muszak":"B"},{"datum":"2026.04.05","hely":"Otthon","muszak":"C"},{"datum":"2026.04.05","hely":"Otthon","muszak":"D"},{"datum":"2026.04.06","hely":"Otthon","muszak":"A"},{"datum":"2026.04.06","hely":"Otthon","muszak":"B"},{"datum":"2026.04.06","hely":"Nappal ","muszak":"C"},{"datum":"2026.04.06","hely":"Éjszaka","muszak":"D"},{"datum":"2026.04.07","hely":"Otthon","muszak":"A"},{"datum":"2026.04.07","hely":"Otthon","muszak":"B"},{"datum":"2026.04.07","hely":"Nappal ","muszak":"C"},{"datum":"2026.04.07","hely":"Éjszaka","muszak":"D"},{"datum":"2026.04.08","hely":"Otthon","muszak":"A"},{"datum":"2026.04.08","hely":"Otthon","muszak":"B"},{"datum":"2026.04.08","hely":"Nappal ","muszak":"C"},{"datum":"2026.04.08","hely":"Éjszaka","muszak":"D"},{"datum":"2026.04.09","hely":"Éjszaka","muszak":"A"},{"datum":"2026.04.09","hely":"Nappal","muszak":"B"},{"datum":"2026.04.09","hely":"Otthon","muszak":"C"},{"datum":"2026.04.09","hely":"Otthon","muszak":"D"},{"datum":"2026.04.10","hely":"Éjszaka","muszak":"A"},{"datum":"2026.04.10","hely":"Nappal","muszak":"B"},{"datum":"2026.04.10","hely":"Otthon","muszak":"C"},{"datum":"2026.04.10","hely":"Otthon","muszak":"D"},{"datum":"2026.04.11","hely":"Éjszaka","muszak":"A"},{"datum":"2026.04.11","hely":"Nappal","muszak":"B"},{"datum":"2026.04.11","hely":"Otthon","muszak":"C"},{"datum":"2026.04.11","hely":"Otthon","muszak":"D"},{"datum":"2026.04.12","hely":"Otthon","muszak":"A"},{"datum":"2026.04.12","hely":"Otthon","muszak":"B"},{"datum":"2026.04.12","hely":"Éjszaka","muszak":"C"},{"datum":"2026.04.12","hely":"Nappal ","muszak":"D"},{"datum":"2026.04.13","hely":"Otthon","muszak":"A"},{"datum":"2026.04.13","hely":"Otthon","muszak":"B"},{"datum":"2026.04.13","hely":"Éjszaka","muszak":"C"},{"datum":"2026.04.13","hely":"Nappal ","muszak":"D"},{"datum":"2026.04.14","hely":"Otthon","muszak":"A"},{"datum":"2026.04.14","hely":"Otthon","muszak":"B"},{"datum":"2026.04.14","hely":"Éjszaka","muszak":"C"},{"datum":"2026.04.14","hely":"Nappal ","muszak":"D"},{"datum":"2026.04.15","hely":"Nappal","muszak":"A"},{"datum":"2026.04.15","hely":"Éjszaka","muszak":"B"},{"datum":"2026.04.15","hely":"Otthon","muszak":"C"},{"datum":"2026.04.15","hely":"Otthon","muszak":"D"},{"datum":"2026.04.16","hely":"Nappal","muszak":"A"},{"datum":"2026.04.16","hely":"Éjszaka","muszak":"B"},{"datum":"2026.04.16","hely":"Otthon","muszak":"C"},{"datum":"2026.04.16","hely":"Otthon","muszak":"D"},{"datum":"2026.04.17","hely":"Nappal","muszak":"A"},{"datum":"2026.04.17","hely":"Éjszaka","muszak":"B"},{"datum":"2026.04.17","hely":"Otthon","muszak":"C"},{"datum":"2026.04.17","hely":"Otthon","muszak":"D"},{"datum":"2026.04.18","hely":"Otthon","muszak":"A"},{"datum":"2026.04.18","hely":"Otthon","muszak":"B"},{"datum":"2026.04.18","hely":"Nappal ","muszak":"C"},{"datum":"2026.04.18","hely":"Éjszaka","muszak":"D"},{"datum":"2026.04.19","hely":"Otthon","muszak":"A"},{"datum":"2026.04.19","hely":"Otthon","muszak":"B"},{"datum":"2026.04.19","hely":"Nappal ","muszak":"C"},{"datum":"2026.04.19","hely":"Éjszaka","muszak":"D"},{"datum":"2026.04.20","hely":"Otthon","muszak":"A"},{"datum":"2026.04.20","hely":"Otthon","muszak":"B"},{"datum":"2026.04.20","hely":"Nappal ","muszak":"C"},{"datum":"2026.04.20","hely":"Éjszaka","muszak":"D"},{"datum":"2026.04.21","hely":"Éjszaka","muszak":"A"},{"datum":"2026.04.21","hely":"Nappal","muszak":"B"},{"datum":"2026.04.21","hely":"Otthon","muszak":"C"},{"datum":"2026.04.21","hely":"Otthon","muszak":"D"},{"datum":"2026.04.22","hely":"Éjszaka","muszak":"A"},{"datum":"2026.04.22","hely":"Nappal","muszak":"B"},{"datum":"2026.04.22","hely":"Otthon","muszak":"C"},{"datum":"2026.04.22","hely":"Otthon","muszak":"D"},{"datum":"2026.04.23","hely":"Éjszaka","muszak":"A"},{"datum":"2026.04.23","hely":"Nappal","muszak":"B"},{"datum":"2026.04.23","hely":"Otthon","muszak":"C"},{"datum":"2026.04.23","hely":"Otthon","muszak":"D"},{"datum":"2026.04.24","hely":"Otthon","muszak":"A"},{"datum":"2026.04.24","hely":"Otthon","muszak":"B"},{"datum":"2026.04.24","hely":"Éjszaka","muszak":"C"},{"datum":"2026.04.24","hely":"Nappal ","muszak":"D"},{"datum":"2026.04.25","hely":"Otthon","muszak":"A"},{"datum":"2026.04.25","hely":"Otthon","muszak":"B"},{"datum":"2026.04.25","hely":"Éjszaka","muszak":"C"},{"datum":"2026.04.25","hely":"Nappal ","muszak":"D"},{"datum":"2026.04.26","hely":"Otthon","muszak":"A"},{"datum":"2026.04.26","hely":"Otthon","muszak":"B"},{"datum":"2026.04.26","hely":"Éjszaka","muszak":"C"},{"datum":"2026.04.26","hely":"Nappal ","muszak":"D"},{"datum":"2026.04.27","hely":"Nappal","muszak":"A"},{"datum":"2026.04.27","hely":"Éjszaka","muszak":"B"},{"datum":"2026.04.27","hely":"Otthon","muszak":"C"},{"datum":"2026.04.27","hely":"Otthon","muszak":"D"},{"datum":"2026.04.28","hely":"Nappal","muszak":"A"},{"datum":"2026.04.28","hely":"Éjszaka","muszak":"B"},{"datum":"2026.04.28","hely":"Otthon","muszak":"C"},{"datum":"2026.04.28","hely":"Otthon","muszak":"D"},{"datum":"2026.04.29","hely":"Nappal","muszak":"A"},{"datum":"2026.04.29","hely":"Éjszaka","muszak":"B"},{"datum":"2026.04.29","hely":"Otthon","muszak":"C"},{"datum":"2026.04.29","hely":"Otthon","muszak":"D"},{"datum":"2026.04.30","hely":"Otthon","muszak":"A"},{"datum":"2026.04.30","hely":"Otthon","muszak":"B"},{"datum":"2026.04.30","hely":"Nappal ","muszak":"C"},{"datum":"2026.04.30","hely":"Éjszaka","muszak":"D"},{"datum":"2026.05.01","hely":"Otthon","muszak":"A"},{"datum":"2026.05.01","hely":"Otthon","muszak":"B"},{"datum":"2026.05.01","hely":"Nappal ","muszak":"C"},{"datum":"2026.05.01","hely":"Éjszaka","muszak":"D"},{"datum":"2026.05.02","hely":"Otthon","muszak":"A"},{"datum":"2026.05.02","hely":"Otthon","muszak":"B"},{"datum":"2026.05.02","hely":"Nappal ","muszak":"C"},{"datum":"2026.05.02","hely":"Éjszaka","muszak":"D"},{"datum":"2026.05.03","hely":"Éjszaka","muszak":"A"},{"datum":"2026.05.03","hely":"Nappal","muszak":"B"},{"datum":"2026.05.03","hely":"Otthon","muszak":"C"},{"datum":"2026.05.03","hely":"Otthon","muszak":"D"},{"datum":"2026.05.04","hely":"Éjszaka","muszak":"A"},{"datum":"2026.05.04","hely":"Nappal","muszak":"B"},{"datum":"2026.05.04","hely":"Otthon","muszak":"C"},{"datum":"2026.05.04","hely":"Otthon","muszak":"D"},{"datum":"2026.05.05","hely":"Éjszaka","muszak":"A"},{"datum":"2026.05.05","hely":"Nappal","muszak":"B"},{"datum":"2026.05.05","hely":"Otthon","muszak":"C"},{"datum":"2026.05.05","hely":"Otthon","muszak":"D"},{"datum":"2026.05.06","hely":"Otthon","muszak":"A"},{"datum":"2026.05.06","hely":"Otthon","muszak":"B"},{"datum":"2026.05.06","hely":"Éjszaka","muszak":"C"},{"datum":"2026.05.06","hely":"Nappal ","muszak":"D"},{"datum":"2026.05.07","hely":"Otthon","muszak":"A"},{"datum":"2026.05.07","hely":"Otthon","muszak":"B"},{"datum":"2026.05.07","hely":"Éjszaka","muszak":"C"},{"datum":"2026.05.07","hely":"Nappal ","muszak":"D"},{"datum":"2026.05.08","hely":"Otthon","muszak":"A"},{"datum":"2026.05.08","hely":"Otthon","muszak":"B"},{"datum":"2026.05.08","hely":"Éjszaka","muszak":"C"},{"datum":"2026.05.08","hely":"Nappal ","muszak":"D"},{"datum":"2026.05.09","hely":"Nappal","muszak":"A"},{"datum":"2026.05.09","hely":"Éjszaka","muszak":"B"},{"datum":"2026.05.09","hely":"Otthon","muszak":"C"},{"datum":"2026.05.09","hely":"Otthon","muszak":"D"},{"datum":"2026.05.10","hely":"Nappal","muszak":"A"},{"datum":"2026.05.10","hely":"Éjszaka","muszak":"B"},{"datum":"2026.05.10","hely":"Otthon","muszak":"C"},{"datum":"2026.05.10","hely":"Otthon","muszak":"D"},{"datum":"2026.05.11","hely":"Nappal","muszak":"A"},{"datum":"2026.05.11","hely":"Éjszaka","muszak":"B"},{"datum":"2026.05.11","hely":"Otthon","muszak":"C"},{"datum":"2026.05.11","hely":"Otthon","muszak":"D"},{"datum":"2026.05.12","hely":"Otthon","muszak":"A"},{"datum":"2026.05.12","hely":"Otthon","muszak":"B"},{"datum":"2026.05.12","hely":"Nappal ","muszak":"C"},{"datum":"2026.05.12","hely":"Éjszaka","muszak":"D"},{"datum":"2026.05.13","hely":"Otthon","muszak":"A"},{"datum":"2026.05.13","hely":"Otthon","muszak":"B"},{"datum":"2026.05.13","hely":"Nappal ","muszak":"C"},{"datum":"2026.05.13","hely":"Éjszaka","muszak":"D"},{"datum":"2026.05.14","hely":"Otthon","muszak":"A"},{"datum":"2026.05.14","hely":"Otthon","muszak":"B"},{"datum":"2026.05.14","hely":"Nappal ","muszak":"C"},{"datum":"2026.05.14","hely":"Éjszaka","muszak":"D"},{"datum":"2026.05.15","hely":"Éjszaka","muszak":"A"},{"datum":"2026.05.15","hely":"Nappal","muszak":"B"},{"datum":"2026.05.15","hely":"Otthon","muszak":"C"},{"datum":"2026.05.15","hely":"Otthon","muszak":"D"},{"datum":"2026.05.16","hely":"Éjszaka","muszak":"A"},{"datum":"2026.05.16","hely":"Nappal","muszak":"B"},{"datum":"2026.05.16","hely":"Otthon","muszak":"C"},{"datum":"2026.05.16","hely":"Otthon","muszak":"D"},{"datum":"2026.05.17","hely":"Éjszaka","muszak":"A"},{"datum":"2026.05.17","hely":"Nappal","muszak":"B"},{"datum":"2026.05.17","hely":"Otthon","muszak":"C"},{"datum":"2026.05.17","hely":"Otthon","muszak":"D"},{"datum":"2026.05.18","hely":"Otthon","muszak":"A"},{"datum":"2026.05.18","hely":"Otthon","muszak":"B"},{"datum":"2026.05.18","hely":"Éjszaka","muszak":"C"},{"datum":"2026.05.18","hely":"Nappal ","muszak":"D"},{"datum":"2026.05.19","hely":"Otthon","muszak":"A"},{"datum":"2026.05.19","hely":"Otthon","muszak":"B"},{"datum":"2026.05.19","hely":"Éjszaka","muszak":"C"},{"datum":"2026.05.19","hely":"Nappal ","muszak":"D"},{"datum":"2026.05.20","hely":"Otthon","muszak":"A"},{"datum":"2026.05.20","hely":"Otthon","muszak":"B"},{"datum":"2026.05.20","hely":"Éjszaka","muszak":"C"},{"datum":"2026.05.20","hely":"Nappal ","muszak":"D"},{"datum":"2026.05.21","hely":"Nappal","muszak":"A"},{"datum":"2026.05.21","hely":"Éjszaka","muszak":"B"},{"datum":"2026.05.21","hely":"Otthon","muszak":"C"},{"datum":"2026.05.21","hely":"Otthon","muszak":"D"},{"datum":"2026.05.22","hely":"Nappal","muszak":"A"},{"datum":"2026.05.22","hely":"Éjszaka","muszak":"B"},{"datum":"2026.05.22","hely":"Otthon","muszak":"C"},{"datum":"2026.05.22","hely":"Otthon","muszak":"D"},{"datum":"2026.05.23","hely":"Nappal","muszak":"A"},{"datum":"2026.05.23","hely":"Éjszaka","muszak":"B"},{"datum":"2026.05.23","hely":"Otthon","muszak":"C"},{"datum":"2026.05.23","hely":"Otthon","muszak":"D"},{"datum":"2026.05.24","hely":"Otthon","muszak":"A"},{"datum":"2026.05.24","hely":"Otthon","muszak":"B"},{"datum":"2026.05.24","hely":"Nappal ","muszak":"C"},{"datum":"2026.05.24","hely":"Éjszaka","muszak":"D"},{"datum":"2026.05.25","hely":"Otthon","muszak":"A"},{"datum":"2026.05.25","hely":"Otthon","muszak":"B"},{"datum":"2026.05.25","hely":"Nappal ","muszak":"C"},{"datum":"2026.05.25","hely":"Éjszaka","muszak":"D"},{"datum":"2026.05.26","hely":"Otthon","muszak":"A"},{"datum":"2026.05.26","hely":"Otthon","muszak":"B"},{"datum":"2026.05.26","hely":"Nappal ","muszak":"C"},{"datum":"2026.05.26","hely":"Éjszaka","muszak":"D"},{"datum":"2026.05.27","hely":"Éjszaka","muszak":"A"},{"datum":"2026.05.27","hely":"Nappal","muszak":"B"},{"datum":"2026.05.27","hely":"Otthon","muszak":"C"},{"datum":"2026.05.27","hely":"Otthon","muszak":"D"},{"datum":"2026.05.28","hely":"Éjszaka","muszak":"A"},{"datum":"2026.05.28","hely":"Nappal","muszak":"B"},{"datum":"2026.05.28","hely":"Otthon","muszak":"C"},{"datum":"2026.05.28","hely":"Otthon","muszak":"D"},{"datum":"2026.05.29","hely":"Éjszaka","muszak":"A"},{"datum":"2026.05.29","hely":"Nappal","muszak":"B"},{"datum":"2026.05.29","hely":"Otthon","muszak":"C"},{"datum":"2026.05.29","hely":"Otthon","muszak":"D"},{"datum":"2026.05.30","hely":"Otthon","muszak":"A"},{"datum":"2026.05.30","hely":"Otthon","muszak":"B"},{"datum":"2026.05.30","hely":"Éjszaka","muszak":"C"},{"datum":"2026.05.30","hely":"Nappal ","muszak":"D"},{"datum":"2026.05.31","hely":"Otthon","muszak":"A"},{"datum":"2026.05.31","hely":"Otthon","muszak":"B"},{"datum":"2026.05.31","hely":"Éjszaka","muszak":"C"},{"datum":"2026.05.31","hely":"Nappal ","muszak":"D"},{"datum":"2026.06.01","hely":"Otthon","muszak":"A"},{"datum":"2026.06.01","hely":"Otthon","muszak":"B"},{"datum":"2026.06.01","hely":"Éjszaka","muszak":"C"},{"datum":"2026.06.01","hely":"Nappal ","muszak":"D"},{"datum":"2026.06.02","hely":"Nappal","muszak":"A"},{"datum":"2026.06.02","hely":"Éjszaka","muszak":"B"},{"datum":"2026.06.02","hely":"Otthon","muszak":"C"},{"datum":"2026.06.02","hely":"Otthon","muszak":"D"},{"datum":"2026.06.03","hely":"Nappal","muszak":"A"},{"datum":"2026.06.03","hely":"Éjszaka","muszak":"B"},{"datum":"2026.06.03","hely":"Otthon","muszak":"C"},{"datum":"2026.06.03","hely":"Otthon","muszak":"D"},{"datum":"2026.06.04","hely":"Nappal","muszak":"A"},{"datum":"2026.06.04","hely":"Éjszaka","muszak":"B"},{"datum":"2026.06.04","hely":"Otthon","muszak":"C"},{"datum":"2026.06.04","hely":"Otthon","muszak":"D"},{"datum":"2026.06.05","hely":"Otthon","muszak":"A"},{"datum":"2026.06.05","hely":"Otthon","muszak":"B"},{"datum":"2026.06.05","hely":"Nappal ","muszak":"C"},{"datum":"2026.06.05","hely":"Éjszaka","muszak":"D"},{"datum":"2026.06.06","hely":"Otthon","muszak":"A"},{"datum":"2026.06.06","hely":"Otthon","muszak":"B"},{"datum":"2026.06.06","hely":"Nappal ","muszak":"C"},{"datum":"2026.06.06","hely":"Éjszaka","muszak":"D"},{"datum":"2026.06.07","hely":"Otthon","muszak":"A"},{"datum":"2026.06.07","hely":"Otthon","muszak":"B"},{"datum":"2026.06.07","hely":"Nappal ","muszak":"C"},{"datum":"2026.06.07","hely":"Éjszaka","muszak":"D"},{"datum":"2026.06.08","hely":"Éjszaka","muszak":"A"},{"datum":"2026.06.08","hely":"Nappal","muszak":"B"},{"datum":"2026.06.08","hely":"Otthon","muszak":"C"},{"datum":"2026.06.08","hely":"Otthon","muszak":"D"},{"datum":"2026.06.09","hely":"Éjszaka","muszak":"A"},{"datum":"2026.06.09","hely":"Nappal","muszak":"B"},{"datum":"2026.06.09","hely":"Otthon","muszak":"C"},{"datum":"2026.06.09","hely":"Otthon","muszak":"D"},{"datum":"2026.06.10","hely":"Éjszaka","muszak":"A"},{"datum":"2026.06.10","hely":"Nappal","muszak":"B"},{"datum":"2026.06.10","hely":"Otthon","muszak":"C"},{"datum":"2026.06.10","hely":"Otthon","muszak":"D"},{"datum":"2026.06.11","hely":"Otthon","muszak":"A"},{"datum":"2026.06.11","hely":"Otthon","muszak":"B"},{"datum":"2026.06.11","hely":"Éjszaka","muszak":"C"},{"datum":"2026.06.11","hely":"Nappal ","muszak":"D"},{"datum":"2026.06.12","hely":"Otthon","muszak":"A"},{"datum":"2026.06.12","hely":"Otthon","muszak":"B"},{"datum":"2026.06.12","hely":"Éjszaka","muszak":"C"},{"datum":"2026.06.12","hely":"Nappal ","muszak":"D"},{"datum":"2026.06.13","hely":"Otthon","muszak":"A"},{"datum":"2026.06.13","hely":"Otthon","muszak":"B"},{"datum":"2026.06.13","hely":"Éjszaka","muszak":"C"},{"datum":"2026.06.13","hely":"Nappal ","muszak":"D"},{"datum":"2026.06.14","hely":"Nappal","muszak":"A"},{"datum":"2026.06.14","hely":"Éjszaka","muszak":"B"},{"datum":"2026.06.14","hely":"Otthon","muszak":"C"},{"datum":"2026.06.14","hely":"Otthon","muszak":"D"},{"datum":"2026.06.15","hely":"Nappal","muszak":"A"},{"datum":"2026.06.15","hely":"Éjszaka","muszak":"B"},{"datum":"2026.06.15","hely":"Otthon","muszak":"C"},{"datum":"2026.06.15","hely":"Otthon","muszak":"D"},{"datum":"2026.06.16","hely":"Nappal","muszak":"A"},{"datum":"2026.06.16","hely":"Éjszaka","muszak":"B"},{"datum":"2026.06.16","hely":"Otthon","muszak":"C"},{"datum":"2026.06.16","hely":"Otthon","muszak":"D"},{"datum":"2026.06.17","hely":"Otthon","muszak":"A"},{"datum":"2026.06.17","hely":"Otthon","muszak":"B"},{"datum":"2026.06.17","hely":"Nappal ","muszak":"C"},{"datum":"2026.06.17","hely":"Éjszaka","muszak":"D"},{"datum":"2026.06.18","hely":"Otthon","muszak":"A"},{"datum":"2026.06.18","hely":"Otthon","muszak":"B"},{"datum":"2026.06.18","hely":"Nappal ","muszak":"C"},{"datum":"2026.06.18","hely":"Éjszaka","muszak":"D"},{"datum":"2026.06.19","hely":"Otthon","muszak":"A"},{"datum":"2026.06.19","hely":"Otthon","muszak":"B"},{"datum":"2026.06.19","hely":"Nappal ","muszak":"C"},{"datum":"2026.06.19","hely":"Éjszaka","muszak":"D"},{"datum":"2026.06.20","hely":"Éjszaka","muszak":"A"},{"datum":"2026.06.20","hely":"Nappal","muszak":"B"},{"datum":"2026.06.20","hely":"Otthon","muszak":"C"},{"datum":"2026.06.20","hely":"Otthon","muszak":"D"},{"datum":"2026.06.21","hely":"Éjszaka","muszak":"A"},{"datum":"2026.06.21","hely":"Nappal","muszak":"B"},{"datum":"2026.06.21","hely":"Otthon","muszak":"C"},{"datum":"2026.06.21","hely":"Otthon","muszak":"D"},{"datum":"2026.06.22","hely":"Éjszaka","muszak":"A"},{"datum":"2026.06.22","hely":"Nappal","muszak":"B"},{"datum":"2026.06.22","hely":"Otthon","muszak":"C"},{"datum":"2026.06.22","hely":"Otthon","muszak":"D"},{"datum":"2026.06.23","hely":"Otthon","muszak":"A"},{"datum":"2026.06.23","hely":"Otthon","muszak":"B"},{"datum":"2026.06.23","hely":"Éjszaka","muszak":"C"},{"datum":"2026.06.23","hely":"Nappal ","muszak":"D"},{"datum":"2026.06.24","hely":"Otthon","muszak":"A"},{"datum":"2026.06.24","hely":"Otthon","muszak":"B"},{"datum":"2026.06.24","hely":"Éjszaka","muszak":"C"},{"datum":"2026.06.24","hely":"Nappal ","muszak":"D"},{"datum":"2026.06.25","hely":"Otthon","muszak":"A"},{"datum":"2026.06.25","hely":"Otthon","muszak":"B"},{"datum":"2026.06.25","hely":"Éjszaka","muszak":"C"},{"datum":"2026.06.25","hely":"Nappal ","muszak":"D"},{"datum":"2026.06.26","hely":"Nappal","muszak":"A"},{"datum":"2026.06.26","hely":"Éjszaka","muszak":"B"},{"datum":"2026.06.26","hely":"Otthon","muszak":"C"},{"datum":"2026.06.26","hely":"Otthon","muszak":"D"},{"datum":"2026.06.27","hely":"Nappal","muszak":"A"},{"datum":"2026.06.27","hely":"Éjszaka","muszak":"B"},{"datum":"2026.06.27","hely":"Otthon","muszak":"C"},{"datum":"2026.06.27","hely":"Otthon","muszak":"D"},{"datum":"2026.06.28","hely":"Nappal","muszak":"A"},{"datum":"2026.06.28","hely":"Éjszaka","muszak":"B"},{"datum":"2026.06.28","hely":"Otthon","muszak":"C"},{"datum":"2026.06.28","hely":"Otthon","muszak":"D"},{"datum":"2026.06.29","hely":"Otthon","muszak":"A"},{"datum":"2026.06.29","hely":"Otthon","muszak":"B"},{"datum":"2026.06.29","hely":"Nappal ","muszak":"C"},{"datum":"2026.06.29","hely":"Éjszaka","muszak":"D"},{"datum":"2026.06.30","hely":"Otthon","muszak":"A"},{"datum":"2026.06.30","hely":"Otthon","muszak":"B"},{"datum":"2026.06.30","hely":"Nappal ","muszak":"C"},{"datum":"2026.06.30","hely":"Éjszaka","muszak":"D"},{"datum":"2026.07.01","hely":"Otthon","muszak":"A"},{"datum":"2026.07.01","hely":"Otthon","muszak":"B"},{"datum":"2026.07.01","hely":"Nappal ","muszak":"C"},{"datum":"2026.07.01","hely":"Éjszaka","muszak":"D"},{"datum":"2026.07.02","hely":"Éjszaka","muszak":"A"},{"datum":"2026.07.02","hely":"Nappal","muszak":"B"},{"datum":"2026.07.02","hely":"Otthon","muszak":"C"},{"datum":"2026.07.02","hely":"Otthon","muszak":"D"},{"datum":"2026.07.03","hely":"Éjszaka","muszak":"A"},{"datum":"2026.07.03","hely":"Nappal","muszak":"B"},{"datum":"2026.07.03","hely":"Otthon","muszak":"C"},{"datum":"2026.07.03","hely":"Otthon","muszak":"D"},{"datum":"2026.07.04","hely":"Éjszaka","muszak":"A"},{"datum":"2026.07.04","hely":"Nappal","muszak":"B"},{"datum":"2026.07.04","hely":"Otthon","muszak":"C"},{"datum":"2026.07.04","hely":"Otthon","muszak":"D"},{"datum":"2026.07.05","hely":"Otthon","muszak":"A"},{"datum":"2026.07.05","hely":"Otthon","muszak":"B"},{"datum":"2026.07.05","hely":"Éjszaka","muszak":"C"},{"datum":"2026.07.05","hely":"Nappal ","muszak":"D"},{"datum":"2026.07.06","hely":"Otthon","muszak":"A"},{"datum":"2026.07.06","hely":"Otthon","muszak":"B"},{"datum":"2026.07.06","hely":"Éjszaka","muszak":"C"},{"datum":"2026.07.06","hely":"Nappal ","muszak":"D"},{"datum":"2026.07.07","hely":"Otthon","muszak":"A"},{"datum":"2026.07.07","hely":"Otthon","muszak":"B"},{"datum":"2026.07.07","hely":"Éjszaka","muszak":"C"},{"datum":"2026.07.07","hely":"Nappal ","muszak":"D"},{"datum":"2026.07.08","hely":"Nappal","muszak":"A"},{"datum":"2026.07.08","hely":"Éjszaka","muszak":"B"},{"datum":"2026.07.08","hely":"Otthon","muszak":"C"},{"datum":"2026.07.08","hely":"Otthon","muszak":"D"},{"datum":"2026.07.09","hely":"Nappal","muszak":"A"},{"datum":"2026.07.09","hely":"Éjszaka","muszak":"B"},{"datum":"2026.07.09","hely":"Otthon","muszak":"C"},{"datum":"2026.07.09","hely":"Otthon","muszak":"D"},{"datum":"2026.07.10","hely":"Nappal","muszak":"A"},{"datum":"2026.07.10","hely":"Éjszaka","muszak":"B"},{"datum":"2026.07.10","hely":"Otthon","muszak":"C"},{"datum":"2026.07.10","hely":"Otthon","muszak":"D"},{"datum":"2026.07.11","hely":"Otthon","muszak":"A"},{"datum":"2026.07.11","hely":"Otthon","muszak":"B"},{"datum":"2026.07.11","hely":"Nappal ","muszak":"C"},{"datum":"2026.07.11","hely":"Éjszaka","muszak":"D"},{"datum":"2026.07.12","hely":"Otthon","muszak":"A"},{"datum":"2026.07.12","hely":"Otthon","muszak":"B"},{"datum":"2026.07.12","hely":"Nappal ","muszak":"C"},{"datum":"2026.07.12","hely":"Éjszaka","muszak":"D"},{"datum":"2026.07.13","hely":"Otthon","muszak":"A"},{"datum":"2026.07.13","hely":"Otthon","muszak":"B"},{"datum":"2026.07.13","hely":"Nappal ","muszak":"C"},{"datum":"2026.07.13","hely":"Éjszaka","muszak":"D"},{"datum":"2026.07.14","hely":"Éjszaka","muszak":"A"},{"datum":"2026.07.14","hely":"Nappal","muszak":"B"},{"datum":"2026.07.14","hely":"Otthon","muszak":"C"},{"datum":"2026.07.14","hely":"Otthon","muszak":"D"},{"datum":"2026.07.15","hely":"Éjszaka","muszak":"A"},{"datum":"2026.07.15","hely":"Nappal","muszak":"B"},{"datum":"2026.07.15","hely":"Otthon","muszak":"C"},{"datum":"2026.07.15","hely":"Otthon","muszak":"D"},{"datum":"2026.07.16","hely":"Éjszaka","muszak":"A"},{"datum":"2026.07.16","hely":"Nappal","muszak":"B"},{"datum":"2026.07.16","hely":"Otthon","muszak":"C"},{"datum":"2026.07.16","hely":"Otthon","muszak":"D"},{"datum":"2026.07.17","hely":"Otthon","muszak":"A"},{"datum":"2026.07.17","hely":"Otthon","muszak":"B"},{"datum":"2026.07.17","hely":"Éjszaka","muszak":"C"},{"datum":"2026.07.17","hely":"Nappal ","muszak":"D"},{"datum":"2026.07.18","hely":"Otthon","muszak":"A"},{"datum":"2026.07.18","hely":"Otthon","muszak":"B"},{"datum":"2026.07.18","hely":"Éjszaka","muszak":"C"},{"datum":"2026.07.18","hely":"Nappal ","muszak":"D"},{"datum":"2026.07.19","hely":"Otthon","muszak":"A"},{"datum":"2026.07.19","hely":"Otthon","muszak":"B"},{"datum":"2026.07.19","hely":"Éjszaka","muszak":"C"},{"datum":"2026.07.19","hely":"Nappal ","muszak":"D"},{"datum":"2026.07.20","hely":"Nappal","muszak":"A"},{"datum":"2026.07.20","hely":"Éjszaka","muszak":"B"},{"datum":"2026.07.20","hely":"Otthon","muszak":"C"},{"datum":"2026.07.20","hely":"Otthon","muszak":"D"},{"datum":"2026.07.21","hely":"Nappal","muszak":"A"},{"datum":"2026.07.21","hely":"Éjszaka","muszak":"B"},{"datum":"2026.07.21","hely":"Otthon","muszak":"C"},{"datum":"2026.07.21","hely":"Otthon","muszak":"D"},{"datum":"2026.07.22","hely":"Nappal","muszak":"A"},{"datum":"2026.07.22","hely":"Éjszaka","muszak":"B"},{"datum":"2026.07.22","hely":"Otthon","muszak":"C"},{"datum":"2026.07.22","hely":"Otthon","muszak":"D"},{"datum":"2026.07.23","hely":"Otthon","muszak":"A"},{"datum":"2026.07.23","hely":"Otthon","muszak":"B"},{"datum":"2026.07.23","hely":"Nappal ","muszak":"C"},{"datum":"2026.07.23","hely":"Éjszaka","muszak":"D"},{"datum":"2026.07.24","hely":"Otthon","muszak":"A"},{"datum":"2026.07.24","hely":"Otthon","muszak":"B"},{"datum":"2026.07.24","hely":"Nappal ","muszak":"C"},{"datum":"2026.07.24","hely":"Éjszaka","muszak":"D"},{"datum":"2026.07.25","hely":"Otthon","muszak":"A"},{"datum":"2026.07.25","hely":"Otthon","muszak":"B"},{"datum":"2026.07.25","hely":"Nappal ","muszak":"C"},{"datum":"2026.07.25","hely":"Éjszaka","muszak":"D"},{"datum":"2026.07.26","hely":"Éjszaka","muszak":"A"},{"datum":"2026.07.26","hely":"Nappal","muszak":"B"},{"datum":"2026.07.26","hely":"Otthon","muszak":"C"},{"datum":"2026.07.26","hely":"Otthon","muszak":"D"},{"datum":"2026.07.27","hely":"Éjszaka","muszak":"A"},{"datum":"2026.07.27","hely":"Nappal","muszak":"B"},{"datum":"2026.07.27","hely":"Otthon","muszak":"C"},{"datum":"2026.07.27","hely":"Otthon","muszak":"D"},{"datum":"2026.07.28","hely":"Éjszaka","muszak":"A"},{"datum":"2026.07.28","hely":"Nappal","muszak":"B"},{"datum":"2026.07.28","hely":"Otthon","muszak":"C"},{"datum":"2026.07.28","hely":"Otthon","muszak":"D"},{"datum":"2026.07.29","hely":"Otthon","muszak":"A"},{"datum":"2026.07.29","hely":"Otthon","muszak":"B"},{"datum":"2026.07.29","hely":"Éjszaka","muszak":"C"},{"datum":"2026.07.29","hely":"Nappal ","muszak":"D"},{"datum":"2026.07.30","hely":"Otthon","muszak":"A"},{"datum":"2026.07.30","hely":"Otthon","muszak":"B"},{"datum":"2026.07.30","hely":"Éjszaka","muszak":"C"},{"datum":"2026.07.30","hely":"Nappal ","muszak":"D"},{"datum":"2026.07.31","hely":"Otthon","muszak":"A"},{"datum":"2026.07.31","hely":"Otthon","muszak":"B"},{"datum":"2026.07.31","hely":"Éjszaka","muszak":"C"},{"datum":"2026.07.31","hely":"Nappal ","muszak":"D"},{"datum":"2026.08.01","hely":"Nappal","muszak":"A"},{"datum":"2026.08.01","hely":"Éjszaka","muszak":"B"},{"datum":"2026.08.01","hely":"Otthon","muszak":"C"},{"datum":"2026.08.01","hely":"Otthon","muszak":"D"},{"datum":"2026.08.02","hely":"Nappal","muszak":"A"},{"datum":"2026.08.02","hely":"Éjszaka","muszak":"B"},{"datum":"2026.08.02","hely":"Otthon","muszak":"C"},{"datum":"2026.08.02","hely":"Otthon","muszak":"D"},{"datum":"2026.08.03","hely":"Nappal","muszak":"A"},{"datum":"2026.08.03","hely":"Éjszaka","muszak":"B"},{"datum":"2026.08.03","hely":"Otthon","muszak":"C"},{"datum":"2026.08.03","hely":"Otthon","muszak":"D"},{"datum":"2026.08.04","hely":"Otthon","muszak":"A"},{"datum":"2026.08.04","hely":"Otthon","muszak":"B"},{"datum":"2026.08.04","hely":"Nappal ","muszak":"C"},{"datum":"2026.08.04","hely":"Éjszaka","muszak":"D"},{"datum":"2026.08.05","hely":"Otthon","muszak":"A"},{"datum":"2026.08.05","hely":"Otthon","muszak":"B"},{"datum":"2026.08.05","hely":"Nappal ","muszak":"C"},{"datum":"2026.08.05","hely":"Éjszaka","muszak":"D"},{"datum":"2026.08.06","hely":"Otthon","muszak":"A"},{"datum":"2026.08.06","hely":"Otthon","muszak":"B"},{"datum":"2026.08.06","hely":"Nappal ","muszak":"C"},{"datum":"2026.08.06","hely":"Éjszaka","muszak":"D"},{"datum":"2026.08.07","hely":"Éjszaka","muszak":"A"},{"datum":"2026.08.07","hely":"Nappal","muszak":"B"},{"datum":"2026.08.07","hely":"Otthon","muszak":"C"},{"datum":"2026.08.07","hely":"Otthon","muszak":"D"},{"datum":"2026.08.08","hely":"Éjszaka","muszak":"A"},{"datum":"2026.08.08","hely":"Nappal","muszak":"B"},{"datum":"2026.08.08","hely":"Otthon","muszak":"C"},{"datum":"2026.08.08","hely":"Otthon","muszak":"D"},{"datum":"2026.08.09","hely":"Éjszaka","muszak":"A"},{"datum":"2026.08.09","hely":"Nappal","muszak":"B"},{"datum":"2026.08.09","hely":"Otthon","muszak":"C"},{"datum":"2026.08.09","hely":"Otthon","muszak":"D"},{"datum":"2026.08.10","hely":"Otthon","muszak":"A"},{"datum":"2026.08.10","hely":"Otthon","muszak":"B"},{"datum":"2026.08.10","hely":"Éjszaka","muszak":"C"},{"datum":"2026.08.10","hely":"Nappal ","muszak":"D"},{"datum":"2026.08.11","hely":"Otthon","muszak":"A"},{"datum":"2026.08.11","hely":"Otthon","muszak":"B"},{"datum":"2026.08.11","hely":"Éjszaka","muszak":"C"},{"datum":"2026.08.11","hely":"Nappal ","muszak":"D"},{"datum":"2026.08.12","hely":"Otthon","muszak":"A"},{"datum":"2026.08.12","hely":"Otthon","muszak":"B"},{"datum":"2026.08.12","hely":"Éjszaka","muszak":"C"},{"datum":"2026.08.12","hely":"Nappal ","muszak":"D"},{"datum":"2026.08.13","hely":"Nappal","muszak":"A"},{"datum":"2026.08.13","hely":"Éjszaka","muszak":"B"},{"datum":"2026.08.13","hely":"Otthon","muszak":"C"},{"datum":"2026.08.13","hely":"Otthon","muszak":"D"},{"datum":"2026.08.14","hely":"Nappal","muszak":"A"},{"datum":"2026.08.14","hely":"Éjszaka","muszak":"B"},{"datum":"2026.08.14","hely":"Otthon","muszak":"C"},{"datum":"2026.08.14","hely":"Otthon","muszak":"D"},{"datum":"2026.08.15","hely":"Nappal","muszak":"A"},{"datum":"2026.08.15","hely":"Éjszaka","muszak":"B"},{"datum":"2026.08.15","hely":"Otthon","muszak":"C"},{"datum":"2026.08.15","hely":"Otthon","muszak":"D"},{"datum":"2026.08.16","hely":"Otthon","muszak":"A"},{"datum":"2026.08.16","hely":"Otthon","muszak":"B"},{"datum":"2026.08.16","hely":"Nappal ","muszak":"C"},{"datum":"2026.08.16","hely":"Éjszaka","muszak":"D"},{"datum":"2026.08.17","hely":"Otthon","muszak":"A"},{"datum":"2026.08.17","hely":"Otthon","muszak":"B"},{"datum":"2026.08.17","hely":"Nappal ","muszak":"C"},{"datum":"2026.08.17","hely":"Éjszaka","muszak":"D"},{"datum":"2026.08.18","hely":"Otthon","muszak":"A"},{"datum":"2026.08.18","hely":"Otthon","muszak":"B"},{"datum":"2026.08.18","hely":"Nappal ","muszak":"C"},{"datum":"2026.08.18","hely":"Éjszaka","muszak":"D"},{"datum":"2026.08.19","hely":"Éjszaka","muszak":"A"},{"datum":"2026.08.19","hely":"Nappal","muszak":"B"},{"datum":"2026.08.19","hely":"Otthon","muszak":"C"},{"datum":"2026.08.19","hely":"Otthon","muszak":"D"},{"datum":"2026.08.20","hely":"Éjszaka","muszak":"A"},{"datum":"2026.08.20","hely":"Nappal","muszak":"B"},{"datum":"2026.08.20","hely":"Otthon","muszak":"C"},{"datum":"2026.08.20","hely":"Otthon","muszak":"D"},{"datum":"2026.08.21","hely":"Éjszaka","muszak":"A"},{"datum":"2026.08.21","hely":"Nappal","muszak":"B"},{"datum":"2026.08.21","hely":"Otthon","muszak":"C"},{"datum":"2026.08.21","hely":"Otthon","muszak":"D"},{"datum":"2026.08.22","hely":"Otthon","muszak":"A"},{"datum":"2026.08.22","hely":"Otthon","muszak":"B"},{"datum":"2026.08.22","hely":"Éjszaka","muszak":"C"},{"datum":"2026.08.22","hely":"Nappal ","muszak":"D"},{"datum":"2026.08.23","hely":"Otthon","muszak":"A"},{"datum":"2026.08.23","hely":"Otthon","muszak":"B"},{"datum":"2026.08.23","hely":"Éjszaka","muszak":"C"},{"datum":"2026.08.23","hely":"Nappal ","muszak":"D"},{"datum":"2026.08.24","hely":"Otthon","muszak":"A"},{"datum":"2026.08.24","hely":"Otthon","muszak":"B"},{"datum":"2026.08.24","hely":"Éjszaka","muszak":"C"},{"datum":"2026.08.24","hely":"Nappal ","muszak":"D"},{"datum":"2026.08.25","hely":"Nappal","muszak":"A"},{"datum":"2026.08.25","hely":"Éjszaka","muszak":"B"},{"datum":"2026.08.25","hely":"Otthon","muszak":"C"},{"datum":"2026.08.25","hely":"Otthon","muszak":"D"},{"datum":"2026.08.26","hely":"Nappal","muszak":"A"},{"datum":"2026.08.26","hely":"Éjszaka","muszak":"B"},{"datum":"2026.08.26","hely":"Otthon","muszak":"C"},{"datum":"2026.08.26","hely":"Otthon","muszak":"D"},{"datum":"2026.08.27","hely":"Nappal","muszak":"A"},{"datum":"2026.08.27","hely":"Éjszaka","muszak":"B"},{"datum":"2026.08.27","hely":"Otthon","muszak":"C"},{"datum":"2026.08.27","hely":"Otthon","muszak":"D"},{"datum":"2026.08.28","hely":"Otthon","muszak":"A"},{"datum":"2026.08.28","hely":"Otthon","muszak":"B"},{"datum":"2026.08.28","hely":"Nappal ","muszak":"C"},{"datum":"2026.08.28","hely":"Éjszaka","muszak":"D"},{"datum":"2026.08.29","hely":"Otthon","muszak":"A"},{"datum":"2026.08.29","hely":"Otthon","muszak":"B"},{"datum":"2026.08.29","hely":"Nappal ","muszak":"C"},{"datum":"2026.08.29","hely":"Éjszaka","muszak":"D"},{"datum":"2026.08.30","hely":"Otthon","muszak":"A"},{"datum":"2026.08.30","hely":"Otthon","muszak":"B"},{"datum":"2026.08.30","hely":"Nappal ","muszak":"C"},{"datum":"2026.08.30","hely":"Éjszaka","muszak":"D"},{"datum":"2026.08.31","hely":"Éjszaka","muszak":"A"},{"datum":"2026.08.31","hely":"Nappal","muszak":"B"},{"datum":"2026.08.31","hely":"Otthon","muszak":"C"},{"datum":"2026.08.31","hely":"Otthon","muszak":"D"},{"datum":"2026.09.01","hely":"Éjszaka","muszak":"A"},{"datum":"2026.09.01","hely":"Nappal","muszak":"B"},{"datum":"2026.09.01","hely":"Otthon","muszak":"C"},{"datum":"2026.09.01","hely":"Otthon","muszak":"D"},{"datum":"2026.09.02","hely":"Éjszaka","muszak":"A"},{"datum":"2026.09.02","hely":"Nappal","muszak":"B"},{"datum":"2026.09.02","hely":"Otthon","muszak":"C"},{"datum":"2026.09.02","hely":"Otthon","muszak":"D"},{"datum":"2026.09.03","hely":"Otthon","muszak":"A"},{"datum":"2026.09.03","hely":"Otthon","muszak":"B"},{"datum":"2026.09.03","hely":"Éjszaka","muszak":"C"},{"datum":"2026.09.03","hely":"Nappal ","muszak":"D"},{"datum":"2026.09.04","hely":"Otthon","muszak":"A"},{"datum":"2026.09.04","hely":"Otthon","muszak":"B"},{"datum":"2026.09.04","hely":"Éjszaka","muszak":"C"},{"datum":"2026.09.04","hely":"Nappal ","muszak":"D"},{"datum":"2026.09.05","hely":"Otthon","muszak":"A"},{"datum":"2026.09.05","hely":"Otthon","muszak":"B"},{"datum":"2026.09.05","hely":"Éjszaka","muszak":"C"},{"datum":"2026.09.05","hely":"Nappal ","muszak":"D"},{"datum":"2026.09.06","hely":"Nappal","muszak":"A"},{"datum":"2026.09.06","hely":"Éjszaka","muszak":"B"},{"datum":"2026.09.06","hely":"Otthon","muszak":"C"},{"datum":"2026.09.06","hely":"Otthon","muszak":"D"},{"datum":"2026.09.07","hely":"Nappal","muszak":"A"},{"datum":"2026.09.07","hely":"Éjszaka","muszak":"B"},{"datum":"2026.09.07","hely":"Otthon","muszak":"C"},{"datum":"2026.09.07","hely":"Otthon","muszak":"D"},{"datum":"2026.09.08","hely":"Nappal","muszak":"A"},{"datum":"2026.09.08","hely":"Éjszaka","muszak":"B"},{"datum":"2026.09.08","hely":"Otthon","muszak":"C"},{"datum":"2026.09.08","hely":"Otthon","muszak":"D"},{"datum":"2026.09.09","hely":"Otthon","muszak":"A"},{"datum":"2026.09.09","hely":"Otthon","muszak":"B"},{"datum":"2026.09.09","hely":"Nappal ","muszak":"C"},{"datum":"2026.09.09","hely":"Éjszaka","muszak":"D"},{"datum":"2026.09.10","hely":"Otthon","muszak":"A"},{"datum":"2026.09.10","hely":"Otthon","muszak":"B"},{"datum":"2026.09.10","hely":"Nappal ","muszak":"C"},{"datum":"2026.09.10","hely":"Éjszaka","muszak":"D"},{"datum":"2026.09.11","hely":"Otthon","muszak":"A"},{"datum":"2026.09.11","hely":"Otthon","muszak":"B"},{"datum":"2026.09.11","hely":"Nappal ","muszak":"C"},{"datum":"2026.09.11","hely":"Éjszaka","muszak":"D"},{"datum":"2026.09.12","hely":"Éjszaka","muszak":"A"},{"datum":"2026.09.12","hely":"Nappal","muszak":"B"},{"datum":"2026.09.12","hely":"Otthon","muszak":"C"},{"datum":"2026.09.12","hely":"Otthon","muszak":"D"},{"datum":"2026.09.13","hely":"Éjszaka","muszak":"A"},{"datum":"2026.09.13","hely":"Nappal","muszak":"B"},{"datum":"2026.09.13","hely":"Otthon","muszak":"C"},{"datum":"2026.09.13","hely":"Otthon","muszak":"D"},{"datum":"2026.09.14","hely":"Éjszaka","muszak":"A"},{"datum":"2026.09.14","hely":"Nappal","muszak":"B"},{"datum":"2026.09.14","hely":"Otthon","muszak":"C"},{"datum":"2026.09.14","hely":"Otthon","muszak":"D"},{"datum":"2026.09.15","hely":"Otthon","muszak":"A"},{"datum":"2026.09.15","hely":"Otthon","muszak":"B"},{"datum":"2026.09.15","hely":"Éjszaka","muszak":"C"},{"datum":"2026.09.15","hely":"Nappal ","muszak":"D"},{"datum":"2026.09.16","hely":"Otthon","muszak":"A"},{"datum":"2026.09.16","hely":"Otthon","muszak":"B"},{"datum":"2026.09.16","hely":"Éjszaka","muszak":"C"},{"datum":"2026.09.16","hely":"Nappal ","muszak":"D"},{"datum":"2026.09.17","hely":"Otthon","muszak":"A"},{"datum":"2026.09.17","hely":"Otthon","muszak":"B"},{"datum":"2026.09.17","hely":"Éjszaka","muszak":"C"},{"datum":"2026.09.17","hely":"Nappal ","muszak":"D"},{"datum":"2026.09.18","hely":"Nappal","muszak":"A"},{"datum":"2026.09.18","hely":"Éjszaka","muszak":"B"},{"datum":"2026.09.18","hely":"Otthon","muszak":"C"},{"datum":"2026.09.18","hely":"Otthon","muszak":"D"},{"datum":"2026.09.19","hely":"Nappal","muszak":"A"},{"datum":"2026.09.19","hely":"Éjszaka","muszak":"B"},{"datum":"2026.09.19","hely":"Otthon","muszak":"C"},{"datum":"2026.09.19","hely":"Otthon","muszak":"D"},{"datum":"2026.09.20","hely":"Nappal","muszak":"A"},{"datum":"2026.09.20","hely":"Éjszaka","muszak":"B"},{"datum":"2026.09.20","hely":"Otthon","muszak":"C"},{"datum":"2026.09.20","hely":"Otthon","muszak":"D"},{"datum":"2026.09.21","hely":"Otthon","muszak":"A"},{"datum":"2026.09.21","hely":"Otthon","muszak":"B"},{"datum":"2026.09.21","hely":"Nappal ","muszak":"C"},{"datum":"2026.09.21","hely":"Éjszaka","muszak":"D"},{"datum":"2026.09.22","hely":"Otthon","muszak":"A"},{"datum":"2026.09.22","hely":"Otthon","muszak":"B"},{"datum":"2026.09.22","hely":"Nappal ","muszak":"C"},{"datum":"2026.09.22","hely":"Éjszaka","muszak":"D"},{"datum":"2026.09.23","hely":"Otthon","muszak":"A"},{"datum":"2026.09.23","hely":"Otthon","muszak":"B"},{"datum":"2026.09.23","hely":"Nappal ","muszak":"C"},{"datum":"2026.09.23","hely":"Éjszaka","muszak":"D"},{"datum":"2026.09.24","hely":"Éjszaka","muszak":"A"},{"datum":"2026.09.24","hely":"Nappal","muszak":"B"},{"datum":"2026.09.24","hely":"Otthon","muszak":"C"},{"datum":"2026.09.24","hely":"Otthon","muszak":"D"},{"datum":"2026.09.25","hely":"Éjszaka","muszak":"A"},{"datum":"2026.09.25","hely":"Nappal","muszak":"B"},{"datum":"2026.09.25","hely":"Otthon","muszak":"C"},{"datum":"2026.09.25","hely":"Otthon","muszak":"D"},{"datum":"2026.09.26","hely":"Éjszaka","muszak":"A"},{"datum":"2026.09.26","hely":"Nappal","muszak":"B"},{"datum":"2026.09.26","hely":"Otthon","muszak":"C"},{"datum":"2026.09.26","hely":"Otthon","muszak":"D"},{"datum":"2026.09.27","hely":"Otthon","muszak":"A"},{"datum":"2026.09.27","hely":"Otthon","muszak":"B"},{"datum":"2026.09.27","hely":"Éjszaka","muszak":"C"},{"datum":"2026.09.27","hely":"Nappal ","muszak":"D"},{"datum":"2026.09.28","hely":"Otthon","muszak":"A"},{"datum":"2026.09.28","hely":"Otthon","muszak":"B"},{"datum":"2026.09.28","hely":"Éjszaka","muszak":"C"},{"datum":"2026.09.28","hely":"Nappal ","muszak":"D"},{"datum":"2026.09.29","hely":"Otthon","muszak":"A"},{"datum":"2026.09.29","hely":"Otthon","muszak":"B"},{"datum":"2026.09.29","hely":"Éjszaka","muszak":"C"},{"datum":"2026.09.29","hely":"Nappal ","muszak":"D"},{"datum":"2026.09.30","hely":"Nappal","muszak":"A"},{"datum":"2026.09.30","hely":"Éjszaka","muszak":"B"},{"datum":"2026.09.30","hely":"Otthon","muszak":"C"},{"datum":"2026.09.30","hely":"Otthon","muszak":"D"},{"datum":"2026.10.01","hely":"Nappal","muszak":"A"},{"datum":"2026.10.01","hely":"Éjszaka","muszak":"B"},{"datum":"2026.10.01","hely":"Otthon","muszak":"C"},{"datum":"2026.10.01","hely":"Otthon","muszak":"D"},{"datum":"2026.10.02","hely":"Nappal","muszak":"A"},{"datum":"2026.10.02","hely":"Éjszaka","muszak":"B"},{"datum":"2026.10.02","hely":"Otthon","muszak":"C"},{"datum":"2026.10.02","hely":"Otthon","muszak":"D"},{"datum":"2026.10.03","hely":"Otthon","muszak":"A"},{"datum":"2026.10.03","hely":"Otthon","muszak":"B"},{"datum":"2026.10.03","hely":"Nappal ","muszak":"C"},{"datum":"2026.10.03","hely":"Éjszaka","muszak":"D"},{"datum":"2026.10.04","hely":"Otthon","muszak":"A"},{"datum":"2026.10.04","hely":"Otthon","muszak":"B"},{"datum":"2026.10.04","hely":"Nappal ","muszak":"C"},{"datum":"2026.10.04","hely":"Éjszaka","muszak":"D"},{"datum":"2026.10.05","hely":"Otthon","muszak":"A"},{"datum":"2026.10.05","hely":"Otthon","muszak":"B"},{"datum":"2026.10.05","hely":"Nappal ","muszak":"C"},{"datum":"2026.10.05","hely":"Éjszaka","muszak":"D"},{"datum":"2026.10.06","hely":"Éjszaka","muszak":"A"},{"datum":"2026.10.06","hely":"Nappal","muszak":"B"},{"datum":"2026.10.06","hely":"Otthon","muszak":"C"},{"datum":"2026.10.06","hely":"Otthon","muszak":"D"},{"datum":"2026.10.07","hely":"Éjszaka","muszak":"A"},{"datum":"2026.10.07","hely":"Nappal","muszak":"B"},{"datum":"2026.10.07","hely":"Otthon","muszak":"C"},{"datum":"2026.10.07","hely":"Otthon","muszak":"D"},{"datum":"2026.10.08","hely":"Éjszaka","muszak":"A"},{"datum":"2026.10.08","hely":"Nappal","muszak":"B"},{"datum":"2026.10.08","hely":"Otthon","muszak":"C"},{"datum":"2026.10.08","hely":"Otthon","muszak":"D"},{"datum":"2026.10.09","hely":"Otthon","muszak":"A"},{"datum":"2026.10.09","hely":"Otthon","muszak":"B"},{"datum":"2026.10.09","hely":"Éjszaka","muszak":"C"},{"datum":"2026.10.09","hely":"Nappal ","muszak":"D"},{"datum":"2026.10.10","hely":"Otthon","muszak":"A"},{"datum":"2026.10.10","hely":"Otthon","muszak":"B"},{"datum":"2026.10.10","hely":"Éjszaka","muszak":"C"},{"datum":"2026.10.10","hely":"Nappal ","muszak":"D"},{"datum":"2026.10.11","hely":"Otthon","muszak":"A"},{"datum":"2026.10.11","hely":"Otthon","muszak":"B"},{"datum":"2026.10.11","hely":"Éjszaka","muszak":"C"},{"datum":"2026.10.11","hely":"Nappal ","muszak":"D"},{"datum":"2026.10.12","hely":"Nappal","muszak":"A"},{"datum":"2026.10.12","hely":"Éjszaka","muszak":"B"},{"datum":"2026.10.12","hely":"Otthon","muszak":"C"},{"datum":"2026.10.12","hely":"Otthon","muszak":"D"},{"datum":"2026.10.13","hely":"Nappal","muszak":"A"},{"datum":"2026.10.13","hely":"Éjszaka","muszak":"B"},{"datum":"2026.10.13","hely":"Otthon","muszak":"C"},{"datum":"2026.10.13","hely":"Otthon","muszak":"D"},{"datum":"2026.10.14","hely":"Nappal","muszak":"A"},{"datum":"2026.10.14","hely":"Éjszaka","muszak":"B"},{"datum":"2026.10.14","hely":"Otthon","muszak":"C"},{"datum":"2026.10.14","hely":"Otthon","muszak":"D"},{"datum":"2026.10.15","hely":"Otthon","muszak":"A"},{"datum":"2026.10.15","hely":"Otthon","muszak":"B"},{"datum":"2026.10.15","hely":"Nappal ","muszak":"C"},{"datum":"2026.10.15","hely":"Éjszaka","muszak":"D"},{"datum":"2026.10.16","hely":"Otthon","muszak":"A"},{"datum":"2026.10.16","hely":"Otthon","muszak":"B"},{"datum":"2026.10.16","hely":"Nappal ","muszak":"C"},{"datum":"2026.10.16","hely":"Éjszaka","muszak":"D"},{"datum":"2026.10.17","hely":"Otthon","muszak":"A"},{"datum":"2026.10.17","hely":"Otthon","muszak":"B"},{"datum":"2026.10.17","hely":"Nappal ","muszak":"C"},{"datum":"2026.10.17","hely":"Éjszaka","muszak":"D"},{"datum":"2026.10.18","hely":"Éjszaka","muszak":"A"},{"datum":"2026.10.18","hely":"Nappal","muszak":"B"},{"datum":"2026.10.18","hely":"Otthon","muszak":"C"},{"datum":"2026.10.18","hely":"Otthon","muszak":"D"},{"datum":"2026.10.19","hely":"Éjszaka","muszak":"A"},{"datum":"2026.10.19","hely":"Nappal","muszak":"B"},{"datum":"2026.10.19","hely":"Otthon","muszak":"C"},{"datum":"2026.10.19","hely":"Otthon","muszak":"D"},{"datum":"2026.10.20","hely":"Éjszaka","muszak":"A"},{"datum":"2026.10.20","hely":"Nappal","muszak":"B"},{"datum":"2026.10.20","hely":"Otthon","muszak":"C"},{"datum":"2026.10.20","hely":"Otthon","muszak":"D"},{"datum":"2026.10.21","hely":"Otthon","muszak":"A"},{"datum":"2026.10.21","hely":"Otthon","muszak":"B"},{"datum":"2026.10.21","hely":"Éjszaka","muszak":"C"},{"datum":"2026.10.21","hely":"Nappal ","muszak":"D"},{"datum":"2026.10.22","hely":"Otthon","muszak":"A"},{"datum":"2026.10.22","hely":"Otthon","muszak":"B"},{"datum":"2026.10.22","hely":"Éjszaka","muszak":"C"},{"datum":"2026.10.22","hely":"Nappal ","muszak":"D"},{"datum":"2026.10.23","hely":"Otthon","muszak":"A"},{"datum":"2026.10.23","hely":"Otthon","muszak":"B"},{"datum":"2026.10.23","hely":"Éjszaka","muszak":"C"},{"datum":"2026.10.23","hely":"Nappal ","muszak":"D"},{"datum":"2026.10.24","hely":"Nappal","muszak":"A"},{"datum":"2026.10.24","hely":"Éjszaka","muszak":"B"},{"datum":"2026.10.24","hely":"Otthon","muszak":"C"},{"datum":"2026.10.24","hely":"Otthon","muszak":"D"},{"datum":"2026.10.25","hely":"Nappal","muszak":"A"},{"datum":"2026.10.25","hely":"Éjszaka","muszak":"B"},{"datum":"2026.10.25","hely":"Otthon","muszak":"C"},{"datum":"2026.10.25","hely":"Otthon","muszak":"D"},{"datum":"2026.10.26","hely":"Nappal","muszak":"A"},{"datum":"2026.10.26","hely":"Éjszaka","muszak":"B"},{"datum":"2026.10.26","hely":"Otthon","muszak":"C"},{"datum":"2026.10.26","hely":"Otthon","muszak":"D"},{"datum":"2026.10.27","hely":"Otthon","muszak":"A"},{"datum":"2026.10.27","hely":"Otthon","muszak":"B"},{"datum":"2026.10.27","hely":"Nappal ","muszak":"C"},{"datum":"2026.10.27","hely":"Éjszaka","muszak":"D"},{"datum":"2026.10.28","hely":"Otthon","muszak":"A"},{"datum":"2026.10.28","hely":"Otthon","muszak":"B"},{"datum":"2026.10.28","hely":"Nappal ","muszak":"C"},{"datum":"2026.10.28","hely":"Éjszaka","muszak":"D"},{"datum":"2026.10.29","hely":"Otthon","muszak":"A"},{"datum":"2026.10.29","hely":"Otthon","muszak":"B"},{"datum":"2026.10.29","hely":"Nappal ","muszak":"C"},{"datum":"2026.10.29","hely":"Éjszaka","muszak":"D"},{"datum":"2026.10.30","hely":"Éjszaka","muszak":"A"},{"datum":"2026.10.30","hely":"Nappal","muszak":"B"},{"datum":"2026.10.30","hely":"Otthon","muszak":"C"},{"datum":"2026.10.30","hely":"Otthon","muszak":"D"},{"datum":"2026.10.31","hely":"Éjszaka","muszak":"A"},{"datum":"2026.10.31","hely":"Nappal","muszak":"B"},{"datum":"2026.10.31","hely":"Otthon","muszak":"C"},{"datum":"2026.10.31","hely":"Otthon","muszak":"D"},{"datum":"2026.11.01","hely":"Éjszaka","muszak":"A"},{"datum":"2026.11.01","hely":"Nappal","muszak":"B"},{"datum":"2026.11.01","hely":"Otthon","muszak":"C"},{"datum":"2026.11.01","hely":"Otthon","muszak":"D"},{"datum":"2026.11.02","hely":"Otthon","muszak":"A"},{"datum":"2026.11.02","hely":"Otthon","muszak":"B"},{"datum":"2026.11.02","hely":"Éjszaka","muszak":"C"},{"datum":"2026.11.02","hely":"Nappal ","muszak":"D"},{"datum":"2026.11.03","hely":"Otthon","muszak":"A"},{"datum":"2026.11.03","hely":"Otthon","muszak":"B"},{"datum":"2026.11.03","hely":"Éjszaka","muszak":"C"},{"datum":"2026.11.03","hely":"Nappal ","muszak":"D"},{"datum":"2026.11.04","hely":"Otthon","muszak":"A"},{"datum":"2026.11.04","hely":"Otthon","muszak":"B"},{"datum":"2026.11.04","hely":"Éjszaka","muszak":"C"},{"datum":"2026.11.04","hely":"Nappal ","muszak":"D"},{"datum":"2026.11.05","hely":"Nappal","muszak":"A"},{"datum":"2026.11.05","hely":"Éjszaka","muszak":"B"},{"datum":"2026.11.05","hely":"Otthon","muszak":"C"},{"datum":"2026.11.05","hely":"Otthon","muszak":"D"},{"datum":"2026.11.06","hely":"Nappal","muszak":"A"},{"datum":"2026.11.06","hely":"Éjszaka","muszak":"B"},{"datum":"2026.11.06","hely":"Otthon","muszak":"C"},{"datum":"2026.11.06","hely":"Otthon","muszak":"D"},{"datum":"2026.11.07","hely":"Nappal","muszak":"A"},{"datum":"2026.11.07","hely":"Éjszaka","muszak":"B"},{"datum":"2026.11.07","hely":"Otthon","muszak":"C"},{"datum":"2026.11.07","hely":"Otthon","muszak":"D"},{"datum":"2026.11.08","hely":"Otthon","muszak":"A"},{"datum":"2026.11.08","hely":"Otthon","muszak":"B"},{"datum":"2026.11.08","hely":"Nappal ","muszak":"C"},{"datum":"2026.11.08","hely":"Éjszaka","muszak":"D"},{"datum":"2026.11.09","hely":"Otthon","muszak":"A"},{"datum":"2026.11.09","hely":"Otthon","muszak":"B"},{"datum":"2026.11.09","hely":"Nappal ","muszak":"C"},{"datum":"2026.11.09","hely":"Éjszaka","muszak":"D"},{"datum":"2026.11.10","hely":"Otthon","muszak":"A"},{"datum":"2026.11.10","hely":"Otthon","muszak":"B"},{"datum":"2026.11.10","hely":"Nappal ","muszak":"C"},{"datum":"2026.11.10","hely":"Éjszaka","muszak":"D"},{"datum":"2026.11.11","hely":"Éjszaka","muszak":"A"},{"datum":"2026.11.11","hely":"Nappal","muszak":"B"},{"datum":"2026.11.11","hely":"Otthon","muszak":"C"},{"datum":"2026.11.11","hely":"Otthon","muszak":"D"},{"datum":"2026.11.12","hely":"Éjszaka","muszak":"A"},{"datum":"2026.11.12","hely":"Nappal","muszak":"B"},{"datum":"2026.11.12","hely":"Otthon","muszak":"C"},{"datum":"2026.11.12","hely":"Otthon","muszak":"D"},{"datum":"2026.11.13","hely":"Éjszaka","muszak":"A"},{"datum":"2026.11.13","hely":"Nappal","muszak":"B"},{"datum":"2026.11.13","hely":"Otthon","muszak":"C"},{"datum":"2026.11.13","hely":"Otthon","muszak":"D"},{"datum":"2026.11.14","hely":"Otthon","muszak":"A"},{"datum":"2026.11.14","hely":"Otthon","muszak":"B"},{"datum":"2026.11.14","hely":"Éjszaka","muszak":"C"},{"datum":"2026.11.14","hely":"Nappal ","muszak":"D"},{"datum":"2026.11.15","hely":"Otthon","muszak":"A"},{"datum":"2026.11.15","hely":"Otthon","muszak":"B"},{"datum":"2026.11.15","hely":"Éjszaka","muszak":"C"},{"datum":"2026.11.15","hely":"Nappal ","muszak":"D"},{"datum":"2026.11.16","hely":"Otthon","muszak":"A"},{"datum":"2026.11.16","hely":"Otthon","muszak":"B"},{"datum":"2026.11.16","hely":"Éjszaka","muszak":"C"},{"datum":"2026.11.16","hely":"Nappal ","muszak":"D"},{"datum":"2026.11.17","hely":"Nappal","muszak":"A"},{"datum":"2026.11.17","hely":"Éjszaka","muszak":"B"},{"datum":"2026.11.17","hely":"Otthon","muszak":"C"},{"datum":"2026.11.17","hely":"Otthon","muszak":"D"},{"datum":"2026.11.18","hely":"Nappal","muszak":"A"},{"datum":"2026.11.18","hely":"Éjszaka","muszak":"B"},{"datum":"2026.11.18","hely":"Otthon","muszak":"C"},{"datum":"2026.11.18","hely":"Otthon","muszak":"D"},{"datum":"2026.11.19","hely":"Nappal","muszak":"A"},{"datum":"2026.11.19","hely":"Éjszaka","muszak":"B"},{"datum":"2026.11.19","hely":"Otthon","muszak":"C"},{"datum":"2026.11.19","hely":"Otthon","muszak":"D"},{"datum":"2026.11.20","hely":"Otthon","muszak":"A"},{"datum":"2026.11.20","hely":"Otthon","muszak":"B"},{"datum":"2026.11.20","hely":"Nappal ","muszak":"C"},{"datum":"2026.11.20","hely":"Éjszaka","muszak":"D"},{"datum":"2026.11.21","hely":"Otthon","muszak":"A"},{"datum":"2026.11.21","hely":"Otthon","muszak":"B"},{"datum":"2026.11.21","hely":"Nappal ","muszak":"C"},{"datum":"2026.11.21","hely":"Éjszaka","muszak":"D"},{"datum":"2026.11.22","hely":"Otthon","muszak":"A"},{"datum":"2026.11.22","hely":"Otthon","muszak":"B"},{"datum":"2026.11.22","hely":"Nappal ","muszak":"C"},{"datum":"2026.11.22","hely":"Éjszaka","muszak":"D"},{"datum":"2026.11.23","hely":"Éjszaka","muszak":"A"},{"datum":"2026.11.23","hely":"Nappal","muszak":"B"},{"datum":"2026.11.23","hely":"Otthon","muszak":"C"},{"datum":"2026.11.23","hely":"Otthon","muszak":"D"},{"datum":"2026.11.24","hely":"Éjszaka","muszak":"A"},{"datum":"2026.11.24","hely":"Nappal","muszak":"B"},{"datum":"2026.11.24","hely":"Otthon","muszak":"C"},{"datum":"2026.11.24","hely":"Otthon","muszak":"D"},{"datum":"2026.11.25","hely":"Éjszaka","muszak":"A"},{"datum":"2026.11.25","hely":"Nappal","muszak":"B"},{"datum":"2026.11.25","hely":"Otthon","muszak":"C"},{"datum":"2026.11.25","hely":"Otthon","muszak":"D"},{"datum":"2026.11.26","hely":"Otthon","muszak":"A"},{"datum":"2026.11.26","hely":"Otthon","muszak":"B"},{"datum":"2026.11.26","hely":"Éjszaka","muszak":"C"},{"datum":"2026.11.26","hely":"Nappal ","muszak":"D"},{"datum":"2026.11.27","hely":"Otthon","muszak":"A"},{"datum":"2026.11.27","hely":"Otthon","muszak":"B"},{"datum":"2026.11.27","hely":"Éjszaka","muszak":"C"},{"datum":"2026.11.27","hely":"Nappal ","muszak":"D"},{"datum":"2026.11.28","hely":"Otthon","muszak":"A"},{"datum":"2026.11.28","hely":"Otthon","muszak":"B"},{"datum":"2026.11.28","hely":"Éjszaka","muszak":"C"},{"datum":"2026.11.28","hely":"Nappal ","muszak":"D"},{"datum":"2026.11.29","hely":"Nappal","muszak":"A"},{"datum":"2026.11.29","hely":"Éjszaka","muszak":"B"},{"datum":"2026.11.29","hely":"Otthon","muszak":"C"},{"datum":"2026.11.29","hely":"Otthon","muszak":"D"},{"datum":"2026.11.30","hely":"Nappal","muszak":"A"},{"datum":"2026.11.30","hely":"Éjszaka","muszak":"B"},{"datum":"2026.11.30","hely":"Otthon","muszak":"C"},{"datum":"2026.11.30","hely":"Otthon","muszak":"D"},{"datum":"2026.12.01","hely":"Nappal","muszak":"A"},{"datum":"2026.12.01","hely":"Éjszaka","muszak":"B"},{"datum":"2026.12.01","hely":"Otthon","muszak":"C"},{"datum":"2026.12.01","hely":"Otthon","muszak":"D"},{"datum":"2026.12.02","hely":"Otthon","muszak":"A"},{"datum":"2026.12.02","hely":"Otthon","muszak":"B"},{"datum":"2026.12.02","hely":"Nappal ","muszak":"C"},{"datum":"2026.12.02","hely":"Éjszaka","muszak":"D"},{"datum":"2026.12.03","hely":"Otthon","muszak":"A"},{"datum":"2026.12.03","hely":"Otthon","muszak":"B"},{"datum":"2026.12.03","hely":"Nappal ","muszak":"C"},{"datum":"2026.12.03","hely":"Éjszaka","muszak":"D"},{"datum":"2026.12.04","hely":"Otthon","muszak":"A"},{"datum":"2026.12.04","hely":"Otthon","muszak":"B"},{"datum":"2026.12.04","hely":"Nappal ","muszak":"C"},{"datum":"2026.12.04","hely":"Éjszaka","muszak":"D"},{"datum":"2026.12.05","hely":"Éjszaka","muszak":"A"},{"datum":"2026.12.05","hely":"Nappal","muszak":"B"},{"datum":"2026.12.05","hely":"Otthon","muszak":"C"},{"datum":"2026.12.05","hely":"Otthon","muszak":"D"},{"datum":"2026.12.06","hely":"Éjszaka","muszak":"A"},{"datum":"2026.12.06","hely":"Nappal","muszak":"B"},{"datum":"2026.12.06","hely":"Otthon","muszak":"C"},{"datum":"2026.12.06","hely":"Otthon","muszak":"D"},{"datum":"2026.12.07","hely":"Éjszaka","muszak":"A"},{"datum":"2026.12.07","hely":"Nappal","muszak":"B"},{"datum":"2026.12.07","hely":"Otthon","muszak":"C"},{"datum":"2026.12.07","hely":"Otthon","muszak":"D"},{"datum":"2026.12.08","hely":"Otthon","muszak":"A"},{"datum":"2026.12.08","hely":"Otthon","muszak":"B"},{"datum":"2026.12.08","hely":"Éjszaka","muszak":"C"},{"datum":"2026.12.08","hely":"Nappal ","muszak":"D"},{"datum":"2026.12.09","hely":"Otthon","muszak":"A"},{"datum":"2026.12.09","hely":"Otthon","muszak":"B"},{"datum":"2026.12.09","hely":"Éjszaka","muszak":"C"},{"datum":"2026.12.09","hely":"Nappal ","muszak":"D"},{"datum":"2026.12.10","hely":"Otthon","muszak":"A"},{"datum":"2026.12.10","hely":"Otthon","muszak":"B"},{"datum":"2026.12.10","hely":"Éjszaka","muszak":"C"},{"datum":"2026.12.10","hely":"Nappal ","muszak":"D"},{"datum":"2026.12.11","hely":"Nappal","muszak":"A"},{"datum":"2026.12.11","hely":"Éjszaka","muszak":"B"},{"datum":"2026.12.11","hely":"Otthon","muszak":"C"},{"datum":"2026.12.11","hely":"Otthon","muszak":"D"},{"datum":"2026.12.12","hely":"Nappal","muszak":"A"},{"datum":"2026.12.12","hely":"Éjszaka","muszak":"B"},{"datum":"2026.12.12","hely":"Otthon","muszak":"C"},{"datum":"2026.12.12","hely":"Otthon","muszak":"D"},{"datum":"2026.12.13","hely":"Nappal","muszak":"A"},{"datum":"2026.12.13","hely":"Éjszaka","muszak":"B"},{"datum":"2026.12.13","hely":"Otthon","muszak":"C"},{"datum":"2026.12.13","hely":"Otthon","muszak":"D"},{"datum":"2026.12.14","hely":"Otthon","muszak":"A"},{"datum":"2026.12.14","hely":"Otthon","muszak":"B"},{"datum":"2026.12.14","hely":"Nappal ","muszak":"C"},{"datum":"2026.12.14","hely":"Éjszaka","muszak":"D"},{"datum":"2026.12.15","hely":"Otthon","muszak":"A"},{"datum":"2026.12.15","hely":"Otthon","muszak":"B"},{"datum":"2026.12.15","hely":"Nappal ","muszak":"C"},{"datum":"2026.12.15","hely":"Éjszaka","muszak":"D"},{"datum":"2026.12.16","hely":"Otthon","muszak":"A"},{"datum":"2026.12.16","hely":"Otthon","muszak":"B"},{"datum":"2026.12.16","hely":"Nappal ","muszak":"C"},{"datum":"2026.12.16","hely":"Éjszaka","muszak":"D"},{"datum":"2026.12.17","hely":"Éjszaka","muszak":"A"},{"datum":"2026.12.17","hely":"Nappal","muszak":"B"},{"datum":"2026.12.17","hely":"Otthon","muszak":"C"},{"datum":"2026.12.17","hely":"Otthon","muszak":"D"},{"datum":"2026.12.18","hely":"Éjszaka","muszak":"A"},{"datum":"2026.12.18","hely":"Nappal","muszak":"B"},{"datum":"2026.12.18","hely":"Otthon","muszak":"C"},{"datum":"2026.12.18","hely":"Otthon","muszak":"D"},{"datum":"2026.12.19","hely":"Éjszaka","muszak":"A"},{"datum":"2026.12.19","hely":"Nappal","muszak":"B"},{"datum":"2026.12.19","hely":"Otthon","muszak":"C"},{"datum":"2026.12.19","hely":"Otthon","muszak":"D"},{"datum":"2026.12.20","hely":"Otthon","muszak":"A"},{"datum":"2026.12.20","hely":"Otthon","muszak":"B"},{"datum":"2026.12.20","hely":"Éjszaka","muszak":"C"},{"datum":"2026.12.20","hely":"Nappal ","muszak":"D"},{"datum":"2026.12.21","hely":"Otthon","muszak":"A"},{"datum":"2026.12.21","hely":"Otthon","muszak":"B"},{"datum":"2026.12.21","hely":"Éjszaka","muszak":"C"},{"datum":"2026.12.21","hely":"Nappal ","muszak":"D"},{"datum":"2026.12.22","hely":"Otthon","muszak":"A"},{"datum":"2026.12.22","hely":"Otthon","muszak":"B"},{"datum":"2026.12.22","hely":"Éjszaka","muszak":"C"},{"datum":"2026.12.22","hely":"Nappal ","muszak":"D"},{"datum":"2026.12.23","hely":"Nappal","muszak":"A"},{"datum":"2026.12.23","hely":"Éjszaka","muszak":"B"},{"datum":"2026.12.23","hely":"Otthon","muszak":"C"},{"datum":"2026.12.23","hely":"Otthon","muszak":"D"},{"datum":"2026.12.24","hely":"Nappal","muszak":"A"},{"datum":"2026.12.24","hely":"Éjszaka","muszak":"B"},{"datum":"2026.12.24","hely":"Otthon","muszak":"C"},{"datum":"2026.12.24","hely":"Otthon","muszak":"D"},{"datum":"2026.12.25","hely":"Nappal","muszak":"A"},{"datum":"2026.12.25","hely":"Éjszaka","muszak":"B"},{"datum":"2026.12.25","hely":"Otthon","muszak":"C"},{"datum":"2026.12.25","hely":"Otthon","muszak":"D"},{"datum":"2026.12.26","hely":"Otthon","muszak":"A"},{"datum":"2026.12.26","hely":"Otthon","muszak":"B"},{"datum":"2026.12.26","hely":"Nappal ","muszak":"C"},{"datum":"2026.12.26","hely":"Éjszaka","muszak":"D"},{"datum":"2026.12.27","hely":"Otthon","muszak":"A"},{"datum":"2026.12.27","hely":"Otthon","muszak":"B"},{"datum":"2026.12.27","hely":"Nappal ","muszak":"C"},{"datum":"2026.12.27","hely":"Éjszaka","muszak":"D"},{"datum":"2026.12.28","hely":"Otthon","muszak":"A"},{"datum":"2026.12.28","hely":"Otthon","muszak":"B"},{"datum":"2026.12.28","hely":"Nappal ","muszak":"C"},{"datum":"2026.12.28","hely":"Éjszaka","muszak":"D"},{"datum":"2026.12.29","hely":"Éjszaka","muszak":"A"},{"datum":"2026.12.29","hely":"Nappal","muszak":"B"},{"datum":"2026.12.29","hely":"Otthon","muszak":"C"},{"datum":"2026.12.29","hely":"Otthon","muszak":"D"},{"datum":"2026.12.30","hely":"Éjszaka","muszak":"A"},{"datum":"2026.12.30","hely":"Nappal","muszak":"B"},{"datum":"2026.12.30","hely":"Otthon","muszak":"C"},{"datum":"2026.12.30","hely":"Otthon","muszak":"D"},{"datum":"2026.12.31","hely":"Éjszaka","muszak":"A"},{"datum":"2026.12.31","hely":"Nappal","muszak":"B"},{"datum":"2026.12.31","hely":"Otthon","muszak":"C"},{"datum":"2026.12.31","hely":"Otthon","muszak":"D"},{"datum":"2027.01.01","hely":"Otthon","muszak":"A"},{"datum":"2027.01.01","hely":"Otthon","muszak":"B"},{"datum":"2027.01.01","hely":"Éjszaka","muszak":"C"},{"datum":"2027.01.01","hely":"Nappal ","muszak":"D"}];
+    // --- MAGYAR ÜNNEPNAPOK 2026 ---
+    const unnepnapok = {
+        "01-01": "Újév",
+        "03-15": "Nemzeti Ünnep",
+        "04-03": "Nagypéntek",
+        "04-05": "Húsvét",
+        "04-06": "Húsvéthétfő",
+        "05-01": "Munka Ünnepe",
+        "05-24": "Pünkösd",
+        "05-25": "Pünkösdhétfő",
+        "08-20": "Államalapítás Ünnepe",
+        "10-23": "1956-os Forradalom",
+        "11-01": "Mindenszentek",
+        "12-24": "Szenteste",
+        "12-25": "Karácsony",
+        "12-26": "Karácsony Másnapja"
+    };
 
-// --- OPTIMALIZÁLT JS (AUTO SCROLL) ---
-let lastScrollY = window.scrollY;
-let ticking = false;
-let initialLoadDone = false;
-let hasAutoScrolled = false; // Flag az automatikus görgetéshez
+    // --- NÉVNAPOK ---
+    const nevnapok = {
+        "01-01": "Alpár", "01-02": "Ábel", "01-03": "Genovéva", "01-04": "Titusz", "01-05": "Simon", "01-06": "Boldizsár", "01-07": "Attila", "01-08": "Gyöngyvér", "01-09": "Marcell", "01-10": "Melánia", "01-11": "Ágota", "01-12": "Ernő", "01-13": "Veronika", "01-14": "Bódog", "01-15": "Lóránt", "01-16": "Gusztáv", "01-17": "Antal", "01-18": "Piroska", "01-19": "Sára", "01-20": "Fábián", "01-21": "Ágnes", "01-22": "Vince", "01-23": "Zelma", "01-24": "Timót", "01-25": "Pál", "01-26": "Vanda", "01-27": "Angelika", "01-28": "Károly", "01-29": "Adél", "01-30": "Martina", "01-31": "Marcella",
+        "02-01": "Ignác", "02-02": "Karolina", "02-03": "Balázs", "02-04": "Ráhel", "02-05": "Ágota", "02-06": "Dorottya", "02-07": "Tódor", "02-08": "Aranka", "02-09": "Abigél", "02-10": "Elvira", "02-11": "Bertold", "02-12": "Lívia", "02-13": "Ella", "02-14": "Bálint", "02-15": "Kolos", "02-16": "Julianna", "02-17": "Donát", "02-18": "Bernadett", "02-19": "Zsuzsanna", "02-20": "Aladár", "02-21": "Eleonóra", "02-22": "Gerzson", "02-23": "Alfréd", "02-24": "Mátyás", "02-25": "Géza", "02-26": "Viktor", "02-27": "Gábor", "02-28": "Elemér", "02-29": "Szökőnap",
+        "03-01": "Albin", "03-02": "Lujza", "03-03": "Kornélia", "03-04": "Kázmér", "03-05": "Adorján", "03-06": "Leonóra", "03-07": "Tamás", "03-08": "Zoltán", "03-09": "Franciska", "03-10": "Ildikó", "03-11": "Szilárd", "03-12": "Gergely", "03-13": "Krisztián", "03-14": "Matild", "03-15": "Kristóf", "03-16": "Henrietta", "03-17": "Gertrúd", "03-18": "Sándor", "03-19": "József", "03-20": "Klaudia", "03-21": "Benedek", "03-22": "Beáta", "03-23": "Emőke", "03-24": "Gábor", "03-25": "Irén", "03-26": "Emánuel", "03-27": "Hajnalka", "03-28": "Gedeon", "03-29": "Auguszta", "03-30": "Zalán", "03-31": "Árpád",
+        "04-01": "Hugó", "04-02": "Áron", "04-03": "Buda", "04-04": "Izidor", "04-05": "Vince", "04-06": "Vilmos", "04-07": "Herman", "04-08": "Dénes", "04-09": "Erhard", "04-10": "Zsolt", "04-11": "Leó", "04-12": "Gyula", "04-13": "Ida", "04-14": "Tibor", "04-15": "Anasztázia", "04-16": "Csongor", "04-17": "Rudolf", "04-18": "Andrea", "04-19": "Emma", "04-20": "Tivadar", "04-21": "Konrád", "04-22": "Csilla", "04-23": "Béla", "04-24": "György", "04-25": "Márk", "04-26": "Ervin", "04-27": "Zita", "04-28": "Valéria", "04-29": "Péter", "04-30": "Katalin",
+        "05-01": "Fülöp", "05-02": "Zsigmond", "05-03": "Tímea", "05-04": "Mónika", "05-05": "Györgyi", "05-06": "Ivett", "05-07": "Gizella", "05-08": "Mihály", "05-09": "Gergely", "05-10": "Ármin", "05-11": "Ferenc", "05-12": "Pongrác", "05-13": "Szervác", "05-14": "Bonifác", "05-15": "Zsófia", "05-16": "Mózes", "05-17": "Paszkál", "05-18": "Erik", "05-19": "Ivó", "05-20": "Bernát", "05-21": "Konstantin", "05-22": "Júlia", "05-23": "Dezső", "05-24": "Eszter", "05-25": "Orbán", "05-26": "Fülöp", "05-27": "Hella", "05-28": "Emil", "05-29": "Magdolna", "05-30": "Janka", "05-31": "Angéla",
+        "06-01": "Tünde", "06-02": "Kármen", "06-03": "Klothild", "06-04": "Bulcsú", "06-05": "Fatime", "06-06": "Norbert", "06-07": "Róbert", "06-08": "Medárd", "06-09": "Félix", "06-10": "Margit", "06-11": "Barnabás", "06-12": "Villő", "06-13": "Antal", "06-14": "Vazul", "06-15": "Jolán", "06-16": "Jusztin", "06-17": "Laura", "06-18": "Arnold", "06-19": "Gyárfás", "06-20": "Rafael", "06-21": "Alajos", "06-22": "Paulina", "06-23": "Zoltán", "06-24": "Iván", "06-25": "Vilmos", "06-26": "János", "06-27": "László", "06-28": "Levente", "06-29": "Péter", "06-30": "Pál",
+        "07-01": "Tihamér", "07-02": "Ottó", "07-03": "Kornél", "07-04": "Ulrik", "07-05": "Emese", "07-06": "Csaba", "07-07": "Apollónia", "07-08": "Ellák", "07-09": "Lukrécia", "07-10": "Amália", "07-11": "Nóra", "07-12": "Izabella", "07-13": "Jenő", "07-14": "Örs", "07-15": "Henrik", "07-16": "Valter", "07-17": "Endre", "07-18": "Frigyes", "07-19": "Emília", "07-20": "Illés", "07-21": "Dániel", "07-22": "Magdolna", "07-23": "Lenke", "07-24": "Kinga", "07-25": "Kristóf", "07-26": "Anna", "07-27": "Olga", "07-28": "Szabolcs", "07-29": "Márta", "07-30": "Judit", "07-31": "Oszkár",
+        "08-01": "Boglárka", "08-02": "Lehel", "08-03": "Hermina", "08-04": "Domonkos", "08-05": "Krisztina", "08-06": "Berta", "08-07": "Ibolya", "08-08": "László", "08-09": "Emőd", "08-10": "Lőrinc", "08-11": "Zsuzsanna", "08-12": "Klára", "08-13": "Ipoly", "08-14": "Marcell", "08-15": "Mária", "08-16": "Ábrahám", "08-17": "Jácint", "08-18": "Ilona", "08-19": "Huba", "08-20": "István", "08-21": "Sámuel", "08-22": "Menyhért", "08-23": "Bence", "08-24": "Bertalan", "08-25": "Lajos", "08-26": "Izsó", "08-27": "Gáspár", "08-28": "Ágoston", "08-29": "Beatrix", "08-30": "Rózsa", "08-31": "Erika",
+        "09-01": "Egyed", "09-02": "Rebeka", "09-03": "Hilda", "09-04": "Rozália", "09-05": "Viktor", "09-06": "Zakariás", "09-07": "Regina", "09-08": "Mária", "09-09": "Ádám", "09-10": "Nikolett", "09-11": "Teodóra", "09-12": "Mária", "09-13": "Kornél", "09-14": "Szeréna", "09-15": "Enikő", "09-16": "Edit", "09-17": "Zsófia", "09-18": "Diána", "09-19": "Vilhelmina", "09-20": "Friderika", "09-21": "Máté", "09-22": "Móric", "09-23": "Tekla", "09-24": "Gellért", "09-25": "Eufrozina", "09-26": "Jusztina", "09-27": "Adalbert", "09-28": "Vencel", "09-29": "Mihály", "09-30": "Jeromos",
+        "10-01": "Malvin", "10-02": "Petra", "10-03": "Helga", "10-04": "Ferenc", "10-05": "Aurél", "10-06": "Brúnó", "10-07": "Amália", "10-08": "Koppány", "10-09": "Dénes", "10-10": "Gedeon", "10-11": "Brigitta", "10-12": "Miksa", "10-13": "Kálmán", "10-14": "Helén", "10-15": "Teréz", "10-16": "Gál", "10-17": "Hedvig", "10-18": "Lukács", "10-19": "Pelbárt", "10-20": "Vendel", "10-21": "Orsolya", "10-22": "Előd", "10-23": "Gyöngyvér", "10-24": "Salamon", "10-25": "Blanka", "10-26": "Dömötör", "10-27": "Szabina", "10-28": "Simon", "10-29": "Nárcisz", "10-30": "Alfonz", "10-31": "Farkas",
+        "11-01": "Marianna", "11-02": "Achilles", "11-03": "Győző", "11-04": "Károly", "11-05": "Imre", "11-06": "Lénárd", "11-07": "Rezső", "11-08": "Zsombor", "11-09": "Tivadar", "11-10": "Réka", "11-11": "Márton", "11-12": "Jónás", "11-13": "Szilvia", "11-14": "Aliz", "11-15": "Albert", "11-16": "Ödön", "11-17": "Hortenzia", "11-18": "Jenő", "11-19": "Erzsébet", "11-20": "Jolán", "11-21": "Olivér", "11-22": "Cecília", "11-23": "Kelemen", "11-24": "Emma", "11-25": "Katalin", "11-26": "Virág", "11-27": "Virgil", "11-28": "Stefánia", "11-29": "Taksony", "11-30": "András",
+        "12-01": "Elza", "12-02": "Melinda", "12-03": "Ferenc", "12-04": "Borbála", "12-05": "Vilma", "12-06": "Miklós", "12-07": "Ambrus", "12-08": "Mária", "12-09": "Natália", "12-10": "Judit", "12-11": "Árpád", "12-12": "Gabriella", "12-13": "Luca", "12-14": "Szilárda", "12-15": "Valér", "12-16": "Etelka", "12-17": "Lázár", "12-18": "Auguszta", "12-19": "Viola", "12-20": "Teofil", "12-21": "Tamás", "12-22": "Zénó", "12-23": "Viktória", "12-24": "Ádám, Éva", "12-25": "Eugénia", "12-26": "István", "12-27": "János", "12-28": "Kamilla", "12-29": "Tamás", "12-30": "Dávid", "12-31": "Szilveszter"
+    };
 
-const panel = document.querySelector('.filter-panel');
-const header = document.getElementById('mainHeader');
+    // --- VÉGTELEN MŰSZAK GENERÁTOR MOTOR ---
+    const anchorDate = new Date(Date.UTC(2026, 0, 9)); 
 
-function updateScroll() {
-    if (lastScrollY > 10) { panel.classList.add('scrolled'); header.classList.add('hidden'); } 
-    else { panel.classList.remove('scrolled'); header.classList.remove('hidden'); }
-    ticking = false;
-}
-window.addEventListener('scroll', () => { lastScrollY = window.scrollY; if (!ticking) { window.requestAnimationFrame(updateScroll); ticking = true; } });
+    function getShiftForDate(dateObj) {
+        const utcDate = new Date(Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()));
+        const diffDays = Math.floor((utcDate - anchorDate) / 86400000);
+        const cycleDay = ((diffDays % 12) + 12) % 12;
 
-const vezetok={'A':'Czerovszki Zsolt','B':'Hajdu Zoltán','C':'Kamasz Ádám','D':'Komjáti István'};
-const dateCache = {};
-function parseDatum(str){
-    if(!str) return null;
-    if(dateCache[str]) return dateCache[str];
-    const isoStr=str.replace(/\./g,'-').replace(/\s/g,'').replace(/-$/,'');
-    const d = new Date(isoStr);
-    dateCache[str] = d; return d;
-}
-function getNapNeve(ds){const d=parseDatum(ds);if(!d||isNaN(d.getTime()))return"Ismeretlen";const n=['Vasárnap','Hétfő','Kedd','Szerda','Csütörtök','Péntek','Szombat'];return n[d.getDay()];}
-function isHetvege(ds){const d=parseDatum(ds);if(!d||isNaN(d.getTime()))return false;return d.getDay()===0||d.getDay()===6;}
-
-document.addEventListener("DOMContentLoaded", showData);
-
-function showData(){
-    const honapSelect = document.getElementById('honap');
-    // Csak indításkor állítjuk be az aktuális hónapot
-    if (!initialLoadDone) {
-        const todayMonth = String(new Date().getMonth() + 1).padStart(2, '0');
-        honapSelect.value = todayMonth;
-        initialLoadDone = true;
+        if (cycleDay >= 0 && cycleDay <= 2) return { day: 'A', night: 'B', off: ['C', 'D'] };
+        if (cycleDay >= 3 && cycleDay <= 5) return { day: 'C', night: 'D', off: ['A', 'B'] };
+        if (cycleDay >= 6 && cycleDay <= 8) return { day: 'B', night: 'A', off: ['C', 'D'] };
+        if (cycleDay >= 9 && cycleDay <= 11) return { day: 'D', night: 'C', off: ['A', 'B'] };
     }
 
-    const hVal = honapSelect.value;
-    const mVal = document.getElementById('muszak').value;
-    const today=new Date().toISOString().split('T')[0];
-    let talalatok = muszakok;
+    // --- ALAP ADATOK ÉS ÁLLAPOT ---
+    let currentDate = new Date();
+    const todayStr = new Date().toISOString().split('T')[0];
+    let currentFilter = 'ALL';
     
-    if(hVal!=='mind') talalatok = talalatok.filter(r => r.datum.indexOf("-"+hVal+"-")!==-1 || r.datum.indexOf("."+hVal+".")!==-1);
-    if(mVal!=='mind') talalatok = talalatok.filter(r => r.muszak === mVal);
-    
-    const napok={};
-    for (let i = 0; i < talalatok.length; i++) {
-        const r = talalatok[i];
-        if(!napok[r.datum]) napok[r.datum]=[];
-        napok[r.datum].push(r);
+    const monthNames = ["Január","Február","Március","Április","Május","Június","Július","Augusztus","Szeptember","Október","November","December"];
+    const dayNames = ["Vasárnap","Hétfő","Kedd","Szerda","Csütörtök","Péntek","Szombat"];
+
+    function jumpToToday() {
+        currentDate = new Date();
+        renderCalendar();
     }
-    
-    let html='';
-    const sortedKeys = Object.keys(napok).sort();
-    for (let i = 0; i < sortedKeys.length; i++) {
-        const datum = sortedKeys[i];
-        const dObj = parseDatum(datum);
-        const isoDate = dObj ? dObj.toISOString().split('T')[0] : '';
-        const isToday = isoDate === today;
-        const hetvege = isHetvege(datum);
-        const cleanId = 'date-' + datum.replace(/[^0-9]/g, '');
 
-        html += `<div class="day-card ${isToday?'today-active':''}" id="${cleanId}">
-            ${isToday?'<div class="today-label">MAI NAP</div>':''}
-            <div class="day-card-content">
-                <div class="date-header ${hetvege?'weekend':''}">
-                    <span class="date-text">${datum.replace(/-/g,'. ')}${datum.endsWith('.')?'':'.'}</span>
-                    <span class="day-name">${getNapNeve(datum)}</span>
-                </div>`;
+    function changeMonth(delta) {
+        currentDate.setMonth(currentDate.getMonth() + delta);
+        renderCalendar();
+    }
 
-        // --- MÓDOSÍTÁS: RENDEZÉS LOGIKA ---
-        // Nappal -> 1, Éjszaka -> 2, Minden más -> 3
-        const shifts = napok[datum];
-        shifts.sort((a, b) => {
-            const getRank = (str) => {
-                const s = str.hely.toLowerCase();
-                if (s.includes('nappal')) return 1;
-                if (s.includes('éjszaka')) return 2;
-                return 3;
-            };
-            return getRank(a) - getRank(b);
-        });
-        // ----------------------------------
+    function setFilter(shift) {
+        currentFilter = shift;
+        
+        // Gombok frissítése
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`.tab-${shift}`).classList.add('active');
+        
+        renderCalendar();
+    }
 
-        for (let j = 0; j < shifts.length; j++) {
-            const r = shifts[j];
-            const szovegLower = r.hely.trim().toLowerCase();
-            const isActive = szovegLower === 'nappal' || szovegLower === 'éjszaka';
-            html+=`<div class="shift-row row-muszak-${r.muszak} ${isActive?'active-shift':''}">
-                <div class="shift-details">
-                    <span class="loc">${r.hely}</span>
-                    <span class="leader">Vezető: ${vezetok[r.muszak]||'Nincs'}</span>
+    function renderCalendar() {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        document.getElementById('monthLabel').innerText = `${year} ${monthNames[month]}`;
+        
+        const grid = document.getElementById('calGrid');
+        grid.innerHTML = '';
+        
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        let startDayIndex = firstDay.getDay() - 1; 
+        if(startDayIndex === -1) startDayIndex = 6; 
+
+        // Üres cellák a hónap elején
+        for(let i = 0; i < startDayIndex; i++) { 
+            grid.innerHTML += `<div class="cal-cell empty"></div>`; 
+        }
+        
+        for(let i = 1; i <= lastDay.getDate(); i++) {
+            const iterDate = new Date(year, month, i);
+            const isoDate = new Date(iterDate.getTime() - (iterDate.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+            const isToday = isoDate === todayStr;
+            const isWeekend = iterDate.getDay() === 0 || iterDate.getDay() === 6;
+            
+            const shiftData = getShiftForDate(iterDate);
+            
+            // Ünnepnap ellenőrzése
+            const mmdd = `${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+            const holidayName = unnepnapok[mmdd];
+            
+            let cellClass = `cal-cell ${isToday ? 'is-today' : ''} ${isWeekend ? 'cell-weekend' : ''}`;
+            let shiftsHtml = '';
+
+            // Műszak vizualizáció
+            if(currentFilter === 'ALL') {
+                shiftsHtml = `
+                    <div class="s-tag day">NAPPAL <span>${shiftData.day}</span></div>
+                    <div class="s-tag night">ÉJJEL <span>${shiftData.night}</span></div>
+                `;
+            } else {
+                if(shiftData.day === currentFilter) {
+                    shiftsHtml = `<div class="s-tag day highlight">NAPPAL</div>`;
+                } else if(shiftData.night === currentFilter) {
+                    shiftsHtml = `<div class="s-tag night highlight">ÉJSZAKA</div>`;
+                } else {
+                    cellClass += ' dimmed';
+                }
+            }
+
+            const cell = document.createElement('div');
+            cell.className = cellClass;
+            cell.innerHTML = `
+                <div class="cell-top">
+                    <span class="cell-date">${i}</span>
+                    ${holidayName ? '<div class="holiday-dot"></div>' : ''}
                 </div>
-                <div class="badge">${r.muszak}</div>
-            </div>`;
+                <div class="cell-shifts">${shiftsHtml}</div>
+            `;
+            
+            cell.onclick = () => openInspector(iterDate, shiftData, holidayName, mmdd);
+            
+            grid.appendChild(cell);
         }
-        html+=`</div></div>`;
     }
-    document.getElementById('eredmeny').innerHTML=html||'<p style="text-align:center;opacity:0.5;margin-top:20px;">Nincs találat erre a szűrésre.</p>';
 
-    // --- AUTOMATIKUS GÖRGETÉS A MAI NAPHOZ ---
-    if (!hasAutoScrolled) {
-        // Kis késleltetés, hogy a böngésző biztosan kész legyen a rendereléssel
-        setTimeout(() => {
-            const t = document.querySelector('.today-active');
-            if(t) {
-                t.scrollIntoView({behavior:'smooth', block:'center'});
-                hasAutoScrolled = true;
-            }
-        }, 400);
-    }
-}
+    // --- INSPECTOR DRAWER ---
+    const drawer = document.getElementById('inspectorDrawer');
+    const overlay = document.getElementById('drawerOverlay');
 
-document.getElementById('maigomb').addEventListener('click',()=>{
-    // Ha nem az aktuális hónap van kiválasztva, állítsuk át
-    const todayMonth = String(new Date().getMonth() + 1).padStart(2, '0');
-    const honapSelect = document.getElementById('honap');
-    if (honapSelect.value !== 'mind' && honapSelect.value !== todayMonth) {
-        honapSelect.value = todayMonth;
-        showData();
-        setTimeout(scrollToToday, 100);
-    } else {
-        scrollToToday();
-    }
-});
-function scrollToToday(){
-    const t=document.querySelector('.today-active');
-    if(t)t.scrollIntoView({behavior:'smooth',block:'center'});
-    else alert("A mai nap nem található a listában.");
-}
-
-document.getElementById('honap').addEventListener('change',showData);
-document.getElementById('muszak').addEventListener('change',showData);
-
-// Naptár logika
-let calDate = new Date();
-document.getElementById('calendarBtn').addEventListener('click', () => { document.getElementById('calModal').style.display = 'flex'; renderCalendar(); });
-function closeCalendar(e) { if(e === null || e.target.id === 'calModal') { document.getElementById('calModal').style.display = 'none'; } }
-function changeCalMonth(delta) { calDate.setMonth(calDate.getMonth() + delta); renderCalendar(); }
-
-function renderCalendar() {
-    const year = calDate.getFullYear(); const month = calDate.getMonth(); const today = new Date();
-    const honapok = ["Január","Február","Március","Április","Május","Június","Július","Augusztus","Szeptember","Október","November","December"];
-    document.getElementById('calTitle').innerText = `${year} ${honapok[month]}`;
-    const grid = document.getElementById('calGrid'); grid.innerHTML = '';
-    ['H','K','Sze','Cs','P','Szo','V'].forEach(d => grid.innerHTML += `<div class="cal-day-name">${d}</div>`);
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    let startDayIndex = firstDay.getDay() - 1; if(startDayIndex === -1) startDayIndex = 6;
-    for(let i=0; i<startDayIndex; i++) { grid.innerHTML += `<div class="cal-cell cal-empty"></div>`; }
-    
-    const currentFilterShift = document.getElementById('muszak').value;
-    
-    for(let i=1; i<=lastDay.getDate(); i++) {
-        const mm = String(month + 1).padStart(2, '0'); const dd = String(i).padStart(2, '0'); const compareDate = `${year}${mm}${dd}`;
-        let shiftContent = ''; 
+    function openInspector(dateObj, shiftData, holidayName, mmdd) {
+        const year = dateObj.getFullYear();
+        const monthName = monthNames[dateObj.getMonth()];
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const dayName = dayNames[dateObj.getDay()];
         
-        // 1. Aznapi összes bejegyzés lekérése a CSV adatokból
-        let dayShifts = muszakok.filter(m => m.datum.replace(/[^0-9]/g, '').startsWith(compareDate));
+        document.getElementById('inspDate').innerText = `${year}. ${monthName} ${day}.`;
+        document.getElementById('inspDayName').innerText = dayName;
 
-        // 2. Csak azokat tartsuk meg, ahol TÉNYLEG dolgoznak (Nappal vagy Éjszaka)
-        dayShifts = dayShifts.filter(m => {
-            const h = m.hely.toLowerCase();
-            return h.includes('nappal') || h.includes('éjszaka');
-        });
+        let html = '';
 
-        // 3. Megjelenítés logikája
-        if (currentFilterShift === 'mind') {
-            // Ha MIND van kiválasztva: Mutassa az összes aznap dolgozót
-            [...new Set(dayShifts.map(m => m.muszak))].sort().forEach(s => { shiftContent += `<span class="code-${s}">${s}</span>`; });
-        } else {
-            // Ha SZŰRVE van (pl. C): Csak akkor jelenjen meg, ha a 'C' tényleg benne van a SZŰRT (dolgozós) listában
-            const isWorking = dayShifts.some(m => m.muszak === currentFilterShift);
-            if(isWorking) { 
-                shiftContent = `<span class="code-${currentFilterShift}">${currentFilterShift}</span>`; 
-            }
+        // Ünnepnap kártya
+        if(holidayName) {
+            html += `
+                <div class="info-card holiday">
+                    <div class="info-icon">🇭🇺</div>
+                    <div>
+                        <div class="info-text-title">Ünnepnap</div>
+                        <div class="info-text-val">${holidayName}</div>
+                    </div>
+                </div>
+            `;
         }
-        
-        let isTodayClass = (year === today.getFullYear() && month === today.getMonth() && i === today.getDate()) ? 'cal-today' : '';
-        const cell = document.createElement('div'); cell.className = `cal-cell ${isTodayClass}`;
-        cell.innerHTML = `<span class="cal-num">${i}</span><span class="cal-shift">${shiftContent}</span>`;
-        cell.onclick = () => {
-            closeCalendar(null);
-            const targetId = `date-${year}${mm}${dd}`;
-            const honapSelect = document.getElementById('honap');
-            if (honapSelect.value !== 'mind' && honapSelect.value !== mm) {
-                honapSelect.value = mm;
-                showData();
-            }
-            setTimeout(() => {
-                const targetEl = document.getElementById(targetId);
-                if(targetEl) { targetEl.scrollIntoView({behavior: 'smooth', block: 'center'}); targetEl.style.transition = "transform 0.3s"; targetEl.style.transform = "scale(1.05)"; setTimeout(() => targetEl.style.transform = "scale(1)", 500); }
-            }, 100);
-        };
-        grid.appendChild(cell);
+
+        // Névnap kártya
+        const nameDay = nevnapok[mmdd];
+        if(nameDay) {
+            html += `
+                <div class="info-card">
+                    <div class="info-icon">🎂</div>
+                    <div>
+                        <div class="info-text-title">Mai Névnap</div>
+                        <div class="info-text-val">${nameDay}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Műszakok összeállítása a szűrő alapján
+        if(currentFilter === 'ALL' || currentFilter === shiftData.day) {
+            html += `
+                <div class="shift-card day">
+                    <div class="shift-icon">☀️</div>
+                    <div class="shift-details">
+                        <div class="shift-label">Nappalos Műszak</div>
+                        <div class="shift-time">06:00 - 18:00</div>
+                    </div>
+                    <div class="s-badge shift-${shiftData.day}">${shiftData.day}</div>
+                </div>
+            `;
+        }
+
+        if(currentFilter === 'ALL' || currentFilter === shiftData.night) {
+            html += `
+                <div class="shift-card night">
+                    <div class="shift-icon">🌙</div>
+                    <div class="shift-details">
+                        <div class="shift-label">Éjszakás Műszak</div>
+                        <div class="shift-time">18:00 - 06:00</div>
+                    </div>
+                    <div class="s-badge shift-${shiftData.night}">${shiftData.night}</div>
+                </div>
+            `;
+        }
+
+        if(currentFilter === 'ALL') {
+            html += `
+                <div class="shift-card off">
+                    <div class="shift-icon">☕</div>
+                    <div class="shift-details">
+                        <div class="shift-label">Pihenőnap</div>
+                        <div class="shift-time">Otthon</div>
+                    </div>
+                    <div class="badge-group">
+                        <div class="s-badge" style="font-size:0.9rem;">${shiftData.off[0]}</div>
+                        <div class="s-badge" style="font-size:0.9rem;">${shiftData.off[1]}</div>
+                    </div>
+                </div>
+            `;
+        } else if (shiftData.off.includes(currentFilter)) {
+            html += `
+                <div class="shift-card off" style="border-left-color: var(--accent); opacity:1;">
+                    <div class="shift-icon">☕</div>
+                    <div class="shift-details">
+                        <div class="shift-label">Szabadnap</div>
+                        <div class="shift-time">Pihenőidő</div>
+                    </div>
+                    <div class="s-badge shift-${currentFilter}">${currentFilter}</div>
+                </div>
+            `;
+        }
+
+        document.getElementById('inspBody').innerHTML = html;
+        drawer.classList.add('open');
+        overlay.classList.add('open');
     }
-}
-</script></body></html>
+
+    function closeInspector() {
+        drawer.classList.remove('open');
+        overlay.classList.remove('open');
+    }
+
+    // Swipe down to close on mobile
+    let touchStartY = 0;
+    drawer.addEventListener('touchstart', e => touchStartY = e.changedTouches[0].screenY, {passive: true});
+    drawer.addEventListener('touchend', e => {
+        if(window.innerWidth <= 768 && e.changedTouches[0].screenY - touchStartY > 50) closeInspector();
+    }, {passive: true});
+
+    // Init
+    renderCalendar();
+
+</script>
+</body>
+</html>
