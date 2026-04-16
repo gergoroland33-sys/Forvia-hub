@@ -44,15 +44,15 @@
             display: flex; justify-content: space-between; align-items: center;
             padding: 5px 15px; background: var(--bg-panel);
             border-bottom: 1px solid var(--border);
-            height: 55px; flex-shrink: 0;
+            height: 50px; flex-shrink: 0;
         }
 
-        .logo-area h1 { margin: 0; font-size: 1.15rem; font-weight: 900; letter-spacing: 0.5px; }
+        .logo-area h1 { margin: 0; font-size: 1.1rem; font-weight: 900; letter-spacing: 0.5px; }
         .logo-area span { color: var(--accent); }
 
         .btn-today {
             background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.5);
-            color: var(--danger); padding: 6px 12px; border-radius: 8px;
+            color: var(--danger); padding: 5px 12px; border-radius: 8px;
             font-size: 0.75rem; font-weight: 800; cursor: pointer;
             display: flex; align-items: center; gap: 6px; transition: 0.2s;
             text-transform: uppercase; letter-spacing: 1px;
@@ -62,7 +62,7 @@
 
         /* --- MŰSZAK GYORSVÁLTÓK (FÜLEK) --- */
         .shift-tabs {
-            display: flex; gap: 8px; padding: 8px 15px;
+            display: flex; gap: 8px; padding: 6px 15px;
             background: var(--bg-base); overflow-x: auto;
             border-bottom: 1px solid var(--border); flex-shrink: 0;
             scrollbar-width: none;
@@ -87,21 +87,21 @@
         /* --- NAPTÁR PANEL --- */
         .calendar-panel {
             flex: 1; display: flex; flex-direction: column;
-            padding: 8px 12px; overflow: hidden;
+            padding: 5px 10px; overflow: hidden;
         }
 
         .cal-nav {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 8px; padding: 0 5px;
+            margin-bottom: 5px; padding: 0 5px;
         }
         .cal-nav-btn {
             background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-main);
-            width: 36px; height: 36px; border-radius: 8px;
-            font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            width: 32px; height: 32px; border-radius: 8px;
+            font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
             transition: 0.2s;
         }
         .cal-nav-btn:active { transform: scale(0.9); background: var(--border); }
-        .current-month-label { font-size: 1.1rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+        .current-month-label { font-size: 1rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
 
         .weekdays {
             display: grid; grid-template-columns: repeat(7, 1fr);
@@ -111,8 +111,8 @@
 
         .calendar-grid {
             display: grid; grid-template-columns: repeat(7, 1fr);
-            gap: 5px; flex: 1; overflow-y: auto; align-content: start;
-            padding-right: 2px; padding-bottom: 20px;
+            gap: 4px; flex: 1; overflow-y: auto; align-content: start;
+            padding-right: 2px; padding-bottom: 5px;
         }
         .calendar-grid::-webkit-scrollbar { width: 4px; }
         .calendar-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
@@ -120,10 +120,12 @@
         .cal-cell {
             background: var(--bg-panel); border: 1px solid var(--border);
             border-radius: 8px; display: flex; flex-direction: column;
-            padding: 4px; cursor: pointer; min-height: 60px;
+            padding: 4px; cursor: pointer; min-height: 48px;
             transition: 0.15s; position: relative;
         }
-        @media (max-width: 400px) { .cal-cell { min-height: 56px; padding: 3px; gap: 2px; } }
+        @media (max-width: 400px) { 
+            .cal-cell { min-height: 65px; /* JAVÍTÁS: Megemelve, hogy ne csússzanak össze az elemek */ padding: 4px; gap: 4px; } 
+        }
         .cal-cell:active { transform: scale(0.92); }
         .cal-cell.empty { background: transparent; border: none; cursor: default; }
         
@@ -136,7 +138,7 @@
         .cal-cell.is-today .cell-date { color: var(--danger); }
 
         .cell-top { display: flex; justify-content: space-between; align-items: flex-start; }
-        .cell-date { font-size: 0.85rem; font-weight: 900; color: var(--text-main); }
+        .cell-date { font-size: 0.8rem; font-weight: 900; color: var(--text-main); }
         .cell-weekend .cell-date { color: var(--text-muted); }
         
         /* Ünnepnap kis pötty a naptárban */
@@ -163,7 +165,7 @@
         .s-tag.highlight { font-size: 0.75rem; padding: 5px; border-width: 2px; justify-content: center; }
         .s-tag.highlight span.s-text { display: none; }
 
-        /* --- INSPECTOR DRAWER (Oldalsó/Lenti Panel) --- */
+        /* --- INSPECTOR DRAWER (Oldalsó/Fenti Panel) --- */
         .drawer-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.7);
             z-index: 1500; opacity: 0; pointer-events: none; transition: 0.3s;
@@ -181,28 +183,34 @@
         }
         .inspector-drawer.open { right: 0; }
 
-        /* Mobilon alulról jön be (Bottom Sheet) */
+        /* JAVÍTÁS: Mobilon felülről jön be (Top Sheet), balra rendezett tartalommal */
         @media (max-width: 768px) {
             .inspector-drawer {
-                top: auto; bottom: -100%; right: 0; max-width: 100%; height: auto; max-height: 85dvh;
-                border-left: none; border-top: 1px solid var(--border);
-                border-top-left-radius: 24px; border-top-right-radius: 24px;
-                transition: bottom 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+                top: -100%; bottom: auto; right: 0; max-width: 100%; height: auto; max-height: 90dvh;
+                border-left: none; border-bottom: 1px solid var(--border);
+                border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;
+                transition: top 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
             }
-            .inspector-drawer.open { bottom: 0; }
+            .inspector-drawer.open { top: 0; }
+            .insp-header, .insp-body { align-items: flex-start; text-align: left; }
         }
 
         .drawer-handle { 
             width: 45px; height: 5px; background: var(--border-light); 
-            border-radius: 10px; margin: 12px auto 5px auto; display: none; 
+            border-radius: 10px; margin: 5px auto 12px auto; display: none; 
         }
-        @media (max-width: 768px) { .drawer-handle { display: block; } }
+        @media (max-width: 768px) { .drawer-handle { display: block; order: 3; /* Felülről lefelé a fogantyú alul van */ margin-bottom: 15px;} }
 
         .insp-header { 
             padding: 15px 20px; border-bottom: 1px solid var(--border); 
             display: flex; justify-content: space-between; align-items: flex-start;
-            background: var(--bg-panel); border-top-left-radius: 24px; border-top-right-radius: 24px;
+            background: var(--bg-panel); 
+            border-bottom-left-radius: 0; border-bottom-right-radius: 0;
         }
+        @media (max-width: 768px) {
+             .insp-header { border-bottom: none; padding-bottom: 5px;}
+        }
+
         .insp-date { font-size: 1.4rem; font-weight: 900; color: white; line-height: 1.2;}
         .insp-sub { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-top: 5px; display:flex; align-items:center; gap:6px;}
         
@@ -213,25 +221,24 @@
         }
         .btn-close:active { background: var(--danger); color: white; border-color: var(--danger); transform: scale(0.9); }
 
-        .insp-body { padding: 20px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: var(--bg-base); }
+        .insp-body { padding: 15px 20px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: var(--bg-base); }
 
-        /* Ünnepnap és Névnap Kártyák */
+        /* Ünnepnap és Névnap Kártyák (Ikonok eltávolítva) */
         .info-card {
-            background: var(--bg-card); border-radius: 12px; padding: 12px 15px;
-            display: flex; align-items: center; gap: 12px; border-left: 4px solid var(--accent);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: var(--bg-card); border-radius: 12px; padding: 10px 15px;
+            display: flex; align-items: flex-start; flex-direction: column; gap: 4px; border-left: 4px solid var(--accent);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%;
         }
         .info-card.holiday { border-left-color: var(--danger); background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-left: 4px solid var(--danger);}
-        .info-icon { font-size: 1.5rem; }
         .info-text-title { font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 800; letter-spacing: 0.5px; }
-        .info-text-val { font-size: 1rem; font-weight: 800; color: white; margin-top: 2px; }
+        .info-text-val { font-size: 0.95rem; font-weight: 800; color: white; margin-top: 2px; }
         .info-card.holiday .info-text-val { color: var(--danger); }
 
-        /* Műszak Kártyák - Dinamikus Színkódolt */
+        /* Műszak Kártyák - Dinamikus Színkódolt (Ikonok eltávolítva) */
         .shift-card {
             background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 12px; padding: 15px; display: flex; align-items: center;
-            border-left: 4px solid transparent; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-radius: 12px; padding: 12px 15px; display: flex; align-items: center;
+            border-left: 4px solid transparent; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%;
         }
         
         .shift-card.tag-A { border-left-color: var(--color-a); background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, var(--bg-card) 30%); }
@@ -240,14 +247,13 @@
         .shift-card.tag-D { border-left-color: var(--color-d); background: linear-gradient(90deg, rgba(239, 68, 68, 0.1) 0%, var(--bg-card) 30%); }
         .shift-card.off { border-left-color: var(--border-light); opacity: 0.7; background: var(--bg-panel); }
 
-        .shift-icon { width: 36px; text-align: center; font-size: 1.5rem; }
-        .shift-details { flex: 1; padding-left: 10px; }
+        .shift-details { flex: 1; text-align: left;}
         .shift-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
         .shift-time { font-size: 1.05rem; font-weight: 900; color: white; margin-top: 2px; }
         
         .badge-group { display: flex; gap: 6px; }
         .s-badge {
-            width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
             font-weight: 900; font-size: 1.1rem; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         
@@ -294,7 +300,7 @@
 
     <div class="drawer-overlay" id="drawerOverlay" onclick="closeInspector()"></div>
     <div class="inspector-drawer" id="inspectorDrawer">
-        <div class="drawer-handle"></div>
+        
         <div class="insp-header">
             <div>
                 <div class="insp-date" id="inspDate">2026. Jan 01.</div>
@@ -305,6 +311,7 @@
         
         <div class="insp-body" id="inspBody">
             </div>
+        <div class="drawer-handle"></div>
     </div>
 
 <script>
@@ -429,9 +436,9 @@
                 `;
             } else {
                 if(shiftData.day === currentFilter) {
-                    shiftsHtml = `<div class="s-tag tag-${shiftData.day} highlight"><span class="s-letter">☀️ NAPPALOS</span></div>`;
+                    shiftsHtml = `<div class="s-tag tag-${shiftData.day} highlight"><span class="s-letter">NAPPALOS</span></div>`;
                 } else if(shiftData.night === currentFilter) {
-                    shiftsHtml = `<div class="s-tag tag-${shiftData.night} highlight"><span class="s-letter">🌙 ÉJSZAKÁS</span></div>`;
+                    shiftsHtml = `<div class="s-tag tag-${shiftData.night} highlight"><span class="s-letter">ÉJSZAKÁS</span></div>`;
                 } else {
                     cellClass += ' dimmed';
                 }
@@ -468,11 +475,10 @@
 
         let html = '';
 
-        // Ünnepnap kártya
+        // Ünnepnap kártya (Ikon eltávolítva)
         if(holidayName) {
             html += `
                 <div class="info-card holiday">
-                    <div class="info-icon">🇭🇺</div>
                     <div>
                         <div class="info-text-title">Ünnepnap</div>
                         <div class="info-text-val">${holidayName}</div>
@@ -481,12 +487,11 @@
             `;
         }
 
-        // Névnap kártya
+        // Névnap kártya (Ikon eltávolítva)
         const nameDay = nevnapok[mmdd];
         if(nameDay) {
             html += `
                 <div class="info-card">
-                    <div class="info-icon">🎂</div>
                     <div>
                         <div class="info-text-title">Mai Névnap</div>
                         <div class="info-text-val">${nameDay}</div>
@@ -499,7 +504,6 @@
         if(currentFilter === 'ALL' || currentFilter === shiftData.day) {
             html += `
                 <div class="shift-card tag-${shiftData.day}">
-                    <div class="shift-icon">☀️</div>
                     <div class="shift-details">
                         <div class="shift-label">Nappalos Műszak (06:00 - 18:00)</div>
                         <div class="shift-time">"${shiftData.day}" Műszak</div>
@@ -512,7 +516,6 @@
         if(currentFilter === 'ALL' || currentFilter === shiftData.night) {
             html += `
                 <div class="shift-card tag-${shiftData.night}">
-                    <div class="shift-icon">🌙</div>
                     <div class="shift-details">
                         <div class="shift-label">Éjszakás Műszak (18:00 - 06:00)</div>
                         <div class="shift-time">"${shiftData.night}" Műszak</div>
@@ -525,7 +528,6 @@
         if(currentFilter === 'ALL') {
             html += `
                 <div class="shift-card off">
-                    <div class="shift-icon">❌</div>
                     <div class="shift-details">
                         <div class="shift-label">Pihenőnap</div>
                         <div class="shift-time">Otthon</div>
@@ -539,7 +541,6 @@
         } else if (shiftData.off.includes(currentFilter)) {
             html += `
                 <div class="shift-card off" style="border-left-color: var(--accent); opacity:1;">
-                    <div class="shift-icon">☕</div>
                     <div class="shift-details">
                         <div class="shift-label">Szabadnap</div>
                         <div class="shift-time">Pihenőidő</div>
@@ -559,11 +560,11 @@
         overlay.classList.remove('open');
     }
 
-    // Swipe down to close on mobile
+    // Swipe up to close on mobile (mert most felülről jön!)
     let touchStartY = 0;
     drawer.addEventListener('touchstart', e => touchStartY = e.changedTouches[0].screenY, {passive: true});
     drawer.addEventListener('touchend', e => {
-        if(window.innerWidth <= 768 && e.changedTouches[0].screenY - touchStartY > 50) closeInspector();
+        if(window.innerWidth <= 768 && touchStartY - e.changedTouches[0].screenY > 50) closeInspector();
     }, {passive: true});
 
     // Init
