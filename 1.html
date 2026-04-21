@@ -277,7 +277,7 @@ input.suggestions-active {
     .row-main .d-value { font-size: 0.95rem; font-weight: 700; white-space: normal; word-break: break-all;}
 
 
-    /* --- PRO 3D BILLENTYŰZET --- */
+    /* --- PRO 3D BILLENTYŰZET FINOMÍTÁS --- */
     #kbContainer {
         display: block;
         position: fixed; 
@@ -317,21 +317,24 @@ input.suggestions-active {
         border-top: 1px solid rgba(255,255,255,0.1); 
         box-shadow: 0 4px 0 #0f172a, 0 5px 5px rgba(0,0,0,0.3); 
         color: #e2e8f0;
-        transition: all 0.05s;
+        /* FINOMÍTOTT ANIMÁCIÓ A RUGALMASABB ÉRZÉSHEZ */
+        transition: all 0.1s cubic-bezier(0.4, 0.0, 0.2, 1);
     }
     
     .k-btn:active { 
-        transform: translateY(3px); 
-        box-shadow: 0 1px 0 #0f172a, inset 0 2px 5px rgba(0,0,0,0.3); 
-        background: #1e293b;
+        transform: translateY(4px) scale(0.95); 
+        box-shadow: 0 0 0 #0f172a, inset 0 4px 8px rgba(0,0,0,0.6); 
+        filter: brightness(1.2);
     }
 
     .k-btn.num { background: linear-gradient(145deg, #475569, #334155); color: white; font-size: 1.4rem; font-weight: 700; }
     .k-btn.func { color: #94a3b8; font-size: 1rem; }
     .k-btn.accent { background: linear-gradient(145deg, #3b82f6, #2563eb); box-shadow: 0 4px 0 #1e40af, 0 5px 5px rgba(0,0,0,0.3); color: white; }
-    .k-btn.accent:active { box-shadow: 0 1px 0 #1e40af; background: #2563eb; }
+    .k-btn.accent:active { box-shadow: 0 0 0 #1e40af, inset 0 4px 8px rgba(0,0,0,0.6); background: #2563eb; }
     .k-btn.red { background: linear-gradient(145deg, #b91c1c, #991b1b); box-shadow: 0 4px 0 #7f1d1d, 0 5px 5px rgba(0,0,0,0.3); color: white; }
+    .k-btn.red:active { box-shadow: 0 0 0 #7f1d1d, inset 0 4px 8px rgba(0,0,0,0.6); }
     .abc-switch { background: linear-gradient(145deg, #10b981, #059669) !important; box-shadow: 0 4px 0 #047857, 0 5px 5px rgba(0,0,0,0.3); color: white; font-weight: 800; font-size: 0.8rem; }
+    .abc-switch:active { box-shadow: 0 0 0 #047857, inset 0 4px 8px rgba(0,0,0,0.6); }
 
     .span-v-2 { grid-row: span 2; } 
     .span-h-2 { grid-column: span 2; } 
@@ -412,6 +415,13 @@ let bank=[],ultetes=[],idSet=new Set(),uniqueIdsArr=[],keresIdozito=null,searchH
 let searchFinalized = false;
 let isNumericMode = true;
 
+// ÚJ: Haptic (Rezgő) Visszajelzés a mobilos gombokhoz
+function provideFeedback() {
+    if (window.navigator && window.navigator.vibrate) {
+        navigator.vibrate(25); // Rövid, 25ms rezgés
+    }
+}
+
 function updateDate(){
     const n=new Date();
     document.getElementById('dateText').textContent=`${n.getFullYear()}.${(n.getMonth()+1).toString().padStart(2,'0')}.${n.getDate().toString().padStart(2,'0')}`;
@@ -433,6 +443,7 @@ function highlight(text, term) {
 }
 
 window.clearSearch = function() {
+    provideFeedback();
     const inp = document.getElementById('keres');
     inp.value = ''; 
     searchFinalized = false; 
@@ -601,20 +612,20 @@ function keres(k){
         });
     }
     
-    const uT=ultetes.filter(r=>r[0]&&r[0].toUpperCase().includes(k)).sort((a,b)=>parseInt(b[5])-parseInt(a[5])).slice(0,30);
+    // JAVÍTVA: Új CSV felépítés: r[0]: Cikkszám, r[1]: Oldal, r[2]: Modell, r[3]: Beültetett Mennyiség
+    const uT=ultetes.filter(r=>r[0]&&r[0].toUpperCase().includes(k)).sort((a,b)=>parseInt(b[3]||0)-parseInt(a[3]||0)).slice(0,30);
     if(uT.length){
         h+=`<div class="section-header header-ultetes">BEÜLTETÉS</div>`;
         uT.forEach(r=>{
-            const mc=getModelColor(r[4]); 
+            const mc=getModelColor(r[2]); 
             h+=`
             <div class="card">
                 <div class="color-strip" style="background:${mc}"></div>
                 <div class="card-content">
                     <div class="data-row row-main"><span class="d-label">Cikkszám</span><span class="d-value">${r[0]}</span></div>
-                    <div class="data-row"><span class="d-label">Modell</span><span class="d-value">${r[4]}</span></div>
-                    <div class="data-row"><span class="d-label">Oldal</span><span class="d-value">${r[3]}</span></div>
-                    <div class="data-row"><span class="d-label">Db</span><span class="d-value">${r[5]}</span></div>
-                    <div class="data-row"><span class="d-label">Alkatrész</span><span class="d-value">${r[1]}</span></div>
+                    <div class="data-row"><span class="d-label">Modell</span><span class="d-value">${r[2]}</span></div>
+                    <div class="data-row"><span class="d-label">Oldal</span><span class="d-value">${r[1]}</span></div>
+                    <div class="data-row"><span class="d-label">Db</span><span class="d-value">${r[3]}</span></div>
                 </div>
             </div>`;
         });
@@ -632,6 +643,7 @@ function keres(k){
 }
 
 function toggleKbMode() {
+    provideFeedback();
     isNumericMode = !isNumericMode;
     const numView = document.getElementById('viewNumeric');
     const alphaView = document.getElementById('viewAlpha');
@@ -684,6 +696,7 @@ function generateAlphaKeys() {
 }
 
 function enterKey() {
+    provideFeedback();
     const inp = document.getElementById('keres');
     if(inp.value.length > 0) {
         searchFinalized = true;
@@ -692,6 +705,7 @@ function enterKey() {
 }
 
 function typeKey(char) {
+    provideFeedback();
     const inp = document.getElementById('keres');
     if (searchFinalized) {
         inp.value = "";
@@ -703,6 +717,7 @@ function typeKey(char) {
 }
 
 function backspaceKey() {
+    provideFeedback();
     const inp = document.getElementById('keres');
     inp.value = inp.value.slice(0, -1);
     searchFinalized = false; 
