@@ -620,23 +620,24 @@ function keres(k){
     if(k.length<2)return;
     let h='';
     
-    // === FEEDER BANK BLOKK KEZDETE (ÚJ: Szigorú Deduplikáció) ===
+    // === FEEDER BANK BLOKK KEZDETE ===
     let bT_raw = bank.filter(r=>r[2]&&r[2].toUpperCase().includes(k));
     
     if(bT_raw.length){
-        // 1. Szigorú duplikáció szűrés a bank adatokra
         let seenBank = new Set();
         let bT_dedup = [];
         
         for(let r of bT_raw) {
-            let stringifiedRow = r.join('|'); // Ellenőrzi a teljes sort (Gép, Pozíció, Cikkszám, Modell)
+            // Minden adatot nagybetűssé alakítunk a sorban az ellenőrzés és a listázás előtt
+            let upperRow = r.map(x => (x || "").toUpperCase());
+            let stringifiedRow = upperRow.join('|'); 
+            
             if(!seenBank.has(stringifiedRow)) {
                 seenBank.add(stringifiedRow);
-                bT_dedup.push(r);
+                bT_dedup.push(upperRow); // A már nagybetűsített sort mentjük el
             }
         }
         
-        // 2. Limitálás az első 30 eltérő találatra
         const bT = bT_dedup.slice(0,30);
 
         h+=`<div class="section-header header-bank">FEEDER BANK</div>`;
@@ -656,17 +657,20 @@ function keres(k){
     }
     // === FEEDER BANK BLOKK VÉGE ===
     
-    // === BEÜLTETÉS BLOKK KEZDETE (Deduplikáció + Szűrő + Színezés) ===
+    // === BEÜLTETÉS BLOKK KEZDETE ===
     let uT_raw = ultetes.filter(r=>r[0]&&r[0].toUpperCase().includes(k));
     
     if(uT_raw.length > 0){
         let seen = new Set();
         let uT_dedup = [];
         for(let r of uT_raw) {
-            let stringifiedRow = r.join('|'); 
+            // Itt is mindent nagybetűssé alakítunk az ellenőrzés és listázás előtt
+            let upperRow = r.map(x => (x || "").toUpperCase());
+            let stringifiedRow = upperRow.join('|'); 
+            
             if(!seen.has(stringifiedRow)) {
                 seen.add(stringifiedRow);
-                uT_dedup.push(r);
+                uT_dedup.push(upperRow); // A már nagybetűsített sort mentjük el
             }
         }
 
