@@ -40,7 +40,7 @@ body {
 
 /* KERESŐ WRAPPER (PC) */
 .search-wrapper { 
-    padding: 30px 15px 15px 15px; /* Kicsit nagyobb felső padding PC-n */
+    padding: 30px 15px 15px 15px; 
     max-width: 600px; 
     margin: 0 auto; 
     position: relative; 
@@ -85,7 +85,7 @@ input.suggestions-active {
     font-size: 1.1rem; padding: 5px; z-index: 10;
 }
 
-/* --- ÚJ: AJÁNLÓ LISTA (Autocomplete - PC) --- */
+/* AJÁNLÓ LISTA (Autocomplete - PC) */
 #suggest {
     display: none;
     position: absolute;
@@ -120,10 +120,10 @@ input.suggestions-active {
 .s-item:last-child { border-bottom: none; }
 .hl { color: #fff; font-weight: bold; text-decoration: underline; text-decoration-color: var(--accent); }
 
-/* --- ÚJ: ELŐZMÉNYEK SZEKCIÓ (PC) --- */
+/* ELŐZMÉNYEK SZEKCIÓ (PC) */
 #historySection {
     margin-top: 15px;
-    display: none; /* JS kapcsolja be, ha van adat */
+    display: none; 
     animation: fadeIn 0.5s ease;
 }
 
@@ -196,12 +196,46 @@ input.suggestions-active {
 
 #kbContainer { display: none; }
 
+/* --- ÚJ: BEÜLTETÉS SZŰRŐ GOMBOK (3D Stílus) --- */
+.filter-container {
+    display: flex; justify-content: center; gap: 10px; margin: 10px 0 15px 0; width: 100%;
+}
+.f-btn {
+    background: #1e293b; color: #94a3b8; border: 1px solid rgba(255,255,255,0.05);
+    padding: 8px 16px; border-radius: 30px; font-size: 0.8rem; font-weight: 700;
+    cursor: pointer; text-transform: uppercase; user-select: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: all 0.15s ease;
+}
+/* Alap gomb nyomás (inaktív állapotban) */
+.f-btn:active { transform: translateY(2px); box-shadow: 0 2px 3px rgba(0,0,0,0.4); }
+
+/* Aktív TOP (Piros) */
+.f-btn.active.top {
+    background: linear-gradient(145deg, #ef4444, #dc2626); color: white; border-color: #ef4444;
+    box-shadow: 0 4px 0 #991b1b, 0 5px 10px rgba(239, 68, 68, 0.4);
+}
+.f-btn.active.top:active { box-shadow: 0 0 0 #991b1b, inset 0 4px 8px rgba(0,0,0,0.6); transform: translateY(4px); }
+
+/* Aktív BOT (Zöld) */
+.f-btn.active.bot {
+    background: linear-gradient(145deg, #10b981, #059669); color: white; border-color: #10b981;
+    box-shadow: 0 4px 0 #047857, 0 5px 10px rgba(16, 185, 129, 0.4);
+}
+.f-btn.active.bot:active { box-shadow: 0 0 0 #047857, inset 0 4px 8px rgba(0,0,0,0.6); transform: translateY(4px); }
+
+/* Aktív BOT-TOP (Kék/Semleges) */
+.f-btn.active.both {
+    background: linear-gradient(145deg, #3b82f6, #2563eb); color: white; border-color: #3b82f6;
+    box-shadow: 0 4px 0 #1e40af, 0 5px 10px rgba(59, 130, 246, 0.4);
+}
+.f-btn.active.both:active { box-shadow: 0 0 0 #1e40af, inset 0 4px 8px rgba(0,0,0,0.6); transform: translateY(4px); }
+
+
 /* ========================================= */
 /* --- MOBIL NÉZET (Max 1024px) --- */
 /* ========================================= */
 @media screen and (max-width: 1024px) {
     .top-bar { display: none; }
-    /* Mobilon elrejtjük az új PC funkciókat */
     #suggest, #historySection { display: none !important; }
     .empty-msg { display: none !important; }
 
@@ -229,7 +263,6 @@ input.suggestions-active {
         color: white;
         text-align: center; 
     }
-    /* Mobilon ne legyen szögletes az alja gépeléskor sem */
     input.suggestions-active { border-radius: 50px; }
 
     input:focus { 
@@ -277,7 +310,7 @@ input.suggestions-active {
     .row-main .d-value { font-size: 0.95rem; font-weight: 700; white-space: normal; word-break: break-all;}
 
 
-    /* --- PRO 3D BILLENTYŰZET FINOMÍTÁS --- */
+    /* PRO 3D BILLENTYŰZET FINOMÍTÁS */
     #kbContainer {
         display: block;
         position: fixed; 
@@ -293,7 +326,6 @@ input.suggestions-active {
         box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
     }
 
-    /* 250px magas rács */
     #viewNumeric, #viewAlpha {
         display: grid;
         grid-template-columns: repeat(4, 1fr) repeat(3, 1.3fr) 1.2fr; 
@@ -317,7 +349,6 @@ input.suggestions-active {
         border-top: 1px solid rgba(255,255,255,0.1); 
         box-shadow: 0 4px 0 #0f172a, 0 5px 5px rgba(0,0,0,0.3); 
         color: #e2e8f0;
-        /* FINOMÍTOTT ANIMÁCIÓ A RUGALMASABB ÉRZÉSHEZ */
         transition: all 0.1s cubic-bezier(0.4, 0.0, 0.2, 1);
     }
     
@@ -414,11 +445,19 @@ input.suggestions-active {
 let bank=[],ultetes=[],idSet=new Set(),uniqueIdsArr=[],keresIdozito=null,searchHistory=JSON.parse(localStorage.getItem('searchHistory')||"[]");
 let searchFinalized = false;
 let isNumericMode = true;
+let beultetesSzuro = 'BOTH'; // ÚJ: Szűrő állapota (TOP, BOT, BOTH)
 
-// ÚJ: Haptic (Rezgő) Visszajelzés a mobilos gombokhoz
+// ÚJ: Gomb eseménykezelője a szűrőhöz
+window.setBeultetesSzuro = function(val) {
+    if(typeof provideFeedback === 'function') provideFeedback(); 
+    beultetesSzuro = val;
+    const inp = document.getElementById('keres');
+    keres(inp.value.toUpperCase()); 
+};
+
 function provideFeedback() {
     if (window.navigator && window.navigator.vibrate) {
-        navigator.vibrate(25); // Rövid, 25ms rezgés
+        navigator.vibrate(25);
     }
 }
 
@@ -438,7 +477,6 @@ function getModelColor(m){
 function highlight(text, term) {
     if(!text) return "";
     if(!term || term.length < 1) return text;
-    // A találat legyen vastag és aláhúzott a listában
     return text.toString().replace(new RegExp(`(${term})`, 'gi'), '<span class="hl">$1</span>');
 }
 
@@ -482,9 +520,8 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
     window.addEventListener('resize', checkDeviceMode);
 
     document.getElementById('eredmeny').innerHTML='';
-    renderHistory(); // Megjeleníti az előzményeket betöltéskor
+    renderHistory(); 
     
-    // Gépelés figyelése
     inp.addEventListener('input',function(){
         const v=this.value.toUpperCase();
         clearBtn.style.display = v.length > 0 ? 'block' : 'none';
@@ -500,14 +537,12 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
             return;
         }
         
-        // Csak PC-n jelenjen meg a javaslat gépelés közben
         if(window.innerWidth >= 1024) updateSuggest(v);
         
         clearTimeout(keresIdozito); 
         keresIdozito=setTimeout(()=>keres(v),100);
     });
 
-    // Ha PC-n elhagyja a mezőt, zárjuk be a javaslatokat kis késleltetéssel (hogy rá lehessen kattintani)
     inp.addEventListener('blur', function() {
         setTimeout(() => {
             document.getElementById('suggest').style.display = 'none';
@@ -539,13 +574,11 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
 
 function feldolgoz(t){return t.split('\n').map(s=>s.replace(/"/g,'').trim()).filter(s=>s).slice(1).map(s=>s.split(';').map(e=>e.trim()));}
 
-// --- JAVASLATOK GENERÁLÁSA ---
 function updateSuggest(v){
     const b=document.getElementById('suggest'); 
     const inp=document.getElementById('keres');
     const m=[];
     
-    // Keresünk max 8 egyezést
     for(let i=0;i<uniqueIdsArr.length;i++){ 
         if(uniqueIdsArr[i].includes(v)){ 
             m.push(uniqueIdsArr[i]); 
@@ -556,14 +589,13 @@ function updateSuggest(v){
     if(m.length>0){ 
         b.innerHTML=m.map(x=>`<div class="s-item" onmousedown="selectSuggest('${x}')">${highlight(x, v)}</div>`).join(''); 
         b.style.display='block'; 
-        inp.classList.add('suggestions-active'); // Szögletes alj
+        inp.classList.add('suggestions-active'); 
     } else { 
         b.style.display='none'; 
         inp.classList.remove('suggestions-active');
     }
 }
 
-// --- JAVASLAT KIVÁLASZTÁSA ---
 window.selectSuggest=function(c){ 
     const i=document.getElementById('keres'); 
     i.value=c; 
@@ -574,14 +606,10 @@ window.selectSuggest=function(c){
     keres(c); 
 };
 
-// --- ELŐZMÉNYEK MEGJELENÍTÉSE ---
 function renderHistory(){
     const c=document.getElementById('historyChips'), s=document.getElementById('historySection');
     
-    // Csak akkor rajzoljuk ki, ha PC nézetben vagyunk (CSS kezeli) és van adat
     if(!searchHistory.length){ s.style.display='none'; return; }
-    
-    // PC-n 'flex', mobilon a CSS miatt 'none !important' marad
     s.style.display = 'block'; 
     
     c.innerHTML = searchHistory.map(x => 
@@ -612,31 +640,70 @@ function keres(k){
         });
     }
     
-    // JAVÍTVA: Új CSV felépítés: r[0]: Cikkszám, r[1]: Oldal, r[2]: Modell, r[3]: Beültetett Mennyiség
-    const uT=ultetes.filter(r=>r[0]&&r[0].toUpperCase().includes(k)).sort((a,b)=>parseInt(b[3]||0)-parseInt(a[3]||0)).slice(0,30);
-    if(uT.length){
-        h+=`<div class="section-header header-ultetes">BEÜLTETÉS</div>`;
-        uT.forEach(r=>{
-            const mc=getModelColor(r[2]); 
-            h+=`
-            <div class="card">
-                <div class="color-strip" style="background:${mc}"></div>
-                <div class="card-content">
-                    <div class="data-row row-main"><span class="d-label">Cikkszám</span><span class="d-value">${r[0]}</span></div>
-                    <div class="data-row"><span class="d-label">Modell</span><span class="d-value">${r[2]}</span></div>
-                    <div class="data-row"><span class="d-label">Oldal</span><span class="d-value">${r[1]}</span></div>
-                    <div class="data-row"><span class="d-label">Db</span><span class="d-value">${r[3]}</span></div>
-                </div>
-            </div>`;
-        });
-    }
+    // === BEÜLTETÉS BLOKK KEZDETE (Deduplikáció + Szűrő + Színezés) ===
+    let uT_raw = ultetes.filter(r=>r[0]&&r[0].toUpperCase().includes(k));
+    
+    if(uT_raw.length > 0){
+        // 1. SZIGORÚ DUPLIKÁCIÓ SZŰRÉS
+        let seen = new Set();
+        let uT_dedup = [];
+        for(let r of uT_raw) {
+            let stringifiedRow = r.join('|'); 
+            if(!seen.has(stringifiedRow)) {
+                seen.add(stringifiedRow);
+                uT_dedup.push(r);
+            }
+        }
 
-    // Ha van pontos találat, mentsük az előzményekbe
+        // 2. GOMBOK SZERINTI OLDAL SZŰRÉS
+        let uT_filtered = uT_dedup.filter(r => {
+            if(beultetesSzuro === 'BOTH') return true;
+            let oldal = (r[1] || "").toUpperCase();
+            return oldal === beultetesSzuro;
+        });
+
+        // 3. RENDEZÉS ÉS 30-AS LIMIT
+        const uT = uT_filtered.sort((a,b)=>parseInt(b[3]||0)-parseInt(a[3]||0)).slice(0,30);
+
+        // FEJLÉC ÉS GOMBOK
+        h+=`<div class="section-header header-ultetes">BEÜLTETÉS</div>`;
+        h+=`<div class="filter-container">
+                <div class="f-btn top ${beultetesSzuro === 'TOP' ? 'active' : ''}" onclick="setBeultetesSzuro('TOP')">TOP</div>
+                <div class="f-btn both ${beultetesSzuro === 'BOTH' ? 'active' : ''}" onclick="setBeultetesSzuro('BOTH')">BOT-TOP</div>
+                <div class="f-btn bot ${beultetesSzuro === 'BOT' ? 'active' : ''}" onclick="setBeultetesSzuro('BOT')">BOT</div>
+            </div>`;
+
+        if(uT.length === 0) {
+            h+= `<div style="text-align:center; padding:10px; color:#64748b; font-size:0.85rem;">Nincs adat a kiválasztott oldalhoz.</div>`;
+        } else {
+            // 4. KÁRTYÁK KIRAJZOLÁSA (Szín logikával)
+            uT.forEach(r=>{
+                let oldal = (r[1] || "").toUpperCase();
+                let mc = getModelColor(r[2]); 
+                
+                // Célzott színfelülírás, ha Top vagy Bot
+                if(oldal === 'TOP') mc = '#ef4444'; 
+                if(oldal === 'BOT') mc = '#10b981'; 
+
+                h+=`
+                <div class="card">
+                    <div class="color-strip" style="background:${mc}"></div>
+                    <div class="card-content">
+                        <div class="data-row row-main"><span class="d-label">Cikkszám</span><span class="d-value">${r[0]}</span></div>
+                        <div class="data-row"><span class="d-label">Modell</span><span class="d-value">${r[2]}</span></div>
+                        <div class="data-row"><span class="d-label">Oldal</span><span class="d-value">${r[1]}</span></div>
+                        <div class="data-row"><span class="d-label">Db</span><span class="d-value">${r[3]}</span></div>
+                    </div>
+                </div>`;
+            });
+        }
+    }
+    // === BEÜLTETÉS BLOKK VÉGE ===
+
     if(idSet.has(k)){
-        // Hozzáadjuk az elejére, eltávolítjuk a duplikációt
         searchHistory = [k, ...searchHistory.filter(c => c !== k)].slice(0, 5);
         localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
-        renderHistory(); // Frissítjük a kijelzőt
+        renderHistory(); 
     }
     
     e.innerHTML=h||`<div style="text-align:center; padding:30px; color:#64748b;">Nincs találat: "${k}"</div>`;
