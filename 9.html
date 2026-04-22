@@ -84,7 +84,7 @@ input[type=range]::-webkit-slider-thumb { height: 20px; width: 20px; border-radi
 
 /* --- INPUT ÉS GOMBOK --- */
 .input-wrapper { 
-    width: 100%; max-width: 500px; display: flex; gap: 12px; margin-bottom: 25px; flex-shrink: 0; 
+    width: 100%; max-width: 500px; display: flex; gap: 12px; margin-bottom: 15px; flex-shrink: 0; 
     transition: all 0.3s ease;
 }
 input[type=text] {
@@ -99,6 +99,22 @@ input[type=text] {
 }
 .scan-btn:active { transform: scale(0.92); }
 .scan-btn svg { width: 28px; height: 28px; fill: white; }
+
+/* --- ÚJ: MODELL SZŰRŐ GOMB (DROPDOWN) --- */
+.filter-wrapper { width: 100%; max-width: 500px; display: flex; justify-content: center; margin-bottom: 20px; flex-shrink: 0; }
+#modelFilter { 
+    background: #1e293b; border: 1px solid var(--glass-border); padding: 10px 20px; 
+    border-radius: 30px; color: var(--text-muted); font-size: 0.85rem; font-weight: 700; 
+    outline: none; cursor: pointer; text-align: center; text-transform: uppercase;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: all 0.3s ease;
+    max-width: 100%;
+}
+#modelFilter:focus { border-color: var(--accent); }
+/* Aktív (világító) állapot, ha szűrés van érvényben */
+#modelFilter.active-filter { 
+    background: linear-gradient(145deg, #3b82f6, #2563eb); color: white; border-color: #3b82f6; 
+    box-shadow: 0 4px 0 #1e40af, 0 5px 15px rgba(59, 130, 246, 0.4); 
+}
 
 /* --- EREDMÉNYEK --- */
 #resultsWrapper { width: 100%; max-width: 500px; padding-bottom: 20px; }
@@ -219,6 +235,7 @@ body.scanning-mode #resultsWrapper,
 body.scanning-mode .footer-history,
 body.scanning-mode .load-msg,
 body.scanning-mode .no-result,
+body.scanning-mode .filter-wrapper,
 body.scanning-mode .input-wrapper { display: none !important; }
 
 body.scanning-mode #reader {
@@ -278,6 +295,12 @@ body.scanning-mode .scan-controls-container { display: flex; }
         </button>
     </div>
 
+    <div class="filter-wrapper">
+        <select id="modelFilter">
+            <option value="ALL">Összes Modell</option>
+        </select>
+    </div>
+
     <div id="resultsWrapper"></div>
 </div>
 
@@ -308,6 +331,7 @@ const sliderContainer = document.getElementById('sliderContainer');
 const mainContent = document.querySelector('.main-content');
 const boxSizeSlider = document.getElementById('boxSizeSlider');
 const sliderValueDisplay = document.getElementById('sliderValueDisplay');
+const modelFilter = document.getElementById('modelFilter'); // ÚJ: Szűrő változó
 
 let html5QrCode = null;
 let isCameraRunning = false;
@@ -350,9 +374,47 @@ async function init() {
     if(bankDB.length > 0) {
         loadMsg.innerText = `Adatbázis kész: ${bankDB.length} tétel`;
         loadMsg.style.color = "#10b981";
+
+        // ÚJ: Szűrő lista feltöltése a betöltött modellekkel
+        let uniqueModels = [...new Set(bankDB.map(i => i.model))].sort();
+        uniqueModels.forEach(m => {
+            if(m !== "BANK") { // Ha van üres/BANK érték, azt kihagyhatjuk vagy meghagyhatjuk, ahogy jólesik.
+                let opt = document.createElement('option');
+                opt.value = m;
+                opt.innerText = m;
+                modelFilter.appendChild(opt);
+            }
+        });
+
+        // ÚJ: Elmentett szűrő beállítása
+        const savedModel = localStorage.getItem('selectedModel') || 'ALL';
+        if (savedModel === 'ALL' || uniqueModels.includes(savedModel)) {
+            modelFilter.value = savedModel;
+        } else {
+            modelFilter.value = 'ALL';
+        }
+        updateFilterStyle();
     }
     renderHistory(); 
 }
+
+// ÚJ: Szűrő gomb stílusának váltása és eseményfigyelő
+function updateFilterStyle() {
+    if (modelFilter.value === 'ALL') {
+        modelFilter.classList.remove('active-filter');
+    } else {
+        modelFilter.classList.add('active-filter');
+    }
+}
+
+modelFilter.addEventListener('change', () => {
+    localStorage.setItem('selectedModel', modelFilter.value);
+    updateFilterStyle();
+    // Ha van beírva/beolvasva adat, azonnal újrakeres a szűrővel
+    if (input.value.trim().length > 2) {
+        search(input.value.trim().toUpperCase());
+    }
+});
 
 async function loadBankCSV() {
     try {
@@ -387,19 +449,26 @@ input.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         const code = input.value.trim().toUpperCase();
         if (code) search(code);
-        input.value = '';
+        input.value = code; // Megtartjuk a beírt szöveget, hogy ha szűrőt váltunk, lefusson újra
         input.blur();
     }
 });
 
 function search(code) {
     resultsWrapper.innerHTML = '';
-    const matches = bankDB.filter(i => (code.includes(i.id) || i.id.includes(code)) && i.id.length > 2);
+    
+    // ÚJ: A szűrésbe belevettük a modellt is
+    const currentModel = modelFilter.value;
+    const matches = bankDB.filter(i => {
+        const isMatch = (code.includes(i.id) || i.id.includes(code)) && i.id.length > 2;
+        const isModelOk = (currentModel === 'ALL' || i.model === currentModel);
+        return isMatch && isModelOk;
+    });
 
     if (matches.length > 0) {
         playSound(true);
 
-        // ÚJ: Deduplikáció (Egyező sorok kiszűrése, hogy csak egyszer listázza)
+        // Deduplikáció (Egyező sorok kiszűrése, hogy csak egyszer listázza)
         let seen = new Set();
         let uniqueMatches = [];
         for (let m of matches) {
