@@ -357,20 +357,24 @@ async function init() {
 async function loadBankCSV() {
     try {
         const res = await fetch('bank.csv');
-        const data = await res.text();
+        let data = await res.text();
+        
+        // TISZTÍTÁS: Idézőjelek és rejtett Windows sortörések eltávolítása (Excel hibák megelőzése)
+        data = data.replace(/"/g, '').replace(/\r/g, '');
+        
         const lines = data.split('\n');
-        const headers = lines[0].split(';');
-        let modelIdx = headers.findIndex(h => h.trim().toLowerCase().includes('model'));
 
         lines.slice(1).forEach(line => {
             const cols = line.split(';');
             if (cols.length < 2) return;
+            
+            // Explicit A-B-C-D oszlop leképezés a kért sorrend alapján:
             bankDB.push({
-                gep: cols[0]?.trim() || "N/A",
-                poz: cols[1]?.trim() || "N/A",
-                id: cols[2]?.trim().toUpperCase() || "",
-                msd: cols[4]?.trim() || "N/A",
-                model: (modelIdx !== -1 && cols[modelIdx]) ? cols[modelIdx].trim() : "BANK"
+                gep: cols[0]?.trim() || "N/A",                   // A oszlop: Gép azonosító
+                poz: cols[1]?.trim() || "N/A",                   // B oszlop: Feeder azonosító
+                id: cols[2]?.trim().toUpperCase() || "",         // C oszlop: Cikkszám
+                model: cols[3]?.trim() || "BANK",                // D oszlop: Modell
+                msd: cols[4]?.trim() || "N/A"                    // E oszlop: MSD (ha létezik)
             });
         });
     } catch (e) { 
@@ -564,3 +568,4 @@ init().then(() => {
 });
 </script>
 </body>
+</html>
