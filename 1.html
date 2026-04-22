@@ -310,7 +310,7 @@ input.suggestions-active {
 
 
     /* --- ÚJ KÉSZENLÉTI KÉPERNYŐ (IDLE STATE) --- */
-    .mobile-only { display: flex; } /* Mobilon bekapcsoljuk a keretet */
+    .mobile-only { display: flex; } 
     
     /* CSS Mágia: Ha az #eredmeny div-ben bármi megjelenik, a Készenléti panelt eltüntetjük! */
     body:has(#eredmeny > div) #idleState { display: none !important; }
@@ -354,19 +354,19 @@ input.suggestions-active {
         height: 250px;
     }
 
-    /* ÚJ: TÖRLÉS NÉLKÜLI GRID ÚJRASZERVEZÉS (5 Oszlopos Numpad) */
+    /* TÖRLÉS NÉLKÜLI GRID ÚJRASZERVEZÉS (5 Oszlopos Numpad) */
     #viewNumeric {
         display: grid;
-        grid-template-columns: 1.2fr 1.5fr 1.5fr 1.5fr 1.3fr; /* 5 oszlop (Eszközök - Számok - Enter/Törlés) */
+        grid-template-columns: 1.2fr 1.5fr 1.5fr 1.5fr 1.3fr; 
         grid-template-rows: repeat(4, 1fr);
-        gap: 6px; /* Kicsit szellősebb a kényelemért */
-        height: 260px; /* Megnövelt magasság a jobb tapintásért */
+        gap: 6px; 
+        height: 260px; 
     }
 
-    /* 1. Lépés: Elrejtünk MINDEN eredeti gombot (nem töröljük, csak kikapcsoljuk) */
+    /* Elrejtünk MINDEN eredeti gombot (nem töröljük, csak kikapcsoljuk) */
     #viewNumeric > div { display: none !important; }
 
-    /* 2. Lépés: Célzottan visszakapcsoljuk és helyrerakjuk csak azt a 16-ot, amire szükség van! */
+    /* Célzottan visszakapcsoljuk és helyrerakjuk csak azt a 16-ot, amire szükség van! */
     /* BAL OLDAL - ESZKÖZÖK */
     #viewNumeric > div:nth-child(1)  { display: flex !important; grid-area: 1 / 1 / 2 / 2; } /* ABC */
     #viewNumeric > div:nth-child(20) { display: flex !important; grid-area: 2 / 1 / 3 / 2; background: #334155; color: white; font-size: 1.4rem; font-weight: bold;} /* _ (Kiemelve) */
@@ -386,7 +386,7 @@ input.suggestions-active {
     #viewNumeric > div:nth-child(22) { display: flex !important; grid-area: 3 / 3 / 4 / 4; } /* 2 */
     #viewNumeric > div:nth-child(23) { display: flex !important; grid-area: 3 / 4 / 4 / 5; } /* 3 */
 
-    /* A 0-ás gomb most 3 oszlop széles lesz a maximális kényelemért! */
+    /* A 0-ás gomb 3 oszlop széles lesz a maximális kényelemért! */
     #viewNumeric > div:nth-child(28) { display: flex !important; grid-area: 4 / 2 / 5 / 5; } /* 0 */
 
     /* JOBB OLDAL - TÖRLÉS ÉS ENTER */
@@ -395,10 +395,10 @@ input.suggestions-active {
     #viewNumeric > div:nth-child(16) { display: flex !important; grid-area: 2 / 5 / 5 / 6; } /* ⏎ */
 
 
-    /* --- ÚJ: TAPINTÁSI VISSZAJELZÉS (Haptic & Visual Feedback) --- */
+    /* --- TAPINTÁSI VISSZAJELZÉS (Haptic & Visual Feedback) --- */
     .k-btn {
         display: flex; align-items: center; justify-content: center;
-        border-radius: 8px; /* Finomabb élek */
+        border-radius: 8px; 
         font-family: sans-serif; font-size: 1.1rem; font-weight: 600;
         cursor: pointer;
         position: relative;
@@ -406,13 +406,11 @@ input.suggestions-active {
         border-top: 1px solid rgba(255,255,255,0.1); 
         box-shadow: 0 4px 0 #0f172a, 0 5px 5px rgba(0,0,0,0.3); 
         color: #e2e8f0;
-        /* Villámgyors lenyomás, rugós visszapattanás */
         transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.1s ease, filter 0.1s;
     }
     
     .k-btn:active { 
         transform: translateY(3px) scale(0.92); 
-        /* Gomb lenyomva tartva "besüllyed" a felületbe */
         box-shadow: 0 0 0 #0f172a, inset 0 5px 15px rgba(0,0,0,0.8) !important; 
         filter: brightness(1.4) contrast(1.2);
     }
@@ -420,11 +418,9 @@ input.suggestions-active {
     .k-btn.num { background: linear-gradient(145deg, #475569, #334155); color: white; font-size: 1.5rem; font-weight: 700; }
     .k-btn.func { color: #94a3b8; font-size: 1rem; }
     
-    /* ENTER gomb fényeffektje */
     .k-btn.accent { background: linear-gradient(145deg, #3b82f6, #2563eb); box-shadow: 0 4px 0 #1e40af, 0 5px 5px rgba(0,0,0,0.3); color: white; }
     .k-btn.accent:active { box-shadow: 0 0 0 #1e40af, inset 0 4px 15px rgba(0,0,0,0.8), 0 0 25px rgba(59, 130, 246, 0.8) !important; background: #2563eb; }
     
-    /* PIROS gombok fényeffektje */
     .k-btn.red { background: linear-gradient(145deg, #b91c1c, #991b1b); box-shadow: 0 4px 0 #7f1d1d, 0 5px 5px rgba(0,0,0,0.3); color: white; }
     .k-btn.red:active { box-shadow: 0 0 0 #7f1d1d, inset 0 4px 15px rgba(0,0,0,0.8), 0 0 25px rgba(239, 68, 68, 0.8) !important; }
     
@@ -691,7 +687,7 @@ function keres(k){
     if(k.length<2)return;
     let h='';
     
-    // === FEEDER BANK BLOKK KEZDETE ===
+    // === FEEDER BANK BLOKK ===
     let bT_raw = bank.filter(r=>r[2]&&r[2].toUpperCase().includes(k));
     
     if(bT_raw.length){
@@ -725,9 +721,8 @@ function keres(k){
             </div>`;
         });
     }
-    // === FEEDER BANK BLOKK VÉGE ===
     
-    // === BEÜLTETÉS BLOKK KEZDETE ===
+    // === BEÜLTETÉS BLOKK ===
     let uT_raw = ultetes.filter(r=>r[0]&&r[0].toUpperCase().includes(k));
     
     if(uT_raw.length > 0){
@@ -781,7 +776,6 @@ function keres(k){
             });
         }
     }
-    // === BEÜLTETÉS BLOKK VÉGE ===
 
     if(idSet.has(k)){
         searchHistory = [k, ...searchHistory.filter(c => c !== k)].slice(0, 5);
@@ -816,33 +810,40 @@ function toggleKeyboard() {
     }
 }
 
+// --- ÚJ: QWERTZ TÖKÉLETESÍTETT GENERÁLÁS (NINCS TÖRLÉS) ---
 function generateAlphaKeys() {
     const container = document.getElementById('viewAlpha');
-    const qwertz = "QWERTZUIOPASDFGHJKLYXCVBNM-.".split('');
+    // Kicsit átrendeztük a stringet, hogy pontosan kijöjjenek a 10-es sorok a CSS grid miatt!
+    const qwertz = "QWERTZUIOPASDFGHJKL-YXCVBNM.".split('');
     
     qwertz.forEach(char => {
         const d = document.createElement('div');
         d.className = 'k-btn num'; 
         d.textContent = char;
-        d.style.fontSize = "1rem";
+        d.style.fontSize = "1.1rem"; // Egy leheletnyivel nagyobb betűk
         d.onclick = (e) => { e.preventDefault(); typeKey(char); }; 
         container.appendChild(d);
     });
     
-    const toNum = document.createElement('div');
-    toNum.className = 'k-btn abc-switch'; toNum.textContent = '123';
-    toNum.onclick = toggleKbMode;
-    container.insertBefore(toNum, container.firstChild); 
-
+    // Törlés (felkerül a 3. sor végére)
     const del = document.createElement('div');
     del.className = 'k-btn red'; del.textContent = '⌫';
     del.onclick = backspaceKey;
     container.appendChild(del);
 
+    // Enter (felkerül a 3. sor legvégére)
     const ent = document.createElement('div');
     ent.className = 'k-btn accent'; ent.textContent = '⏎';
     ent.onclick = enterKey;
     container.appendChild(ent);
+
+    // 123 Gomb (Lekerül a legalsó sorba, teljes szélességben)
+    const toNum = document.createElement('div');
+    toNum.className = 'k-btn abc-switch'; 
+    toNum.textContent = '123 / SZÁMOK';
+    toNum.style.gridColumn = 'span 10'; // Hogy végigérjen az alján
+    toNum.onclick = toggleKbMode;
+    container.appendChild(toNum); 
 }
 
 function enterKey() {
