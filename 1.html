@@ -230,21 +230,15 @@ input.suggestions-active {
 }
 .f-btn.active.both:active { box-shadow: 0 0 0 #1e40af, inset 0 4px 8px rgba(0,0,0,0.6); transform: translateY(4px); }
 
-/* --- SZOLID "LÉLEGZŐ" HÁTTÉR (IDLE STATE) --- */
+/* --- SZOLID FIX HÁTTÉR (IDLE STATE) --- */
 #idleState {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    width: 100%; height: 250px; margin: 0 auto;
-    animation: breathe 3s ease-in-out infinite;
-    user-select: none; text-align: center;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    width: 100%; max-width: 600px; height: 250px; margin: 0 auto; padding: 15px 15px 0 15px;
+    user-select: none; text-align: center; box-sizing: border-box;
 }
 .idle-text { font-family: monospace; font-size: 1.1rem; font-weight: 800; color: var(--text-secondary); letter-spacing: 2px; margin-bottom: 8px; pointer-events: none;}
 .idle-sub { font-size: 0.85rem; font-weight: normal; color: #64748b; font-family: monospace; text-transform: uppercase; pointer-events: none;}
 .idle-sub span { color: var(--accent); font-weight: bold; font-size: 1.1rem; margin-right: 4px;}
-
-@keyframes breathe {
-    0%, 100% { opacity: 0.3; transform: scale(0.98); }
-    50% { opacity: 0.8; transform: scale(1.02); }
-}
 
 /* --- FELUGRÓ MODAL ABLAK --- */
 .modal-overlay {
@@ -531,15 +525,16 @@ input.suggestions-active {
 </div>
 
 <div id="idleState">
-    <div class="idle-text">FORVIA TERMINAL KÉSZ</div>
-    
-    <div style="margin: 15px 0 20px 0; width: 100%; display: flex; justify-content: center; pointer-events: auto;">
+    <div style="width: 100%; display: flex; justify-content: flex-start; margin-bottom: 30px; pointer-events: auto;">
         <div class="f-btn both" style="font-size: 0.85rem; letter-spacing: 1px; padding: 10px 20px; display: flex; align-items: center; gap: 8px;" onclick="openSetupModal()">
             <span style="font-size: 1.2rem;">📄</span> SETUP SHEET NYOMTATÁS
         </div>
     </div>
 
-    <div class="idle-sub" id="dbSizeDisplay">ADATBÁZIS BETÖLTÉSE...</div>
+    <div style="width: 100%; text-align: center;">
+        <div class="idle-text">FORVIA TERMINAL KÉSZ</div>
+        <div class="idle-sub" id="dbSizeDisplay">ADATBÁZIS BETÖLTÉSE...</div>
+    </div>
 </div>
 
 <div id="eredmeny"></div>
@@ -891,9 +886,6 @@ function keres(k){
                 let oldal = (r[1] || "").toUpperCase();
                 let mc = getModelColor(r[2]); 
                 
-                if(oldal === 'TOP') mc = '#ef4444'; 
-                if(oldal === 'BOT') mc = '#10b981'; 
-
                 h+=`
                 <div class="card clickable-card" onclick="openModelModal('${r[2]}')">
                     <div class="color-strip" style="background:${mc}"></div>
@@ -984,7 +976,6 @@ window.openSetupModal = function() {
     let models = new Set();
     ultetes.forEach(r => { 
         if(r[2]) {
-            // Összefésüli a TOP és BOT modelleket egyetlen közös névvé
             let mName = r[2].toUpperCase().replace(/[ \-_]*(TOP|BOT)$/i, '').trim();
             models.add(mName);
         }
@@ -1010,7 +1001,6 @@ window.generateSetupSheet = function() {
     let baseModelName = sel.value;
     if(!baseModelName) { alert("Kérlek, válassz ki egy modellt a listából!"); return; }
     
-    // 1. Kiválasztott "bázis" modell alkatrészeinek kigyűjtése (TOP és BOT verziókat is keresi)
     let requiredParts = new Set();
     ultetes.forEach(r => {
         if(r[2]) {
@@ -1021,32 +1011,30 @@ window.generateSetupSheet = function() {
         }
     });
     
-    // 2. Keresztezés a Feeder Bankkal
     let printData = {}; 
     
     bank.forEach(r => {
         let bGep = r[0] || "Ismeretlen Gép";
-        let bPoz = r[1] || "";
+        let bPozRaw = r[1] || "";
+        let bPoz = bPozRaw.toString().trim();
         let bCikk = (r[2] || "").toUpperCase();
         let bModelRaw = (r[3] || "").toUpperCase();
         
         let bModelBase = bModelRaw.replace(/[ \-_]*(TOP|BOT)$/i, '').trim();
         
-        // Ha az alkatrész kell a modellhez VAGY eleve a bázis modellen van a bankban
         if(bModelBase === baseModelName || requiredParts.has(bCikk)) {
-            // Oldal meghatározása (2-essel kezdődik = 200-as oldal, többi = 100-as oldal)
-            let oldal = bPoz.toString().trim().startsWith('2') ? '200' : '100';
+            let oldal = bPoz.startsWith('2') ? '200' : '100';
             
             if(!printData[bGep]) printData[bGep] = { '100': [], '200': [] };
             
-            let exists = printData[bGep][oldal].find(x => x.poz === bPoz && x.cikk === bCikk);
+            // JAVÍTVA: Szigorú pozíció deduplikáció a nyomtatásnál
+            let exists = printData[bGep][oldal].find(x => x.poz === bPoz);
             if(!exists) {
                 printData[bGep][oldal].push({ poz: bPoz, cikk: bCikk });
             }
         }
     });
     
-    // 3. Okos nyomtatási kép HTML generálása (1 Gép 1 Oldal -> 1 Lap)
     let html = '';
     let gepek = Object.keys(printData).sort();
     
@@ -1059,7 +1047,6 @@ window.generateSetupSheet = function() {
         ['100', '200'].forEach(oldal => {
             let items = printData[gep][oldal];
             if(items.length > 0) {
-                // Sorbarendezés pozíció szerint 
                 items.sort((a,b) => {
                     let numA = parseInt(a.poz.replace(/\D/g, '')) || 0;
                     let numB = parseInt(b.poz.replace(/\D/g, '')) || 0;
@@ -1069,7 +1056,6 @@ window.generateSetupSheet = function() {
                 
                 let oldalNev = oldal === '100' ? '100-AS OLDAL' : '200-AS OLDAL';
                 
-                // Kettéosztás algoritmus (Ha sok a sor, 2 oszlopba rendezi a táblázatot hogy A4-en garantáltan elférjen)
                 let tableHTML = '';
                 if(items.length > 45) {
                     let half = Math.ceil(items.length / 2);
