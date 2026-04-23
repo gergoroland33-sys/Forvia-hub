@@ -468,7 +468,14 @@ input.suggestions-active {
 .btn-print { width: 100%; background: var(--ok-color); border: none; color: white; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
 .btn-print:active { transform: scale(0.98); background: #059669; }
 
-/* --- JAVÍTOTT: OKOS, ÜRES LAP NÉLKÜLI NYOMTATÁSI KÉP --- */
+
+/* --- KÉPERNYŐN LÁTHATATLAN NYOMTATÁSI TERÜLET --- */
+/* Ezt az egy blokkot tettem be, hogy a képernyőn ne mutassa a nyomtatási adatokat a lap alján! */
+@media screen {
+    #printArea { display: none !important; }
+}
+
+/* --- OKOS, ÜRES LAP NÉLKÜLI NYOMTATÁSI KÉP --- */
 @media print {
     @page { size: A4 portrait; margin: 10mm; }
     body { background: white !important; -webkit-print-color-adjust: exact; }
@@ -480,7 +487,6 @@ input.suggestions-active {
         page-break-after: always;
         break-after: page;
         width: 100%; 
-        /* JAVÍTVA: Eltávolítva a fix magasság, ez okozta az extra üres lapokat! */
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
@@ -813,7 +819,6 @@ function keres(k){
     if(k.length<2)return;
     let h='';
     
-    // === FEEDER BANK BLOKK ===
     let bT_raw = bank.filter(r=>r[2]&&r[2].toUpperCase().includes(k));
     
     if(bT_raw.length){
@@ -848,7 +853,6 @@ function keres(k){
         });
     }
     
-    // === BEÜLTETÉS BLOKK ===
     let uT_raw = ultetes.filter(r=>r[0]&&r[0].toUpperCase().includes(k));
     
     if(uT_raw.length > 0){
@@ -916,7 +920,6 @@ function keres(k){
     e.innerHTML=h||`<div style="text-align:center; padding:30px; color:#64748b;">Nincs találat: "${k}"</div>`;
 }
 
-// --- MODAL LOGIKA ---
 window.openModelModal = function(modelName) {
     if(typeof provideFeedback === 'function') provideFeedback();
     
@@ -972,7 +975,6 @@ window.closeModelModal = function() {
 };
 
 
-// --- SETUP SHEET NYOMTATÁS LOGIKA ---
 window.openSetupModal = function() {
     if(typeof provideFeedback === 'function') provideFeedback();
     
