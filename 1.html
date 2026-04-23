@@ -226,8 +226,32 @@ input.suggestions-active {
 }
 .f-btn.active.both:active { box-shadow: 0 0 0 #1e40af, inset 0 4px 8px rgba(0,0,0,0.6); transform: translateY(4px); }
 
-/* --- KÉSZENLÉTI KÉPERNYŐ --- */
-.mobile-only { display: none; }
+/* --- ÚJ: STATISZTIKAI KEZDŐKÉPERNYŐ (PC ÉS MOBIL IS) --- */
+#idleState {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 30px 15px; max-width: 700px; margin: 10px auto; width: 100%;
+    animation: fadeIn 0.5s ease; box-sizing: border-box;
+}
+
+/* Elrejtjük, ha van találat vagy keresés folyamatban van */
+body:has(#eredmeny > div) #idleState { display: none !important; }
+body:has(#suggest > .s-item) #idleState { display: none !important; }
+
+.stat-header { font-size: 0.8rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; text-align: center; display: flex; align-items: center; gap: 10px; }
+.stat-header::before, .stat-header::after { content: ''; height: 1px; width: 30px; background: rgba(255,255,255,0.1); }
+
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; width: 100%; }
+
+.stat-card {
+    background: rgba(30, 41, 59, 0.4); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px 10px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1); backdrop-filter: blur(10px);
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.stat-card:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 8px 20px rgba(59, 130, 246, 0.15); }
+.stat-icon { font-size: 1.6rem; margin-bottom: 8px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.1)); }
+.stat-value { font-size: 1.15rem; font-weight: 800; color: white; font-family: monospace; margin-bottom: 5px; word-break: break-word; line-height: 1.2; }
+.stat-title { font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; line-height: 1.3; }
 
 
 /* ========================================= */
@@ -307,26 +331,6 @@ input.suggestions-active {
     .d-label { display: block; font-size: 0.55rem; text-transform: uppercase; margin-bottom: 0px;}
     .d-value { font-size: 0.85rem; text-align: center; color: white; font-weight: 500; white-space: nowrap; }
     .row-main .d-value { font-size: 0.95rem; font-weight: 700; white-space: normal; word-break: break-all;}
-
-
-    /* --- KÉSZENLÉTI KÉPERNYŐ (IDLE STATE) --- */
-    .mobile-only { display: flex; } 
-    body:has(#eredmeny > div) #idleState { display: none !important; }
-
-    #idleState {
-        flex-direction: column; align-items: center; justify-content: center;
-        height: 40vh; width: 100%; text-align: center;
-        animation: breathe 3s ease-in-out infinite;
-        pointer-events: none;
-    }
-    #idleState .idle-icon { font-size: 3rem; margin-bottom: 15px; opacity: 0.8; filter: drop-shadow(0 0 15px var(--accent)); }
-    #idleState .idle-text { font-family: monospace; font-size: 1.1rem; font-weight: 800; color: var(--text-secondary); letter-spacing: 2px; }
-    #idleState .idle-sub { font-size: 0.75rem; font-weight: normal; opacity: 0.5; margin-top: 5px; }
-
-    @keyframes breathe {
-        0%, 100% { opacity: 0.4; transform: scale(0.98); }
-        50% { opacity: 0.9; transform: scale(1.02); }
-    }
 
 
     /* --- PRO 3D BILLENTYŰZET --- */
@@ -451,10 +455,30 @@ input.suggestions-active {
     </div>
 </div>
 
-<div id="idleState" class="mobile-only">
-    <div class="idle-icon">⚡</div>
-    <div class="idle-text">TERMINAL KÉSZEN ÁLL</div>
-    <div class="idle-sub">Gépelje be a cikkszámot</div>
+<div id="idleState">
+    <div class="stat-header">ADATBÁZIS STATISZTIKA</div>
+    <div class="stat-grid">
+        <div class="stat-card">
+            <div class="stat-icon">🔥</div>
+            <div class="stat-value" id="statMostPlanted">-</div>
+            <div class="stat-title">Legtöbbet Ültetett<br>Cikkszám</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-value" id="statMostModels">-</div>
+            <div class="stat-title">Legtöbb Modellben<br>Szereplő</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🔍</div>
+            <div class="stat-value" id="statMostSearched">-</div>
+            <div class="stat-title">Lokálisan<br>Legkeresettebb</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📦</div>
+            <div class="stat-value" id="statTotalParts">-</div>
+            <div class="stat-title">Összes Egyedi<br>Cikkszám (Db)</div>
+        </div>
+    </div>
 </div>
 
 <div id="eredmeny"></div>
@@ -554,6 +578,69 @@ window.clearSearch = function() {
     document.getElementById('eredmeny').innerHTML = '';
 };
 
+// --- ÚJ: STATISZTIKAI FUNKCIÓK FELDOLGOZÁSA ---
+function calculateStats() {
+    // 1. Összes egyedi cikkszám
+    document.getElementById('statTotalParts').innerText = uniqueIdsArr.length.toLocaleString('hu-HU');
+
+    let plantCounts = {};
+    let modelCounts = {};
+
+    // Végigfutunk a beültetésen, hogy kinyerjük az adatokat
+    ultetes.forEach(r => {
+        let cikk = (r[0] || "").toUpperCase();
+        let model = (r[2] || "").toUpperCase();
+        let db = parseInt(r[3]) || 0;
+        
+        if(cikk) {
+            // Legtöbbet ültetett összegzése
+            plantCounts[cikk] = (plantCounts[cikk] || 0) + db;
+            
+            // Legtöbb modellben szereplő halmozása
+            if(model) {
+                if(!modelCounts[cikk]) modelCounts[cikk] = new Set();
+                modelCounts[cikk].add(model);
+            }
+        }
+    });
+
+    // Max értékek megkeresése
+    let maxPlanted = "-", maxPlantedVal = 0;
+    for(let c in plantCounts) {
+        if(plantCounts[c] > maxPlantedVal) {
+            maxPlantedVal = plantCounts[c];
+            maxPlanted = c;
+        }
+    }
+    document.getElementById('statMostPlanted').innerText = maxPlanted;
+
+    let maxModels = "-", maxModelsVal = 0;
+    for(let c in modelCounts) {
+        if(modelCounts[c].size > maxModelsVal) {
+            maxModelsVal = modelCounts[c].size;
+            maxModels = c;
+        }
+    }
+    document.getElementById('statMostModels').innerText = maxModels;
+    
+    // Lokális keresési adatok betöltése
+    updateLocalStatsDisplay();
+}
+
+function updateLocalStatsDisplay() {
+    let freq = JSON.parse(localStorage.getItem('searchFreq') || "{}");
+    let maxSearched = "-", maxFreqVal = 0;
+    for(let c in freq) {
+        if(freq[c] > maxFreqVal) {
+            maxFreqVal = freq[c];
+            maxSearched = c;
+        }
+    }
+    const el = document.getElementById('statMostSearched');
+    if(el) el.innerText = maxSearched;
+}
+
+
 Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.text())]).then(([bT,uT])=>{
     bank=feldolgoz(bT); ultetes=feldolgoz(uT);
     bank.forEach(r=>r[2]&&idSet.add(r[2].toUpperCase()));
@@ -582,6 +669,7 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
 
     document.getElementById('eredmeny').innerHTML='';
     renderHistory(); 
+    calculateStats(); // <-- Statisztika generálása a betöltés után
     
     inp.addEventListener('input',function(){
         const v=this.value.toUpperCase();
@@ -773,7 +861,14 @@ function keres(k){
         }
     }
 
+    // Ha van érvényes pontos találat a listában
     if(idSet.has(k)){
+        // Lokális statisztika (Melyiket kerested eddig a legtöbbször)
+        let freq = JSON.parse(localStorage.getItem('searchFreq') || "{}");
+        freq[k] = (freq[k] || 0) + 1;
+        localStorage.setItem('searchFreq', JSON.stringify(freq));
+        updateLocalStatsDisplay();
+
         searchHistory = [k, ...searchHistory.filter(c => c !== k)].slice(0, 5);
         localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
         renderHistory(); 
