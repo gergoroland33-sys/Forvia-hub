@@ -233,7 +233,7 @@ input.suggestions-active {
 /* --- SZOLID FIX HÁTTÉR (IDLE STATE) --- */
 #idleState {
     display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-    width: 100%; max-width: 600px; height: 250px; margin: 0 auto; padding: 30px 15px 0 15px;
+    width: 100%; max-width: 600px; height: 250px; margin: 0 auto; padding: 15px 15px 0 15px;
     user-select: none; text-align: center; box-sizing: border-box;
 }
 .idle-text { font-family: monospace; font-size: 1.1rem; font-weight: 800; color: var(--text-secondary); letter-spacing: 2px; margin-bottom: 8px; pointer-events: none;}
@@ -479,9 +479,7 @@ input.suggestions-active {
     .print-page { 
         page-break-after: always; 
         width: 100%; 
-        height: 277mm; /* Szigorú magasság az A4 tartáshoz */
         box-sizing: border-box;
-        overflow: hidden;
         display: flex;
         flex-direction: column;
     }
@@ -492,7 +490,6 @@ input.suggestions-active {
     .print-h-sub { font-size: 16pt; font-weight: bold; color: #334155 !important; }
     
     .print-table { width: 100%; border-collapse: collapse; }
-    /* JAVÍTVA: Kisebb padding és betűméret, hogy a hosszú listák is elférjenek */
     .print-table th { background: #e2e8f0 !important; color: #000 !important; padding: 4px; text-align: center; font-size: 9pt; border: 1px solid #000; text-transform: uppercase; }
     .print-table td { padding: 2px 4px; border: 1px solid #000; font-size: 9pt; font-family: monospace !important; font-weight: bold; line-height: 1.1; text-align: center; }
     
@@ -884,6 +881,10 @@ function keres(k){
                 let oldal = (r[1] || "").toUpperCase();
                 let mc = getModelColor(r[2]); 
                 
+                // JAVÍTVA: Visszakerültek a TOP és BOT specifikus színek!
+                if(oldal === 'TOP') mc = '#ef4444'; 
+                if(oldal === 'BOT') mc = '#10b981'; 
+
                 h+=`
                 <div class="card clickable-card" onclick="openModelModal('${r[2]}')">
                     <div class="color-strip" style="background:${mc}"></div>
@@ -1025,7 +1026,7 @@ window.generateSetupSheet = function() {
             
             if(!printData[bGep]) printData[bGep] = { '100': [], '200': [] };
             
-            // JAVÍTVA: Csak a fizikai pozíciót veszi alapul, kizárva a felesleges duplikációt
+            // Szigorú pozíció deduplikáció a nyomtatásnál
             let exists = printData[bGep][oldal].find(x => x.poz === bPoz);
             if(!exists) {
                 printData[bGep][oldal].push({ poz: bPoz, cikk: bCikk });
@@ -1054,8 +1055,8 @@ window.generateSetupSheet = function() {
                 
                 let oldalNev = oldal === '100' ? '100-AS OLDAL' : '200-AS OLDAL';
                 
-                // JAVÍTVA: Dinamikus darabolás (chunking), hogy végtelen sok sor esetén is egymás mellé (több oszlopba) tördeljen, garantálva az A4-et.
-                let maxPerCol = 45; // 45 sor fér el biztonságosan egy A4-es oszlopban
+                // JAVÍTVA: Csökkentett maxPerCol (35), hogy garantáltan ráférjen a lapra vágás nélkül. Több oszlopos dinamikus bontás!
+                let maxPerCol = 35; 
                 let numCols = Math.ceil(items.length / maxPerCol);
                 
                 let tableHTML = `<div style="display: flex; gap: 10px; flex: 1; align-items: flex-start; width: 100%;">`;
