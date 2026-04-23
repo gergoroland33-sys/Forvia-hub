@@ -235,10 +235,10 @@ input.suggestions-active {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     width: 100%; height: 250px; margin: 0 auto;
     animation: breathe 3s ease-in-out infinite;
-    user-select: none; pointer-events: none; text-align: center;
+    user-select: none; text-align: center;
 }
-.idle-text { font-family: monospace; font-size: 1.1rem; font-weight: 800; color: var(--text-secondary); letter-spacing: 2px; margin-bottom: 8px;}
-.idle-sub { font-size: 0.85rem; font-weight: normal; color: #64748b; font-family: monospace; text-transform: uppercase; }
+.idle-text { font-family: monospace; font-size: 1.1rem; font-weight: 800; color: var(--text-secondary); letter-spacing: 2px; margin-bottom: 8px; pointer-events: none;}
+.idle-sub { font-size: 0.85rem; font-weight: normal; color: #64748b; font-family: monospace; text-transform: uppercase; pointer-events: none;}
 .idle-sub span { color: var(--accent); font-weight: bold; font-size: 1.1rem; margin-right: 4px;}
 
 @keyframes breathe {
@@ -461,6 +461,50 @@ input.suggestions-active {
 @media screen and (min-width: 1024px) {
     body { padding-bottom: 0 !important; }
 }
+
+/* --- ÚJ: SETUP SHEET SELECTOR --- */
+.setup-select { 
+    width: 100%; padding: 14px 15px; 
+    background: #020617; border: 1px solid var(--accent); 
+    color: white; border-radius: 8px; font-size: 1.1rem; 
+    outline: none; margin-bottom: 20px; font-family: monospace; 
+    font-weight: bold; text-align: center;
+}
+.setup-select:focus { box-shadow: 0 0 0 3px rgba(59,130,246,0.3); }
+.btn-print { width: 100%; background: var(--ok-color); border: none; color: white; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
+.btn-print:active { transform: scale(0.98); background: #059669; }
+
+/* --- ÚJ: SETUP SHEET NYOMTATÁSI NÉZET (A4) --- */
+@media print {
+    @page { size: A4 portrait; margin: 15mm; }
+    body { background: white !important; -webkit-print-color-adjust: exact; }
+    body * { visibility: hidden; }
+    #printArea, #printArea * { visibility: visible; color: black !important; font-family: 'Inter', Arial, sans-serif !important; }
+    #printArea { position: absolute; left: 0; top: 0; width: 100%; background: white; }
+    
+    .print-page { 
+        page-break-after: always; 
+        width: 100%; 
+        box-sizing: border-box;
+    }
+    .print-page:last-child { page-break-after: auto; }
+    
+    .print-header { border-bottom: 3px solid #0f172a; padding-bottom: 15px; margin-bottom: 25px; }
+    .print-header h2 { margin: 0 0 15px 0; font-size: 26pt; color: #0f172a !important; text-transform: uppercase; text-align: center; letter-spacing: 2px; }
+    .print-meta { display: flex; justify-content: space-between; font-size: 13pt; background: #f1f5f9 !important; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-family: monospace !important; }
+    
+    .print-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    .print-table th { background: #0f172a !important; color: white !important; padding: 12px; text-align: left; font-size: 13pt; border: 1px solid #0f172a; text-transform: uppercase; }
+    .print-table td { padding: 10px 12px; border: 1px solid #cbd5e1; font-size: 13pt; font-family: monospace !important; font-weight: bold; }
+    .print-table tr:nth-child(even) td { background: #f8fafc !important; }
+    
+    .poz-col { width: 25%; text-align: center; font-size: 14pt !important; color: #1d4ed8 !important;}
+    .cikk-col { width: 55%; }
+    .check-col { width: 20%; text-align: center; }
+    .checkbox { width: 22px; height: 22px; border: 2px solid #64748b; border-radius: 4px; margin: 0 auto; }
+    
+    .print-footer { text-align: center; font-size: 10pt; color: #94a3b8 !important; margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 10px; font-family: monospace !important;}
+}
 </style>
 </head>
 <body>
@@ -488,6 +532,11 @@ input.suggestions-active {
 <div id="idleState">
     <div class="idle-text">FORVIA TERMINAL KÉSZ</div>
     <div class="idle-sub" id="dbSizeDisplay">ADATBÁZIS BETÖLTÉSE...</div>
+    <div style="margin-top: 25px; width: 100%; display: flex; justify-content: center; pointer-events: auto;">
+        <div class="f-btn both" style="font-size: 0.85rem; letter-spacing: 1px; padding: 10px 20px; display: flex; align-items: center; gap: 8px;" onclick="openSetupModal()">
+            <span style="font-size: 1.2rem;">📄</span> SETUP SHEET NYOMTATÁS
+        </div>
+    </div>
 </div>
 
 <div id="eredmeny"></div>
@@ -505,6 +554,21 @@ input.suggestions-active {
             </div>
     </div>
 </div>
+
+<div class="modal-overlay" id="setupModal" onclick="if(event.target===this) closeSetupModal()">
+    <div class="modal-content" style="max-width: 400px; padding: 20px; background: var(--bg-app);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+            <div style="color: white; font-weight: bold; font-family: monospace; font-size: 1.1rem;">SETUP SHEET GENERÁLÁS</div>
+            <div class="modal-close" onclick="closeSetupModal()">✕</div>
+        </div>
+        <select id="setupModelSelect" class="setup-select">
+            <option value="">Adatbázis betöltése...</option>
+        </select>
+        <button class="btn-print" onclick="generateSetupSheet()">Generálás és Nyomtatás</button>
+    </div>
+</div>
+
+<div id="printArea"></div>
 
 <div id="kbContainer">
     <div id="viewNumeric">
@@ -603,7 +667,6 @@ window.clearSearch = function() {
     if(idle) idle.style.display = 'flex';
 };
 
-// --- ÚJ: CSAK AZ EGYEDI CIKKSZÁMOK MEGJELENÍTÉSE ---
 function calculateStats() {
     const totalParts = uniqueIdsArr.length;
     const display = document.getElementById('dbSizeDisplay');
@@ -910,6 +973,131 @@ window.openModelModal = function(modelName) {
 window.closeModelModal = function() {
     if(typeof provideFeedback === 'function') provideFeedback();
     document.getElementById('modelModal').style.display = 'none';
+};
+
+
+// --- ÚJ: SETUP SHEET GENERÁLÓ LOGIKA ---
+window.openSetupModal = function() {
+    if(typeof provideFeedback === 'function') provideFeedback();
+    
+    // Modellek összegyűjtése
+    let models = new Set();
+    ultetes.forEach(r => { if(r[2]) models.add(r[2].toUpperCase()); });
+    
+    let select = document.getElementById('setupModelSelect');
+    select.innerHTML = '<option value="">Válassz modellt a listából...</option>';
+    
+    Array.from(models).sort().forEach(m => {
+        select.innerHTML += `<option value="${m}">${m}</option>`;
+    });
+    
+    document.getElementById('setupModal').style.display = 'flex';
+};
+
+window.closeSetupModal = function() {
+    if(typeof provideFeedback === 'function') provideFeedback();
+    document.getElementById('setupModal').style.display = 'none';
+};
+
+window.generateSetupSheet = function() {
+    let sel = document.getElementById('setupModelSelect');
+    let modelName = sel.value;
+    if(!modelName) { alert("Kérlek, válassz ki egy modellt a listából!"); return; }
+    
+    // 1. Kiválasztott modell alkatrészeinek kigyűjtése (beültetésből)
+    let requiredParts = new Set();
+    ultetes.forEach(r => {
+        if(r[2] && r[2].toUpperCase() === modelName) {
+            requiredParts.add((r[0] || "").toUpperCase());
+        }
+    });
+    
+    // 2. Keresztezés a Feeder Bankkal
+    let printData = {}; // Struktúra: { gepNev: { '100': [], '200': [] } }
+    
+    bank.forEach(r => {
+        let bGep = r[0] || "Ismeretlen Gép";
+        let bPoz = r[1] || "";
+        let bCikk = (r[2] || "").toUpperCase();
+        let bModel = (r[3] || "").toUpperCase();
+        
+        // Ha az alkatrész kell a modellhez, VAGY eleve ezen a modellnéven van a bankban
+        if(bModel === modelName || requiredParts.has(bCikk)) {
+            // Oldal meghatározása (Ha 2-essel kezdődik = 200, minden más /tálca is/ = 100)
+            let oldal = bPoz.toString().trim().startsWith('2') ? '200' : '100';
+            
+            if(!printData[bGep]) printData[bGep] = { '100': [], '200': [] };
+            
+            // Duplikációk szűrése egy gépen/oldalon belül
+            let exists = printData[bGep][oldal].find(x => x.poz === bPoz && x.cikk === bCikk);
+            if(!exists) {
+                printData[bGep][oldal].push({ poz: bPoz, cikk: bCikk });
+            }
+        }
+    });
+    
+    // 3. HTML generálás a nyomtatáshoz
+    let html = '';
+    let gepek = Object.keys(printData).sort();
+    
+    if(gepek.length === 0) {
+        alert(`A(z) ${modelName} modellhez nem található Feeder Bank adat!`);
+        return;
+    }
+    
+    gepek.forEach(gep => {
+        ['100', '200'].forEach(oldal => {
+            let items = printData[gep][oldal];
+            if(items.length > 0) {
+                // Sorbarendezés pozíció szerint (számként)
+                items.sort((a,b) => {
+                    let numA = parseInt(a.poz.replace(/\D/g, '')) || 0;
+                    let numB = parseInt(b.poz.replace(/\D/g, '')) || 0;
+                    if(numA === numB) return a.poz.localeCompare(b.poz);
+                    return numA - numB;
+                });
+                
+                let oldalNev = oldal === '100' ? '100-as Oldal (+ Tálcás)' : '200-as Oldal';
+                
+                html += `
+                <div class="print-page">
+                    <div class="print-header">
+                        <h2>FORVIA SETUP SHEET</h2>
+                        <div class="print-meta">
+                            <div><b>Modell:</b> ${modelName}</div>
+                            <div><b>Gép:</b> ${gep}</div>
+                            <div><b>Oldal:</b> ${oldalNev}</div>
+                            <div><b>Dátum:</b> ${new Date().toLocaleString('hu-HU', {year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'})}</div>
+                        </div>
+                    </div>
+                    <table class="print-table">
+                        <thead>
+                            <tr>
+                                <th>Pozíció</th>
+                                <th>Cikkszám</th>
+                                <th>Ellenőrzés (Operátor)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${items.map(i => `
+                            <tr>
+                                <td class="poz-col">${i.poz}</td>
+                                <td class="cikk-col">${i.cikk}</td>
+                                <td class="check-col"><div class="checkbox"></div></td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                    <div class="print-footer">Azonosító: ${modelName} / ${gep} / ${oldalNev} | Forvia Smart Search &copy;</div>
+                </div>`;
+            }
+        });
+    });
+    
+    document.getElementById('printArea').innerHTML = html;
+    closeSetupModal();
+    
+    // Kis késleltetés a renderelésnek, majd nyomtatás
+    setTimeout(() => { window.print(); }, 300);
 };
 
 
