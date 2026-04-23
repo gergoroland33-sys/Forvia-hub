@@ -233,7 +233,7 @@ input.suggestions-active {
 /* --- SZOLID FIX HÁTTÉR (IDLE STATE) --- */
 #idleState {
     display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-    width: 100%; max-width: 600px; height: 250px; margin: 0 auto; padding: 15px 15px 0 15px;
+    width: 100%; max-width: 600px; height: 250px; margin: 0 auto; padding: 30px 15px 0 15px;
     user-select: none; text-align: center; box-sizing: border-box;
 }
 .idle-text { font-family: monospace; font-size: 1.1rem; font-weight: 800; color: var(--text-secondary); letter-spacing: 2px; margin-bottom: 8px; pointer-events: none;}
@@ -468,7 +468,7 @@ input.suggestions-active {
 .btn-print { width: 100%; background: var(--ok-color); border: none; color: white; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
 .btn-print:active { transform: scale(0.98); background: #059669; }
 
-/* --- OKOS, GARANTÁLTAN A4-RE ILLESZKEDŐ NYOMTATÁSI KÉP --- */
+/* --- JAVÍTOTT: OKOS, GARANTÁLTAN A4-RE ILLESZKEDŐ NYOMTATÁSI KÉP --- */
 @media print {
     @page { size: A4 portrait; margin: 10mm; }
     body { background: white !important; -webkit-print-color-adjust: exact; }
@@ -492,13 +492,14 @@ input.suggestions-active {
     .print-h-sub { font-size: 16pt; font-weight: bold; color: #334155 !important; }
     
     .print-table { width: 100%; border-collapse: collapse; }
-    .print-table th { background: #e2e8f0 !important; color: #000 !important; padding: 6px; text-align: center; font-size: 11pt; border: 1px solid #000; text-transform: uppercase; }
-    .print-table td { padding: 4px 6px; border: 1px solid #000; font-size: 11pt; font-family: monospace !important; font-weight: bold; line-height: 1.2; text-align: center; }
+    /* JAVÍTVA: Kisebb padding és betűméret, hogy a hosszú listák is elférjenek */
+    .print-table th { background: #e2e8f0 !important; color: #000 !important; padding: 4px; text-align: center; font-size: 9pt; border: 1px solid #000; text-transform: uppercase; }
+    .print-table td { padding: 2px 4px; border: 1px solid #000; font-size: 9pt; font-family: monospace !important; font-weight: bold; line-height: 1.1; text-align: center; }
     
-    .poz-col { width: 25%; font-size: 13pt !important;}
+    .poz-col { width: 25%; font-size: 10pt !important;}
     .cikk-col { width: 55%; }
     .check-col { width: 20%; }
-    .checkbox { width: 18px; height: 18px; border: 2px solid #000; border-radius: 3px; margin: 0 auto; }
+    .checkbox { width: 14px; height: 14px; border: 1px solid #000; border-radius: 3px; margin: 0 auto; }
 }
 </style>
 </head>
@@ -506,7 +507,12 @@ input.suggestions-active {
 
 <div class="top-bar">
     <div class="brand">FORVIA TERMINAL</div>
-    <div class="date-display" id="dateText"></div>
+    <div style="display:flex; align-items:center; gap:15px;">
+        <button onclick="openSetupModal()" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text-secondary); border-radius: 6px; padding: 4px 10px; font-family: monospace; font-size: 0.75rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 5px;">
+            <span style="font-size: 0.9rem;">📄</span> SETUP SHEET
+        </button>
+        <div class="date-display" id="dateText"></div>
+    </div>
 </div>
 
 <div class="search-wrapper">
@@ -525,16 +531,8 @@ input.suggestions-active {
 </div>
 
 <div id="idleState">
-    <div style="width: 100%; display: flex; justify-content: flex-start; margin-bottom: 30px; pointer-events: auto;">
-        <div class="f-btn both" style="font-size: 0.85rem; letter-spacing: 1px; padding: 10px 20px; display: flex; align-items: center; gap: 8px;" onclick="openSetupModal()">
-            <span style="font-size: 1.2rem;">📄</span> SETUP SHEET NYOMTATÁS
-        </div>
-    </div>
-
-    <div style="width: 100%; text-align: center;">
-        <div class="idle-text">FORVIA TERMINAL KÉSZ</div>
-        <div class="idle-sub" id="dbSizeDisplay">ADATBÁZIS BETÖLTÉSE...</div>
-    </div>
+    <div class="idle-text">FORVIA TERMINAL KÉSZ</div>
+    <div class="idle-sub" id="dbSizeDisplay">ADATBÁZIS BETÖLTÉSE...</div>
 </div>
 
 <div id="eredmeny"></div>
@@ -969,7 +967,7 @@ window.closeModelModal = function() {
 };
 
 
-// --- ÚJ: SETUP SHEET NYOMTATÁS LOGIKA ---
+// --- SETUP SHEET NYOMTATÁS LOGIKA ---
 window.openSetupModal = function() {
     if(typeof provideFeedback === 'function') provideFeedback();
     
@@ -1027,7 +1025,7 @@ window.generateSetupSheet = function() {
             
             if(!printData[bGep]) printData[bGep] = { '100': [], '200': [] };
             
-            // JAVÍTVA: Szigorú pozíció deduplikáció a nyomtatásnál
+            // JAVÍTVA: Csak a fizikai pozíciót veszi alapul, kizárva a felesleges duplikációt
             let exists = printData[bGep][oldal].find(x => x.poz === bPoz);
             if(!exists) {
                 printData[bGep][oldal].push({ poz: bPoz, cikk: bCikk });
@@ -1056,31 +1054,21 @@ window.generateSetupSheet = function() {
                 
                 let oldalNev = oldal === '100' ? '100-AS OLDAL' : '200-AS OLDAL';
                 
-                let tableHTML = '';
-                if(items.length > 45) {
-                    let half = Math.ceil(items.length / 2);
-                    let col1 = items.slice(0, half);
-                    let col2 = items.slice(half);
-                    tableHTML = `
-                    <div style="display: flex; gap: 15px; flex: 1;">
-                        <table class="print-table" style="width: 49%;">
-                            <thead><tr><th>Pozíció</th><th>Cikkszám</th><th>Ellenőrzés</th></tr></thead>
-                            <tbody>${col1.map(i => `<tr><td class="poz-col">${i.poz}</td><td class="cikk-col">${i.cikk}</td><td class="check-col"><div class="checkbox"></div></td></tr>`).join('')}</tbody>
-                        </table>
-                        <table class="print-table" style="width: 49%;">
-                            <thead><tr><th>Pozíció</th><th>Cikkszám</th><th>Ellenőrzés</th></tr></thead>
-                            <tbody>${col2.map(i => `<tr><td class="poz-col">${i.poz}</td><td class="cikk-col">${i.cikk}</td><td class="check-col"><div class="checkbox"></div></td></tr>`).join('')}</tbody>
-                        </table>
-                    </div>`;
-                } else {
-                    tableHTML = `
-                    <div style="flex: 1;">
-                        <table class="print-table">
-                            <thead><tr><th>Pozíció</th><th>Cikkszám</th><th>Ellenőrzés</th></tr></thead>
-                            <tbody>${items.map(i => `<tr><td class="poz-col">${i.poz}</td><td class="cikk-col">${i.cikk}</td><td class="check-col"><div class="checkbox"></div></td></tr>`).join('')}</tbody>
-                        </table>
-                    </div>`;
+                // JAVÍTVA: Dinamikus darabolás (chunking), hogy végtelen sok sor esetén is egymás mellé (több oszlopba) tördeljen, garantálva az A4-et.
+                let maxPerCol = 45; // 45 sor fér el biztonságosan egy A4-es oszlopban
+                let numCols = Math.ceil(items.length / maxPerCol);
+                
+                let tableHTML = `<div style="display: flex; gap: 10px; flex: 1; align-items: flex-start; width: 100%;">`;
+                
+                for(let c = 0; c < numCols; c++) {
+                    let chunk = items.slice(c * maxPerCol, (c + 1) * maxPerCol);
+                    tableHTML += `
+                    <table class="print-table" style="flex: 1; min-width: 0;">
+                        <thead><tr><th>Pozíció</th><th>Cikkszám</th><th>Ellenőrzés</th></tr></thead>
+                        <tbody>${chunk.map(i => `<tr><td class="poz-col">${i.poz}</td><td class="cikk-col">${i.cikk}</td><td class="check-col"><div class="checkbox"></div></td></tr>`).join('')}</tbody>
+                    </table>`;
                 }
+                tableHTML += `</div>`;
                 
                 html += `
                 <div class="print-page">
