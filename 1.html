@@ -230,19 +230,23 @@ input.suggestions-active {
 }
 .f-btn.active.both:active { box-shadow: 0 0 0 #1e40af, inset 0 4px 8px rgba(0,0,0,0.6); transform: translateY(4px); }
 
-/* --- ÚJ: EGYSZERŰSÍTETT HÁTTÉR (IDLE STATE) --- */
+/* --- ÚJ: SZOLID "LÉLEGZŐ" HÁTTÉR (IDLE STATE) --- */
 #idleState {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    width: 100%; max-width: 500px; margin: 30px auto; padding: 0 15px;
-    opacity: 0.6; transition: opacity 0.3s ease;
+    width: 100%; height: 250px; margin: 0 auto;
+    animation: breathe 3s ease-in-out infinite;
     user-select: none; pointer-events: none; text-align: center;
 }
-.idle-icon { font-size: 2.5rem; color: var(--accent); margin-bottom: 10px; filter: drop-shadow(0 0 10px rgba(59,130,246,0.3)); }
-.idle-title { font-family: monospace; font-size: 0.8rem; color: #64748b; letter-spacing: 3px; margin-bottom: 5px; text-transform: uppercase; }
-.idle-data { font-size: 1.1rem; color: white; font-weight: bold; font-family: monospace; }
-.idle-data span { color: var(--accent); font-size: 1.3rem; }
+.idle-text { font-family: monospace; font-size: 1.1rem; font-weight: 800; color: var(--text-secondary); letter-spacing: 2px; margin-bottom: 8px;}
+.idle-sub { font-size: 0.85rem; font-weight: normal; color: #64748b; font-family: monospace; text-transform: uppercase; }
+.idle-sub span { color: var(--accent); font-weight: bold; font-size: 1.1rem; margin-right: 4px;}
 
-/* --- ÚJ: FELUGRÓ MODAL ABLAK --- */
+@keyframes breathe {
+    0%, 100% { opacity: 0.3; transform: scale(0.98); }
+    50% { opacity: 0.8; transform: scale(1.02); }
+}
+
+/* --- FELUGRÓ MODAL ABLAK --- */
 .modal-overlay {
     display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px);
@@ -363,7 +367,6 @@ input.suggestions-active {
     .d-value { font-size: 0.85rem; text-align: center; color: white; font-weight: 500; white-space: nowrap; }
     .row-main .d-value { font-size: 0.95rem; font-weight: 700; white-space: normal; word-break: break-all;}
 
-
     /* --- PRO 3D BILLENTYŰZET --- */
     #kbContainer {
         display: block;
@@ -483,9 +486,8 @@ input.suggestions-active {
 </div>
 
 <div id="idleState">
-    <div class="idle-icon">📊</div>
-    <div class="idle-title">FORVIA ADATBÁZIS</div>
-    <div class="idle-data" id="dbSizeDisplay">BETÖLTÉS FOLYAMATBAN...</div>
+    <div class="idle-text">FORVIA TERMINAL KÉSZ</div>
+    <div class="idle-sub" id="dbSizeDisplay">ADATBÁZIS BETÖLTÉSE...</div>
 </div>
 
 <div id="eredmeny"></div>
@@ -601,12 +603,12 @@ window.clearSearch = function() {
     if(idle) idle.style.display = 'flex';
 };
 
-// --- ÚJ: EGYSZERŰSÍTETT STATISZTIKA ---
+// --- ÚJ: CSAK AZ EGYEDI CIKKSZÁMOK MEGJELENÍTÉSE ---
 function calculateStats() {
-    const totalRecords = bank.length + ultetes.length;
+    const totalParts = uniqueIdsArr.length;
     const display = document.getElementById('dbSizeDisplay');
     if (display) {
-        display.innerHTML = `BETÖLTÉS KÉSZ<br><span>${totalRecords.toLocaleString('hu-HU')}</span> REKORD`;
+        display.innerHTML = `<span>${totalParts.toLocaleString('hu-HU')}</span> DB EGYEDI CIKKSZÁM BETÖLTVE`;
     }
 }
 
@@ -825,7 +827,6 @@ function keres(k){
                 let oldal = (r[1] || "").toUpperCase();
                 let mc = getModelColor(r[2]); 
                 
-                // ÚJ: Kattintható kártya hozzáadása a beültetésnél
                 h+=`
                 <div class="card clickable-card" onclick="openModelModal('${r[2]}')">
                     <div class="color-strip" style="background:${mc}"></div>
@@ -853,7 +854,7 @@ function keres(k){
     e.innerHTML=h||`<div style="text-align:center; padding:30px; color:#64748b;">Nincs találat: "${k}"</div>`;
 }
 
-// --- ÚJ: MODAL (FELUGRÓ ABLAK) LOGIKA ---
+// --- MODAL (FELUGRÓ ABLAK) LOGIKA ---
 window.openModelModal = function(modelName) {
     if(typeof provideFeedback === 'function') provideFeedback();
     
@@ -876,7 +877,6 @@ window.openModelModal = function(modelName) {
         }
     }
     
-    // Rendezés: Először Oldal szerint (BOT majd TOP), aztán Cikkszám szerint ABC-ben
     dedupData.sort((a,b) => {
         let oA = (a[1] || "").toUpperCase();
         let oB = (b[1] || "").toUpperCase();
