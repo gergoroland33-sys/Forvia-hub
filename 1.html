@@ -233,7 +233,7 @@ input.suggestions-active {
 /* --- SZOLID FIX HÁTTÉR (IDLE STATE) --- */
 #idleState {
     display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-    width: 100%; max-width: 600px; height: 250px; margin: 0 auto; padding: 15px 15px 0 15px;
+    width: 100%; max-width: 600px; height: 250px; margin: 0 auto; padding: 30px 15px 0 15px;
     user-select: none; text-align: center; box-sizing: border-box;
 }
 .idle-text { font-family: monospace; font-size: 1.1rem; font-weight: 800; color: var(--text-secondary); letter-spacing: 2px; margin-bottom: 8px; pointer-events: none;}
@@ -468,7 +468,7 @@ input.suggestions-active {
 .btn-print { width: 100%; background: var(--ok-color); border: none; color: white; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
 .btn-print:active { transform: scale(0.98); background: #059669; }
 
-/* --- JAVÍTOTT: OKOS, GARANTÁLTAN A4-RE ILLESZKEDŐ NYOMTATÁSI KÉP --- */
+/* --- JAVÍTOTT: OKOS, ÜRES LAP NÉLKÜLI NYOMTATÁSI KÉP --- */
 @media print {
     @page { size: A4 portrait; margin: 10mm; }
     body { background: white !important; -webkit-print-color-adjust: exact; }
@@ -477,13 +477,18 @@ input.suggestions-active {
     #printArea { position: absolute; left: 0; top: 0; width: 100%; background: white; }
     
     .print-page { 
-        page-break-after: always; 
+        page-break-after: always;
+        break-after: page;
         width: 100%; 
+        /* JAVÍTVA: Eltávolítva a fix magasság, ez okozta az extra üres lapokat! */
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
     }
-    .print-page:last-child { page-break-after: auto; }
+    .print-page:last-child { 
+        page-break-after: auto; 
+        break-after: auto;
+    }
     
     .print-header { border: 2px solid #000; padding: 12px; margin-bottom: 12px; text-align: center; border-radius: 8px; background: #f8fafc !important; }
     .print-h-title { font-size: 22pt; font-weight: 900; margin-bottom: 6px; text-transform: uppercase; }
@@ -881,7 +886,6 @@ function keres(k){
                 let oldal = (r[1] || "").toUpperCase();
                 let mc = getModelColor(r[2]); 
                 
-                // JAVÍTVA: Visszakerültek a TOP és BOT specifikus színek!
                 if(oldal === 'TOP') mc = '#ef4444'; 
                 if(oldal === 'BOT') mc = '#10b981'; 
 
@@ -1026,7 +1030,6 @@ window.generateSetupSheet = function() {
             
             if(!printData[bGep]) printData[bGep] = { '100': [], '200': [] };
             
-            // Szigorú pozíció deduplikáció a nyomtatásnál
             let exists = printData[bGep][oldal].find(x => x.poz === bPoz);
             if(!exists) {
                 printData[bGep][oldal].push({ poz: bPoz, cikk: bCikk });
@@ -1055,7 +1058,6 @@ window.generateSetupSheet = function() {
                 
                 let oldalNev = oldal === '100' ? '100-AS OLDAL' : '200-AS OLDAL';
                 
-                // JAVÍTVA: Csökkentett maxPerCol (35), hogy garantáltan ráférjen a lapra vágás nélkül. Több oszlopos dinamikus bontás!
                 let maxPerCol = 35; 
                 let numCols = Math.ceil(items.length / maxPerCol);
                 
