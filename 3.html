@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Forvia SMT | Pro Műszaknaptár V5</title>
+    <title>Forvia SMT | Pro Premium Műszaknaptár</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
         :root {
-            /* Corporate SMT Színek */
+            /* Premium Dark Theme */
             --bg-base: #020617;
-            --bg-panel: #0f172a;
-            --bg-card: #1e293b;
-            --border: #334155;
-            --border-light: #475569;
+            --bg-panel: rgba(15, 23, 42, 0.7);
+            --bg-card: rgba(30, 41, 59, 0.8);
+            --border: rgba(51, 65, 85, 0.6);
+            --border-light: rgba(71, 85, 105, 0.4);
             
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --accent: #3b82f6;
-            --danger: #ef4444; /* Vörös a mai napnak */
+            --danger: #ef4444; 
             
-            /* Műszak specifikus állandó színek (Ezek határozzák meg a UI-t) */
+            /* Shift Colors */
             --color-a: #3b82f6; /* Kék */
             --color-b: #10b981; /* Zöld */
             --color-c: #f59e0b; /* Sárga */
@@ -32,236 +32,268 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-base);
+            background-image: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
             color: var(--text-main);
             margin: 0; padding: 0;
             display: flex; flex-direction: column;
-            height: 100dvh; /* Görgetés nélküli nézet */
+            height: 100dvh;
             overflow: hidden;
         }
 
         /* --- APP HEADER --- */
         .app-header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 5px 15px; background: var(--bg-panel);
+            padding: 10px 20px; 
+            background: var(--bg-panel);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border);
-            height: 50px; flex-shrink: 0;
+            height: 60px; flex-shrink: 0;
+            z-index: 10;
         }
 
-        .logo-area h1 { margin: 0; font-size: 1.1rem; font-weight: 900; letter-spacing: 0.5px; }
+        .logo-area h1 { margin: 0; font-size: 1.3rem; font-weight: 900; letter-spacing: 0.5px; }
         .logo-area span { color: var(--accent); }
 
-        .btn-today {
-            background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.5);
-            color: var(--danger); padding: 5px 12px; border-radius: 8px;
-            font-size: 0.75rem; font-weight: 800; cursor: pointer;
-            display: flex; align-items: center; gap: 6px; transition: 0.2s;
-            text-transform: uppercase; letter-spacing: 1px;
-            box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
-        }
-        .btn-today:active { transform: scale(0.95); background: var(--danger); color: white; }
+        .header-actions { display: flex; gap: 10px; }
 
-        /* --- MŰSZAK GYORSVÁLTÓK (FÜLEK) --- */
-        .shift-tabs {
-            display: flex; gap: 8px; padding: 6px 15px;
-            background: var(--bg-base); overflow-x: auto;
-            border-bottom: 1px solid var(--border); flex-shrink: 0;
-            scrollbar-width: none;
+        .btn-modern {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border);
+            color: var(--text-main); padding: 8px 16px; border-radius: 12px;
+            font-size: 0.8rem; font-weight: 700; cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; align-items: center; gap: 8px;
         }
-        .shift-tabs::-webkit-scrollbar { display: none; }
-
-        .tab-btn {
-            background: var(--bg-panel); border: 2px solid var(--border);
-            color: var(--text-muted); padding: 6px 14px; border-radius: 20px;
-            font-size: 0.8rem; font-weight: 800; white-space: nowrap; cursor: pointer;
-            transition: 0.2s;
-        }
-        .tab-btn:active { transform: scale(0.92); }
+        .btn-modern:hover { background: rgba(255, 255, 255, 0.1); }
+        .btn-modern:active { transform: scale(0.95); }
         
-        /* Színkódolt fülek */
-        .tab-btn.tab-ALL.active { background: var(--text-main); color: var(--bg-base); border-color: var(--text-main); }
-        .tab-btn.tab-A { border-color: rgba(59, 130, 246, 0.3); } .tab-btn.tab-A.active { background: var(--color-a); color: white; border-color: var(--color-a); box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4); }
-        .tab-btn.tab-B { border-color: rgba(16, 185, 129, 0.3); } .tab-btn.tab-B.active { background: var(--color-b); color: white; border-color: var(--color-b); box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4); }
-        .tab-btn.tab-C { border-color: rgba(245, 158, 11, 0.3); } .tab-btn.tab-C.active { background: var(--color-c); color: white; border-color: var(--color-c); box-shadow: 0 4px 10px rgba(245, 158, 11, 0.4); }
-        .tab-btn.tab-D { border-color: rgba(239, 68, 68, 0.3); }  .tab-btn.tab-D.active { background: var(--color-d); color: white; border-color: var(--color-d); box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4); }
+        .btn-today { color: var(--danger); border-color: rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.1); }
+        .btn-today:hover { background: rgba(239, 68, 68, 0.2); }
 
-        /* --- NAPTÁR PANEL --- */
-        .calendar-panel {
-            flex: 1; display: flex; flex-direction: column;
-            padding: 5px 10px; overflow: hidden;
+        /* --- SEGMENTED CONTROL (Szűrő) --- */
+        .filter-container {
+            padding: 15px 20px;
+            background: var(--bg-base);
+            z-index: 5;
+        }
+        .segmented-control {
+            display: flex; background: rgba(15, 23, 42, 0.8);
+            border-radius: 12px; padding: 4px; border: 1px solid var(--border);
+            position: relative;
+        }
+        .seg-btn {
+            flex: 1; text-align: center; padding: 8px 0;
+            font-size: 0.8rem; font-weight: 700; color: var(--text-muted);
+            cursor: pointer; z-index: 2; transition: color 0.3s;
+            border-radius: 8px;
+        }
+        .seg-btn.active { color: var(--text-main); }
+        .seg-slider {
+            position: absolute; top: 4px; bottom: 4px;
+            background: rgba(255,255,255,0.1); border-radius: 8px;
+            z-index: 1; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s;
         }
 
-        .cal-nav {
+        /* --- LAYOUT WRAPPER --- */
+        .main-layout {
+            display: flex; flex: 1; overflow: hidden;
+            flex-direction: column; /* Default: Mobile */
+        }
+
+        /* --- CALENDAR PANEL --- */
+        .calendar-section {
+            flex: 1; display: flex; flex-direction: column;
+            padding: 0 15px 15px 15px; overflow: hidden;
+        }
+
+        .cal-header {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 5px; padding: 0 5px;
+            margin-bottom: 15px;
         }
         .cal-nav-btn {
-            background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-main);
-            width: 32px; height: 32px; border-radius: 8px;
-            font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            transition: 0.2s;
+            background: transparent; border: none; color: var(--text-muted);
+            font-size: 1.5rem; cursor: pointer; padding: 5px 15px;
+            transition: color 0.2s;
         }
-        .cal-nav-btn:active { transform: scale(0.9); background: var(--border); }
-        .current-month-label { font-size: 1rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+        .cal-nav-btn:hover { color: var(--text-main); }
+        .cal-nav-btn:active { transform: scale(0.9); }
+        .month-title { font-size: 1.2rem; font-weight: 900; letter-spacing: 1px; }
 
         .weekdays {
             display: grid; grid-template-columns: repeat(7, 1fr);
-            text-align: center; margin-bottom: 5px;
+            text-align: center; margin-bottom: 10px;
         }
-        .weekday-label { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
+        .weekday { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
 
+        .cal-grid-wrapper {
+            flex: 1; overflow: hidden; position: relative;
+        }
         .calendar-grid {
             display: grid; grid-template-columns: repeat(7, 1fr);
-            gap: 4px; flex: 1; overflow-y: auto; align-content: start;
-            padding-right: 2px; padding-bottom: 5px;
+            gap: 6px; height: 100%; align-content: start;
+            overflow-y: auto; padding-right: 4px; padding-bottom: 20px;
+            /* Swipe animáció előkészítés */
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
         }
         .calendar-grid::-webkit-scrollbar { width: 4px; }
         .calendar-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-        .cal-cell {
-            background: var(--bg-panel); border: 1px solid var(--border);
-            border-radius: 8px; display: flex; flex-direction: column;
-            padding: 4px; cursor: pointer; min-height: 48px;
-            transition: 0.15s; position: relative;
+        /* Cellák */
+        .cell {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 6px; cursor: pointer;
+            min-height: 85px; display: flex; flex-direction: column;
+            transition: all 0.2s; position: relative;
         }
-        @media (max-width: 400px) { 
-            .cal-cell { min-height: 65px; /* JAVÍTÁS: Megemelve, hogy ne csússzanak össze az elemek */ padding: 4px; gap: 4px; } 
-        }
-        .cal-cell:active { transform: scale(0.92); }
-        .cal-cell.empty { background: transparent; border: none; cursor: default; }
-        
-        /* MAI NAP VÖRÖS KIEMELÉSE */
-        .cal-cell.is-today { 
-            border: 2px solid var(--danger); 
-            background: rgba(239, 68, 68, 0.1); 
-            box-shadow: inset 0 0 15px rgba(239, 68, 68, 0.2), 0 0 10px rgba(239, 68, 68, 0.3); 
-        }
-        .cal-cell.is-today .cell-date { color: var(--danger); }
+        .cell:active { transform: scale(0.95); }
+        .cell.empty { background: transparent; border: none; cursor: default; }
+        .cell:hover:not(.empty) { background: rgba(51, 65, 85, 0.4); border-color: var(--text-muted); }
 
-        .cell-top { display: flex; justify-content: space-between; align-items: flex-start; }
-        .cell-date { font-size: 0.8rem; font-weight: 900; color: var(--text-main); }
-        .cell-weekend .cell-date { color: var(--text-muted); }
+        .cell.today {
+            border: 2px solid var(--danger); background: rgba(239, 68, 68, 0.05);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.15);
+        }
         
-        /* Ünnepnap kis pötty a naptárban */
+        .cell-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: auto;}
+        .date-num { font-size: 0.9rem; font-weight: 800; color: var(--text-main); }
+        .cell.weekend .date-num { color: var(--text-muted); }
+        .cell.today .date-num { color: var(--danger); }
         .holiday-dot { width: 6px; height: 6px; background: var(--danger); border-radius: 50%; box-shadow: 0 0 5px var(--danger);}
 
-        /* Műszak kiírás a cellákban - SZÍNKÓDOLT */
-        .cell-shifts { display: flex; flex-direction: column; gap: 3px; margin-top: auto; }
-        .s-tag {
-            font-size: 0.65rem; font-weight: 700; padding: 3px 4px; border-radius: 4px;
-            display: flex; justify-content: space-between; align-items: center; line-height: 1;
+        /* Műszak Címkék (Pills) */
+        .shifts-container { display: flex; flex-direction: column; gap: 4px; margin-top: 5px; }
+        .shift-pill {
+            font-size: 0.65rem; font-weight: 800; padding: 3px 6px; border-radius: 6px;
+            display: flex; justify-content: space-between; align-items: center;
         }
-        @media (max-width: 400px) { .s-tag { font-size: 0.55rem; padding: 2px 3px; } }
+        .pill-A { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+        .pill-B { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+        .pill-C { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
+        .pill-D { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+
+        /* Dimmed for filtering */
+        .cell.dimmed { opacity: 0.2; filter: grayscale(1); pointer-events: none; }
+        .shift-pill.highlight { justify-content: center; font-size: 0.75rem; padding: 6px; border: 1px solid currentColor; }
+
+        /* --- INSPECTOR (Részletek) --- */
+        .inspector-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            z-index: 100; opacity: 0; pointer-events: none; transition: 0.3s;
+        }
+        .inspector {
+            position: fixed; bottom: -100%; left: 0; width: 100%;
+            background: var(--bg-panel); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border); border-radius: 24px 24px 0 0;
+            padding: 20px; z-index: 101; transition: bottom 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            max-height: 85dvh; overflow-y: auto; box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+        }
+        .inspector.open { bottom: 0; }
+        .inspector-overlay.open { opacity: 1; pointer-events: all; }
+
+        .drag-handle { width: 40px; height: 5px; background: var(--border-light); border-radius: 10px; margin: 0 auto 20px auto; }
         
-        .s-tag span.s-letter { font-weight: 900; font-family: monospace; font-size: 0.75rem; }
-        
-        /* Műszakok dinamikus színei a naptárban */
-        .tag-A { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
-        .tag-B { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
-        .tag-C { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
-        .tag-D { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
-
-        /* Szűrt nézet (csak a keresett műszakot mutatja) */
-        .cal-cell.dimmed { opacity: 0.25; filter: grayscale(1); border-color: transparent; }
-        .s-tag.highlight { font-size: 0.75rem; padding: 5px; border-width: 2px; justify-content: center; }
-        .s-tag.highlight span.s-text { display: none; }
-
-        /* --- INSPECTOR DRAWER (Oldalsó/Fenti Panel) --- */
-        .drawer-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-            z-index: 1500; opacity: 0; pointer-events: none; transition: 0.3s;
-            backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
-        }
-        .drawer-overlay.open { opacity: 1; pointer-events: all; }
-
-        .inspector-drawer {
-            position: fixed; top: 0; right: -400px;
-            width: 100%; max-width: 400px; height: 100dvh;
-            background: var(--bg-panel); border-left: 1px solid var(--border);
-            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
-            transition: right 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-            z-index: 2000; display: flex; flex-direction: column;
-        }
-        .inspector-drawer.open { right: 0; }
-
-        /* JAVÍTÁS: Mobilon felülről jön be (Top Sheet), balra rendezett tartalommal */
-        @media (max-width: 768px) {
-            .inspector-drawer {
-                top: -100%; bottom: auto; right: 0; max-width: 100%; height: auto; max-height: 90dvh;
-                border-left: none; border-bottom: 1px solid var(--border);
-                border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;
-                transition: top 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-            }
-            .inspector-drawer.open { top: 0; }
-            .insp-header, .insp-body { align-items: flex-start; text-align: left; }
-        }
-
-        .drawer-handle { 
-            width: 45px; height: 5px; background: var(--border-light); 
-            border-radius: 10px; margin: 5px auto 12px auto; display: none; 
-        }
-        @media (max-width: 768px) { .drawer-handle { display: block; order: 3; /* Felülről lefelé a fogantyú alul van */ margin-bottom: 15px;} }
-
-        .insp-header { 
-            padding: 15px 20px; border-bottom: 1px solid var(--border); 
-            display: flex; justify-content: space-between; align-items: flex-start;
-            background: var(--bg-panel); 
-            border-bottom-left-radius: 0; border-bottom-right-radius: 0;
-        }
-        @media (max-width: 768px) {
-             .insp-header { border-bottom: none; padding-bottom: 5px;}
-        }
-
-        .insp-date { font-size: 1.4rem; font-weight: 900; color: white; line-height: 1.2;}
-        .insp-sub { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-top: 5px; display:flex; align-items:center; gap:6px;}
+        .insp-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .insp-date-title { font-size: 1.5rem; font-weight: 900; line-height: 1.1; }
+        .insp-date-sub { font-size: 0.9rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-top: 4px; }
         
         .btn-close {
-            background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-muted);
-            width: 32px; height: 32px; border-radius: 50%; font-size: 1rem;
-            display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;
+            background: rgba(255,255,255,0.1); border: none; color: var(--text-muted);
+            width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.2s; font-size: 1.2rem;
         }
-        .btn-close:active { background: var(--danger); color: white; border-color: var(--danger); transform: scale(0.9); }
+        .btn-close:active { transform: scale(0.9); background: var(--danger); color: white; }
 
-        .insp-body { padding: 15px 20px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: var(--bg-base); }
-
-        /* Ünnepnap és Névnap Kártyák (Ikonok eltávolítva) */
-        .info-card {
-            background: var(--bg-card); border-radius: 12px; padding: 10px 15px;
-            display: flex; align-items: flex-start; flex-direction: column; gap: 4px; border-left: 4px solid var(--accent);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%;
-        }
-        .info-card.holiday { border-left-color: var(--danger); background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-left: 4px solid var(--danger);}
-        .info-text-title { font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 800; letter-spacing: 0.5px; }
-        .info-text-val { font-size: 0.95rem; font-weight: 800; color: white; margin-top: 2px; }
-        .info-card.holiday .info-text-val { color: var(--danger); }
-
-        /* Műszak Kártyák - Dinamikus Színkódolt (Ikonok eltávolítva) */
-        .shift-card {
+        /* Kártyák az Inspectorban */
+        .detail-card {
             background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 12px; padding: 12px 15px; display: flex; align-items: center;
-            border-left: 4px solid transparent; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%;
+            border-radius: 16px; padding: 15px; margin-bottom: 10px;
+            display: flex; align-items: center; gap: 15px; position: relative; overflow: hidden;
         }
-        
-        .shift-card.tag-A { border-left-color: var(--color-a); background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, var(--bg-card) 30%); }
-        .shift-card.tag-B { border-left-color: var(--color-b); background: linear-gradient(90deg, rgba(16, 185, 129, 0.1) 0%, var(--bg-card) 30%); }
-        .shift-card.tag-C { border-left-color: var(--color-c); background: linear-gradient(90deg, rgba(245, 158, 11, 0.1) 0%, var(--bg-card) 30%); }
-        .shift-card.tag-D { border-left-color: var(--color-d); background: linear-gradient(90deg, rgba(239, 68, 68, 0.1) 0%, var(--bg-card) 30%); }
-        .shift-card.off { border-left-color: var(--border-light); opacity: 0.7; background: var(--bg-panel); }
+        .detail-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--accent); }
+        .card-holiday::before { background: var(--danger); }
+        .card-A::before { background: var(--color-a); }
+        .card-B::before { background: var(--color-b); }
+        .card-C::before { background: var(--color-c); }
+        .card-D::before { background: var(--color-d); }
+        .card-OFF::before { background: var(--text-muted); }
+        .card-OFF { opacity: 0.8; }
 
-        .shift-details { flex: 1; text-align: left;}
-        .shift-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
-        .shift-time { font-size: 1.05rem; font-weight: 900; color: white; margin-top: 2px; }
-        
-        .badge-group { display: flex; gap: 6px; }
-        .s-badge {
-            width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
-            font-weight: 900; font-size: 1.1rem; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        .card-content { flex: 1; }
+        .card-label { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .card-value { font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin-top: 4px; }
+        .card-holiday .card-value { color: var(--danger); }
+
+        .big-badge {
+            width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; font-weight: 900; color: white;
         }
-        
-        /* Badgek a kártyákban */
-        .bg-A { background: var(--color-a); } .bg-B { background: var(--color-b); }
-        .bg-C { background: var(--color-c); } .bg-D { background: var(--color-d); }
+        .bg-A { background: var(--color-a); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
+        .bg-B { background: var(--color-b); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
+        .bg-C { background: var(--color-c); box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); }
+        .bg-D { background: var(--color-d); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
         .bg-OFF { background: var(--border-light); }
 
+        /* --- DESKTOP DASHBOARD (Min 1024px) --- */
+        .btn-print { display: none; }
+        @media (min-width: 1024px) {
+            .btn-print { display: flex; }
+            .filter-container { padding: 15px 30px; }
+            .main-layout { flex-direction: row; padding: 0 15px 15px 15px; gap: 20px; }
+            
+            .calendar-section { flex: 2; background: var(--bg-panel); border-radius: 20px; border: 1px solid var(--border); padding: 20px; }
+            .cell { min-height: 100px; }
+            
+            /* Inspector as fixed side panel */
+            .inspector-overlay { display: none; }
+            .inspector {
+                position: static; flex: 1; border-radius: 20px; border: 1px solid var(--border);
+                max-height: none; padding: 25px; box-shadow: none; display: flex; flex-direction: column;
+            }
+            .drag-handle, .btn-close { display: none; }
+            #inspBody { flex: 1; overflow-y: auto; }
+            
+            .empty-state { text-align: center; color: var(--text-muted); margin-top: 50px; font-weight: 600; }
+        }
+
+        /* --- A4 NYOMTATÁSI NÉZET --- */
+        @media print {
+            @page { size: A4 portrait; margin: 15mm; }
+            body { background: white !important; color: black !important; display: block; height: auto; }
+            
+            /* Elrejtjük a UI elemeket */
+            .app-header .header-actions, .filter-container, .inspector, .inspector-overlay, .cal-nav-btn { display: none !important; }
+            
+            /* Fejléc formázása nyomtatáshoz */
+            .app-header { background: transparent !important; border-bottom: 2px solid black !important; padding: 0 0 10px 0; height: auto; margin-bottom: 20px; }
+            .logo-area h1 { color: black !important; font-size: 1.8rem; }
+            .logo-area span { color: var(--accent) !important; }
+            .print-subtitle { display: block !important; font-size: 1.2rem; font-weight: 800; margin-top: 5px; }
+            
+            .main-layout { display: block; padding: 0; }
+            .calendar-section { padding: 0; background: transparent !important; border: none !important; }
+            
+            .month-title { color: black !important; text-align: center; font-size: 1.8rem; margin-bottom: 20px; width: 100%; }
+            .cal-header { justify-content: center; }
+            
+            .weekday { color: black !important; font-size: 1rem; padding-bottom: 10px; border-bottom: 1px solid #ccc; }
+            
+            .calendar-grid { gap: 2px; padding: 0; overflow: visible; display: grid; grid-template-rows: repeat(6, 1fr); height: 210mm; /* A4 magasság kihasználása */ }
+            
+            .cell { background: white !important; border: 1px solid #aaa !important; border-radius: 0 !important; min-height: auto; padding: 8px; box-shadow: none !important; }
+            .cell.empty { border: none !important; }
+            .date-num { color: black !important; font-size: 1.2rem; }
+            .cell.weekend { background: #f8f9fa !important; }
+            
+            /* Színek nyomtatása (Böngészőfüggő, kell a print-color-adjust) */
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            
+            .shift-pill { font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; margin-top: 4px; border: 1px solid rgba(0,0,0,0.1); }
+            .pill-A { background: var(--color-a) !important; color: white !important; }
+            .pill-B { background: var(--color-b) !important; color: white !important; }
+            .pill-C { background: var(--color-c) !important; color: white !important; }
+            .pill-D { background: var(--color-d) !important; color: white !important; }
+        }
+
+        .print-subtitle { display: none; }
     </style>
 </head>
 <body>
@@ -269,71 +301,69 @@
     <header class="app-header">
         <div class="logo-area">
             <h1>FORVIA <span>SMT</span></h1>
+            <div class="print-subtitle">Műszaknaptár Beosztás</div>
         </div>
-        <button class="btn-today" onclick="jumpToToday()">
-            📍 Mai Nap
-        </button>
+        <div class="header-actions">
+            <button class="btn-modern btn-today" onclick="jumpToToday()">Mai Nap</button>
+            <button class="btn-modern btn-print" onclick="window.print()">🖨️ Nyomtatás</button>
+        </div>
     </header>
 
-    <div class="shift-tabs">
-        <button class="tab-btn tab-ALL active" onclick="setFilter('ALL')">Összes Műszak</button>
-        <button class="tab-btn tab-A" onclick="setFilter('A')">"A" Műszak</button>
-        <button class="tab-btn tab-B" onclick="setFilter('B')">"B" Műszak</button>
-        <button class="tab-btn tab-C" onclick="setFilter('C')">"C" Műszak</button>
-        <button class="tab-btn tab-D" onclick="setFilter('D')">"D" Műszak</button>
+    <div class="filter-container">
+        <div class="segmented-control" id="segControl">
+            <div class="seg-slider" id="segSlider"></div>
+            <div class="seg-btn active" onclick="setFilter('ALL', 0)">Összes</div>
+            <div class="seg-btn" onclick="setFilter('A', 1)">"A"</div>
+            <div class="seg-btn" onclick="setFilter('B', 2)">"B"</div>
+            <div class="seg-btn" onclick="setFilter('C', 3)">"C"</div>
+            <div class="seg-btn" onclick="setFilter('D', 4)">"D"</div>
+        </div>
     </div>
 
-    <div class="calendar-panel">
-        <div class="cal-nav">
-            <button class="cal-nav-btn" onclick="changeMonth(-1)">&#10094;</button>
-            <div class="current-month-label" id="monthLabel">2026 JANUÁR</div>
-            <button class="cal-nav-btn" onclick="changeMonth(1)">&#10095;</button>
-        </div>
-        
-        <div class="weekdays">
-            <div class="weekday-label">H</div><div class="weekday-label">K</div><div class="weekday-label">Sze</div>
-            <div class="weekday-label">Cs</div><div class="weekday-label">P</div><div class="weekday-label">Szo</div><div class="weekday-label">V</div>
-        </div>
-        
-        <div class="calendar-grid" id="calGrid"></div>
-    </div>
+    <main class="main-layout">
+        <section class="calendar-section">
+            <div class="cal-header">
+                <button class="cal-nav-btn" onclick="changeMonth(-1)">&#10094;</button>
+                <div class="month-title" id="monthLabel">2026 JANUÁR</div>
+                <button class="cal-nav-btn" onclick="changeMonth(1)">&#10095;</button>
+            </div>
+            
+            <div class="weekdays">
+                <div class="weekday">H</div><div class="weekday">K</div><div class="weekday">Sze</div>
+                <div class="weekday">Cs</div><div class="weekday">P</div><div class="weekday">Szo</div><div class="weekday">V</div>
+            </div>
+            
+            <div class="cal-grid-wrapper" id="calWrapper">
+                <div class="calendar-grid" id="calGrid"></div>
+            </div>
+        </section>
 
-    <div class="drawer-overlay" id="drawerOverlay" onclick="closeInspector()"></div>
-    <div class="inspector-drawer" id="inspectorDrawer">
-        
-        <div class="insp-header">
-            <div>
-                <div class="insp-date" id="inspDate">2026. Jan 01.</div>
-                <div class="insp-sub"><span id="inspDayName">Csütörtök</span></div>
+        <aside class="inspector" id="inspectorDrawer">
+            <div class="drag-handle"></div>
+            <div class="insp-header">
+                <div>
+                    <div class="insp-date-title" id="inspDate">Válassz napot</div>
+                    <div class="insp-date-sub" id="inspDayName">Részletek megtekintéséhez</div>
+                </div>
+                <button class="btn-close" onclick="closeInspector()">✕</button>
             </div>
-            <button class="btn-close" onclick="closeInspector()">✕</button>
-        </div>
-        
-        <div class="insp-body" id="inspBody">
+            <div id="inspBody">
+                <div class="empty-state desktop-only">Kattints egy napra a naptárban a részletes műszakinformációk megtekintéséhez.</div>
             </div>
-        <div class="drawer-handle"></div>
-    </div>
+        </aside>
+    </main>
+
+    <div class="inspector-overlay" id="drawerOverlay" onclick="closeInspector()"></div>
 
 <script>
-    // --- MAGYAR ÜNNEPNAPOK 2026 ---
+    // --- ADATOK (Ünnepnapok, Névnapok) ---
     const unnepnapok = {
-        "01-01": "Újév",
-        "03-15": "Nemzeti Ünnep",
-        "04-03": "Nagypéntek",
-        "04-05": "Húsvét",
-        "04-06": "Húsvéthétfő",
-        "05-01": "Munka Ünnepe",
-        "05-24": "Pünkösd",
-        "05-25": "Pünkösdhétfő",
-        "08-20": "Államalapítás Ünnepe",
-        "10-23": "1956-os Forradalom",
-        "11-01": "Mindenszentek",
-        "12-24": "Szenteste",
-        "12-25": "Karácsony",
-        "12-26": "Karácsony Másnapja"
+        "01-01": "Újév", "03-15": "Nemzeti Ünnep", "04-03": "Nagypéntek", "04-05": "Húsvét",
+        "04-06": "Húsvéthétfő", "05-01": "Munka Ünnepe", "05-24": "Pünkösd", "05-25": "Pünkösdhétfő",
+        "08-20": "Államalapítás", "10-23": "1956-os Forradalom", "11-01": "Mindenszentek",
+        "12-24": "Szenteste", "12-25": "Karácsony", "12-26": "Karácsony Másnapja"
     };
 
-    // --- NÉVNAPOK ---
     const nevnapok = {
         "01-01": "Alpár", "01-02": "Ábel", "01-03": "Genovéva", "01-04": "Titusz", "01-05": "Simon", "01-06": "Boldizsár", "01-07": "Attila", "01-08": "Gyöngyvér", "01-09": "Marcell", "01-10": "Melánia", "01-11": "Ágota", "01-12": "Ernő", "01-13": "Veronika", "01-14": "Bódog", "01-15": "Lóránt", "01-16": "Gusztáv", "01-17": "Antal", "01-18": "Piroska", "01-19": "Sára", "01-20": "Fábián", "01-21": "Ágnes", "01-22": "Vince", "01-23": "Zelma", "01-24": "Timót", "01-25": "Pál", "01-26": "Vanda", "01-27": "Angelika", "01-28": "Károly", "01-29": "Adél", "01-30": "Martina", "01-31": "Marcella",
         "02-01": "Ignác", "02-02": "Karolina", "02-03": "Balázs", "02-04": "Ráhel", "02-05": "Ágota", "02-06": "Dorottya", "02-07": "Tódor", "02-08": "Aranka", "02-09": "Abigél", "02-10": "Elvira", "02-11": "Bertold", "02-12": "Lívia", "02-13": "Ella", "02-14": "Bálint", "02-15": "Kolos", "02-16": "Julianna", "02-17": "Donát", "02-18": "Bernadett", "02-19": "Zsuzsanna", "02-20": "Aladár", "02-21": "Eleonóra", "02-22": "Gerzson", "02-23": "Alfréd", "02-24": "Mátyás", "02-25": "Géza", "02-26": "Viktor", "02-27": "Gábor", "02-28": "Elemér", "02-29": "Szökőnap",
@@ -349,7 +379,7 @@
         "12-01": "Elza", "12-02": "Melinda", "12-03": "Ferenc", "12-04": "Borbála", "12-05": "Vilma", "12-06": "Miklós", "12-07": "Ambrus", "12-08": "Mária", "12-09": "Natália", "12-10": "Judit", "12-11": "Árpád", "12-12": "Gabriella", "12-13": "Luca", "12-14": "Szilárda", "12-15": "Valér", "12-16": "Etelka", "12-17": "Lázár", "12-18": "Auguszta", "12-19": "Viola", "12-20": "Teofil", "12-21": "Tamás", "12-22": "Zénó", "12-23": "Viktória", "12-24": "Ádám, Éva", "12-25": "Eugénia", "12-26": "István", "12-27": "János", "12-28": "Kamilla", "12-29": "Tamás", "12-30": "Dávid", "12-31": "Szilveszter"
     };
 
-    // --- VÉGTELEN MŰSZAK GENERÁTOR MOTOR ---
+    // --- MŰSZAK GENERÁTOR MOTOR ---
     const anchorDate = new Date(Date.UTC(2026, 0, 9)); 
 
     function getShiftForDate(dateObj) {
@@ -363,7 +393,7 @@
         if (cycleDay >= 9 && cycleDay <= 11) return { day: 'D', night: 'C', off: ['A', 'B'] };
     }
 
-    // --- ALAP ADATOK ÉS ÁLLAPOT ---
+    // --- ÁLLAPOT ÉS VÁLTOZÓK ---
     let currentDate = new Date();
     const todayStr = new Date().toISOString().split('T')[0];
     let currentFilter = 'ALL';
@@ -371,30 +401,70 @@
     const monthNames = ["Január","Február","Március","Április","Május","Június","Július","Augusztus","Szeptember","Október","November","December"];
     const dayNames = ["Vasárnap","Hétfő","Kedd","Szerda","Csütörtök","Péntek","Szombat"];
 
+    // --- INICIALIZÁLÁS ---
+    window.onload = () => {
+        initSegmentedControl();
+        renderCalendar();
+        setupSwipe();
+    };
+
+    // --- SEGMENTED CONTROL LOGIKA ---
+    function initSegmentedControl() {
+        const slider = document.getElementById('segSlider');
+        slider.style.width = '20%';
+        slider.style.transform = 'translateX(0%)';
+    }
+
+    function setFilter(shift, index) {
+        currentFilter = shift;
+        
+        // UI Frissítés
+        const btns = document.querySelectorAll('.seg-btn');
+        btns.forEach(btn => btn.classList.remove('active'));
+        btns[index].classList.add('active');
+        
+        const slider = document.getElementById('segSlider');
+        slider.style.transform = `translateX(${index * 100}%)`;
+        
+        renderCalendar();
+    }
+
+    // --- NAPTÁR LOGIKA ÉS ANIMÁCIÓ ---
     function jumpToToday() {
         currentDate = new Date();
-        renderCalendar();
+        animateRender(0);
     }
 
     function changeMonth(delta) {
-        currentDate.setMonth(currentDate.getMonth() + delta);
-        renderCalendar();
+        animateRender(delta);
     }
 
-    function setFilter(shift) {
-        currentFilter = shift;
+    function animateRender(delta) {
+        const grid = document.getElementById('calGrid');
+        // Kifelé animáció
+        grid.style.transform = delta > 0 ? 'translateX(-20px)' : (delta < 0 ? 'translateX(20px)' : 'scale(0.98)');
+        grid.style.opacity = '0';
         
-        // Gombok frissítése
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelector(`.tab-${shift}`).classList.add('active');
-        
-        renderCalendar();
+        setTimeout(() => {
+            currentDate.setMonth(currentDate.getMonth() + delta);
+            renderCalendar();
+            
+            // Befelé animáció előkészítése
+            grid.style.transform = delta > 0 ? 'translateX(20px)' : (delta < 0 ? 'translateX(-20px)' : 'scale(1.02)');
+            
+            // Kényszerített reflow, hogy a CSS észrevegye a változást
+            void grid.offsetWidth;
+            
+            // Visszaállás
+            grid.style.transform = 'translateX(0) scale(1)';
+            grid.style.opacity = '1';
+        }, 150);
     }
 
     function renderCalendar() {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
-        document.getElementById('monthLabel').innerText = `${year} ${monthNames[month]}`;
+        document.getElementById('monthLabel').innerText = `${year} ${monthNames[month].toUpperCase()}`;
         
         const grid = document.getElementById('calGrid');
         grid.innerHTML = '';
@@ -404,11 +474,12 @@
         let startDayIndex = firstDay.getDay() - 1; 
         if(startDayIndex === -1) startDayIndex = 6; 
 
-        // Üres cellák a hónap elején
+        // Üres cellák
         for(let i = 0; i < startDayIndex; i++) { 
-            grid.innerHTML += `<div class="cal-cell empty"></div>`; 
+            grid.innerHTML += `<div class="cell empty"></div>`; 
         }
         
+        // Napok
         for(let i = 1; i <= lastDay.getDate(); i++) {
             const iterDate = new Date(year, month, i);
             const isoDate = new Date(iterDate.getTime() - (iterDate.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
@@ -416,29 +487,27 @@
             const isWeekend = iterDate.getDay() === 0 || iterDate.getDay() === 6;
             
             const shiftData = getShiftForDate(iterDate);
-            
-            // Ünnepnap ellenőrzése
             const mmdd = `${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
             const holidayName = unnepnapok[mmdd];
             
-            let cellClass = `cal-cell ${isToday ? 'is-today' : ''} ${isWeekend ? 'cell-weekend' : ''}`;
+            let cellClass = `cell ${isToday ? 'today' : ''} ${isWeekend ? 'weekend' : ''}`;
             let shiftsHtml = '';
 
-            // Műszak vizualizáció (SZÍNKÓDOLT KIFEJEZŐ SZÖVEG)
+            // Műszak Pilulák
             if(currentFilter === 'ALL') {
                 shiftsHtml = `
-                    <div class="s-tag tag-${shiftData.day}">
-                        <span class="s-text"> Nap:</span><span class="s-letter">${shiftData.day}</span>
+                    <div class="shift-pill pill-${shiftData.day}">
+                        <span>Nappal</span><strong>${shiftData.day}</strong>
                     </div>
-                    <div class="s-tag tag-${shiftData.night}">
-                        <span class="s-text"> Éjj:</span><span class="s-letter">${shiftData.night}</span>
+                    <div class="shift-pill pill-${shiftData.night}">
+                        <span>Éjjel</span><strong>${shiftData.night}</strong>
                     </div>
                 `;
             } else {
                 if(shiftData.day === currentFilter) {
-                    shiftsHtml = `<div class="s-tag tag-${shiftData.day} highlight"><span class="s-letter">NAPPALOS</span></div>`;
+                    shiftsHtml = `<div class="shift-pill pill-${shiftData.day} highlight"><strong>NAPPALOS</strong></div>`;
                 } else if(shiftData.night === currentFilter) {
-                    shiftsHtml = `<div class="s-tag tag-${shiftData.night} highlight"><span class="s-letter">ÉJSZAKÁS</span></div>`;
+                    shiftsHtml = `<div class="shift-pill pill-${shiftData.night} highlight"><strong>ÉJSZAKÁS</strong></div>`;
                 } else {
                     cellClass += ' dimmed';
                 }
@@ -447,20 +516,41 @@
             const cell = document.createElement('div');
             cell.className = cellClass;
             cell.innerHTML = `
-                <div class="cell-top">
-                    <span class="cell-date">${i}</span>
+                <div class="cell-header">
+                    <span class="date-num">${i}</span>
                     ${holidayName ? '<div class="holiday-dot"></div>' : ''}
                 </div>
-                <div class="cell-shifts">${shiftsHtml}</div>
+                <div class="shifts-container">${shiftsHtml}</div>
             `;
             
             cell.onclick = () => openInspector(iterDate, shiftData, holidayName, mmdd);
-            
             grid.appendChild(cell);
         }
     }
 
-    // --- INSPECTOR DRAWER ---
+    // --- SWIPE LOGIKA (MOBILRA) ---
+    function setupSwipe() {
+        const wrapper = document.getElementById('calWrapper');
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        wrapper.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, {passive: true});
+
+        wrapper.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, {passive: true});
+
+        function handleSwipe() {
+            const threshold = 50;
+            if (touchEndX < touchStartX - threshold) changeMonth(1); // Balra húzás -> Következő
+            if (touchEndX > touchStartX + threshold) changeMonth(-1); // Jobbra húzás -> Előző
+        }
+    }
+
+    // --- INSPECTOR (RÉSZLETEK) ---
     const drawer = document.getElementById('inspectorDrawer');
     const overlay = document.getElementById('drawerOverlay');
 
@@ -468,91 +558,85 @@
         const year = dateObj.getFullYear();
         const monthName = monthNames[dateObj.getMonth()];
         const day = String(dateObj.getDate()).padStart(2, '0');
-        const dayName = dayNames[dateObj.getDay()];
         
         document.getElementById('inspDate').innerText = `${year}. ${monthName} ${day}.`;
-        document.getElementById('inspDayName').innerText = dayName;
+        document.getElementById('inspDayName').innerText = dayNames[dateObj.getDay()];
 
         let html = '';
 
-        // Ünnepnap kártya (Ikon eltávolítva)
         if(holidayName) {
             html += `
-                <div class="info-card holiday">
-                    <div>
-                        <div class="info-text-title">Ünnepnap</div>
-                        <div class="info-text-val">${holidayName}</div>
+                <div class="detail-card card-holiday">
+                    <div class="card-content">
+                        <div class="card-label">Ünnepnap</div>
+                        <div class="card-value">${holidayName}</div>
                     </div>
                 </div>
             `;
         }
 
-        // Névnap kártya (Ikon eltávolítva)
         const nameDay = nevnapok[mmdd];
         if(nameDay) {
             html += `
-                <div class="info-card">
-                    <div>
-                        <div class="info-text-title">Mai Névnap</div>
-                        <div class="info-text-val">${nameDay}</div>
+                <div class="detail-card">
+                    <div class="card-content">
+                        <div class="card-label">Mai Névnap</div>
+                        <div class="card-value">${nameDay}</div>
                     </div>
                 </div>
             `;
         }
 
-        // Műszakok összeállítása a szűrő alapján - DINAMIKUS SZÍNKÓDOLÁSSAL
+        // Műszak Kártyák Inspectorba
         if(currentFilter === 'ALL' || currentFilter === shiftData.day) {
             html += `
-                <div class="shift-card tag-${shiftData.day}">
-                    <div class="shift-details">
-                        <div class="shift-label">Nappalos Műszak (06:00 - 18:00)</div>
-                        <div class="shift-time">"${shiftData.day}" Műszak</div>
+                <div class="detail-card card-${shiftData.day}">
+                    <div class="card-content">
+                        <div class="card-label">06:00 - 18:00</div>
+                        <div class="card-value">Nappalos Műszak</div>
                     </div>
-                    <div class="s-badge bg-${shiftData.day}">${shiftData.day}</div>
+                    <div class="big-badge bg-${shiftData.day}">${shiftData.day}</div>
                 </div>
             `;
         }
 
         if(currentFilter === 'ALL' || currentFilter === shiftData.night) {
             html += `
-                <div class="shift-card tag-${shiftData.night}">
-                    <div class="shift-details">
-                        <div class="shift-label">Éjszakás Műszak (18:00 - 06:00)</div>
-                        <div class="shift-time">"${shiftData.night}" Műszak</div>
+                <div class="detail-card card-${shiftData.night}">
+                    <div class="card-content">
+                        <div class="card-label">18:00 - 06:00</div>
+                        <div class="card-value">Éjszakás Műszak</div>
                     </div>
-                    <div class="s-badge bg-${shiftData.night}">${shiftData.night}</div>
+                    <div class="big-badge bg-${shiftData.night}">${shiftData.night}</div>
                 </div>
             `;
         }
 
-        if(currentFilter === 'ALL') {
+        if(currentFilter === 'ALL' || shiftData.off.includes(currentFilter)) {
+            const isTargetOff = shiftData.off.includes(currentFilter);
             html += `
-                <div class="shift-card off">
-                    <div class="shift-details">
-                        <div class="shift-label">Pihenőnap</div>
-                        <div class="shift-time">Otthon</div>
+                <div class="detail-card card-OFF" ${isTargetOff ? 'style="border-color:var(--accent); opacity:1;"' : ''}>
+                    <div class="card-content">
+                        <div class="card-label">Szabadnap</div>
+                        <div class="card-value">Pihenőidő</div>
                     </div>
-                    <div class="badge-group">
-                        <div class="s-badge bg-OFF" style="font-size:0.9rem;">${shiftData.off[0]}</div>
-                        <div class="s-badge bg-OFF" style="font-size:0.9rem;">${shiftData.off[1]}</div>
+                    <div style="display:flex; gap:5px;">
+                        ${isTargetOff 
+                            ? `<div class="big-badge bg-OFF" style="color:var(--text-main)">${currentFilter}</div>`
+                            : `<div class="big-badge bg-OFF" style="font-size:1rem;">${shiftData.off[0]}</div><div class="big-badge bg-OFF" style="font-size:1rem;">${shiftData.off[1]}</div>`
+                        }
                     </div>
-                </div>
-            `;
-        } else if (shiftData.off.includes(currentFilter)) {
-            html += `
-                <div class="shift-card off" style="border-left-color: var(--accent); opacity:1;">
-                    <div class="shift-details">
-                        <div class="shift-label">Szabadnap</div>
-                        <div class="shift-time">Pihenőidő</div>
-                    </div>
-                    <div class="s-badge bg-OFF" style="color:var(--text-main);">${currentFilter}</div>
                 </div>
             `;
         }
 
         document.getElementById('inspBody').innerHTML = html;
-        drawer.classList.add('open');
-        overlay.classList.add('open');
+        
+        // Csak mobilon nyitjuk fel alulról, asztalin fixen ott van
+        if(window.innerWidth < 1024) {
+            drawer.classList.add('open');
+            overlay.classList.add('open');
+        }
     }
 
     function closeInspector() {
@@ -560,15 +644,12 @@
         overlay.classList.remove('open');
     }
 
-    // Swipe up to close on mobile (mert most felülről jön!)
-    let touchStartY = 0;
-    drawer.addEventListener('touchstart', e => touchStartY = e.changedTouches[0].screenY, {passive: true});
+    // Swipe lefelé a bezáráshoz (Mobilon)
+    let inspTouchY = 0;
+    drawer.addEventListener('touchstart', e => inspTouchY = e.changedTouches[0].screenY, {passive: true});
     drawer.addEventListener('touchend', e => {
-        if(window.innerWidth <= 768 && touchStartY - e.changedTouches[0].screenY > 50) closeInspector();
+        if(window.innerWidth < 1024 && e.changedTouches[0].screenY > inspTouchY + 50) closeInspector();
     }, {passive: true});
-
-    // Init
-    renderCalendar();
 
 </script>
 </body>
