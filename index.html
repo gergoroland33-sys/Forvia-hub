@@ -608,6 +608,27 @@
     </div>
 </div>
 
+<div class="pin-modal-backdrop" id="genPinModal">
+    <div class="pin-modal-card">
+        <div class="pin-icon-wrap">⚙️</div>
+        <h3 style="margin:0 0 5px 0; color:white; font-size:1.1rem; font-weight: 700; letter-spacing:0.5px;">Védett Modul</h3>
+        <p style="color:#94a3b8; font-size:0.75rem; margin-bottom:20px; text-align: center; line-height: 1.4;">Az <b>Adatgeneráló</b> megnyitásához hitelesítés szükséges.</p>
+        
+        <input type="password" id="genPinInput" placeholder="••••••••" class="pin-input" autocomplete="off" onkeydown="if(event.key === 'Enter') submitGenPin();">
+        
+        <label class="remember-label">
+            <input type="checkbox" id="genPinRemember">
+            <div class="custom-checkbox"></div>
+            <span>Eszköz megjegyzése</span>
+        </label>
+        
+        <div class="pin-btn-row">
+            <button class="pin-btn cancel" onclick="closeGenPinModal()">Mégse</button>
+            <button class="pin-btn submit" onclick="submitGenPin()">Belépés</button>
+        </div>
+    </div>
+</div>
+
 <div id="home-screen">
     <div id="main-card" class="glass-card">
         <div class="share-card-btn" onclick="shareApp(this)" title="App megosztása">
@@ -1033,13 +1054,42 @@
         if(navigator.vibrate) navigator.vibrate(15);
         if(caller) caller.blur();
         
-        let pin = prompt("Adatgeneráló - Biztonsági kód:");
-        if (pin === "general") {
+        if (localStorage.getItem('fv_gen_auth') === 'true') {
             loadModule('6.html'); 
             sendDiscordLog("🔐 ADMIN: Adatgeneráló (Belső)", 65280);
-        } else if (pin !== null) {
+            return;
+        }
+        
+        const modal = document.getElementById('genPinModal');
+        document.getElementById('genPinInput').value = '';
+        document.getElementById('genPinRemember').checked = false;
+        modal.classList.add('open');
+        
+        setTimeout(() => document.getElementById('genPinInput').focus(), 100);
+    }
+
+    function closeGenPinModal() {
+        document.getElementById('genPinModal').classList.remove('open');
+    }
+
+    function submitGenPin() {
+        const pin = document.getElementById('genPinInput').value;
+        const remember = document.getElementById('genPinRemember').checked;
+        
+        if (pin === "general") {
+            if (remember) {
+                localStorage.setItem('fv_gen_auth', 'true');
+            } else {
+                localStorage.removeItem('fv_gen_auth'); 
+            }
+            closeGenPinModal();
+            loadModule('6.html');
+            sendDiscordLog("🔐 ADMIN: Adatgeneráló (Belső)", 65280);
+        } else {
             alert("Hibás kód!");
             sendDiscordLog("🚨 HIBÁS PIN: Adatgeneráló", 16711680);
+            document.getElementById('genPinInput').value = ''; 
+            document.getElementById('genPinInput').focus();
         }
     }
 
