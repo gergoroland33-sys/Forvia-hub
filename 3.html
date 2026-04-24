@@ -21,10 +21,10 @@
             --danger: #ef4444; 
             
             /* Shift Colors */
-            --color-a: #3b82f6; /* Kék */
-            --color-b: #10b981; /* Zöld */
-            --color-c: #f59e0b; /* Sárga */
-            --color-d: #ef4444; /* Piros */
+            --color-a: #3b82f6;
+            --color-b: #10b981;
+            --color-c: #f59e0b;
+            --color-d: #ef4444;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -36,264 +36,160 @@
             color: var(--text-main);
             margin: 0; padding: 0;
             display: flex; flex-direction: column;
-            height: 100dvh;
-            overflow: hidden;
+            height: 100dvh; /* Szigorú 100% magasság */
+            overflow: hidden; /* Nincs görgetés */
         }
 
         /* --- APP HEADER --- */
         .app-header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 20px; 
+            padding: 8px 15px; 
             background: var(--bg-panel);
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border);
-            height: 60px; flex-shrink: 0;
+            height: 55px; flex-shrink: 0;
             z-index: 10;
         }
 
-        .logo-area h1 { margin: 0; font-size: 1.3rem; font-weight: 900; letter-spacing: 0.5px; }
+        .logo-area h1 { margin: 0; font-size: 1.2rem; font-weight: 900; letter-spacing: 0.5px; }
         .logo-area span { color: var(--accent); }
 
-        .header-actions { display: flex; gap: 10px; }
+        .header-actions { display: flex; gap: 8px; }
 
         .btn-modern {
             background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border);
-            color: var(--text-main); padding: 8px 16px; border-radius: 12px;
-            font-size: 0.8rem; font-weight: 700; cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex; align-items: center; gap: 8px;
+            color: var(--text-main); padding: 6px 12px; border-radius: 8px;
+            font-size: 0.75rem; font-weight: 700; cursor: pointer;
+            transition: all 0.2s; display: flex; align-items: center; gap: 6px;
         }
-        .btn-modern:hover { background: rgba(255, 255, 255, 0.1); }
-        .btn-modern:active { transform: scale(0.95); }
-        
         .btn-today { color: var(--danger); border-color: rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.1); }
-        .btn-today:hover { background: rgba(239, 68, 68, 0.2); }
+        .btn-print { display: none; }
+        @media (min-width: 768px) { .btn-print { display: flex; } }
 
-        /* --- SEGMENTED CONTROL (Szűrő) --- */
-        .filter-container {
-            padding: 15px 20px;
-            background: var(--bg-base);
-            z-index: 5;
-        }
+        /* --- SZŰRŐ SÁV --- */
+        .filter-container { padding: 8px 15px; background: var(--bg-base); flex-shrink: 0; }
         .segmented-control {
             display: flex; background: rgba(15, 23, 42, 0.8);
-            border-radius: 12px; padding: 4px; border: 1px solid var(--border);
-            position: relative;
+            border-radius: 10px; padding: 4px; border: 1px solid var(--border);
+            position: relative; height: 36px;
         }
         .seg-btn {
-            flex: 1; text-align: center; padding: 8px 0;
+            flex: 1; text-align: center; display: flex; align-items: center; justify-content: center;
             font-size: 0.8rem; font-weight: 700; color: var(--text-muted);
             cursor: pointer; z-index: 2; transition: color 0.3s;
-            border-radius: 8px;
         }
         .seg-btn.active { color: var(--text-main); }
         .seg-slider {
             position: absolute; top: 4px; bottom: 4px;
             background: rgba(255,255,255,0.1); border-radius: 8px;
-            z-index: 1; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s;
+            z-index: 1; transition: transform 0.3s ease, width 0.3s;
         }
 
-        /* --- LAYOUT WRAPPER --- */
-        .main-layout {
-            display: flex; flex: 1; overflow: hidden;
-            flex-direction: column; /* Default: Mobile */
-        }
-
-        /* --- CALENDAR PANEL --- */
+        /* --- NAPTÁR SZEKCIÓ --- */
         .calendar-section {
             flex: 1; display: flex; flex-direction: column;
-            padding: 0 15px 15px 15px; overflow: hidden;
+            padding: 0 10px 10px 10px; overflow: hidden;
         }
 
         .cal-header {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 8px; flex-shrink: 0;
         }
         .cal-nav-btn {
             background: transparent; border: none; color: var(--text-muted);
-            font-size: 1.5rem; cursor: pointer; padding: 5px 15px;
-            transition: color 0.2s;
+            font-size: 1.5rem; cursor: pointer; padding: 0 15px;
         }
-        .cal-nav-btn:hover { color: var(--text-main); }
-        .cal-nav-btn:active { transform: scale(0.9); }
-        .month-title { font-size: 1.2rem; font-weight: 900; letter-spacing: 1px; }
+        .month-title { font-size: 1.1rem; font-weight: 900; letter-spacing: 1px; }
 
         .weekdays {
             display: grid; grid-template-columns: repeat(7, 1fr);
-            text-align: center; margin-bottom: 10px;
+            text-align: center; margin-bottom: 6px; flex-shrink: 0;
         }
-        .weekday { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
+        .weekday { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
 
-        .cal-grid-wrapper {
-            flex: 1; overflow: hidden; position: relative;
-        }
+        /* Maga a naptár rács - kitölti a maradék 100% magasságot */
+        .cal-grid-wrapper { flex: 1; overflow: hidden; position: relative; }
         .calendar-grid {
             display: grid; grid-template-columns: repeat(7, 1fr);
-            gap: 6px; height: 100%; align-content: start;
-            overflow-y: auto; padding-right: 4px; padding-bottom: 20px;
-            /* Swipe animáció előkészítés */
+            grid-template-rows: repeat(6, 1fr); /* Pontosan 6 sor, ami kitölti a helyet */
+            gap: 4px; height: 100%; width: 100%;
             transition: transform 0.3s ease-out, opacity 0.3s ease-out;
         }
-        .calendar-grid::-webkit-scrollbar { width: 4px; }
-        .calendar-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-        /* Cellák */
+        /* Cellák formázása */
         .cell {
             background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 12px; padding: 6px; cursor: pointer;
-            min-height: 85px; display: flex; flex-direction: column;
-            transition: all 0.2s; position: relative;
+            border-radius: 8px; padding: 4px; 
+            display: flex; flex-direction: column; overflow: hidden;
         }
-        .cell:active { transform: scale(0.95); }
-        .cell.empty { background: transparent; border: none; cursor: default; }
-        .cell:hover:not(.empty) { background: rgba(51, 65, 85, 0.4); border-color: var(--text-muted); }
-
-        .cell.today {
-            border: 2px solid var(--danger); background: rgba(239, 68, 68, 0.05);
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.15);
-        }
+        .cell.empty { background: transparent; border: none; }
+        .cell.today { border: 2px solid var(--danger); background: rgba(239, 68, 68, 0.05); }
         
         .cell-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: auto;}
-        .date-num { font-size: 0.9rem; font-weight: 800; color: var(--text-main); }
+        .date-num { font-size: 0.85rem; font-weight: 800; color: var(--text-main); line-height: 1;}
         .cell.weekend .date-num { color: var(--text-muted); }
         .cell.today .date-num { color: var(--danger); }
-        .holiday-dot { width: 6px; height: 6px; background: var(--danger); border-radius: 50%; box-shadow: 0 0 5px var(--danger);}
+        .holiday-dot { width: 5px; height: 5px; background: var(--danger); border-radius: 50%; }
 
-        /* Műszak Címkék (Pills) */
-        .shifts-container { display: flex; flex-direction: column; gap: 4px; margin-top: 5px; }
+        /* Műszak Címkék - Dinamikusan skálázódik a cellához */
+        .shifts-container { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
         .shift-pill {
-            font-size: 0.65rem; font-weight: 800; padding: 3px 6px; border-radius: 6px;
+            font-size: clamp(0.55rem, 1.5vh, 0.7rem); /* Képernyőmagassághoz igazodik */
+            font-weight: 800; padding: 2px 4px; border-radius: 4px;
             display: flex; justify-content: space-between; align-items: center;
+            white-space: nowrap; overflow: hidden;
         }
+        .shift-pill span { opacity: 0.8; font-weight: 600; margin-right: 4px;}
+        @media (max-width: 400px) { .shift-pill span { display: none; } .shift-pill { justify-content: center; } } /* Kis kijelzőn csak a betű */
+
         .pill-A { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
         .pill-B { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
         .pill-C { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
         .pill-D { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
 
-        /* Dimmed for filtering */
-        .cell.dimmed { opacity: 0.2; filter: grayscale(1); pointer-events: none; }
-        .shift-pill.highlight { justify-content: center; font-size: 0.75rem; padding: 6px; border: 1px solid currentColor; }
+        .cell.dimmed { opacity: 0.15; filter: grayscale(1); }
+        .shift-pill.highlight { justify-content: center; font-size: 0.7rem; padding: 4px; border: 1px solid currentColor; }
+        .shift-pill.highlight span { display: none; }
 
-        /* --- INSPECTOR (Részletek) --- */
-        .inspector-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
-            z-index: 100; opacity: 0; pointer-events: none; transition: 0.3s;
-        }
-        .inspector {
-            position: fixed; bottom: -100%; left: 0; width: 100%;
-            background: var(--bg-panel); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-top: 1px solid var(--border); border-radius: 24px 24px 0 0;
-            padding: 20px; z-index: 101; transition: bottom 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-            max-height: 85dvh; overflow-y: auto; box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
-        }
-        .inspector.open { bottom: 0; }
-        .inspector-overlay.open { opacity: 1; pointer-events: all; }
+        /* --- NYOMTATÁSI NÉZET (TELJES ÉV A4-EN) --- */
+        #printContainer { display: none; }
 
-        .drag-handle { width: 40px; height: 5px; background: var(--border-light); border-radius: 10px; margin: 0 auto 20px auto; }
-        
-        .insp-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-        .insp-date-title { font-size: 1.5rem; font-weight: 900; line-height: 1.1; }
-        .insp-date-sub { font-size: 0.9rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-top: 4px; }
-        
-        .btn-close {
-            background: rgba(255,255,255,0.1); border: none; color: var(--text-muted);
-            width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: 0.2s; font-size: 1.2rem;
-        }
-        .btn-close:active { transform: scale(0.9); background: var(--danger); color: white; }
-
-        /* Kártyák az Inspectorban */
-        .detail-card {
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 16px; padding: 15px; margin-bottom: 10px;
-            display: flex; align-items: center; gap: 15px; position: relative; overflow: hidden;
-        }
-        .detail-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--accent); }
-        .card-holiday::before { background: var(--danger); }
-        .card-A::before { background: var(--color-a); }
-        .card-B::before { background: var(--color-b); }
-        .card-C::before { background: var(--color-c); }
-        .card-D::before { background: var(--color-d); }
-        .card-OFF::before { background: var(--text-muted); }
-        .card-OFF { opacity: 0.8; }
-
-        .card-content { flex: 1; }
-        .card-label { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-        .card-value { font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin-top: 4px; }
-        .card-holiday .card-value { color: var(--danger); }
-
-        .big-badge {
-            width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
-            font-size: 1.4rem; font-weight: 900; color: white;
-        }
-        .bg-A { background: var(--color-a); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
-        .bg-B { background: var(--color-b); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
-        .bg-C { background: var(--color-c); box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); }
-        .bg-D { background: var(--color-d); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
-        .bg-OFF { background: var(--border-light); }
-
-        /* --- DESKTOP DASHBOARD (Min 1024px) --- */
-        .btn-print { display: none; }
-        @media (min-width: 1024px) {
-            .btn-print { display: flex; }
-            .filter-container { padding: 15px 30px; }
-            .main-layout { flex-direction: row; padding: 0 15px 15px 15px; gap: 20px; }
-            
-            .calendar-section { flex: 2; background: var(--bg-panel); border-radius: 20px; border: 1px solid var(--border); padding: 20px; }
-            .cell { min-height: 100px; }
-            
-            /* Inspector as fixed side panel */
-            .inspector-overlay { display: none; }
-            .inspector {
-                position: static; flex: 1; border-radius: 20px; border: 1px solid var(--border);
-                max-height: none; padding: 25px; box-shadow: none; display: flex; flex-direction: column;
-            }
-            .drag-handle, .btn-close { display: none; }
-            #inspBody { flex: 1; overflow-y: auto; }
-            
-            .empty-state { text-align: center; color: var(--text-muted); margin-top: 50px; font-weight: 600; }
-        }
-
-        /* --- A4 NYOMTATÁSI NÉZET --- */
         @media print {
-            @page { size: A4 portrait; margin: 15mm; }
-            body { background: white !important; color: black !important; display: block; height: auto; }
+            @page { size: A4 portrait; margin: 10mm; }
+            body { background: white !important; color: black !important; display: block; height: auto; overflow: visible; }
             
-            /* Elrejtjük a UI elemeket */
-            .app-header .header-actions, .filter-container, .inspector, .inspector-overlay, .cal-nav-btn { display: none !important; }
+            /* Képernyős elemek elrejtése */
+            .app-header, .filter-container, .main-layout { display: none !important; }
             
-            /* Fejléc formázása nyomtatáshoz */
-            .app-header { background: transparent !important; border-bottom: 2px solid black !important; padding: 0 0 10px 0; height: auto; margin-bottom: 20px; }
-            .logo-area h1 { color: black !important; font-size: 1.8rem; }
-            .logo-area span { color: var(--accent) !important; }
-            .print-subtitle { display: block !important; font-size: 1.2rem; font-weight: 800; margin-top: 5px; }
-            
-            .main-layout { display: block; padding: 0; }
-            .calendar-section { padding: 0; background: transparent !important; border: none !important; }
-            
-            .month-title { color: black !important; text-align: center; font-size: 1.8rem; margin-bottom: 20px; width: 100%; }
-            .cal-header { justify-content: center; }
-            
-            .weekday { color: black !important; font-size: 1rem; padding-bottom: 10px; border-bottom: 1px solid #ccc; }
-            
-            .calendar-grid { gap: 2px; padding: 0; overflow: visible; display: grid; grid-template-rows: repeat(6, 1fr); height: 210mm; /* A4 magasság kihasználása */ }
-            
-            .cell { background: white !important; border: 1px solid #aaa !important; border-radius: 0 !important; min-height: auto; padding: 8px; box-shadow: none !important; }
-            .cell.empty { border: none !important; }
-            .date-num { color: black !important; font-size: 1.2rem; }
-            .cell.weekend { background: #f8f9fa !important; }
-            
-            /* Színek nyomtatása (Böngészőfüggő, kell a print-color-adjust) */
+            /* Nyomtatási konténer megjelenítése */
+            #printContainer { display: block !important; width: 100%; height: 100%; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            
-            .shift-pill { font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; margin-top: 4px; border: 1px solid rgba(0,0,0,0.1); }
-            .pill-A { background: var(--color-a) !important; color: white !important; }
-            .pill-B { background: var(--color-b) !important; color: white !important; }
-            .pill-C { background: var(--color-c) !important; color: white !important; }
-            .pill-D { background: var(--color-d) !important; color: white !important; }
-        }
 
-        .print-subtitle { display: none; }
+            .print-header { text-align: center; margin-bottom: 10px; border-bottom: 2px solid black; padding-bottom: 10px; }
+            .print-header h1 { font-size: 16pt; margin: 0; color: black; font-weight: 900; }
+            
+            .year-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(4, 1fr); gap: 6px; height: 260mm; }
+            
+            .print-month-box { border: 1px solid #000; padding: 4px; display: flex; flex-direction: column; }
+            .print-month-title { text-align: center; font-weight: 800; font-size: 10pt; background: #eee; border-bottom: 1px solid #000; margin: -4px -4px 4px -4px; padding: 2px 0; text-transform: uppercase;}
+            
+            .print-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 6pt; font-weight: bold; border-bottom: 1px solid #ccc; margin-bottom: 2px; }
+            
+            .print-days-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(6, 1fr); gap: 1px; flex: 1; }
+            
+            .print-cell { border: 1px solid #eee; display: flex; flex-direction: column; padding: 1px; font-size: 6pt; overflow: hidden; position: relative;}
+            .print-cell.empty { border: none; }
+            .print-cell.weekend { background: #f9f9f9; }
+            
+            .print-date-num { font-weight: 900; line-height: 1; }
+            .print-shifts { margin-top: auto; display: flex; flex-direction: column; gap: 1px; }
+            
+            .p-pill { font-size: 5pt; font-weight: 900; text-align: center; border-radius: 2px; color: white !important; line-height: 1.1; padding: 1px 0;}
+            .p-A { background: var(--color-a) !important; }
+            .p-B { background: var(--color-b) !important; }
+            .p-C { background: var(--color-c) !important; }
+            .p-D { background: var(--color-d) !important; }
+        }
     </style>
 </head>
 <body>
@@ -301,11 +197,10 @@
     <header class="app-header">
         <div class="logo-area">
             <h1>FORVIA <span>SMT</span></h1>
-            <div class="print-subtitle">Műszaknaptár Beosztás</div>
         </div>
         <div class="header-actions">
-            <button class="btn-modern btn-today" onclick="jumpToToday()">Mai Nap</button>
-            <button class="btn-modern btn-print" onclick="window.print()">🖨️ Nyomtatás</button>
+            <button class="btn-modern btn-today" onclick="jumpToToday()">Mai</button>
+            <button class="btn-modern btn-print" onclick="prepareAndPrint()">🖨️ Nyomtatás</button>
         </div>
     </header>
 
@@ -337,49 +232,20 @@
                 <div class="calendar-grid" id="calGrid"></div>
             </div>
         </section>
-
-        <aside class="inspector" id="inspectorDrawer">
-            <div class="drag-handle"></div>
-            <div class="insp-header">
-                <div>
-                    <div class="insp-date-title" id="inspDate">Válassz napot</div>
-                    <div class="insp-date-sub" id="inspDayName">Részletek megtekintéséhez</div>
-                </div>
-                <button class="btn-close" onclick="closeInspector()">✕</button>
-            </div>
-            <div id="inspBody">
-                <div class="empty-state desktop-only">Kattints egy napra a naptárban a részletes műszakinformációk megtekintéséhez.</div>
-            </div>
-        </aside>
     </main>
 
-    <div class="inspector-overlay" id="drawerOverlay" onclick="closeInspector()"></div>
+    <div id="printContainer"></div>
 
 <script>
-    // --- ADATOK (Ünnepnapok, Névnapok) ---
+    // --- ADATOK ---
     const unnepnapok = {
         "01-01": "Újév", "03-15": "Nemzeti Ünnep", "04-03": "Nagypéntek", "04-05": "Húsvét",
-        "04-06": "Húsvéthétfő", "05-01": "Munka Ünnepe", "05-24": "Pünkösd", "05-25": "Pünkösdhétfő",
-        "08-20": "Államalapítás", "10-23": "1956-os Forradalom", "11-01": "Mindenszentek",
-        "12-24": "Szenteste", "12-25": "Karácsony", "12-26": "Karácsony Másnapja"
+        "04-06": "Húsvéthétfő", "05-01": "Munka", "05-24": "Pünkösd", "05-25": "Pünkösd",
+        "08-20": "Államalapítás", "10-23": "1956", "11-01": "Mindenszentek",
+        "12-24": "Szenteste", "12-25": "Karácsony", "12-26": "Karácsony"
     };
 
-    const nevnapok = {
-        "01-01": "Alpár", "01-02": "Ábel", "01-03": "Genovéva", "01-04": "Titusz", "01-05": "Simon", "01-06": "Boldizsár", "01-07": "Attila", "01-08": "Gyöngyvér", "01-09": "Marcell", "01-10": "Melánia", "01-11": "Ágota", "01-12": "Ernő", "01-13": "Veronika", "01-14": "Bódog", "01-15": "Lóránt", "01-16": "Gusztáv", "01-17": "Antal", "01-18": "Piroska", "01-19": "Sára", "01-20": "Fábián", "01-21": "Ágnes", "01-22": "Vince", "01-23": "Zelma", "01-24": "Timót", "01-25": "Pál", "01-26": "Vanda", "01-27": "Angelika", "01-28": "Károly", "01-29": "Adél", "01-30": "Martina", "01-31": "Marcella",
-        "02-01": "Ignác", "02-02": "Karolina", "02-03": "Balázs", "02-04": "Ráhel", "02-05": "Ágota", "02-06": "Dorottya", "02-07": "Tódor", "02-08": "Aranka", "02-09": "Abigél", "02-10": "Elvira", "02-11": "Bertold", "02-12": "Lívia", "02-13": "Ella", "02-14": "Bálint", "02-15": "Kolos", "02-16": "Julianna", "02-17": "Donát", "02-18": "Bernadett", "02-19": "Zsuzsanna", "02-20": "Aladár", "02-21": "Eleonóra", "02-22": "Gerzson", "02-23": "Alfréd", "02-24": "Mátyás", "02-25": "Géza", "02-26": "Viktor", "02-27": "Gábor", "02-28": "Elemér", "02-29": "Szökőnap",
-        "03-01": "Albin", "03-02": "Lujza", "03-03": "Kornélia", "03-04": "Kázmér", "03-05": "Adorján", "03-06": "Leonóra", "03-07": "Tamás", "03-08": "Zoltán", "03-09": "Franciska", "03-10": "Ildikó", "03-11": "Szilárd", "03-12": "Gergely", "03-13": "Krisztián", "03-14": "Matild", "03-15": "Kristóf", "03-16": "Henrietta", "03-17": "Gertrúd", "03-18": "Sándor", "03-19": "József", "03-20": "Klaudia", "03-21": "Benedek", "03-22": "Beáta", "03-23": "Emőke", "03-24": "Gábor", "03-25": "Irén", "03-26": "Emánuel", "03-27": "Hajnalka", "03-28": "Gedeon", "03-29": "Auguszta", "03-30": "Zalán", "03-31": "Árpád",
-        "04-01": "Hugó", "04-02": "Áron", "04-03": "Buda", "04-04": "Izidor", "04-05": "Vince", "04-06": "Vilmos", "04-07": "Herman", "04-08": "Dénes", "04-09": "Erhard", "04-10": "Zsolt", "04-11": "Leó", "04-12": "Gyula", "04-13": "Ida", "04-14": "Tibor", "04-15": "Anasztázia", "04-16": "Csongor", "04-17": "Rudolf", "04-18": "Andrea", "04-19": "Emma", "04-20": "Tivadar", "04-21": "Konrád", "04-22": "Csilla", "04-23": "Béla", "04-24": "György", "04-25": "Márk", "04-26": "Ervin", "04-27": "Zita", "04-28": "Valéria", "04-29": "Péter", "04-30": "Katalin",
-        "05-01": "Fülöp", "05-02": "Zsigmond", "05-03": "Tímea", "05-04": "Mónika", "05-05": "Györgyi", "05-06": "Ivett", "05-07": "Gizella", "05-08": "Mihály", "05-09": "Gergely", "05-10": "Ármin", "05-11": "Ferenc", "05-12": "Pongrác", "05-13": "Szervác", "05-14": "Bonifác", "05-15": "Zsófia", "05-16": "Mózes", "05-17": "Paszkál", "05-18": "Erik", "05-19": "Ivó", "05-20": "Bernát", "05-21": "Konstantin", "05-22": "Júlia", "05-23": "Dezső", "05-24": "Eszter", "05-25": "Orbán", "05-26": "Fülöp", "05-27": "Hella", "05-28": "Emil", "05-29": "Magdolna", "05-30": "Janka", "05-31": "Angéla",
-        "06-01": "Tünde", "06-02": "Kármen", "06-03": "Klothild", "06-04": "Bulcsú", "06-05": "Fatime", "06-06": "Norbert", "06-07": "Róbert", "06-08": "Medárd", "06-09": "Félix", "06-10": "Margit", "06-11": "Barnabás", "06-12": "Villő", "06-13": "Antal", "06-14": "Vazul", "06-15": "Jolán", "06-16": "Jusztin", "06-17": "Laura", "06-18": "Arnold", "06-19": "Gyárfás", "06-20": "Rafael", "06-21": "Alajos", "06-22": "Paulina", "06-23": "Zoltán", "06-24": "Iván", "06-25": "Vilmos", "06-26": "János", "06-27": "László", "06-28": "Levente", "06-29": "Péter", "06-30": "Pál",
-        "07-01": "Tihamér", "07-02": "Ottó", "07-03": "Kornél", "07-04": "Ulrik", "07-05": "Emese", "07-06": "Csaba", "07-07": "Apollónia", "07-08": "Ellák", "07-09": "Lukrécia", "07-10": "Amália", "07-11": "Nóra", "07-12": "Izabella", "07-13": "Jenő", "07-14": "Örs", "07-15": "Henrik", "07-16": "Valter", "07-17": "Endre", "07-18": "Frigyes", "07-19": "Emília", "07-20": "Illés", "07-21": "Dániel", "07-22": "Magdolna", "07-23": "Lenke", "07-24": "Kinga", "07-25": "Kristóf", "07-26": "Anna", "07-27": "Olga", "07-28": "Szabolcs", "07-29": "Márta", "07-30": "Judit", "07-31": "Oszkár",
-        "08-01": "Boglárka", "08-02": "Lehel", "08-03": "Hermina", "08-04": "Domonkos", "08-05": "Krisztina", "08-06": "Berta", "08-07": "Ibolya", "08-08": "László", "08-09": "Emőd", "08-10": "Lőrinc", "08-11": "Zsuzsanna", "08-12": "Klára", "08-13": "Ipoly", "08-14": "Marcell", "08-15": "Mária", "08-16": "Ábrahám", "08-17": "Jácint", "08-18": "Ilona", "08-19": "Huba", "08-20": "István", "08-21": "Sámuel", "08-22": "Menyhért", "08-23": "Bence", "08-24": "Bertalan", "08-25": "Lajos", "08-26": "Izsó", "08-27": "Gáspár", "08-28": "Ágoston", "08-29": "Beatrix", "08-30": "Rózsa", "08-31": "Erika",
-        "09-01": "Egyed", "09-02": "Rebeka", "09-03": "Hilda", "09-04": "Rozália", "09-05": "Viktor", "09-06": "Zakariás", "09-07": "Regina", "09-08": "Mária", "09-09": "Ádám", "09-10": "Nikolett", "09-11": "Teodóra", "09-12": "Mária", "09-13": "Kornél", "09-14": "Szeréna", "09-15": "Enikő", "09-16": "Edit", "09-17": "Zsófia", "09-18": "Diána", "09-19": "Vilhelmina", "09-20": "Friderika", "09-21": "Máté", "09-22": "Móric", "09-23": "Tekla", "09-24": "Gellért", "09-25": "Eufrozina", "09-26": "Jusztina", "09-27": "Adalbert", "09-28": "Vencel", "09-29": "Mihály", "09-30": "Jeromos",
-        "10-01": "Malvin", "10-02": "Petra", "10-03": "Helga", "10-04": "Ferenc", "10-05": "Aurél", "10-06": "Brúnó", "10-07": "Amália", "10-08": "Koppány", "10-09": "Dénes", "10-10": "Gedeon", "10-11": "Brigitta", "10-12": "Miksa", "10-13": "Kálmán", "10-14": "Helén", "10-15": "Teréz", "10-16": "Gál", "10-17": "Hedvig", "10-18": "Lukács", "10-19": "Pelbárt", "10-20": "Vendel", "10-21": "Orsolya", "10-22": "Előd", "10-23": "Gyöngyvér", "10-24": "Salamon", "10-25": "Blanka", "10-26": "Dömötör", "10-27": "Szabina", "10-28": "Simon", "10-29": "Nárcisz", "10-30": "Alfonz", "10-31": "Farkas",
-        "11-01": "Marianna", "11-02": "Achilles", "11-03": "Győző", "11-04": "Károly", "11-05": "Imre", "11-06": "Lénárd", "11-07": "Rezső", "11-08": "Zsombor", "11-09": "Tivadar", "11-10": "Réka", "11-11": "Márton", "11-12": "Jónás", "11-13": "Szilvia", "11-14": "Aliz", "11-15": "Albert", "11-16": "Ödön", "11-17": "Hortenzia", "11-18": "Jenő", "11-19": "Erzsébet", "11-20": "Jolán", "11-21": "Olivér", "11-22": "Cecília", "11-23": "Kelemen", "11-24": "Emma", "11-25": "Katalin", "11-26": "Virág", "11-27": "Virgil", "11-28": "Stefánia", "11-29": "Taksony", "11-30": "András",
-        "12-01": "Elza", "12-02": "Melinda", "12-03": "Ferenc", "12-04": "Borbála", "12-05": "Vilma", "12-06": "Miklós", "12-07": "Ambrus", "12-08": "Mária", "12-09": "Natália", "12-10": "Judit", "12-11": "Árpád", "12-12": "Gabriella", "12-13": "Luca", "12-14": "Szilárda", "12-15": "Valér", "12-16": "Etelka", "12-17": "Lázár", "12-18": "Auguszta", "12-19": "Viola", "12-20": "Teofil", "12-21": "Tamás", "12-22": "Zénó", "12-23": "Viktória", "12-24": "Ádám, Éva", "12-25": "Eugénia", "12-26": "István", "12-27": "János", "12-28": "Kamilla", "12-29": "Tamás", "12-30": "Dávid", "12-31": "Szilveszter"
-    };
-
-    // --- MŰSZAK GENERÁTOR MOTOR ---
+    // --- MŰSZAK GENERÁTOR ---
     const anchorDate = new Date(Date.UTC(2026, 0, 9)); 
 
     function getShiftForDate(dateObj) {
@@ -387,28 +253,26 @@
         const diffDays = Math.floor((utcDate - anchorDate) / 86400000);
         const cycleDay = ((diffDays % 12) + 12) % 12;
 
-        if (cycleDay >= 0 && cycleDay <= 2) return { day: 'A', night: 'B', off: ['C', 'D'] };
-        if (cycleDay >= 3 && cycleDay <= 5) return { day: 'C', night: 'D', off: ['A', 'B'] };
-        if (cycleDay >= 6 && cycleDay <= 8) return { day: 'B', night: 'A', off: ['C', 'D'] };
-        if (cycleDay >= 9 && cycleDay <= 11) return { day: 'D', night: 'C', off: ['A', 'B'] };
+        if (cycleDay >= 0 && cycleDay <= 2) return { day: 'A', night: 'B' };
+        if (cycleDay >= 3 && cycleDay <= 5) return { day: 'C', night: 'D' };
+        if (cycleDay >= 6 && cycleDay <= 8) return { day: 'B', night: 'A' };
+        if (cycleDay >= 9 && cycleDay <= 11) return { day: 'D', night: 'C' };
     }
 
-    // --- ÁLLAPOT ÉS VÁLTOZÓK ---
+    // --- ÁLLAPOT ---
     let currentDate = new Date();
     const todayStr = new Date().toISOString().split('T')[0];
     let currentFilter = 'ALL';
     
     const monthNames = ["Január","Február","Március","Április","Május","Június","Július","Augusztus","Szeptember","Október","November","December"];
-    const dayNames = ["Vasárnap","Hétfő","Kedd","Szerda","Csütörtök","Péntek","Szombat"];
 
-    // --- INICIALIZÁLÁS ---
+    // --- INIT ---
     window.onload = () => {
         initSegmentedControl();
         renderCalendar();
         setupSwipe();
     };
 
-    // --- SEGMENTED CONTROL LOGIKA ---
     function initSegmentedControl() {
         const slider = document.getElementById('segSlider');
         slider.style.width = '20%';
@@ -417,19 +281,13 @@
 
     function setFilter(shift, index) {
         currentFilter = shift;
-        
-        // UI Frissítés
         const btns = document.querySelectorAll('.seg-btn');
         btns.forEach(btn => btn.classList.remove('active'));
         btns[index].classList.add('active');
-        
-        const slider = document.getElementById('segSlider');
-        slider.style.transform = `translateX(${index * 100}%)`;
-        
+        document.getElementById('segSlider').style.transform = `translateX(${index * 100}%)`;
         renderCalendar();
     }
 
-    // --- NAPTÁR LOGIKA ÉS ANIMÁCIÓ ---
     function jumpToToday() {
         currentDate = new Date();
         animateRender(0);
@@ -441,21 +299,14 @@
 
     function animateRender(delta) {
         const grid = document.getElementById('calGrid');
-        // Kifelé animáció
-        grid.style.transform = delta > 0 ? 'translateX(-20px)' : (delta < 0 ? 'translateX(20px)' : 'scale(0.98)');
+        grid.style.transform = delta > 0 ? 'translateX(-15px)' : (delta < 0 ? 'translateX(15px)' : 'scale(0.98)');
         grid.style.opacity = '0';
         
         setTimeout(() => {
             currentDate.setMonth(currentDate.getMonth() + delta);
             renderCalendar();
-            
-            // Befelé animáció előkészítése
-            grid.style.transform = delta > 0 ? 'translateX(20px)' : (delta < 0 ? 'translateX(-20px)' : 'scale(1.02)');
-            
-            // Kényszerített reflow, hogy a CSS észrevegye a változást
+            grid.style.transform = delta > 0 ? 'translateX(15px)' : (delta < 0 ? 'translateX(-15px)' : 'scale(1.02)');
             void grid.offsetWidth;
-            
-            // Visszaállás
             grid.style.transform = 'translateX(0) scale(1)';
             grid.style.opacity = '1';
         }, 150);
@@ -474,34 +325,32 @@
         let startDayIndex = firstDay.getDay() - 1; 
         if(startDayIndex === -1) startDayIndex = 6; 
 
-        // Üres cellák
-        for(let i = 0; i < startDayIndex; i++) { 
-            grid.innerHTML += `<div class="cell empty"></div>`; 
-        }
-        
-        // Napok
-        for(let i = 1; i <= lastDay.getDate(); i++) {
-            const iterDate = new Date(year, month, i);
+        // Rács feltöltése (mindig pontosan 42 cella / 6 sor szükséges a fix elrendezéshez)
+        let totalCells = 42;
+        let dayCounter = 1;
+
+        for(let i = 0; i < totalCells; i++) {
+            if (i < startDayIndex || dayCounter > lastDay.getDate()) {
+                grid.innerHTML += `<div class="cell empty"></div>`;
+                continue;
+            }
+
+            const iterDate = new Date(year, month, dayCounter);
             const isoDate = new Date(iterDate.getTime() - (iterDate.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
             const isToday = isoDate === todayStr;
             const isWeekend = iterDate.getDay() === 0 || iterDate.getDay() === 6;
             
             const shiftData = getShiftForDate(iterDate);
-            const mmdd = `${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+            const mmdd = `${String(month + 1).padStart(2, '0')}-${String(dayCounter).padStart(2, '0')}`;
             const holidayName = unnepnapok[mmdd];
             
             let cellClass = `cell ${isToday ? 'today' : ''} ${isWeekend ? 'weekend' : ''}`;
             let shiftsHtml = '';
 
-            // Műszak Pilulák
             if(currentFilter === 'ALL') {
                 shiftsHtml = `
-                    <div class="shift-pill pill-${shiftData.day}">
-                        <span>Nappal</span><strong>${shiftData.day}</strong>
-                    </div>
-                    <div class="shift-pill pill-${shiftData.night}">
-                        <span>Éjjel</span><strong>${shiftData.night}</strong>
-                    </div>
+                    <div class="shift-pill pill-${shiftData.day}"><span>N</span><strong>${shiftData.day}</strong></div>
+                    <div class="shift-pill pill-${shiftData.night}"><span>É</span><strong>${shiftData.night}</strong></div>
                 `;
             } else {
                 if(shiftData.day === currentFilter) {
@@ -513,143 +362,84 @@
                 }
             }
 
-            const cell = document.createElement('div');
-            cell.className = cellClass;
-            cell.innerHTML = `
-                <div class="cell-header">
-                    <span class="date-num">${i}</span>
-                    ${holidayName ? '<div class="holiday-dot"></div>' : ''}
+            grid.innerHTML += `
+                <div class="${cellClass}">
+                    <div class="cell-header">
+                        <span class="date-num">${dayCounter}</span>
+                        ${holidayName ? '<div class="holiday-dot"></div>' : ''}
+                    </div>
+                    <div class="shifts-container">${shiftsHtml}</div>
                 </div>
-                <div class="shifts-container">${shiftsHtml}</div>
             `;
-            
-            cell.onclick = () => openInspector(iterDate, shiftData, holidayName, mmdd);
-            grid.appendChild(cell);
+            dayCounter++;
         }
     }
 
-    // --- SWIPE LOGIKA (MOBILRA) ---
     function setupSwipe() {
         const wrapper = document.getElementById('calWrapper');
-        let touchStartX = 0;
-        let touchEndX = 0;
-
-        wrapper.addEventListener('touchstart', e => {
-            touchStartX = e.changedTouches[0].screenX;
-        }, {passive: true});
-
+        let touchStartX = 0; let touchEndX = 0;
+        wrapper.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX, {passive: true});
         wrapper.addEventListener('touchend', e => {
             touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
+            if (touchEndX < touchStartX - 40) changeMonth(1);
+            if (touchEndX > touchStartX + 40) changeMonth(-1);
         }, {passive: true});
-
-        function handleSwipe() {
-            const threshold = 50;
-            if (touchEndX < touchStartX - threshold) changeMonth(1); // Balra húzás -> Következő
-            if (touchEndX > touchStartX + threshold) changeMonth(-1); // Jobbra húzás -> Előző
-        }
     }
 
-    // --- INSPECTOR (RÉSZLETEK) ---
-    const drawer = document.getElementById('inspectorDrawer');
-    const overlay = document.getElementById('drawerOverlay');
-
-    function openInspector(dateObj, shiftData, holidayName, mmdd) {
-        const year = dateObj.getFullYear();
-        const monthName = monthNames[dateObj.getMonth()];
-        const day = String(dateObj.getDate()).padStart(2, '0');
+    // --- ÉVES NYOMTATÁS GENERÁLÁSA ---
+    function prepareAndPrint() {
+        const year = currentDate.getFullYear();
+        const container = document.getElementById('printContainer');
         
-        document.getElementById('inspDate').innerText = `${year}. ${monthName} ${day}.`;
-        document.getElementById('inspDayName').innerText = dayNames[dateObj.getDay()];
+        let html = `
+            <div class="print-header">
+                <h1>FORVIA SMT Éves Műszakbeosztás - ${year}</h1>
+            </div>
+            <div class="year-grid">
+        `;
 
-        let html = '';
+        for(let m = 0; m < 12; m++) {
+            html += `<div class="print-month-box">`;
+            html += `<div class="print-month-title">${monthNames[m]}</div>`;
+            html += `<div class="print-weekdays"><div>H</div><div>K</div><div>Sz</div><div>Cs</div><div>P</div><div>Sz</div><div>V</div></div>`;
+            
+            html += `<div class="print-days-grid">`;
+            const firstDay = new Date(year, m, 1);
+            const lastDay = new Date(year, m + 1, 0);
+            let startDayIndex = firstDay.getDay() - 1; 
+            if(startDayIndex === -1) startDayIndex = 6; 
 
-        if(holidayName) {
-            html += `
-                <div class="detail-card card-holiday">
-                    <div class="card-content">
-                        <div class="card-label">Ünnepnap</div>
-                        <div class="card-value">${holidayName}</div>
+            let dayCounter = 1;
+            for(let i = 0; i < 42; i++) {
+                if (i < startDayIndex || dayCounter > lastDay.getDate()) {
+                    html += `<div class="print-cell empty"></div>`;
+                    continue;
+                }
+
+                const iterDate = new Date(year, m, dayCounter);
+                const isWeekend = iterDate.getDay() === 0 || iterDate.getDay() === 6;
+                const shiftData = getShiftForDate(iterDate);
+                
+                html += `
+                    <div class="print-cell ${isWeekend ? 'weekend' : ''}">
+                        <div class="print-date-num">${dayCounter}</div>
+                        <div class="print-shifts">
+                            <div class="p-pill p-${shiftData.day}">${shiftData.day}</div>
+                            <div class="p-pill p-${shiftData.night}">${shiftData.night}</div>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
+                dayCounter++;
+            }
+            html += `</div></div>`; // End print-days-grid & print-month-box
         }
 
-        const nameDay = nevnapok[mmdd];
-        if(nameDay) {
-            html += `
-                <div class="detail-card">
-                    <div class="card-content">
-                        <div class="card-label">Mai Névnap</div>
-                        <div class="card-value">${nameDay}</div>
-                    </div>
-                </div>
-            `;
-        }
+        html += `</div>`; // End year-grid
+        container.innerHTML = html;
 
-        // Műszak Kártyák Inspectorba
-        if(currentFilter === 'ALL' || currentFilter === shiftData.day) {
-            html += `
-                <div class="detail-card card-${shiftData.day}">
-                    <div class="card-content">
-                        <div class="card-label">06:00 - 18:00</div>
-                        <div class="card-value">Nappalos Műszak</div>
-                    </div>
-                    <div class="big-badge bg-${shiftData.day}">${shiftData.day}</div>
-                </div>
-            `;
-        }
-
-        if(currentFilter === 'ALL' || currentFilter === shiftData.night) {
-            html += `
-                <div class="detail-card card-${shiftData.night}">
-                    <div class="card-content">
-                        <div class="card-label">18:00 - 06:00</div>
-                        <div class="card-value">Éjszakás Műszak</div>
-                    </div>
-                    <div class="big-badge bg-${shiftData.night}">${shiftData.night}</div>
-                </div>
-            `;
-        }
-
-        if(currentFilter === 'ALL' || shiftData.off.includes(currentFilter)) {
-            const isTargetOff = shiftData.off.includes(currentFilter);
-            html += `
-                <div class="detail-card card-OFF" ${isTargetOff ? 'style="border-color:var(--accent); opacity:1;"' : ''}>
-                    <div class="card-content">
-                        <div class="card-label">Szabadnap</div>
-                        <div class="card-value">Pihenőidő</div>
-                    </div>
-                    <div style="display:flex; gap:5px;">
-                        ${isTargetOff 
-                            ? `<div class="big-badge bg-OFF" style="color:var(--text-main)">${currentFilter}</div>`
-                            : `<div class="big-badge bg-OFF" style="font-size:1rem;">${shiftData.off[0]}</div><div class="big-badge bg-OFF" style="font-size:1rem;">${shiftData.off[1]}</div>`
-                        }
-                    </div>
-                </div>
-            `;
-        }
-
-        document.getElementById('inspBody').innerHTML = html;
-        
-        // Csak mobilon nyitjuk fel alulról, asztalin fixen ott van
-        if(window.innerWidth < 1024) {
-            drawer.classList.add('open');
-            overlay.classList.add('open');
-        }
+        // Rövid várakozás, hogy a böngésző biztosan legenerálja a DOM-ot, majd print
+        setTimeout(() => { window.print(); }, 100);
     }
-
-    function closeInspector() {
-        drawer.classList.remove('open');
-        overlay.classList.remove('open');
-    }
-
-    // Swipe lefelé a bezáráshoz (Mobilon)
-    let inspTouchY = 0;
-    drawer.addEventListener('touchstart', e => inspTouchY = e.changedTouches[0].screenY, {passive: true});
-    drawer.addEventListener('touchend', e => {
-        if(window.innerWidth < 1024 && e.changedTouches[0].screenY > inspTouchY + 50) closeInspector();
-    }, {passive: true});
 
 </script>
 </body>
