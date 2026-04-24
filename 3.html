@@ -38,6 +38,7 @@
             display: flex; flex-direction: column;
             height: 100dvh; /* Szigorú 100% magasság */
             overflow: hidden; /* Nincs görgetés */
+            touch-action: manipulation; /* JAVÍTÁS: Gyorsabb és pontosabb érintés mobilon */
         }
 
         /* --- APP HEADER --- */
@@ -83,6 +84,7 @@
             position: absolute; top: 4px; bottom: 4px;
             background: rgba(255,255,255,0.1); border-radius: 8px;
             z-index: 1; transition: transform 0.3s ease, width 0.3s;
+            pointer-events: none; /* JAVÍTÁS: A csúszka sosem takarja el az érintést a gombok elől */
         }
 
         /* --- NAPTÁR SZEKCIÓ --- */
@@ -107,16 +109,14 @@
         }
         .weekday { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
 
-        /* Maga a naptár rács - kitölti a maradék 100% magasságot */
         .cal-grid-wrapper { flex: 1; overflow: hidden; position: relative; }
         .calendar-grid {
             display: grid; grid-template-columns: repeat(7, 1fr);
-            grid-template-rows: repeat(6, 1fr); /* Pontosan 6 sor, ami kitölti a helyet */
+            grid-template-rows: repeat(6, 1fr);
             gap: 4px; height: 100%; width: 100%;
             transition: transform 0.3s ease-out, opacity 0.3s ease-out;
         }
 
-        /* Cellák formázása */
         .cell {
             background: var(--bg-card); border: 1px solid var(--border);
             border-radius: 8px; padding: 4px; 
@@ -131,16 +131,15 @@
         .cell.today .date-num { color: var(--danger); }
         .holiday-dot { width: 5px; height: 5px; background: var(--danger); border-radius: 50%; }
 
-        /* Műszak Címkék - Dinamikusan skálázódik a cellához */
         .shifts-container { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
         .shift-pill {
-            font-size: clamp(0.55rem, 1.5vh, 0.7rem); /* Képernyőmagassághoz igazodik */
+            font-size: clamp(0.55rem, 1.5vh, 0.7rem);
             font-weight: 800; padding: 2px 4px; border-radius: 4px;
             display: flex; justify-content: space-between; align-items: center;
             white-space: nowrap; overflow: hidden;
         }
         .shift-pill span { opacity: 0.8; font-weight: 600; margin-right: 4px;}
-        @media (max-width: 400px) { .shift-pill span { display: none; } .shift-pill { justify-content: center; } } /* Kis kijelzőn csak a betű */
+        @media (max-width: 400px) { .shift-pill span { display: none; } .shift-pill { justify-content: center; } }
 
         .pill-A { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
         .pill-B { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
@@ -148,22 +147,16 @@
         .pill-D { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
 
         .cell.dimmed { opacity: 0.15; filter: grayscale(1); }
-        
-        /* JAVÍTÁS: A kiemelt (szűrt) pille dinamikus kisebb méretezése, hogy biztosan kiférjen */
         .shift-pill.highlight { justify-content: center; font-size: clamp(0.55rem, 1.2vh, 0.7rem); padding: 3px 2px; border: 1px solid currentColor; }
         .shift-pill.highlight span { display: none; }
 
-        /* --- NYOMTATÁSI NÉZET (TELJES ÉV A4-EN) --- */
+        /* --- NYOMTATÁSI NÉZET --- */
         #printContainer { display: none; }
 
         @media print {
             @page { size: A4 portrait; margin: 10mm; }
             body { background: white !important; color: black !important; display: block; height: auto; overflow: visible; }
-            
-            /* Képernyős elemek elrejtése */
             .app-header, .filter-container, .main-layout { display: none !important; }
-            
-            /* Nyomtatási konténer megjelenítése */
             #printContainer { display: block !important; width: 100%; height: 100%; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
@@ -221,7 +214,7 @@
         <section class="calendar-section">
             <div class="cal-header">
                 <button class="cal-nav-btn" onclick="changeMonth(-1)">&#10094;</button>
-                <div class="month-title" id="monthLabel">2026 JANUÁR</div>
+                <div class="month-title" id="monthLabel"></div>
                 <button class="cal-nav-btn" onclick="changeMonth(1)">&#10095;</button>
             </div>
             
@@ -239,7 +232,6 @@
     <div id="printContainer"></div>
 
 <script>
-    // --- ADATOK ---
     const unnepnapok = {
         "01-01": "Újév", "03-15": "Nemzeti Ünnep", "04-03": "Nagypéntek", "04-05": "Húsvét",
         "04-06": "Húsvéthétfő", "05-01": "Munka", "05-24": "Pünkösd", "05-25": "Pünkösd",
@@ -247,7 +239,6 @@
         "12-24": "Szenteste", "12-25": "Karácsony", "12-26": "Karácsony"
     };
 
-    // --- MŰSZAK GENERÁTOR ---
     const anchorDate = new Date(Date.UTC(2026, 0, 9)); 
 
     function getShiftForDate(dateObj) {
@@ -261,19 +252,11 @@
         if (cycleDay >= 9 && cycleDay <= 11) return { day: 'D', night: 'C' };
     }
 
-    // --- ÁLLAPOT ---
     let currentDate = new Date();
     const todayStr = new Date().toISOString().split('T')[0];
     let currentFilter = 'ALL';
     
     const monthNames = ["Január","Február","Március","Április","Május","Június","Július","Augusztus","Szeptember","Október","November","December"];
-
-    // --- INIT ---
-    window.onload = () => {
-        initSegmentedControl();
-        renderCalendar();
-        setupSwipe();
-    };
 
     function initSegmentedControl() {
         const slider = document.getElementById('segSlider');
@@ -327,7 +310,6 @@
         let startDayIndex = firstDay.getDay() - 1; 
         if(startDayIndex === -1) startDayIndex = 6; 
 
-        // Rács feltöltése (mindig pontosan 42 cella / 6 sor szükséges a fix elrendezéshez)
         let totalCells = 42;
         let dayCounter = 1;
 
@@ -355,7 +337,6 @@
                     <div class="shift-pill pill-${shiftData.night}"><span>É</span><strong>${shiftData.night}</strong></div>
                 `;
             } else {
-                /* JAVÍTÁS: NAPPALOS helyett NAPPAL, ÉJSZAKÁS helyett ÉJJEL szövegek */
                 if(shiftData.day === currentFilter) {
                     shiftsHtml = `<div class="shift-pill pill-${shiftData.day} highlight"><strong>NAPPAL</strong></div>`;
                 } else if(shiftData.night === currentFilter) {
@@ -381,15 +362,19 @@
     function setupSwipe() {
         const wrapper = document.getElementById('calWrapper');
         let touchStartX = 0; let touchEndX = 0;
-        wrapper.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX, {passive: true});
+        
+        // JAVÍTÁS: Sokkal pontosabb érintéskoordináta olvasás mobilon
+        wrapper.addEventListener('touchstart', e => {
+            touchStartX = e.touches[0].clientX;
+        }, {passive: true});
+        
         wrapper.addEventListener('touchend', e => {
-            touchEndX = e.changedTouches[0].screenX;
+            touchEndX = e.changedTouches[0].clientX;
             if (touchEndX < touchStartX - 40) changeMonth(1);
             if (touchEndX > touchStartX + 40) changeMonth(-1);
         }, {passive: true});
     }
 
-    // --- ÉVES NYOMTATÁS GENERÁLÁSA ---
     function prepareAndPrint() {
         const year = currentDate.getFullYear();
         const container = document.getElementById('printContainer');
@@ -403,4 +388,51 @@
 
         for(let m = 0; m < 12; m++) {
             html += `<div class="print-month-box">`;
-            html +=
+            html += `<div class="print-month-title">${monthNames[m]}</div>`;
+            html += `<div class="print-weekdays"><div>H</div><div>K</div><div>Sz</div><div>Cs</div><div>P</div><div>Sz</div><div>V</div></div>`;
+            
+            html += `<div class="print-days-grid">`;
+            const firstDay = new Date(year, m, 1);
+            const lastDay = new Date(year, m + 1, 0);
+            let startDayIndex = firstDay.getDay() - 1; 
+            if(startDayIndex === -1) startDayIndex = 6; 
+
+            let dayCounter = 1;
+            for(let i = 0; i < 42; i++) {
+                if (i < startDayIndex || dayCounter > lastDay.getDate()) {
+                    html += `<div class="print-cell empty"></div>`;
+                    continue;
+                }
+
+                const iterDate = new Date(year, m, dayCounter);
+                const isWeekend = iterDate.getDay() === 0 || iterDate.getDay() === 6;
+                const shiftData = getShiftForDate(iterDate);
+                
+                html += `
+                    <div class="print-cell ${isWeekend ? 'weekend' : ''}">
+                        <div class="print-date-num">${dayCounter}</div>
+                        <div class="print-shifts">
+                            <div class="p-pill p-${shiftData.day}">${shiftData.day}</div>
+                            <div class="p-pill p-${shiftData.night}">${shiftData.night}</div>
+                        </div>
+                    </div>
+                `;
+                dayCounter++;
+            }
+            html += `</div></div>`; 
+        }
+
+        html += `</div>`; 
+        container.innerHTML = html;
+
+        setTimeout(() => { window.print(); }, 100);
+    }
+
+    // JAVÍTÁS: A kód legvégén azonnal lefuttatjuk a betöltést, nem várunk semmilyen window.onload eseményre, amit a mobil letilthat.
+    initSegmentedControl();
+    renderCalendar();
+    setupSwipe();
+
+</script>
+</body>
+</html>
