@@ -148,7 +148,9 @@
         .pill-D { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
 
         .cell.dimmed { opacity: 0.15; filter: grayscale(1); }
-        .shift-pill.highlight { justify-content: center; font-size: 0.7rem; padding: 4px; border: 1px solid currentColor; }
+        
+        /* JAVÍTÁS: A kiemelt (szűrt) pille dinamikus kisebb méretezése, hogy biztosan kiférjen */
+        .shift-pill.highlight { justify-content: center; font-size: clamp(0.55rem, 1.2vh, 0.7rem); padding: 3px 2px; border: 1px solid currentColor; }
         .shift-pill.highlight span { display: none; }
 
         /* --- NYOMTATÁSI NÉZET (TELJES ÉV A4-EN) --- */
@@ -353,10 +355,11 @@
                     <div class="shift-pill pill-${shiftData.night}"><span>É</span><strong>${shiftData.night}</strong></div>
                 `;
             } else {
+                /* JAVÍTÁS: NAPPALOS helyett NAPPAL, ÉJSZAKÁS helyett ÉJJEL szövegek */
                 if(shiftData.day === currentFilter) {
-                    shiftsHtml = `<div class="shift-pill pill-${shiftData.day} highlight"><strong>NAPPALOS</strong></div>`;
+                    shiftsHtml = `<div class="shift-pill pill-${shiftData.day} highlight"><strong>NAPPAL</strong></div>`;
                 } else if(shiftData.night === currentFilter) {
-                    shiftsHtml = `<div class="shift-pill pill-${shiftData.night} highlight"><strong>ÉJSZAKÁS</strong></div>`;
+                    shiftsHtml = `<div class="shift-pill pill-${shiftData.night} highlight"><strong>ÉJJEL</strong></div>`;
                 } else {
                     cellClass += ' dimmed';
                 }
@@ -400,47 +403,4 @@
 
         for(let m = 0; m < 12; m++) {
             html += `<div class="print-month-box">`;
-            html += `<div class="print-month-title">${monthNames[m]}</div>`;
-            html += `<div class="print-weekdays"><div>H</div><div>K</div><div>Sz</div><div>Cs</div><div>P</div><div>Sz</div><div>V</div></div>`;
-            
-            html += `<div class="print-days-grid">`;
-            const firstDay = new Date(year, m, 1);
-            const lastDay = new Date(year, m + 1, 0);
-            let startDayIndex = firstDay.getDay() - 1; 
-            if(startDayIndex === -1) startDayIndex = 6; 
-
-            let dayCounter = 1;
-            for(let i = 0; i < 42; i++) {
-                if (i < startDayIndex || dayCounter > lastDay.getDate()) {
-                    html += `<div class="print-cell empty"></div>`;
-                    continue;
-                }
-
-                const iterDate = new Date(year, m, dayCounter);
-                const isWeekend = iterDate.getDay() === 0 || iterDate.getDay() === 6;
-                const shiftData = getShiftForDate(iterDate);
-                
-                html += `
-                    <div class="print-cell ${isWeekend ? 'weekend' : ''}">
-                        <div class="print-date-num">${dayCounter}</div>
-                        <div class="print-shifts">
-                            <div class="p-pill p-${shiftData.day}">${shiftData.day}</div>
-                            <div class="p-pill p-${shiftData.night}">${shiftData.night}</div>
-                        </div>
-                    </div>
-                `;
-                dayCounter++;
-            }
-            html += `</div></div>`; // End print-days-grid & print-month-box
-        }
-
-        html += `</div>`; // End year-grid
-        container.innerHTML = html;
-
-        // Rövid várakozás, hogy a böngésző biztosan legenerálja a DOM-ot, majd print
-        setTimeout(() => { window.print(); }, 100);
-    }
-
-</script>
-</body>
-</html>
+            html +=
