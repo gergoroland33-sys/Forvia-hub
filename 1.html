@@ -164,34 +164,59 @@ input.suggestions-active {
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-/* EREDMÉNYEK */
-#eredmeny { max-width: 600px; margin: 0 auto 50px auto; padding: 0 15px; }
+/* EREDMÉNYEK - ÚJ KOMPAKT PC GRID LAYOUT */
+#eredmeny { 
+    max-width: 960px; /* Szélesebb lett, hogy elférjenek a kártyák egymás mellett */
+    margin: 0 auto 50px auto; 
+    padding: 0 15px; 
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Rács szerkezet */
+    gap: 15px;
+    align-items: stretch; /* Egyforma magas kártyák egy sorban */
+}
 
-/* PC Kártya Stílus */
+/* Hogy a fejléc, a szűrő, és a JS által generált üres üzenetek kitöltsék az egész sort! */
+.section-header, 
+.filter-container,
+#eredmeny > div[style*="text-align:center"] {
+    grid-column: 1 / -1;
+    width: 100%;
+}
+
+/* PC Kártya Stílus - Prémium frissítés */
 .card { 
-    background: var(--card-surface); 
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95)); 
     border-radius: var(--radius); 
-    margin-bottom: 10px; 
+    margin-bottom: 0; /* Margin helyett most a Grid Gap dolgozik */
     position: relative; 
     overflow: hidden; 
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    box-shadow: 0 6px 12px -2px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.05);
     border: 1px solid var(--border);
+    border-top: 1px solid rgba(255,255,255,0.12);
     display: flex; 
-    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    height: 100%;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease;
 }
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -4px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.15);
+}
+
 .clickable-card { cursor: pointer; }
-.clickable-card:active { transform: scale(0.98); box-shadow: 0 0 0 rgba(0,0,0,0); }
+.clickable-card:active { transform: scale(0.98) translateY(0); box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: 0.1s; }
 
 .color-strip { width: 6px; flex-shrink: 0; }
-.card-content { flex: 1; padding: 10px 15px; display: grid; gap: 2px; }
-.data-row { display: flex; justify-content: space-between; align-items: baseline; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.02); }
+.card-content { flex: 1; padding: 12px 15px; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+.data-row { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.02); }
+.data-row:last-child { border-bottom: none; }
 .d-label { font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; }
 .d-value { font-size: 0.9rem; font-weight: 500; color: var(--text-primary); text-align: right; }
 .row-main .d-value { font-size: 1.1rem; font-weight: 700; color: white; font-family: monospace; }
 .row-main .d-label { color: var(--accent); font-weight: bold; }
 
 .section-header {
-    margin-top: 30px; margin-bottom: 10px; padding: 8px 15px;
+    margin-top: 15px; margin-bottom: 5px; padding: 8px 15px;
     border-radius: 8px; font-size: 0.85rem; font-weight: 800; text-transform: uppercase;
     display: flex; align-items: center; gap: 10px; border-left: 6px solid transparent;
 }
@@ -326,7 +351,7 @@ input.suggestions-active {
     .search-icon { display: none; } 
     .clear-btn { top: 6px; right: 12px; }
 
-    /* KÁRTYA ELRENDEZÉS - FLEX */
+    /* KÁRTYA ELRENDEZÉS - FLEX MOBILON TÖKÉLETESEN MEGTARTVA */
     #eredmeny {
         display: flex;
         flex-wrap: wrap;         
@@ -351,7 +376,10 @@ input.suggestions-active {
         margin-bottom: 0; border-radius: 6px; font-size: 0.75rem;      
         border: 1px solid rgba(255,255,255,0.08); background: #1e293b; 
         box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
+        /* Resetéljük a PC hover effekteket mobilon */
+        transform: none !important;
     }
+    .card:hover { transform: none; box-shadow: 0 2px 4px rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.08); }
     
     .color-strip { width: 100%; height: 3px; order: -1; }
     .card-content { padding: 6px 8px; gap: 1px; }
@@ -470,17 +498,16 @@ input.suggestions-active {
 
 
 /* --- KÉPERNYŐN LÁTHATATLAN NYOMTATÁSI TERÜLET --- */
-/* Ezt az egy blokkot tettem be, hogy a képernyőn ne mutassa a nyomtatási adatokat a lap alján! */
 @media screen {
     #printArea { display: none !important; }
 }
 
-/* --- OKOS, ÜRES LAP NÉLKÜLI NYOMTATÁSI KÉP --- */
+/* --- OKOS, SZÍNES, PRÉMIUM NYOMTATÁSI KÉP --- */
 @media print {
     @page { size: A4 portrait; margin: 10mm; }
-    body { background: white !important; -webkit-print-color-adjust: exact; }
+    body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     body * { visibility: hidden; }
-    #printArea, #printArea * { visibility: visible; color: black !important; font-family: 'Inter', Arial, sans-serif !important; }
+    #printArea, #printArea * { visibility: visible; color: #0f172a !important; font-family: 'Inter', Arial, sans-serif !important; }
     #printArea { position: absolute; left: 0; top: 0; width: 100%; background: white; }
     
     .print-page { 
@@ -496,18 +523,52 @@ input.suggestions-active {
         break-after: auto;
     }
     
-    .print-header { border: 2px solid #000; padding: 12px; margin-bottom: 12px; text-align: center; border-radius: 8px; background: #f8fafc !important; }
-    .print-h-title { font-size: 22pt; font-weight: 900; margin-bottom: 6px; text-transform: uppercase; }
-    .print-h-sub { font-size: 16pt; font-weight: bold; color: #334155 !important; }
+    /* Prémium nyomtatási fejléc */
+    .print-header { 
+        border: 2px solid #1e293b; 
+        padding: 12px; 
+        margin-bottom: 12px; 
+        text-align: center; 
+        border-radius: 8px; 
+        background: #f1f5f9 !important; 
+        box-shadow: 4px 4px 0px #cbd5e1 !important; 
+    }
+    .print-h-title { font-size: 22pt; font-weight: 900; margin-bottom: 6px; text-transform: uppercase; color: #1d4ed8 !important; }
+    .print-h-sub { font-size: 16pt; font-weight: bold; color: #475569 !important; }
     
-    .print-table { width: 100%; border-collapse: collapse; }
-    .print-table th { background: #e2e8f0 !important; color: #000 !important; padding: 4px; text-align: center; font-size: 9pt; border: 1px solid #000; text-transform: uppercase; }
-    .print-table td { padding: 2px 4px; border: 1px solid #000; font-size: 9pt; font-family: monospace !important; font-weight: bold; line-height: 1.1; text-align: center; }
+    /* Prémium színes táblázat */
+    .print-table { width: 100%; border-collapse: collapse; border: 2px solid #1e293b !important; }
+    .print-table th { 
+        background: #3b82f6 !important; 
+        color: #ffffff !important; 
+        padding: 6px 4px; 
+        text-align: center; 
+        font-size: 10pt; 
+        border: 1px solid #1e40af !important; 
+        text-transform: uppercase; 
+        letter-spacing: 0.5px;
+    }
+    .print-table td { 
+        padding: 4px; 
+        border: 1px solid #94a3b8 !important; 
+        font-size: 9.5pt; 
+        font-family: monospace !important; 
+        font-weight: bold; 
+        line-height: 1.2; 
+        text-align: center; 
+    }
     
-    .poz-col { width: 25%; font-size: 10pt !important;}
-    .cikk-col { width: 55%; }
+    /* Zebra csíkozás a jobb olvashatóságért */
+    .print-table tbody tr:nth-child(even) td { background: #f8fafc !important; }
+    .print-table tbody tr:nth-child(odd) td { background: #ffffff !important; }
+    
+    /* Kiemelt Pozíció oszlop */
+    .poz-col { width: 25%; font-size: 11pt !important; color: #0f172a !important; background: #e2e8f0 !important; border-right: 2px solid #94a3b8 !important;}
+    .cikk-col { width: 55%; color: #1e293b !important; }
     .check-col { width: 20%; }
-    .checkbox { width: 14px; height: 14px; border: 1px solid #000; border-radius: 3px; margin: 0 auto; }
+    
+    /* Checkbox dizájn javítás */
+    .checkbox { width: 16px; height: 16px; border: 2px solid #475569 !important; border-radius: 4px; margin: 0 auto; background: white !important; }
 }
 </style>
 </head>
