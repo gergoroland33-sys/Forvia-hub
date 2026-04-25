@@ -164,17 +164,18 @@ input.suggestions-active {
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-/* EREDMÉNYEK - KOMPAKT PC GRID LAYOUT MEGTARTVA */
+/* EREDMÉNYEK - ÚJ KOMPAKT PC GRID LAYOUT */
 #eredmeny { 
-    max-width: 960px; 
+    max-width: 960px; /* Szélesebb lett, hogy elférjenek a kártyák egymás mellett */
     margin: 0 auto 50px auto; 
     padding: 0 15px; 
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Rács szerkezet */
     gap: 15px;
-    align-items: stretch; 
+    align-items: stretch; /* Egyforma magas kártyák egy sorban */
 }
 
+/* Hogy a fejléc, a szűrő, és a JS által generált üres üzenetek kitöltsék az egész sort! */
 .section-header, 
 .filter-container,
 #eredmeny > div[style*="text-align:center"] {
@@ -182,11 +183,11 @@ input.suggestions-active {
     width: 100%;
 }
 
-/* PC Kártya Stílus - Hover effektekkel */
+/* PC Kártya Stílus - Prémium frissítés */
 .card { 
     background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95)); 
     border-radius: var(--radius); 
-    margin-bottom: 0; 
+    margin-bottom: 0; /* Margin helyett most a Grid Gap dolgozik */
     position: relative; 
     overflow: hidden; 
     box-shadow: 0 6px 12px -2px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.05);
@@ -308,7 +309,7 @@ input.suggestions-active {
 .m-db span { font-size: 0.7rem; font-weight: normal; color: var(--text-secondary); margin-left: 2px; }
 
 /* ========================================= */
-/* --- MOBIL NÉZET (Max 1024px) - ÉRINTETLEN --- */
+/* --- MOBIL NÉZET (Max 1024px) --- */
 /* ========================================= */
 @media screen and (max-width: 1024px) {
     .top-bar { display: none; }
@@ -350,6 +351,7 @@ input.suggestions-active {
     .search-icon { display: none; } 
     .clear-btn { top: 6px; right: 12px; }
 
+    /* KÁRTYA ELRENDEZÉS - FLEX MOBILON TÖKÉLETESEN MEGTARTVA */
     #eredmeny {
         display: flex;
         flex-wrap: wrap;         
@@ -374,6 +376,7 @@ input.suggestions-active {
         margin-bottom: 0; border-radius: 6px; font-size: 0.75rem;      
         border: 1px solid rgba(255,255,255,0.08); background: #1e293b; 
         box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
+        /* Resetéljük a PC hover effekteket mobilon */
         transform: none !important;
     }
     .card:hover { transform: none; box-shadow: 0 2px 4px rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.08); }
@@ -386,6 +389,7 @@ input.suggestions-active {
     .d-value { font-size: 0.85rem; text-align: center; color: white; font-weight: 500; white-space: nowrap; }
     .row-main .d-value { font-size: 0.95rem; font-weight: 700; white-space: normal; word-break: break-all;}
 
+    /* --- PRO 3D BILLENTYŰZET --- */
     #kbContainer {
         display: block;
         position: fixed; 
@@ -525,32 +529,32 @@ input.suggestions-active {
         break-after: auto !important;
     }
     
-    /* Fejléc: Eredeti méretek, új színezés */
+    /* Fejléc: Excel stílus (Világoskék fókusz) */
     .print-header { 
-        border: 2px solid #000; 
+        border: 2px solid #93c5fd; 
         padding: 12px; 
         margin-bottom: 12px; 
         text-align: center; 
         border-radius: 8px; 
-        background: #f1f5f9 !important; 
+        background: #f8fafc !important; 
     }
-    .print-h-title { font-size: 22pt; font-weight: 900; margin-bottom: 6px; text-transform: uppercase; color: #1e40af !important; }
-    .print-h-sub { font-size: 16pt; font-weight: bold; color: #334155 !important; }
+    .print-h-title { font-size: 22pt; font-weight: 900; margin-bottom: 6px; text-transform: uppercase; color: #2563eb !important; }
+    .print-h-sub { font-size: 16pt; font-weight: bold; color: #475569 !important; }
     
-    /* Táblázat: Eredeti méretek, új színezés */
+    /* Táblázat: Excel kék stílus */
     .print-table { width: 100%; border-collapse: collapse; }
     .print-table th { 
-        background: #1e40af !important; 
+        background: #3b82f6 !important; /* Szép Excel-szerű világosabb kék */
         color: #ffffff !important; 
         padding: 4px; 
         text-align: center; 
         font-size: 9pt; 
-        border: 1px solid #000; 
+        border: 1px solid #2563eb !important; 
         text-transform: uppercase; 
     }
     .print-table td { 
         padding: 2px 4px; 
-        border: 1px solid #000; 
+        border: 1px solid #bfdbfe !important; /* Halványkék, letisztult keretek */
         font-size: 9pt; 
         font-family: monospace !important; 
         font-weight: bold; 
@@ -558,15 +562,17 @@ input.suggestions-active {
         text-align: center; 
     }
     
-    /* Zebra csíkozás hozzáadása (színezés) */
-    .print-table tbody tr:nth-child(even) td { background: #f8fafc !important; }
+    /* Zebra csíkozás hozzáadása */
+    .print-table tbody tr:nth-child(even) td { background: #eff6ff !important; /* Jól látható halványkék */ }
+    .print-table tbody tr:nth-child(odd) td { background: #ffffff !important; }
     
-    .poz-col { width: 25%; font-size: 10pt !important;}
-    .cikk-col { width: 55%; }
+    /* Kiemelt oszlopok színezése (Megoldja a "túl alul színezett" problémát) */
+    .poz-col { width: 25%; font-size: 10pt !important; background: #dbeafe !important; color: #1e3a8a !important; }
+    .cikk-col { width: 55%; color: #0f172a !important; }
     .check-col { width: 20%; }
     
-    /* Checkbox: Eredeti struktúra és színezés */
-    .checkbox { width: 14px; height: 14px; border: 1px solid #000; border-radius: 3px; margin: 0 auto; background: white !important; }
+    /* Checkbox: Világosabb keret */
+    .checkbox { width: 14px; height: 14px; border: 1px solid #64748b; border-radius: 3px; margin: 0 auto; background: white !important; }
 }
 </style>
 </head>
