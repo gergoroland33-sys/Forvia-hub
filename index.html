@@ -32,7 +32,9 @@
         }
 
         #content-frame {
-            border: none; width: 100%; height: 100%;
+            border: none; width: 100%; 
+            /* MÓDOSÍTVA: A virtuális "holt tér" létrehozása az alsó 55 pixel kihagyásával */
+            height: calc(100% - 55px);
             display: none; 
             background: #0f172a;
         }
@@ -298,22 +300,23 @@
         }
         .nav-item:active { background: var(--accent) !important; color: white !important; transform: scale(0.98); }
 
-        /* --- PRO "SMART DOCK" --- */
+        /* --- PRO "SMART DOCK" - GLOBÁLIS VÉKONY VERZIÓ --- */
         .smart-dock {
             position: fixed;
-            bottom: 30px;
-            right: 16px; 
+            /* MÓDOSÍTVA: A korábbi 30px helyett most 10px-re, és vízszintesen rendezve */
+            bottom: 10px;
+            right: 10px; 
             z-index: 2147483647;
             display: flex;
-            flex-direction: column; 
+            flex-direction: row; /* Fekvő elrendezés (mint a régi 8-as modulnál) */
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             
             background: rgba(30, 41, 59, 0.65);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.12);
-            padding: 8px;
-            border-radius: 30px; 
+            padding: 4px; /* Keskenyebb padding */
+            border-radius: 40px; /* Lekerekített kapszula forma */
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255,255,255,0.1);
             
             transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -325,102 +328,59 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        /* --- EGYEDI POZÍCIÓK MODULONKÉNT --- */
+        /* --- EGYEDI POZÍCIÓK MODULONKÉNT (KIKOMMENTELVE, HOGY NE ZAVARJA A FIX ALSÓ SÁVOT, DE NE is VESSZEN EL) --- */
+        /*
         body.active-mod-1 .smart-dock,
         body.active-mod-2 .smart-dock,
         body.active-mod-10 .smart-dock {
-            bottom: auto;
-            top: 50%;
-            margin-top: -55px; 
+            bottom: auto; top: 50%; margin-top: -55px; 
         }
 
-        /* --- CAD ELEMZŐ (13. modul) - BAL OLDALI DOCK (FIZIKAI ELTOLÁSSAL VÉDVE) --- */
         body.active-mod-13 .smart-dock {
-            right: auto;
-            left: 0; /* A képernyő bal széléhez rögzítve */
-            bottom: 20px; /* Kissé lejjebb engedve az erdeti 30px helyett */
-            animation: none; /* Kikapcsolja a kezdeti beugrás animációját a simább működésért */
-            transform: translateX(calc(-100% + 14px)); /* Rejtve van, de 14px kint marad, ami a "fogantyú" területe */
-            border-radius: 0 30px 30px 0; /* Egyenes bal oldal, teljesen lekerekített jobb */
-            border-left: none; /* Nincs szél a képernyő peremén */
-            /* A MATEK: 24px jobb padding + 8px bal padding + 42px gomb = 74px szélesség. 
-               Ha -100%+14px eltoljuk, akkor pontosan 10 pixelnyire a képernyőn kívülre kerül a gomb! 
-               Fizikai lehetetlenség megnyomni csukott állapotban. Csak a fogantyút tudod érinteni. */
-            padding-right: 24px; 
-            padding-left: 8px; 
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15); /* Rugós "Sleek" becsúszás */
+            right: auto; left: 0; bottom: 20px; animation: none;
+            transform: translateX(calc(-100% + 14px));
+            border-radius: 0 30px 30px 0; border-left: none;
+            padding-right: 24px; padding-left: 8px;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15);
         }
 
-        /* Egy elegáns kis kék neon "csík", ami mutatja a fogantyút */
         body.active-mod-13 .smart-dock::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            right: 5px; /* Középre igazítva a kilógó 14px-es sávban */
-            transform: translateY(-50%);
-            width: 4px;
-            height: 36px;
-            background: var(--accent);
-            border-radius: 10px;
-            box-shadow: 0 0 8px rgba(59, 130, 246, 0.8);
-            transition: opacity 0.3s ease;
+            content: ''; position: absolute; top: 50%; right: 5px; transform: translateY(-50%);
+            width: 4px; height: 36px; background: var(--accent); border-radius: 10px;
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.8); transition: opacity 0.3s ease;
         }
 
-        /* Láthatatlan érintési zóna kiterjesztése mobilon, hogy vakon is könnyen kinyitható legyen a szélét érintve */
         body.active-mod-13 .smart-dock::before {
-            content: '';
-            position: absolute;
-            top: -15px;
-            bottom: -15px;
-            right: -20px; 
-            width: 40px;
-            z-index: 10;
-            cursor: pointer;
+            content: ''; position: absolute; top: -15px; bottom: -15px; right: -20px; width: 40px; z-index: 10; cursor: pointer;
         }
 
-        /* Interakció: Hover (PC) vagy érintés (Mobil) hatására előcsúszik teljes valójában */
-        body.active-mod-13 .smart-dock:hover,
-        body.active-mod-13 .smart-dock:focus-within,
-        body.active-mod-13 .smart-dock:active {
+        body.active-mod-13 .smart-dock:hover, body.active-mod-13 .smart-dock:focus-within, body.active-mod-13 .smart-dock:active {
             transform: translateX(0);
         }
 
-        /* Amikor meg van nyitva a menü, a kis kék csík finoman elhalványul a háttérben */
-        body.active-mod-13 .smart-dock:hover::after,
-        body.active-mod-13 .smart-dock:focus-within::after,
-        body.active-mod-13 .smart-dock:active::after {
+        body.active-mod-13 .smart-dock:hover::after, body.active-mod-13 .smart-dock:focus-within::after, body.active-mod-13 .smart-dock:active::after {
             opacity: 0.1;
         }
 
-        /* SZABADSÁGOK (VÉKONYÍTOTT VERZIÓ) */
         body.active-mod-8 .smart-dock {
-            flex-direction: row; 
-            bottom: 10px;        
-            right: 10px;
-            padding: 4px;        
-            gap: 8px;            
-            border-radius: 40px;
+            flex-direction: row; bottom: 10px; right: 10px; padding: 4px; gap: 8px; border-radius: 40px;
         }
-
-        body.active-mod-8 .smart-dock .menu-fab,
-        body.active-mod-8 .smart-dock .refresh-fab {
-            width: 35px;       
-            height: 35px;
+        body.active-mod-8 .smart-dock .menu-fab, body.active-mod-8 .smart-dock .refresh-fab {
+            width: 35px; height: 35px;
         }
         body.active-mod-8 .smart-dock .menu-fab span { font-size: 18px; }
         body.active-mod-8 .smart-dock .refresh-fab span { font-size: 16px; }
 
-
-        /* BARCODE SCAN - FELJEBB */
-        body.active-mod-9 .smart-dock {
-            bottom: 140px; 
-        }
+        body.active-mod-9 .smart-dock { bottom: 140px; }
+        */
 
         /* ------------------------------------------- */
 
+        /* GLOBÁLIS GOMB MÉRETEZÉS AZ ÚJ ALAPÉRTELMEZETT KAPSZULÁHOZ */
         .menu-fab, .refresh-fab {
             position: relative !important; bottom: auto !important; right: auto !important; top: auto !important;
-            width: 42px; height: 42px; 
+            /* MÓDOSÍTVA: Kisebb, kompaktabb méret (42px helyett 35px) */
+            width: 35px; height: 35px; 
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
             cursor: pointer; 
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -435,7 +395,8 @@
             box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); 
         }
         .menu-fab:active { transform: scale(0.92); box-shadow: 0 2px 5px rgba(59, 130, 246, 0.5); }
-        .menu-fab span { font-size: 24px; color: white; line-height: 1; pointer-events: none; transition: transform 0.3s ease; }
+        /* MÓDOSÍTVA: Ikon méret hozzáigazítva az új gombhoz */
+        .menu-fab span { font-size: 18px; color: white; line-height: 1; pointer-events: none; transition: transform 0.3s ease; }
 
         .refresh-fab {
             background: rgba(255, 255, 255, 0.05);
@@ -451,7 +412,8 @@
         }
         
         .refresh-fab:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.1); }
-        .refresh-fab span { font-size: 20px; color: var(--accent); line-height: 1; font-weight: bold; pointer-events: none; }
+        /* MÓDOSÍTVA: Ikon méret hozzáigazítva az új gombhoz */
+        .refresh-fab span { font-size: 16px; color: var(--accent); line-height: 1; font-weight: bold; pointer-events: none; }
 
         .overlay {
             display: none; position: fixed; inset: 0;
