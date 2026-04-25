@@ -164,18 +164,17 @@ input.suggestions-active {
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-/* EREDMÉNYEK - ÚJ KOMPAKT PC GRID LAYOUT */
+/* EREDMÉNYEK - KOMPAKT PC GRID LAYOUT MEGTARTVA */
 #eredmeny { 
-    max-width: 960px; /* Szélesebb lett, hogy elférjenek a kártyák egymás mellett */
+    max-width: 960px; 
     margin: 0 auto 50px auto; 
     padding: 0 15px; 
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Rács szerkezet */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
     gap: 15px;
-    align-items: stretch; /* Egyforma magas kártyák egy sorban */
+    align-items: stretch; 
 }
 
-/* Hogy a fejléc, a szűrő, és a JS által generált üres üzenetek kitöltsék az egész sort! */
 .section-header, 
 .filter-container,
 #eredmeny > div[style*="text-align:center"] {
@@ -183,11 +182,11 @@ input.suggestions-active {
     width: 100%;
 }
 
-/* PC Kártya Stílus - Prémium frissítés */
+/* PC Kártya Stílus - Hover effektekkel */
 .card { 
     background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95)); 
     border-radius: var(--radius); 
-    margin-bottom: 0; /* Margin helyett most a Grid Gap dolgozik */
+    margin-bottom: 0; 
     position: relative; 
     overflow: hidden; 
     box-shadow: 0 6px 12px -2px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.05);
@@ -257,7 +256,7 @@ input.suggestions-active {
 
 /* --- SZOLID FIX HÁTTÉR (IDLE STATE) --- */
 #idleState {
-    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    display: flex; flex-direction: column; align-items: center; justify(flex-start;
     width: 100%; max-width: 600px; height: 250px; margin: 0 auto; padding: 30px 15px 0 15px;
     user-select: none; text-align: center; box-sizing: border-box;
 }
@@ -309,7 +308,7 @@ input.suggestions-active {
 .m-db span { font-size: 0.7rem; font-weight: normal; color: var(--text-secondary); margin-left: 2px; }
 
 /* ========================================= */
-/* --- MOBIL NÉZET (Max 1024px) --- */
+/* --- MOBIL NÉZET (Max 1024px) - ÉRINTETLEN --- */
 /* ========================================= */
 @media screen and (max-width: 1024px) {
     .top-bar { display: none; }
@@ -351,7 +350,6 @@ input.suggestions-active {
     .search-icon { display: none; } 
     .clear-btn { top: 6px; right: 12px; }
 
-    /* KÁRTYA ELRENDEZÉS - FLEX MOBILON TÖKÉLETESEN MEGTARTVA */
     #eredmeny {
         display: flex;
         flex-wrap: wrap;         
@@ -376,7 +374,6 @@ input.suggestions-active {
         margin-bottom: 0; border-radius: 6px; font-size: 0.75rem;      
         border: 1px solid rgba(255,255,255,0.08); background: #1e293b; 
         box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
-        /* Resetéljük a PC hover effekteket mobilon */
         transform: none !important;
     }
     .card:hover { transform: none; box-shadow: 0 2px 4px rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.08); }
@@ -389,7 +386,6 @@ input.suggestions-active {
     .d-value { font-size: 0.85rem; text-align: center; color: white; font-weight: 500; white-space: nowrap; }
     .row-main .d-value { font-size: 0.95rem; font-weight: 700; white-space: normal; word-break: break-all;}
 
-    /* --- PRO 3D BILLENTYŰZET --- */
     #kbContainer {
         display: block;
         position: fixed; 
@@ -502,12 +498,12 @@ input.suggestions-active {
     #printArea { display: none !important; }
 }
 
-/* --- OKOS, SZÍNES, PRÉMIUM NYOMTATÁSI KÉP --- */
+/* --- NYOMTATÁSI KÉP - SZERKEZET VISSZAÁLLÍTVA, CSAK SZÍNEZÉS HOZZÁADVA --- */
 @media print {
     @page { size: A4 portrait; margin: 10mm; }
     body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     body * { visibility: hidden; }
-    #printArea, #printArea * { visibility: visible; color: #0f172a !important; font-family: 'Inter', Arial, sans-serif !important; }
+    #printArea, #printArea * { visibility: visible; color: black !important; font-family: 'Inter', Arial, sans-serif !important; }
     #printArea { position: absolute; left: 0; top: 0; width: 100%; background: white; }
     
     .print-page { 
@@ -523,52 +519,48 @@ input.suggestions-active {
         break-after: auto;
     }
     
-    /* Prémium nyomtatási fejléc */
+    /* Fejléc: Eredeti méretek, új színezés */
     .print-header { 
-        border: 2px solid #1e293b; 
-        padding: 12px; 
-        margin-bottom: 12px; 
+        border: 2px solid #000; 
+        padding: 12px; /* Eredeti padding */
+        margin-bottom: 12px; /* Eredeti margin */
         text-align: center; 
         border-radius: 8px; 
-        background: #f1f5f9 !important; 
-        box-shadow: 4px 4px 0px #cbd5e1 !important; 
+        background: #f1f5f9 !important; /* Új háttérszín */
     }
-    .print-h-title { font-size: 22pt; font-weight: 900; margin-bottom: 6px; text-transform: uppercase; color: #1d4ed8 !important; }
-    .print-h-sub { font-size: 16pt; font-weight: bold; color: #475569 !important; }
+    .print-h-title { font-size: 22pt; font-weight: 900; margin-bottom: 6px; text-transform: uppercase; color: #1e40af !important; }
+    .print-h-sub { font-size: 16pt; font-weight: bold; color: #334155 !important; }
     
-    /* Prémium színes táblázat */
-    .print-table { width: 100%; border-collapse: collapse; border: 2px solid #1e293b !important; }
+    /* Táblázat: Eredeti méretek, új színezés */
+    .print-table { width: 100%; border-collapse: collapse; }
     .print-table th { 
-        background: #3b82f6 !important; 
+        background: #1e40af !important; /* Kék léc */
         color: #ffffff !important; 
-        padding: 6px 4px; 
+        padding: 4px; /* Eredeti padding */
         text-align: center; 
-        font-size: 10pt; 
-        border: 1px solid #1e40af !important; 
+        font-size: 9pt; /* Eredeti font-size */
+        border: 1px solid #000; 
         text-transform: uppercase; 
-        letter-spacing: 0.5px;
     }
     .print-table td { 
-        padding: 4px; 
-        border: 1px solid #94a3b8 !important; 
-        font-size: 9.5pt; 
+        padding: 2px 4px; /* Eredeti padding */
+        border: 1px solid #000; 
+        font-size: 9pt; /* Eredeti font-size */
         font-family: monospace !important; 
         font-weight: bold; 
-        line-height: 1.2; 
+        line-height: 1.1; /* Eredeti line-height */
         text-align: center; 
     }
     
-    /* Zebra csíkozás a jobb olvashatóságért */
+    /* Zebra csíkozás hozzáadása (színezés) */
     .print-table tbody tr:nth-child(even) td { background: #f8fafc !important; }
-    .print-table tbody tr:nth-child(odd) td { background: #ffffff !important; }
     
-    /* Kiemelt Pozíció oszlop */
-    .poz-col { width: 25%; font-size: 11pt !important; color: #0f172a !important; background: #e2e8f0 !important; border-right: 2px solid #94a3b8 !important;}
-    .cikk-col { width: 55%; color: #1e293b !important; }
+    .poz-col { width: 25%; font-size: 10pt !important;}
+    .cikk-col { width: 55%; }
     .check-col { width: 20%; }
     
-    /* Checkbox dizájn javítás */
-    .checkbox { width: 16px; height: 16px; border: 2px solid #475569 !important; border-radius: 4px; margin: 0 auto; background: white !important; }
+    /* Checkbox: Eredeti struktúra és színezés */
+    .checkbox { width: 14px; height: 14px; border: 1px solid #000; border-radius: 3px; margin: 0 auto; background: white !important; }
 }
 </style>
 </head>
