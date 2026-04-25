@@ -164,7 +164,7 @@ input.suggestions-active {
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-/* EREDMÉNYEK - KOMPAKT PC GRID LAYOUT MEGTARTVA */
+/* EREDMÉNYEK - ÚJ KOMPAKT PC GRID LAYOUT */
 #eredmeny { 
     max-width: 960px; 
     margin: 0 auto 50px auto; 
@@ -182,7 +182,7 @@ input.suggestions-active {
     width: 100%;
 }
 
-/* PC Kártya Stílus - Hover effektekkel */
+/* PC Kártya Stílus - Prémium frissítés */
 .card { 
     background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95)); 
     border-radius: var(--radius); 
@@ -254,7 +254,7 @@ input.suggestions-active {
 }
 .f-btn.active.both:active { box-shadow: 0 0 0 #1e40af, inset 0 4px 8px rgba(0,0,0,0.6); transform: translateY(4px); }
 
-/* --- SZOLID FIX HÁTTÉR (IDLE STATE) --- JAVÍTOTT SZINTAKTIKA! */
+/* --- SZOLID FIX HÁTTÉR (IDLE STATE) --- */
 #idleState {
     display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
     width: 100%; max-width: 600px; height: 250px; margin: 0 auto; padding: 30px 15px 0 15px;
@@ -308,7 +308,7 @@ input.suggestions-active {
 .m-db span { font-size: 0.7rem; font-weight: normal; color: var(--text-secondary); margin-left: 2px; }
 
 /* ========================================= */
-/* --- MOBIL NÉZET (Max 1024px) - ÉRINTETLEN --- */
+/* --- MOBIL NÉZET (Max 1024px) --- */
 /* ========================================= */
 @media screen and (max-width: 1024px) {
     .top-bar { display: none; }
@@ -350,6 +350,7 @@ input.suggestions-active {
     .search-icon { display: none; } 
     .clear-btn { top: 6px; right: 12px; }
 
+    /* KÁRTYA ELRENDEZÉS - FLEX */
     #eredmeny {
         display: flex;
         flex-wrap: wrap;         
@@ -374,9 +375,7 @@ input.suggestions-active {
         margin-bottom: 0; border-radius: 6px; font-size: 0.75rem;      
         border: 1px solid rgba(255,255,255,0.08); background: #1e293b; 
         box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
-        transform: none !important;
     }
-    .card:hover { transform: none; box-shadow: 0 2px 4px rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.08); }
     
     .color-strip { width: 100%; height: 3px; order: -1; }
     .card-content { padding: 6px 8px; gap: 1px; }
@@ -386,6 +385,7 @@ input.suggestions-active {
     .d-value { font-size: 0.85rem; text-align: center; color: white; font-weight: 500; white-space: nowrap; }
     .row-main .d-value { font-size: 0.95rem; font-weight: 700; white-space: normal; word-break: break-all;}
 
+    /* --- PRO 3D BILLENTYŰZET --- */
     #kbContainer {
         display: block;
         position: fixed; 
@@ -498,7 +498,7 @@ input.suggestions-active {
     #printArea { display: none !important; }
 }
 
-/* --- NYOMTATÁSI KÉP - SZERKEZET VISSZAÁLLÍTVA, CSAK SZÍNEZÉS HOZZÁADVA --- */
+/* --- OKOS, SZÍNES NYOMTATÁSI KÉP --- */
 @media print {
     @page { size: A4 portrait; margin: 10mm; }
     body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -519,48 +519,21 @@ input.suggestions-active {
         break-after: auto;
     }
     
-    /* Fejléc: Eredeti méretek, új színezés */
-    .print-header { 
-        border: 2px solid #000; 
-        padding: 12px; /* Eredeti padding */
-        margin-bottom: 12px; /* Eredeti margin */
-        text-align: center; 
-        border-radius: 8px; 
-        background: #f1f5f9 !important; /* Új háttérszín */
-    }
+    .print-header { border: 2px solid #1e293b; padding: 12px; margin-bottom: 12px; text-align: center; border-radius: 8px; background: #f1f5f9 !important; }
     .print-h-title { font-size: 22pt; font-weight: 900; margin-bottom: 6px; text-transform: uppercase; color: #1e40af !important; }
     .print-h-sub { font-size: 16pt; font-weight: bold; color: #334155 !important; }
     
-    /* Táblázat: Eredeti méretek, új színezés */
     .print-table { width: 100%; border-collapse: collapse; }
-    .print-table th { 
-        background: #1e40af !important; /* Kék léc */
-        color: #ffffff !important; 
-        padding: 4px; /* Eredeti padding */
-        text-align: center; 
-        font-size: 9pt; /* Eredeti font-size */
-        border: 1px solid #000; 
-        text-transform: uppercase; 
-    }
-    .print-table td { 
-        padding: 2px 4px; /* Eredeti padding */
-        border: 1px solid #000; 
-        font-size: 9pt; /* Eredeti font-size */
-        font-family: monospace !important; 
-        font-weight: bold; 
-        line-height: 1.1; /* Eredeti line-height */
-        text-align: center; 
-    }
+    .print-table th { background: #3b82f6 !important; color: #ffffff !important; padding: 4px; text-align: center; font-size: 9pt; border: 1px solid #1e293b; text-transform: uppercase; }
+    .print-table td { padding: 2px 4px; border: 1px solid #1e293b; font-size: 9pt; font-family: monospace !important; font-weight: bold; line-height: 1.1; text-align: center; }
     
-    /* Zebra csíkozás hozzáadása (színezés) */
-    .print-table tbody tr:nth-child(even) td { background: #f8fafc !important; }
+    /* Zebra csíkozás */
+    .print-table tbody tr:nth-child(even) td { background: #eff6ff !important; }
     
-    .poz-col { width: 25%; font-size: 10pt !important;}
+    .poz-col { width: 25%; font-size: 10pt !important; background: #e2e8f0 !important; color: #0f172a !important; }
     .cikk-col { width: 55%; }
     .check-col { width: 20%; }
-    
-    /* Checkbox: Eredeti struktúra és színezés */
-    .checkbox { width: 14px; height: 14px; border: 1px solid #000; border-radius: 3px; margin: 0 auto; background: white !important; }
+    .checkbox { width: 14px; height: 14px; border: 1px solid #1e293b; border-radius: 3px; margin: 0 auto; background: white !important; }
 }
 </style>
 </head>
@@ -1006,7 +979,7 @@ window.openModelModal = function(modelName) {
     let html = '';
     dedupData.forEach(r => {
         let oldal = (r[1] || "").toUpperCase();
-        let oClass = oldal === 'TOP' ? 'top' : (oldal === 'BOT' ? 'unknown');
+        let oClass = oldal === 'TOP' ? 'top' : (oldal === 'BOT' ? 'bot' : 'unknown');
         
         html += `
         <div class="m-card">
