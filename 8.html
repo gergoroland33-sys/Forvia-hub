@@ -849,7 +849,6 @@
 
         // --- ÚJ FEJLESZTÉS: TÚLÓRA CSERENAP (START) ---
         
-        // 1. A felugró ablak HTML kódjának biztonságos beillesztése az oldalba
         const tuPopupHTML = `
             <div id="tu-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity">
                 <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-2xl max-w-sm w-full mx-4 transform scale-95 transition-transform">
@@ -876,7 +875,6 @@
 
         let activeTuContext = null;
 
-        // 2. Dupla kattintás (DblClick) figyelése asztali és mobilos bevitelnél
         document.addEventListener('dblclick', function(e) {
             // Asztali nézet
             if(e.target.classList.contains('input-cell') && e.target.value.trim().toUpperCase() === 'TU') {
@@ -888,7 +886,7 @@
 
                 const empId = tr.getAttribute('data-id');
                 const emp = employees.find(x => x.id == empId);
-                const dayIndex = td.cellIndex - 2; // (Név, Keret, Kivehető = 0,1,2. Első nap a 3-as indexű).
+                const dayIndex = td.cellIndex - 2; 
                 const m = date.getMonth();
                 const k = `2026-${m+1}-${dayIndex}`;
 
@@ -909,7 +907,6 @@
 
         function openTuModal(emp, key) {
             activeTuContext = { emp: emp, key: key };
-            // Formázzuk a napot is
             const dayParts = key.split('-');
             document.getElementById('tu-modal-info').innerText = `${emp.name} | ${monthNames[parseInt(dayParts[1])-1]} ${dayParts[2]}.`;
             const modal = document.getElementById('tu-modal');
@@ -928,7 +925,6 @@
 
         document.getElementById('btn-tu-cancel').addEventListener('click', closeTuModal);
 
-        // Opció 1: Nincs bónusz, normál túlóra
         document.getElementById('btn-tu-100').addEventListener('click', () => {
             if(activeTuContext) {
                 const { emp, key } = activeTuContext;
@@ -941,12 +937,10 @@
             closeTuModal();
         });
 
-        // Opció 2: Túlóra + Cserenap (okos bónusz beiktatása)
         document.getElementById('btn-tu-50').addEventListener('click', () => {
             if(activeTuContext) {
                 const { emp, key } = activeTuContext;
                 emp.data = emp.data || {};
-                // Trükk: -12 értéket mentünk el egy rejtett kulcson, így az eredeti összeadó rutinod automatikusan levonja a kivett szabikból, ezáltal megnövelve a kivehetőt!
                 emp.data[key + '_cserenap'] = "-12";
                 save();
                 render();
@@ -955,27 +949,22 @@
             closeTuModal();
         });
 
-        // 3. Biztonsági "Nullázó" Asztali nézetre (Azonnali Kivehető számítás javítása)
         const originalUpdate = update;
         update = function(id, key, val, el) {
             const emp = employees.find(e => e.id == id);
             const v = val.trim().toUpperCase();
-            // Ha a felhasználó bármi másra írja át a TU-t (vagy letörli üresre)
             if (emp && emp.data && v !== 'TU') {
                 if (emp.data[key + '_cserenap']) {
-                    delete emp.data[key + '_cserenap']; // Azonnal levesszük a +12 bónuszt
-                    // A pötty azonnali vizuális eltüntetése
+                    delete emp.data[key + '_cserenap']; 
                     const td = el.parentElement;
                     const dot = td.querySelector('.tu-dot-desk');
                     if (dot) dot.remove();
                     td.removeAttribute('title');
                 }
             }
-            // Hagyjuk lefutni az eredeti update rutint, ami már a TISZTA (+12 nélküli) számokból vonja le a keretet!
             originalUpdate.apply(this, arguments);
         };
 
-        // 4. Mentés funkció felülbírálása (Biztonsági takarítás, ha mobilon törli a TU-t)
         const originalSave = save;
         save = async function() {
             let cleanupHappened = false;
@@ -985,7 +974,7 @@
                         if (key.endsWith('_cserenap')) {
                             const baseKey = key.replace('_cserenap', '');
                             if (emp.data[baseKey] !== 'TU') {
-                                delete emp.data[key]; // Ha már nem TU, elvesszük a +12 bónuszt is
+                                delete emp.data[key]; 
                                 cleanupHappened = true;
                             }
                         }
@@ -995,7 +984,6 @@
             
             const result = await originalSave.apply(this, arguments);
 
-            // Ha mobilon vagyunk és volt takarítás, a fejléc KIVEHETŐ feliratát azonnal számoljuk újra!
             if (cleanupHappened && mSelectedUserIndex !== -1) {
                 const emp = employees[mSelectedUserIndex];
                 let s = 0; if(emp.data) Object.values(emp.data).forEach(v => { let n=parseFloat(String(v).replace(',','.')); if(!isNaN(n)) s+=n; });
@@ -1006,7 +994,6 @@
             return result;
         };
 
-        // 5. Rajzoló (render) függvények "kiegészítése" a piros pöttyökhöz ÉS A HOVER TOOLTIP-HEZ!
         const originalRender = render;
         render = function() {
             originalRender.apply(this, arguments);
@@ -1019,7 +1006,7 @@
                             const row = document.querySelector(`tr[data-id="${emp.id}"]`);
                             if(row && row.cells[d+2]) {
                                 const td = row.cells[d+2];
-                                td.setAttribute('title', '50% + Cserenap'); // HOVER SZÖVEG BEÁLLÍTÁSA
+                                td.setAttribute('title', '50% + Cserenap'); 
                                 if(!td.querySelector('.tu-dot-desk')) {
                                     td.classList.add('relative');
                                     td.insertAdjacentHTML('beforeend', '<div class="tu-dot-desk absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 border border-slate-900 shadow-[0_0_5px_rgba(239,68,68,1)] pointer-events-none z-20"></div>');
@@ -1043,7 +1030,7 @@
                 if(emp.data[k] === 'TU' && emp.data[k + '_cserenap']) {
                     const dayEl = document.getElementById(`m-day-${d}`);
                     if(dayEl && !dayEl.querySelector('.tu-dot-mob-cal')) {
-                        dayEl.setAttribute('title', '50% + Cserenap'); // MOBILON IS MEGÍRJA BIZTOS AMI BIZTOS
+                        dayEl.setAttribute('title', '50% + Cserenap'); 
                         dayEl.insertAdjacentHTML('beforeend', '<div class="tu-dot-mob-cal absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,1)] z-20"></div>');
                     }
                 }
@@ -1083,7 +1070,6 @@
             });
         };
 
-        // 6. Statisztika nézet (ID-Kártyák) grafikai okosítása
         const originalSetView = setView;
         setView = function(v) {
             originalSetView.apply(this, arguments);
@@ -1096,14 +1082,13 @@
                         let cserenapCount = 0;
                         Object.entries(emp.data).forEach(([k, val]) => {
                             if(k.endsWith('_cserenap')) {
-                                cserenapCount += Math.abs(parseFloat(val) || 0); // Visszaszámoljuk órákban (+12)
+                                cserenapCount += Math.abs(parseFloat(val) || 0); 
                             } else {
                                 let n = parseFloat(String(val).replace(',','.'));
                                 if(!isNaN(n)) trueSzabi += n;
                             }
                         });
 
-                        // Vizuálisan csak a valódi SZABI értéket írjuk ki a kártyán (hogy ne lásson negatív számot, ha pl 0 napja van de 1 cserenapja)
                         const statBoxes = card.querySelectorAll('.grid > div');
                         if(statBoxes.length > 0) {
                             const szabiBox = statBoxes[0]; 
@@ -1111,7 +1096,6 @@
                             if(numSpan) numSpan.innerText = trueSzabi;
                         }
 
-                        // Gyönyörű Cserenap bónusz mező beszúrása a kártya aljára
                         if(cserenapCount > 0) {
                             const gridContainer = card.querySelector('.grid');
                             const notice = document.createElement('div');
@@ -1124,6 +1108,275 @@
             }
         };
         // --- ÚJ FEJLESZTÉS: TÚLÓRA CSERENAP (VÉGE) ---
+
+
+        // --- ÚJ FEJLESZTÉS 2: MEGJEGYZÉSEK (START) ---
+
+        // 1. Megjegyzés popup HTML beillesztése a kódba
+        const notePopupHTML = `
+            <div id="note-modal" class="hidden fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity">
+                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-2xl max-w-sm w-full mx-4 transform scale-95 transition-transform">
+                    <h3 class="text-white font-black text-xl mb-4 text-center uppercase tracking-wider flex items-center justify-center gap-2">
+                        <i class="fas fa-comment-dots text-pink-500"></i> Megjegyzés
+                    </h3>
+                    <p id="note-modal-info" class="text-slate-400 text-xs text-center mb-4 font-bold uppercase"></p>
+                    <textarea id="note-input-text" class="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-xl mb-4 focus:border-pink-500 focus:outline-none placeholder-slate-600 font-bold" rows="3" placeholder="Írd ide a megjegyzést..."></textarea>
+                    <div class="space-y-3">
+                        <button id="btn-note-save" class="w-full py-3 rounded-xl font-black text-sm uppercase bg-pink-600 hover:bg-pink-500 text-white shadow-lg transition-all border border-pink-500 focus:outline-none flex items-center justify-center gap-2">
+                            <i class="fas fa-save"></i> Mentés
+                        </button>
+                        <button id="btn-note-delete" class="w-full py-3 rounded-xl font-black text-sm uppercase bg-slate-700 hover:bg-red-600 text-white shadow-lg transition-all focus:outline-none hidden flex items-center justify-center gap-2">
+                            <i class="fas fa-trash"></i> Megjegyzés Törlése
+                        </button>
+                    </div>
+                    <button id="btn-note-cancel" class="mt-4 w-full py-2 rounded-lg font-bold text-xs uppercase text-slate-500 hover:text-slate-300 transition-colors">
+                        Mégse
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', notePopupHTML);
+
+        // 2. Túlóra Modal (előző fejlesztés) kiegészítése egy új "Megjegyzés" gombbal okosan!
+        const tuModalSpace = document.querySelector('#tu-modal .space-y-3');
+        if(tuModalSpace) {
+            tuModalSpace.insertAdjacentHTML('beforeend', `
+                <button id="btn-tu-note" class="w-full py-3 mt-3 rounded-xl font-black text-sm uppercase bg-pink-600 hover:bg-pink-500 text-white shadow-lg transition-all border border-pink-500 focus:outline-none flex items-center justify-center gap-2">
+                    <i class="fas fa-comment-dots"></i> Megjegyzés hozzáfűzése
+                </button>
+            `);
+            document.getElementById('btn-tu-note').addEventListener('click', () => {
+                closeTuModal();
+                if(activeTuContext) {
+                    openNoteModal(activeTuContext.emp, activeTuContext.key);
+                }
+            });
+        }
+
+        let activeNoteContext = null;
+
+        // 3. Dupla kattintás figyelése (minden nem üres és nem 'TU' cellán)
+        document.addEventListener('dblclick', function(e) {
+            // Asztali
+            if(e.target.classList.contains('input-cell')) {
+                const val = e.target.value.trim().toUpperCase();
+                if (val !== '' && val !== 'TU') {
+                    e.preventDefault();
+                    e.target.blur();
+                    const td = e.target.closest('td');
+                    const tr = e.target.closest('tr');
+                    if(!td || !tr) return;
+                    
+                    const empId = tr.getAttribute('data-id');
+                    const emp = employees.find(x => x.id == empId);
+                    const dayIndex = td.cellIndex - 2;
+                    const m = date.getMonth();
+                    const k = `2026-${m+1}-${dayIndex}`;
+                    
+                    if(emp) openNoteModal(emp, k);
+                }
+            }
+            // Mobil
+            if(e.target.id === 'm-input') {
+                const val = e.target.value.trim().toUpperCase();
+                if (val !== '' && val !== 'TU' && mSelectedUserIndex !== -1 && mSelectedDate) {
+                    e.preventDefault();
+                    e.target.blur();
+                    const emp = employees[mSelectedUserIndex];
+                    const m = date.getMonth();
+                    const k = `2026-${m+1}-${mSelectedDate}`;
+                    openNoteModal(emp, k);
+                }
+            }
+        });
+
+        function openNoteModal(emp, key) {
+            activeNoteContext = { emp: emp, key: key };
+            const dayParts = key.split('-');
+            document.getElementById('note-modal-info').innerText = `${emp.name} | ${monthNames[parseInt(dayParts[1])-1]} ${dayParts[2]}.`;
+            
+            const existingNote = (emp.data && emp.data[key + '_note']) ? emp.data[key + '_note'] : '';
+            document.getElementById('note-input-text').value = existingNote;
+            
+            if(existingNote) {
+                document.getElementById('btn-note-delete').classList.remove('hidden');
+            } else {
+                document.getElementById('btn-note-delete').classList.add('hidden');
+            }
+
+            const modal = document.getElementById('note-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.firstElementChild.classList.remove('scale-95');
+                document.getElementById('note-input-text').focus();
+            }, 10);
+        }
+
+        function closeNoteModal() {
+            const modal = document.getElementById('note-modal');
+            modal.firstElementChild.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                activeNoteContext = null;
+            }, 150);
+        }
+
+        document.getElementById('btn-note-cancel').addEventListener('click', closeNoteModal);
+
+        document.getElementById('btn-note-save').addEventListener('click', () => {
+            if(activeNoteContext) {
+                const { emp, key } = activeNoteContext;
+                const noteVal = document.getElementById('note-input-text').value.trim();
+                emp.data = emp.data || {};
+                
+                if(noteVal) {
+                    emp.data[key + '_note'] = noteVal;
+                } else {
+                    delete emp.data[key + '_note'];
+                }
+                
+                save(); render();
+                if(mSelectedUserIndex !== -1) { renderMobileList(); renderMobileCalendar(); }
+            }
+            closeNoteModal();
+        });
+
+        document.getElementById('btn-note-delete').addEventListener('click', () => {
+            if(activeNoteContext) {
+                const { emp, key } = activeNoteContext;
+                if(emp.data) delete emp.data[key + '_note'];
+                save(); render();
+                if(mSelectedUserIndex !== -1) { renderMobileList(); renderMobileCalendar(); }
+            }
+            closeNoteModal();
+        });
+
+        // 4. Tisztító modul - ha a cellát kitörlik (üres lesz), vesszük a megjegyzést is
+        const prevUpdate2 = update;
+        update = function(id, key, val, el) {
+            const emp = employees.find(e => e.id == id);
+            if(emp && emp.data && val.trim() === '') {
+                if(emp.data[key + '_note']) {
+                    delete emp.data[key + '_note'];
+                    const td = el.parentElement;
+                    const dot = td.querySelector('.note-dot-desk');
+                    if (dot) dot.remove();
+                }
+            }
+            prevUpdate2.apply(this, arguments);
+        };
+
+        const prevSave2 = save;
+        save = async function() {
+            employees.forEach(emp => {
+                if(emp.data) {
+                    Object.keys(emp.data).forEach(k => {
+                        if(k.endsWith('_note')) {
+                            const baseK = k.replace('_note', '');
+                            // Ha az alap cella üres lett, töröljük a fantom megjegyzést is
+                            if(!emp.data[baseK] || emp.data[baseK].trim() === '') {
+                                delete emp.data[k];
+                            }
+                        }
+                    });
+                }
+            });
+            return prevSave2.apply(this, arguments);
+        };
+
+        // 5. Rajzoló (Render) függvények felülbírálása: Rózsaszín pötty és Tooltip hozzáadása
+        const prevRender3 = render;
+        render = function() {
+            prevRender3.apply(this, arguments);
+            const m = date.getMonth();
+            employees.forEach(emp => {
+                if(emp && emp.data) {
+                    for(let d=1; d<=31; d++) {
+                        const k = `2026-${m+1}-${d}`;
+                        if(emp.data[k] && emp.data[k + '_note']) {
+                            const row = document.querySelector(`tr[data-id="${emp.id}"]`);
+                            if(row && row.cells[d+2]) {
+                                const td = row.cells[d+2];
+                                
+                                // Tooltip (title) okos kiegészítése
+                                let existingTitle = td.getAttribute('title') || '';
+                                let noteText = "Megjegyzés: " + emp.data[k + '_note'];
+                                td.setAttribute('title', existingTitle ? existingTitle + '\n' + noteText : noteText);
+                                
+                                // Rózsaszín pötty (jobb alsó sarok, így nem takarja be a TU piros pöttyöt)
+                                if(!td.querySelector('.note-dot-desk')) {
+                                    td.classList.add('relative');
+                                    td.insertAdjacentHTML('beforeend', '<div class="note-dot-desk absolute bottom-1 right-1 w-2.5 h-2.5 rounded-full bg-pink-500 border border-slate-900 shadow-[0_0_5px_rgba(236,72,153,1)] pointer-events-none z-20"></div>');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        };
+
+        const prevRenderMobileCalendar3 = renderMobileCalendar;
+        renderMobileCalendar = function() {
+            prevRenderMobileCalendar3.apply(this, arguments);
+            if(mSelectedUserIndex === -1) return;
+            const emp = employees[mSelectedUserIndex];
+            if(!emp || !emp.data) return;
+            const m = date.getMonth();
+            for(let d=1; d<=31; d++) {
+                const k = `2026-${m+1}-${d}`;
+                if(emp.data[k] && emp.data[k + '_note']) {
+                    const dayEl = document.getElementById(`m-day-${d}`);
+                    if(dayEl) {
+                        let existingTitle = dayEl.getAttribute('title') || '';
+                        let noteText = "Megjegyzés: " + emp.data[k + '_note'];
+                        dayEl.setAttribute('title', existingTitle ? existingTitle + '\n' + noteText : noteText);
+
+                        if(!dayEl.querySelector('.note-dot-mob-cal')) {
+                            dayEl.insertAdjacentHTML('beforeend', '<div class="note-dot-mob-cal absolute bottom-1 right-1 w-2.5 h-2.5 rounded-full bg-pink-500 shadow-[0_0_5px_rgba(236,72,153,1)] z-20"></div>');
+                        }
+                    }
+                }
+            }
+        };
+
+        const prevRenderMobileList3 = renderMobileList;
+        renderMobileList = function() {
+            prevRenderMobileList3.apply(this, arguments);
+            const listEl = document.getElementById('m-emp-list');
+            if(!listEl) return;
+            const cards = listEl.querySelectorAll('.m-card');
+            cards.forEach((card, index) => {
+                const emp = employees[index];
+                if(!emp || !emp.data) return;
+                const today = new Date();
+                const d1 = new Date(); d1.setDate(today.getDate() + 1);
+                const d2 = new Date(); d2.setDate(today.getDate() + 2);
+                const keys = [
+                    `2026-${today.getMonth()+1}-${today.getDate()}`,
+                    `2026-${d1.getMonth()+1}-${d1.getDate()}`,
+                    `2026-${d2.getMonth()+1}-${d2.getDate()}`
+                ];
+                const statusRows = card.querySelectorAll('.m-status-row');
+                keys.forEach((k, i) => {
+                    if(emp.data[k] && emp.data[k + '_note']) {
+                        if(statusRows[i]) {
+                            const pill = statusRows[i].querySelector('.m-status-pill');
+                            if(pill) {
+                                let existingTitle = pill.getAttribute('title') || '';
+                                let noteText = "Megjegyzés: " + emp.data[k + '_note'];
+                                pill.setAttribute('title', existingTitle ? existingTitle + '\n' + noteText : noteText);
+
+                                if(!pill.querySelector('.note-dot-mob-list')) {
+                                    pill.classList.add('relative');
+                                    pill.insertAdjacentHTML('beforeend', '<div class="note-dot-mob-list absolute -bottom-1.5 -right-1.5 w-2.5 h-2.5 rounded-full bg-pink-500 border border-slate-900 shadow-[0_0_5px_rgba(236,72,153,1)] z-20"></div>');
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        };
+        // --- ÚJ FEJLESZTÉS 2: MEGJEGYZÉSEK (VÉGE) ---
 
 
         // --- AUTOMATIKUS HITELESÍTÉS ÉS INDÍTÁS ---
