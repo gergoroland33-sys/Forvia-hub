@@ -955,9 +955,30 @@
             closeTuModal();
         });
 
-        // 3. Mentés funkció felülbírálása (Biztonsági takarítás, ha valaki kitörli utólag a TU-t)
+        // 3. Biztonsági "Nullázó" Asztali nézetre (Azonnali Kivehető számítás javítása)
+        const originalUpdate = update;
+        update = function(id, key, val, el) {
+            const emp = employees.find(e => e.id == id);
+            const v = val.trim().toUpperCase();
+            // Ha a felhasználó bármi másra írja át a TU-t (vagy letörli üresre)
+            if (emp && emp.data && v !== 'TU') {
+                if (emp.data[key + '_cserenap']) {
+                    delete emp.data[key + '_cserenap']; // Azonnal levesszük a +12 bónuszt
+                    // A pötty azonnali vizuális eltüntetése
+                    const td = el.parentElement;
+                    const dot = td.querySelector('.tu-dot-desk');
+                    if (dot) dot.remove();
+                    td.removeAttribute('title');
+                }
+            }
+            // Hagyjuk lefutni az eredeti update rutint, ami már a TISZTA (+12 nélküli) számokból vonja le a keretet!
+            originalUpdate.apply(this, arguments);
+        };
+
+        // 4. Mentés funkció felülbírálása (Biztonsági takarítás, ha mobilon törli a TU-t)
         const originalSave = save;
         save = async function() {
+            let cleanupHappened = false;
             employees.forEach(emp => {
                 if (emp.data) {
                     Object.keys(emp.data).forEach(key => {
@@ -965,15 +986,27 @@
                             const baseKey = key.replace('_cserenap', '');
                             if (emp.data[baseKey] !== 'TU') {
                                 delete emp.data[key]; // Ha már nem TU, elvesszük a +12 bónuszt is
+                                cleanupHappened = true;
                             }
                         }
                     });
                 }
             });
-            return originalSave.apply(this, arguments);
+            
+            const result = await originalSave.apply(this, arguments);
+
+            // Ha mobilon vagyunk és volt takarítás, a fejléc KIVEHETŐ feliratát azonnal számoljuk újra!
+            if (cleanupHappened && mSelectedUserIndex !== -1) {
+                const emp = employees[mSelectedUserIndex];
+                let s = 0; if(emp.data) Object.values(emp.data).forEach(v => { let n=parseFloat(String(v).replace(',','.')); if(!isNaN(n)) s+=n; });
+                const el = document.getElementById('m-detail-quota');
+                if (el) el.innerText = `KERET: ${emp.yearlyQuota||160} | KIVEHETŐ: ${(emp.yearlyQuota||160)-s}`;
+            }
+
+            return result;
         };
 
-        // 4. Rajzoló (render) függvények "kiegészítése" a piros pöttyökhöz
+        // 5. Rajzoló (render) függvények "kiegészítése" a piros pöttyökhöz ÉS A HOVER TOOLTIP-HEZ!
         const originalRender = render;
         render = function() {
             originalRender.apply(this, arguments);
@@ -986,6 +1019,7 @@
                             const row = document.querySelector(`tr[data-id="${emp.id}"]`);
                             if(row && row.cells[d+2]) {
                                 const td = row.cells[d+2];
+                                td.setAttribute('title', '50% + Cserenap'); // HOVER SZÖVEG BEÁLLÍTÁSA
                                 if(!td.querySelector('.tu-dot-desk')) {
                                     td.classList.add('relative');
                                     td.insertAdjacentHTML('beforeend', '<div class="tu-dot-desk absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 border border-slate-900 shadow-[0_0_5px_rgba(239,68,68,1)] pointer-events-none z-20"></div>');
@@ -1009,6 +1043,7 @@
                 if(emp.data[k] === 'TU' && emp.data[k + '_cserenap']) {
                     const dayEl = document.getElementById(`m-day-${d}`);
                     if(dayEl && !dayEl.querySelector('.tu-dot-mob-cal')) {
+                        dayEl.setAttribute('title', '50% + Cserenap'); // MOBILON IS MEGÍRJA BIZTOS AMI BIZTOS
                         dayEl.insertAdjacentHTML('beforeend', '<div class="tu-dot-mob-cal absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,1)] z-20"></div>');
                     }
                 }
@@ -1039,6 +1074,7 @@
                             const pill = statusRows[i].querySelector('.m-status-pill');
                             if(pill && !pill.querySelector('.tu-dot-mob-list')) {
                                 pill.classList.add('relative');
+                                pill.setAttribute('title', '50% + Cserenap');
                                 pill.insertAdjacentHTML('beforeend', '<div class="tu-dot-mob-list absolute -top-1.5 -right-1.5 w-2.5 h-2.5 rounded-full bg-red-500 border border-slate-900 shadow-[0_0_5px_rgba(239,68,68,1)]"></div>');
                             }
                         }
@@ -1047,7 +1083,7 @@
             });
         };
 
-        // 5. Statisztika nézet (ID-Kártyák) grafikai okosítása
+        // 6. Statisztika nézet (ID-Kártyák) grafikai okosítása
         const originalSetView = setView;
         setView = function(v) {
             originalSetView.apply(this, arguments);
