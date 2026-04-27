@@ -160,7 +160,8 @@
             #printContainer { display: block !important; width: 100%; height: 100%; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
-            .print-header { text-align: center; margin-bottom: 10px; border-bottom: 2px solid black; padding-bottom: 10px; }
+            /* Csökkentett margók a fejlécben, hogy több hely maradjon */
+            .print-header { text-align: center; margin-bottom: 5px; border-bottom: 2px solid black; padding-bottom: 5px; }
             .print-header h1 { font-size: 16pt; margin: 0; color: black; font-weight: 900; }
             
             .year-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(4, 1fr); gap: 6px; height: 260mm; }
@@ -172,14 +173,16 @@
             
             .print-days-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(6, 1fr); gap: 1px; flex: 1; }
             
-            /* --- MODOSÍTOTT NYOMTATÁSI CELLA DIZÁJN --- */
-            .print-cell { border: 1px solid #999; border-radius: 4px; display: flex; flex-direction: column; align-items: center; padding: 2px; font-size: 6pt; overflow: hidden; position: relative;}
+            /* --- JAVÍTOTT, KOMPAKT NYOMTATÁSI CELLA DIZÁJN --- */
+            /* A padding lecsökkentve 1px-re, hogy elférjen egy lapon */
+            .print-cell { border: 1px solid #999; border-radius: 3px; display: flex; flex-direction: column; align-items: center; padding: 1px; font-size: 6pt; overflow: hidden; position: relative;}
             .print-cell.empty { border: none; }
             .print-cell.weekend { background: #f9f9f9; }
             
-            .print-date-num { font-weight: 900; line-height: 1; text-align: center; border-bottom: 1px solid #ccc; width: 100%; padding-bottom: 2px; margin-bottom: 2px; }
+            /* Margin és padding minimalizálva a szám alatt */
+            .print-date-num { font-weight: 900; line-height: 1; text-align: center; border-bottom: 1px solid #ccc; width: 100%; padding-bottom: 1px; margin-bottom: 1px; }
             .print-shifts { margin-top: auto; display: flex; flex-direction: column; gap: 1px; width: 90%; }
-            /* ------------------------------------------ */
+            /* --------------------------------------------------- */
 
             .p-pill { font-size: 5pt; font-weight: 900; text-align: center; border-radius: 2px; color: white !important; line-height: 1.1; padding: 1px 0;}
             .p-A { background: var(--color-a) !important; }
@@ -365,7 +368,6 @@
         const wrapper = document.getElementById('calWrapper');
         let touchStartX = 0; let touchEndX = 0;
         
-        // JAVÍTÁS: Sokkal pontosabb érintéskoordináta olvasás mobilon
         wrapper.addEventListener('touchstart', e => {
             touchStartX = e.touches[0].clientX;
         }, {passive: true});
@@ -430,7 +432,6 @@
         setTimeout(() => { window.print(); }, 100);
     }
 
-    // JAVÍTÁS: A kód legvégén azonnal lefuttatjuk a betöltést, nem várunk semmilyen window.onload eseményre, amit a mobil letilthat.
     initSegmentedControl();
     renderCalendar();
     setupSwipe();
