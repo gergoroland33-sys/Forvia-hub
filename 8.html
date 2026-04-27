@@ -1140,6 +1140,13 @@
         // Követi az egeret, amíg a cellán vagy
         document.addEventListener('mousemove', function(e) {
             if (!tooltipEl.classList.contains('hidden')) {
+                // BIZTONSÁGI JAVÍTÁS: Ha mozgatod az egeret, de már nem egy feliratos cella felett vagy
+                if (!e.target.closest('[data-modern-title]')) {
+                    tooltipEl.classList.add('opacity-0');
+                    tooltipEl.classList.add('hidden');
+                    return;
+                }
+
                 // Enyhén eltoljuk az egértől, hogy ne takarja ki a mutatót
                 let x = e.clientX + 15;
                 let y = e.clientY + 15;
@@ -1164,6 +1171,15 @@
                         tooltipEl.classList.add('hidden');
                     }
                 }, 200);
+            }
+        });
+        
+        // BIZTONSÁGI JAVÍTÁS 2: Ha bárhova kattintasz (pl. dupla kattintás vagy Mégse gomb),
+        // kényszerítve eltüntetjük a buborékot, hogy esélye se legyen beragadni!
+        document.addEventListener('mousedown', function() {
+            if (!tooltipEl.classList.contains('hidden')) {
+                tooltipEl.classList.add('opacity-0');
+                tooltipEl.classList.add('hidden');
             }
         });
         // --- ÚJ FEJLESZTÉS V4: MODERN TOOLTIP (VÉGE) ---
