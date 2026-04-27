@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FORVIA | Staff Pro 2026</title>
+    <title>FORVIA | Staff Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -26,7 +26,7 @@
             flex-direction: column;
         }
 
-        /* --- DESKTOP STYLES (ÉRINTETLEN) --- */
+        /* --- DESKTOP STYLES --- */
         header.desktop-header { flex: none; background: linear-gradient(to bottom, #111827, #0f172a); border-bottom: 1px solid #1e293b; z-index: 60; }
         main.desktop-main { flex-grow: 1; position: relative; overflow: hidden; background: #111827; }
         footer.desktop-footer { flex: none; background: #0f172a; border-top: 1px solid #1e293b; padding: 8px; z-index: 60; }
@@ -71,6 +71,13 @@
         .today-D { border-left: 2px solid rgba(139, 92, 246, 0.4) !important; border-right: 2px solid rgba(139, 92, 246, 0.4) !important; }
         thead th.today-D { color: #8b5cf6 !important; border-bottom: 2px solid rgba(139, 92, 246, 0.4) !important; background-color: #1e293b !important; }
         .sortable-fallback { opacity: 0.8 !important; background: #1e293b !important; border: 1px solid #3b82f6; }
+
+        /* UI JELZŐK (Pötty és Háromszög) ÉS KIJELÖLÉSGÁTLÓ */
+        .no-select { -webkit-user-select: none; user-select: none; }
+        .m-input-area button, .m-input-area span { -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+        .note-triangle-desk { position: absolute; bottom: 0; right: 0; width: 0; height: 0; border-bottom: 12px solid #eab308; border-left: 12px solid transparent; z-index: 20; pointer-events: none; filter: drop-shadow(-1px -1px 2px rgba(0,0,0,0.6)); }
+        .note-triangle-mob-cal { position: absolute; bottom: 0; right: 0; width: 0; height: 0; border-bottom: 12px solid #eab308; border-left: 12px solid transparent; z-index: 20; border-bottom-right-radius: 6px; }
+        .note-triangle-mob-list { position: absolute; bottom: -1px; right: -1px; width: 0; height: 0; border-bottom: 8px solid #eab308; border-left: 8px solid transparent; z-index: 20; border-bottom-right-radius: 4px; }
 
         /* --- MOBILE APP VIEW STYLES --- */
         #mobile-app-container { display: none; width: 100%; height: 100%; background: #0b0f1a; flex-direction: column; }
@@ -122,7 +129,7 @@
         <div class="flex justify-between items-center w-full">
             <div class="flex flex-col">
                 <span class="text-blue-500 font-black text-xl tracking-tighter leading-none">FORVIA</span>
-                <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Szabadságok SMT 2026</span>
+                <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Szabadságok SMT</span>
             </div>
             <div class="flex items-center bg-slate-900/80 p-1 rounded-lg border border-slate-700/50 shadow-sm">
                 <div class="px-2 border-r border-slate-700/50 mr-1 flex items-center gap-1">
@@ -139,10 +146,17 @@
         </div>
         <div class="flex items-center justify-between w-full gap-2 overflow-x-auto pb-1">
             <div id="sync" class="bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded-full text-[9px] font-black border border-emerald-500/20 whitespace-nowrap">ONLINE</div>
-            <div class="flex items-center bg-slate-900/80 border border-slate-700/50 rounded-lg p-0.5">
-                <button onclick="changeMonth(-1)" class="p-2 text-blue-400 hover:text-white"><i class="fas fa-chevron-left text-xs"></i></button>
-                <span id="monthDisp" class="font-black text-xs uppercase w-20 text-center text-blue-400 tracking-widest">Jan</span>
-                <button onclick="changeMonth(1)" class="p-2 text-blue-400 hover:text-white"><i class="fas fa-chevron-right text-xs"></i></button>
+            <div class="flex items-center gap-2">
+                <div class="flex items-center bg-slate-900/80 border border-slate-700/50 rounded-lg p-0.5">
+                    <button onclick="changeYear(-1)" class="p-2 text-blue-400 hover:text-white"><i class="fas fa-angle-double-left text-xs"></i></button>
+                    <span id="yearDisp" class="font-black text-xs uppercase w-12 text-center text-blue-400 tracking-widest"></span>
+                    <button onclick="changeYear(1)" class="p-2 text-blue-400 hover:text-white"><i class="fas fa-angle-double-right text-xs"></i></button>
+                </div>
+                <div class="flex items-center bg-slate-900/80 border border-slate-700/50 rounded-lg p-0.5">
+                    <button onclick="changeMonth(-1)" class="p-2 text-blue-400 hover:text-white"><i class="fas fa-chevron-left text-xs"></i></button>
+                    <span id="monthDisp" class="font-black text-xs uppercase w-20 text-center text-blue-400 tracking-widest">Jan</span>
+                    <button onclick="changeMonth(1)" class="p-2 text-blue-400 hover:text-white"><i class="fas fa-chevron-right text-xs"></i></button>
+                </div>
             </div>
             <button onclick="jumpToToday()" class="bg-slate-800 hover:bg-slate-700 text-blue-400 hover:text-white border border-blue-500/30 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase shadow-lg whitespace-nowrap flex items-center gap-1 transition-all">
                 <i class="fas fa-calendar-day text-blue-500"></i> <span class="hidden md:inline">MA</span>
@@ -199,10 +213,17 @@
                     <button onclick="changeShift('D')" class="m-shift-btn m-shift-D py-2 rounded-lg font-black text-sm bg-slate-800 text-slate-400 border border-slate-700">D</button>
                 </div>
 
-                <div class="flex items-center justify-between bg-slate-900 rounded-lg p-1 border border-slate-800">
-                    <button onclick="changeMonth(-1)" class="p-3 text-blue-400"><i class="fas fa-chevron-left"></i></button>
-                    <span id="m-monthDisp" class="font-black text-lg uppercase text-white"></span>
-                    <button onclick="changeMonth(1)" class="p-3 text-blue-400"><i class="fas fa-chevron-right"></i></button>
+                <div class="flex items-center justify-between gap-2 mb-3">
+                    <div class="flex flex-1 items-center justify-between bg-slate-900 rounded-lg p-1 border border-slate-800">
+                        <button onclick="changeYear(-1)" class="p-3 text-blue-400"><i class="fas fa-angle-double-left"></i></button>
+                        <span id="m-yearDisp" class="font-black text-lg uppercase text-white"></span>
+                        <button onclick="changeYear(1)" class="p-3 text-blue-400"><i class="fas fa-angle-double-right"></i></button>
+                    </div>
+                    <div class="flex flex-1 items-center justify-between bg-slate-900 rounded-lg p-1 border border-slate-800">
+                        <button onclick="changeMonth(-1)" class="p-3 text-blue-400"><i class="fas fa-chevron-left"></i></button>
+                        <span id="m-monthDisp" class="font-black text-lg uppercase text-white"></span>
+                        <button onclick="changeMonth(1)" class="p-3 text-blue-400"><i class="fas fa-chevron-right"></i></button>
+                    </div>
                 </div>
             </div>
 
@@ -234,6 +255,9 @@
             </div>
 
             <div class="m-input-area shadow-[0_-5px_15px_rgba(0,0,0,0.5)] z-20 pb-12">
+                <div id="m-active-note-display" class="hidden text-xs text-yellow-400 font-bold mb-2 p-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg flex items-start gap-2">
+                    <i class="fas fa-comment-dots mt-0.5"></i><span id="m-active-note-text" class="break-words"></span>
+                </div>
                 <div class="flex justify-between items-center mb-2">
                     <span id="m-selected-date" class="text-sm font-bold text-blue-400 uppercase">MAI NAP</span>
                     <span id="m-status-text" class="text-xs font-bold text-slate-500">Státusz</span>
@@ -256,8 +280,53 @@
 
     </div>
 
+    <div id="tu-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity no-select">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-2xl max-w-sm w-full mx-4 transform scale-95 transition-transform">
+            <h3 class="text-white font-black text-xl mb-4 text-center uppercase tracking-wider flex items-center justify-center gap-2">
+                <i class="fas fa-clock text-blue-500"></i> Túlóra Opciók
+            </h3>
+            <p id="tu-modal-info" class="text-slate-400 text-xs text-center mb-6 font-bold uppercase"></p>
+            <div class="space-y-3">
+                <button id="btn-tu-100" class="w-full py-4 rounded-xl font-black text-sm uppercase bg-blue-600 hover:bg-blue-500 text-white shadow-lg transition-all border border-blue-500 focus:outline-none">
+                    1. 100% Túlóra
+                </button>
+                <button id="btn-tu-50" class="w-full py-4 rounded-xl font-black text-sm uppercase bg-red-600 hover:bg-red-500 text-white shadow-lg transition-all border border-red-500 focus:outline-none flex flex-col items-center gap-1">
+                    <span>2. 50% Túlóra + Cserenap</span>
+                    <span class="text-[9px] text-red-200 opacity-80">(+12 óra kivehető nap automatikusan)</span>
+                </button>
+                <button id="btn-tu-note" class="w-full py-3 mt-3 rounded-xl font-black text-sm uppercase bg-yellow-600 hover:bg-yellow-500 text-white shadow-lg transition-all border border-yellow-500 focus:outline-none flex items-center justify-center gap-2">
+                    <i class="fas fa-comment-dots"></i> Megjegyzés hozzáfűzése
+                </button>
+            </div>
+            <button id="btn-tu-cancel" class="mt-4 w-full py-2 rounded-lg font-bold text-xs uppercase text-slate-500 hover:text-slate-300 transition-colors">
+                Mégse
+            </button>
+        </div>
+    </div>
+
+    <div id="note-modal" class="hidden fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity no-select">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-2xl max-w-sm w-full mx-4 transform scale-95 transition-transform">
+            <h3 class="text-white font-black text-xl mb-4 text-center uppercase tracking-wider flex items-center justify-center gap-2">
+                <i class="fas fa-comment-dots text-yellow-500"></i> Megjegyzés
+            </h3>
+            <p id="note-modal-info" class="text-slate-400 text-xs text-center mb-4 font-bold uppercase"></p>
+            <textarea id="note-input-text" class="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-xl mb-4 focus:border-yellow-500 focus:outline-none placeholder-slate-600 font-bold" rows="3" placeholder="Írd ide a megjegyzést..."></textarea>
+            <div class="space-y-3">
+                <button id="btn-note-save" class="w-full py-3 rounded-xl font-black text-sm uppercase bg-yellow-600 hover:bg-yellow-500 text-white shadow-lg transition-all border border-yellow-500 focus:outline-none flex items-center justify-center gap-2">
+                    <i class="fas fa-save"></i> Mentés
+                </button>
+                <button id="btn-note-delete" class="w-full py-3 rounded-xl font-black text-sm uppercase bg-slate-700 hover:bg-red-600 text-white shadow-lg transition-all focus:outline-none hidden flex items-center justify-center gap-2">
+                    <i class="fas fa-trash"></i> Megjegyzés Törlése
+                </button>
+            </div>
+            <button id="btn-note-cancel" class="mt-4 w-full py-2 rounded-lg font-bold text-xs uppercase text-slate-500 hover:text-slate-300 transition-colors">
+                Mégse
+            </button>
+        </div>
+    </div>
+
     <script>
-        // --- FIREBASE INICIALIZÁLÁS (ÚJ BIZTONSÁGOS MÓDSZER) ---
+        // --- FIREBASE INICIALIZÁLÁS ---
         const firebaseConfig = {
             apiKey: "AIzaSyC9nfTSnV3wFsYjBpL8Cb7mVSt0eR_to3w",
             authDomain: "forviastaff.firebaseapp.com",
@@ -275,25 +344,76 @@
 
         // --- GLOBÁLIS VÁLTOZÓK ---
         let currentShift = localStorage.getItem('fv_shift_final') || 'A';
-        let date = new Date(2026, new Date().getMonth(), 1);
+        // A dátum most már nem betonfixen 2026, hanem dinamikus (alapból az aktuális évet és hónapot veszi fel)
+        let date = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
         let employees = [];
         const monthNames = ["Január", "Február", "Március", "Április", "Május", "Június", "Július", "Augusztus", "Szeptember", "Október", "November", "December"];
         const dayNamesShort = ["V", "H", "K", "Sze", "Cs", "P", "Szo"];
-        const holidays2026 = ["1-1", "3-15", "4-3", "4-6", "5-1", "5-25", "8-20", "10-23", "11-1", "12-25", "12-26"];
 
         let mSelectedUserIndex = -1;
         let mSelectedDate = null;
+        let activeTuContext = null;
+        let activeNoteContext = null;
+
+        // --- ÉVES KERET ÉS SZÁMOLÁS OKOSÍTÁS ---
+        function getEmpQuota(e, year) {
+            if (e.quotas && e.quotas[year] !== undefined) return parseInt(e.quotas[year]);
+            return parseInt(e.yearlyQuota || 160); // Ha nincs mentve specifikus évre, adja az alap 160-at
+        }
+
+        window.updateEmpQuota = function(empId, year, val) {
+            const emp = employees.find(x => x.id == empId);
+            if(emp) {
+                emp.quotas = emp.quotas || {};
+                emp.quotas[year] = parseInt(val) || 160;
+                save(); render();
+                if(mSelectedUserIndex !== -1) renderMobileList();
+            }
+        };
+
+        function getYearlyUsed(emp, year) {
+            let s = 0;
+            if(emp && emp.data) {
+                Object.entries(emp.data).forEach(([key, v]) => {
+                    if(key.startsWith(year + '-')) { // Csak az adott évet számolja!
+                        if(key.endsWith('_cserenap')) {
+                            s += parseFloat(v); // -12
+                        } else if (!key.endsWith('_note')) {
+                            let n = parseFloat(String(v).replace(',','.'));
+                            if(!isNaN(n)) s += n;
+                        }
+                    }
+                });
+            }
+            return s;
+        }
+
+        // --- MOZGÓ ÜNNEPEK (Húsvét, Pünkösd) OKOS SZÁMOLÁSA BÁRMELYIK ÉVRE ---
+        function getHolidays(year) {
+            const fixed = ["1-1", "3-15", "5-1", "8-20", "10-23", "11-1", "12-25", "12-26"];
+            // Gauss-féle Húsvét algoritmus
+            let f = Math.floor, G = year % 19, C = f(year / 100), H = (C - f(C / 4) - f((8 * C + 13) / 25) + 19 * G + 15) % 30;
+            let I = H - f(H / 28) * (1 - f(29 / (H + 1)) * f((21 - G) / 11)), J = (year + f(year / 4) + I + 2 - C + f(C / 4)) % 7;
+            let L = I - J, m = 3 + f((L + 40) / 44), d = L + 28 - 31 * f(m / 4);
+            
+            let gf = new Date(year, m - 1, d - 2); // Nagypéntek
+            let em = new Date(year, m - 1, d + 1); // Húsvét Hétfő
+            let pm = new Date(year, m - 1, d + 50); // Pünkösd Hétfő
+
+            let moving = [
+                `${gf.getMonth()+1}-${gf.getDate()}`,
+                `${em.getMonth()+1}-${em.getDate()}`,
+                `${pm.getMonth()+1}-${pm.getDate()}`
+            ];
+            return [...fixed, ...moving];
+        }
+
+        // --- ALAP FUNKCIÓK ---
 
         async function changeShift(s) {
-            document.getElementById('m-emp-list').innerHTML = `
-                <div class="flex flex-col items-center justify-center pt-20">
-                    <i class="fas fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i>
-                    <span class="text-slate-400 font-bold text-sm uppercase tracking-widest">Adatok betöltése...</span>
-                </div>
-            `;
+            document.getElementById('m-emp-list').innerHTML = `<div class="flex flex-col items-center justify-center pt-20"><i class="fas fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i><span class="text-slate-400 font-bold text-sm uppercase tracking-widest">Adatok betöltése...</span></div>`;
             employees = []; 
             render(); 
-
             currentShift = s; localStorage.setItem('fv_shift_final', s);
             
             document.querySelectorAll('.shift-btn').forEach(b => b.classList.remove('active'));
@@ -308,30 +428,24 @@
                 mBtn.classList.remove('bg-slate-800', 'text-slate-400');
                 mBtn.classList.add('bg-blue-600', 'text-white', 'border-blue-500');
             }
-
             await load();
         }
 
-        // --- ÚJ BIZTONSÁGOS BETÖLTÉS (FIREBASE SDK) ---
         async function load() {
             try {
                 const snapshot = await db.ref(`shift_${currentShift}`).once('value');
                 const data = snapshot.val();
-                
                 employees = Array.isArray(data) ? data.filter(e => e != null) : [];
-                
             } catch(e) { 
-                console.error("Betöltési hiba:", e);
-                employees = []; 
+                console.error("Betöltési hiba:", e); employees = []; 
             } finally {
                 render(); 
                 renderMobileList(); 
-                
                 if(!document.getElementById('m-detail-view').classList.contains('hidden') && mSelectedUserIndex > -1) {
                     if (employees[mSelectedUserIndex]) {
                         renderMobileCalendar();
                         if(mSelectedDate) {
-                            const k = `2026-${date.getMonth()+1}-${mSelectedDate}`;
+                            const k = `${date.getFullYear()}-${date.getMonth()+1}-${mSelectedDate}`;
                             const emp = employees[mSelectedUserIndex];
                             const val = (emp && emp.data && emp.data[k]) ? emp.data[k] : "";
                             const input = document.getElementById('m-input');
@@ -340,27 +454,46 @@
                                 document.getElementById('m-status-text').innerText = val ? "MENTVE (Frissítve)" : "ÜRES";
                             }
                         }
-                    } else {
-                         closeMobileDetail();
-                    }
+                    } else closeMobileDetail();
                 }
                 initSortable();
             }
         }
 
-        // --- ÚJ BIZTONSÁGOS MENTÉS (FIREBASE SDK) ---
         async function save() {
             document.getElementById('sync').innerHTML = '<i class="fas fa-spin fa-sync"></i>';
+            let cleanupHappened = false;
+            
+            // Biztonsági takarítás mentés előtt (Megjegyzések és Cserenapok)
+            employees.forEach(emp => {
+                if (emp.data) {
+                    Object.keys(emp.data).forEach(key => {
+                        if (key.endsWith('_cserenap')) {
+                            const baseKey = key.replace('_cserenap', '');
+                            if (emp.data[baseKey] !== 'TU') { delete emp.data[key]; cleanupHappened = true; }
+                        }
+                        if (key.endsWith('_note')) {
+                            const baseKey = key.replace('_note', '');
+                            if (!emp.data[baseKey] || emp.data[baseKey].trim() === '') { delete emp.data[key]; cleanupHappened = true; }
+                        }
+                    });
+                }
+            });
+
             try {
                 await db.ref(`shift_${currentShift}`).set(employees);
                 document.getElementById('sync').innerHTML = 'ONLINE';
             } catch(e) { 
-                console.error("Mentési hiba:", e);
-                document.getElementById('sync').innerText = "HIBA!"; 
+                console.error("Mentési hiba:", e); document.getElementById('sync').innerText = "HIBA!"; 
+            }
+
+            if (cleanupHappened && mSelectedUserIndex !== -1) {
+                const emp = employees[mSelectedUserIndex];
+                const el = document.getElementById('m-detail-quota');
+                if (el) el.innerText = `KERET: ${getEmpQuota(emp, date.getFullYear())} | KIVEHETŐ: ${getEmpQuota(emp, date.getFullYear()) - getYearlyUsed(emp, date.getFullYear())}`;
             }
         }
 
-        // --- ÚJ BIZTONSÁGOS MENTÉS A GÉPRE (FIREBASE SDK) ---
         async function backupAllData() {
             const btn = document.querySelector('button[title*="TELJES"]');
             const originalText = btn.innerHTML;
@@ -386,10 +519,7 @@
             var el = document.getElementById('tBody');
             if(el) {
                 Sortable.create(el, {
-                    animation: 150,
-                    handle: '.name-col',
-                    delay: 50, 
-                    delayOnTouchOnly: true,
+                    animation: 150, handle: '.name-col', delay: 50, delayOnTouchOnly: true,
                     onEnd: function() {
                         let newOrder = [];
                         el.querySelectorAll('tr').forEach(tr => {
@@ -397,12 +527,7 @@
                             let emp = employees.find(e => e.id == id);
                             if(emp) newOrder.push(emp);
                         });
-                        if(newOrder.length > 0) {
-                            employees = newOrder;
-                            save();
-                            render(); 
-                            renderMobileList();
-                        }
+                        if(newOrder.length > 0) { employees = newOrder; save(); render(); renderMobileList(); }
                     }
                 });
             }
@@ -420,41 +545,77 @@
             const v = val.trim().toUpperCase();
             emp.data = emp.data || {};
             if(v === "") delete emp.data[key]; else emp.data[key] = v;
+            
+            const currentYear = date.getFullYear();
+
+            // Takarítás valós időben
+            if(v !== 'TU' && emp.data[key + '_cserenap']) delete emp.data[key + '_cserenap'];
+            if(v === '' && emp.data[key + '_note']) delete emp.data[key + '_note'];
+
             const td = el.parentElement;
             td.className = td.className.replace(/cell-\S+/g, "").trim();
             const cls = (v && !isNaN(parseFloat(v.replace(',','.')))) ? 'cell-S' : (v==='BÁ'?'cell-BA':v==='IG'?'cell-IG':v==='TU'?'cell-TU':v.startsWith('KÉ')?'cell-KE':'');
             if(cls) td.classList.add(cls);
-            let s = 0; Object.values(emp.data).forEach(x => { let n=parseFloat(String(x).replace(',','.')); if(!isNaN(n)) s+=n; });
-            document.getElementById(`rem-${id}`).innerText = (emp.yearlyQuota || 160) - s;
+            
+            document.getElementById(`rem-${id}`).innerText = getEmpQuota(emp, currentYear) - getYearlyUsed(emp, currentYear);
             save();
+            render(); // Azonnal frissítjük a felületet (pöttyök és tooltipek eltüntetése miatt)
         }
 
+        // Tökéletesített Renderelés (Dinamikus Évekkel és Pöttyökkel EGYBEÉPÍTVE)
         function render() {
-            const m = date.getMonth(); const days = new Date(2026, m+1, 0).getDate();
+            const currentYear = date.getFullYear();
+            const m = date.getMonth(); 
+            const days = new Date(currentYear, m+1, 0).getDate();
+            
+            document.getElementById('yearDisp').innerText = currentYear;
             document.getElementById('monthDisp').innerText = monthNames[m];
-            const today = new Date(); const isCurrentMonth = today.getFullYear() === 2026 && today.getMonth() === m; const currentDay = today.getDate();
+            
+            const today = new Date(); 
+            const isCurrentMonth = today.getFullYear() === currentYear && today.getMonth() === m; 
+            const currentDay = today.getDate();
+            const holidays = getHolidays(currentYear); // Dinamikus ünnepek
 
             let h = `<tr><th class="name-col">Név</th><th class="sticky-quota bg-slate-800 text-blue-300 border-b border-slate-700">KERET</th><th class="sticky-rem bg-slate-800 text-emerald-400 border-b border-slate-700 border-r-4 border-r-slate-900">KIVEHETŐ</th>`;
             for(let d=1; d<=days; d++) {
-                const isHoliday = holidays2026.includes(`${m+1}-${d}`);
+                const isHoliday = holidays.includes(`${m+1}-${d}`);
                 const isToday = isCurrentMonth && d === currentDay;
-                const dayOfWeek = new Date(2026, m, d).getDay();
+                const dayOfWeek = new Date(currentYear, m, d).getDay();
                 h += `<th id="${isToday?'today-header':''}" class="${isHoliday?'holiday-text':''} ${isToday?`today-base today-${currentShift}`:''} leading-tight">${d}<br><span class="text-[9px] font-normal text-slate-500">${dayNamesShort[dayOfWeek]}</span></th>`;
             }
             document.getElementById('tHead').innerHTML = h + "</tr>";
 
             document.getElementById('tBody').innerHTML = employees.map(e => {
-                let s = 0; if(e.data) Object.values(e.data).forEach(v => { let n=parseFloat(String(v).replace(',','.')); if(!isNaN(n)) s+=n; });
+                const quota = getEmpQuota(e, currentYear);
+                const used = getYearlyUsed(e, currentYear);
+                
                 let row = `<tr data-id="${e.id}"><td class="name-col"><div class="flex justify-between items-center h-full w-full"><span class="font-black text-[12px] tracking-tight uppercase text-white text-left break-words leading-tight">${e.name}</span><button onclick="delEmp(${e.id})" class="text-red-500/30 hover:text-red-500 transition-colors p-1 flex-shrink-0 ml-1"><i class="fas fa-times-circle"></i></button></div></td>
-                <td class="sticky-quota bg-slate-800 border-r border-slate-700/50"><input type="number" value="${e.yearlyQuota||160}" onchange="employees.find(x=>x.id==${e.id}).yearlyQuota=this.value; save(); render();" class="input-cell quota-input text-center"></td>
-                <td id="rem-${e.id}" class="sticky-rem bg-slate-800 text-emerald-400 font-black text-[15px] border-r-4 border-slate-900 text-center">${(e.yearlyQuota||160)-s}</td>`;
+                <td class="sticky-quota bg-slate-800 border-r border-slate-700/50"><input type="number" value="${quota}" onchange="updateEmpQuota(${e.id}, ${currentYear}, this.value)" class="input-cell quota-input text-center"></td>
+                <td id="rem-${e.id}" class="sticky-rem bg-slate-800 text-emerald-400 font-black text-[15px] border-r-4 border-slate-900 text-center">${quota - used}</td>`;
+                
                 for(let d=1; d<=days; d++) {
-                    const k = `2026-${m+1}-${d}`, v = (e.data && e.data[k]) ? e.data[k] : "";
-                    const isWeekend = [0,6].includes(new Date(2026,m,d).getDay());
-                    const isHoliday = holidays2026.includes(`${m+1}-${d}`);
+                    const k = `${currentYear}-${m+1}-${d}`;
+                    const v = (e.data && e.data[k]) ? e.data[k] : "";
+                    const isWeekend = [0,6].includes(new Date(currentYear,m,d).getDay());
+                    const isHoliday = holidays.includes(`${m+1}-${d}`);
                     const isToday = isCurrentMonth && d === currentDay;
+                    
+                    const isTuCserenap = (v === 'TU' && e.data && e.data[k + '_cserenap']);
+                    const hasNote = (e.data && e.data[k + '_note']);
+                    
+                    let titleArr = [];
+                    if(isTuCserenap) titleArr.push("50% + Cserenap");
+                    if(hasNote) titleArr.push("Megjegyzés: " + e.data[k + '_note']);
+                    const titleAttr = titleArr.length > 0 ? `title="${titleArr.join('\n')}"` : '';
+
                     const cls = (v && !isNaN(parseFloat(v.replace(',','.')))) ? 'cell-S' : (v==='BÁ'?'cell-BA':v==='IG'?'cell-IG':v==='TU'?'cell-TU':v.startsWith('KÉ')?'cell-KE':'');
-                    row += `<td class="${isWeekend||isHoliday?'weekend':''} ${isHoliday?'holiday-bg':''} ${cls} ${isToday?`today-base today-${currentShift}`:''}"><input type="text" value="${v}" onfocus="this.select(); highlight(this,${d},true)" onblur="highlight(this,${d},false); update(${e.id},'${k}',this.value,this)" onkeydown="if(event.key==='Enter'){this.blur();}" class="input-cell" inputmode="text"></td>`;
+                    const relativeCls = (isTuCserenap || hasNote) ? 'relative' : '';
+
+                    let dots = '';
+                    if(isTuCserenap) dots += '<div class="tu-dot-desk absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 border border-slate-900 shadow-[0_0_5px_rgba(239,68,68,1)] pointer-events-none z-20"></div>';
+                    if(hasNote) dots += '<div class="note-triangle-desk"></div>';
+
+                    row += `<td class="${isWeekend||isHoliday?'weekend':''} ${isHoliday?'holiday-bg':''} ${cls} ${isToday?`today-base today-${currentShift}`:''} ${relativeCls}" ${titleAttr}><input type="text" value="${v}" onfocus="this.select(); highlight(this,${d},true)" onblur="highlight(this,${d},false); update(${e.id},'${k}',this.value,this)" onkeydown="if(event.key==='Enter'){this.blur();}" class="input-cell" inputmode="text">${dots}</td>`;
                 }
                 return row + "</tr>";
             }).join('');
@@ -463,7 +624,7 @@
         }
 
         function jumpToToday() {
-            const now = new Date(); date = new Date(2026, now.getMonth(), 1); render(); renderMobileList();
+            const now = new Date(); date = new Date(now.getFullYear(), now.getMonth(), 1); render(); renderMobileList();
             setTimeout(() => {
                 const el = document.getElementById('today-header'); const container = document.querySelector('.table-container');
                 if(el && container) container.scrollTo({ left: el.offsetLeft - 260, behavior: 'smooth' });
@@ -471,101 +632,61 @@
         }
 
         function printA4(id) {
+            const currentYear = date.getFullYear();
             const emp = employees.find(x => x.id == id);
             let s = { S:0, BA:0, IG:0, TU:0, KE:0 }; const mData = Array(12).fill(0).map(() => ({S:0, BA:0, IG:0, TU:0, KE:0}));
+            
             if(emp.data) Object.entries(emp.data).forEach(([key, v]) => {
-                const m = parseInt(key.split('-')[1]) - 1; const n = parseFloat(String(v).replace(',','.'));
-                if(!isNaN(n)) { s.S += n; mData[m].S += n; } else if(v==='BÁ') { s.BA++; mData[m].BA++; } else if(v==='IG') { s.IG++; mData[m].IG++; } else if(v==='TU') { s.TU++; mData[m].TU++; } else if(String(v).startsWith('KÉ')) { s.KE++; mData[m].KE++; }
+                if(key.startsWith(currentYear + '-')) {
+                    if(key.endsWith('_cserenap')) {
+                        s.S += parseFloat(v);
+                        const m = parseInt(key.split('-')[1]) - 1; mData[m].S += parseFloat(v);
+                    } else if(!key.endsWith('_note')) {
+                        const m = parseInt(key.split('-')[1]) - 1; const n = parseFloat(String(v).replace(',','.'));
+                        if(!isNaN(n)) { s.S += n; mData[m].S += n; } 
+                        else if(v==='BÁ') { s.BA++; mData[m].BA++; } 
+                        else if(v==='IG') { s.IG++; mData[m].IG++; } 
+                        else if(v==='TU') { s.TU++; mData[m].TU++; } 
+                        else if(String(v).startsWith('KÉ')) { s.KE++; mData[m].KE++; }
+                    }
+                }
             });
             let rows = mData.map((m, i) => `<tr><td>${monthNames[i]}</td><td>${m.S}</td><td>${m.BA}</td><td>${m.IG}</td><td>${m.TU}</td><td>${m.KE}</td></tr>`).join('');
-            document.getElementById('print-area').innerHTML = `<div style="color:black; background:white; font-family:sans-serif; padding:40px;"><h1 style="margin:0; color:#3b82f6;">FORVIA - 2026</h1><h2 style="border-bottom:2px solid #3b82f6; padding-bottom:10px;">ADATLAP: ${emp.name}</h2><div style="display:flex; margin:20px 0; font-size:18px;"><p>Éves keret: <b>${emp.yearlyQuota || 160} óra</b></p><p style="margin-left:40px">Kivett: <b>${s.S} óra</b></p><p style="margin-left:40px">Maradék: <b style="color:green">${(emp.yearlyQuota || 160) - s.S} óra</b></p></div><table style="width:100%; border-collapse:collapse; margin-top:20px;"><thead><tr style="background:#f1f5f9;"><th>HÓNAP</th><th>SZABADSÁG</th><th>BÁ</th><th>IG</th><th>TU</th><th>KÉ</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+            document.getElementById('print-area').innerHTML = `<div style="color:black; background:white; font-family:sans-serif; padding:40px;"><h1 style="margin:0; color:#3b82f6;">FORVIA - ${currentYear}</h1><h2 style="border-bottom:2px solid #3b82f6; padding-bottom:10px;">ADATLAP: ${emp.name}</h2><div style="display:flex; margin:20px 0; font-size:18px;"><p>Éves keret: <b>${getEmpQuota(emp, currentYear)} óra</b></p><p style="margin-left:40px">Kivett: <b>${s.S} óra</b></p><p style="margin-left:40px">Maradék: <b style="color:green">${getEmpQuota(emp, currentYear) - s.S} óra</b></p></div><table style="width:100%; border-collapse:collapse; margin-top:20px;"><thead><tr style="background:#f1f5f9;"><th>HÓNAP</th><th>SZABADSÁG</th><th>BÁ</th><th>IG</th><th>TU</th><th>KÉ</th></tr></thead><tbody>${rows}</tbody></table></div>`;
             window.print();
         }
 
-        // --- ÚJ FUNKCIÓ: MŰSZAK ÖSSZESÍTŐ NYOMTATÁSA (OPTIMALIZÁLVA A4-RE, TELJES ÉVES ADAT) ---
         function printShiftSummary() {
-            if(employees.length === 0) {
-                alert("Nincs dolgozó a kiválasztott műszakban a nyomtatáshoz!");
-                return;
-            }
+            if(employees.length === 0) { alert("Nincs dolgozó a kiválasztott műszakban a nyomtatáshoz!"); return; }
 
             const today = new Date();
-            const currentYear = 2026;
-            const todayFormatted = `${currentYear}. ${monthNames[today.getMonth()]} ${today.getDate()}.`;
+            const currentYear = date.getFullYear();
+            const todayFormatted = `${today.getFullYear()}. ${monthNames[today.getMonth()]} ${today.getDate()}.`;
 
             let rows = employees.map(emp => {
-                let sS_Total = 0; 
-                let sBA = 0, sIG = 0, sTU = 0, sKE = 0;
-
+                let sS_Total = 0, sBA = 0, sIG = 0, sTU = 0, sKE = 0;
                 if(emp.data) {
                     Object.entries(emp.data).forEach(([key, v]) => {
-                        const parts = key.split('-');
-                        const year = parseInt(parts[0]);
-                        
-                        // Összes adat az évben (múlt, jelen, jövő)
-                        if(year === currentYear) {
-                            const n = parseFloat(String(v).replace(',','.'));
-                            if(!isNaN(n)) { sS_Total += n; } 
-                            else if(v === 'BÁ') { sBA++; } 
-                            else if(v === 'IG') { sIG++; } 
-                            else if(v === 'TU') { sTU++; } 
-                            else if(String(v).startsWith('KÉ')) { sKE++; }
+                        if(key.startsWith(currentYear + '-')) {
+                            if(key.endsWith('_cserenap')) sS_Total += parseFloat(v);
+                            else if(!key.endsWith('_note')) {
+                                const n = parseFloat(String(v).replace(',','.'));
+                                if(!isNaN(n)) { sS_Total += n; } 
+                                else if(v === 'BÁ') { sBA++; } 
+                                else if(v === 'IG') { sIG++; } 
+                                else if(v === 'TU') { sTU++; } 
+                                else if(String(v).startsWith('KÉ')) { sKE++; }
+                            }
                         }
                     });
                 }
-
-                const quota = emp.yearlyQuota || 160;
+                const quota = getEmpQuota(emp, currentYear);
                 const rem = quota - sS_Total;
-                const remColor = rem < 0 ? '#ef4444' : '#059669'; // Piros, ha túllépte, amúgy zöld
-
-                return `
-                <tr>
-                    <td style="text-align:left; font-weight:bold; padding:4px 8px; border:1px solid #cbd5e1;">${emp.name}</td>
-                    <td style="padding:4px 8px; border:1px solid #cbd5e1;">${quota} óra</td>
-                    <td style="padding:4px 8px; border:1px solid #cbd5e1; font-weight:bold; color:#059669;">${sS_Total} óra</td>
-                    <td style="padding:4px 8px; border:1px solid #cbd5e1; color:${remColor}; font-weight:bold;">${rem} óra</td>
-                    <td style="padding:4px 8px; border:1px solid #cbd5e1;">${sBA}</td>
-                    <td style="padding:4px 8px; border:1px solid #cbd5e1;">${sIG}</td>
-                    <td style="padding:4px 8px; border:1px solid #cbd5e1;">${sTU}</td>
-                    <td style="padding:4px 8px; border:1px solid #cbd5e1;">${sKE}</td>
-                </tr>`;
+                const remColor = rem < 0 ? '#ef4444' : '#059669'; 
+                return `<tr><td style="text-align:left; font-weight:bold; padding:4px 8px; border:1px solid #cbd5e1;">${emp.name}</td><td style="padding:4px 8px; border:1px solid #cbd5e1;">${quota} óra</td><td style="padding:4px 8px; border:1px solid #cbd5e1; font-weight:bold; color:#059669;">${sS_Total} óra</td><td style="padding:4px 8px; border:1px solid #cbd5e1; color:${remColor}; font-weight:bold;">${rem} óra</td><td style="padding:4px 8px; border:1px solid #cbd5e1;">${sBA}</td><td style="padding:4px 8px; border:1px solid #cbd5e1;">${sIG}</td><td style="padding:4px 8px; border:1px solid #cbd5e1;">${sTU}</td><td style="padding:4px 8px; border:1px solid #cbd5e1;">${sKE}</td></tr>`;
             }).join('');
 
-            document.getElementById('print-area').innerHTML = `
-                <div style="color:black; background:white; font-family:sans-serif; padding:15px 30px; box-sizing:border-box;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid #3b82f6; padding-bottom:10px; margin-bottom:15px;">
-                        <div>
-                            <h1 style="margin:0; color:#3b82f6; font-size:24px; font-weight:900;">FORVIA - 2026</h1>
-                            <h2 style="margin:5px 0 0 0; color:#1e293b; font-size:16px; text-transform:uppercase;">Műszak Összesítő: <b>"${currentShift}" MŰSZAK</b></h2>
-                        </div>
-                        <div style="text-align:right; font-size:12px; color:#475569;">
-                            <p style="margin:0;">Lekérdezés ideje: <b>${todayFormatted} (Teljes éves adat)</b></p>
-                        </div>
-                    </div>
-                    
-                    <table style="width:100%; border-collapse:collapse; text-align:center; font-size:12px;">
-                        <thead>
-                            <tr style="background:#f1f5f9;">
-                                <th style="padding:6px 8px; text-align:left; border:1px solid #cbd5e1; color:#334155;">NÉV</th>
-                                <th style="padding:6px 8px; border:1px solid #cbd5e1; color:#334155;">ÉVES<br>KERET</th>
-                                <th style="padding:6px 8px; border:1px solid #cbd5e1; color:#059669;">SZABADSÁG<br>(Kivett + Tervezett)</th>
-                                <th style="padding:6px 8px; border:1px solid #cbd5e1; color:#334155;">MARADÉK</th>
-                                <th style="padding:6px 8px; border:1px solid #cbd5e1; color:#ea580c;">BÁ</th>
-                                <th style="padding:6px 8px; border:1px solid #cbd5e1; color:#7c3aed;">IG</th>
-                                <th style="padding:6px 8px; border:1px solid #cbd5e1; color:#2563eb;">TU</th>
-                                <th style="padding:6px 8px; border:1px solid #cbd5e1; color:#d97706;">KÉ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${rows}
-                        </tbody>
-                    </table>
-                    
-                    <div style="margin-top:15px; font-size:10px; color:#94a3b8; text-align:center; border-top:1px solid #e2e8f0; padding-top:8px;">
-                        Automatikusan generálva: ${new Date().toLocaleString('hu-HU')} | Rendszer: Forvia Staff Pro 2026 SMT
-                    </div>
-                </div>
-            `;
+            document.getElementById('print-area').innerHTML = `<div style="color:black; background:white; font-family:sans-serif; padding:15px 30px; box-sizing:border-box;"><div style="display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid #3b82f6; padding-bottom:10px; margin-bottom:15px;"><div><h1 style="margin:0; color:#3b82f6; font-size:24px; font-weight:900;">FORVIA - ${currentYear}</h1><h2 style="margin:5px 0 0 0; color:#1e293b; font-size:16px; text-transform:uppercase;">Műszak Összesítő: <b>"${currentShift}" MŰSZAK</b></h2></div><div style="text-align:right; font-size:12px; color:#475569;"><p style="margin:0;">Lekérdezés ideje: <b>${todayFormatted} (Teljes éves adat)</b></p></div></div><table style="width:100%; border-collapse:collapse; text-align:center; font-size:12px;"><thead><tr style="background:#f1f5f9;"><th style="padding:6px 8px; text-align:left; border:1px solid #cbd5e1; color:#334155;">NÉV</th><th style="padding:6px 8px; border:1px solid #cbd5e1; color:#334155;">ÉVES<br>KERET</th><th style="padding:6px 8px; border:1px solid #cbd5e1; color:#059669;">SZABADSÁG<br>(Kivett + Tervezett)</th><th style="padding:6px 8px; border:1px solid #cbd5e1; color:#334155;">MARADÉK</th><th style="padding:6px 8px; border:1px solid #cbd5e1; color:#ea580c;">BÁ</th><th style="padding:6px 8px; border:1px solid #cbd5e1; color:#7c3aed;">IG</th><th style="padding:6px 8px; border:1px solid #cbd5e1; color:#2563eb;">TU</th><th style="padding:6px 8px; border:1px solid #cbd5e1; color:#d97706;">KÉ</th></tr></thead><tbody>${rows}</tbody></table><div style="margin-top:15px; font-size:10px; color:#94a3b8; text-align:center; border-top:1px solid #e2e8f0; padding-top:8px;">Automatikusan generálva: ${new Date().toLocaleString('hu-HU')} | Rendszer: Forvia Staff Pro SMT</div></div>`;
             window.print();
         }
 
@@ -575,24 +696,53 @@
             document.getElementById('nav-m').className = v === 'matrix' ? "px-3 py-1.5 rounded text-[10px] font-black uppercase bg-blue-600 text-white flex items-center gap-1" : "px-3 py-1.5 rounded text-[10px] font-black uppercase text-slate-400 hover:text-white flex items-center gap-1";
             document.getElementById('nav-s').className = v === 'stats' ? "px-3 py-1.5 rounded text-[10px] font-black uppercase bg-blue-600 text-white flex items-center gap-1 ml-1" : "px-3 py-1.5 rounded text-[10px] font-black uppercase text-slate-400 hover:text-white flex items-center gap-1 ml-1";
             if(v==='stats') {
+                const currentYear = date.getFullYear();
                 document.getElementById('stats-grid').innerHTML = employees.map(e => {
                     let totals = { S:0, BA:0, IG:0, TU:0, KE:0 };
-                    if(e.data) Object.values(e.data).forEach(val => { let n = parseFloat(String(val).replace(',','.')); if(!isNaN(n)) totals.S += n; else if(val==='BÁ') totals.BA++; else if(val==='IG') totals.IG++; else if(val==='TU') totals.TU++; else if(String(val).startsWith('KÉ')) totals.KE++; });
-                    const percent = Math.max(0, Math.min(100, (totals.S / (e.yearlyQuota||160)) * 100));
-                    return `<div class="bg-slate-900/80 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col"><div class="p-6 pb-4 border-b border-slate-800"><h3 class="font-black text-xl text-white uppercase tracking-tighter mb-2">${e.name}</h3><div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden mb-2"><div class="h-full bg-gradient-to-r from-blue-500 to-emerald-400" style="width: ${percent}%"></div></div><div class="flex justify-between items-end"><div class="text-[10px] text-slate-400 font-bold uppercase">Keret: ${e.yearlyQuota||160}</div><div class="text-right"><div class="text-[10px] text-slate-500 font-bold uppercase">Még kivehető</div><div class="text-2xl font-black text-emerald-400 leading-none">${(e.yearlyQuota||160)-totals.S}</div></div></div></div><div class="p-4 grid grid-cols-2 gap-2 bg-slate-900/50 flex-grow content-start"><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center"><span class="text-[10px] text-slate-400 font-bold">SZABI</span><span class="font-bold text-white">${totals.S}</span></div><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center"><span class="text-[10px] text-orange-400 font-bold">BETEG</span><span class="font-bold text-orange-400">${totals.BA}</span></div><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center"><span class="text-[10px] text-violet-400 font-bold">IGAZOLATLAN</span><span class="font-bold text-violet-400">${totals.IG}</span></div><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center"><span class="text-[10px] text-blue-400 font-bold">TÚLÓRA</span><span class="font-bold text-blue-400">${totals.TU}</span></div><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center col-span-2"><span class="text-[10px] text-amber-500 font-bold">KÉSÉS</span><span class="font-bold text-amber-500">${totals.KE}</span></div></div><div class="p-4 pt-2"><button onclick="printA4(${e.id})" class="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-black text-[10px] uppercase transition-all tracking-widest text-white shadow-lg"><i class="fas fa-print mr-2"></i> Részletes adatlap</button></div></div>`;
+                    let cserenapCount = 0;
+                    if(e.data) Object.entries(e.data).forEach(([k, val]) => { 
+                        if(k.startsWith(currentYear + '-')) {
+                            if(k.endsWith('_cserenap')) {
+                                cserenapCount += Math.abs(parseFloat(val) || 0);
+                            } else if(!k.endsWith('_note')) {
+                                let n = parseFloat(String(val).replace(',','.')); 
+                                if(!isNaN(n)) totals.S += n; 
+                                else if(val==='BÁ') totals.BA++; 
+                                else if(val==='IG') totals.IG++; 
+                                else if(val==='TU') totals.TU++; 
+                                else if(String(val).startsWith('KÉ')) totals.KE++; 
+                            }
+                        }
+                    });
+                    const quota = getEmpQuota(e, currentYear);
+                    const percent = Math.max(0, Math.min(100, (totals.S / quota) * 100));
+                    
+                    let cserenapHtml = cserenapCount > 0 ? `<div class="bg-red-500/20 p-2 rounded-lg border border-red-500/50 flex justify-between items-center col-span-2 mt-1"><span class="text-[10px] text-red-400 font-bold uppercase"><i class="fas fa-gift mr-1"></i> Cserenap Jóváírás</span><span class="font-bold text-red-400">+${cserenapCount} óra</span></div>` : '';
+
+                    return `<div class="bg-slate-900/80 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col"><div class="p-6 pb-4 border-b border-slate-800"><h3 class="font-black text-xl text-white uppercase tracking-tighter mb-2">${e.name}</h3><div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden mb-2"><div class="h-full bg-gradient-to-r from-blue-500 to-emerald-400" style="width: ${percent}%"></div></div><div class="flex justify-between items-end"><div class="text-[10px] text-slate-400 font-bold uppercase">Keret: ${quota}</div><div class="text-right"><div class="text-[10px] text-slate-500 font-bold uppercase">Még kivehető</div><div class="text-2xl font-black text-emerald-400 leading-none">${quota - getYearlyUsed(e, currentYear)}</div></div></div></div><div class="p-4 grid grid-cols-2 gap-2 bg-slate-900/50 flex-grow content-start"><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center"><span class="text-[10px] text-slate-400 font-bold">SZABI</span><span class="font-bold text-white">${totals.S}</span></div><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center"><span class="text-[10px] text-orange-400 font-bold">BETEG</span><span class="font-bold text-orange-400">${totals.BA}</span></div><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center"><span class="text-[10px] text-violet-400 font-bold">IGAZOLATLAN</span><span class="font-bold text-violet-400">${totals.IG}</span></div><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center"><span class="text-[10px] text-blue-400 font-bold">TÚLÓRA</span><span class="font-bold text-blue-400">${totals.TU}</span></div><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center col-span-2"><span class="text-[10px] text-amber-500 font-bold">KÉSÉS</span><span class="font-bold text-amber-500">${totals.KE}</span></div>${cserenapHtml}</div><div class="p-4 pt-2"><button onclick="printA4(${e.id})" class="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-black text-[10px] uppercase transition-all tracking-widest text-white shadow-lg"><i class="fas fa-print mr-2"></i> Részletes adatlap</button></div></div>`;
                 }).join('');
             }
         }
 
         function changeMonth(v) { 
             date.setMonth(date.getMonth() + v); 
-            render(); 
-            renderMobileList();
-            
+            render(); renderMobileList();
             if(!document.getElementById('m-detail-view').classList.contains('hidden')) {
                 renderMobileCalendar();
                 const today = new Date();
-                const isCurrentMonth = today.getFullYear() === 2026 && today.getMonth() === date.getMonth();
+                const isCurrentMonth = today.getFullYear() === date.getFullYear() && today.getMonth() === date.getMonth();
+                const dayToSelect = isCurrentMonth ? today.getDate() : 1;
+                selectMobileDate(dayToSelect);
+            }
+        }
+
+        function changeYear(v) {
+            date.setFullYear(date.getFullYear() + v);
+            render(); renderMobileList();
+            if(!document.getElementById('m-detail-view').classList.contains('hidden')) {
+                renderMobileCalendar();
+                const today = new Date();
+                const isCurrentMonth = today.getFullYear() === date.getFullYear() && today.getMonth() === date.getMonth();
                 const dayToSelect = isCurrentMonth ? today.getDate() : 1;
                 selectMobileDate(dayToSelect);
             }
@@ -603,44 +753,37 @@
         
         document.addEventListener('focusin', function(e) {
             if (e.target && e.target.classList.contains('input-cell')) {
-                setTimeout(function() {
-                    e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-                }, 300);
+                setTimeout(function() { e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' }); }, 300);
             }
         });
 
         document.addEventListener('visibilitychange', function() {
-            if (document.visibilityState === 'visible') {
-                load();
-            }
+            if (document.visibilityState === 'visible') load();
         });
 
         function renderMobileList() {
+            const currentYear = date.getFullYear();
             const m = date.getMonth();
             document.getElementById('m-monthDisp').innerText = monthNames[m];
+            document.getElementById('m-yearDisp').innerText = currentYear;
             const listEl = document.getElementById('m-emp-list');
             
             if(employees.length === 0) {
-                listEl.innerHTML = `
-                <div class="m-no-data">
-                    <i class="fas fa-users-slash"></i>
-                    <span>Nincs adat ebben a műszakban</span>
-                    <button onclick="addEmp()" class="bg-blue-600/30 text-blue-400 px-4 py-2 rounded-lg text-xs mt-2">Dolgózó hozzáadása</button>
-                </div>`;
+                listEl.innerHTML = `<div class="m-no-data"><i class="fas fa-users-slash"></i><span>Nincs adat ebben a műszakban</span><button onclick="addEmp()" class="bg-blue-600/30 text-blue-400 px-4 py-2 rounded-lg text-xs mt-2">Dolgózó hozzáadása</button></div>`;
                 return;
             }
 
             const today = new Date();
-            const d1 = new Date(); d1.setDate(today.getDate() + 1); 
-            const d2 = new Date(); d2.setDate(today.getDate() + 2); 
+            const d1 = new Date(today); d1.setDate(d1.getDate() + 1); 
+            const d2 = new Date(today); d2.setDate(d2.getDate() + 2); 
             
-            const k0 = `2026-${today.getMonth()+1}-${today.getDate()}`;
-            const k1 = `2026-${d1.getMonth()+1}-${d1.getDate()}`;
-            const k2 = `2026-${d2.getMonth()+1}-${d2.getDate()}`;
+            const k0 = `${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`;
+            const k1 = `${d1.getFullYear()}-${d1.getMonth()+1}-${d1.getDate()}`;
+            const k2 = `${d2.getFullYear()}-${d2.getMonth()+1}-${d2.getDate()}`;
+            const keys = [k0, k1, k2];
 
             listEl.innerHTML = employees.map((e, index) => {
-                let s = 0; if(e.data) Object.values(e.data).forEach(v => { let n=parseFloat(String(v).replace(',','.')); if(!isNaN(n)) s+=n; });
-                let remaining = (e.yearlyQuota || 160) - s;
+                let remaining = getEmpQuota(e, currentYear) - getYearlyUsed(e, currentYear);
                 
                 const getStatusHtml = (key, label) => {
                     const val = (e.data && e.data[key]) ? e.data[key] : "-";
@@ -652,44 +795,39 @@
                         else if(val === 'IG') bg = "bg-violet-600 text-white";
                         else bg = "bg-slate-600 text-white";
                     }
-                    return `
-                    <div class="m-status-row">
-                        <span class="m-status-label">${label}</span>
-                        <div class="m-status-pill ${bg}">${val}</div>
-                    </div>`;
+                    
+                    const isTuCserenap = (val === 'TU' && e.data && e.data[key + '_cserenap']);
+                    const hasNote = (e.data && e.data[key + '_note']);
+                    
+                    let titleArr = [];
+                    if(isTuCserenap) titleArr.push("50% + Cserenap");
+                    if(hasNote) titleArr.push("Megjegyzés: " + e.data[key + '_note']);
+                    const titleAttr = titleArr.length > 0 ? `title="${titleArr.join('\n')}"` : '';
+                    const relativeCls = (isTuCserenap || hasNote) ? 'relative' : '';
+                    
+                    let dots = '';
+                    if(isTuCserenap) dots += '<div class="tu-dot-mob-list absolute -top-1.5 -right-1.5 w-2.5 h-2.5 rounded-full bg-red-500 border border-slate-900 shadow-[0_0_5px_rgba(239,68,68,1)]"></div>';
+                    if(hasNote) dots += '<div class="note-triangle-mob-list"></div>';
+
+                    return `<div class="m-status-row"><span class="m-status-label">${label}</span><div class="m-status-pill ${bg} ${relativeCls}" ${titleAttr}>${val}${dots}</div></div>`;
                 };
 
-                return `
-                <div class="m-card" onclick="openMobileUser(${index})">
-                    <div class="flex items-center flex-grow overflow-hidden">
-                        <div class="m-avatar">${e.name.charAt(0)}</div>
-                        <div class="min-w-0 pr-2">
-                            <div class="font-black text-white text-lg leading-tight uppercase truncate">${e.name}</div>
-                            <div class="text-[10px] text-emerald-400 font-bold uppercase mt-1">Maradék: ${remaining}</div>
-                        </div>
-                    </div>
-                    <div class="flex flex-col flex-none">
-                        ${getStatusHtml(k0, "MA")}
-                        ${getStatusHtml(k1, "HOL")}
-                        ${getStatusHtml(k2, "KÖV")}
-                    </div>
-                </div>
-                `;
+                return `<div class="m-card" onclick="openMobileUser(${index})"><div class="flex items-center flex-grow overflow-hidden"><div class="m-avatar">${e.name.charAt(0)}</div><div class="min-w-0 pr-2"><div class="font-black text-white text-lg leading-tight uppercase truncate">${e.name}</div><div class="text-[10px] text-emerald-400 font-bold uppercase mt-1">Maradék: ${remaining}</div></div></div><div class="flex flex-col flex-none">${getStatusHtml(k0, "MA")}${getStatusHtml(k1, "HOL")}${getStatusHtml(k2, "KÖV")}</div></div>`;
             }).join('');
         }
 
         function openMobileUser(index) {
             mSelectedUserIndex = index;
             const emp = employees[index];
+            const currentYear = date.getFullYear();
+            
             document.getElementById('m-list-view').classList.add('hidden');
             document.getElementById('m-detail-view').classList.remove('hidden');
             document.getElementById('m-detail-name').innerText = emp.name;
-            
-            let s = 0; if(emp.data) Object.values(emp.data).forEach(v => { let n=parseFloat(String(v).replace(',','.')); if(!isNaN(n)) s+=n; });
-            document.getElementById('m-detail-quota').innerText = `KERET: ${emp.yearlyQuota||160} | KIVEHETŐ: ${(emp.yearlyQuota||160)-s}`;
+            document.getElementById('m-detail-quota').innerText = `KERET: ${getEmpQuota(emp, currentYear)} | KIVEHETŐ: ${getEmpQuota(emp, currentYear) - getYearlyUsed(emp, currentYear)}`;
 
             const today = new Date();
-            const isCurrentMonth = today.getFullYear() === 2026 && today.getMonth() === date.getMonth();
+            const isCurrentMonth = today.getFullYear() === currentYear && today.getMonth() === date.getMonth();
             const dayToSelect = isCurrentMonth ? today.getDate() : 1;
             
             renderMobileCalendar();
@@ -702,7 +840,7 @@
         function closeMobileDetail() {
             document.getElementById('m-detail-view').classList.add('hidden');
             document.getElementById('m-list-view').classList.remove('hidden');
-            mSelectedUserIndex = -1; // <-- EZ LETT BEILLESZTVE A BIZTONSÁG ÉRDEKÉBEN
+            mSelectedUserIndex = -1;
             renderMobileList();
         }
 
@@ -717,37 +855,39 @@
             const emp = employees[mSelectedUserIndex];
             if(confirm(`Biztosan törlöd: ${emp.name}?`)) {
                 employees.splice(mSelectedUserIndex, 1);
-                save();
-                closeMobileDetail();
+                save(); closeMobileDetail();
             }
         }
 
         function renderMobileCalendar() {
+            const currentYear = date.getFullYear();
             const m = date.getMonth();
             document.getElementById('m-detail-monthDisp').innerText = monthNames[m];
             
-            const daysInMonth = new Date(2026, m + 1, 0).getDate();
-            const firstDayIndex = new Date(2026, m, 1).getDay();
+            const daysInMonth = new Date(currentYear, m + 1, 0).getDate();
+            const firstDayIndex = new Date(currentYear, m, 1).getDay();
             const offset = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+            const holidays = getHolidays(currentYear);
             
             const grid = document.getElementById('m-calendar-grid');
             let html = "";
             const emp = employees[mSelectedUserIndex];
 
-            if (!emp) return; // <-- EZ LETT BEILLESZTVE A BIZTONSÁG ÉRDEKÉBEN
+            if (!emp) return; 
 
-            for(let i=0; i<offset; i++) {
-                html += `<div class="m-day border-0 bg-transparent"></div>`;
-            }
+            for(let i=0; i<offset; i++) html += `<div class="m-day border-0 bg-transparent"></div>`;
 
             const today = new Date();
-            const isCurrentMonth = today.getFullYear() === 2026 && today.getMonth() === m;
+            const isCurrentMonth = today.getFullYear() === currentYear && today.getMonth() === m;
             
             for(let d=1; d<=daysInMonth; d++) {
-                const k = `2026-${m+1}-${d}`;
+                const k = `${currentYear}-${m+1}-${d}`;
                 const val = (emp.data && emp.data[k]) ? emp.data[k] : "";
                 const isToday = isCurrentMonth && d === today.getDate();
-                const isHoliday = holidays2026.includes(`${m+1}-${d}`);
+                const isHoliday = holidays.includes(`${m+1}-${d}`);
+                
+                const isTuCserenap = (val === 'TU' && emp.data && emp.data[k + '_cserenap']);
+                const hasNote = (emp.data && emp.data[k + '_note']);
                 
                 let dotColor = "hidden";
                 if(val) {
@@ -763,11 +903,16 @@
                 if(val) classes += " has-data";
                 if(isHoliday) classes += " holiday-text holiday-bg"; 
                 
-                html += `
-                <div class="${classes}" id="m-day-${d}" onclick="selectMobileDate(${d})">
-                    <span>${d}</span>
-                    <div class="m-dot ${dotColor}"></div>
-                </div>`;
+                let titleArr = [];
+                if(isTuCserenap) titleArr.push("50% + Cserenap");
+                if(hasNote) titleArr.push("Megjegyzés: " + emp.data[k + '_note']);
+                const titleAttr = titleArr.length > 0 ? `title="${titleArr.join('\n')}"` : '';
+
+                let extraDots = '';
+                if(isTuCserenap) extraDots += '<div class="tu-dot-mob-cal absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,1)] z-20"></div>';
+                if(hasNote) extraDots += '<div class="note-triangle-mob-cal"></div>';
+                
+                html += `<div class="${classes}" id="m-day-${d}" onclick="selectMobileDate(${d})" ${titleAttr}><span>${d}</span><div class="m-dot ${dotColor}"></div>${extraDots}</div>`;
             }
             grid.innerHTML = html;
         }
@@ -778,9 +923,10 @@
             const cell = document.getElementById(`m-day-${d}`);
             if(cell) cell.classList.add('active');
 
+            const currentYear = date.getFullYear();
             const m = date.getMonth();
-            const k = `2026-${m+1}-${d}`;
-            const dayOfWeek = dayNamesShort[new Date(2026, m, d).getDay()];
+            const k = `${currentYear}-${m+1}-${d}`;
+            const dayOfWeek = dayNamesShort[new Date(currentYear, m, d).getDay()];
             
             document.getElementById('m-selected-date').innerText = `${monthNames[m]} ${d}. (${dayOfWeek})`;
             
@@ -790,6 +936,16 @@
             input.value = val;
             
             document.getElementById('m-status-text').innerText = val ? "MENTVE" : "ÜRES";
+
+            // Telefonos aktív megjegyzés megjelenítő
+            const noteDisp = document.getElementById('m-active-note-display');
+            const noteText = document.getElementById('m-active-note-text');
+            if (emp && emp.data && emp.data[k + '_note']) {
+                noteText.innerText = emp.data[k + '_note'];
+                noteDisp.classList.remove('hidden');
+            } else {
+                noteDisp.classList.add('hidden');
+            }
             
             input.focus();
         }
@@ -802,7 +958,7 @@
         async function forceSave() {
             if(mSelectedUserIndex === -1 || !mSelectedDate) return;
             const val = document.getElementById('m-input').value.toUpperCase();
-            const k = `2026-${date.getMonth()+1}-${mSelectedDate}`;
+            const k = `${date.getFullYear()}-${date.getMonth()+1}-${mSelectedDate}`;
             const emp = employees[mSelectedUserIndex];
             
             emp.data = emp.data || {};
@@ -817,22 +973,18 @@
         const inputEl = document.getElementById('m-input');
         
         inputEl.addEventListener('keydown', function(e) {
-            if(e.key === 'Enter') {
-                e.preventDefault(); 
-                manualSaveAndClose();
-            }
+            if(e.key === 'Enter') { e.preventDefault(); manualSaveAndClose(); }
         });
 
         inputEl.addEventListener('input', function(e) {
             if(mSelectedUserIndex === -1 || !mSelectedDate) return;
             
             const val = e.target.value.toUpperCase();
-            const k = `2026-${date.getMonth()+1}-${mSelectedDate}`;
+            const k = `${date.getFullYear()}-${date.getMonth()+1}-${mSelectedDate}`;
             const emp = employees[mSelectedUserIndex];
             
             emp.data = emp.data || {};
-            if(val === "") delete emp.data[k];
-            else emp.data[k] = val;
+            if(val === "") delete emp.data[k]; else emp.data[k] = val;
 
             document.getElementById('m-status-text').innerText = "MENTÉS...";
             document.getElementById('m-status-text').classList.add('text-blue-400');
@@ -847,139 +999,53 @@
             }, 500);
         });
 
-        // --- ÚJ FEJLESZTÉS V3: TÚLÓRA CSERENAP ÉS MEGJEGYZÉS (START) ---
-        
-        // CSS beinjektálása a dinamikus UI elemekhez (Kijelölés-gátlás és Sárga Háromszögek)
-        document.head.insertAdjacentHTML('beforeend', `<style>
-            .no-select { -webkit-user-select: none; user-select: none; }
-            .m-input-area button, .m-input-area span { -webkit-user-select: none; user-select: none; touch-action: manipulation; }
-            .note-triangle-desk { position: absolute; bottom: 0; right: 0; width: 0; height: 0; border-bottom: 12px solid #eab308; border-left: 12px solid transparent; z-index: 20; pointer-events: none; filter: drop-shadow(-1px -1px 2px rgba(0,0,0,0.6)); }
-            .note-triangle-mob-cal { position: absolute; bottom: 0; right: 0; width: 0; height: 0; border-bottom: 12px solid #eab308; border-left: 12px solid transparent; z-index: 20; border-bottom-right-radius: 6px; }
-            .note-triangle-mob-list { position: absolute; bottom: -1px; right: -1px; width: 0; height: 0; border-bottom: 8px solid #eab308; border-left: 8px solid transparent; z-index: 20; border-bottom-right-radius: 4px; }
-        </style>`);
+        // --- DUPLA KATTINTÁS (MODAL) LOGIKA ---
 
-        // Telefonos Megjegyzés-kijelző beépítése a felületbe a meglévő beviteli mező fölé
-        const mInputArea = document.querySelector('.m-input-area');
-        if(mInputArea && !document.getElementById('m-active-note-display')) {
-            const noteDisplayHTML = `<div id="m-active-note-display" class="hidden text-xs text-yellow-400 font-bold mb-2 p-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg flex items-start gap-2"><i class="fas fa-comment-dots mt-0.5"></i><span id="m-active-note-text" class="break-words"></span></div>`;
-            mInputArea.insertAdjacentHTML('afterbegin', noteDisplayHTML);
-        }
-
-        // Modálok (Felugró ablakok) beillesztése a kódba kijelölés-védelemmel (no-select)
-        const modalsHTML = `
-            <div id="tu-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity no-select">
-                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-2xl max-w-sm w-full mx-4 transform scale-95 transition-transform">
-                    <h3 class="text-white font-black text-xl mb-4 text-center uppercase tracking-wider flex items-center justify-center gap-2">
-                        <i class="fas fa-clock text-blue-500"></i> Túlóra Opciók
-                    </h3>
-                    <p id="tu-modal-info" class="text-slate-400 text-xs text-center mb-6 font-bold uppercase"></p>
-                    <div class="space-y-3">
-                        <button id="btn-tu-100" class="w-full py-4 rounded-xl font-black text-sm uppercase bg-blue-600 hover:bg-blue-500 text-white shadow-lg transition-all border border-blue-500 focus:outline-none">
-                            1. 100% Túlóra
-                        </button>
-                        <button id="btn-tu-50" class="w-full py-4 rounded-xl font-black text-sm uppercase bg-red-600 hover:bg-red-500 text-white shadow-lg transition-all border border-red-500 focus:outline-none flex flex-col items-center gap-1">
-                            <span>2. 50% Túlóra + Cserenap</span>
-                            <span class="text-[9px] text-red-200 opacity-80">(+12 óra kivehető nap automatikusan)</span>
-                        </button>
-                        <button id="btn-tu-note" class="w-full py-3 mt-3 rounded-xl font-black text-sm uppercase bg-yellow-600 hover:bg-yellow-500 text-white shadow-lg transition-all border border-yellow-500 focus:outline-none flex items-center justify-center gap-2">
-                            <i class="fas fa-comment-dots"></i> Megjegyzés hozzáfűzése
-                        </button>
-                    </div>
-                    <button id="btn-tu-cancel" class="mt-4 w-full py-2 rounded-lg font-bold text-xs uppercase text-slate-500 hover:text-slate-300 transition-colors">
-                        Mégse
-                    </button>
-                </div>
-            </div>
-
-            <div id="note-modal" class="hidden fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity no-select">
-                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-2xl max-w-sm w-full mx-4 transform scale-95 transition-transform">
-                    <h3 class="text-white font-black text-xl mb-4 text-center uppercase tracking-wider flex items-center justify-center gap-2">
-                        <i class="fas fa-comment-dots text-yellow-500"></i> Megjegyzés
-                    </h3>
-                    <p id="note-modal-info" class="text-slate-400 text-xs text-center mb-4 font-bold uppercase"></p>
-                    <textarea id="note-input-text" class="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-xl mb-4 focus:border-yellow-500 focus:outline-none placeholder-slate-600 font-bold" rows="3" placeholder="Írd ide a megjegyzést..."></textarea>
-                    <div class="space-y-3">
-                        <button id="btn-note-save" class="w-full py-3 rounded-xl font-black text-sm uppercase bg-yellow-600 hover:bg-yellow-500 text-white shadow-lg transition-all border border-yellow-500 focus:outline-none flex items-center justify-center gap-2">
-                            <i class="fas fa-save"></i> Mentés
-                        </button>
-                        <button id="btn-note-delete" class="w-full py-3 rounded-xl font-black text-sm uppercase bg-slate-700 hover:bg-red-600 text-white shadow-lg transition-all focus:outline-none hidden flex items-center justify-center gap-2">
-                            <i class="fas fa-trash"></i> Megjegyzés Törlése
-                        </button>
-                    </div>
-                    <button id="btn-note-cancel" class="mt-4 w-full py-2 rounded-lg font-bold text-xs uppercase text-slate-500 hover:text-slate-300 transition-colors">
-                        Mégse
-                    </button>
-                </div>
-            </div>
-        `;
-        document.body.insertAdjacentHTML('beforeend', modalsHTML);
-
-        let activeTuContext = null;
-        let activeNoteContext = null;
-
-        // Dupla kattintás (DblClick) figyelő - Mindent kezel egyben!
         document.addEventListener('dblclick', function(e) {
-            // Asztali
             if(e.target.classList.contains('input-cell')) {
                 const val = e.target.value.trim().toUpperCase();
                 if (val !== '') {
-                    e.preventDefault();
-                    e.target.blur();
-                    const td = e.target.closest('td');
-                    const tr = e.target.closest('tr');
+                    e.preventDefault(); e.target.blur();
+                    const td = e.target.closest('td'); const tr = e.target.closest('tr');
                     if(!td || !tr) return;
                     
-                    const empId = tr.getAttribute('data-id');
-                    const emp = employees.find(x => x.id == empId);
-                    const dayIndex = td.cellIndex - 2;
-                    const m = date.getMonth();
-                    const k = `2026-${m+1}-${dayIndex}`;
+                    const emp = employees.find(x => x.id == tr.getAttribute('data-id'));
+                    const k = `${date.getFullYear()}-${date.getMonth()+1}-${td.cellIndex - 2}`;
                     
                     if(!emp) return;
-                    if(val === 'TU') openTuModal(emp, k);
-                    else openNoteModal(emp, k);
+                    if(val === 'TU') openTuModal(emp, k); else openNoteModal(emp, k);
                 }
             }
-            // Mobil
             if(e.target.id === 'm-input') {
                 const val = e.target.value.trim().toUpperCase();
                 if (val !== '' && mSelectedUserIndex !== -1 && mSelectedDate) {
-                    e.preventDefault();
-                    e.target.blur();
+                    e.preventDefault(); e.target.blur();
                     const emp = employees[mSelectedUserIndex];
-                    const m = date.getMonth();
-                    const k = `2026-${m+1}-${mSelectedDate}`;
+                    const k = `${date.getFullYear()}-${date.getMonth()+1}-${mSelectedDate}`;
                     
-                    if(val === 'TU') openTuModal(emp, k);
-                    else openNoteModal(emp, k);
+                    if(val === 'TU') openTuModal(emp, k); else openNoteModal(emp, k);
                 }
             }
         });
 
-        // TÚLÓRA Ablak megnyitása és bezárása
         function openTuModal(emp, key) {
             activeTuContext = { emp: emp, key: key };
-            const dayParts = key.split('-');
-            document.getElementById('tu-modal-info').innerText = `${emp.name} | ${monthNames[parseInt(dayParts[1])-1]} ${dayParts[2]}.`;
+            const parts = key.split('-');
+            document.getElementById('tu-modal-info').innerText = `${emp.name} | ${parts[0]}. ${monthNames[parseInt(parts[1])-1]} ${parts[2]}.`;
             const modal = document.getElementById('tu-modal');
-            modal.classList.remove('hidden');
-            setTimeout(() => modal.firstElementChild.classList.remove('scale-95'), 10);
+            modal.classList.remove('hidden'); setTimeout(() => modal.firstElementChild.classList.remove('scale-95'), 10);
         }
 
         function closeTuModal() {
             const modal = document.getElementById('tu-modal');
             modal.firstElementChild.classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                activeTuContext = null;
-            }, 150);
+            setTimeout(() => { modal.classList.add('hidden'); activeTuContext = null; }, 150);
         }
 
-        // MEGJEGYZÉS Ablak megnyitása és bezárása
         function openNoteModal(emp, key) {
             activeNoteContext = { emp: emp, key: key };
-            const dayParts = key.split('-');
-            document.getElementById('note-modal-info').innerText = `${emp.name} | ${monthNames[parseInt(dayParts[1])-1]} ${dayParts[2]}.`;
+            const parts = key.split('-');
+            document.getElementById('note-modal-info').innerText = `${emp.name} | ${parts[0]}. ${monthNames[parseInt(parts[1])-1]} ${parts[2]}.`;
             
             const existingNote = (emp.data && emp.data[key + '_note']) ? emp.data[key + '_note'] : '';
             document.getElementById('note-input-text').value = existingNote;
@@ -989,37 +1055,27 @@
 
             const modal = document.getElementById('note-modal');
             modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.firstElementChild.classList.remove('scale-95');
-                document.getElementById('note-input-text').focus();
-            }, 10);
+            setTimeout(() => { modal.firstElementChild.classList.remove('scale-95'); document.getElementById('note-input-text').focus(); }, 10);
         }
 
         function closeNoteModal() {
             const modal = document.getElementById('note-modal');
             modal.firstElementChild.classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                activeNoteContext = null;
-            }, 150);
+            setTimeout(() => { modal.classList.add('hidden'); activeNoteContext = null; }, 150);
         }
 
-        // Modál Gombok Eseményei
         document.getElementById('btn-tu-cancel').addEventListener('click', closeTuModal);
         document.getElementById('btn-note-cancel').addEventListener('click', closeNoteModal);
 
         document.getElementById('btn-tu-note').addEventListener('click', () => {
-            closeTuModal();
-            if(activeTuContext) openNoteModal(activeTuContext.emp, activeTuContext.key);
+            closeTuModal(); if(activeTuContext) openNoteModal(activeTuContext.emp, activeTuContext.key);
         });
 
         document.getElementById('btn-tu-100').addEventListener('click', () => {
             if(activeTuContext) {
                 const { emp, key } = activeTuContext;
-                emp.data = emp.data || {};
-                delete emp.data[key + '_cserenap'];
-                save(); render();
-                if(mSelectedUserIndex !== -1) { renderMobileList(); renderMobileCalendar(); selectMobileDate(mSelectedDate); }
+                emp.data = emp.data || {}; delete emp.data[key + '_cserenap'];
+                save(); render(); if(mSelectedUserIndex !== -1) { renderMobileList(); renderMobileCalendar(); selectMobileDate(mSelectedDate); }
             }
             closeTuModal();
         });
@@ -1027,10 +1083,8 @@
         document.getElementById('btn-tu-50').addEventListener('click', () => {
             if(activeTuContext) {
                 const { emp, key } = activeTuContext;
-                emp.data = emp.data || {};
-                emp.data[key + '_cserenap'] = "-12";
-                save(); render();
-                if(mSelectedUserIndex !== -1) { renderMobileList(); renderMobileCalendar(); selectMobileDate(mSelectedDate); }
+                emp.data = emp.data || {}; emp.data[key + '_cserenap'] = "-12";
+                save(); render(); if(mSelectedUserIndex !== -1) { renderMobileList(); renderMobileCalendar(); selectMobileDate(mSelectedDate); }
             }
             closeTuModal();
         });
@@ -1040,10 +1094,8 @@
                 const { emp, key } = activeNoteContext;
                 const noteVal = document.getElementById('note-input-text').value.trim();
                 emp.data = emp.data || {};
-                if(noteVal) emp.data[key + '_note'] = noteVal;
-                else delete emp.data[key + '_note'];
-                save(); render();
-                if(mSelectedUserIndex !== -1) { renderMobileList(); renderMobileCalendar(); selectMobileDate(mSelectedDate); }
+                if(noteVal) emp.data[key + '_note'] = noteVal; else delete emp.data[key + '_note'];
+                save(); render(); if(mSelectedUserIndex !== -1) { renderMobileList(); renderMobileCalendar(); selectMobileDate(mSelectedDate); }
             }
             closeNoteModal();
         });
@@ -1052,234 +1104,10 @@
             if(activeNoteContext) {
                 const { emp, key } = activeNoteContext;
                 if(emp.data) delete emp.data[key + '_note'];
-                save(); render();
-                if(mSelectedUserIndex !== -1) { renderMobileList(); renderMobileCalendar(); selectMobileDate(mSelectedDate); }
+                save(); render(); if(mSelectedUserIndex !== -1) { renderMobileList(); renderMobileCalendar(); selectMobileDate(mSelectedDate); }
             }
             closeNoteModal();
         });
-
-        // Telefonos megjegyzés megjelenítő okosítás (hook beillesztés)
-        const prevSelectMobileDateFinal = selectMobileDate;
-        selectMobileDate = function(d) {
-            prevSelectMobileDateFinal.apply(this, arguments); // Futtatja az eredetit
-
-            // Ezután kirajzolja a megjegyzést is ha van
-            const m = date.getMonth();
-            const k = `2026-${m+1}-${d}`;
-            const emp = employees[mSelectedUserIndex];
-            const noteDisp = document.getElementById('m-active-note-display');
-            const noteText = document.getElementById('m-active-note-text');
-            
-            if (emp && emp.data && emp.data[k + '_note']) {
-                noteText.innerText = emp.data[k + '_note'];
-                noteDisp.classList.remove('hidden');
-            } else {
-                noteDisp.classList.add('hidden');
-            }
-        };
-
-        // Automatikus tisztítás cella törlésnél
-        const prevUpdateFinal = update;
-        update = function(id, key, val, el) {
-            const emp = employees.find(e => e.id == id);
-            const v = val.trim().toUpperCase();
-            if(emp && emp.data) {
-                if (v !== 'TU' && emp.data[key + '_cserenap']) {
-                    delete emp.data[key + '_cserenap'];
-                    const dot = el.parentElement.querySelector('.tu-dot-desk');
-                    if (dot) dot.remove();
-                }
-                if (v === '' && emp.data[key + '_note']) {
-                    delete emp.data[key + '_note'];
-                    const tri = el.parentElement.querySelector('.note-triangle-desk');
-                    if (tri) tri.remove();
-                }
-                el.parentElement.removeAttribute('title'); // Tooltip takarítása
-            }
-            prevUpdateFinal.apply(this, arguments);
-        };
-
-        // Extra háttér tisztítás a mentésnél
-        const prevSaveFinal = save;
-        save = async function() {
-            let cleanupHappened = false;
-            employees.forEach(emp => {
-                if(emp.data) {
-                    Object.keys(emp.data).forEach(k => {
-                        if(k.endsWith('_cserenap')) {
-                            const baseK = k.replace('_cserenap', '');
-                            if(emp.data[baseK] !== 'TU') { delete emp.data[k]; cleanupHappened = true; }
-                        }
-                        if(k.endsWith('_note')) {
-                            const baseK = k.replace('_note', '');
-                            if(!emp.data[baseK] || emp.data[baseK].trim() === '') { delete emp.data[k]; cleanupHappened = true; }
-                        }
-                    });
-                }
-            });
-            const result = await prevSaveFinal.apply(this, arguments);
-            if (cleanupHappened && mSelectedUserIndex !== -1) {
-                const emp = employees[mSelectedUserIndex];
-                let s = 0; if(emp.data) Object.values(emp.data).forEach(v => { let n=parseFloat(String(v).replace(',','.')); if(!isNaN(n)) s+=n; });
-                const el = document.getElementById('m-detail-quota');
-                if (el) el.innerText = `KERET: ${emp.yearlyQuota||160} | KIVEHETŐ: ${(emp.yearlyQuota||160)-s}`;
-            }
-            return result;
-        };
-
-        // Rajzoló (Render) felülbírálások: Tooltipek és Pöttyök/Háromszögek
-        const prevRenderFinal = render;
-        render = function() {
-            prevRenderFinal.apply(this, arguments);
-            const m = date.getMonth();
-            employees.forEach(emp => {
-                if(emp && emp.data) {
-                    for(let d=1; d<=31; d++) {
-                        const k = `2026-${m+1}-${d}`;
-                        const isTuCserenap = (emp.data[k] === 'TU' && emp.data[k + '_cserenap']);
-                        const hasNote = emp.data[k + '_note'];
-                        
-                        if(isTuCserenap || hasNote) {
-                            const row = document.querySelector(`tr[data-id="${emp.id}"]`);
-                            if(row && row.cells[d+2]) {
-                                const td = row.cells[d+2];
-                                
-                                // Okos tooltip építés
-                                let titleArr = [];
-                                if(isTuCserenap) titleArr.push("50% + Cserenap");
-                                if(hasNote) titleArr.push("Megjegyzés: " + emp.data[k + '_note']);
-                                td.setAttribute('title', titleArr.join('\n'));
-
-                                td.classList.add('relative');
-                                
-                                if(isTuCserenap && !td.querySelector('.tu-dot-desk')) {
-                                    td.insertAdjacentHTML('beforeend', '<div class="tu-dot-desk absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 border border-slate-900 shadow-[0_0_5px_rgba(239,68,68,1)] pointer-events-none z-20"></div>');
-                                }
-                                if(hasNote && !td.querySelector('.note-triangle-desk')) {
-                                    td.insertAdjacentHTML('beforeend', '<div class="note-triangle-desk"></div>');
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        };
-
-        const prevRenderMobileCalendarFinal = renderMobileCalendar;
-        renderMobileCalendar = function() {
-            prevRenderMobileCalendarFinal.apply(this, arguments);
-            if(mSelectedUserIndex === -1) return;
-            const emp = employees[mSelectedUserIndex];
-            if(!emp || !emp.data) return;
-            const m = date.getMonth();
-            for(let d=1; d<=31; d++) {
-                const k = `2026-${m+1}-${d}`;
-                const isTuCserenap = (emp.data[k] === 'TU' && emp.data[k + '_cserenap']);
-                const hasNote = emp.data[k + '_note'];
-                
-                if(isTuCserenap || hasNote) {
-                    const dayEl = document.getElementById(`m-day-${d}`);
-                    if(dayEl) {
-                        let titleArr = [];
-                        if(isTuCserenap) titleArr.push("50% + Cserenap");
-                        if(hasNote) titleArr.push("Megjegyzés: " + emp.data[k + '_note']);
-                        dayEl.setAttribute('title', titleArr.join('\n'));
-
-                        if(isTuCserenap && !dayEl.querySelector('.tu-dot-mob-cal')) {
-                            dayEl.insertAdjacentHTML('beforeend', '<div class="tu-dot-mob-cal absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,1)] z-20"></div>');
-                        }
-                        if(hasNote && !dayEl.querySelector('.note-triangle-mob-cal')) {
-                            dayEl.insertAdjacentHTML('beforeend', '<div class="note-triangle-mob-cal"></div>');
-                        }
-                    }
-                }
-            }
-        };
-
-        const prevRenderMobileListFinal = renderMobileList;
-        renderMobileList = function() {
-            prevRenderMobileListFinal.apply(this, arguments);
-            const listEl = document.getElementById('m-emp-list');
-            if(!listEl) return;
-            const cards = listEl.querySelectorAll('.m-card');
-            cards.forEach((card, index) => {
-                const emp = employees[index];
-                if(!emp || !emp.data) return;
-                const today = new Date();
-                const d1 = new Date(); d1.setDate(today.getDate() + 1);
-                const d2 = new Date(); d2.setDate(today.getDate() + 2);
-                const keys = [
-                    `2026-${today.getMonth()+1}-${today.getDate()}`,
-                    `2026-${d1.getMonth()+1}-${d1.getDate()}`,
-                    `2026-${d2.getMonth()+1}-${d2.getDate()}`
-                ];
-                const statusRows = card.querySelectorAll('.m-status-row');
-                keys.forEach((k, i) => {
-                    const isTuCserenap = (emp.data[k] === 'TU' && emp.data[k + '_cserenap']);
-                    const hasNote = emp.data[k + '_note'];
-                    
-                    if(isTuCserenap || hasNote) {
-                        if(statusRows[i]) {
-                            const pill = statusRows[i].querySelector('.m-status-pill');
-                            if(pill) {
-                                let titleArr = [];
-                                if(isTuCserenap) titleArr.push("50% + Cserenap");
-                                if(hasNote) titleArr.push("Megjegyzés: " + emp.data[k + '_note']);
-                                pill.setAttribute('title', titleArr.join('\n'));
-                                pill.classList.add('relative');
-
-                                if(isTuCserenap && !pill.querySelector('.tu-dot-mob-list')) {
-                                    pill.insertAdjacentHTML('beforeend', '<div class="tu-dot-mob-list absolute -top-1.5 -right-1.5 w-2.5 h-2.5 rounded-full bg-red-500 border border-slate-900 shadow-[0_0_5px_rgba(239,68,68,1)]"></div>');
-                                }
-                                if(hasNote && !pill.querySelector('.note-triangle-mob-list')) {
-                                    pill.insertAdjacentHTML('beforeend', '<div class="note-triangle-mob-list"></div>');
-                                }
-                            }
-                        }
-                    }
-                });
-            });
-        };
-
-        const prevSetViewFinal = setView;
-        setView = function(v) {
-            prevSetViewFinal.apply(this, arguments);
-            if(v === 'stats') {
-                const statCards = document.querySelectorAll('#stats-grid > div');
-                statCards.forEach((card, i) => {
-                    const emp = employees[i];
-                    if(emp && emp.data) {
-                        let trueSzabi = 0;
-                        let cserenapCount = 0;
-                        Object.entries(emp.data).forEach(([k, val]) => {
-                            if(k.endsWith('_cserenap')) {
-                                cserenapCount += Math.abs(parseFloat(val) || 0); 
-                            } else if (!k.endsWith('_note')) {
-                                let n = parseFloat(String(val).replace(',','.'));
-                                if(!isNaN(n)) trueSzabi += n;
-                            }
-                        });
-
-                        const statBoxes = card.querySelectorAll('.grid > div');
-                        if(statBoxes.length > 0) {
-                            const szabiBox = statBoxes[0]; 
-                            const numSpan = szabiBox.querySelector('span:last-child');
-                            if(numSpan) numSpan.innerText = trueSzabi;
-                        }
-
-                        if(cserenapCount > 0) {
-                            const gridContainer = card.querySelector('.grid');
-                            const notice = document.createElement('div');
-                            notice.className = 'bg-red-500/20 p-2 rounded-lg border border-red-500/50 flex justify-between items-center col-span-2 mt-1';
-                            notice.innerHTML = `<span class="text-[10px] text-red-400 font-bold uppercase"><i class="fas fa-gift mr-1"></i> Cserenap Jóváírás</span><span class="font-bold text-red-400">+${cserenapCount} óra</span>`;
-                            gridContainer.appendChild(notice);
-                        }
-                    }
-                });
-            }
-        };
-        // --- ÚJ FEJLESZTÉS V3: TÚLÓRA CSERENAP ÉS MEGJEGYZÉS (VÉGE) ---
-
 
         // --- AUTOMATIKUS HITELESÍTÉS ÉS INDÍTÁS ---
         window.onload = () => {
