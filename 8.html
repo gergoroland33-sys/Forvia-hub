@@ -1119,7 +1119,8 @@
 
         // Amikor ráviszed az egeret bármire, aminek van "title" attribútuma (ez a gyári tooltip)
         document.addEventListener('mouseover', function(e) {
-            let target = e.target.closest('[title]');
+            // CSAK a táblázat celláin, vagy a mobilos elemeken keressük a title-t, a gombokon NEM!
+            let target = e.target.closest('td[title], .m-day[title], .m-status-pill[title]');
             if (target && target.getAttribute('title')) {
                 // "Ellopjuk" a szöveget és eltávolítjuk a gyári attribútumot, hogy ne zavarjon be
                 target.setAttribute('data-modern-title', target.getAttribute('title'));
