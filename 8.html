@@ -1119,15 +1119,15 @@
 
         // Amikor ráviszed az egeret bármire, aminek van "title" attribútuma (ez a gyári tooltip)
         document.addEventListener('mouseover', function(e) {
-            // CSAK a táblázat celláin, vagy a mobilos elemeken keressük a title-t, a gombokon NEM!
-            let target = e.target.closest('td[title], .m-day[title], .m-status-pill[title]');
+            // JAVÍTÁS: CSAK a táblázat celláin (asztali nézet) keressük a title-t, mobilon NEM, hogy ne villanjon fel!
+            let target = e.target.closest('td[title]');
             if (target && target.getAttribute('title')) {
                 // "Ellopjuk" a szöveget és eltávolítjuk a gyári attribútumot, hogy ne zavarjon be
                 target.setAttribute('data-modern-title', target.getAttribute('title'));
                 target.removeAttribute('title');
             }
             
-            let hoverTarget = e.target.closest('[data-modern-title]');
+            let hoverTarget = e.target.closest('td[data-modern-title]');
             if (hoverTarget) {
                 // A sortöréseket (<br>) formázzuk, hogy szép legyen
                 tooltipEl.innerHTML = hoverTarget.getAttribute('data-modern-title').replace(/\n/g, '<br>');
@@ -1141,7 +1141,7 @@
         document.addEventListener('mousemove', function(e) {
             if (!tooltipEl.classList.contains('hidden')) {
                 // BIZTONSÁGI JAVÍTÁS: Ha mozgatod az egeret, de már nem egy feliratos cella felett vagy
-                if (!e.target.closest('[data-modern-title]')) {
+                if (!e.target.closest('td[data-modern-title]')) {
                     tooltipEl.classList.add('opacity-0');
                     tooltipEl.classList.add('hidden');
                     return;
@@ -1163,7 +1163,7 @@
 
         // Eltűnik, ha leviszed róla az egeret
         document.addEventListener('mouseout', function(e) {
-            let hoverTarget = e.target.closest('[data-modern-title]');
+            let hoverTarget = e.target.closest('td[data-modern-title]');
             if (hoverTarget) {
                 tooltipEl.classList.add('opacity-0');
                 setTimeout(() => {
