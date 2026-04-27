@@ -1109,6 +1109,65 @@
             closeNoteModal();
         });
 
+        // --- ÚJ FEJLESZTÉS V4: MODERN TOOLTIP (START) ---
+        
+        // Dinamikusan létrehozzuk az egyedi, dizájnos tooltip HTML elemét
+        const tooltipEl = document.createElement('div');
+        tooltipEl.id = "modern-tooltip";
+        tooltipEl.className = "hidden fixed z-[9999] bg-slate-900 border-2 border-yellow-500 text-white p-3 rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.8)] pointer-events-none transform transition-opacity duration-200 opacity-0 text-sm font-black tracking-wide max-w-xs break-words whitespace-pre-wrap";
+        document.body.appendChild(tooltipEl);
+
+        // Amikor ráviszed az egeret bármire, aminek van "title" attribútuma (ez a gyári tooltip)
+        document.addEventListener('mouseover', function(e) {
+            let target = e.target.closest('[title]');
+            if (target && target.getAttribute('title')) {
+                // "Ellopjuk" a szöveget és eltávolítjuk a gyári attribútumot, hogy ne zavarjon be
+                target.setAttribute('data-modern-title', target.getAttribute('title'));
+                target.removeAttribute('title');
+            }
+            
+            let hoverTarget = e.target.closest('[data-modern-title]');
+            if (hoverTarget) {
+                // A sortöréseket (<br>) formázzuk, hogy szép legyen
+                tooltipEl.innerHTML = hoverTarget.getAttribute('data-modern-title').replace(/\n/g, '<br>');
+                tooltipEl.classList.remove('hidden');
+                // Pici késleltetés a szép áttűnéshez
+                requestAnimationFrame(() => tooltipEl.classList.remove('opacity-0'));
+            }
+        });
+
+        // Követi az egeret, amíg a cellán vagy
+        document.addEventListener('mousemove', function(e) {
+            if (!tooltipEl.classList.contains('hidden')) {
+                // Enyhén eltoljuk az egértől, hogy ne takarja ki a mutatót
+                let x = e.clientX + 15;
+                let y = e.clientY + 15;
+                
+                // Képernyő szélének érzékelése (ne lógjon ki jobbra vagy lefelé)
+                const rect = tooltipEl.getBoundingClientRect();
+                if (x + rect.width > window.innerWidth) x = e.clientX - rect.width - 15;
+                if (y + rect.height > window.innerHeight) y = e.clientY - rect.height - 15;
+                
+                tooltipEl.style.left = x + 'px';
+                tooltipEl.style.top = y + 'px';
+            }
+        });
+
+        // Eltűnik, ha leviszed róla az egeret
+        document.addEventListener('mouseout', function(e) {
+            let hoverTarget = e.target.closest('[data-modern-title]');
+            if (hoverTarget) {
+                tooltipEl.classList.add('opacity-0');
+                setTimeout(() => {
+                    if (tooltipEl.classList.contains('opacity-0')) {
+                        tooltipEl.classList.add('hidden');
+                    }
+                }, 200);
+            }
+        });
+        // --- ÚJ FEJLESZTÉS V4: MODERN TOOLTIP (VÉGE) ---
+
+
         // --- AUTOMATIKUS HITELESÍTÉS ÉS INDÍTÁS ---
         window.onload = () => {
             auth.signInAnonymously().then(async () => {
