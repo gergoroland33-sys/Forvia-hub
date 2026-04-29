@@ -19,7 +19,7 @@
             --text-main: #2c3e50;
             --text-muted: #7f8c8d;
             --border: #e4e6eb;
-            --shadow: 0 2px 4px rgba(0,0,0,0.08);
+            --shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
 
         body { 
@@ -78,27 +78,64 @@
         .btn-report:hover { background: var(--accent); }
         .btn-report:active { transform: scale(0.98); }
 
-        /* --- NAVIGATION --- */
+        /* --- MODERN SEGMENTED CONTROL (VÁLTÓKAPCSOLÓ) --- */
         .nav-tabs {
-            display: flex; justify-content: center; gap: 8px;
-            background: var(--bg); padding: 15px 0;
-            position: sticky; top: 60px; z-index: 900;
+            display: flex; justify-content: center; gap: 0;
+            background: #e2e8f0; padding: 4px; border-radius: 30px;
+            width: fit-content; margin: 15px auto;
+            position: sticky; top: 70px; z-index: 900;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
         }
         .nav-btn {
-            background: white; border: 1px solid transparent; padding: 8px 20px; font-size: 0.9rem; font-weight: 600;
-            color: var(--text-muted); cursor: pointer; border-radius: 20px; transition: all 0.2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+            background: transparent; border: none; padding: 10px 25px; font-size: 0.95rem; font-weight: 700;
+            color: #64748b; cursor: pointer; border-radius: 26px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: none; display: flex; align-items: center; gap: 6px;
         }
         .nav-btn.active { 
             background: var(--primary-dark); color: white; 
-            box-shadow: 0 4px 10px rgba(44, 62, 80, 0.2); 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15); 
         }
-        .nav-btn:hover:not(.active) { background: white; border-color: #dfe6e9; color: var(--primary-dark); }
+        .nav-btn:hover:not(.active) { color: var(--primary-dark); }
 
         /* --- LAYOUT --- */
         .view-section { display: none; padding: 0 20px; max-width: 1600px; margin: 0 auto; }
         .view-section.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- STICKY FILTER BAR --- */
+        .sticky-filter-bar {
+            position: sticky; top: 125px; z-index: 850; background: rgba(240, 242, 245, 0.95);
+            backdrop-filter: blur(5px); padding: 12px 0; border-bottom: 1px solid var(--border);
+            margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .my-date-filter { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+        .my-date-filter input { padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-weight: 600; color: var(--primary-dark); }
+        .my-date-filter button { background: #fee2e2; border: none; color: #e74c3c; cursor: pointer; font-weight: bold; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .my-date-filter button:hover { background: #e74c3c; color: white; }
+
+        /* --- ACCORDION (KINYITHATÓ BLOKKOK) --- */
+        .accordion-item {
+            background: white; border-radius: 12px; margin-bottom: 20px; box-shadow: var(--shadow);
+            border: 1px solid var(--border); overflow: hidden;
+        }
+        .accordion-header {
+            padding: 18px 20px; background: #fff; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+            font-weight: 800; color: var(--primary-dark); font-size: 1.1rem; border-bottom: 1px solid transparent;
+            transition: background 0.2s;
+        }
+        .accordion-header:hover { background: #f8f9fa; }
+        .accordion-header.active { border-bottom: 1px solid var(--border); background: #f8f9fa; }
+        .accordion-icon { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-size: 0.9rem; color: var(--text-muted); }
+        .accordion-header.active .accordion-icon { transform: rotate(180deg); }
+        .accordion-content { padding: 20px; display: none; background: #fff; }
+        .accordion-content.active { display: block; animation: fadeIn 0.3s ease; }
+
+        /* --- ÚJ: KPI KÁRTYÁK --- */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .kpi-card { background: #f8f9fa; border-radius: 10px; padding: 20px; border-left: 5px solid var(--accent); display: flex; flex-direction: column; justify-content: center; }
+        .kpi-title { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 800; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .kpi-value { font-size: 1.8rem; font-weight: 900; color: var(--primary-dark); line-height: 1.1; }
+        .kpi-sub { font-size: 0.8rem; font-weight: 600; color: #95a5a6; margin-top: 4px; }
 
         /* --- MONITOR UI --- */
         .line-wrapper { margin-bottom: 30px; }
@@ -149,23 +186,21 @@
             background: var(--danger); color: white; border-color: #a93226; 
             box-shadow: 0 2px 0 #922b21; animation: pulse 2s infinite;
         }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
 
         /* --- STATS & HISTORY --- */
-        .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
         .btn-print { background: var(--primary-light); color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
         
-        .stats-charts { margin-bottom: 30px; }
-        .chart-container { background: white; padding: 20px; border-radius: 10px; box-shadow: var(--shadow); height: 320px; }
+        .chart-container { position: relative; height: 320px; width: 100%; }
         
-        .history-table-container { background: transparent; }
-        .data-table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
-        .data-table th { padding: 0 15px 10px 15px; text-align: left; color: #95a5a6; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; }
-        .data-table tr.row-card { background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: transform 0.1s; }
-        .data-table tr.row-card:hover { transform: scale(1.005); }
+        /* --- KÁRTYÁS MOBIL TÁBLÁZAT --- */
+        .history-table-container { background: transparent; width: 100%; }
+        .data-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+        .data-table th { padding: 0 15px 10px 15px; text-align: left; color: #95a5a6; font-weight: 800; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; }
+        .data-table tr.row-card { background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.03); border: 1px solid var(--border); border-radius: 8px; transition: transform 0.1s; }
+        .data-table tr.row-card:hover { transform: scale(1.005); box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
         
         .data-table td { padding: 15px; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; }
-        .data-table td:first-child { border-left: 5px solid transparent; border-top-left-radius: 8px; border-bottom-left-radius: 8px; border-left-width: 5px; }
+        .data-table td:first-child { border-left: 4px solid transparent; border-top-left-radius: 8px; border-bottom-left-radius: 8px; border-left-width: 4px; }
         .data-table td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; border-right: 1px solid #f0f0f0; }
 
         .row-error td:first-child { border-left-color: var(--danger); }
@@ -179,7 +214,17 @@
         .btn-delete { background: #fff; color: #e74c3c; border: 1px solid #fadbd8; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .btn-delete:hover { background: #e74c3c; color: white; }
 
-        /* --- MODAL --- */
+        /* --- TOP HIBÁK --- */
+        .top-errors-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+        .top-error-card { background: linear-gradient(135deg, var(--primary-dark), var(--primary-light)); color: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: space-between; position: relative; overflow: hidden;}
+        .top-error-card::after { content: '⚠️'; position: absolute; right: -10px; bottom: -15px; font-size: 4rem; opacity: 0.1; }
+        .top-error-line { font-weight: 900; font-size: 1.2rem; color: var(--accent); letter-spacing: 1px; }
+        .top-error-details { text-align: right; z-index: 1; }
+        .top-error-nozzle { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; font-weight: bold; background: rgba(255,255,255,0.15); padding: 4px 8px; border-radius: 6px; margin-bottom: 4px; display: inline-block;}
+        .top-error-count { font-size: 0.8rem; color: #bdc3c7; text-transform: uppercase; font-weight: 700; }
+        .top-error-empty { color: #2ecc71; font-weight: bold; font-size: 0.9rem; z-index: 1;}
+
+        /* --- MODAL, JELENTÉS STB (EREDETI) --- */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; backdrop-filter: blur(2px); justify-content: center; align-items: center; }
         .modal-box { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
         .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 1rem; margin-top: 5px; }
@@ -189,20 +234,7 @@
         .btn-confirm { background: var(--danger); color: white; }
         .btn-reset { width: 100%; margin-top: 15px; background: var(--success); color: white; padding: 12px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; }
 
-        /* --- DÁTUM SZŰRŐ ELSZIGETELT STÍLUSAI --- */
-        .my-date-filter { display: flex; align-items: center; gap: 5px; font-size: 0.85rem; }
-        .my-date-filter input { padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; }
-        .my-date-filter button { background: none; border: none; color: #e74c3c; cursor: pointer; font-weight: bold; }
-
-        /* --- GENERÁLT JELENTÉS (REJTETT) STÍLUS --- */
-        #report-generator-container {
-            position: fixed; left: -10000px; top: 0;
-            width: 1200px;
-            background-color: white;
-            z-index: 9999;
-            font-family: 'Roboto', sans-serif;
-            color: #2c3e50;
-        }
+        #report-generator-container { position: fixed; left: -10000px; top: 0; width: 1200px; background-color: white; z-index: 9999; font-family: 'Roboto', sans-serif; color: #2c3e50; }
         .rep-header { padding: 30px; background: #2c3e50; color: white; display:flex; justify-content: space-between; align-items:center; }
         .rep-title { font-size: 2rem; font-weight: 900; }
         .rep-meta { text-align: right; font-family: 'JetBrains Mono', monospace; opacity: 0.8; }
@@ -217,37 +249,45 @@
         .rep-cap-val { font-size: 2rem; font-weight: 900; color: #27ae60; }
         .rep-cap-label { font-size: 0.7rem; text-transform: uppercase; color: #95a5a6; letter-spacing: 1px; }
         .rep-cap-val.warning { color: #c0392b; }
-        
         .rep-error-list { font-size: 0.8rem; background: #fff5f5; border: 1px solid #fed7d7; border-radius: 6px; padding: 10px; }
         .rep-err-item { margin-bottom: 5px; color: #c53030; display: flex; gap: 6px; align-items: center; }
         .rep-err-loc { font-weight: bold; font-family: 'JetBrains Mono', monospace; }
         .rep-ok-badge { color: #27ae60; font-weight: bold; background: #f0fff4; padding: 5px 10px; border-radius: 6px; border: 1px solid #c6f6d5; display: inline-block; }
 
-        /* --- ÚJ PRO FEJLÉC STÍLUSOK (TOP HIBÁK) --- */
-        .top-errors-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .top-error-card { background: linear-gradient(135deg, var(--primary-dark), var(--primary-light)); color: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: space-between; position: relative; overflow: hidden;}
-        .top-error-card::after { content: '⚠️'; position: absolute; right: -10px; bottom: -15px; font-size: 4rem; opacity: 0.1; }
-        .top-error-line { font-weight: 900; font-size: 1.2rem; color: var(--accent); letter-spacing: 1px; }
-        .top-error-details { text-align: right; z-index: 1; }
-        .top-error-nozzle { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; font-weight: bold; background: rgba(255,255,255,0.15); padding: 4px 8px; border-radius: 6px; margin-bottom: 4px; display: inline-block;}
-        .top-error-count { font-size: 0.8rem; color: #bdc3c7; text-transform: uppercase; font-weight: 700; }
-        .top-error-empty { color: #2ecc71; font-weight: bold; font-size: 0.9rem; z-index: 1;}
-
-        /* --- AZ EREDETI MOBIL NÉZET - KARAKTERRE PONTOSAN --- */
-        @media (max-width: 600px) {
-            .stats-charts { grid-template-columns: 1fr; }
+        /* --- MOBIL NÉZET (KÁRTYÁS TÁBLÁZATTAL) --- */
+        @media (max-width: 768px) {
             .header-left h1 { font-size: 1.1rem; }
-            .nav-tabs { top: 55px; }
+            .nav-tabs { width: 90%; top: 60px; }
+            .sticky-filter-bar { top: 120px; flex-direction: column; gap: 10px; align-items: flex-start; padding: 10px 20px; }
             .dashboard-grid { grid-template-columns: 1fr; }
-            .data-table { min-width: 600px; } 
-            .history-table-container { overflow-x: scroll; }
+            
+            /* Kártyás Táblázat Varázslat */
+            .data-table thead { display: none; } /* Fejléc elrejtése */
+            .data-table, .data-table tbody, .data-table tr, .data-table td { display: block; width: 100%; }
+            .data-table tr.row-card { margin-bottom: 15px; padding: 5px; }
+            .data-table td { 
+                border: none !important; border-bottom: 1px solid #f0f0f0 !important; 
+                padding: 10px 10px 10px 40% !important; text-align: right; position: relative; 
+            }
+            .data-table td:last-child { border-bottom: none !important; text-align: center; padding-left: 10px !important; }
+            /* Címkék generálása a 'data-label' attribútumból */
+            .data-table td::before {
+                content: attr(data-label); position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
+                font-weight: 800; font-size: 0.7rem; color: #95a5a6; text-transform: uppercase; text-align: left; width: 35%;
+            }
+            .row-error td:first-child { border-left-color: transparent; } /* Mobilon a kártya bal széle kap színt */
+            .row-error { border-left: 4px solid var(--danger) !important; }
+            .row-ok { border-left: 4px solid var(--success) !important; }
+            
             .btn-report span { display: none; }
         }
+
         @media print {
             body * { visibility: hidden; }
             #history-content, #history-content * { visibility: visible; }
             #history-content { position: absolute; left: 0; top: 0; width: 100%; }
-            .no-print { display: none !important; }
+            .no-print, .accordion-icon { display: none !important; }
+            .accordion-content { display: block !important; }
         }
     </style>
 </head>
@@ -279,7 +319,7 @@
 
     <div class="nav-tabs no-print">
         <button class="nav-btn active" onclick="switchTab('monitor')">📡 Élő Monitor</button>
-        <button class="nav-btn" onclick="switchTab('history')">📊 Statisztika</button>
+        <button class="nav-btn" onclick="switchTab('history')">📊 Karbantartó Statisztika</button>
     </div>
 
     <div id="view-monitor" class="view-section active">
@@ -287,50 +327,74 @@
     </div>
 
     <div id="view-history" class="view-section">
-        <div id="history-content" style="padding-top:20px;">
-            <div class="stats-header">
-                <div>
-                    <h2 style="margin:0; color:var(--primary-dark);">Eseménynapló</h2>
-                    <small style="color:var(--text-muted);">Szűrés: <strong id="statsLineTitle" style="color:var(--accent);">ÖSSZES GÉPSOR</strong></small>
+        
+        <div class="sticky-filter-bar no-print">
+            <div>
+                <h2 style="margin:0; font-size:1.3rem; color:var(--primary-dark);">Irányítópult</h2>
+                <small style="color:var(--text-muted);">Jelenlegi nézet: <strong id="statsLineTitle" style="color:var(--accent);">ÖSSZES GÉPSOR</strong></small>
+            </div>
+            <div style="display:flex; align-items:center; gap:15px;">
+                <div class="my-date-filter">
+                    Dátum: 
+                    <input type="date" id="filterDateFrom" onchange="loadHistoryData()">
+                    -
+                    <input type="date" id="filterDateTo" onchange="loadHistoryData()">
+                    <button onclick="clearDateFilter()" title="Szűrő törlése">✕</button>
                 </div>
-                
-                <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
-                    <div class="my-date-filter no-print">
-                        Szűrés: 
-                        <input type="date" id="filterDateFrom" onchange="loadHistoryData()">
-                        -
-                        <input type="date" id="filterDateTo" onchange="loadHistoryData()">
-                        <button onclick="clearDateFilter()" title="Törlés">✖</button>
-                    </div>
-                    <button class="btn-print no-print" onclick="window.print()">🖨️ Nyomtatás</button>
+                <button class="btn-print" onclick="window.print()">🖨️ Nyomtatás</button>
+            </div>
+        </div>
+
+        <div id="history-content">
+            
+            <div class="accordion-item">
+                <div class="accordion-header active" onclick="toggleAccordion(this)">
+                    <span>⚡ Vezetői Összegzés & Top Hibák</span>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content active">
+                    <div class="kpi-grid" id="kpiDashboard">
+                        </div>
+                    <h4 style="margin-top:20px; margin-bottom:15px; font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Leggyakoribb Hibák Gépsoronként</h4>
+                    <div class="top-errors-container no-print" id="topErrorsContainer"></div>
                 </div>
             </div>
 
-            <div class="top-errors-container no-print" id="topErrorsContainer"></div>
-
-            <div class="stats-charts">
-                <div class="chart-container">
-                    <h3 style="margin-top:0; font-size:0.9rem; color:#95a5a6; text-transform:uppercase;">Összesített Hiba és Gép Statisztika</h3>
-                    <div style="height:260px; position: relative;">
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>📉 Grafikus Elemzés (Gépek szerint)</span>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="chart-container">
                         <canvas id="mainChart"></canvas>
                     </div>
                 </div>
             </div>
 
-            <div class="history-table-container">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Időpont</th>
-                            <th>Állapot</th>
-                            <th>Hely (Sor / Gép)</th>
-                            <th>Megjegyzés / Ok</th>
-                            <th class="no-print">Törlés</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historyTableBody"></tbody>
-                </table>
+            <div class="accordion-item">
+                <div class="accordion-header active" onclick="toggleAccordion(this)">
+                    <span>📋 Részletes Eseménynapló</span>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content active" style="padding: 10px;">
+                    <div class="history-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Időpont</th>
+                                    <th>Állapot</th>
+                                    <th>Hely (Sor / Gép)</th>
+                                    <th>Megjegyzés / Ok</th>
+                                    <th class="no-print" style="text-align:center;">Művelet</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
+
         </div>
     </div>
 
@@ -372,6 +436,7 @@
         import { getDatabase, ref, set, onValue, remove, push, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+        // A te hitelesítési adataid és logikád SÉRTHETETLENÜL marad!
         const firebaseConfig = {
             apiKey: "AIzaSyBL1VWdfWW2d_GEWL2Jen1qX5PCvBcsV4s",
             authDomain: "smt-monitor-ad310.firebaseapp.com",
@@ -398,6 +463,7 @@
         let currentSelection = null;
         let mainChart = null; 
 
+        // Biztonságos háttér belépés, amit ma csináltunk
         signInWithEmailAndPassword(auth, "monitor@forvia.hu", "SmtMonitor2026!")
             .then(() => {
                 onValue(ref(db, ".info/connected"), (snap) => {
@@ -426,6 +492,13 @@
                 document.getElementById("statusText").innerText = "Hitelesítési hiba!";
                 document.getElementById("statusDot").className = "status-dot offline";
             });
+
+        // --- ÚJ: Harmonika (Accordion) nyitó-csukó funkció ---
+        window.toggleAccordion = function(element) {
+            element.classList.toggle('active');
+            let content = element.nextElementSibling;
+            content.classList.toggle('active');
+        }
 
         window.switchTab = function(tabName) {
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
@@ -767,7 +840,49 @@
 
             allEntries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-            // ---> ÚJ KÓD KEZDETE: TOP HIBÁK KISZÁMÍTÁSA GÉPSORONKÉNT <---
+            // --- ÚJ FEJLESZTÉS: KPI KÁRTYÁK KISZÁMÍTÁSA ---
+            let totalStops = 0;
+            let machineFails = {};
+            let reasonFails = {};
+
+            allEntries.forEach(log => {
+                if (log.type === 'DISABLE') {
+                    totalStops++;
+                    const mName = `Gép #${log.machineId} (${log._line})`;
+                    machineFails[mName] = (machineFails[mName] || 0) + 1;
+                    reasonFails[log.reason] = (reasonFails[log.reason] || 0) + 1;
+                }
+            });
+
+            let worstMachine = "N/A"; let worstMachineCount = 0;
+            for (let m in machineFails) { if (machineFails[m] > worstMachineCount) { worstMachineCount = machineFails[m]; worstMachine = m; } }
+
+            let topReason = "N/A"; let topReasonCount = 0;
+            for (let r in reasonFails) { if (reasonFails[r] > topReasonCount) { topReasonCount = reasonFails[r]; topReason = r; } }
+
+            const kpiBoard = document.getElementById('kpiDashboard');
+            if (kpiBoard) {
+                kpiBoard.innerHTML = `
+                    <div class="kpi-card">
+                        <div class="kpi-title">Összes Leállás</div>
+                        <div class="kpi-value">${totalStops} <span style="font-size:0.9rem; font-weight:700; color:#95a5a6;">db</span></div>
+                        <div class="kpi-sub">Az adott szűrési időszakban</div>
+                    </div>
+                    <div class="kpi-card" style="border-left-color: #f39c12;">
+                        <div class="kpi-title">Legkritikusabb Gép</div>
+                        <div class="kpi-value">${worstMachine}</div>
+                        <div class="kpi-sub">${worstMachineCount > 0 ? worstMachineCount + ' db rögzített hiba' : 'Nincs hiba'}</div>
+                    </div>
+                    <div class="kpi-card" style="border-left-color: #9b59b6;">
+                        <div class="kpi-title">Vezető Hibaok</div>
+                        <div class="kpi-value" style="font-size:1.3rem;">${topReason}</div>
+                        <div class="kpi-sub">${topReasonCount > 0 ? topReasonCount + ' esetben' : '-'}</div>
+                    </div>
+                `;
+            }
+            // --- KPI VÉGE ---
+
+            // TOP HIBÁK KISZÁMÍTÁSA GÉPSORONKÉNT
             const errorCounts = {};
             linesToList.forEach(l => errorCounts[l] = {});
             
@@ -813,7 +928,6 @@
                     `;
                 });
             }
-            // ---> ÚJ KÓD VÉGE <---
             
             const tbody = document.getElementById('historyTableBody');
             tbody.innerHTML = '';
@@ -839,14 +953,15 @@
                 const badge = isError ? `<span class="log-badge bg-err">LEÁLLÍTÁS</span>` : `<span class="log-badge bg-ok">AKTIVÁLÁS</span>`;
                 const locationPrefix = (line === 'ALL') ? `<span style="color:var(--accent); font-weight:bold;">[${log._line}]</span> ` : '';
                 
+                // Módosítás: A td-k megkapták a data-label attribútumot a mobil nézethez!
                 tbody.innerHTML += `
                     <tr class="row-card ${rowClass}">
-                        <td class="log-date">${dateStr}</td>
-                        <td>${badge}</td>
-                        <td class="log-loc">${locationPrefix}Gép ${log.machineId} / ${log.side}. oldal / Nozzle ${log.nozzle}</td>
-                        <td>${log.reason}</td>
-                        <td class="no-print" align="center">
-                            <button class="btn-delete" onclick="window.deleteLog('${log._line}', '${log._id}')">✕</button>
+                        <td data-label="Időpont" class="log-date">${dateStr}</td>
+                        <td data-label="Állapot">${badge}</td>
+                        <td data-label="Hely" class="log-loc">${locationPrefix}Gép ${log.machineId} / ${log.side}. oldal / Nozzle ${log.nozzle}</td>
+                        <td data-label="Ok / Megjegyzés">${log.reason}</td>
+                        <td data-label="Művelet" class="no-print" align="center">
+                            <button class="btn-delete" onclick="window.deleteLog('${log._line}', '${log._id}')" title="Törlés">✕</button>
                         </td>
                     </tr>`;
             });
