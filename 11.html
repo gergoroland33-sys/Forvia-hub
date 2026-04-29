@@ -22,7 +22,7 @@
             --shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
 
-        * { box-sizing: border-box; } /* Ez garantálja, hogy mobilon semmi ne lógjon ki a képernyőről! */
+        * { box-sizing: border-box; } /* Ez garantálja, hogy semmi ne lógjon ki a képernyőről */
 
         body { 
             font-family: 'Roboto', sans-serif; 
@@ -30,6 +30,7 @@
             margin: 0; padding: 0; 
             color: var(--text-main); 
             padding-bottom: 60px;
+            overflow-x: hidden; /* Vízszintes görgetés letiltása mobilon */
         }
 
         /* --- HEADER --- */
@@ -104,14 +105,13 @@
         .view-section.active { display: block; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- STICKY FILTER BAR (LEBEGŐ SZŰRŐ TÖKÉLETESÍTVE) --- */
-        .sticky-filter-bar {
-            position: sticky; top: 125px; z-index: 850; 
-            background: var(--bg); /* Teljesen szolid háttér, nem látszik át a görgetés! */
+        /* --- FILTER BAR (NEM LEBEG TÖBBÉ, ELTŰNIK GÖRGETÉSKOR) --- */
+        .filter-bar {
+            background: var(--bg); 
             padding: 15px 20px; 
-            margin: 0 -20px 20px -20px; /* Kihúzza a képernyő széléig */
+            margin: 0 -20px 20px -20px; 
             border-bottom: 1px solid #cfd8dc;
-            box-shadow: 0 6px 10px -4px rgba(0,0,0,0.05); /* Szép lezáró árnyék */
+            box-shadow: 0 6px 10px -4px rgba(0,0,0,0.05);
             display: flex; justify-content: space-between; align-items: center;
         }
         .my-date-filter { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
@@ -260,42 +260,44 @@
         .rep-err-loc { font-weight: bold; font-family: 'JetBrains Mono', monospace; }
         .rep-ok-badge { color: #27ae60; font-weight: bold; background: #f0fff4; padding: 5px 10px; border-radius: 6px; border: 1px solid #c6f6d5; display: inline-block; }
 
-        /* --- MOBIL NÉZET (KÁRTYÁS TÁBLÁZAT GARANTÁLT JAVÍTÁSA) --- */
+        /* --- MOBIL NÉZET (KÁRTYÁS TÁBLÁZAT JAVÍTÁSA - GARANTÁLTAN NEM LÓG KI) --- */
         @media (max-width: 768px) {
+            .view-section { padding: 0 10px; } /* Kisebb belső margó mobilon, több hely az adatoknak */
             .header-left h1 { font-size: 1.1rem; }
             .nav-tabs { width: 95%; top: 60px; }
             
             /* Szűrősáv mobilon */
-            .sticky-filter-bar { 
-                top: 110px; flex-direction: column; gap: 15px; align-items: flex-start; 
-                padding: 15px 20px; margin: 0 -20px 20px -20px;
+            .filter-bar { 
+                flex-direction: column; gap: 15px; align-items: flex-start; 
+                padding: 15px 15px; margin: 0 -10px 20px -10px;
                 background: #ffffff;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.05);
             }
 
             .dashboard-grid { grid-template-columns: 1fr; }
             
-            /* TÁBLÁZAT MOBILON (Nincs kilógás a képernyőről!) */
-            .history-table-container { overflow: hidden; width: 100%; padding: 0; }
-            .data-table { width: 100%; border-spacing: 0; border-collapse: separate; }
+            /* TÁBLÁZAT MOBILON (Biztonságos Flexbox Kártyanézet) */
+            .data-table, .data-table tbody, .data-table tr, .data-table td { 
+                display: block; width: 100%; box-sizing: border-box; 
+            }
             .data-table thead { display: none; }
-            .data-table tbody { display: block; width: 100%; }
+            
             .data-table tr.row-card { 
-                display: block; width: 100%; margin-bottom: 15px; 
-                border: 1px solid var(--border); border-radius: 8px; 
-                background: white; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+                margin-bottom: 15px; border: 1px solid var(--border); 
+                border-radius: 8px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+                overflow: hidden; 
             }
             .data-table td { 
-                display: block; width: 100%; box-sizing: border-box;
                 border: none !important; border-bottom: 1px solid #f1f5f9 !important; 
-                padding: 12px 15px 12px 40% !important; text-align: right; position: relative; 
-                min-height: 44px; display: flex; justify-content: flex-end; align-items: center;
+                padding: 10px 15px !important; text-align: right; 
+                display: flex; justify-content: space-between; align-items: center;
+                min-height: auto; word-break: break-word; gap: 10px;
             }
-            .data-table td:last-child { border-bottom: none !important; justify-content: center; padding: 12px !important; }
+            .data-table td:last-child { border-bottom: none !important; justify-content: center; }
             
             .data-table td::before {
-                content: attr(data-label); position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
-                font-weight: 800; font-size: 0.7rem; color: #64748b; text-transform: uppercase; text-align: left; width: 35%;
+                content: attr(data-label); 
+                font-weight: 800; font-size: 0.7rem; color: #64748b; 
+                text-transform: uppercase; text-align: left; flex-shrink: 0; max-width: 40%;
             }
             
             /* Színes csíkok a kártya bal szélén */
@@ -303,23 +305,23 @@
             .row-ok { border-left: 5px solid var(--success) !important; }
             .row-error td:first-child, .row-ok td:first-child { border-left: none !important; border-radius: 0 !important; }
             
-            .log-loc { font-size: 0.8rem; text-align: right; word-break: break-word; }
+            .log-loc { text-align: right; font-size: 0.8rem; }
             .btn-report span { display: none; }
         }
 
-        /* --- AZ EREDETI, TÖKÉLETES NYOMTATÁSI KÓD VISSZAÁLLÍTÁSA --- */
+        /* --- AZ EREDETI TÖKÉLETES NYOMTATÁSI KÓD VISSZAÁLLÍTÁSA --- */
         @media print {
             body * { visibility: hidden; }
             #history-content, #history-content * { visibility: visible; }
-            #history-content { position: absolute; left: 0; top: 0; width: 100%; }
+            #history-content { position: absolute; left: 0; top: 0; width: 100%; margin: 0 !important; padding: 0 !important; }
+            
+            /* A te eredeti kódodban szereplő no-print */
             .no-print { display: none !important; }
             
-            /* Ezek kellenek, hogy a nyomtatáskor a harmonikák kinyíljanak és látszódjon a tartalom */
-            .accordion-content { display: block !important; }
-            .accordion-icon { display: none !important; }
-            
-            /* Hogy a szűrősáv címsora is rendesen rákerüljön a papírra */
-            .sticky-filter-bar { position: static !important; margin: 0 !important; border: none !important; box-shadow: none !important; padding: 0 0 20px 0 !important; }
+            /* Ezek kellenek, hogy a nyomtatáskor a harmonikák kinyíljanak és a keretek eltűnjenek */
+            .accordion-content { display: block !important; padding: 0 !important; }
+            .accordion-item { border: none !important; box-shadow: none !important; margin: 0 0 20px 0 !important; }
+            .filter-bar { margin: 0 !important; border: none !important; box-shadow: none !important; padding: 0 0 20px 0 !important; background: transparent !important; }
         }
     </style>
 </head>
@@ -361,7 +363,7 @@
     <div id="view-history" class="view-section">
         <div id="history-content">
             
-            <div class="sticky-filter-bar">
+            <div class="filter-bar">
                 <div>
                     <h2 style="margin:0; font-size:1.3rem; color:var(--primary-dark);">Irányítópult</h2>
                     <small style="color:var(--text-muted);">Jelenlegi nézet: <strong id="statsLineTitle" style="color:var(--accent);">ÖSSZES GÉPSOR</strong></small>
@@ -378,21 +380,20 @@
                 </div>
             </div>
             
-            <div class="accordion-item">
+            <div class="accordion-item no-print">
                 <div class="accordion-header active" onclick="toggleAccordion(this)">
                     <span>⚡ Vezetői Összegzés & Top Hibák</span>
                     <span class="accordion-icon">▼</span>
                 </div>
                 <div class="accordion-content active">
-                    <div class="kpi-grid" id="kpiDashboard">
-                        </div>
+                    <div class="kpi-grid" id="kpiDashboard"></div>
                     <h4 style="margin-top:20px; margin-bottom:15px; font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Leggyakoribb Hibák Gépsoronként</h4>
-                    <div class="top-errors-container no-print" id="topErrorsContainer"></div>
+                    <div class="top-errors-container" id="topErrorsContainer"></div>
                 </div>
             </div>
 
             <div class="accordion-item">
-                <div class="accordion-header" onclick="toggleAccordion(this)">
+                <div class="accordion-header no-print" onclick="toggleAccordion(this)">
                     <span>📉 Grafikus Elemzés (Gépek szerint)</span>
                     <span class="accordion-icon">▼</span>
                 </div>
@@ -404,7 +405,7 @@
             </div>
 
             <div class="accordion-item">
-                <div class="accordion-header active" onclick="toggleAccordion(this)">
+                <div class="accordion-header active no-print" onclick="toggleAccordion(this)">
                     <span>📋 Részletes Eseménynapló</span>
                     <span class="accordion-icon">▼</span>
                 </div>
