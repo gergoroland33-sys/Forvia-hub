@@ -22,6 +22,8 @@
             --shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
 
+        * { box-sizing: border-box; } /* Ez garantálja, hogy mobilon semmi ne lógjon ki a képernyőről! */
+
         body { 
             font-family: 'Roboto', sans-serif; 
             background-color: var(--bg); 
@@ -102,11 +104,15 @@
         .view-section.active { display: block; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- STICKY FILTER BAR --- */
+        /* --- STICKY FILTER BAR (LEBEGŐ SZŰRŐ TÖKÉLETESÍTVE) --- */
         .sticky-filter-bar {
-            position: sticky; top: 125px; z-index: 850; background: rgba(240, 242, 245, 0.95);
-            backdrop-filter: blur(5px); padding: 12px 0; border-bottom: 1px solid var(--border);
-            margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 125px; z-index: 850; 
+            background: var(--bg); /* Teljesen szolid háttér, nem látszik át a görgetés! */
+            padding: 15px 20px; 
+            margin: 0 -20px 20px -20px; /* Kihúzza a képernyő széléig */
+            border-bottom: 1px solid #cfd8dc;
+            box-shadow: 0 6px 10px -4px rgba(0,0,0,0.05); /* Szép lezáró árnyék */
+            display: flex; justify-content: space-between; align-items: center;
         }
         .my-date-filter { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
         .my-date-filter input { padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-weight: 600; color: var(--primary-dark); }
@@ -130,7 +136,7 @@
         .accordion-content { padding: 20px; display: none; background: #fff; }
         .accordion-content.active { display: block; animation: fadeIn 0.3s ease; }
 
-        /* --- ÚJ: KPI KÁRTYÁK --- */
+        /* --- KPI KÁRTYÁK --- */
         .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
         .kpi-card { background: #f8f9fa; border-radius: 10px; padding: 20px; border-left: 5px solid var(--accent); display: flex; flex-direction: column; justify-content: center; }
         .kpi-title { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 800; margin-bottom: 8px; letter-spacing: 0.5px; }
@@ -192,8 +198,8 @@
         
         .chart-container { position: relative; height: 320px; width: 100%; }
         
-        /* --- KÁRTYÁS MOBIL TÁBLÁZAT --- */
-        .history-table-container { background: transparent; width: 100%; }
+        /* --- TÁBLÁZAT --- */
+        .history-table-container { background: transparent; width: 100%; overflow-x: auto; }
         .data-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
         .data-table th { padding: 0 15px 10px 15px; text-align: left; color: #95a5a6; font-weight: 800; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; }
         .data-table tr.row-card { background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.03); border: 1px solid var(--border); border-radius: 8px; transition: transform 0.1s; }
@@ -224,7 +230,7 @@
         .top-error-count { font-size: 0.8rem; color: #bdc3c7; text-transform: uppercase; font-weight: 700; }
         .top-error-empty { color: #2ecc71; font-weight: bold; font-size: 0.9rem; z-index: 1;}
 
-        /* --- MODAL, JELENTÉS STB (EREDETI) --- */
+        /* --- MODAL, JELENTÉS STB --- */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; backdrop-filter: blur(2px); justify-content: center; align-items: center; }
         .modal-box { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
         .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 1rem; margin-top: 5px; }
@@ -254,40 +260,66 @@
         .rep-err-loc { font-weight: bold; font-family: 'JetBrains Mono', monospace; }
         .rep-ok-badge { color: #27ae60; font-weight: bold; background: #f0fff4; padding: 5px 10px; border-radius: 6px; border: 1px solid #c6f6d5; display: inline-block; }
 
-        /* --- MOBIL NÉZET (KÁRTYÁS TÁBLÁZATTAL) --- */
+        /* --- MOBIL NÉZET (KÁRTYÁS TÁBLÁZAT GARANTÁLT JAVÍTÁSA) --- */
         @media (max-width: 768px) {
             .header-left h1 { font-size: 1.1rem; }
-            .nav-tabs { width: 90%; top: 60px; }
-            .sticky-filter-bar { top: 120px; flex-direction: column; gap: 10px; align-items: flex-start; padding: 10px 20px; }
+            .nav-tabs { width: 95%; top: 60px; }
+            
+            /* Szűrősáv mobilon */
+            .sticky-filter-bar { 
+                top: 110px; flex-direction: column; gap: 15px; align-items: flex-start; 
+                padding: 15px 20px; margin: 0 -20px 20px -20px;
+                background: #ffffff;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            }
+
             .dashboard-grid { grid-template-columns: 1fr; }
             
-            /* Kártyás Táblázat Varázslat */
-            .data-table thead { display: none; } /* Fejléc elrejtése */
-            .data-table, .data-table tbody, .data-table tr, .data-table td { display: block; width: 100%; }
-            .data-table tr.row-card { margin-bottom: 15px; padding: 5px; }
-            .data-table td { 
-                border: none !important; border-bottom: 1px solid #f0f0f0 !important; 
-                padding: 10px 10px 10px 40% !important; text-align: right; position: relative; 
+            /* TÁBLÁZAT MOBILON (Nincs kilógás a képernyőről!) */
+            .history-table-container { overflow: hidden; width: 100%; padding: 0; }
+            .data-table { width: 100%; border-spacing: 0; border-collapse: separate; }
+            .data-table thead { display: none; }
+            .data-table tbody { display: block; width: 100%; }
+            .data-table tr.row-card { 
+                display: block; width: 100%; margin-bottom: 15px; 
+                border: 1px solid var(--border); border-radius: 8px; 
+                background: white; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.04);
             }
-            .data-table td:last-child { border-bottom: none !important; text-align: center; padding-left: 10px !important; }
-            /* Címkék generálása a 'data-label' attribútumból */
+            .data-table td { 
+                display: block; width: 100%; box-sizing: border-box;
+                border: none !important; border-bottom: 1px solid #f1f5f9 !important; 
+                padding: 12px 15px 12px 40% !important; text-align: right; position: relative; 
+                min-height: 44px; display: flex; justify-content: flex-end; align-items: center;
+            }
+            .data-table td:last-child { border-bottom: none !important; justify-content: center; padding: 12px !important; }
+            
             .data-table td::before {
                 content: attr(data-label); position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
-                font-weight: 800; font-size: 0.7rem; color: #95a5a6; text-transform: uppercase; text-align: left; width: 35%;
+                font-weight: 800; font-size: 0.7rem; color: #64748b; text-transform: uppercase; text-align: left; width: 35%;
             }
-            .row-error td:first-child { border-left-color: transparent; } /* Mobilon a kártya bal széle kap színt */
-            .row-error { border-left: 4px solid var(--danger) !important; }
-            .row-ok { border-left: 4px solid var(--success) !important; }
             
+            /* Színes csíkok a kártya bal szélén */
+            .row-error { border-left: 5px solid var(--danger) !important; }
+            .row-ok { border-left: 5px solid var(--success) !important; }
+            .row-error td:first-child, .row-ok td:first-child { border-left: none !important; border-radius: 0 !important; }
+            
+            .log-loc { font-size: 0.8rem; text-align: right; word-break: break-word; }
             .btn-report span { display: none; }
         }
 
+        /* --- AZ EREDETI, TÖKÉLETES NYOMTATÁSI KÓD VISSZAÁLLÍTÁSA --- */
         @media print {
             body * { visibility: hidden; }
             #history-content, #history-content * { visibility: visible; }
             #history-content { position: absolute; left: 0; top: 0; width: 100%; }
-            .no-print, .accordion-icon { display: none !important; }
+            .no-print { display: none !important; }
+            
+            /* Ezek kellenek, hogy a nyomtatáskor a harmonikák kinyíljanak és látszódjon a tartalom */
             .accordion-content { display: block !important; }
+            .accordion-icon { display: none !important; }
+            
+            /* Hogy a szűrősáv címsora is rendesen rákerüljön a papírra */
+            .sticky-filter-bar { position: static !important; margin: 0 !important; border: none !important; box-shadow: none !important; padding: 0 0 20px 0 !important; }
         }
     </style>
 </head>
@@ -327,25 +359,24 @@
     </div>
 
     <div id="view-history" class="view-section">
-        
-        <div class="sticky-filter-bar no-print">
-            <div>
-                <h2 style="margin:0; font-size:1.3rem; color:var(--primary-dark);">Irányítópult</h2>
-                <small style="color:var(--text-muted);">Jelenlegi nézet: <strong id="statsLineTitle" style="color:var(--accent);">ÖSSZES GÉPSOR</strong></small>
-            </div>
-            <div style="display:flex; align-items:center; gap:15px;">
-                <div class="my-date-filter">
-                    Dátum: 
-                    <input type="date" id="filterDateFrom" onchange="loadHistoryData()">
-                    -
-                    <input type="date" id="filterDateTo" onchange="loadHistoryData()">
-                    <button onclick="clearDateFilter()" title="Szűrő törlése">✕</button>
-                </div>
-                <button class="btn-print" onclick="window.print()">🖨️ Nyomtatás</button>
-            </div>
-        </div>
-
         <div id="history-content">
+            
+            <div class="sticky-filter-bar">
+                <div>
+                    <h2 style="margin:0; font-size:1.3rem; color:var(--primary-dark);">Irányítópult</h2>
+                    <small style="color:var(--text-muted);">Jelenlegi nézet: <strong id="statsLineTitle" style="color:var(--accent);">ÖSSZES GÉPSOR</strong></small>
+                </div>
+                <div class="no-print" style="display:flex; align-items:center; gap:15px;">
+                    <div class="my-date-filter">
+                        Dátum: 
+                        <input type="date" id="filterDateFrom" onchange="loadHistoryData()">
+                        -
+                        <input type="date" id="filterDateTo" onchange="loadHistoryData()">
+                        <button onclick="clearDateFilter()" title="Szűrő törlése">✕</button>
+                    </div>
+                    <button class="btn-print" onclick="window.print()">🖨️ Nyomtatás</button>
+                </div>
+            </div>
             
             <div class="accordion-item">
                 <div class="accordion-header active" onclick="toggleAccordion(this)">
@@ -463,7 +494,7 @@
         let currentSelection = null;
         let mainChart = null; 
 
-        // Biztonságos háttér belépés, amit ma csináltunk
+        // Biztonságos háttér belépés
         signInWithEmailAndPassword(auth, "monitor@forvia.hu", "SmtMonitor2026!")
             .then(() => {
                 onValue(ref(db, ".info/connected"), (snap) => {
@@ -493,7 +524,7 @@
                 document.getElementById("statusDot").className = "status-dot offline";
             });
 
-        // --- ÚJ: Harmonika (Accordion) nyitó-csukó funkció ---
+        // --- Harmonika (Accordion) nyitó-csukó funkció ---
         window.toggleAccordion = function(element) {
             element.classList.toggle('active');
             let content = element.nextElementSibling;
@@ -840,7 +871,7 @@
 
             allEntries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-            // --- ÚJ FEJLESZTÉS: KPI KÁRTYÁK KISZÁMÍTÁSA ---
+            // --- KPI KÁRTYÁK KISZÁMÍTÁSA ---
             let totalStops = 0;
             let machineFails = {};
             let reasonFails = {};
