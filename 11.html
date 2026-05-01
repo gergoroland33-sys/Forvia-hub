@@ -6,27 +6,30 @@
     <title>SMT Monitor Pro v2.5</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-dark: #1a252f;
-            --primary-light: #34495e;
-            --accent: #3498db;
-            --success: #27ae60;
-            --danger: #c0392b;
-            --bg: #f0f2f5;
+            /* IPARI PRÉMIUM SZÍNVILÁG */
+            --primary-dark: #0f172a;    /* Mélykék / Palaszürke */
+            --primary-light: #334155;
+            --accent: #2563eb;          /* Ipari kék */
+            --success: #059669;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --bg: #e2e8f0;              /* Ipari hűvös szürke hátter */
             --card-bg: #ffffff;
-            --text-main: #2c3e50;
-            --text-muted: #7f8c8d;
-            --border: #e4e6eb;
-            --shadow: 0 4px 6px rgba(0,0,0,0.05);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #cbd5e1;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            --inner-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.15);
         }
 
-        * { box-sizing: border-box; } /* Ez garantálja, hogy semmi ne lógjon ki a képernyőről */
+        * { box-sizing: border-box; }
 
         html, body {
             max-width: 100vw;
-            overflow-x: hidden; /* JAVÍTÁS: Szigorúan letiltja a vízszintes csúszkálást mobilon! */
+            overflow-x: hidden;
         }
 
         body { 
@@ -45,266 +48,253 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
             position: sticky;
             top: 0;
             z-index: 1000;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 2px solid var(--border);
         }
         .header-left { display: flex; align-items: center; gap: 15px; }
         .header-left h1 { 
-            margin: 0; font-size: 1.25rem; font-weight: 800; color: var(--primary-dark); letter-spacing: -0.5px;
-            display: flex; align-items: center; gap: 8px;
+            margin: 0; font-size: 1.3rem; font-weight: 900; color: var(--primary-dark); letter-spacing: -0.5px;
+            display: flex; align-items: center; gap: 8px; text-transform: uppercase;
         }
         
         .connection-status {
-            font-size: 0.7rem; font-weight: 600; 
-            padding: 4px 10px; border-radius: 20px;
-            background: #f8f9fa; border: 1px solid #e1e4e8;
+            font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+            padding: 4px 12px; border-radius: 4px;
+            background: #f1f5f9; border: 1px solid #cbd5e1;
             display: flex; align-items: center; gap: 6px; color: var(--text-muted);
         }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #ccc; }
-        .status-dot.online { background-color: #2ecc71; box-shadow: 0 0 5px #2ecc71; }
-        .status-dot.offline { background-color: #e74c3c; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background-color: #94a3b8; }
+        .status-dot.online { background-color: var(--success); box-shadow: 0 0 8px var(--success); }
+        .status-dot.offline { background-color: var(--danger); }
 
         select { 
-            padding: 8px 12px; border-radius: 6px; border: 1px solid #ced6e0; 
-            font-weight: 600; cursor: pointer; outline: none; background: white; 
-            color: var(--primary-dark); font-family: inherit; font-size: 0.9rem;
+            padding: 8px 12px; border-radius: 4px; border: 2px solid var(--border); 
+            font-weight: 800; cursor: pointer; outline: none; background: white; 
+            color: var(--primary-dark); font-family: inherit; font-size: 0.85rem; text-transform: uppercase;
             transition: border 0.2s;
         }
         select:hover { border-color: var(--accent); }
 
-        /* JELENTÉS GOMB */
         .btn-report {
             background: var(--primary-dark); color: white; border: none;
-            padding: 8px 15px; border-radius: 6px; cursor: pointer;
-            font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;
-            transition: background 0.2s;
+            padding: 8px 15px; border-radius: 4px; cursor: pointer;
+            font-weight: 800; font-size: 0.85rem; text-transform: uppercase;
+            display: flex; align-items: center; gap: 6px; transition: background 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         .btn-report:hover { background: var(--accent); }
-        .btn-report:active { transform: scale(0.98); }
+        .btn-report:active { transform: translateY(2px); box-shadow: none; }
 
         /* --- ÉRTESÍTÉSI HARANG --- */
         .notification-wrapper { position: relative; display: inline-block; margin-right: 10px; }
         .btn-bell { 
-            background: #f0f2f5; border: 1px solid #e1e4e8; border-radius: 50%;
+            background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px;
             width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
-            font-size: 1.1rem; cursor: pointer; position: relative; transition: all 0.2s;
-            color: var(--text-main); 
+            cursor: pointer; position: relative; transition: all 0.2s; color: var(--text-main); 
         }
-        .btn-bell:hover { background: #e4e6eb; transform: translateY(-1px); }
-        .btn-bell:active { transform: translateY(1px); }
+        .btn-bell:hover { background: #e2e8f0; }
         .bell-badge {
-            position: absolute; top: -3px; right: -3px; background: var(--danger); color: white;
+            position: absolute; top: -5px; right: -5px; background: var(--danger); color: white;
             font-size: 0.65rem; font-weight: bold; font-family: 'JetBrains Mono', monospace;
-            border-radius: 50%; width: 18px; height: 18px; display: none; 
+            border-radius: 4px; padding: 2px 6px; display: none; 
             align-items: center; justify-content: center; border: 2px solid white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2); animation: pulseBell 2s infinite;
         }
-        @keyframes pulseBell { 0% {box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.4);} 70% {box-shadow: 0 0 0 6px rgba(192, 57, 43, 0);} 100% {box-shadow: 0 0 0 0 rgba(192, 57, 43, 0);} }
+        @keyframes pulseBell { 0% {box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5);} 70% {box-shadow: 0 0 0 6px rgba(220, 38, 38, 0);} 100% {box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);} }
+        
         .notification-popup {
-            display: none; position: absolute; top: 120%; right: 0; width: 300px;
-            background: white; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            border: 1px solid var(--border); z-index: 1001; padding: 15px; cursor: default;
+            display: none; position: absolute; top: 120%; right: 0; width: 320px;
+            background: white; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 2px solid var(--border); z-index: 1001; padding: 15px; cursor: default;
         }
-        .notification-popup::before {
-            content: ''; position: absolute; top: -6px; right: 14px;
-            width: 12px; height: 12px; background: white; transform: rotate(45deg);
-            border-left: 1px solid var(--border); border-top: 1px solid var(--border);
-        }
-        .notif-title { font-weight: 800; font-size: 0.95rem; margin-bottom: 12px; color: var(--primary-dark); border-bottom: 1px solid #f0f0f0; padding-bottom: 8px; display: flex; justify-content: space-between;}
-        
-        /* Műszakonkénti bontás stílusa */
+        .notif-title { font-weight: 900; font-size: 0.95rem; margin-bottom: 12px; color: var(--primary-dark); border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; text-transform: uppercase;}
         .notif-shift-group { margin-bottom: 12px; }
-        .notif-shift-group:last-child { margin-bottom: 0; }
-        .notif-shift-header { font-size: 0.7rem; color: #95a5a6; font-weight: 800; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; border-bottom: 1px dashed #ecf0f1; padding-bottom: 4px; }
-        
-        .notif-item { font-size: 0.85rem; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; font-weight: 500;}
+        .notif-shift-header { font-size: 0.75rem; color: #94a3b8; font-weight: 900; text-transform: uppercase; margin-bottom: 6px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 4px; }
+        .notif-item { font-size: 0.85rem; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; font-weight: 700;}
 
-        /* --- MODERN SEGMENTED CONTROL (VÁLTÓKAPCSOLÓ) --- */
+        /* --- MODERN SEGMENTED CONTROL (VÁLTÓKAPCSOLÓ PRÉMIUM IPARI VERZIÓ) --- */
         .nav-tabs {
-            display: flex; justify-content: center; gap: 0;
-            background: #e2e8f0; padding: 4px; border-radius: 30px;
-            width: fit-content; margin: 15px auto;
-            position: sticky; top: 70px; z-index: 900;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+            display: flex; justify-content: center; gap: 4px;
+            background: #cbd5e1; padding: 5px; border-radius: 8px;
+            width: fit-content; margin: 20px auto;
+            position: sticky; top: 75px; z-index: 900;
+            box-shadow: var(--inner-shadow);
+            border: 1px solid #94a3b8;
         }
         .nav-btn {
-            background: transparent; border: none; padding: 10px 25px; font-size: 0.95rem; font-weight: 700;
-            color: #64748b; cursor: pointer; border-radius: 26px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: none; display: flex; align-items: center; gap: 6px;
+            background: transparent; border: none; padding: 10px 30px; font-size: 0.85rem; font-weight: 900;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            color: #475569; cursor: pointer; border-radius: 6px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; align-items: center; gap: 8px;
         }
         .nav-btn.active { 
-            background: var(--primary-dark); color: white; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15); 
+            background: var(--card-bg); color: var(--accent); 
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15); 
+            border: 1px solid white;
         }
         .nav-btn:hover:not(.active) { color: var(--primary-dark); }
 
         /* --- LAYOUT --- */
-        .view-section { display: none; padding: 0 20px; max-width: 1600px; margin: 0 auto; }
+        .view-section { display: none; padding: 0 20px; max-width: 1800px; margin: 0 auto; }
         .view-section.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- FILTER BAR (NEM LEBEG TÖBBÉ, ELTŰNIK GÖRGETÉSKOR) --- */
-        .filter-bar {
-            background: var(--bg); 
-            padding: 15px 20px; 
-            margin: 0 -20px 20px -20px; 
-            border-bottom: 1px solid #cfd8dc;
-            box-shadow: 0 6px 10px -4px rgba(0,0,0,0.05);
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .my-date-filter { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
-        .my-date-filter input { padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-weight: 600; color: var(--primary-dark); }
-        .my-date-filter button { background: #fee2e2; border: none; color: #e74c3c; cursor: pointer; font-weight: bold; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        .my-date-filter button:hover { background: #e74c3c; color: white; }
-
-        /* --- ACCORDION (KINYITHATÓ BLOKKOK) --- */
-        .accordion-item {
-            background: white; border-radius: 12px; margin-bottom: 20px; box-shadow: var(--shadow);
-            border: 1px solid var(--border); overflow: hidden;
-        }
-        .accordion-header {
-            padding: 18px 20px; background: #fff; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
-            font-weight: 800; color: var(--primary-dark); font-size: 1.1rem; border-bottom: 1px solid transparent;
-            transition: background 0.2s;
-        }
-        .accordion-header:hover { background: #f8f9fa; }
-        .accordion-header.active { border-bottom: 1px solid var(--border); background: #f8f9fa; }
-        .accordion-icon { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-size: 0.9rem; color: var(--text-muted); }
-        .accordion-header.active .accordion-icon { transform: rotate(180deg); }
-        .accordion-content { padding: 20px; display: none; background: #fff; }
-        .accordion-content.active { display: block; animation: fadeIn 0.3s ease; }
-
-        /* --- KPI KÁRTYÁK --- */
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .kpi-card { background: #f8f9fa; border-radius: 10px; padding: 20px; border-left: 5px solid var(--accent); display: flex; flex-direction: column; justify-content: center; }
-        .kpi-title { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 800; margin-bottom: 8px; letter-spacing: 0.5px; }
-        .kpi-value { font-size: 1.8rem; font-weight: 900; color: var(--primary-dark); line-height: 1.1; }
-        .kpi-sub { font-size: 0.8rem; font-weight: 600; color: #95a5a6; margin-top: 4px; }
-
-        /* --- MONITOR UI --- */
+        /* --- MONITOR UI (ÉLŐ NÉZET) --- */
         .line-wrapper { margin-bottom: 30px; }
         .line-header-strip {
             padding: 10px 5px; display: flex; align-items: center;
-            border-bottom: 2px solid #e1e4e8; margin-bottom: 15px;
+            border-bottom: 3px solid #cbd5e1; margin-bottom: 15px;
         }
-        .line-title { font-size: 1.1rem; font-weight: 900; color: var(--primary-light); display: flex; align-items: center; gap: 10px; }
-        .line-err-badge { background: var(--danger); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 10px; }
+        .line-title { font-size: 1.2rem; font-weight: 900; color: var(--primary-dark); display: flex; align-items: center; gap: 10px; text-transform: uppercase; }
+        .line-err-badge { background: var(--danger); color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: 900; margin-left: 10px; box-shadow: 0 2px 4px rgba(220, 38, 38, 0.4);}
         
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
 
         .machine-card {
-            background: var(--card-bg); border-radius: 10px; box-shadow: var(--shadow); border: 1px solid white;
-            display: flex; flex-direction: column; overflow: hidden;
+            background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow); 
+            border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden;
         }
         .machine-header { 
-            background: #fff; padding: 12px 15px; border-bottom: 1px solid #f0f2f5; 
+            background: #f8fafc; padding: 12px 15px; border-bottom: 2px solid #e2e8f0; 
             display: flex; justify-content: space-between; align-items: center;
         }
-        .machine-name { font-weight: 700; color: var(--text-main); font-size: 0.95rem; }
+        .machine-name { font-weight: 900; color: var(--primary-dark); font-size: 1rem; text-transform: uppercase;}
         
-        .error-info { font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+        .error-info { font-size: 0.85rem; font-weight: 800; display: flex; align-items: center; gap: 5px; }
         .txt-ok { color: var(--success); }
         .txt-err { color: var(--danger); }
-        .percent-tag { background: #f1f2f6; color: #7f8c8d; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-family: 'JetBrains Mono', monospace; }
+        .percent-tag { background: #e2e8f0; color: #475569; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; }
 
         .machine-body { padding: 15px; display: flex; gap: 10px; background: #fff; }
         .side-col { flex: 1; display: flex; flex-direction: column; align-items: center; }
-        .side-label { font-size: 0.65rem; text-transform: uppercase; color: #95a5a6; margin-bottom: 6px; font-weight: 700; letter-spacing: 0.5px; }
+        .side-label { font-size: 0.7rem; text-transform: uppercase; color: #64748b; margin-bottom: 8px; font-weight: 900; letter-spacing: 1px; }
 
-        .nozzle-grid { display: grid; gap: 5px; width: 100%; }
+        .nozzle-grid { display: grid; gap: 6px; width: 100%; }
         .grid-15 { grid-template-columns: repeat(3, 1fr); }
         .grid-3 { grid-template-columns: 1fr; }
         
         .nozzle-btn {
-            background: #f8f9fa; border: 1px solid #dfe4ea; border-radius: 4px; cursor: pointer;
-            font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--text-muted); 
+            background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; cursor: pointer;
+            font-family: 'JetBrains Mono', monospace; font-weight: 800; color: var(--text-muted); 
             transition: all 0.1s; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 2px 0 #dfe4ea;
+            box-shadow: 0 2px 0 #cbd5e1;
         }
         .nozzle-btn:active { transform: translateY(2px); box-shadow: none; }
-        .grid-15 .nozzle-btn { height: 32px; font-size: 0.8rem; }
+        .grid-15 .nozzle-btn { height: 34px; font-size: 0.85rem; }
         .grid-3 .nozzle-btn { height: 45px; font-size: 1.1rem; border-width: 2px; }
         .nozzle-btn:hover { border-color: var(--accent); color: var(--accent); background: #fff; }
         
+        /* PULZÁLÓ VÖRÖS GLOW HATÁS IPARI STÍLUSBAN */
         .nozzle-btn.error { 
-            background: var(--danger); color: white; border-color: #a93226; 
-            box-shadow: 0 2px 0 #922b21; animation: pulse 2s infinite;
+            background: var(--danger); color: white; border-color: #991b1b; 
+            box-shadow: 0 0 12px rgba(220, 38, 38, 0.8); animation: redGlow 1.5s infinite alternate;
+        }
+        @keyframes redGlow {
+            0% { box-shadow: 0 0 8px rgba(220, 38, 38, 0.5); transform: scale(1); }
+            100% { box-shadow: 0 0 18px rgba(220, 38, 38, 1); transform: scale(1.02); }
         }
 
-        /* --- STATS & HISTORY --- */
-        .btn-print { 
-            display: none !important; 
-            background: var(--primary-light); color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; align-items: center; gap: 8px; font-size: 0.9rem; 
-        }
+        /* --- ÚJ: IPARI KARBANTARTÓI IRÁNYÍTÓPULT (SPLIT VIEW) --- */
         
-        .chart-container { position: relative; height: 320px; width: 100%; }
+        .history-dashboard { display: flex; flex-direction: column; gap: 20px; }
         
-        /* --- TÁBLÁZAT --- */
-        .history-table-container { background: transparent; width: 100%; overflow-x: auto; }
-        .data-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
-        .data-table th { padding: 0 15px 10px 15px; text-align: left; color: #95a5a6; font-weight: 800; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; }
-        .data-table tr.row-card { background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.03); border: 1px solid var(--border); border-radius: 8px; transition: transform 0.1s; }
-        .data-table tr.row-card:hover { transform: scale(1.005); box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
-        
-        .data-table td { padding: 15px; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; }
-        .data-table td:first-child { border-left: 4px solid transparent; border-top-left-radius: 8px; border-bottom-left-radius: 8px; border-left-width: 4px; }
-        .data-table td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; border-right: 1px solid #f0f0f0; }
+        .dash-header-row { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 20px; border-radius: 8px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+        .dash-title { margin: 0; font-size: 1.2rem; font-weight: 900; color: var(--primary-dark); text-transform: uppercase; }
+        .my-date-filter { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase;}
+        .my-date-filter input { padding: 6px 10px; border: 2px solid #cbd5e1; border-radius: 4px; font-family: inherit; font-weight: 800; color: var(--primary-dark); }
+        .my-date-filter button { background: #fee2e2; border: none; color: #ef4444; cursor: pointer; font-weight: bold; width: 30px; height: 30px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .my-date-filter button:hover { background: #ef4444; color: white; }
 
-        .row-error td:first-child { border-left-color: var(--danger); }
-        .row-ok td:first-child { border-left-color: var(--success); }
+        /* KPI KÁRTYÁK FESZESEN */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+        .kpi-card { background: white; border-radius: 8px; padding: 20px; border-left: 6px solid var(--accent); box-shadow: var(--shadow); border-top: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; }
+        .kpi-title { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 900; margin-bottom: 5px; letter-spacing: 0.5px; }
+        .kpi-value { font-size: 2rem; font-weight: 900; color: var(--primary-dark); line-height: 1; }
+        .kpi-sub { font-size: 0.75rem; font-weight: 800; color: #94a3b8; margin-top: 8px; text-transform: uppercase; }
+
+        /* OSZTOTT KÉPERNYŐ (BAL: GRAFIKON/TOP - JOBB: TÁBLÁZAT) */
+        .history-split-view { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; align-items: start;}
         
-        .log-date { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #555; }
-        .log-loc { font-weight: 700; color: var(--primary-dark); font-size: 0.9rem; }
-        .log-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
-        .bg-err { background: #fadbd8; color: #c0392b; }
-        .bg-ok { background: #d5f5e3; color: #27ae60; }
-        .btn-delete { background: #fff; color: #e74c3c; border: 1px solid #fadbd8; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        .btn-delete:hover { background: #e74c3c; color: white; }
+        .panel-card { background: white; border-radius: 8px; box-shadow: var(--shadow); border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px;}
+        .panel-header { background: #f1f5f9; padding: 12px 20px; border-bottom: 2px solid var(--border); font-weight: 900; font-size: 0.9rem; text-transform: uppercase; color: var(--primary-dark); display: flex; align-items: center; gap: 8px;}
+        .panel-body { padding: 20px; }
 
-        /* --- TOP HIBÁK --- */
-        .top-errors-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
-        .top-error-card { background: linear-gradient(135deg, var(--primary-dark), var(--primary-light)); color: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: space-between; position: relative; overflow: hidden;}
-        .top-error-card::after { content: '⚠️'; position: absolute; right: -10px; bottom: -15px; font-size: 4rem; opacity: 0.1; }
-        .top-error-line { font-weight: 900; font-size: 1.2rem; color: var(--accent); letter-spacing: 1px; }
-        .top-error-details { text-align: right; z-index: 1; }
-        .top-error-nozzle { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; font-weight: bold; background: rgba(255,255,255,0.15); padding: 4px 8px; border-radius: 6px; margin-bottom: 4px; display: inline-block;}
-        .top-error-count { font-size: 0.8rem; color: #bdc3c7; text-transform: uppercase; font-weight: 700; }
-        .top-error-empty { color: #2ecc71; font-weight: bold; font-size: 0.9rem; z-index: 1;}
+        .chart-container { position: relative; height: 280px; width: 100%; }
 
-        /* --- MODAL, JELENTÉS STB --- */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; backdrop-filter: blur(2px); justify-content: center; align-items: center; }
-        .modal-box { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
-        .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 1rem; margin-top: 5px; }
+        /* TOP HIBÁK (Kompakt dizájn) */
+        .top-errors-container { display: flex; flex-direction: column; gap: 10px; }
+        .top-error-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--warning);}
+        .top-error-line { font-weight: 900; font-size: 1rem; color: var(--primary-dark); text-transform: uppercase; }
+        .top-error-details { text-align: right; }
+        .top-error-nozzle { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 900; background: #e2e8f0; color: var(--primary-dark); padding: 2px 6px; border-radius: 4px; margin-bottom: 2px; display: inline-block;}
+        .top-error-count { font-size: 0.75rem; color: var(--danger); font-weight: 900; text-transform: uppercase; }
+        .top-error-empty { color: var(--success); font-weight: 900; font-size: 0.85rem; }
+
+        /* BELSŐ GÖRGETŐSÁVOS TÁBLÁZAT */
+        .table-wrapper { max-height: 600px; overflow-y: auto; background: white; }
+        /* Görgetősáv dizájn */
+        .table-wrapper::-webkit-scrollbar { width: 8px; }
+        .table-wrapper::-webkit-scrollbar-track { background: #f1f5f9; }
+        .table-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .table-wrapper::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table thead th { position: sticky; top: 0; background: #f1f5f9; padding: 10px 15px; text-align: left; color: #475569; font-weight: 900; text-transform: uppercase; font-size: 0.75rem; border-bottom: 2px solid var(--border); z-index: 10;}
+        .data-table tbody tr { border-bottom: 1px solid #e2e8f0; transition: background 0.1s;}
+        .data-table tbody tr:hover { background: #f8fafc; }
+        .data-table td { padding: 12px 15px; vertical-align: middle; }
+        
+        .log-date { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #475569; font-weight: 700; }
+        .log-loc { font-weight: 900; color: var(--primary-dark); font-size: 0.85rem; }
+        .log-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;}
+        .bg-err { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5;}
+        .bg-ok { background: #d1fae5; color: #059669; border: 1px solid #6ee7b7;}
+        .btn-delete { background: #f8fafc; color: #dc2626; border: 1px solid #e2e8f0; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-weight: bold;}
+        .btn-delete:hover { background: #dc2626; color: white; border-color: #dc2626;}
+
+        /* --- MODAL --- */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); z-index: 2000; backdrop-filter: blur(3px); justify-content: center; align-items: center; }
+        .modal-box { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 8px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); border: 1px solid var(--border);}
+        .form-control { width: 100%; padding: 10px; border: 2px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; font-size: 0.95rem; margin-top: 5px; font-weight: 700; color: var(--primary-dark);}
+        .form-control:focus { outline: none; border-color: var(--accent); }
         .action-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-        .btn-modal { padding: 10px 20px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
-        .btn-cancel { background: #f1f2f6; color: #7f8c8d; }
+        .btn-modal { padding: 10px 20px; border: none; border-radius: 4px; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 0.85rem;}
+        .btn-cancel { background: #e2e8f0; color: #475569; }
+        .btn-cancel:hover { background: #cbd5e1; }
         .btn-confirm { background: var(--danger); color: white; }
-        .btn-reset { width: 100%; margin-top: 15px; background: var(--success); color: white; padding: 12px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; }
+        .btn-confirm:hover { background: #b91c1c; }
+        .btn-reset { width: 100%; margin-top: 15px; background: var(--success); color: white; padding: 12px; border: none; border-radius: 4px; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 0.9rem;}
+        .btn-reset:hover { background: #047857; }
 
         #report-generator-container { position: fixed; left: -10000px; top: 0; width: 1200px; background-color: white; z-index: 9999; font-family: 'Roboto', sans-serif; color: #2c3e50; }
-        .rep-header { padding: 30px; background: #2c3e50; color: white; display:flex; justify-content: space-between; align-items:center; }
+        .rep-header { padding: 30px; background: #0f172a; color: white; display:flex; justify-content: space-between; align-items:center; }
         .rep-title { font-size: 2rem; font-weight: 900; }
         .rep-meta { text-align: right; font-family: 'JetBrains Mono', monospace; opacity: 0.8; }
-        .rep-body { padding: 30px; background: #f4f6f8; }
-        .rep-line-section { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; overflow: hidden; }
-        .rep-line-title { background: #ecf0f1; padding: 15px 25px; font-size: 1.2rem; font-weight: 800; color: #34495e; border-bottom: 2px solid #bdc3c7; display: flex; justify-content: space-between; }
+        .rep-body { padding: 30px; background: #f1f5f9; }
+        .rep-line-section { background: white; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 25px; overflow: hidden; }
+        .rep-line-title { background: #e2e8f0; padding: 15px 25px; font-size: 1.2rem; font-weight: 900; color: #0f172a; border-bottom: 2px solid #cbd5e1; display: flex; justify-content: space-between; text-transform: uppercase;}
         .rep-machines-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; }
-        .rep-machine { padding: 20px; border-right: 1px solid #f0f0f0; display: flex; flex-direction: column; }
+        .rep-machine { padding: 20px; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; }
         .rep-machine:last-child { border-right: none; }
-        .rep-m-name { font-weight: 700; margin-bottom: 10px; font-size: 1.1rem; }
+        .rep-m-name { font-weight: 900; margin-bottom: 10px; font-size: 1.1rem; text-transform: uppercase;}
         .rep-capacity-box { margin-bottom: 15px; }
-        .rep-cap-val { font-size: 2rem; font-weight: 900; color: #27ae60; }
-        .rep-cap-label { font-size: 0.7rem; text-transform: uppercase; color: #95a5a6; letter-spacing: 1px; }
-        .rep-cap-val.warning { color: #c0392b; }
-        .rep-error-list { font-size: 0.8rem; background: #fff5f5; border: 1px solid #fed7d7; border-radius: 6px; padding: 10px; }
-        .rep-err-item { margin-bottom: 5px; color: #c53030; display: flex; gap: 6px; align-items: center; }
-        .rep-err-loc { font-weight: bold; font-family: 'JetBrains Mono', monospace; }
-        .rep-ok-badge { color: #27ae60; font-weight: bold; background: #f0fff4; padding: 5px 10px; border-radius: 6px; border: 1px solid #c6f6d5; display: inline-block; }
+        .rep-cap-val { font-size: 2rem; font-weight: 900; color: #059669; }
+        .rep-cap-label { font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 900; letter-spacing: 1px; }
+        .rep-cap-val.warning { color: #dc2626; }
+        .rep-error-list { font-size: 0.8rem; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 4px; padding: 10px; }
+        .rep-err-item { margin-bottom: 5px; color: #b91c1c; display: flex; gap: 6px; align-items: center; }
+        .rep-err-loc { font-weight: 900; font-family: 'JetBrains Mono', monospace; }
+        .rep-ok-badge { color: #059669; font-weight: 900; background: #d1fae5; padding: 5px 10px; border-radius: 4px; border: 1px solid #6ee7b7; display: inline-block; text-transform: uppercase; }
 
-        /* --- MOBIL NÉZET (GARANTÁLTAN CSAK ITT VÁLTOZTATUNK) --- */
+        /* --- MOBIL NÉZET --- */
+        @media (max-width: 1024px) {
+            .history-split-view { grid-template-columns: 1fr; } /* Tablet/Mobil: egymás alá kerül a grafikon és a táblázat */
+            .table-wrapper { max-height: 500px; }
+        }
+
         @media (max-width: 768px) {
             .view-section { padding: 0 10px; }
             
@@ -325,62 +315,53 @@
                 max-width: calc(100vw - 30px);
                 transform: none;
             }
-            .notification-popup::before {
-                display: none;
-            }
 
-            .nav-tabs { width: 95%; top: 60px; }
+            .nav-tabs { width: 95%; top: 65px; }
             
-            .filter-bar { 
+            .dash-header-row { 
                 flex-direction: column; gap: 15px; align-items: flex-start; 
-                padding: 15px; margin: 0 0 20px 0; 
-                background: #ffffff;
-                border-radius: 8px; 
+                padding: 15px;
             }
 
             .dashboard-grid { grid-template-columns: 1fr; }
             
+            /* Táblázat mobil kártyás nézete (Szigorú megőrzés) */
             .data-table, .data-table tbody, .data-table tr, .data-table td { 
                 display: block; width: 100%; box-sizing: border-box; 
             }
             .data-table thead { display: none; }
             
-            .data-table tr.row-card { 
+            .data-table tbody tr { 
                 margin-bottom: 15px; border: 1px solid var(--border); 
-                border-radius: 8px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-                overflow: hidden; 
+                border-radius: 6px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.04);
             }
             .data-table td { 
                 border: none !important; border-bottom: 1px solid #f1f5f9 !important; 
                 padding: 10px 15px !important; text-align: right; 
                 display: flex; justify-content: space-between; align-items: center;
-                min-height: auto; word-break: break-word; gap: 10px;
+                gap: 10px;
             }
             .data-table td:last-child { border-bottom: none !important; justify-content: center; }
             
             .data-table td::before {
                 content: attr(data-label); 
-                font-weight: 800; font-size: 0.7rem; color: #64748b; 
+                font-weight: 900; font-size: 0.7rem; color: #64748b; 
                 text-transform: uppercase; text-align: left; flex-shrink: 0; max-width: 40%;
             }
             
-            .row-error { border-left: 5px solid var(--danger) !important; }
-            .row-ok { border-left: 5px solid var(--success) !important; }
-            .row-error td:first-child, .row-ok td:first-child { border-left: none !important; border-radius: 0 !important; }
-            
             .log-loc { text-align: right; font-size: 0.8rem; }
             .btn-report span { display: none; }
+            .btn-print { display: none !important; }
         }
 
-        /* --- AZ EREDETI TÖKÉLETES NYOMTATÁSI KÓD VISSZAÁLLÍTÁSA --- */
         @media print {
             body * { visibility: hidden; }
             #history-content, #history-content * { visibility: visible; }
             #history-content { position: absolute; left: 0; top: 0; width: 100%; margin: 0 !important; padding: 0 !important; }
             .no-print { display: none !important; }
-            .accordion-content { display: block !important; padding: 0 !important; }
-            .accordion-item { border: none !important; box-shadow: none !important; margin: 0 0 20px 0 !important; }
-            .filter-bar { margin: 0 !important; border: none !important; box-shadow: none !important; padding: 0 0 20px 0 !important; background: transparent !important; }
+            .history-split-view { display: block !important; }
+            .table-wrapper { max-height: none !important; overflow: visible !important; }
+            .panel-card { border: none !important; box-shadow: none !important; margin-bottom: 30px !important; }
         }
     </style>
 </head>
@@ -388,7 +369,7 @@
 
     <header class="no-print">
         <div class="header-left">
-            <h1>🏭 SMT PRO <small style="font-size:0.5em; opacity:0.6; font-weight:400;">v2.5</small></h1>
+            <h1>🏭 SMT PRO <small style="font-size:0.6em; opacity:0.6; font-weight:800;">v3.0</small></h1>
         </div>
         
         <div class="header-right" style="display:flex; align-items:center; gap:15px;">
@@ -406,15 +387,13 @@
                     <span id="bellBadge" class="bell-badge">0</span>
                 </button>
                 <div id="notificationPopup" class="notification-popup">
-                    <div class="notif-title">
-                        <span>Új Események</span>
-                    </div>
+                    <div class="notif-title">Új Események</div>
                     <div id="notifContent">Nincs új esemény.</div>
                 </div>
             </div>
 
             <button class="btn-report" onclick="window.generateReport()" title="Képes Jelentés Generálása">
-                📊 <span>JELENTÉS KÉSZÍTÉSE</span>
+                📊 <span>Jelentés</span>
             </button>
 
             <select id="lineSelector" onchange="changeLine()">
@@ -429,24 +408,26 @@
 
     <div class="nav-tabs no-print">
         <button class="nav-btn active" onclick="switchTab('monitor')">📡 Élő Monitor</button>
-        <button class="nav-btn" onclick="switchTab('history')">📊 Karbantartó Statisztika</button>
+        <button class="nav-btn" onclick="switchTab('history')">📋 Karbantartó Pult</button>
     </div>
 
+    <!-- ÉLŐ MONITOR (Eredeti Layout megőrizve, csak stílusban iparibb) -->
     <div id="view-monitor" class="view-section active">
-        <div id="monitor-content" style="padding-top:20px; padding-bottom: 20px;"></div> 
+        <div id="monitor-content" style="padding-top:10px; padding-bottom: 20px;"></div> 
     </div>
 
+    <!-- ÚJ IPARI KARBANTARTÓI IRÁNYÍTÓPULT (Grid & Split View) -->
     <div id="view-history" class="view-section">
-        <div id="history-content">
+        <div id="history-content" class="history-dashboard">
             
-            <div class="filter-bar">
+            <div class="dash-header-row no-print">
                 <div>
-                    <h2 style="margin:0; font-size:1.3rem; color:var(--primary-dark);">Irányítópult</h2>
-                    <small style="color:var(--text-muted);">Jelenlegi nézet: <strong id="statsLineTitle" style="color:var(--accent);">ÖSSZES GÉPSOR</strong></small>
+                    <h2 class="dash-title">Irányítópult</h2>
+                    <small style="color:var(--text-muted); font-weight:800; text-transform:uppercase;">Nézet: <strong id="statsLineTitle" style="color:var(--accent);">ÖSSZES GÉPSOR</strong></small>
                 </div>
-                <div class="no-print" style="display:flex; align-items:center; gap:15px;">
+                <div style="display:flex; align-items:center; gap:15px;">
                     <div class="my-date-filter">
-                        Dátum: 
+                        Intervallum: 
                         <input type="date" id="filterDateFrom" onchange="loadHistoryData()">
                         -
                         <input type="date" id="filterDateTo" onchange="loadHistoryData()">
@@ -456,63 +437,65 @@
                 </div>
             </div>
             
-            <div class="accordion-item no-print">
-                <div class="accordion-header active" onclick="toggleAccordion(this)">
-                    <span>⚡ Vezetői Összegzés & Top Hibák</span>
-                    <span class="accordion-icon">▼</span>
-                </div>
-                <div class="accordion-content active">
-                    <div class="kpi-grid" id="kpiDashboard"></div>
-                    <h4 style="margin-top:20px; margin-bottom:15px; font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Leggyakoribb Hibák Gépsoronként</h4>
-                    <div class="top-errors-container" id="topErrorsContainer"></div>
-                </div>
-            </div>
+            <!-- Felső sor: KPI kártyák -->
+            <div class="kpi-grid no-print" id="kpiDashboard"></div>
 
-            <div class="accordion-item">
-                <div class="accordion-header no-print" onclick="toggleAccordion(this)">
-                    <span>📉 Grafikus Elemzés (Gépek szerint)</span>
-                    <span class="accordion-icon">▼</span>
-                </div>
-                <div class="accordion-content">
-                    <div class="chart-container">
-                        <canvas id="mainChart"></canvas>
+            <!-- Osztott nézet -->
+            <div class="history-split-view">
+                
+                <!-- Bal oldal: Elemzések -->
+                <div class="history-left-panel no-print">
+                    <div class="panel-card">
+                        <div class="panel-header">📉 Grafikus Elemzés (Gépek szerint)</div>
+                        <div class="panel-body">
+                            <div class="chart-container">
+                                <canvas id="mainChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="panel-card">
+                        <div class="panel-header">⚠️ Top Hibák Gépsoronként</div>
+                        <div class="panel-body">
+                            <div class="top-errors-container" id="topErrorsContainer"></div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="accordion-item">
-                <div class="accordion-header active no-print" onclick="toggleAccordion(this)">
-                    <span>📋 Részletes Eseménynapló</span>
-                    <span class="accordion-icon">▼</span>
-                </div>
-                <div class="accordion-content active" style="padding: 10px;">
-                    <div class="history-table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Időpont</th>
-                                    <th>Állapot</th>
-                                    <th>Hely (Sor / Gép)</th>
-                                    <th>Megjegyzés / Ok</th>
-                                    <th class="no-print" style="text-align:center;">Művelet</th>
-                                </tr>
-                            </thead>
-                            <tbody id="historyTableBody"></tbody>
-                        </table>
+                <!-- Jobb oldal: Részletes táblázat belső görgetéssel -->
+                <div class="history-right-panel">
+                    <div class="panel-card" style="margin-bottom: 0;">
+                        <div class="panel-header no-print">📋 Részletes Eseménynapló</div>
+                        <div class="table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Időpont</th>
+                                        <th>Állapot</th>
+                                        <th>Hely (Sor / Gép)</th>
+                                        <th>Megjegyzés / Ok</th>
+                                        <th class="no-print" style="text-align:center;">Művelet</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyTableBody"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
+
             </div>
 
         </div>
     </div>
 
+    <!-- MODAL (Hiba rögzítés) -->
     <div id="errorModal" class="modal-overlay">
         <div class="modal-box">
-            <h3 id="modalTitle" style="margin-top:0; color:var(--primary-dark);">Hiba Bejelentés</h3>
-            <p id="modalSubtitle" style="color:#666; font-size:0.9rem; margin-bottom:15px;"></p>
+            <h3 id="modalTitle" style="margin-top:0; color:var(--primary-dark); font-weight:900; text-transform:uppercase;">Hiba Bejelentés</h3>
+            <p id="modalSubtitle" style="color:var(--text-muted); font-size:0.85rem; font-weight:800; margin-bottom:20px;"></p>
             
             <div style="margin-bottom:15px;">
-                <label style="font-size:0.85rem; font-weight:bold; color:var(--primary-light);">Hiba oka:</label>
+                <label style="font-size:0.8rem; font-weight:900; color:var(--primary-light); text-transform:uppercase;">Hiba oka:</label>
                 <select id="errorReason" class="form-control" onchange="toggleOtherInput()">
                     <option value="Nozzle kicsúszott">Nozzle kicsúszott a szárból</option>
                     <option value="PickUp Hiba">Alkatrész felvételi hiba</option>
@@ -522,8 +505,8 @@
             </div>
             
             <div id="otherInputContainer" style="display:none; margin-bottom:15px;">
-                <label style="font-size:0.85rem; font-weight:bold;">Leírás:</label>
-                <input type="text" id="otherReasonText" class="form-control" placeholder="Hiba leírása...">
+                <label style="font-size:0.8rem; font-weight:900; color:var(--primary-light); text-transform:uppercase;">Leírás:</label>
+                <input type="text" id="otherReasonText" class="form-control" placeholder="Hiba pontos leírása...">
             </div>
 
             <div class="action-btns">
@@ -531,7 +514,7 @@
                 <button class="btn-modal btn-confirm" onclick="saveError()">Kikapcsolás (Hiba)</button>
             </div>
             
-            <div style="border-top:1px solid #eee; margin-top:20px; padding-top:10px;">
+            <div style="border-top:2px solid #f1f5f9; margin-top:20px; padding-top:15px;">
                 <button class="btn-reset" onclick="resetNozzle()">♻️ Visszakapcsolás (OK)</button>
             </div>
         </div>
@@ -655,42 +638,33 @@
                 popupContent.innerHTML = html;
             } else {
                 badge.style.display = 'none';
-                popupContent.innerHTML = '<div style="text-align:center; padding: 10px; color: #95a5a6;">Nincs új esemény.</div>';
+                popupContent.innerHTML = '<div style="text-align:center; padding: 10px; color: #94a3b8; font-weight:bold;">Nincs új esemény.</div>';
             }
         }
 
-        // TÖKÉLETESÍTETT MEGNYITÁSI LOGIKA: Megtekintéskor "olvasottnak" jelöli azonnal
         window.toggleNotificationPopup = function() {
             const popup = document.getElementById('notificationPopup');
             if (popup.style.display === 'block') {
                 popup.style.display = 'none';
-                updateBellUI(); // Bezáráskor kiürül a lista vizuálisan is
+                updateBellUI(); 
             } else {
                 popup.style.display = 'block';
-                // Megnyitás pillanatában elmentjük a jelenlegi időt, mint utolsó megtekintés!
                 localStorage.setItem('smt_last_seen', new Date().toISOString());
-                unseenEvents = []; // Kiürítjük a memóriában lévő listát
-                document.getElementById('bellBadge').style.display = 'none'; // A piros pötty azonnal eltűnik!
+                unseenEvents = []; 
+                document.getElementById('bellBadge').style.display = 'none';
             }
         }
 
-        // Bezárás kattintással máshova: ez is üríti
         document.addEventListener('click', function(event) {
             const wrapper = document.querySelector('.notification-wrapper');
             const popup = document.getElementById('notificationPopup');
             if (wrapper && !wrapper.contains(event.target)) {
                 if (popup.style.display === 'block') {
                     popup.style.display = 'none';
-                    updateBellUI(); // Bezáráskor frissíti a tartalmát (kiüríti)
+                    updateBellUI(); 
                 }
             }
         });
-
-        window.toggleAccordion = function(element) {
-            element.classList.toggle('active');
-            let content = element.nextElementSibling;
-            content.classList.toggle('active');
-        }
 
         window.switchTab = function(tabName) {
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
@@ -735,7 +709,7 @@
                 lineWrapper.innerHTML = `
                     <div class="line-header-strip">
                         <div class="line-title">${lineId} ${errorBadge}</div>
-                        <div style="flex:1; border-bottom:1px solid #e1e4e8; margin-left:15px;"></div>
+                        <div style="flex:1; border-bottom:2px solid #cbd5e1; margin-left:15px;"></div>
                     </div>
                 `;
 
@@ -757,14 +731,14 @@
                     } else {
                         statusHtml = `
                             <span class="error-info txt-err">
-                                🛑 ${machineErrors} Hiba 
+                                🛑 ${machineErrors} HIBA 
                                 <span class="percent-tag">(${errorPercent})</span>
                             </span>`;
                     }
 
                     card.innerHTML = `
                         <div class="machine-header">
-                            <span class="machine-name">Gép #${m.id} <span style="font-weight:400; color:#ccc;">| ${m.name}</span></span>
+                            <span class="machine-name">Gép #${m.id} <span style="font-weight:700; color:#94a3b8; font-size:0.85rem;">| ${m.name}</span></span>
                             ${statusHtml}
                         </div>
                         <div class="machine-body">
@@ -772,7 +746,7 @@
                                 <div class="side-label">100-as oldal</div>
                                 ${generateGridHTML(lineId, m.id, 1, m.s1, lineErrors)}
                             </div>
-                            <div class="side-col" style="border-left:1px solid #f0f0f0;">
+                            <div class="side-col" style="border-left:1px solid #e2e8f0;">
                                 <div class="side-label">200-as oldal</div>
                                 ${generateGridHTML(lineId, m.id, 2, m.s2, lineErrors)}
                             </div>
@@ -1061,15 +1035,15 @@
                 kpiBoard.innerHTML = `
                     <div class="kpi-card">
                         <div class="kpi-title">Összes Leállás</div>
-                        <div class="kpi-value">${totalStops} <span style="font-size:0.9rem; font-weight:700; color:#95a5a6;">db</span></div>
-                        <div class="kpi-sub">Az adott szűrési időszakban</div>
+                        <div class="kpi-value">${totalStops} <span style="font-size:1rem; color:#94a3b8;">db</span></div>
+                        <div class="kpi-sub">Adott intervallumban</div>
                     </div>
-                    <div class="kpi-card" style="border-left-color: #f39c12;">
+                    <div class="kpi-card" style="border-left-color: var(--warning);">
                         <div class="kpi-title">Legkritikusabb Gép</div>
                         <div class="kpi-value">${worstMachine}</div>
                         <div class="kpi-sub">${worstMachineCount > 0 ? worstMachineCount + ' db rögzített hiba' : 'Nincs hiba'}</div>
                     </div>
-                    <div class="kpi-card" style="border-left-color: #9b59b6;">
+                    <div class="kpi-card" style="border-left-color: #8b5cf6;">
                         <div class="kpi-title">Vezető Hibaok</div>
                         <div class="kpi-value" style="font-size:1.3rem;">${topReason}</div>
                         <div class="kpi-sub">${topReasonCount > 0 ? topReasonCount + ' esetben' : '-'}</div>
@@ -1111,7 +1085,7 @@
                             </div>
                         `;
                     } else {
-                        contentHtml = `<div class="top-error-empty">✅ Nincs rögzített hiba</div>`;
+                        contentHtml = `<div class="top-error-empty">Nincs rögzített hiba</div>`;
                     }
 
                     topErrorsContainer.innerHTML += `
@@ -1144,14 +1118,14 @@
                 
                 const rowClass = isError ? 'row-error' : 'row-ok';
                 const badge = isError ? `<span class="log-badge bg-err">LEÁLLÍTÁS</span>` : `<span class="log-badge bg-ok">AKTIVÁLÁS</span>`;
-                const locationPrefix = (line === 'ALL') ? `<span style="color:var(--accent); font-weight:bold;">[${log._line}]</span> ` : '';
+                const locationPrefix = (line === 'ALL') ? `<span style="color:var(--accent); font-weight:900;">[${log._line}]</span> ` : '';
                 
                 tbody.innerHTML += `
-                    <tr class="row-card ${rowClass}">
+                    <tr class="${rowClass}">
                         <td data-label="Időpont" class="log-date">${dateStr}</td>
                         <td data-label="Állapot">${badge}</td>
                         <td data-label="Hely" class="log-loc">${locationPrefix}Gép ${log.machineId} / ${log.side}. oldal / Nozzle ${log.nozzle}</td>
-                        <td data-label="Ok / Megjegyzés">${log.reason}</td>
+                        <td data-label="Ok / Megjegyzés" style="font-weight:700; color:var(--text-main);">${log.reason}</td>
                         <td data-label="Művelet" class="no-print" align="center">
                             <button class="btn-delete" onclick="window.deleteLog('${log._line}', '${log._id}')" title="Törlés">✕</button>
                         </td>
@@ -1161,7 +1135,7 @@
             if(mainChart) mainChart.destroy();
 
             const allReasons = Array.from(allReasonsSet);
-            const colorPalette = ['#e74c3c', '#3498db', '#f1c40f', '#9b59b6', '#1abc9c', '#e67e22', '#34495e'];
+            const colorPalette = ['#dc2626', '#2563eb', '#d97706', '#7c3aed', '#059669', '#ea580c', '#475569'];
             
             const datasets = allReasons.map((reason, index) => {
                 return {
@@ -1182,7 +1156,7 @@
                     responsive: true, 
                     maintainAspectRatio: false,
                     plugins: { 
-                        legend: { position: 'top' },
+                        legend: { position: 'top', labels: { font: { family: 'Roboto', weight: 'bold' } } },
                         tooltip: { 
                             mode: 'index', 
                             intersect: false,
@@ -1197,8 +1171,8 @@
                         } 
                     },
                     scales: { 
-                        x: { stacked: false, grid: { display: false } }, 
-                        y: { stacked: false, beginAtZero: true, grid: { color: '#f0f0f0' }, ticks: { precision: 0 } } 
+                        x: { stacked: false, grid: { display: false }, ticks: { font: { weight: 'bold' } } }, 
+                        y: { stacked: false, beginAtZero: true, grid: { color: '#e2e8f0' }, ticks: { precision: 0, font: { weight: 'bold' } } } 
                     } 
                 }
             });
