@@ -121,8 +121,6 @@
         .notif-shift-header { font-size: 0.7rem; color: #95a5a6; font-weight: 800; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; border-bottom: 1px dashed #ecf0f1; padding-bottom: 4px; }
         
         .notif-item { font-size: 0.85rem; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; font-weight: 500;}
-        .notif-action { font-size: 0.8rem; color: #fff; background: var(--accent); padding: 8px; border-radius: 6px; margin-top: 15px; font-weight: bold; cursor: pointer; text-align: center; transition: background 0.2s;}
-        .notif-action:hover { background: #2980b9; }
 
         /* --- MODERN SEGMENTED CONTROL (VÁLTÓKAPCSOLÓ) --- */
         .nav-tabs {
@@ -319,17 +317,16 @@
             header { padding: 10px; }
             .btn-bell { width: 34px; height: 34px; } 
 
-            /* KILÓGÁS JAVÍTÁSA: A felugró ablak fix pozíciót kap mobilon */
             .notification-popup {
                 position: fixed;
-                top: 60px; /* Pont a fejléc alatt */
+                top: 60px;
                 right: 15px;
                 width: 320px;
-                max-width: calc(100vw - 30px); /* Garantáltan sosem lóg ki egyetlen kijelzőn sem! */
+                max-width: calc(100vw - 30px);
                 transform: none;
             }
             .notification-popup::before {
-                display: none; /* A kis nyilat mobilon levesszük a tiszta kinézetért */
+                display: none;
             }
 
             .nav-tabs { width: 95%; top: 60px; }
@@ -413,9 +410,6 @@
                         <span>Új Események</span>
                     </div>
                     <div id="notifContent">Nincs új esemény.</div>
-                    <div class="notif-action" onclick="switchTab('history'); document.getElementById('notificationPopup').style.display='none';">
-                        Nézd meg a statisztikában! ➔
-                    </div>
                 </div>
             </div>
 
@@ -576,7 +570,7 @@
         let currentSelection = null;
         let mainChart = null; 
         
-        let unseenEvents = []; // AZ ÚJ LOGIKA LISTÁJA
+        let unseenEvents = []; 
         if (!localStorage.getItem('smt_last_seen')) {
             localStorage.setItem('smt_last_seen', new Date().toISOString());
         }
@@ -605,7 +599,7 @@
                 
                 onValue(ref(db, 'smt_logs'), (snapshot) => {
                     const logsData = snapshot.val() || {};
-                    unseenEvents = []; // Lista nullázása frissítéskor
+                    unseenEvents = []; 
                     
                     const lastSeenStr = localStorage.getItem('smt_last_seen');
                     const lastSeenTime = lastSeenStr ? new Date(lastSeenStr).getTime() : 0;
@@ -614,7 +608,7 @@
                         Object.values(lineLogs).forEach(log => {
                             const logTime = new Date(log.timestamp).getTime();
                             if (logTime > lastSeenTime) {
-                                unseenEvents.push(log); // Esemény eltárolása csoportosításhoz
+                                unseenEvents.push(log);
                             }
                         });
                     });
@@ -628,7 +622,6 @@
                 document.getElementById("statusDot").className = "status-dot offline";
             });
 
-        // --- OKOSÍTOTT ÉRTESÍTÉSI LOGIKA (MŰSZAKONKÉNT) ---
         window.updateBellUI = function() {
             const totalUnseen = unseenEvents.length;
             const badge = document.getElementById('bellBadge');
@@ -638,7 +631,6 @@
                 badge.style.display = 'flex';
                 badge.innerText = totalUnseen > 99 ? '99+' : totalUnseen;
                 
-                // Csoportosítás műszakonként
                 let shiftSummary = {};
                 unseenEvents.forEach(log => {
                     const shift = getShiftInfo(log.timestamp);
@@ -667,16 +659,30 @@
             }
         }
 
+        // TÖKÉLETESÍTETT MEGNYITÁSI LOGIKA: Megtekintéskor "olvasottnak" jelöli azonnal
         window.toggleNotificationPopup = function() {
             const popup = document.getElementById('notificationPopup');
-            popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+            if (popup.style.display === 'block') {
+                popup.style.display = 'none';
+                updateBellUI(); // Bezáráskor kiürül a lista vizuálisan is
+            } else {
+                popup.style.display = 'block';
+                // Megnyitás pillanatában elmentjük a jelenlegi időt, mint utolsó megtekintés!
+                localStorage.setItem('smt_last_seen', new Date().toISOString());
+                unseenEvents = []; // Kiürítjük a memóriában lévő listát
+                document.getElementById('bellBadge').style.display = 'none'; // A piros pötty azonnal eltűnik!
+            }
         }
 
+        // Bezárás kattintással máshova: ez is üríti
         document.addEventListener('click', function(event) {
             const wrapper = document.querySelector('.notification-wrapper');
             const popup = document.getElementById('notificationPopup');
             if (wrapper && !wrapper.contains(event.target)) {
-                popup.style.display = 'none';
+                if (popup.style.display === 'block') {
+                    popup.style.display = 'none';
+                    updateBellUI(); // Bezáráskor frissíti a tartalmát (kiüríti)
+                }
             }
         });
 
@@ -695,7 +701,7 @@
             if(tabName === 'history') {
                 loadHistoryData();
                 localStorage.setItem('smt_last_seen', new Date().toISOString());
-                unseenEvents = []; // Sikeres megtekintés után töröljük a listát
+                unseenEvents = []; 
                 updateBellUI();
             }
         }
@@ -778,7 +784,6 @@
             });
         }
 
-        // FIGYELEM: Ezt használja az értesítési ablak is a csoportosításhoz!
         function getShiftInfo(timestamp) {
             if (!timestamp) return "Ismeretlen műszak";
             const d = new Date(timestamp);
