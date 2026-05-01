@@ -85,6 +85,38 @@
         .btn-report:hover { background: var(--accent); }
         .btn-report:active { transform: scale(0.98); }
 
+        /* --- ÉRTESÍTÉSI HARANG (ÚJ FUNKCIÓ BEILLESZTÉSE) --- */
+        .notification-wrapper { position: relative; display: inline-block; margin-right: 10px; }
+        .btn-bell { 
+            background: #f0f2f5; border: 1px solid #e1e4e8; border-radius: 50%;
+            width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; cursor: pointer; position: relative; transition: all 0.2s;
+        }
+        .btn-bell:hover { background: #e4e6eb; transform: translateY(-1px); }
+        .btn-bell:active { transform: translateY(1px); }
+        .bell-badge {
+            position: absolute; top: -3px; right: -3px; background: var(--danger); color: white;
+            font-size: 0.65rem; font-weight: bold; font-family: 'JetBrains Mono', monospace;
+            border-radius: 50%; width: 18px; height: 18px; display: none; 
+            align-items: center; justify-content: center; border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2); animation: pulseBell 2s infinite;
+        }
+        @keyframes pulseBell { 0% {box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.4);} 70% {box-shadow: 0 0 0 6px rgba(192, 57, 43, 0);} 100% {box-shadow: 0 0 0 0 rgba(192, 57, 43, 0);} }
+        .notification-popup {
+            display: none; position: absolute; top: 120%; right: 0; width: 280px;
+            background: white; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border: 1px solid var(--border); z-index: 1001; padding: 15px; cursor: default;
+        }
+        .notification-popup::before {
+            content: ''; position: absolute; top: -6px; right: 14px;
+            width: 12px; height: 12px; background: white; transform: rotate(45deg);
+            border-left: 1px solid var(--border); border-top: 1px solid var(--border);
+        }
+        .notif-title { font-weight: 800; font-size: 0.95rem; margin-bottom: 12px; color: var(--primary-dark); border-bottom: 1px solid #f0f0f0; padding-bottom: 8px; display: flex; justify-content: space-between;}
+        .notif-item { font-size: 0.85rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; font-weight: 500;}
+        .notif-action { font-size: 0.8rem; color: #fff; background: var(--accent); padding: 8px; border-radius: 6px; margin-top: 15px; font-weight: bold; cursor: pointer; text-align: center; transition: background 0.2s;}
+        .notif-action:hover { background: #2980b9; }
+
         /* --- MODERN SEGMENTED CONTROL (VÁLTÓKAPCSOLÓ) --- */
         .nav-tabs {
             display: flex; justify-content: center; gap: 0;
@@ -347,6 +379,23 @@
                 <span id="statusText">Kapcsolódás...</span>
             </div>
             
+            <!-- ÉRTESÍTÉSI HARANG BLOKK (ÚJ) -->
+            <div class="notification-wrapper no-print">
+                <button class="btn-bell" onclick="toggleNotificationPopup()" title="Értesítések">
+                    🔔
+                    <span id="bellBadge" class="bell-badge">0</span>
+                </button>
+                <div id="notificationPopup" class="notification-popup">
+                    <div class="notif-title">
+                        <span>Új Események</span>
+                    </div>
+                    <div id="notifContent">Nincs új esemény.</div>
+                    <div class="notif-action" onclick="switchTab('history'); document.getElementById('notificationPopup').style.display='none';">
+                        Nézd meg a statisztikában! ➔
+                    </div>
+                </div>
+            </div>
+
             <button class="btn-report" onclick="window.generateReport()" title="Képes Jelentés Generálása">
                 📊 <span>JELENTÉS KÉSZÍTÉSE</span>
             </button>
@@ -504,6 +553,14 @@
         let globalData = {};
         let currentSelection = null;
         let mainChart = null; 
+        
+        // -- Új változók az értesítésekhez --
+        let unseenDisable = 0;
+        let unseenEnable = 0;
+        // Ha először nyitja meg, rögzítjük a mostani időt, hogy ne mutasson 1000 régi hibát újszerűként
+        if (!localStorage.getItem('smt_last_seen')) {
+            localStorage.setItem('smt_last_seen', new Date().toISOString());
+        }
 
         // Biztonságos háttér belépés
         signInWithEmailAndPassword(auth, "monitor@forvia.hu", "SmtMonitor2026!")
@@ -527,6 +584,27 @@
                         renderDashboard();
                     }
                 });
+                
+                // --- ÉRTESÍTÉSEK FIGYELÉSE A HÁTTÉRBEN (ÚJ) ---
+                onValue(ref(db, 'smt_logs'), (snapshot) => {
+                    const logsData = snapshot.val() || {};
+                    unseenDisable = 0;
+                    unseenEnable = 0;
+                    
+                    const lastSeenStr = localStorage.getItem('smt_last_seen');
+                    const lastSeenTime = lastSeenStr ? new Date(lastSeenStr).getTime() : 0;
+
+                    Object.values(logsData).forEach(lineLogs => {
+                        Object.values(lineLogs).forEach(log => {
+                            const logTime = new Date(log.timestamp).getTime();
+                            if (logTime > lastSeenTime) {
+                                if (log.type === 'DISABLE') unseenDisable++;
+                                if (log.type === 'ENABLE') unseenEnable++;
+                            }
+                        });
+                    });
+                    updateBellUI();
+                });
 
                 renderDashboard();
             })
@@ -535,6 +613,39 @@
                 document.getElementById("statusDot").className = "status-dot offline";
             });
 
+        // --- HARANG LOGIKA (ÚJ) ---
+        window.updateBellUI = function() {
+            const totalUnseen = unseenDisable + unseenEnable;
+            const badge = document.getElementById('bellBadge');
+            const popupContent = document.getElementById('notifContent');
+            
+            if (totalUnseen > 0) {
+                badge.style.display = 'flex';
+                badge.innerText = totalUnseen > 99 ? '99+' : totalUnseen;
+                
+                let html = '';
+                if(unseenDisable > 0) html += `<div class="notif-item">🛑 ${unseenDisable} szár lett leállítva</div>`;
+                if(unseenEnable > 0) html += `<div class="notif-item">✅ ${unseenEnable} szár újra aktív</div>`;
+                popupContent.innerHTML = html;
+            } else {
+                badge.style.display = 'none';
+                popupContent.innerHTML = '<div style="text-align:center; padding: 10px; color: #95a5a6;">Nincs új esemény.</div>';
+            }
+        }
+
+        window.toggleNotificationPopup = function() {
+            const popup = document.getElementById('notificationPopup');
+            popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+        }
+
+        document.addEventListener('click', function(event) {
+            const wrapper = document.querySelector('.notification-wrapper');
+            const popup = document.getElementById('notificationPopup');
+            if (wrapper && !wrapper.contains(event.target)) {
+                popup.style.display = 'none';
+            }
+        });
+
         // --- Harmonika (Accordion) nyitó-csukó funkció ---
         window.toggleAccordion = function(element) {
             element.classList.toggle('active');
@@ -542,13 +653,21 @@
             content.classList.toggle('active');
         }
 
+        // --- JAVÍTOTT VÁLTÓKAPCSOLÓ LOGIKA (FRISSÍTI AZ ÉRTESÍTÉSEKET) ---
         window.switchTab = function(tabName) {
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             document.querySelectorAll('.view-section').forEach(div => div.classList.remove('active'));
             document.getElementById(`view-${tabName}`).classList.add('active');
             if(tabName === 'monitor') renderDashboard(); 
-            if(tabName === 'history') loadHistoryData();
+            if(tabName === 'history') {
+                loadHistoryData();
+                // Harang nullázása a saját böngésződben:
+                localStorage.setItem('smt_last_seen', new Date().toISOString());
+                unseenDisable = 0;
+                unseenEnable = 0;
+                updateBellUI();
+            }
         }
 
         window.changeLine = function() {
