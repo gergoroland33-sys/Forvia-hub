@@ -85,12 +85,13 @@
         .btn-report:hover { background: var(--accent); }
         .btn-report:active { transform: scale(0.98); }
 
-        /* --- ÉRTESÍTÉSI HARANG (ÚJ FUNKCIÓ BEILLESZTÉSE) --- */
+        /* --- ÉRTESÍTÉSI HARANG --- */
         .notification-wrapper { position: relative; display: inline-block; margin-right: 10px; }
         .btn-bell { 
             background: #f0f2f5; border: 1px solid #e1e4e8; border-radius: 50%;
             width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
             font-size: 1.1rem; cursor: pointer; position: relative; transition: all 0.2s;
+            color: var(--text-main); /* Hogy az SVG színe illeszkedjen */
         }
         .btn-bell:hover { background: #e4e6eb; transform: translateY(-1px); }
         .btn-bell:active { transform: translateY(1px); }
@@ -230,10 +231,8 @@
         }
 
         /* --- STATS & HISTORY --- */
-        
-        /* JAVÍTÁS: A Nyomtatás gomb el van rejtve, de a kódját NEM töröltük ki! */
         .btn-print { 
-            display: none !important; /* Felhasználó kérésére elrejtve minden eszközön */
+            display: none !important; 
             background: var(--primary-light); color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; align-items: center; gap: 8px; font-size: 0.9rem; 
         }
         
@@ -301,23 +300,31 @@
         .rep-err-loc { font-weight: bold; font-family: 'JetBrains Mono', monospace; }
         .rep-ok-badge { color: #27ae60; font-weight: bold; background: #f0fff4; padding: 5px 10px; border-radius: 6px; border: 1px solid #c6f6d5; display: inline-block; }
 
-        /* --- MOBIL NÉZET (KÁRTYÁS TÁBLÁZAT JAVÍTÁSA - GARANTÁLTAN NEM LÓG KI) --- */
+        /* --- MOBIL NÉZET (GARANTÁLTAN CSAK ITT VÁLTOZTATUNK) --- */
         @media (max-width: 768px) {
-            .view-section { padding: 0 10px; } /* Kisebb belső margó mobilon, több hely az adatoknak */
-            .header-left h1 { font-size: 1.1rem; }
+            .view-section { padding: 0 10px; }
+            
+            /* FEJLÉC ÁTALAKÍTÁSA MOBILON */
+            .header-left { display: none !important; } /* Cím eltüntetése mobilon */
+            .header-right { 
+                width: 100%; 
+                justify-content: space-between !important; 
+                gap: 8px !important; 
+            }
+            header { padding: 10px; }
+            .btn-bell { width: 34px; height: 34px; } /* Kicsit kompaktabb harang gomb */
+
             .nav-tabs { width: 95%; top: 60px; }
             
-            /* Szűrősáv mobilon - NEGATÍV MARGÓ KISZEDVE! */
             .filter-bar { 
                 flex-direction: column; gap: 15px; align-items: flex-start; 
                 padding: 15px; margin: 0 0 20px 0; 
                 background: #ffffff;
-                border-radius: 8px; /* Adunk neki egy szép lekerekítést */
+                border-radius: 8px; 
             }
 
             .dashboard-grid { grid-template-columns: 1fr; }
             
-            /* TÁBLÁZAT MOBILON (Biztonságos Flexbox Kártyanézet) */
             .data-table, .data-table tbody, .data-table tr, .data-table td { 
                 display: block; width: 100%; box-sizing: border-box; 
             }
@@ -342,7 +349,6 @@
                 text-transform: uppercase; text-align: left; flex-shrink: 0; max-width: 40%;
             }
             
-            /* Színes csíkok a kártya bal szélén */
             .row-error { border-left: 5px solid var(--danger) !important; }
             .row-ok { border-left: 5px solid var(--success) !important; }
             .row-error td:first-child, .row-ok td:first-child { border-left: none !important; border-radius: 0 !important; }
@@ -356,11 +362,7 @@
             body * { visibility: hidden; }
             #history-content, #history-content * { visibility: visible; }
             #history-content { position: absolute; left: 0; top: 0; width: 100%; margin: 0 !important; padding: 0 !important; }
-            
-            /* A te eredeti kódodban szereplő no-print */
             .no-print { display: none !important; }
-            
-            /* Ezek kellenek, hogy a nyomtatáskor a harmonikák kinyíljanak és a keretek eltűnjenek */
             .accordion-content { display: block !important; padding: 0 !important; }
             .accordion-item { border: none !important; box-shadow: none !important; margin: 0 0 20px 0 !important; }
             .filter-bar { margin: 0 !important; border: none !important; box-shadow: none !important; padding: 0 0 20px 0 !important; background: transparent !important; }
@@ -373,16 +375,21 @@
         <div class="header-left">
             <h1>🏭 SMT PRO <small style="font-size:0.5em; opacity:0.6; font-weight:400;">v2.5</small></h1>
         </div>
-        <div style="display:flex; align-items:center; gap:15px;">
+        
+        <!-- HEADER JOBB OLDAL, KÜLÖN OSZTÁLLYAL A MOBILOS IGAZÍTÁSHOZ -->
+        <div class="header-right" style="display:flex; align-items:center; gap:15px;">
             <div class="connection-status">
                 <div id="statusDot" class="status-dot"></div>
                 <span id="statusText">Kapcsolódás...</span>
             </div>
             
-            <!-- ÉRTESÍTÉSI HARANG BLOKK (ÚJ) -->
+            <!-- ÉRTESÍTÉSI HARANG BLOKK (SZÍNTELEN SVG IKONNAL) -->
             <div class="notification-wrapper no-print">
                 <button class="btn-bell" onclick="toggleNotificationPopup()" title="Értesítések">
-                    🔔
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
                     <span id="bellBadge" class="bell-badge">0</span>
                 </button>
                 <div id="notificationPopup" class="notification-popup">
@@ -527,7 +534,6 @@
         import { getDatabase, ref, set, onValue, remove, push, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // A te hitelesítési adataid és logikád SÉRTHETETLENÜL marad!
         const firebaseConfig = {
             apiKey: "AIzaSyBL1VWdfWW2d_GEWL2Jen1qX5PCvBcsV4s",
             authDomain: "smt-monitor-ad310.firebaseapp.com",
@@ -554,15 +560,12 @@
         let currentSelection = null;
         let mainChart = null; 
         
-        // -- Új változók az értesítésekhez --
         let unseenDisable = 0;
         let unseenEnable = 0;
-        // Ha először nyitja meg, rögzítjük a mostani időt, hogy ne mutasson 1000 régi hibát újszerűként
         if (!localStorage.getItem('smt_last_seen')) {
             localStorage.setItem('smt_last_seen', new Date().toISOString());
         }
 
-        // Biztonságos háttér belépés
         signInWithEmailAndPassword(auth, "monitor@forvia.hu", "SmtMonitor2026!")
             .then(() => {
                 onValue(ref(db, ".info/connected"), (snap) => {
@@ -585,7 +588,6 @@
                     }
                 });
                 
-                // --- ÉRTESÍTÉSEK FIGYELÉSE A HÁTTÉRBEN (ÚJ) ---
                 onValue(ref(db, 'smt_logs'), (snapshot) => {
                     const logsData = snapshot.val() || {};
                     unseenDisable = 0;
@@ -613,7 +615,6 @@
                 document.getElementById("statusDot").className = "status-dot offline";
             });
 
-        // --- HARANG LOGIKA (ÚJ) ---
         window.updateBellUI = function() {
             const totalUnseen = unseenDisable + unseenEnable;
             const badge = document.getElementById('bellBadge');
@@ -646,14 +647,12 @@
             }
         });
 
-        // --- Harmonika (Accordion) nyitó-csukó funkció ---
         window.toggleAccordion = function(element) {
             element.classList.toggle('active');
             let content = element.nextElementSibling;
             content.classList.toggle('active');
         }
 
-        // --- JAVÍTOTT VÁLTÓKAPCSOLÓ LOGIKA (FRISSÍTI AZ ÉRTESÍTÉSEKET) ---
         window.switchTab = function(tabName) {
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
@@ -662,7 +661,6 @@
             if(tabName === 'monitor') renderDashboard(); 
             if(tabName === 'history') {
                 loadHistoryData();
-                // Harang nullázása a saját böngésződben:
                 localStorage.setItem('smt_last_seen', new Date().toISOString());
                 unseenDisable = 0;
                 unseenEnable = 0;
@@ -1001,7 +999,6 @@
 
             allEntries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-            // --- KPI KÁRTYÁK KISZÁMÍTÁSA ---
             let totalStops = 0;
             let machineFails = {};
             let reasonFails = {};
@@ -1041,9 +1038,7 @@
                     </div>
                 `;
             }
-            // --- KPI VÉGE ---
 
-            // TOP HIBÁK KISZÁMÍTÁSA GÉPSORONKÉNT
             const errorCounts = {};
             linesToList.forEach(l => errorCounts[l] = {});
             
@@ -1093,7 +1088,6 @@
             const tbody = document.getElementById('historyTableBody');
             tbody.innerHTML = '';
             
-            // --- ADATOK ELŐKÉSZÍTÉSE AZ EGYESÍTETT DIAGRAMHOZ ---
             let chartData = { 1: {}, 2: {}, 3: {}, 4: {} };
             let allReasonsSet = new Set();
             
@@ -1114,7 +1108,6 @@
                 const badge = isError ? `<span class="log-badge bg-err">LEÁLLÍTÁS</span>` : `<span class="log-badge bg-ok">AKTIVÁLÁS</span>`;
                 const locationPrefix = (line === 'ALL') ? `<span style="color:var(--accent); font-weight:bold;">[${log._line}]</span> ` : '';
                 
-                // Módosítás: A td-k megkapták a data-label attribútumot a mobil nézethez!
                 tbody.innerHTML += `
                     <tr class="row-card ${rowClass}">
                         <td data-label="Időpont" class="log-date">${dateStr}</td>
