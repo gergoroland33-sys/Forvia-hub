@@ -91,7 +91,7 @@
             background: #f0f2f5; border: 1px solid #e1e4e8; border-radius: 50%;
             width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
             font-size: 1.1rem; cursor: pointer; position: relative; transition: all 0.2s;
-            color: var(--text-main); /* Hogy az SVG színe illeszkedjen */
+            color: var(--text-main); 
         }
         .btn-bell:hover { background: #e4e6eb; transform: translateY(-1px); }
         .btn-bell:active { transform: translateY(1px); }
@@ -104,7 +104,7 @@
         }
         @keyframes pulseBell { 0% {box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.4);} 70% {box-shadow: 0 0 0 6px rgba(192, 57, 43, 0);} 100% {box-shadow: 0 0 0 0 rgba(192, 57, 43, 0);} }
         .notification-popup {
-            display: none; position: absolute; top: 120%; right: 0; width: 280px;
+            display: none; position: absolute; top: 120%; right: 0; width: 300px;
             background: white; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             border: 1px solid var(--border); z-index: 1001; padding: 15px; cursor: default;
         }
@@ -114,7 +114,13 @@
             border-left: 1px solid var(--border); border-top: 1px solid var(--border);
         }
         .notif-title { font-weight: 800; font-size: 0.95rem; margin-bottom: 12px; color: var(--primary-dark); border-bottom: 1px solid #f0f0f0; padding-bottom: 8px; display: flex; justify-content: space-between;}
-        .notif-item { font-size: 0.85rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; font-weight: 500;}
+        
+        /* Műszakonkénti bontás stílusa */
+        .notif-shift-group { margin-bottom: 12px; }
+        .notif-shift-group:last-child { margin-bottom: 0; }
+        .notif-shift-header { font-size: 0.7rem; color: #95a5a6; font-weight: 800; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; border-bottom: 1px dashed #ecf0f1; padding-bottom: 4px; }
+        
+        .notif-item { font-size: 0.85rem; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; font-weight: 500;}
         .notif-action { font-size: 0.8rem; color: #fff; background: var(--accent); padding: 8px; border-radius: 6px; margin-top: 15px; font-weight: bold; cursor: pointer; text-align: center; transition: background 0.2s;}
         .notif-action:hover { background: #2980b9; }
 
@@ -304,15 +310,27 @@
         @media (max-width: 768px) {
             .view-section { padding: 0 10px; }
             
-            /* FEJLÉC ÁTALAKÍTÁSA MOBILON */
-            .header-left { display: none !important; } /* Cím eltüntetése mobilon */
+            .header-left { display: none !important; }
             .header-right { 
                 width: 100%; 
                 justify-content: space-between !important; 
                 gap: 8px !important; 
             }
             header { padding: 10px; }
-            .btn-bell { width: 34px; height: 34px; } /* Kicsit kompaktabb harang gomb */
+            .btn-bell { width: 34px; height: 34px; } 
+
+            /* KILÓGÁS JAVÍTÁSA: A felugró ablak fix pozíciót kap mobilon */
+            .notification-popup {
+                position: fixed;
+                top: 60px; /* Pont a fejléc alatt */
+                right: 15px;
+                width: 320px;
+                max-width: calc(100vw - 30px); /* Garantáltan sosem lóg ki egyetlen kijelzőn sem! */
+                transform: none;
+            }
+            .notification-popup::before {
+                display: none; /* A kis nyilat mobilon levesszük a tiszta kinézetért */
+            }
 
             .nav-tabs { width: 95%; top: 60px; }
             
@@ -376,14 +394,12 @@
             <h1>🏭 SMT PRO <small style="font-size:0.5em; opacity:0.6; font-weight:400;">v2.5</small></h1>
         </div>
         
-        <!-- HEADER JOBB OLDAL, KÜLÖN OSZTÁLLYAL A MOBILOS IGAZÍTÁSHOZ -->
         <div class="header-right" style="display:flex; align-items:center; gap:15px;">
             <div class="connection-status">
                 <div id="statusDot" class="status-dot"></div>
                 <span id="statusText">Kapcsolódás...</span>
             </div>
             
-            <!-- ÉRTESÍTÉSI HARANG BLOKK (SZÍNTELEN SVG IKONNAL) -->
             <div class="notification-wrapper no-print">
                 <button class="btn-bell" onclick="toggleNotificationPopup()" title="Értesítések">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -560,8 +576,7 @@
         let currentSelection = null;
         let mainChart = null; 
         
-        let unseenDisable = 0;
-        let unseenEnable = 0;
+        let unseenEvents = []; // AZ ÚJ LOGIKA LISTÁJA
         if (!localStorage.getItem('smt_last_seen')) {
             localStorage.setItem('smt_last_seen', new Date().toISOString());
         }
@@ -590,8 +605,7 @@
                 
                 onValue(ref(db, 'smt_logs'), (snapshot) => {
                     const logsData = snapshot.val() || {};
-                    unseenDisable = 0;
-                    unseenEnable = 0;
+                    unseenEvents = []; // Lista nullázása frissítéskor
                     
                     const lastSeenStr = localStorage.getItem('smt_last_seen');
                     const lastSeenTime = lastSeenStr ? new Date(lastSeenStr).getTime() : 0;
@@ -600,8 +614,7 @@
                         Object.values(lineLogs).forEach(log => {
                             const logTime = new Date(log.timestamp).getTime();
                             if (logTime > lastSeenTime) {
-                                if (log.type === 'DISABLE') unseenDisable++;
-                                if (log.type === 'ENABLE') unseenEnable++;
+                                unseenEvents.push(log); // Esemény eltárolása csoportosításhoz
                             }
                         });
                     });
@@ -615,8 +628,9 @@
                 document.getElementById("statusDot").className = "status-dot offline";
             });
 
+        // --- OKOSÍTOTT ÉRTESÍTÉSI LOGIKA (MŰSZAKONKÉNT) ---
         window.updateBellUI = function() {
-            const totalUnseen = unseenDisable + unseenEnable;
+            const totalUnseen = unseenEvents.length;
             const badge = document.getElementById('bellBadge');
             const popupContent = document.getElementById('notifContent');
             
@@ -624,9 +638,28 @@
                 badge.style.display = 'flex';
                 badge.innerText = totalUnseen > 99 ? '99+' : totalUnseen;
                 
+                // Csoportosítás műszakonként
+                let shiftSummary = {};
+                unseenEvents.forEach(log => {
+                    const shift = getShiftInfo(log.timestamp);
+                    if (!shiftSummary[shift]) shiftSummary[shift] = { disable: 0, enable: 0 };
+                    if (log.type === 'DISABLE') shiftSummary[shift].disable++;
+                    if (log.type === 'ENABLE') shiftSummary[shift].enable++;
+                });
+
                 let html = '';
-                if(unseenDisable > 0) html += `<div class="notif-item">🛑 ${unseenDisable} szár lett leállítva</div>`;
-                if(unseenEnable > 0) html += `<div class="notif-item">✅ ${unseenEnable} szár újra aktív</div>`;
+                for (let shift in shiftSummary) {
+                    html += `<div class="notif-shift-group">
+                                <div class="notif-shift-header">${shift}</div>`;
+                    if (shiftSummary[shift].disable > 0) {
+                        html += `<div class="notif-item">🛑 ${shiftSummary[shift].disable} szár leállítva</div>`;
+                    }
+                    if (shiftSummary[shift].enable > 0) {
+                        html += `<div class="notif-item">✅ ${shiftSummary[shift].enable} szár újra aktív</div>`;
+                    }
+                    html += `</div>`;
+                }
+                
                 popupContent.innerHTML = html;
             } else {
                 badge.style.display = 'none';
@@ -662,8 +695,7 @@
             if(tabName === 'history') {
                 loadHistoryData();
                 localStorage.setItem('smt_last_seen', new Date().toISOString());
-                unseenDisable = 0;
-                unseenEnable = 0;
+                unseenEvents = []; // Sikeres megtekintés után töröljük a listát
                 updateBellUI();
             }
         }
@@ -746,6 +778,7 @@
             });
         }
 
+        // FIGYELEM: Ezt használja az értesítési ablak is a csoportosításhoz!
         function getShiftInfo(timestamp) {
             if (!timestamp) return "Ismeretlen műszak";
             const d = new Date(timestamp);
