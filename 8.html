@@ -104,6 +104,12 @@
         .m-status-row { display: flex; align-items: center; justify-content: flex-end; gap: 6px; margin-bottom: 2px; }
         .m-status-label { font-size: 9px; color: #64748b; font-weight: 700; width: 20px; text-align: right; }
 
+        /* MODAL CUSTOM SCROLLBAR ELEGANCIA */
+        .modal-scrollbar::-webkit-scrollbar { width: 6px; }
+        .modal-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .modal-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+        .modal-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
         /* --- RESPONSIVE SWITCH --- */
         @media (max-width: 768px) {
             .desktop-header, .desktop-main, .desktop-footer { display: none !important; }
@@ -166,7 +172,11 @@
                 <button onclick="setView('stats')" id="nav-s" class="px-3 py-1.5 rounded text-[10px] font-black uppercase ml-1 flex items-center gap-1"><i class="fas fa-id-card"></i></button>
             </div>
             <div class="flex gap-1">
-                <button onclick="printShiftSummary()" title="Műszak Nyomtatása" class="bg-indigo-600 hover:bg-indigo-500 px-3 py-1.5 rounded-lg text-white shadow-lg"><i class="fas fa-print"></i></button>
+                <!-- ÚJ FUNKCIÓK: JELÖLT ÉS CSERENAP GOMBOK -->
+                <button onclick="openFilterModal('note')" title="Jelölt (Megjegyzések szűrése az adott évre)" class="bg-yellow-600 hover:bg-yellow-500 px-3 py-1.5 rounded-lg text-white shadow-lg flex items-center gap-1 transition-all border border-yellow-700"><i class="fas fa-exclamation-triangle"></i> <span class="hidden md:inline text-[10px] font-black uppercase tracking-widest">Jelölt</span></button>
+                <button onclick="openFilterModal('cserenap')" title="Cserenapok (Szűrés az adott évre)" class="bg-red-600 hover:bg-red-500 px-3 py-1.5 rounded-lg text-white shadow-lg flex items-center gap-1 transition-all border border-red-700"><i class="fas fa-circle text-[8px] animate-pulse"></i> <span class="hidden md:inline text-[10px] font-black uppercase tracking-widest">Cserenap</span></button>
+                <!-- RÉGI GOMBOK -->
+                <button onclick="printShiftSummary()" title="Műszak Nyomtatása" class="bg-indigo-600 hover:bg-indigo-500 px-3 py-1.5 rounded-lg text-white shadow-lg ml-2"><i class="fas fa-print"></i></button>
                 <button onclick="backupAllData()" title="TELJES Mentés" class="bg-violet-600 hover:bg-violet-500 px-3 py-1.5 rounded-lg text-white shadow-lg"><i class="fas fa-download"></i></button>
                 <button onclick="addEmp()" class="bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded-lg text-white shadow-lg"><i class="fas fa-plus"></i></button>
             </div>
@@ -278,6 +288,22 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- ÚJ: IPARI PRÉMIUM SZŰRŐ ABLAK (JELÖLT & CSERENAP) -->
+    <div id="filter-modal" class="hidden fixed inset-0 z-[120] flex items-center justify-center bg-black/70 backdrop-blur-sm transition-opacity no-select">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-[0_0_40px_rgba(0,0,0,0.8)] w-full max-w-3xl mx-4 transform scale-95 transition-transform flex flex-col max-h-[85vh]">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-4">
+                <div>
+                    <h3 id="filter-modal-title" class="text-white font-black text-2xl uppercase tracking-wider flex items-center gap-2 mb-1"></h3>
+                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest"><span id="filter-modal-shift-info" class="text-blue-400"></span> • Adott évi összesítés</p>
+                </div>
+                <button onclick="closeFilterModal()" class="text-slate-400 hover:text-white transition-colors text-2xl bg-slate-800 hover:bg-red-500 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg border border-slate-700 hover:border-red-500"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="filter-modal-content" class="overflow-y-auto pr-2 space-y-2 flex-grow modal-scrollbar">
+                <!-- Dinamikus tartalom kerül ide -->
+            </div>
+        </div>
     </div>
 
     <div id="tu-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity no-select">
@@ -1108,6 +1134,87 @@
             }
             closeNoteModal();
         });
+
+        // --- ÚJ FEJLESZTÉS: IPARI PRÉMIUM SZŰRŐ ABLAK LOGIKA (JELÖLT & CSERENAP) ---
+
+        window.openFilterModal = function(type) {
+            const currentYear = date.getFullYear();
+            let results = [];
+
+            // Adatok kigyűjtése
+            employees.forEach(emp => {
+                if(emp.data) {
+                    Object.entries(emp.data).forEach(([key, val]) => {
+                        if(key.startsWith(currentYear + '-')) {
+                            if(type === 'note' && key.endsWith('_note')) {
+                                const datePart = key.replace('_note', '');
+                                results.push({ empName: emp.name, dateStr: datePart, detail: val });
+                            } else if(type === 'cserenap' && key.endsWith('_cserenap')) {
+                                const datePart = key.replace('_cserenap', '');
+                                results.push({ empName: emp.name, dateStr: datePart, detail: Math.abs(val) + ' óra jóváírás' });
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Időrendbe rendezés
+            results.sort((a, b) => {
+                const da = new Date(a.dateStr.split('-')[0], a.dateStr.split('-')[1]-1, a.dateStr.split('-')[2]);
+                const db = new Date(b.dateStr.split('-')[0], b.dateStr.split('-')[1]-1, b.dateStr.split('-')[2]);
+                return da - db;
+            });
+
+            // HTML Generálás
+            const contentDiv = document.getElementById('filter-modal-content');
+            const titleEl = document.getElementById('filter-modal-title');
+            document.getElementById('filter-modal-shift-info').innerText = currentShift + ' Műszak';
+            
+            if (type === 'note') {
+                titleEl.innerHTML = `<i class="fas fa-exclamation-triangle text-yellow-500"></i> Éves Jelölések`;
+            } else {
+                titleEl.innerHTML = `<i class="fas fa-circle text-red-500 text-lg"></i> Éves Cserenapok`;
+            }
+
+            if(results.length === 0) {
+                contentDiv.innerHTML = `<div class="text-center text-slate-500 py-10 font-bold uppercase tracking-widest"><i class="fas fa-box-open text-4xl mb-3 opacity-50 block"></i> Nincs rögzített adat az adott évre.</div>`;
+            } else {
+                let html = '';
+                results.forEach(item => {
+                    const parts = item.dateStr.split('-');
+                    const mName = monthNames[parseInt(parts[1]) - 1];
+                    const niceDate = `${mName} ${parts[2].padStart(2, '0')}.`;
+                    
+                    const iconColor = type === 'note' ? 'text-yellow-500' : 'text-red-500';
+                    const bgBorder = type === 'note' ? 'border-yellow-500/30 bg-yellow-500/10' : 'border-red-500/30 bg-red-500/10';
+
+                    html += `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-800 transition-colors gap-3">
+                        <div class="flex items-center gap-4">
+                            <div class="font-black text-blue-400 text-sm bg-slate-900 py-1.5 px-3 rounded border border-slate-700 whitespace-nowrap min-w-[100px] text-center">${niceDate}</div>
+                            <div class="font-bold text-white uppercase tracking-wider text-sm sm:text-base">${item.empName}</div>
+                        </div>
+                        <div class="sm:text-right pl-[116px] sm:pl-0">
+                            <div class="${bgBorder} px-3 py-1.5 rounded-lg border flex items-center gap-2 w-fit sm:w-auto">
+                                <i class="fas ${type === 'note' ? 'fa-comment-dots' : 'fa-gift'} ${iconColor}"></i>
+                                <span class="text-xs font-black text-slate-200 uppercase">${item.detail}</span>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+                contentDiv.innerHTML = html;
+            }
+
+            const modal = document.getElementById('filter-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.firstElementChild.classList.remove('scale-95'), 10);
+        }
+
+        window.closeFilterModal = function() {
+            const modal = document.getElementById('filter-modal');
+            modal.firstElementChild.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 150);
+        }
 
         // --- ÚJ FEJLESZTÉS V4: MODERN TOOLTIP (START) ---
         
