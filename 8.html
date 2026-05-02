@@ -172,9 +172,9 @@
                 <button onclick="setView('stats')" id="nav-s" class="px-3 py-1.5 rounded text-[10px] font-black uppercase ml-1 flex items-center gap-1"><i class="fas fa-id-card"></i></button>
             </div>
             <div class="flex gap-1">
-                <!-- ÚJ FUNKCIÓK: JELÖLT ÉS CSERENAP GOMBOK -->
-                <button onclick="openFilterModal('note')" title="Jelölt (Megjegyzések szűrése az adott évre)" class="bg-yellow-600 hover:bg-yellow-500 px-3 py-1.5 rounded-lg text-white shadow-lg flex items-center gap-1 transition-all border border-yellow-700"><i class="fas fa-exclamation-triangle"></i> <span class="hidden md:inline text-[10px] font-black uppercase tracking-widest">Jelölt</span></button>
-                <button onclick="openFilterModal('cserenap')" title="Cserenapok (Szűrés az adott évre)" class="bg-red-600 hover:bg-red-500 px-3 py-1.5 rounded-lg text-white shadow-lg flex items-center gap-1 transition-all border border-red-700"><i class="fas fa-circle text-[8px] animate-pulse"></i> <span class="hidden md:inline text-[10px] font-black uppercase tracking-widest">Cserenap</span></button>
+                <!-- ÚJ, SZOLIDABB FUNKCIÓ GOMBOK -->
+                <button onclick="openFilterModal('note')" title="Jelölt (Megjegyzések szűrése az adott évre)" class="bg-slate-800 hover:bg-slate-700 text-yellow-500 border border-yellow-500/30 px-2.5 py-1.5 rounded-lg shadow-lg flex items-center gap-1.5 transition-all"><i class="fas fa-exclamation-triangle text-[10px]"></i> <span class="hidden md:inline text-[9px] font-black uppercase tracking-widest">Jelölt</span></button>
+                <button onclick="openFilterModal('cserenap')" title="Cserenapok (Szűrés az adott évre)" class="bg-slate-800 hover:bg-slate-700 text-red-500 border border-red-500/30 px-2.5 py-1.5 rounded-lg shadow-lg flex items-center gap-1.5 transition-all"><i class="fas fa-circle text-[8px] animate-pulse"></i> <span class="hidden md:inline text-[9px] font-black uppercase tracking-widest">Cserenap</span></button>
                 <!-- RÉGI GOMBOK -->
                 <button onclick="printShiftSummary()" title="Műszak Nyomtatása" class="bg-indigo-600 hover:bg-indigo-500 px-3 py-1.5 rounded-lg text-white shadow-lg ml-2"><i class="fas fa-print"></i></button>
                 <button onclick="backupAllData()" title="TELJES Mentés" class="bg-violet-600 hover:bg-violet-500 px-3 py-1.5 rounded-lg text-white shadow-lg"><i class="fas fa-download"></i></button>
@@ -275,7 +275,7 @@
                 
                 <div class="flex gap-2">
                     <input type="text" id="m-input" class="m-big-input flex-grow" placeholder="--" autocomplete="off">
-                    <button onclick="manualSaveAndClose()" class="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl px-4 font-black text-xs uppercase shadow-lg flex flex-col items-center justify-center w-24">
+                    <button onclick="manualSaveAndClose()" class="bg-emerald-600 hover:bg-emerald-50 text-white rounded-xl px-4 font-black text-xs uppercase shadow-lg flex flex-col items-center justify-center w-24">
                         <i class="fas fa-check text-xl mb-1"></i>
                         MENTÉS
                     </button>
@@ -290,15 +290,15 @@
 
     </div>
 
-    <!-- ÚJ: IPARI PRÉMIUM SZŰRŐ ABLAK (JELÖLT & CSERENAP) -->
+    <!-- IPARI PRÉMIUM SZŰRŐ ABLAK (KOMPAKTEBB KINÉZETTEL) -->
     <div id="filter-modal" class="hidden fixed inset-0 z-[120] flex items-center justify-center bg-black/70 backdrop-blur-sm transition-opacity no-select">
-        <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-[0_0_40px_rgba(0,0,0,0.8)] w-full max-w-3xl mx-4 transform scale-95 transition-transform flex flex-col max-h-[85vh]">
-            <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl p-5 shadow-[0_0_40px_rgba(0,0,0,0.8)] w-full max-w-2xl mx-4 transform scale-95 transition-transform flex flex-col max-h-[85vh]">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
                 <div>
-                    <h3 id="filter-modal-title" class="text-white font-black text-2xl uppercase tracking-wider flex items-center gap-2 mb-1"></h3>
+                    <h3 id="filter-modal-title" class="text-white font-black text-xl uppercase tracking-wider flex items-center gap-2 mb-1"></h3>
                     <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest"><span id="filter-modal-shift-info" class="text-blue-400"></span> • Adott évi összesítés</p>
                 </div>
-                <button onclick="closeFilterModal()" class="text-slate-400 hover:text-white transition-colors text-2xl bg-slate-800 hover:bg-red-500 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg border border-slate-700 hover:border-red-500"><i class="fas fa-times"></i></button>
+                <button onclick="closeFilterModal()" class="text-slate-400 hover:text-white transition-colors text-xl bg-slate-800 hover:bg-red-500 w-8 h-8 rounded-lg flex items-center justify-center shadow-lg border border-slate-700 hover:border-red-500"><i class="fas fa-times"></i></button>
             </div>
             <div id="filter-modal-content" class="overflow-y-auto pr-2 space-y-2 flex-grow modal-scrollbar">
                 <!-- Dinamikus tartalom kerül ide -->
@@ -1186,18 +1186,18 @@
                     const niceDate = `${mName} ${parts[2].padStart(2, '0')}.`;
                     
                     const iconColor = type === 'note' ? 'text-yellow-500' : 'text-red-500';
-                    const bgBorder = type === 'note' ? 'border-yellow-500/30 bg-yellow-500/10' : 'border-red-500/30 bg-red-500/10';
+                    const bgBorder = type === 'note' ? 'border-yellow-500/20 bg-yellow-500/5' : 'border-red-500/20 bg-red-500/5';
 
                     html += `
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-800 transition-colors gap-3">
-                        <div class="flex items-center gap-4">
-                            <div class="font-black text-blue-400 text-sm bg-slate-900 py-1.5 px-3 rounded border border-slate-700 whitespace-nowrap min-w-[100px] text-center">${niceDate}</div>
-                            <div class="font-bold text-white uppercase tracking-wider text-sm sm:text-base">${item.empName}</div>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between p-2 rounded-lg border border-slate-700/50 bg-slate-800/40 hover:bg-slate-800 transition-colors gap-2">
+                        <div class="flex items-center gap-3">
+                            <div class="font-black text-blue-400 text-xs bg-slate-900 py-1 px-2 rounded border border-slate-700/80 whitespace-nowrap min-w-[85px] text-center">${niceDate}</div>
+                            <div class="font-bold text-slate-200 uppercase tracking-wider text-xs sm:text-sm">${item.empName}</div>
                         </div>
-                        <div class="sm:text-right pl-[116px] sm:pl-0">
-                            <div class="${bgBorder} px-3 py-1.5 rounded-lg border flex items-center gap-2 w-fit sm:w-auto">
-                                <i class="fas ${type === 'note' ? 'fa-comment-dots' : 'fa-gift'} ${iconColor}"></i>
-                                <span class="text-xs font-black text-slate-200 uppercase">${item.detail}</span>
+                        <div class="sm:text-right pl-[97px] sm:pl-0">
+                            <div class="${bgBorder} px-2 py-1 rounded border flex items-center gap-1.5 w-fit sm:w-auto">
+                                <i class="fas ${type === 'note' ? 'fa-comment-dots' : 'fa-gift'} ${iconColor} text-[10px]"></i>
+                                <span class="text-[10px] font-black text-slate-300 uppercase">${item.detail}</span>
                             </div>
                         </div>
                     </div>`;
