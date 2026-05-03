@@ -68,7 +68,7 @@
         @media (min-width: 768px) { .btn-print { display: flex; } }
 
         /* --- SZŰRŐ SÁV & TÚLÓRA GOMB --- */
-        .filter-container { padding: 8px 15px; background: var(--bg-base); flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; }
+        .filter-container { padding: 8px 15px; background: var(--bg-base); flex-shrink: 0; display: flex; flex-direction: column; gap: 8px;}
         .segmented-control {
             display: flex; background: rgba(15, 23, 42, 0.8);
             border-radius: 10px; padding: 4px; border: 1px solid var(--border);
@@ -233,18 +233,14 @@
 
         @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Ezt a szabályt betettem ide, hogy a te nyomtatási kódod lent érintetlen maradhasson! */
-        @media print {
-            .overtime-container, .modal-overlay { display: none !important; }
-        }
-
         /* --- NYOMTATÁSI NÉZET --- */
         #printContainer { display: none; }
 
         @media print {
             @page { size: A4 portrait; margin: 10mm; }
             body { background: white !important; color: black !important; display: block; height: auto; overflow: visible; }
-            .app-header, .filter-container, .main-layout { display: none !important; }
+            /* ITT A JAVÍTÁS: Szépen beolvasztottam a .modal-overlay-t a te eredeti sorodba! */
+            .app-header, .filter-container, .main-layout, .modal-overlay { display: none !important; }
             #printContainer { display: block !important; width: 100%; height: 100%; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
@@ -326,9 +322,7 @@
         </section>
     </main>
 
-    <div id="printContainer"></div>
-
-    <!-- ÚJ: Túlóra Modal -->
+    <!-- ÚJ: Túlóra Modal (IDE MOZGATVA FELJEBB, HOGY A NYOMTATÁST NE ZAVARJA!) -->
     <div class="modal-overlay" id="otModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -351,6 +345,9 @@
             </div>
         </div>
     </div>
+
+    <!-- A nyomtató konténer maradt az utolsó HTML elem! -->
+    <div id="printContainer"></div>
 
 <script>
     const unnepnapok = {
