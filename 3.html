@@ -36,9 +36,9 @@
             color: var(--text-main);
             margin: 0; padding: 0;
             display: flex; flex-direction: column;
-            height: 100dvh; /* Szigorú 100% magasság */
-            overflow: hidden; /* Nincs görgetés */
-            touch-action: manipulation; /* JAVÍTÁS: Gyorsabb és pontosabb érintés mobilon */
+            height: 100dvh; 
+            overflow: hidden; 
+            touch-action: manipulation; 
         }
 
         /* --- APP HEADER --- */
@@ -67,8 +67,8 @@
         .btn-print { display: none; }
         @media (min-width: 768px) { .btn-print { display: flex; } }
 
-        /* --- SZŰRŐ SÁV --- */
-        .filter-container { padding: 8px 15px; background: var(--bg-base); flex-shrink: 0; }
+        /* --- SZŰRŐ SÁV & TÚLÓRA GOMB --- */
+        .filter-container { padding: 8px 15px; background: var(--bg-base); flex-shrink: 0; display: flex; flex-direction: column; gap: 8px;}
         .segmented-control {
             display: flex; background: rgba(15, 23, 42, 0.8);
             border-radius: 10px; padding: 4px; border: 1px solid var(--border);
@@ -84,8 +84,20 @@
             position: absolute; top: 4px; bottom: 4px;
             background: rgba(255,255,255,0.1); border-radius: 8px;
             z-index: 1; transition: transform 0.3s ease, width 0.3s;
-            pointer-events: none; /* JAVÍTÁS: A csúszka sosem takarja el az érintést a gombok elől */
+            pointer-events: none; 
         }
+
+        .overtime-container {
+            display: none; animation: fadeInDown 0.3s ease-out;
+        }
+        .btn-overtime {
+            width: 100%; background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+            border: 1px solid var(--accent); color: var(--text-main); 
+            padding: 8px; border-radius: 10px; font-weight: 800; font-size: 0.8rem;
+            cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; 
+            transition: all 0.2s;
+        }
+        .btn-overtime:active { transform: scale(0.98); background: rgba(59, 130, 246, 0.25); }
 
         /* --- NAPTÁR SZEKCIÓ --- */
         .calendar-section {
@@ -150,13 +162,79 @@
         .shift-pill.highlight { justify-content: center; font-size: clamp(0.55rem, 1.2vh, 0.7rem); padding: 3px 2px; border: 1px solid currentColor; }
         .shift-pill.highlight span { display: none; }
 
+        /* --- MODAL (TÚLÓRA) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            z-index: 100; display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        
+        .modal-content {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+            width: 92%; max-width: 420px; max-height: 90vh; display: flex; flex-direction: column;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6); transform: translateY(30px); transition: transform 0.3s ease;
+        }
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+        
+        .modal-header { 
+            padding: 15px; border-bottom: 1px solid var(--border); 
+            display: flex; justify-content: space-between; align-items: center; 
+        }
+        .modal-header h2 { margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 8px;}
+        .btn-close { 
+            background: rgba(255,255,255,0.1); border: none; color: var(--text-main); 
+            width: 30px; height: 30px; border-radius: 50%; font-size: 1.2rem; 
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        
+        .modal-body { padding: 15px; overflow-y: auto; flex: 1; }
+        .period-select { 
+            width: 100%; padding: 12px; background: rgba(2,6,23,0.8); color: var(--text-main); 
+            border: 1px solid var(--accent); border-radius: 10px; margin-bottom: 15px; 
+            outline: none; font-size: 0.9rem; font-weight: 600; font-family: inherit;
+        }
+        
+        /* Toggles */
+        .holiday-item { 
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border-light); 
+            padding: 12px; border-radius: 10px; margin-bottom: 10px; 
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .holiday-info { display: flex; flex-direction: column; gap: 4px; }
+        .h-date { font-size: 0.85rem; font-weight: 800; color: var(--text-main); }
+        .h-name { font-size: 0.75rem; color: var(--text-muted); font-weight: 600;}
+        
+        .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0;}
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border); transition: .3s; border-radius: 24px; }
+        .toggle-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: var(--text-main); transition: .3s; border-radius: 50%; }
+        input:checked + .toggle-slider { background-color: var(--accent); }
+        input:checked + .toggle-slider:before { transform: translateX(20px); }
+
+        /* Eredmény doboz */
+        .result-box { margin-top: 20px; background: rgba(2,6,23,0.6); border: 1px solid var(--border); border-radius: 12px; padding: 15px; }
+        .res-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted); font-weight: 600;}
+        .res-row strong { color: var(--text-main); font-size: 0.95rem;}
+        .res-total { 
+            display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; 
+            border-top: 1px solid var(--border); font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .res-total strong { font-size: 1.4rem; }
+        .res-total .positive { color: var(--color-b); }
+        .res-total .negative { color: var(--danger); }
+        .res-total .neutral { color: var(--text-main); }
+
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
         /* --- NYOMTATÁSI NÉZET --- */
         #printContainer { display: none; }
 
         @media print {
             @page { size: A4 portrait; margin: 10mm; }
             body { background: white !important; color: black !important; display: block; height: auto; overflow: visible; }
-            .app-header, .filter-container, .main-layout { display: none !important; }
+            .app-header, .filter-container, .main-layout, .modal-overlay { display: none !important; }
             #printContainer { display: block !important; width: 100%; height: 100%; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
@@ -172,16 +250,13 @@
             
             .print-days-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(6, 1fr); gap: 1px; flex: 1; }
             
-            /* SZENT GRÁL MÉRETEK + KÉRT DIZÁJN (Keret sötétebb, kerekített) */
             .print-cell { border: 1px solid #666; border-radius: 3px; display: flex; flex-direction: column; padding: 1px; font-size: 6pt; overflow: hidden; position: relative;}
             .print-cell.empty { border: none; }
             .print-cell.weekend { background: #f9f9f9; }
             
-            /* SZENT GRÁL MÉRETEK + KÉRT DIZÁJN (Középre igazítva) */
             .print-date-num { font-weight: 900; line-height: 1; text-align: center; }
             .print-shifts { margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 1px; }
             
-            /* SZENT GRÁL MÉRETEK + KÉRT DIZÁJN (Pirulák szélessége beállítva) */
             .p-pill { width: 90%; font-size: 5pt; font-weight: 900; text-align: center; border-radius: 2px; color: white !important; line-height: 1.1; padding: 1px 0;}
             .p-A { background: var(--color-a) !important; }
             .p-B { background: var(--color-b) !important; }
@@ -211,6 +286,12 @@
             <div class="seg-btn" onclick="setFilter('C', 3)">"C"</div>
             <div class="seg-btn" onclick="setFilter('D', 4)">"D"</div>
         </div>
+        <!-- ÚJ: Keret elszámolás gomb -->
+        <div class="overtime-container" id="overtimeBtnContainer">
+            <button class="btn-overtime" onclick="openOvertimeModal()">
+                ⏱️ Negyedéves Keret Elszámolás (Túlóra)
+            </button>
+        </div>
     </div>
 
     <main class="main-layout">
@@ -233,6 +314,30 @@
     </main>
 
     <div id="printContainer"></div>
+
+    <!-- ÚJ: Túlóra Modal -->
+    <div class="modal-overlay" id="otModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⏱️ <span id="otShiftLabel"></span> Műszak Elszámolás</h2>
+                <button class="btn-close" onclick="closeOvertimeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <select class="period-select" id="periodSelect" onchange="calculateAndRenderOvertime()"></select>
+                
+                <div id="holidayQuestions"></div>
+                
+                <div class="result-box">
+                    <div class="res-row"><span>Törvényes alap munkaidő:</span> <strong id="resBase">0 óra</strong></div>
+                    <div class="res-row"><span>Ténylegesen ledolgozott:</span> <strong id="resWorked">0 óra</strong></div>
+                    <div class="res-total">
+                        <span>Túllépés:</span> 
+                        <strong id="resDiff">0 óra</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 <script>
     const unnepnapok = {
@@ -273,6 +378,15 @@
         btns.forEach(btn => btn.classList.remove('active'));
         btns[index].classList.add('active');
         document.getElementById('segSlider').style.transform = `translateX(${index * 100}%)`;
+        
+        // Gomb megjelenítése/elrejtése
+        const otBtn = document.getElementById('overtimeBtnContainer');
+        if (shift === 'ALL') {
+            otBtn.style.display = 'none';
+        } else {
+            otBtn.style.display = 'block';
+        }
+
         renderCalendar();
     }
 
@@ -430,6 +544,134 @@
         setTimeout(() => { window.print(); }, 100);
     }
 
+    /* --- TÚLÓRA (KERET) LOGIKA --- */
+    let holidayOverrides = {};
+    let currentPeriods = [];
+
+    function openOvertimeModal() {
+        buildPeriods();
+        document.getElementById('otShiftLabel').innerText = `"${currentFilter}"`;
+        document.getElementById('otModal').classList.add('active');
+        calculateAndRenderOvertime();
+    }
+
+    function closeOvertimeModal() {
+        document.getElementById('otModal').classList.remove('active');
+    }
+
+    function buildPeriods() {
+        const y = currentDate.getFullYear();
+        // A kifizetési negyedévek (Feb-Ápr -> Május, Máj-Júl -> Augusztus, stb.)
+        currentPeriods = [
+            { name: `Nov (${y-1}) - Jan (${y}) | Februári kifizetés`, start: new Date(y-1, 10, 1), end: new Date(y, 1, 0) },
+            { name: `Február - Április (${y}) | Májusi kifizetés`, start: new Date(y, 1, 1), end: new Date(y, 4, 0) },
+            { name: `Május - Július (${y}) | Augusztusi kifizetés`, start: new Date(y, 4, 1), end: new Date(y, 7, 0) },
+            { name: `Augusztus - Október (${y}) | Novemberi kifizetés`, start: new Date(y, 7, 1), end: new Date(y, 10, 0) }
+        ];
+        
+        const select = document.getElementById('periodSelect');
+        select.innerHTML = '';
+        
+        // Próbáljuk felismerni az aktuális naptári hónap alapján, melyik negyedév lehet érdekes
+        const m = currentDate.getMonth(); 
+        let defaultIdx = 1; 
+        if (m >= 1 && m <= 3) defaultIdx = 1; // Feb-Ápr
+        else if (m >= 4 && m <= 6) defaultIdx = 2; // Máj-Júl
+        else if (m >= 7 && m <= 9) defaultIdx = 3; // Aug-Okt
+        else defaultIdx = 0; // Nov-Jan
+
+        currentPeriods.forEach((p, idx) => {
+            select.innerHTML += `<option value="${idx}" ${idx === defaultIdx ? 'selected' : ''}>${p.name}</option>`;
+        });
+    }
+
+    function calculateAndRenderOvertime() {
+        const pIdx = document.getElementById('periodSelect').value;
+        const period = currentPeriods[pIdx];
+        const shift = currentFilter;
+        
+        let baseHours = 0;
+        let workedHours = 0;
+        let holidayHTML = '';
+
+        // Végigmegyünk a kiválasztott periódus minden napján
+        for (let d = new Date(period.start); d <= period.end; d.setDate(d.getDate() + 1)) {
+            let year = d.getFullYear();
+            let month = String(d.getMonth() + 1).padStart(2, '0');
+            let day = String(d.getDate()).padStart(2, '0');
+            let mmdd = `${month}-${day}`;
+            let dateStr = `${year}-${mmdd}`;
+            
+            let isWeekend = (d.getDay() === 0 || d.getDay() === 6);
+            let isHoliday = !!unnepnapok[mmdd];
+            
+            // 1. Törvényes alap: Hétköznap + Nem ünnepnap = 8 óra
+            if (!isWeekend && !isHoliday) {
+                baseHours += 8;
+            }
+            
+            // 2. Ténylegesen beosztott műszak vizsgálata
+            let shiftData = getShiftForDate(d);
+            let isDayShift = (shiftData.day === shift);
+            let isNightShift = (shiftData.night === shift);
+            
+            if (isDayShift || isNightShift) {
+                if (isHoliday) {
+                    // Ha ünnepnapra esik, alapesetben 0 órát számolunk, KIVÉVE, ha a user bejelöli!
+                    let shiftType = isDayShift ? 'NAPPALOS (06:00-18:00)' : 'ÉJSZAKÁS (18:00-06:00)';
+                    let overrideKey = `${dateStr}-${isDayShift ? 'day' : 'night'}`;
+                    
+                    if (holidayOverrides[overrideKey] === undefined) {
+                        holidayOverrides[overrideKey] = false; // Alapból nem dolgozott
+                    }
+                    
+                    if (holidayOverrides[overrideKey]) {
+                        workedHours += 12; // Csak akkor ad 12-t, ha átkapcsolja
+                    }
+                    
+                    // Kapcsoló (Toggle) generálása a UI-ra
+                    holidayHTML += `
+                        <div class="holiday-item">
+                            <div class="holiday-info">
+                                <span class="h-date">${monthNames[d.getMonth()]} ${d.getDate()}. - ${unnepnapok[mmdd]}</span>
+                                <span class="h-name">Beosztás szerint: ${shiftType}</span>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" ${holidayOverrides[overrideKey] ? 'checked' : ''} onchange="toggleHoliday('${overrideKey}', this.checked)">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    `;
+                } else {
+                    // Normál napokon vagy hétvégéken fix 12 óra, ha be van osztva
+                    workedHours += 12;
+                }
+            }
+        }
+        
+        // UI Frissítés
+        const hContainer = document.getElementById('holidayQuestions');
+        if (holidayHTML !== '') {
+            hContainer.innerHTML = `<div style="font-size: 0.8rem; color: var(--accent); margin-bottom: 10px; font-weight:700;">Érintett ünnepnapok: Dolgoztál ekkor?</div>` + holidayHTML;
+        } else {
+            hContainer.innerHTML = `<div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px; text-align: center; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px;">Ebben a 3 hónapban a beosztásod nem érintett ünnepnapot.</div>`;
+        }
+        
+        let diff = workedHours - baseHours;
+        let diffClass = diff > 0 ? 'positive' : (diff < 0 ? 'negative' : 'neutral');
+        let diffSign = diff > 0 ? '+' : '';
+        
+        document.getElementById('resBase').innerText = `${baseHours} óra`;
+        document.getElementById('resWorked').innerText = `${workedHours} óra`;
+        document.getElementById('resDiff').innerHTML = `<span class="${diffClass}">${diffSign}${diff} óra</span>`;
+    }
+
+    function toggleHoliday(key, value) {
+        holidayOverrides[key] = value;
+        calculateAndRenderOvertime(); // Azonnali újraszámolás a UI-on!
+    }
+
+    // Inicializálás
     initSegmentedControl();
     renderCalendar();
     setupSwipe();
