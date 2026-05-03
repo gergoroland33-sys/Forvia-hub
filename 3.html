@@ -577,12 +577,20 @@
         const select = document.getElementById('periodSelect');
         select.innerHTML = '';
         
+        // ÚJ LOGIKA: Kifizetési hónapok váltása mindig 10.-e után történik
         const m = currentDate.getMonth(); 
-        let defaultIdx = 1; 
-        if (m >= 1 && m <= 3) defaultIdx = 1; 
-        else if (m >= 4 && m <= 6) defaultIdx = 2; 
-        else if (m >= 7 && m <= 9) defaultIdx = 3; 
-        else defaultIdx = 0; 
+        const d = currentDate.getDate();
+        let defaultIdx = 0; 
+
+        if ((m === 10 && d > 10) || m === 11 || m === 0 || (m === 1 && d <= 10)) {
+            defaultIdx = 0; // Nov-Jan (Februári kifizetés)
+        } else if ((m === 1 && d > 10) || m === 2 || m === 3 || (m === 4 && d <= 10)) {
+            defaultIdx = 1; // Feb-Ápr (Májusi kifizetés)
+        } else if ((m === 4 && d > 10) || m === 5 || m === 6 || (m === 7 && d <= 10)) {
+            defaultIdx = 2; // Máj-Júl (Augusztusi kifizetés)
+        } else {
+            defaultIdx = 3; // Aug-Okt (Novemberi kifizetés)
+        }
 
         currentPeriods.forEach((p, idx) => {
             select.innerHTML += `<option value="${idx}" ${idx === defaultIdx ? 'selected' : ''}>${p.name}</option>`;
