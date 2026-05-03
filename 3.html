@@ -67,7 +67,7 @@
         .btn-print { display: none; }
         @media (min-width: 768px) { .btn-print { display: flex; } }
 
-        /* --- SZŰRŐ SÁV & TÚLÓRA GOMB --- */
+        /* --- SZŰRŐ SÁV --- */
         .filter-container { padding: 8px 15px; background: var(--bg-base); flex-shrink: 0; display: flex; flex-direction: column; gap: 8px;}
         .segmented-control {
             display: flex; background: rgba(15, 23, 42, 0.8);
@@ -87,6 +87,7 @@
             pointer-events: none; /* JAVÍTÁS: A csúszka sosem takarja el az érintést a gombok elől */
         }
 
+        /* --- ÚJ GOMB ÉS MODAL CSS --- */
         .overtime-container {
             display: none; animation: fadeInDown 0.3s ease-out;
         }
@@ -99,70 +100,6 @@
         }
         .btn-overtime:active { transform: scale(0.98); background: rgba(59, 130, 246, 0.25); }
 
-        /* --- NAPTÁR SZEKCIÓ --- */
-        .calendar-section {
-            flex: 1; display: flex; flex-direction: column;
-            padding: 0 10px 10px 10px; overflow: hidden;
-        }
-
-        .cal-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 8px; flex-shrink: 0;
-        }
-        .cal-nav-btn {
-            background: transparent; border: none; color: var(--text-muted);
-            font-size: 1.5rem; cursor: pointer; padding: 0 15px;
-        }
-        .month-title { font-size: 1.1rem; font-weight: 900; letter-spacing: 1px; }
-
-        .weekdays {
-            display: grid; grid-template-columns: repeat(7, 1fr);
-            text-align: center; margin-bottom: 6px; flex-shrink: 0;
-        }
-        .weekday { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
-
-        .cal-grid-wrapper { flex: 1; overflow: hidden; position: relative; }
-        .calendar-grid {
-            display: grid; grid-template-columns: repeat(7, 1fr);
-            grid-template-rows: repeat(6, 1fr);
-            gap: 4px; height: 100%; width: 100%;
-            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
-        }
-
-        .cell {
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 8px; padding: 4px; 
-            display: flex; flex-direction: column; overflow: hidden;
-        }
-        .cell.empty { background: transparent; border: none; }
-        .cell.today { border: 2px solid var(--danger); background: rgba(239, 68, 68, 0.05); }
-        
-        .cell-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: auto;}
-        .date-num { font-size: 0.85rem; font-weight: 800; color: var(--text-main); line-height: 1;}
-        .cell.weekend .date-num { color: var(--text-muted); }
-        .cell.today .date-num { color: var(--danger); }
-        .holiday-dot { width: 5px; height: 5px; background: var(--danger); border-radius: 50%; }
-
-        .shifts-container { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
-        .shift-pill {
-            font-size: clamp(0.55rem, 1.5vh, 0.7rem);
-            font-weight: 800; padding: 2px 4px; border-radius: 4px;
-            display: flex; justify-content: space-between; align-items: center;
-            white-space: nowrap; overflow: hidden;
-        }
-        .shift-pill span { opacity: 0.8; font-weight: 600; margin-right: 4px;}
-        @media (max-width: 400px) { .shift-pill span { display: none; } .shift-pill { justify-content: center; } }
-
-        .pill-A { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
-        .pill-B { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
-        .pill-C { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
-        .pill-D { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
-
-        .cell.dimmed { opacity: 0.15; filter: grayscale(1); }
-        .shift-pill.highlight { justify-content: center; font-size: clamp(0.55rem, 1.2vh, 0.7rem); padding: 3px 2px; border: 1px solid currentColor; }
-        .shift-pill.highlight span { display: none; }
-
-        /* --- ÚJ MODAL (TÚLÓRA) CSS --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
@@ -233,14 +170,76 @@
 
         @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* --- NAPTÁR SZEKCIÓ --- */
+        .calendar-section {
+            flex: 1; display: flex; flex-direction: column;
+            padding: 0 10px 10px 10px; overflow: hidden;
+        }
+
+        .cal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 8px; flex-shrink: 0;
+        }
+        .cal-nav-btn {
+            background: transparent; border: none; color: var(--text-muted);
+            font-size: 1.5rem; cursor: pointer; padding: 0 15px;
+        }
+        .month-title { font-size: 1.1rem; font-weight: 900; letter-spacing: 1px; }
+
+        .weekdays {
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            text-align: center; margin-bottom: 6px; flex-shrink: 0;
+        }
+        .weekday { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
+
+        .cal-grid-wrapper { flex: 1; overflow: hidden; position: relative; }
+        .calendar-grid {
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            gap: 4px; height: 100%; width: 100%;
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+        }
+
+        .cell {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 8px; padding: 4px; 
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        .cell.empty { background: transparent; border: none; }
+        .cell.today { border: 2px solid var(--danger); background: rgba(239, 68, 68, 0.05); }
+        
+        .cell-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: auto;}
+        .date-num { font-size: 0.85rem; font-weight: 800; color: var(--text-main); line-height: 1;}
+        .cell.weekend .date-num { color: var(--text-muted); }
+        .cell.today .date-num { color: var(--danger); }
+        .holiday-dot { width: 5px; height: 5px; background: var(--danger); border-radius: 50%; }
+
+        .shifts-container { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
+        .shift-pill {
+            font-size: clamp(0.55rem, 1.5vh, 0.7rem);
+            font-weight: 800; padding: 2px 4px; border-radius: 4px;
+            display: flex; justify-content: space-between; align-items: center;
+            white-space: nowrap; overflow: hidden;
+        }
+        .shift-pill span { opacity: 0.8; font-weight: 600; margin-right: 4px;}
+        @media (max-width: 400px) { .shift-pill span { display: none; } .shift-pill { justify-content: center; } }
+
+        .pill-A { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+        .pill-B { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+        .pill-C { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
+        .pill-D { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+
+        .cell.dimmed { opacity: 0.15; filter: grayscale(1); }
+        .shift-pill.highlight { justify-content: center; font-size: clamp(0.55rem, 1.2vh, 0.7rem); padding: 3px 2px; border: 1px solid currentColor; }
+        .shift-pill.highlight span { display: none; }
+
         /* --- NYOMTATÁSI NÉZET --- */
         #printContainer { display: none; }
 
         @media print {
             @page { size: A4 portrait; margin: 10mm; }
             body { background: white !important; color: black !important; display: block; height: auto; overflow: visible; }
-            /* ITT A JAVÍTÁS: Szépen beolvasztottam a .modal-overlay-t a te eredeti sorodba! */
-            .app-header, .filter-container, .main-layout, .modal-overlay { display: none !important; }
+            .app-header, .filter-container, .main-layout { display: none !important; }
             #printContainer { display: block !important; width: 100%; height: 100%; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
@@ -320,33 +319,34 @@
                 <div class="calendar-grid" id="calGrid"></div>
             </div>
         </section>
-    </main>
 
-    <!-- ÚJ: Túlóra Modal (IDE MOZGATVA FELJEBB, HOGY A NYOMTATÁST NE ZAVARJA!) -->
-    <div class="modal-overlay" id="otModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>⏱️ <span id="otShiftLabel"></span> Műszak Elszámolás</h2>
-                <button class="btn-close" onclick="closeOvertimeModal()">×</button>
-            </div>
-            <div class="modal-body">
-                <select class="period-select" id="periodSelect" onchange="calculateAndRenderOvertime()"></select>
-                
-                <div id="holidayQuestions"></div>
-                
-                <div class="result-box">
-                    <div class="res-row"><span>Törvényes alap munkaidő:</span> <strong id="resBase">0 óra</strong></div>
-                    <div class="res-row"><span>Ténylegesen ledolgozott:</span> <strong id="resWorked">0 óra</strong></div>
-                    <div class="res-total">
-                        <span>Túllépés:</span> 
-                        <strong id="resDiff">0 óra</strong>
+        <!-- A JAVÍTÁS ITT VAN: A Modal a main-layout-on belülre került! 
+             Így amikor a nyomtatási CSS eltünteti a main-layout-ot, 
+             ez a kód is a semmibe vész, garantáltan nulla sortörést hagyva! -->
+        <div class="modal-overlay" id="otModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>⏱️ <span id="otShiftLabel"></span> Műszak Elszámolás</h2>
+                    <button class="btn-close" onclick="closeOvertimeModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <select class="period-select" id="periodSelect" onchange="calculateAndRenderOvertime()"></select>
+                    
+                    <div id="holidayQuestions"></div>
+                    
+                    <div class="result-box">
+                        <div class="res-row"><span>Törvényes alap munkaidő:</span> <strong id="resBase">0 óra</strong></div>
+                        <div class="res-row"><span>Ténylegesen ledolgozott:</span> <strong id="resWorked">0 óra</strong></div>
+                        <div class="res-total">
+                            <span>Túllépés:</span> 
+                            <strong id="resDiff">0 óra</strong>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 
-    <!-- A nyomtató konténer maradt az utolsó HTML elem! -->
     <div id="printContainer"></div>
 
 <script>
@@ -389,7 +389,6 @@
         btns[index].classList.add('active');
         document.getElementById('segSlider').style.transform = `translateX(${index * 100}%)`;
         
-        // ÚJ: Gomb megjelenítése/elrejtése a szűrő alapján
         const otBtn = document.getElementById('overtimeBtnContainer');
         if (shift === 'ALL') {
             otBtn.style.display = 'none';
@@ -554,7 +553,7 @@
         setTimeout(() => { window.print(); }, 100);
     }
 
-    /* --- ÚJ TÚLÓRA (KERET) LOGIKA --- */
+    /* --- TÚLÓRA (KERET) LOGIKA --- */
     let holidayOverrides = {};
     let currentPeriods = [];
 
