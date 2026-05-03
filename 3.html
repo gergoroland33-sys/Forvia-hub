@@ -36,9 +36,9 @@
             color: var(--text-main);
             margin: 0; padding: 0;
             display: flex; flex-direction: column;
-            height: 100dvh; 
-            overflow: hidden; 
-            touch-action: manipulation; 
+            height: 100dvh; /* Szigorú 100% magasság */
+            overflow: hidden; /* Nincs görgetés */
+            touch-action: manipulation; /* JAVÍTÁS: Gyorsabb és pontosabb érintés mobilon */
         }
 
         /* --- APP HEADER --- */
@@ -68,7 +68,7 @@
         @media (min-width: 768px) { .btn-print { display: flex; } }
 
         /* --- SZŰRŐ SÁV & TÚLÓRA GOMB --- */
-        .filter-container { padding: 8px 15px; background: var(--bg-base); flex-shrink: 0; display: flex; flex-direction: column; gap: 8px;}
+        .filter-container { padding: 8px 15px; background: var(--bg-base); flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; }
         .segmented-control {
             display: flex; background: rgba(15, 23, 42, 0.8);
             border-radius: 10px; padding: 4px; border: 1px solid var(--border);
@@ -84,7 +84,7 @@
             position: absolute; top: 4px; bottom: 4px;
             background: rgba(255,255,255,0.1); border-radius: 8px;
             z-index: 1; transition: transform 0.3s ease, width 0.3s;
-            pointer-events: none; 
+            pointer-events: none; /* JAVÍTÁS: A csúszka sosem takarja el az érintést a gombok elől */
         }
 
         .overtime-container {
@@ -162,14 +162,13 @@
         .shift-pill.highlight { justify-content: center; font-size: clamp(0.55rem, 1.2vh, 0.7rem); padding: 3px 2px; border: 1px solid currentColor; }
         .shift-pill.highlight span { display: none; }
 
-        /* --- MODAL (TÚLÓRA) --- */
+        /* --- ÚJ MODAL (TÚLÓRA) CSS --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
             z-index: 100; display: flex; justify-content: center; align-items: center;
             opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
         }
-        @media print { .modal-overlay { display: none !important; } } /* Ezt idetettem a saját blokkjába, hogy a tiéd érintetlen maradjon! */
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         
         .modal-content {
@@ -197,7 +196,6 @@
             outline: none; font-size: 0.9rem; font-weight: 600; font-family: inherit;
         }
         
-        /* Toggles & Pro Select */
         .holiday-item { 
             background: rgba(255,255,255,0.03); border: 1px solid var(--border-light); 
             padding: 12px; border-radius: 10px; margin-bottom: 10px; 
@@ -221,7 +219,6 @@
         }
         .pro-select:focus { border-color: var(--color-b); }
 
-        /* Eredmény doboz */
         .result-box { margin-top: 20px; background: rgba(2,6,23,0.6); border: 1px solid var(--border); border-radius: 12px; padding: 15px; }
         .res-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted); font-weight: 600;}
         .res-row strong { color: var(--text-main); font-size: 0.95rem;}
@@ -235,6 +232,11 @@
         .res-total .neutral { color: var(--text-main); }
 
         @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Ezt a szabályt betettem ide, hogy a te nyomtatási kódod lent érintetlen maradhasson! */
+        @media print {
+            .overtime-container, .modal-overlay { display: none !important; }
+        }
 
         /* --- NYOMTATÁSI NÉZET --- */
         #printContainer { display: none; }
@@ -297,7 +299,7 @@
             <div class="seg-btn" onclick="setFilter('C', 3)">"C"</div>
             <div class="seg-btn" onclick="setFilter('D', 4)">"D"</div>
         </div>
-        <!-- Keret elszámolás gomb -->
+        <!-- ÚJ: Keret elszámolás gomb -->
         <div class="overtime-container" id="overtimeBtnContainer">
             <button class="btn-overtime" onclick="openOvertimeModal()">
                 ⏱️ Negyedéves Keret Elszámolás (Túlóra)
@@ -326,7 +328,7 @@
 
     <div id="printContainer"></div>
 
-    <!-- Túlóra Modal -->
+    <!-- ÚJ: Túlóra Modal -->
     <div class="modal-overlay" id="otModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -390,6 +392,7 @@
         btns[index].classList.add('active');
         document.getElementById('segSlider').style.transform = `translateX(${index * 100}%)`;
         
+        // ÚJ: Gomb megjelenítése/elrejtése a szűrő alapján
         const otBtn = document.getElementById('overtimeBtnContainer');
         if (shift === 'ALL') {
             otBtn.style.display = 'none';
@@ -554,7 +557,7 @@
         setTimeout(() => { window.print(); }, 100);
     }
 
-    /* --- TÚLÓRA (KERET) LOGIKA MULTI-ÜNNEPPEL ÉS PRO OPCIÓKKAL --- */
+    /* --- ÚJ TÚLÓRA (KERET) LOGIKA --- */
     let holidayOverrides = {};
     let currentPeriods = [];
 
@@ -581,19 +584,18 @@
         const select = document.getElementById('periodSelect');
         select.innerHTML = '';
         
-        // ÚJ LOGIKA: Kifizetési hónapok váltása mindig 10.-e után történik
         const m = currentDate.getMonth(); 
         const d = currentDate.getDate();
         let defaultIdx = 0; 
 
         if ((m === 10 && d > 10) || m === 11 || m === 0 || (m === 1 && d <= 10)) {
-            defaultIdx = 0; // Nov-Jan (Februári kifizetés)
+            defaultIdx = 0; 
         } else if ((m === 1 && d > 10) || m === 2 || m === 3 || (m === 4 && d <= 10)) {
-            defaultIdx = 1; // Feb-Ápr (Májusi kifizetés)
+            defaultIdx = 1; 
         } else if ((m === 4 && d > 10) || m === 5 || m === 6 || (m === 7 && d <= 10)) {
-            defaultIdx = 2; // Máj-Júl (Augusztusi kifizetés)
+            defaultIdx = 2; 
         } else {
-            defaultIdx = 3; // Aug-Okt (Novemberi kifizetés)
+            defaultIdx = 3; 
         }
 
         currentPeriods.forEach((p, idx) => {
@@ -620,12 +622,10 @@
             let isWeekend = (d.getDay() === 0 || d.getDay() === 6);
             let isHoliday = !!unnepnapok[mmdd];
             
-            // Törvényes alap
             if (!isWeekend && !isHoliday) {
                 baseHours += 8;
             }
             
-            // Beosztás
             let shiftData = getShiftForDate(d);
             let isDayShift = (shiftData.day === shift);
             let isNightShift = (shiftData.night === shift);
@@ -633,13 +633,11 @@
             if (isDayShift || isNightShift) {
                 if (isHoliday) {
                     if (isNightShift) {
-                        // Előretekintés: Vajon holnap is ünnepnap? (Pl. Pünkösd 1. és 2. napja)
                         let nextDay = new Date(d);
                         nextDay.setDate(d.getDate() + 1);
                         let nextMmdd = `${String(nextDay.getMonth() + 1).padStart(2, '0')}-${String(nextDay.getDate()).padStart(2, '0')}`;
                         let isNextHoliday = !!unnepnapok[nextMmdd];
                         
-                        // Ha holnap is ünnep, a mai éjszaka 0 óra. Ha nem, akkor 8 óra (22:00-06:00).
                         let defaultNightHours = isNextHoliday ? 0 : 8;
                         let overrideKey = `${dateStr}-night`;
                         
@@ -664,7 +662,6 @@
                             </div>
                         `;
                     } else {
-                        // Nappalos
                         let overrideKey = `${dateStr}-day`;
                         if (holidayOverrides[overrideKey] === undefined) {
                             holidayOverrides[overrideKey] = 0; 
@@ -687,7 +684,6 @@
                         `;
                     }
                 } else {
-                    // Sima nap
                     workedHours += 12;
                 }
             }
