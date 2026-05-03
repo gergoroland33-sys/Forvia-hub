@@ -82,6 +82,24 @@
         /* --- MOBILE APP VIEW STYLES --- */
         #mobile-app-container { display: none; width: 100%; height: 100%; background: #0b0f1a; flex-direction: column; }
         
+        /* ÚJ: PRÉMIUM MOBIL SZŰRŐ GOMBOK STÍLUSA */
+        .m-filter-btn {
+            background: linear-gradient(to bottom, #1e293b, #0f172a);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 6px 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+            transition: all 0.15s ease;
+            touch-action: manipulation;
+            user-select: none;
+        }
+        .m-filter-btn:active { transform: scale(0.92); box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
+        .m-filter-note { border-color: rgba(234, 179, 8, 0.4); }
+        .m-filter-cserenap { border-color: rgba(239, 68, 68, 0.4); }
+
         .m-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; transition: transform 0.1s; }
         .m-card:active { transform: scale(0.98); background: #334155; }
         .m-avatar { width: 40px; height: 40px; border-radius: 50%; background: #3b82f6; display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; margin-right: 12px; flex-shrink: 0; }
@@ -211,9 +229,20 @@
         
         <div id="m-list-view" class="flex flex-col h-full">
             <div class="p-4 bg-[#0f172a] border-b border-slate-800 shadow-xl z-20">
+                <!-- ÚJ, PRÉMIUM GOMBOK A FORVIA FELIRAT MELLÉ MOBILON -->
                 <div class="flex justify-between items-center mb-4">
                     <span class="text-blue-500 font-black text-2xl tracking-tighter">FORVIA</span>
-                    <button onclick="addEmp()" class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg"><i class="fas fa-plus"></i></button>
+                    <div class="flex items-center gap-2">
+                        <button onclick="openFilterModal('note')" class="m-filter-btn m-filter-note" title="Jelölt">
+                            <i class="fas fa-exclamation-triangle text-yellow-500 text-[10px]"></i>
+                            <span class="text-yellow-500 text-[9px] font-black uppercase tracking-widest">Jelölt</span>
+                        </button>
+                        <button onclick="openFilterModal('cserenap')" class="m-filter-btn m-filter-cserenap" title="Cserenap">
+                            <i class="fas fa-circle text-red-500 text-[8px] animate-pulse"></i>
+                            <span class="text-red-500 text-[9px] font-black uppercase tracking-widest">Csere</span>
+                        </button>
+                        <button onclick="addEmp()" class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg ml-1"><i class="fas fa-plus"></i></button>
+                    </div>
                 </div>
                 
                 <div class="grid grid-cols-4 gap-2 mb-3">
