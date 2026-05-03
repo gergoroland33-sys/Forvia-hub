@@ -196,7 +196,7 @@
             outline: none; font-size: 0.9rem; font-weight: 600; font-family: inherit;
         }
         
-        /* Toggles */
+        /* Toggles & Info Items */
         .holiday-item { 
             background: rgba(255,255,255,0.03); border: 1px solid var(--border-light); 
             padding: 12px; border-radius: 10px; margin-bottom: 10px; 
@@ -286,7 +286,7 @@
             <div class="seg-btn" onclick="setFilter('C', 3)">"C"</div>
             <div class="seg-btn" onclick="setFilter('D', 4)">"D"</div>
         </div>
-        <!-- ÚJ: Keret elszámolás gomb -->
+        <!-- Keret elszámolás gomb -->
         <div class="overtime-container" id="overtimeBtnContainer">
             <button class="btn-overtime" onclick="openOvertimeModal()">
                 ⏱️ Negyedéves Keret Elszámolás (Túlóra)
@@ -315,7 +315,7 @@
 
     <div id="printContainer"></div>
 
-    <!-- ÚJ: Túlóra Modal -->
+    <!-- Túlóra Modal -->
     <div class="modal-overlay" id="otModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -544,7 +544,7 @@
         setTimeout(() => { window.print(); }, 100);
     }
 
-    /* --- TÚLÓRA (KERET) LOGIKA --- */
+    /* --- TÚLÓRA (KERET) LOGIKA JAVÍTVA! --- */
     let holidayOverrides = {};
     let currentPeriods = [];
 
@@ -572,7 +572,6 @@
         const select = document.getElementById('periodSelect');
         select.innerHTML = '';
         
-        // Próbáljuk felismerni az aktuális naptári hónap alapján, melyik negyedév lehet érdekes
         const m = currentDate.getMonth(); 
         let defaultIdx = 1; 
         if (m >= 1 && m <= 3) defaultIdx = 1; // Feb-Ápr
@@ -617,31 +616,43 @@
             
             if (isDayShift || isNightShift) {
                 if (isHoliday) {
-                    // Ha ünnepnapra esik, alapesetben 0 órát számolunk, KIVÉVE, ha a user bejelöli!
-                    let shiftType = isDayShift ? 'NAPPALOS (06:00-18:00)' : 'ÉJSZAKÁS (18:00-06:00)';
-                    let overrideKey = `${dateStr}-${isDayShift ? 'day' : 'night'}`;
-                    
-                    if (holidayOverrides[overrideKey] === undefined) {
-                        holidayOverrides[overrideKey] = false; // Alapból nem dolgozott
-                    }
-                    
-                    if (holidayOverrides[overrideKey]) {
-                        workedHours += 12; // Csak akkor ad 12-t, ha átkapcsolja
-                    }
-                    
-                    // Kapcsoló (Toggle) generálása a UI-ra
-                    holidayHTML += `
-                        <div class="holiday-item">
-                            <div class="holiday-info">
-                                <span class="h-date">${monthNames[d.getMonth()]} ${d.getDate()}. - ${unnepnapok[mmdd]}</span>
-                                <span class="h-name">Beosztás szerint: ${shiftType}</span>
+                    if (isNightShift) {
+                        // ÚJ SZABÁLY: Ha éjszakás vagy ünnepnapon, akkor FIX 8 ÓRA (22:00 - 06:00), nincs kérdés!
+                        workedHours += 8;
+                        holidayHTML += `
+                            <div class="holiday-item" style="opacity: 0.9; border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.05);">
+                                <div class="holiday-info">
+                                    <span class="h-date">${monthNames[d.getMonth()]} ${d.getDate()}. - ${unnepnapok[mmdd]}</span>
+                                    <span class="h-name">ÉJSZAKÁS (Fix 22:00-06:00)</span>
+                                </div>
+                                <div style="font-weight: 900; color: var(--color-b); font-size: 0.9rem;">+8 óra</div>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" ${holidayOverrides[overrideKey] ? 'checked' : ''} onchange="toggleHoliday('${overrideKey}', this.checked)">
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                    `;
+                        `;
+                    } else {
+                        // Nappalos műszak esetén maradt a kapcsoló (0 vagy 12 óra)
+                        let overrideKey = `${dateStr}-day`;
+                        
+                        if (holidayOverrides[overrideKey] === undefined) {
+                            holidayOverrides[overrideKey] = false; // Alapból nem dolgozott
+                        }
+                        
+                        if (holidayOverrides[overrideKey]) {
+                            workedHours += 12; 
+                        }
+                        
+                        holidayHTML += `
+                            <div class="holiday-item">
+                                <div class="holiday-info">
+                                    <span class="h-date">${monthNames[d.getMonth()]} ${d.getDate()}. - ${unnepnapok[mmdd]}</span>
+                                    <span class="h-name">NAPPALOS (06:00-18:00)</span>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" ${holidayOverrides[overrideKey] ? 'checked' : ''} onchange="toggleHoliday('${overrideKey}', this.checked)">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        `;
+                    }
                 } else {
                     // Normál napokon vagy hétvégéken fix 12 óra, ha be van osztva
                     workedHours += 12;
@@ -652,7 +663,7 @@
         // UI Frissítés
         const hContainer = document.getElementById('holidayQuestions');
         if (holidayHTML !== '') {
-            hContainer.innerHTML = `<div style="font-size: 0.8rem; color: var(--accent); margin-bottom: 10px; font-weight:700;">Érintett ünnepnapok: Dolgoztál ekkor?</div>` + holidayHTML;
+            hContainer.innerHTML = `<div style="font-size: 0.8rem; color: var(--accent); margin-bottom: 10px; font-weight:700;">Érintett ünnepnapok:</div>` + holidayHTML;
         } else {
             hContainer.innerHTML = `<div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px; text-align: center; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px;">Ebben a 3 hónapban a beosztásod nem érintett ünnepnapot.</div>`;
         }
