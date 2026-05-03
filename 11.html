@@ -565,6 +565,12 @@
         let mainChart = null; 
         
         let unseenEvents = []; 
+        
+        // --- ÚJ RÉSZ: Értesítés hang és vibráció változói ---
+        let lastUnseenCount = 0;
+        const notifSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        // ----------------------------------------------------
+
         if (!localStorage.getItem('smt_last_seen')) {
             localStorage.setItem('smt_last_seen', new Date().toISOString());
         }
@@ -623,6 +629,16 @@
             const bellBtn = document.getElementById('mainBellBtn'); // Az animációhoz
             
             if (totalUnseen > 0) {
+                // --- ÚJ RÉSZ: Hang és Vibrálás ---
+                if (totalUnseen > lastUnseenCount) {
+                    notifSound.play().catch(e => console.log("Auto-play tiltva böngésző által"));
+                    if (navigator.vibrate) {
+                        navigator.vibrate([200, 100, 200]);
+                    }
+                }
+                lastUnseenCount = totalUnseen;
+                // ----------------------------------
+
                 bellBtn.classList.add('animating'); // Bekapcsolja a harang vibrálást
                 badge.style.display = 'flex';
                 badge.innerText = totalUnseen > 99 ? '99+' : totalUnseen;
@@ -665,6 +681,7 @@
                 popup.style.display = 'block';
                 localStorage.setItem('smt_last_seen', new Date().toISOString());
                 unseenEvents = []; 
+                lastUnseenCount = 0; // <-- ÚJ RÉSZ: Érték nullázása olvasás után
                 document.getElementById('bellBadge').style.display = 'none';
                 document.getElementById('mainBellBtn').classList.remove('animating'); // Azonnal leáll az animáció
             }
@@ -691,6 +708,7 @@
                 loadHistoryData();
                 localStorage.setItem('smt_last_seen', new Date().toISOString());
                 unseenEvents = []; 
+                lastUnseenCount = 0; // <-- ÚJ RÉSZ: Érték nullázása olvasás után
                 updateBellUI();
             }
         }
