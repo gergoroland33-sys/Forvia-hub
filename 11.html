@@ -390,6 +390,12 @@
                 <div id="statusDot" class="status-dot"></div>
                 <span id="statusText">Kapcsolódás...</span>
             </div>
+
+            <!-- ÚJ RÉSZ: Aktív felhasználók számlálója a fejlécben -->
+            <div class="connection-status" style="margin-left: -5px;" title="Jelenleg aktív felhasználók (Presence)">
+                👥 <span id="activeUsersCount">1</span>
+            </div>
+            <!-- --------------------------------------------------- -->
             
             <div class="notification-wrapper no-print">
                 <!-- HARANG GOMB (Itt aktiválódik majd a JS által a vibrálás) -->
@@ -535,7 +541,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove, push, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        // --- ÚJ RÉSZ: onDisconnect hozzáadva az importokhoz ---
+        import { getDatabase, ref, set, onValue, remove, push, get, child, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        // ------------------------------------------------------
         import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -583,11 +591,27 @@
                     if (snap.val() === true) {
                         statusDot.className = "status-dot online";
                         statusText.innerText = "Mentés aktív";
+
+                        // --- ÚJ RÉSZ: Jelenlét (Presence) logika ---
+                        const myConnectionRef = push(ref(db, 'active_users'));
+                        // Ha megszakad a kapcsolat, a Firebase szerver automatikusan törli ezt a bejegyzést
+                        onDisconnect(myConnectionRef).remove().then(() => {
+                            set(myConnectionRef, true);
+                        });
+                        // -------------------------------------------
                     } else {
                         statusDot.className = "status-dot offline";
                         statusText.innerText = "Nincs kapcsolat";
                     }
                 });
+
+                // --- ÚJ RÉSZ: Aktív felhasználók számolása és kijelzése ---
+                onValue(ref(db, 'active_users'), (snapshot) => {
+                    const usersObj = snapshot.val() || {};
+                    const count = Object.keys(usersObj).length;
+                    document.getElementById('activeUsersCount').innerText = count;
+                });
+                // ----------------------------------------------------------
 
                 const dbRef = ref(db, 'smt_errors');
                 onValue(dbRef, (snapshot) => {
