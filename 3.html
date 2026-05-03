@@ -350,12 +350,68 @@
     <div id="printContainer"></div>
 
 <script>
-    const unnepnapok = {
-        "01-01": "Újév", "03-15": "Nemzeti Ünnep", "04-03": "Nagypéntek", "04-05": "Húsvét",
-        "04-06": "Húsvéthétfő", "05-01": "Munka", "05-24": "Pünkösd", "05-25": "Pünkösd",
-        "08-20": "Államalapítás", "10-23": "1956", "11-01": "Mindenszentek",
-        "12-24": "Szenteste", "12-25": "Karácsony", "12-26": "Karácsony"
-    };
+    /* --- ÚJ: Mozgó ünnepek automatikus számítása (Meeus/Jones/Butcher algoritmus) --- */
+    function getEaster(year) {
+        let a = year % 19;
+        let b = Math.floor(year / 100);
+        let c = year % 100;
+        let d = Math.floor(b / 4);
+        let e = b % 4;
+        let f = Math.floor((b + 8) / 25);
+        let g = Math.floor((b - f + 1) / 3);
+        let h = (19 * a + b - d - g + 15) % 30;
+        let i = Math.floor(c / 4);
+        let k = c % 4;
+        let l = (32 + 2 * e + 2 * i - h - k) % 7;
+        let m = Math.floor((a + 11 * h + 22 * l) / 451);
+        let month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+        let day = ((h + l - 7 * m + 114) % 31) + 1;
+        return new Date(year, month, day);
+    }
+
+    function getHolidaysForYear(year) {
+        const easter = getEaster(year);
+        
+        const addDays = (date, days) => {
+            let result = new Date(date);
+            result.setDate(result.getDate() + days);
+            return result;
+        };
+
+        const formatDate = (date) => {
+            return String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+        };
+
+        const goodFriday = addDays(easter, -2);
+        const easterMonday = addDays(easter, 1);
+        const pentecostSunday = addDays(easter, 49);
+        const pentecostMonday = addDays(easter, 50);
+
+        return {
+            "01-01": "Újév",
+            "03-15": "Nemzeti Ünnep",
+            [formatDate(goodFriday)]: "Nagypéntek",
+            [formatDate(easter)]: "Húsvét",
+            [formatDate(easterMonday)]: "Húsvéthétfő",
+            "05-01": "Munka",
+            [formatDate(pentecostSunday)]: "Pünkösd",
+            [formatDate(pentecostMonday)]: "Pünkösd",
+            "08-20": "Államalapítás",
+            "10-23": "1956",
+            "11-01": "Mindenszentek",
+            "12-24": "Szenteste",
+            "12-25": "Karácsony",
+            "12-26": "Karácsony"
+        };
+    }
+
+    let holidaysCache = {};
+    function getHolidayName(year, mmdd) {
+        if (!holidaysCache[year]) {
+            holidaysCache[year] = getHolidaysForYear(year);
+        }
+        return holidaysCache[year][mmdd];
+    }
 
     const anchorDate = new Date(Date.UTC(2026, 0, 9)); 
 
@@ -389,6 +445,7 @@
         btns[index].classList.add('active');
         document.getElementById('segSlider').style.transform = `translateX(${index * 100}%)`;
         
+        // Gomb megjelenítése/elrejtése a szűrő alapján
         const otBtn = document.getElementById('overtimeBtnContainer');
         if (shift === 'ALL') {
             otBtn.style.display = 'none';
@@ -452,7 +509,9 @@
             
             const shiftData = getShiftForDate(iterDate);
             const mmdd = `${String(month + 1).padStart(2, '0')}-${String(dayCounter).padStart(2, '0')}`;
-            const holidayName = unnepnapok[mmdd];
+            
+            // Ünnep lekérdezése az új automata algoritmussal
+            const holidayName = getHolidayName(year, mmdd);
             
             let cellClass = `cell ${isToday ? 'today' : ''} ${isWeekend ? 'weekend' : ''}`;
             let shiftsHtml = '';
@@ -616,7 +675,8 @@
             let dateStr = `${year}-${mmdd}`;
             
             let isWeekend = (d.getDay() === 0 || d.getDay() === 6);
-            let isHoliday = !!unnepnapok[mmdd];
+            let holidayName = getHolidayName(year, mmdd);
+            let isHoliday = !!holidayName;
             
             if (!isWeekend && !isHoliday) {
                 baseHours += 8;
@@ -631,8 +691,9 @@
                     if (isNightShift) {
                         let nextDay = new Date(d);
                         nextDay.setDate(d.getDate() + 1);
+                        let nextYear = nextDay.getFullYear();
                         let nextMmdd = `${String(nextDay.getMonth() + 1).padStart(2, '0')}-${String(nextDay.getDate()).padStart(2, '0')}`;
-                        let isNextHoliday = !!unnepnapok[nextMmdd];
+                        let isNextHoliday = !!getHolidayName(nextYear, nextMmdd);
                         
                         let defaultNightHours = isNextHoliday ? 0 : 8;
                         let overrideKey = `${dateStr}-night`;
@@ -647,7 +708,7 @@
                         holidayHTML += `
                             <div class="holiday-item" style="border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.05);">
                                 <div class="holiday-info">
-                                    <span class="h-date">${monthNames[d.getMonth()]} ${d.getDate()}. - ${unnepnapok[mmdd]}</span>
+                                    <span class="h-date">${monthNames[d.getMonth()]} ${d.getDate()}. - ${holidayName}</span>
                                     <span class="h-name">ÉJSZAKÁS (Módosítható Pro Opció)</span>
                                 </div>
                                 <select class="pro-select" onchange="toggleHoliday('${overrideKey}', parseInt(this.value))">
@@ -669,7 +730,7 @@
                         holidayHTML += `
                             <div class="holiday-item">
                                 <div class="holiday-info">
-                                    <span class="h-date">${monthNames[d.getMonth()]} ${d.getDate()}. - ${unnepnapok[mmdd]}</span>
+                                    <span class="h-date">${monthNames[d.getMonth()]} ${d.getDate()}. - ${holidayName}</span>
                                     <span class="h-name">NAPPALOS (06:00-18:00)</span>
                                 </div>
                                 <label class="toggle-switch">
