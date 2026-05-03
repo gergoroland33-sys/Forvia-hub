@@ -69,6 +69,8 @@ input {
     transition: 0.3s;
     font-family: monospace; 
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    /* MÓDOSÍTÁS: Középre igazítás PC-n is */
+    text-align: center; 
 }
 input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4); }
 input.search-ready { border-color: #10b981 !important; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3) !important; }
@@ -264,6 +266,27 @@ input.suggestions-active {
 .idle-text { font-family: monospace; font-size: 1.1rem; font-weight: 800; color: var(--text-secondary); letter-spacing: 2px; margin-bottom: 8px; pointer-events: none;}
 .idle-sub { font-size: 0.85rem; font-weight: normal; color: #64748b; font-family: monospace; text-transform: uppercase; pointer-events: none;}
 .idle-sub span { color: var(--accent); font-weight: bold; font-size: 1.1rem; margin-right: 4px;}
+
+/* ÚJ: Dinamikus kijelző konténer a top infóknak */
+.dynamic-stat-container {
+    height: 40px; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.dynamic-stat-item {
+    animation: fadeInOut 5s infinite; /* 5 másodpercenként vált a teszteléshez, ezt növelheted órára is js-ben*/
+    opacity: 0;
+}
+
+@keyframes fadeInOut {
+    0%, 10% { opacity: 0; transform: translateY(10px); }
+    20%, 80% { opacity: 1; transform: translateY(0); }
+    90%, 100% { opacity: 0; transform: translateY(-10px); }
+}
+
 
 /* --- FELUGRÓ MODAL ABLAK --- */
 .modal-overlay {
@@ -605,7 +628,10 @@ input.suggestions-active {
 
 <div id="idleState">
     <div class="idle-text">FORVIA TERMINAL KÉSZ</div>
-    <div class="idle-sub" id="dbSizeDisplay">ADATBÁZIS BETÖLTÉSE...</div>
+    <!-- MÓDOSÍTÁS: Dinamikus kijelző konténer -->
+    <div class="dynamic-stat-container">
+        <div class="idle-sub dynamic-stat-item" id="dynamicStatsDisplay">ADATBÁZIS BETÖLTÉSE...</div>
+    </div>
 </div>
 
 <div id="eredmeny"></div>
@@ -686,6 +712,7 @@ let bank=[],ultetes=[],idSet=new Set(),uniqueIdsArr=[],keresIdozito=null,searchH
 let searchFinalized = false;
 let isNumericMode = true;
 let beultetesSzuro = 'BOTH'; 
+let statInterval = null; // ÚJ: Statisztika interval
 
 window.setBeultetesSzuro = function(val) {
     if(typeof provideFeedback === 'function') provideFeedback(); 
@@ -735,13 +762,75 @@ window.clearSearch = function() {
     if(idle) idle.style.display = 'flex';
 };
 
-function calculateStats() {
-    const totalParts = uniqueIdsArr.length;
-    const display = document.getElementById('dbSizeDisplay');
-    if (display) {
-        display.innerHTML = `<span>${totalParts.toLocaleString('hu-HU')}</span> DB EGYEDI CIKKSZÁM BETÖLTVE`;
+// --- ÚJ: Dinamikus statisztikák számítása és megjelenítése ---
+function startDynamicStats() {
+    const display = document.getElementById('dynamicStatsDisplay');
+    if (!display) return;
+
+    if (ultetes.length === 0 && bank.length === 0) {
+        display.innerHTML = `NINCS ELÉRHETŐ ADAT`;
+        return;
     }
+
+    // Statisztikák számítása
+    const totalParts = uniqueIdsArr.length;
+    
+    // Alkatrészek modellenként (Legtöbb/Legkevesebb)
+    const modelPartsCount = {};
+    const partUsageCount = {};
+    let totalPlacements = 0;
+
+    ultetes.forEach(r => {
+        const cikk = r[0];
+        const model = r[2];
+        const db = parseInt(r[3]) || 0;
+
+        if (model) {
+            modelPartsCount[model] = (modelPartsCount[model] || 0) + db;
+        }
+        if (cikk) {
+            partUsageCount[cikk] = (partUsageCount[cikk] || 0) + db;
+        }
+        totalPlacements += db;
+    });
+
+    // Legtöbb alkatrészt használó modell
+    let topModel = Object.keys(modelPartsCount).reduce((a, b) => modelPartsCount[a] > modelPartsCount[b] ? a : b, "");
+    // Legkevesebb alkatrészt használó modell
+    let minModel = Object.keys(modelPartsCount).reduce((a, b) => modelPartsCount[a] < modelPartsCount[b] ? a : b, "");
+    // Leggyakrabban használt cikkszám (db alapján)
+    let topPart = Object.keys(partUsageCount).reduce((a, b) => partUsageCount[a] > partUsageCount[b] ? a : b, "");
+
+
+    const statMessages = [
+        `<span>${totalParts.toLocaleString('hu-HU')}</span> DB EGYEDI CIKKSZÁM BETÖLTVE`,
+        `LEGTÖBB ALKATRÉSZ: <span>${topModel}</span> (${modelPartsCount[topModel] || 0} db)`,
+        `LEGGYAKORIBB CIKKSZÁM: <span>${topPart}</span> (${partUsageCount[topPart] || 0} db)`,
+        `LEGKEVESEBB ALKATRÉSZ: <span>${minModel}</span> (${modelPartsCount[minModel] || 0} db)`,
+        `ÖSSZES BEÜLTETÉS (DB): <span>${totalPlacements.toLocaleString('hu-HU')}</span>`
+    ];
+
+    let currentIndex = 0;
+
+    function updateDisplay() {
+        // Újraindítjuk az animációt azáltal, hogy eltávolítjuk majd hozzáadjuk az elemet a DOM-hoz (vagy a class-t)
+        display.style.animation = 'none';
+        display.offsetHeight; // trigger reflow
+        display.style.animation = null; 
+        
+        display.innerHTML = statMessages[currentIndex];
+        currentIndex = (currentIndex + 1) % statMessages.length;
+    }
+
+    // Azonnali első frissítés
+    updateDisplay();
+    
+    // Ha volt előző, töröljük
+    if(statInterval) clearInterval(statInterval);
+    // Váltás beállítása (5000ms = 5 másodperc)
+    statInterval = setInterval(updateDisplay, 5000); 
 }
+
 
 Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.text())]).then(([bT,uT])=>{
     bank=feldolgoz(bT); ultetes=feldolgoz(uT);
@@ -771,7 +860,9 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
 
     document.getElementById('eredmeny').innerHTML='';
     renderHistory(); 
-    calculateStats(); 
+    
+    // MÓDOSÍTÁS: Az egyszerű calculateStats hívás helyett az új animált funkciót indítjuk
+    startDynamicStats(); 
     
     inp.addEventListener('input',function(){
         const v=this.value.toUpperCase();
