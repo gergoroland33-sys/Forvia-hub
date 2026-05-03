@@ -169,6 +169,7 @@
             z-index: 100; display: flex; justify-content: center; align-items: center;
             opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
         }
+        @media print { .modal-overlay { display: none !important; } } /* Ezt idetettem a saját blokkjába, hogy a tiéd érintetlen maradjon! */
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         
         .modal-content {
@@ -241,7 +242,7 @@
         @media print {
             @page { size: A4 portrait; margin: 10mm; }
             body { background: white !important; color: black !important; display: block; height: auto; overflow: visible; }
-            .app-header, .filter-container, .main-layout, .modal-overlay { display: none !important; }
+            .app-header, .filter-container, .main-layout { display: none !important; }
             #printContainer { display: block !important; width: 100%; height: 100%; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
@@ -257,13 +258,16 @@
             
             .print-days-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(6, 1fr); gap: 1px; flex: 1; }
             
+            /* SZENT GRÁL MÉRETEK + KÉRT DIZÁJN (Keret sötétebb, kerekített) */
             .print-cell { border: 1px solid #666; border-radius: 3px; display: flex; flex-direction: column; padding: 1px; font-size: 6pt; overflow: hidden; position: relative;}
             .print-cell.empty { border: none; }
             .print-cell.weekend { background: #f9f9f9; }
             
+            /* SZENT GRÁL MÉRETEK + KÉRT DIZÁJN (Középre igazítva) */
             .print-date-num { font-weight: 900; line-height: 1; text-align: center; }
             .print-shifts { margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 1px; }
             
+            /* SZENT GRÁL MÉRETEK + KÉRT DIZÁJN (Pirulák szélessége beállítva) */
             .p-pill { width: 90%; font-size: 5pt; font-weight: 900; text-align: center; border-radius: 2px; color: white !important; line-height: 1.1; padding: 1px 0;}
             .p-A { background: var(--color-a) !important; }
             .p-B { background: var(--color-b) !important; }
