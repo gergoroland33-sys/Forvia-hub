@@ -167,7 +167,6 @@
         .giant-search-input:focus::placeholder { opacity: 0.4; transform: translateX(5px); }
         .giant-search:focus-within i { color: #fff; transform: translateY(-50%) scale(1.1); text-shadow: 0 0 10px var(--accent); }
         
-        /* A böngésző beépített "x" törlő gombjának eltüntetése search mezőnél */
         .giant-search-input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
         
         @media (max-width: 768px) {
@@ -325,9 +324,12 @@
     <div id="publicSearchPanel">
         <div class="public-logo"><i class="fas fa-microchip"></i> INVEN<span>PRO</span></div>
         <div class="giant-search">
+            <!-- LÁTHATATLAN CSAPDA A BÖNGÉSZŐ JELSZÓKEZELŐJÉNEK -->
+            <input type="email" style="position: absolute; top: -9999px; left: -9999px;" tabindex="-1" aria-hidden="true">
             <i class="fas fa-search"></i>
-            <!-- JAVÍTOTT KERESŐ MEZŐ: type="search" és autocomplete="nope" a böngészők becsapására -->
-            <input type="search" id="publicSearchInput" class="giant-search-input" placeholder="Keress stencilt, szekrényt, polcot..." onkeyup="renderPublicSearch()" autocomplete="nope" spellcheck="false">
+            
+            <!-- ATOMBIZTOS KERESŐ MEZŐ (readonly trükkel) -->
+            <input type="search" id="publicSearchInput" class="giant-search-input" placeholder="Keress stencilt, szekrényt, polcot..." onkeyup="renderPublicSearch()" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');" onmouseenter="this.removeAttribute('readonly');" ontouchstart="this.removeAttribute('readonly');" spellcheck="false">
         </div>
         <div class="public-results" id="publicResultsContainer"></div>
     </div>
@@ -348,9 +350,12 @@
         <div class="main-content">
             <div class="topbar">
                 <div class="search-container">
+                    <!-- CSAPDA IDE IS -->
+                    <input type="email" style="position: absolute; top: -9999px; left: -9999px;" tabindex="-1" aria-hidden="true">
                     <i class="fas fa-search"></i>
-                    <!-- ITT IS JAVÍTVA A BELSŐ KERESŐ -->
-                    <input type="search" id="adminSearchInput" class="search-input" placeholder="Keresés..." onkeyup="renderUI()" autocomplete="nope" spellcheck="false">
+                    
+                    <!-- BELSŐ KERESŐ MEZŐ -->
+                    <input type="search" id="adminSearchInput" class="search-input" placeholder="Keresés..." onkeyup="renderUI()" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');" onmouseenter="this.removeAttribute('readonly');" ontouchstart="this.removeAttribute('readonly');" spellcheck="false">
                 </div>
                 <div class="action-buttons">
                     <button class="btn btn-primary" onclick="openModal()"><i class="fas fa-plus"></i> Új Stencil</button>
