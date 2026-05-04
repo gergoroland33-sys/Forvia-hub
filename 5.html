@@ -1,188 +1,722 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Maszk Finder</title>
-<style>
-body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:white;margin:0;padding:20px;text-align:center;}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INVEN PRO - Enterprise Stencil Control</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Firebase SDK-k -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
 
-/* Kereső doboz konténer */
-.search-container { position: relative; max-width: 500px; margin: 0 auto; }
+        const firebaseConfig = {
+            apiKey: "AIzaSyBIwpNLR7ZSqVZAAN3UXVcww2fgvCfG2Hs",
+            authDomain: "invenpro-65b86.firebaseapp.com",
+            databaseURL: "https://invenpro-65b86-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "invenpro-65b86",
+            storageBucket: "invenpro-65b86.firebasestorage.app",
+            messagingSenderId: "493080174446",
+            appId: "1:493080174446:web:a940376b3fa6ab41602b7f"
+        };
 
-input{width:100%;padding:15px;font-size:1.5rem;background:#1e293b;border:2px solid #3b82f6;color:white;border-radius:12px;text-align:center;box-sizing:border-box;text-transform:uppercase;margin-bottom:5px;}
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
 
-/* Javaslatok lista stílusa */
-#javaslatok {
-display: none;
-position: absolute;
-top: 100%; left: 0; right: 0;
-background: #1e293b;
-border: 1px solid #3b82f6;
-border-top: none;
-border-radius: 0 0 12px 12px;
-z-index: 100;
-max-height: 250px;
-overflow-y: auto;
-box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-}
-.tipp {
-padding: 15px;
-border-bottom: 1px solid #334155;
-cursor: pointer;
-font-size: 1.2rem;
-font-weight: bold;
-color: #94a3b8;
-text-align: left;
-padding-left: 20px;
-}
-.tipp:hover { background: #3b82f6; color: white; }
-.tipp:last-child { border-bottom: none; }
-.tipp span { color: #3b82f6; font-weight: normal; font-size: 0.9rem; float: right; }
-.tipp:hover span { color: white; }
+        window.stencilData = [];
+        window.isAdmin = false;
+        
+        window.cabinetsConfig = [
+            { name: "Szekrény 1", start: 1, end: 20 },
+            { name: "Szekrény 2", start: 1, end: 20 },
+            { name: "Szekrény 3", start: 21, end: 40 },
+            { name: "Szekrény 4", start: 41, end: 60 },
+            { name: "Szekrény 5", start: 61, end: 96 },
+            { name: "Szekrény 6", start: 97, end: 132 }
+        ];
 
-#eredmeny{display:none;background:#1e293b;padding:25px;border-radius:15px;border-left:8px solid #fbbf24;animation:pop 0.3s ease; margin-top: 20px; max-width: 500px; margin-left: auto; margin-right: auto;}
-h1{color:#3b82f6;margin-bottom:30px;}
-.label{color:#94a3b8;font-size:0.8rem;text-transform:uppercase;letter-spacing:1px;}
-.big-val{font-size:3.5rem;font-weight:900;color:#fbbf24;line-height:1;margin:10px 0;}
-.sub-val{font-size:1.5rem;font-weight:bold;}
-@keyframes pop{from{transform:scale(0.9);opacity:0;}to{transform:scale(1);opacity:1;}}
-#status{color:#ef4444;font-size:0.9rem;margin-top:10px;}
-</style>
+        onSnapshot(collection(db, "stencils"), (snapshot) => {
+            window.stencilData = [];
+            snapshot.forEach((doc) => {
+                window.stencilData.push({ id: doc.id, ...doc.data() });
+            });
+            if(window.isAdmin) { renderUI(); } else { renderPublicSearch(); }
+        }, (error) => {
+            const el = document.getElementById('connectionStatus');
+            el.style.color = 'var(--danger)';
+            el.title = "Firebase kapcsolat megszakadt!";
+            console.error("Firebase hiba:", error);
+        });
+
+        window.addEventListener('online', () => {
+            const el = document.getElementById('connectionStatus');
+            el.style.color = 'var(--success)';
+            el.title = "Firebase kapcsolat aktív";
+        });
+        window.addEventListener('offline', () => {
+            const el = document.getElementById('connectionStatus');
+            el.style.color = 'var(--danger)';
+            el.title = "Nincs internetkapcsolat!";
+        });
+
+        onAuthStateChanged(auth, (user) => {
+            const loginBtn = document.getElementById('loginBtn');
+            if (user) {
+                window.isAdmin = true;
+                loginBtn.style.display = 'none'; 
+                document.getElementById('adminPanel').style.display = 'flex';
+                document.getElementById('publicSearchPanel').style.display = 'none';
+                renderUI();
+                showToast("Sikeres belépés: Admin mód aktív");
+            } else {
+                window.isAdmin = false;
+                loginBtn.style.display = 'flex'; 
+                loginBtn.onclick = openLoginModal;
+                document.getElementById('adminPanel').style.display = 'none';
+                document.getElementById('publicSearchPanel').style.display = 'flex';
+                renderPublicSearch();
+            }
+        });
+
+        window.login = () => {
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPassword').value;
+            const remember = document.getElementById('rememberMe').checked;
+
+            const persistenceType = remember ? browserLocalPersistence : browserSessionPersistence;
+
+            setPersistence(auth, persistenceType)
+                .then(() => {
+                    return signInWithEmailAndPassword(auth, email, pass);
+                })
+                .then(() => { closeModal('loginModal'); })
+                .catch((error) => { alert("Hibás bejelentkezés: " + error.message); });
+        };
+
+        window.logout = () => { signOut(auth); };
+
+        window.saveToFirebase = async (dataObj) => {
+            try {
+                await setDoc(doc(db, "stencils", dataObj.maszk), dataObj);
+                closeModal('addModal');
+                showToast("Mentés sikeres!");
+            } catch (e) { alert("Hiba a mentés során: " + e.message); }
+        };
+
+        window.deleteFromFirebase = async (maszkId) => {
+            try {
+                await deleteDoc(doc(db, "stencils", maszkId));
+                showToast("Sikeresen törölve!");
+            } catch (e) { alert("Hiba a törlés során: " + e.message); }
+        };
+
+    </script>
+    <style>
+        :root {
+            --bg-base: #0b1120;
+            --bg-panel: #1e293b;
+            --bg-hover: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #0ea5e9;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --border: #2dd4bf20;
+            --slot-empty: #0f172a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background-color: var(--bg-base); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; position: relative; }
+
+        .system-top-right { position: fixed; top: 20px; right: 30px; z-index: 1000; }
+        
+        /* JAVÍTOTT WIFI IKON (A jobb alsó sarok teljesen üres mindkét nézetben) */
+        #connectionStatus { 
+            position: fixed; 
+            bottom: 20px; 
+            right: 20px; 
+            z-index: 9999; 
+            background: rgba(15, 23, 42, 0.9); 
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            color: var(--success); 
+            font-size: 16px; 
+            transition: 0.3s;
+        }
+        
+        .auth-btn { background: rgba(30, 41, 59, 0.8); border: 1px solid var(--border); color: var(--text-muted); width: 45px; height: 45px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.3s; backdrop-filter: blur(10px); font-size: 18px; }
+        .auth-btn:hover { background: var(--accent); color: white; transform: scale(1.1); box-shadow: 0 0 15px rgba(14, 165, 233, 0.4); border-color: var(--accent); }
+
+        #publicSearchPanel { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 15vh; background: radial-gradient(circle at center, #1e293b 0%, #0b1120 100%); overflow-y: auto; }
+        .public-logo { font-size: 45px; font-weight: 900; margin-bottom: 40px; text-shadow: 0 5px 15px rgba(0,0,0,0.5); letter-spacing: 2px; }
+        .public-logo span { color: var(--accent); }
+        .giant-search { position: relative; width: 80%; max-width: 700px; margin-bottom: 50px; }
+        .giant-search i { position: absolute; left: 25px; top: 50%; transform: translateY(-50%); color: var(--accent); font-size: 24px; }
+        .giant-search-input { width: 100%; padding: 20px 25px 20px 70px; border-radius: 50px; border: 2px solid rgba(14, 165, 233, 0.3); background: rgba(15, 23, 42, 0.8); color: white; outline: none; font-size: 22px; transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
+        .giant-search-input:focus { border-color: var(--accent); box-shadow: 0 0 25px rgba(14, 165, 233, 0.4); background: #0f172a; }
+        
+        .public-results { width: 90%; max-width: 1000px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; padding-bottom: 50px; }
+        .p-card { background: linear-gradient(135deg, var(--bg-panel), #0f172a); border-left: 5px solid var(--success); border-radius: 15px; padding: 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 20px rgba(0,0,0,0.4); transition: 0.3s; animation: fadeIn 0.3s ease-out; }
+        .p-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.6); border-left-color: var(--accent); }
+        .p-card-info h2 { color: white; margin: 0 0 8px 0; font-size: 28px; font-weight: 900; letter-spacing: 1px; }
+        .p-card-info p { color: var(--accent); margin: 0; font-size: 14px; font-weight: bold; text-transform: uppercase; background: rgba(14, 165, 233, 0.1); display: inline-block; padding: 4px 10px; border-radius: 6px; }
+        .p-card-loc { text-align: right; }
+        .p-card-loc .cab { color: var(--text-muted); font-size: 14px; text-transform: uppercase; margin-bottom: 5px; font-weight: bold; }
+        .p-card-loc .shelf { color: var(--success); font-size: 24px; font-weight: 900; background: rgba(16,185,129,0.1); padding: 5px 15px; border-radius: 8px; border: 1px solid rgba(16,185,129,0.2); }
+
+        #adminPanel { width: 100%; height: 100%; display: none; }
+        
+        .sidebar { width: 240px; background-color: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 50; box-shadow: 4px 0 15px rgba(0,0,0,0.3); }
+        .logo { padding: 25px 20px; font-size: 22px; font-weight: 800; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; letter-spacing: 1px; }
+        .logo i { color: var(--accent); font-size: 24px; }
+        .nav-items { padding: 15px 0; flex-grow: 1; }
+        .nav-item { padding: 15px 25px; display: flex; align-items: center; gap: 15px; color: var(--text-muted); cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .nav-item:hover, .nav-item.active { background-color: rgba(14, 165, 233, 0.1); color: var(--accent); border-left-color: var(--accent); }
+        
+        .sidebar-stats { padding: 25px 20px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.2); }
+        .stat-row { margin-bottom: 15px; }
+        .stat-row:last-child { margin-bottom: 0; }
+        .stat-row span { display: block; font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+        .stat-row strong { font-size: 22px; color: white; }
+        .stat-row strong.free { color: var(--success); }
+
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
+        .topbar { padding: 15px 30px; background-color: rgba(30, 41, 59, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; gap: 20px; }
+        
+        .search-container { position: relative; flex-grow: 1; max-width: 450px; }
+        .search-container i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--accent); }
+        .search-input { width: 100%; padding: 12px 15px 12px 42px; border-radius: 8px; border: 1px solid var(--border); background-color: rgba(15, 23, 42, 0.6); color: white; outline: none; font-size: 14px; transition: 0.2s; }
+        .search-input:focus { border-color: var(--accent); background-color: var(--bg-base); box-shadow: 0 0 10px rgba(14, 165, 233, 0.2); }
+        
+        .action-buttons { display: flex; gap: 10px; }
+        .btn { padding: 10px 18px; border-radius: 6px; border: 1px solid transparent; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; color: white; font-size: 13px; transition: 0.2s; }
+        .btn:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .btn-primary { background-color: var(--accent); }
+        .btn-print { background-color: var(--bg-hover); border-color: #475569; }
+
+        .content-area { padding: 25px 30px; display: none; animation: fadeIn 0.2s ease-out; }
+        .content-area.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .cabinets-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .cabinet { background: linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-base) 100%); border-radius: 10px; padding: 15px; border: 1px solid #334155; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .cabinet-header { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; text-align: center; }
+        .slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+        
+        .slot { height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 13px; font-weight: bold; position: relative; transition: 0.2s; cursor: default; }
+        .slot-num { position: absolute; top: 4px; left: 5px; font-size: 9px; opacity: 0.5; font-weight: normal; }
+        .slot.occupied .slot-num { color: #ffffff; opacity: 1; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+
+        .slot.empty { background-color: var(--slot-empty); border: 1px dashed #334155; color: #475569; }
+        .slot.occupied { background: linear-gradient(145deg, #065f46, #064e3b); border: 1px solid #10b981; color: #34d399; box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 2px 5px rgba(0,0,0,0.2); cursor: help; }
+        .slot.occupied:hover { filter: brightness(1.2); transform: scale(1.05); z-index: 2; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4); color: white; }
+        .slot.highlight { background: var(--warning); color: #000; border-color: #fff; animation: blink 1s infinite; z-index: 5; }
+
+        .table-container { background-color: var(--bg-panel); border-radius: 10px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        table { width: 100%; border-collapse: collapse; min-width: 700px; }
+        th, td { padding: 12px 20px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
+        th { color: var(--text-muted); font-size: 11px; text-transform: uppercase; background: #0f172a; position: sticky; top: 0; }
+        tr:hover { background-color: rgba(255,255,255,0.02); }
+        .status-empty { color: #64748b; font-style: italic; font-size: 12px; }
+        .model-text-table { color: var(--accent); font-size: 11px; font-weight: bold; background: rgba(14, 165, 233, 0.1); padding: 3px 8px; border-radius: 4px; border: 1px solid rgba(14, 165, 233, 0.2); }
+        
+        .btn-icon { background: none; border: none; cursor: pointer; font-size: 13px; padding: 8px 12px; margin-left: 5px; border-radius: 6px; transition: 0.2s; font-weight: bold; }
+        .btn-add-inline { color: var(--success); border: 1px solid rgba(16,185,129,0.3); background: rgba(16,185,129,0.05); }
+        .btn-add-inline:hover { background: var(--success); color: white; }
+        .btn-edit { color: var(--accent); border: 1px solid rgba(14,165,233,0.3); background: rgba(14,165,233,0.05); }
+        .btn-edit:hover { background: var(--accent); color: white; transform: translateY(-1px); }
+        .btn-delete { color: var(--danger); border: 1px solid rgba(239,68,68,0.3); background: rgba(239,68,68,0.05); }
+        .btn-delete:hover { background: var(--danger); color: white; transform: translateY(-1px); }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.2s; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-content { background-color: var(--bg-panel); width: 90%; max-width: 420px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); transform: translateY(20px); transition: transform 0.3s; }
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+        .modal-header { padding: 20px 25px; border-bottom: 1px solid var(--border); font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 16px; color: white; }
+        .modal-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; transition: 0.2s; }
+        .modal-close:hover { color: var(--danger); transform: scale(1.1); }
+        .modal-body { padding: 25px; display: flex; flex-direction: column; gap: 15px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 11px; color: var(--accent); text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
+        .form-control { padding: 12px 15px; background-color: var(--bg-base); border: 1px solid #334155; color: white; border-radius: 6px; outline: none; transition: 0.2s; font-size: 14px; width: 100%; }
+        .form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2); }
+        .modal-footer { padding: 20px 25px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; background: rgba(0,0,0,0.1); border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
+        
+        .btn-outline { background: #475569; border: 1px solid #475569; color: white; }
+        .btn-outline:hover { background: #334155; }
+
+        /* JAVÍTOTT ÉRTESÍTÉS POZÍCIÓ (Fent középre, hogy semmit ne takarjon ki) */
+        #toast { position: fixed; top: 20px; left: 50%; transform: translate(-50%, -100px); background-color: var(--success); color: white; padding: 15px 25px; border-radius: 8px; font-weight: bold; font-size: 14px; opacity: 0; transition: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 3000; box-shadow: 0 10px 20px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 10px; }
+        #toast.show { transform: translate(-50%, 0); opacity: 1; }
+
+        /* =========================================================
+           JAVÍTOTT NYOMTATÁSI NÉZET (Garantáltan mindig 1 lap!)
+        ========================================================= */
+        #printArea { display: none; }
+        
+        @media print {
+            @page { margin: 10mm; size: A4 portrait; }
+            body > *:not(#printArea) { display: none !important; }
+            
+            body, html { margin: 0 !important; padding: 0 !important; background: white !important; font-family: Arial, sans-serif !important; height: 100% !important; overflow: hidden !important; }
+            
+            #printArea { 
+                display: flex !important; justify-content: center !important; align-items: flex-start !important; 
+                position: absolute; left: 0; top: 0; width: 100%; height: 100%; 
+                background: white !important; color: black !important; box-sizing: border-box !important;
+            }
+
+            .print-wrapper {
+                display: flex !important; flex-direction: column !important; align-items: center !important;
+                width: 85% !important; height: 98vh !important;
+                margin: 0 auto !important;
+            }
+
+            /* Cím egy picit kisebb, hogy több hely maradjon */
+            .print-wrapper h1 { margin: 0 0 5px 0 !important; font-size: 18pt !important; font-weight: bold !important; color: black !important; flex-shrink: 0 !important; text-align: center; }
+
+            .print-table {
+                width: 100% !important; height: 100% !important; 
+                border-collapse: collapse !important; border: 2px solid black !important;
+            }
+
+            .print-table tr { display: table-row !important; }
+            .print-table th, .print-table td { border: 1px solid black !important; text-align: center !important; vertical-align: middle !important; color: black !important; }
+            
+            /* JAVÍTÁS: Sokkal kisebb belső margók és betűméret, hogy a 36 sor is ráférjen */
+            .print-table th { padding: 4px !important; font-size: 12pt !important; font-weight: bold !important; background-color: #d1d5db !important; text-transform: uppercase !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .print-table td { padding: 2px !important; font-size: 10pt !important; }
+            .print-table tr:nth-child(even) td { background-color: #f3f4f6 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+            .col-polc { width: 25% !important; }
+            .col-tartalom { width: 75% !important; }
+            .empty-slot { color: #64748b !important; font-style: italic !important; font-weight: normal !important; }
+        }
+    </style>
 </head>
 <body>
 
-<h1>Maszk Kereső</h1>
+    <div class="system-top-right">
+        <button id="loginBtn" class="auth-btn" title="Bejelentkezés"><i class="fas fa-lock"></i></button>
+    </div>
 
-<div class="search-container">
-<input type="text" id="inp" placeholder="PL: M10..." oninput="gepeles()" autocomplete="off">
-<div id="javaslatok"></div>
-</div>
+    <!-- JAVÍTOTT WIFI IKON a JOBB alsó sarokban (Soha semmit nem takar ki!) -->
+    <div id="connectionStatus" title="Firebase kapcsolat aktív"><i class="fas fa-wifi"></i></div>
 
-<div id="eredmeny">
-<div class="label">SZEKRÉNY</div>
-<div class="big-val" id="szekreny">-</div>
-<div style="margin-top:15px;">
-<div class="label">FAKK SZÁMA</div>
-<div class="sub-val" id="fakk">-</div>
-</div>
-<div style="margin-top:15px;">
-<div class="label">KERESETT MASZK</div>
-<div style="color:#3b82f6; font-weight:bold;" id="maszkID">-</div>
-</div>
-</div>
+    <div id="publicSearchPanel">
+        <div class="public-logo"><i class="fas fa-microchip"></i> INVEN<span>PRO</span></div>
+        <div class="giant-search">
+            <i class="fas fa-search"></i>
+            <input type="text" id="publicSearchInput" class="giant-search-input" placeholder="Keress stencilt, szekrényt, polcot..." onkeyup="renderPublicSearch()" autocomplete="off">
+        </div>
+        <div class="public-results" id="publicResultsContainer"></div>
+    </div>
 
-<div id="status">Betöltés...</div>
+    <div id="adminPanel">
+        <div class="sidebar">
+            <div class="logo"><i class="fas fa-user-shield" style="font-size:18px;"></i> ADMIN<span>PRO</span></div>
+            <div class="nav-items">
+                <div class="nav-item active" onclick="switchTab('map', this)"><i class="fas fa-border-all"></i> Térkép Nézet</div>
+                <div class="nav-item" onclick="switchTab('db', this)"><i class="fas fa-list-ul"></i> Adatbázis</div>
+            </div>
+            <div class="sidebar-stats">
+                <div class="stat-row"><span>Maszk Készlet</span><strong id="stat-total">0</strong></div>
+                <div class="stat-row"><span>Üres Polcok</span><strong class="free" id="stat-free">0</strong></div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="topbar">
+                <div class="search-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="adminSearchInput" class="search-input" placeholder="Keresés..." onkeyup="renderUI()" autocomplete="off">
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="openModal()"><i class="fas fa-plus"></i> Új Stencil</button>
+                    <button class="btn btn-print" onclick="openPrintModal()"><i class="fas fa-print"></i> Nyomtatás</button>
+                    <button class="btn" style="background-color: var(--danger); border-color: var(--danger);" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Kilépés</button>
+                </div>
+            </div>
+
+            <div id="tab-map" class="content-area active">
+                <div class="cabinets-grid" id="cabinetsContainer"></div>
+            </div>
+
+            <div id="tab-db" class="content-area">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Szekrény</th>
+                                <th>Polc</th>
+                                <th>Stencil Szám</th>
+                                <th>Modell</th>
+                                <th style="text-align: right;">Műveletek</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span><i class="fas fa-lock"></i> Adminisztrátor Belépés</span>
+                <button class="modal-close" onclick="closeModal('loginModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>E-mail cím</label>
+                    <input type="email" id="loginEmail" class="form-control" placeholder="admin@invenpro.hu" autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label>Jelszó</label>
+                    <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" autocomplete="current-password">
+                </div>
+                <div class="form-group" style="flex-direction: row; align-items: center; gap: 8px; margin-top: 5px;">
+                    <input type="checkbox" id="rememberMe" checked style="width: 16px; height: 16px; cursor: pointer;">
+                    <label for="rememberMe" style="text-transform: none; font-size: 13px; color: var(--text-muted); letter-spacing: 0; cursor: pointer;">Emlékezz rám</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('loginModal')">Mégse</button>
+                <button class="btn btn-primary" onclick="login()">Belépés</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="addModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span id="modalTitle"><i class="fas fa-microchip"></i> Stencil Regisztráció</span>
+                <button class="modal-close" onclick="closeModal('addModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editOriginalId">
+                <div class="form-group">
+                    <label>Stencil / Maszk</label>
+                    <input type="text" id="editId" class="form-control" placeholder="Azonosító (pl. M1059)" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>Modellnév</label>
+                    <input type="text" id="editModel" class="form-control" placeholder="Opcionális (pl. Tosca)" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>Cél Szekrény</label>
+                    <select id="editCabinet" class="form-control">
+                        <option value="Szekrény 1">Szekrény 1 (Polcok: 1-20)</option><option value="Szekrény 2">Szekrény 2 (Polcok: 1-20)</option>
+                        <option value="Szekrény 3">Szekrény 3 (Polcok: 21-40)</option><option value="Szekrény 4">Szekrény 4 (Polcok: 41-60)</option>
+                        <option value="Szekrény 5">Szekrény 5 (Polcok: 61-96)</option><option value="Szekrény 6">Szekrény 6 (Polcok: 97-132)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Polc</label>
+                    <input type="number" id="editShelf" class="form-control" placeholder="Fizikai hely száma">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('addModal')">Mégse</button>
+                <button class="btn btn-primary" onclick="requestSave()"><i class="fas fa-save"></i> Adatok Mentése</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="confirmModal" style="z-index: 300;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span id="confirmTitle"><i class="fas fa-exclamation-triangle"></i> Figyelmeztetés</span>
+                <button class="modal-close" onclick="closeModal('confirmModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="confirmMessage">Biztosan végrehajtod ezt a műveletet?</div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('confirmModal')">Mégse</button>
+                <button class="btn btn-primary" id="confirmBtn" style="background:var(--danger); border-color:var(--danger);">Igen</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="printModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span><i class="fas fa-print"></i> Jelentés Nyomtatása</span>
+                <button class="modal-close" onclick="closeModal('printModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Válassz Szekrényt</label>
+                    <select id="printCabinetSelect" class="form-control">
+                        <option value="Szekrény 1">Szekrény 1</option><option value="Szekrény 2">Szekrény 2</option>
+                        <option value="Szekrény 3">Szekrény 3</option><option value="Szekrény 4">Szekrény 4</option>
+                        <option value="Szekrény 5">Szekrény 5</option><option value="Szekrény 6">Szekrény 6</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('printModal')">Mégse</button>
+                <button class="btn btn-print" onclick="executePrint()" style="color:white; background:var(--accent); border:none;"><i class="fas fa-file-pdf"></i> Nyomtatás Indítása</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="printArea"></div>
+    <div id="toast"><i class="fas fa-check-circle"></i> <span id="toast-msg"></span></div>
 
 <script>
-let adatb = []; 
-let fejléc = []; 
-let maszkLista = []; 
+    function showToast(msg) { 
+        const t = document.getElementById('toast'); 
+        document.getElementById('toast-msg').innerText = msg; 
+        t.classList.add('show'); 
+        setTimeout(() => t.classList.remove('show'), 3000); 
+    }
 
-// JAVÍTÁS: A fetch végére tettem egy egyedi azonosítót, hogy ne a régi cache-elt fájlt olvassa be
-fetch('Maszk%202026.csv?v=' + Date.now())
-.then(response => {
-if (!response.ok) throw new Error("A CSV fájl nem található!");
-return response.text();
-})
-.then(szoveg => {
-// JAVÍTÁS: Kezeli a Windows-os sorvégeket is a split(/\r?\n/) használatával
-adatb = szoveg.split(/\r?\n/).filter(r => r.trim() !== ''); 
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    function openLoginModal() { document.getElementById('loginModal').classList.add('active'); }
+    function openPrintModal() { document.getElementById('printModal').classList.add('active'); }
 
-if(adatb.length > 0) {
-fejléc = adatb[0].split(';');
+    function switchTab(tabId, element) {
+        document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.content-area').forEach(c => c.classList.remove('active'));
+        element.classList.add('active');
+        document.getElementById('tab-' + tabId).classList.add('active');
+    }
 
-maszkLista = []; // Tisztítás beolvasás előtt
-for (let i = 1; i < adatb.length; i++) {
-const cellak = adatb[i].split(';');
-for (let j = 0; j < cellak.length; j++) {
-const adat = cellak[j].trim().toUpperCase();
-if (adat.length > 1 && adat.startsWith('M')) {
-maszkLista.push(adat);
-}
-}
-}
-maszkLista = [...new Set(maszkLista)].sort();
+    function renderPublicSearch() {
+        const query = document.getElementById('publicSearchInput').value.trim().toLowerCase();
+        const container = document.getElementById('publicResultsContainer');
+        container.innerHTML = '';
 
-document.getElementById('status').style.color = '#10b981';
-document.getElementById('status').innerText = `Adatbázis kész: ${maszkLista.length} maszk.`;
-}
-})
-.catch(hiba => {
-document.getElementById('status').innerText = "HIBA: A 'Maszk 2026.csv' nem olvasható.";
-});
+        if (query.length < 2) {
+            container.innerHTML = '<div style="width: 100%; text-align: center; color: var(--text-muted); grid-column: 1/-1;">Írj be legalább 2 karaktert a kereséshez...</div>';
+            return;
+        }
 
-function gepeles() {
-const kulcs = document.getElementById('inp').value.trim().toUpperCase();
-const listaDoboz = document.getElementById('javaslatok');
-const eredmenyDoboz = document.getElementById('eredmeny');
+        const results = window.stencilData.filter(d => 
+            d.maszk.toLowerCase().includes(query) || 
+            (d.modell && d.modell.toLowerCase().includes(query)) ||
+            d.szekreny.toLowerCase().includes(query) ||
+            d.polc.toString() === query
+        );
+        
+        if (results.length === 0) {
+            container.innerHTML = '<div style="width: 100%; text-align: center; color: var(--danger); font-weight: bold; grid-column: 1/-1;"><i class="fas fa-times-circle"></i> Nincs találat.</div>';
+            return;
+        }
 
-listaDoboz.innerHTML = ''; 
+        results.sort((a,b) => a.szekreny.localeCompare(b.szekreny) || a.polc - b.polc);
+        
+        results.forEach(item => {
+            container.innerHTML += `
+            <div class="p-card">
+                <div class="p-card-info">
+                    <h2>${item.maszk}</h2>
+                    ${item.modell ? `<p>${item.modell}</p>` : ''}
+                </div>
+                <div class="p-card-loc">
+                    <div class="cab">${item.szekreny}</div>
+                    <div class="shelf">${item.polc}. polc</div>
+                </div>
+            </div>`;
+        });
+    }
 
-if (kulcs.length < 1) {
-listaDoboz.style.display = 'none';
-eredmenyDoboz.style.display = 'none';
-return;
-}
+    function renderUI() {
+        if (!window.isAdmin) return; 
+        
+        const query = document.getElementById('adminSearchInput').value.toLowerCase();
+        let totalSlots = window.cabinetsConfig.reduce((acc, cab) => acc + (cab.end - cab.start + 1), 0);
+        
+        document.getElementById('stat-total').innerText = window.stencilData.length;
+        document.getElementById('stat-free').innerText = totalSlots - window.stencilData.length;
 
-const talalatok = maszkLista.filter(m => m.includes(kulcs)).slice(0, 10);
+        const mapContainer = document.getElementById('cabinetsContainer');
+        mapContainer.innerHTML = '';
+        window.cabinetsConfig.forEach(cab => {
+            const cabDiv = document.createElement('div');
+            cabDiv.className = 'cabinet';
+            cabDiv.innerHTML = `<div class="cabinet-header">${cab.name}</div><div class="slots" id="slots-${cab.name.replace(' ', '')}"></div>`;
+            mapContainer.appendChild(cabDiv);
+            
+            const slotsDiv = document.getElementById(`slots-${cab.name.replace(' ', '')}`);
+            for (let i = cab.start; i <= cab.end; i++) {
+                const item = window.stencilData.find(d => d.szekreny === cab.name && parseInt(d.polc) === i);
+                const slot = document.createElement('div');
+                slot.className = 'slot' + (item ? ' occupied' : ' empty');
+                slot.id = `slot-${cab.name.replace(' ', '')}-${i}`;
+                
+                if (query.length >= 2 && item && (item.maszk.toLowerCase().includes(query) || (item.modell && item.modell.toLowerCase().includes(query)))) {
+                    slot.classList.add('highlight');
+                }
 
-if (talalatok.length > 0) {
-listaDoboz.style.display = 'block';
-talalatok.forEach(maszk => {
-const div = document.createElement('div');
-div.className = 'tipp';
-div.innerHTML = `${maszk} <span>Kiválasztás &rarr;</span>`;
-div.onclick = function() {
-document.getElementById('inp').value = maszk;
-kereses(maszk); 
-listaDoboz.style.display = 'none'; 
-};
-listaDoboz.appendChild(div);
-});
-} else {
-listaDoboz.style.display = 'none';
-}
-}
+                if (item) {
+                    slot.innerHTML = `<span class="slot-num">${i}</span>${item.maszk}`;
+                    if(item.modell) slot.title = `Modell: ${item.modell}`;
+                    slot.onclick = () => openModal(item.maszk); 
+                } else {
+                    slot.innerHTML = `<span class="slot-num">${i}</span>Üres`;
+                    slot.onclick = () => openModal(null, cab.name, i); 
+                    slot.style.cursor = 'pointer';
+                }
+                slotsDiv.appendChild(slot);
+            }
+        });
 
-function kereses(konkretMaszk) {
-const kulcs = konkretMaszk || document.getElementById('inp').value.trim().toUpperCase();
-const doboz = document.getElementById('eredmeny');
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        
+        window.cabinetsConfig.forEach(cab => {
+            for (let i = cab.start; i <= cab.end; i++) {
+                const item = window.stencilData.find(d => d.szekreny === cab.name && parseInt(d.polc) === i);
+                const matchSearch = !query || (item && (item.maszk.toLowerCase().includes(query) || (item.modell && item.modell.toLowerCase().includes(query)))) || cab.name.toLowerCase().includes(query) || i.toString().includes(query);
+                if (!matchSearch) continue;
 
-let talalat = false;
+                if (item) {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="color:var(--text-muted); font-size:12px;">${item.szekreny}</td>
+                            <td><strong style="color:var(--success);">${item.polc}.</strong></td>
+                            <td><strong style="color:white; font-size:15px;">${item.maszk}</strong></td>
+                            <td>${item.modell ? `<span class="model-text-table">${item.modell}</span>` : '-'}</td>
+                            <td style="text-align: right;">
+                                <button class="btn-icon btn-edit" onclick="openModal('${item.maszk}')"><i class="fas fa-pencil-alt"></i></button>
+                                <button class="btn-icon btn-delete" onclick="confirmDelete('${item.maszk}')"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>`;
+                } else {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="color:var(--text-muted); font-size:12px;">${cab.name}</td>
+                            <td style="color:var(--text-muted);">${i}.</td>
+                            <td class="status-empty">Üres polc</td>
+                            <td>-</td>
+                            <td style="text-align: right;">
+                                <button class="btn-icon btn-add-inline" onclick="openModal(null, '${cab.name}', ${i})" title="Hozzáadás ide"><i class="fas fa-plus"></i> Hozzáadás</button>
+                            </td>
+                        </tr>`;
+                }
+            }
+        });
+    }
 
-for (let i = 1; i < adatb.length; i++) {
-const sor = adatb[i].split(';');
+    function openModal(maszkId = null, prefillCabinet = "Szekrény 1", prefillShelf = "") {
+        const title = document.getElementById('modalTitle');
+        if (maszkId) {
+            const item = window.stencilData.find(d => d.maszk === maszkId);
+            title.innerHTML = '<i class="fas fa-edit"></i> Stencil Módosítása';
+            document.getElementById('editOriginalId').value = item.maszk;
+            document.getElementById('editId').value = item.maszk;
+            document.getElementById('editModel').value = item.modell || "";
+            document.getElementById('editCabinet').value = item.szekreny;
+            document.getElementById('editShelf').value = item.polc;
+        } else {
+            title.innerHTML = '<i class="fas fa-plus"></i> Új Stencil Regisztráció';
+            document.getElementById('editOriginalId').value = '';
+            document.getElementById('editId').value = '';
+            document.getElementById('editModel').value = '';
+            document.getElementById('editCabinet').value = prefillCabinet;
+            document.getElementById('editShelf').value = prefillShelf;
+        }
+        document.getElementById('addModal').classList.add('active');
+        setTimeout(() => document.getElementById('editId').focus(), 100);
+    }
 
-for (let j = 0; j < sor.length; j++) {
-if (sor[j] && sor[j].trim().toUpperCase() === kulcs) {
+    let confirmCallback = null;
+    function customConfirm(title, message, confirmBtnText, callback) {
+        document.getElementById('confirmTitle').innerHTML = title;
+        document.getElementById('confirmMessage').innerHTML = message;
+        document.getElementById('confirmBtn').innerText = confirmBtnText;
+        confirmCallback = callback;
+        document.getElementById('confirmModal').classList.add('active');
+    }
 
-const oszlopParIndex = Math.floor(j / 2);
-const fejlecIndex = oszlopParIndex * 2;
+    document.getElementById('confirmBtn').addEventListener('click', () => {
+        closeModal('confirmModal');
+        if (confirmCallback) confirmCallback();
+    });
 
-let szekrenyNev = fejléc[fejlecIndex];
-if(!szekrenyNev || szekrenyNev.trim() === "") {
-szekrenyNev = (oszlopParIndex + 1) + ". Szekrény";
-}
+    function requestSave() {
+        const originalMaszkId = document.getElementById('editOriginalId').value;
+        const maszk = document.getElementById('editId').value.trim().toUpperCase();
+        const modell = document.getElementById('editModel').value.trim();
+        const szekreny = document.getElementById('editCabinet').value;
+        const polc = parseInt(document.getElementById('editShelf').value);
 
-const fakkSzam = sor[j-1];
+        if (!maszk || !polc) return alert("Maszk azonosító és Polc megadása kötelező!");
+        const config = window.cabinetsConfig.find(c => c.name === szekreny);
+        if (polc < config.start || polc > config.end) return alert(`A ${szekreny} polcai ${config.start}-${config.end} között vannak!`);
 
-document.getElementById('szekreny').innerText = szekrenyNev;
-document.getElementById('fakk').innerText = fakkSzam + ".";
-document.getElementById('maszkID').innerText = kulcs;
+        const existingOnShelf = window.stencilData.find(d => d.szekreny === szekreny && parseInt(d.polc) === polc && d.maszk !== originalMaszkId);
+        
+        if (existingOnShelf) {
+            customConfirm(
+                '<i class="fas fa-exclamation-triangle"></i> Foglalt Polc!',
+                `A választott helyen (${szekreny}, ${polc}. polc) már van egy maszk: <strong style="color:var(--accent);">${existingOnShelf.maszk}</strong>.<br><br>Biztosan <strong>felülírod</strong> a régit az új adattal? (A régi törlődik!)`,
+                'Igen, Felülírom',
+                async () => {
+                    await window.deleteFromFirebase(existingOnShelf.maszk);
+                    if (originalMaszkId && originalMaszkId !== maszk) await window.deleteFromFirebase(originalMaszkId);
+                    window.saveToFirebase({ maszk, modell, szekreny, polc });
+                }
+            );
+        } else {
+            if (originalMaszkId && originalMaszkId !== maszk) {
+                window.deleteFromFirebase(originalMaszkId).then(() => {
+                    window.saveToFirebase({ maszk, modell, szekreny, polc });
+                });
+            } else {
+                window.saveToFirebase({ maszk, modell, szekreny, polc });
+            }
+        }
+    }
 
-doboz.style.display = 'block';
-talalat = true;
-break;
-}
-}
-if (talalat) break;
-}
+    function confirmDelete(maszkId) {
+        customConfirm(
+            '<i class="fas fa-trash-alt"></i> Törlés Megerősítése',
+            `Biztosan véglegesen törlöd a következő stencilt: <strong style="color:var(--danger); font-size:18px;">${maszkId}</strong>?`,
+            'Törlés Végrehajtása',
+            () => window.deleteFromFirebase(maszkId)
+        );
+    }
 
-if (!talalat) {
-doboz.style.display = 'none';
-}
-}
+    function executePrint() {
+        const targetCabinet = document.getElementById('printCabinetSelect').value;
+        const config = window.cabinetsConfig.find(c => c.name === targetCabinet);
+        const printArea = document.getElementById('printArea');
+        
+        let html = `
+        <div class="print-wrapper">
+            <h1>${targetCabinet}</h1>
+            <table class="print-table">
+                <tr>
+                    <th class="col-polc">Polc</th>
+                    <th class="col-tartalom">Tartalom</th>
+                </tr>
+        `;
+        
+        for (let i = config.start; i <= config.end; i++) {
+            const item = window.stencilData.find(d => d.szekreny === targetCabinet && parseInt(d.polc) === i);
+            let contentText = item ? `<strong>${item.maszk}</strong>` : `<span class="empty-slot">Üres</span>`; 
+            html += `<tr><td class="col-polc">${i}</td><td class="col-tartalom">${contentText}</td></tr>`;
+        }
+        
+        html += `</table></div>`;
+        printArea.innerHTML = html;
+        closeModal('printModal');
+        setTimeout(() => { window.print(); }, 300);
+    }
+
 </script>
 </body>
 </html>
