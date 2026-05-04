@@ -323,14 +323,13 @@
 
     <div id="publicSearchPanel">
         <div class="public-logo"><i class="fas fa-microchip"></i> INVEN<span>PRO</span></div>
-        <div class="giant-search">
-            <!-- LÁTHATATLAN CSAPDA A BÖNGÉSZŐ JELSZÓKEZELŐJÉNEK -->
-            <input type="email" style="position: absolute; top: -9999px; left: -9999px;" tabindex="-1" aria-hidden="true">
+        
+        <!-- JAVÍTÁS: A keresőt egy teljesen elszeparált, vak űrlapba tettem, így a böngésző békén hagyja! -->
+        <form class="giant-search" onsubmit="return false;" autocomplete="off">
             <i class="fas fa-search"></i>
-            
-            <!-- ATOMBIZTOS KERESŐ MEZŐ (readonly trükkel) -->
-            <input type="search" id="publicSearchInput" class="giant-search-input" placeholder="Keress stencilt, szekrényt, polcot..." onkeyup="renderPublicSearch()" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');" onmouseenter="this.removeAttribute('readonly');" ontouchstart="this.removeAttribute('readonly');" spellcheck="false">
-        </div>
+            <input type="search" id="publicSearchInput" class="giant-search-input" placeholder="Keress stencilt, szekrényt, polcot..." onkeyup="renderPublicSearch()" spellcheck="false" name="search_query_main">
+        </form>
+        
         <div class="public-results" id="publicResultsContainer"></div>
     </div>
 
@@ -349,14 +348,13 @@
 
         <div class="main-content">
             <div class="topbar">
-                <div class="search-container">
-                    <!-- CSAPDA IDE IS -->
-                    <input type="email" style="position: absolute; top: -9999px; left: -9999px;" tabindex="-1" aria-hidden="true">
+                
+                <!-- BELSŐ KERESŐ IS JAVÍTVA UGYANEZZEL A MÓDSZERREL -->
+                <form class="search-container" onsubmit="return false;" autocomplete="off">
                     <i class="fas fa-search"></i>
-                    
-                    <!-- BELSŐ KERESŐ MEZŐ -->
-                    <input type="search" id="adminSearchInput" class="search-input" placeholder="Keresés..." onkeyup="renderUI()" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');" onmouseenter="this.removeAttribute('readonly');" ontouchstart="this.removeAttribute('readonly');" spellcheck="false">
-                </div>
+                    <input type="search" id="adminSearchInput" class="search-input" placeholder="Keresés..." onkeyup="renderUI()" spellcheck="false" name="search_query_admin">
+                </form>
+
                 <div class="action-buttons">
                     <button class="btn btn-primary" onclick="openModal()"><i class="fas fa-plus"></i> Új Stencil</button>
                     <button class="btn btn-print" onclick="openPrintModal()"><i class="fas fa-print"></i> Nyomtatás</button>
