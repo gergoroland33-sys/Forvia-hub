@@ -1,1249 +1,1251 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <title>FORVIA HUB - MASTER SHELL</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>FORVIA HUB - MASTER SHELL</title>
 
-    <link rel="icon" type="image/png" href="icon.png">
-    <link rel="apple-touch-icon" href="icon.png">
-    
-    <meta name="apple-mobile-web-app-title" content="Forvia Hub">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="mobile-web-app-capable" content="yes">
-    <style>
-        :root {
-            --bg: #0b1120; --card: #1e293b; --accent: #3b82f6;
-            --text: #f3f4f6; --text-dim: #94a3b8; --border: #334155;
-            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
-            --day-color: #fbbf24; --night-color: #818cf8;
-        }
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
+    
+    <meta name="apple-mobile-web-app-title" content="Forvia Hub">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <style>
+        :root {
+            --bg: #0b1120; --card: #1e293b; --accent: #3b82f6;
+            --text: #f3f4f6; --text-dim: #94a3b8; --border: #334155;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --day-color: #fbbf24; --night-color: #818cf8;
+        }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-        body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background: #0f172a; color: var(--text);
-            margin: 0; height: 100dvh; overflow: hidden;
-            display: flex; flex-direction: column;
-            padding-top: env(safe-area-inset-top);
-            -webkit-user-select: none; user-select: none;
-        }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: #0f172a; color: var(--text);
+            margin: 0; height: 100dvh; overflow: hidden;
+            display: flex; flex-direction: column;
+            padding-top: env(safe-area-inset-top);
+            -webkit-user-select: none; user-select: none;
+        }
 
-        #content-frame {
-            border: none; width: 100%; 
-            /* MÓDOSÍTVA: A virtuális "holt tér" létrehozása az alsó 55 pixel kihagyásával */
-            height: calc(100% - 55px);
-            display: none; 
-            background: #0f172a;
-        }
+        #content-frame {
+            border: none; width: 100%; 
+            /* MÓDOSÍTVA: A virtuális "holt tér" létrehozása az alsó 55 pixel kihagyásával */
+            height: calc(100% - 55px);
+            display: none; 
+            background: #0f172a;
+        }
 
-        /* --- Görgethetőség beállítása laptopra --- */
-        #home-screen {
-            flex-grow: 1; display: flex; flex-direction: column;
-            align-items: center; 
-            text-align: center;
-            /* STATIKUS HÁTTÉR - Nincs animáció, nincs lassulás */
-            background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 45%),
-            radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.05), transparent 45%), #0b1120;
-            
-            padding: 20px; position: relative; width: 100%; height: 100%;
-            overflow-y: auto; 
-            padding-bottom: 60px;
-        }
-        
-        /* A TISZTA ÜVEG KÁRTYA (Animációk nélkül) */
-        .glass-card {
-            background: rgba(30, 41, 59, 0.4); 
-            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            
-            /* Visszaállítottuk az elegáns, vékony keretet */
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-top: 1px solid rgba(255, 255, 255, 0.15);
-            
-            padding: 40px 30px; border-radius: 24px;
-            /* Statikus árnyék a mélységérzetért */
-            box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6);
-            
-            max-width: 500px; width: 100%; 
-            position: relative; 
-            margin: auto; 
-            
-            /* Egyszerű megjelenés animáció betöltéskor */
-            animation: fadeIn 0.5s ease-out;
-        }
+        /* --- Görgethetőség beállítása laptopra --- */
+        #home-screen {
+            flex-grow: 1; display: flex; flex-direction: column;
+            align-items: center; 
+            text-align: center;
+            /* STATIKUS HÁTTÉR - Nincs animáció, nincs lassulás */
+            background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 45%),
+            radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.05), transparent 45%), #0b1120;
+            
+            padding: 20px; position: relative; width: 100%; height: 100%;
+            overflow-y: auto; 
+            padding-bottom: 60px;
+        }
+        
+        /* A TISZTA ÜVEG KÁRTYA (Animációk nélkül) */
+        .glass-card {
+            background: rgba(30, 41, 59, 0.4); 
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            
+            /* Visszaállítottuk az elegáns, vékony keretet */
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            
+            padding: 40px 30px; border-radius: 24px;
+            /* Statikus árnyék a mélységérzetért */
+            box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6);
+            
+            max-width: 500px; width: 100%; 
+            position: relative; 
+            margin: auto; 
+            
+            /* Egyszerű megjelenés animáció betöltéskor */
+            animation: fadeIn 0.5s ease-out;
+        }
 
-        .share-card-btn {
-            position: absolute; top: 5px; right: 5px;
-            width: 40px; height: 40px; border-radius: 50%;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: var(--text-dim); display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: all 0.2s ease; z-index: 10;
-        }
-        .share-card-btn:active {
-            background: var(--accent); color: white; border-color: var(--accent);
-            transform: scale(0.95);
-        }
+        .share-card-btn {
+            position: absolute; top: 5px; right: 5px;
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-dim); display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s ease; z-index: 10;
+        }
+        .share-card-btn:active {
+            background: var(--accent); color: white; border-color: var(--accent);
+            transform: scale(0.95);
+        }
 
-        .share-icon-svg { width: 20px; height: 20px; fill: currentColor; }
+        .share-icon-svg { width: 20px; height: 20px; fill: currentColor; }
 
-        .welcome-title {
-            font-size: 2.2rem; font-weight: 800; margin: 0;
-            color: white; letter-spacing: -1px; margin-bottom: 5px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
-        .highlight-blue { 
-            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+        .welcome-title {
+            font-size: 2.2rem; font-weight: 800; margin: 0;
+            color: white; letter-spacing: -1px; margin-bottom: 5px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .highlight-blue { 
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
-        .current-date {
-            color: var(--text-dim); font-size: 0.95rem; margin-bottom: 30px; font-weight: 500; line-height: 1.5;
-            user-select: none;
-        }
+        .current-date {
+            color: var(--text-dim); font-size: 0.95rem; margin-bottom: 30px; font-weight: 500; line-height: 1.5;
+            user-select: none;
+        }
 
-        /* --- EGYSZERŰ NÉVNAP STÍLUS (Eredeti) --- */
-        .nameday-text { 
-            color: var(--accent); 
-            font-weight: 600; 
-            font-size: 0.9rem; 
-            letter-spacing: 0.5px;
-            display: inline-block;
-            margin-top: 6px;
-        }
-        /* ------------------------------------------------ */
+        /* --- EGYSZERŰ NÉVNAP STÍLUS (Eredeti) --- */
+        .nameday-text { 
+            color: var(--accent); 
+            font-weight: 600; 
+            font-size: 0.9rem; 
+            letter-spacing: 0.5px;
+            display: inline-block;
+            margin-top: 6px;
+        }
+        /* ------------------------------------------------ */
 
-        /* --- KÖZÉPRE IGAZÍTOTT NAPTÁR DOBOZ --- */
-        .calendar-box {
-            background: linear-gradient(145deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
-            padding: 20px 22px; 
-            margin-bottom: 30px;
-            
-            position: relative;
-            overflow: hidden;
-            
-            border-left: 4px solid transparent; 
-            display: flex;              
-            flex-direction: column;    
-            align-items: center;       
-            text-align: center;        
-            
-            width: 100%;
-            
-            /* Interaktivitás */
-            cursor: pointer;
-            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        
-        /* --- STATIKUS KIRÁLYKÉK (Nincs animáció) --- */
-        .calendar-box.electric-blue {
-            border-left-color: #4169E1; /* Királykék */
-            /* Statikus ragyogás */
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2), -2px 0 15px rgba(65, 105, 225, 0.4);
-        }
-        
-        .calendar-box:active {
-            transform: scale(0.97);
-        }
+        /* --- KÖZÉPRE IGAZÍTOTT NAPTÁR DOBOZ --- */
+        .calendar-box {
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 20px 22px; 
+            margin-bottom: 30px;
+            
+            position: relative;
+            overflow: hidden;
+            
+            border-left: 4px solid transparent; 
+            display: flex;              
+            flex-direction: column;    
+            align-items: center;       
+            text-align: center;        
+            
+            width: 100%;
+            
+            /* Interaktivitás */
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        /* --- STATIKUS KIRÁLYKÉK (Nincs animáció) --- */
+        .calendar-box.electric-blue {
+            border-left-color: #4169E1; /* Királykék */
+            /* Statikus ragyogás */
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2), -2px 0 15px rgba(65, 105, 225, 0.4);
+        }
+        
+        .calendar-box:active {
+            transform: scale(0.97);
+        }
 
-        .cal-header { 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 8px; 
-            margin-bottom: 12px; 
-            width: 100%;
-        }
-        .cal-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: #64748b; font-weight: 700; }
-        
-        .cal-main-row { 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            gap: 12px;                
-            margin-bottom: 6px; 
-            width: 100%;
-            flex-wrap: wrap;         
-        }
-        .cal-date-text { font-size: 1.4rem; font-weight: 800; color: white; letter-spacing: -0.5px; }
-        
-        .cal-badge { 
-            font-size: 0.75rem; padding: 6px 12px; border-radius: 20px; 
-            font-weight: 700; text-transform: uppercase; white-space: nowrap;
-            letter-spacing: 0.5px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
-        .cal-event-name { font-size: 0.95rem; color: #94a3b8; font-weight: 500; }
-        
-        .cal-badge.holiday { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
-        .cal-badge.workday { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
-        
-        /* A sárga munkanap felülírja a kéket */
-        .calendar-box.type-workday { 
-            border-left-color: #fbbf24 !important; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;
-        }
+        .cal-header { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 8px; 
+            margin-bottom: 12px; 
+            width: 100%;
+        }
+        .cal-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: #64748b; font-weight: 700; }
+        
+        .cal-main-row { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 12px;                
+            margin-bottom: 6px; 
+            width: 100%;
+            flex-wrap: wrap;         
+        }
+        .cal-date-text { font-size: 1.4rem; font-weight: 800; color: white; letter-spacing: -0.5px; }
+        
+        .cal-badge { 
+            font-size: 0.75rem; padding: 6px 12px; border-radius: 20px; 
+            font-weight: 700; text-transform: uppercase; white-space: nowrap;
+            letter-spacing: 0.5px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .cal-event-name { font-size: 0.95rem; color: #94a3b8; font-weight: 500; }
+        
+        .cal-badge.holiday { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .cal-badge.workday { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
+        
+        /* A sárga munkanap felülírja a kéket */
+        .calendar-box.type-workday { 
+            border-left-color: #fbbf24 !important; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;
+        }
 
-        /* --- PRO SHIFT INFO BOX --- */
-        .shift-info-box {
-            margin-top: 15px; width: 100%; 
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.08); 
-            border-radius: 12px;
-            overflow: hidden;
-            animation: fadeIn 0.5s ease;
-            display: flex; flex-direction: column;
-        }
-        .shift-header-row {
-            background: rgba(255, 255, 255, 0.03);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 8px;
-            color: #94a3b8; 
-            font-size: 0.65rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 1.5px;
-        }
-        .shift-content-row {
-            display: flex; width: 100%;
-        }
-        .shift-cell {
-            flex: 1; padding: 10px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            border-right: 1px solid rgba(255, 255, 255, 0.05);
-            position: relative;
-        }
-        .shift-cell:last-child { border-right: none; }
-        
-        .shift-cell-label { 
-            font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; font-weight: 600; 
-        }
-        .shift-cell-val { font-size: 1.1rem; font-weight: 800; }
+        /* --- PRO SHIFT INFO BOX --- */
+        .shift-info-box {
+            margin-top: 15px; width: 100%; 
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            border-radius: 12px;
+            overflow: hidden;
+            animation: fadeIn 0.5s ease;
+            display: flex; flex-direction: column;
+        }
+        .shift-header-row {
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 8px;
+            color: #94a3b8; 
+            font-size: 0.65rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1.5px;
+        }
+        .shift-content-row {
+            display: flex; width: 100%;
+        }
+        .shift-cell {
+            flex: 1; padding: 10px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+        }
+        .shift-cell:last-child { border-right: none; }
+        
+        .shift-cell-label { 
+            font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; font-weight: 600; 
+        }
+        .shift-cell-val { font-size: 1.1rem; font-weight: 800; }
 
-        /* Day / Night Colors for Pro Look */
-        .theme-day .shift-cell-label { color: var(--day-color); opacity: 0.8; }
-        .theme-day .shift-cell-val { color: var(--day-color); text-shadow: 0 0 10px rgba(251, 191, 36, 0.2); }
-        
-        .theme-night .shift-cell-label { color: var(--night-color); opacity: 0.8; }
-        .theme-night .shift-cell-val { color: var(--night-color); text-shadow: 0 0 10px rgba(129, 140, 248, 0.2); }
+        /* Day / Night Colors for Pro Look */
+        .theme-day .shift-cell-label { color: var(--day-color); opacity: 0.8; }
+        .theme-day .shift-cell-val { color: var(--day-color); text-shadow: 0 0 10px rgba(251, 191, 36, 0.2); }
+        
+        .theme-night .shift-cell-label { color: var(--night-color); opacity: 0.8; }
+        .theme-night .shift-cell-val { color: var(--night-color); text-shadow: 0 0 10px rgba(129, 140, 248, 0.2); }
 
-        .instruction-text {
-            font-size: 1rem; line-height: 1.6; color: #cbd5e1; margin-bottom: 30px;
-        }
-        .instruction-highlight { color: var(--accent); font-weight: 600; }
+        .instruction-text {
+            font-size: 1rem; line-height: 1.6; color: #cbd5e1; margin-bottom: 30px;
+        }
+        .instruction-highlight { color: var(--accent); font-weight: 600; }
 
-        .device-info {
-            font-size: 0.8rem; color: #64748b;
-            border-top: 1px solid rgba(255,255,255,0.08);
-            padding-top: 20px; margin-top: 10px;
-        }
-        .good-luck {
-            display: block; margin-top: 5px; color: var(--success); font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
-        }
+        .device-info {
+            font-size: 0.8rem; color: #64748b;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            padding-top: 20px; margin-top: 10px;
+        }
+        .good-luck {
+            display: block; margin-top: 5px; color: var(--success); font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
+        }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .ticker-wrap {
-            position: fixed; bottom: 0; left: 0; width: 100%; overflow: hidden; height: 36px;
-            background-color: rgba(15, 23, 42, 0.95); border-top: 1px solid var(--accent);
-            z-index: 1000; backdrop-filter: blur(5px);
-            padding-left: 100%; box-sizing: content-box;
-        }
-        .ticker-move {
-            display: inline-block; height: 36px; line-height: 36px; white-space: nowrap;
-            padding-right: 100%; box-sizing: content-box;
-            animation: ticker 30s linear infinite;
-        }
-        .ticker-item {
-            display: inline-block; padding: 0 2rem; font-size: 0.9rem; color: #fbbf24;
-            font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
-        }
-        @keyframes ticker {
-            0% { transform: translate3d(0, 0, 0); }
-            100% { transform: translate3d(-100%, 0, 0); }
-        }
+        .ticker-wrap {
+            position: fixed; bottom: 0; left: 0; width: 100%; overflow: hidden; height: 36px;
+            background-color: rgba(15, 23, 42, 0.95); border-top: 1px solid var(--accent);
+            z-index: 1000; backdrop-filter: blur(5px);
+            padding-left: 100%; box-sizing: content-box;
+        }
+        .ticker-move {
+            display: inline-block; height: 36px; line-height: 36px; white-space: nowrap;
+            padding-right: 100%; box-sizing: content-box;
+            animation: ticker 30s linear infinite;
+        }
+        .ticker-item {
+            display: inline-block; padding: 0 2rem; font-size: 0.9rem; color: #fbbf24;
+            font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
+        }
+        @keyframes ticker {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
+        }
 
-        .sidebar {
-            position: fixed; left: 0; top: 0;
-            width: 280px; height: 100%; background: #111827;
-            border-right: 1px solid var(--border);
-            display: flex; flex-direction: column;
-            transform: translateX(-100%);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 2000;
-            padding-top: env(safe-area-inset-top);
-        }
-        .sidebar.open { transform: translateX(0); box-shadow: 20px 0 50px rgba(0,0,0,0.8); }
+        .sidebar {
+            position: fixed; left: 0; top: 0;
+            width: 280px; height: 100%; background: #111827;
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000;
+            padding-top: env(safe-area-inset-top);
+        }
+        .sidebar.open { transform: translateX(0); box-shadow: 20px 0 50px rgba(0,0,0,0.8); }
 
-        .sidebar-header {
-            padding: 25px 20px;
-            border-bottom: 1px solid var(--border);
-            background: rgba(255,255,255,0.02);
-        }
-        .sidebar-header h2 {
-            font-size: 1.3rem; margin: 0; letter-spacing: 1px; font-weight: 700;
-        }
+        .sidebar-header {
+            padding: 25px 20px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255,255,255,0.02);
+        }
+        .sidebar-header h2 {
+            font-size: 1.3rem; margin: 0; letter-spacing: 1px; font-weight: 700;
+        }
 
-        .nav-list { padding: 20px; flex-grow: 1; overflow-y: auto; }
+        .nav-list { padding: 20px; flex-grow: 1; overflow-y: auto; }
 
-        .nav-item {
-            display: flex; align-items: center; padding: 14px 15px;
-            margin-bottom: 8px; border-radius: 12px; text-decoration: none;
-            color: var(--text-dim); font-weight: 500; transition: background 0.1s; cursor: pointer;
-        }
-        .nav-item i { width: 30px; font-style: normal; text-align: center; font-size: 1.2rem; }
-        
-        @media (hover: hover) {
-            .nav-item:hover { background: rgba(59, 130, 246, 0.2); color: white; }
-        }
-        .nav-item:active { background: var(--accent) !important; color: white !important; transform: scale(0.98); }
+        .nav-item {
+            display: flex; align-items: center; padding: 14px 15px;
+            margin-bottom: 8px; border-radius: 12px; text-decoration: none;
+            color: var(--text-dim); font-weight: 500; transition: background 0.1s; cursor: pointer;
+        }
+        .nav-item i { width: 30px; font-style: normal; text-align: center; font-size: 1.2rem; }
+        
+        @media (hover: hover) {
+            .nav-item:hover { background: rgba(59, 130, 246, 0.2); color: white; }
+        }
+        .nav-item:active { background: var(--accent) !important; color: white !important; transform: scale(0.98); }
 
-        /* --- PRO "SMART DOCK" - GLOBÁLIS VÉKONY VERZIÓ --- */
-        .smart-dock {
-            position: fixed;
-            bottom: 10px;
-            right: 10px; 
-            z-index: 2147483647;
-            display: flex;
-            flex-direction: row; /* Fekvő elrendezés */
-            align-items: center;
-            gap: 8px;
-            
-            background: rgba(30, 41, 59, 0.65);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            padding: 4px; /* Keskenyebb padding */
-            border-radius: 40px; /* Lekerekített kapszula forma */
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255,255,255,0.1);
-            
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            animation: dockPopUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        }
+        /* --- PRO "SMART DOCK" - GLOBÁLIS VÉKONY VERZIÓ --- */
+        .smart-dock {
+            position: fixed;
+            bottom: 10px;
+            right: 10px; 
+            z-index: 2147483647;
+            display: flex;
+            flex-direction: row; /* Fekvő elrendezés */
+            align-items: center;
+            gap: 8px;
+            
+            background: rgba(30, 41, 59, 0.65);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 4px; /* Keskenyebb padding */
+            border-radius: 40px; /* Lekerekített kapszula forma */
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255,255,255,0.1);
+            
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: dockPopUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
 
-        /* --- ÚJ MÓDOSÍTÁS: A KEZDŐLAPON FELJEBB TOLJUK A DOCKOT A HÍRSÁV (TICKER) MIATT --- */
-        body:not(.module-active) .smart-dock {
-            bottom: 50px; /* 36px hírsáv + kényelmes hely */
-        }
+        /* --- ÚJ MÓDOSÍTÁS: A KEZDŐLAPON FELJEBB TOLJUK A DOCKOT A HÍRSÁV (TICKER) MIATT --- */
+        body:not(.module-active) .smart-dock {
+            bottom: 50px; /* 36px hírsáv + kényelmes hely */
+        }
 
-        @keyframes dockPopUp {
-            0% { transform: scale(0.8); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
+        @keyframes dockPopUp {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
 
-        /* --- EGYEDI POZÍCIÓK MODULONKÉNT (KIKOMMENTELVE, HOGY NE ZAVARJA A FIX ALSÓ SÁVOT, DE NE is VESSZEN EL) --- */
-        /*
-        body.active-mod-1 .smart-dock,
-        body.active-mod-2 .smart-dock,
-        body.active-mod-10 .smart-dock {
-            bottom: auto; top: 50%; margin-top: -55px; 
-        }
+        /* --- EGYEDI POZÍCIÓK MODULONKÉNT (KIKOMMENTELVE, HOGY NE ZAVARJA A FIX ALSÓ SÁVOT, DE NE is VESSZEN EL) --- */
+        /*
+        body.active-mod-1 .smart-dock,
+        body.active-mod-2 .smart-dock,
+        body.active-mod-10 .smart-dock {
+            bottom: auto; top: 50%; margin-top: -55px; 
+        }
 
-        body.active-mod-13 .smart-dock {
-            right: auto; left: 0; bottom: 20px; animation: none;
-            transform: translateX(calc(-100% + 14px));
-            border-radius: 0 30px 30px 0; border-left: none;
-            padding-right: 24px; padding-left: 8px;
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15);
-        }
+        body.active-mod-13 .smart-dock {
+            right: auto; left: 0; bottom: 20px; animation: none;
+            transform: translateX(calc(-100% + 14px));
+            border-radius: 0 30px 30px 0; border-left: none;
+            padding-right: 24px; padding-left: 8px;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15);
+        }
 
-        body.active-mod-13 .smart-dock::after {
-            content: ''; position: absolute; top: 50%; right: 5px; transform: translateY(-50%);
-            width: 4px; height: 36px; background: var(--accent); border-radius: 10px;
-            box-shadow: 0 0 8px rgba(59, 130, 246, 0.8); transition: opacity 0.3s ease;
-        }
+        body.active-mod-13 .smart-dock::after {
+            content: ''; position: absolute; top: 50%; right: 5px; transform: translateY(-50%);
+            width: 4px; height: 36px; background: var(--accent); border-radius: 10px;
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.8); transition: opacity 0.3s ease;
+        }
 
-        body.active-mod-13 .smart-dock::before {
-            content: ''; position: absolute; top: -15px; bottom: -15px; right: -20px; width: 40px; z-index: 10; cursor: pointer;
-        }
+        body.active-mod-13 .smart-dock::before {
+            content: ''; position: absolute; top: -15px; bottom: -15px; right: -20px; width: 40px; z-index: 10; cursor: pointer;
+        }
 
-        body.active-mod-13 .smart-dock:hover, body.active-mod-13 .smart-dock:focus-within, body.active-mod-13 .smart-dock:active {
-            transform: translateX(0);
-        }
+        body.active-mod-13 .smart-dock:hover, body.active-mod-13 .smart-dock:focus-within, body.active-mod-13 .smart-dock:active {
+            transform: translateX(0);
+        }
 
-        body.active-mod-13 .smart-dock:hover::after, body.active-mod-13 .smart-dock:focus-within::after, body.active-mod-13 .smart-dock:active::after {
-            opacity: 0.1;
-        }
+        body.active-mod-13 .smart-dock:hover::after, body.active-mod-13 .smart-dock:focus-within::after, body.active-mod-13 .smart-dock:active::after {
+            opacity: 0.1;
+        }
 
-        body.active-mod-8 .smart-dock {
-            flex-direction: row; bottom: 10px; right: 10px; padding: 4px; gap: 8px; border-radius: 40px;
-        }
-        body.active-mod-8 .smart-dock .menu-fab, body.active-mod-8 .smart-dock .refresh-fab {
-            width: 35px; height: 35px;
-        }
-        body.active-mod-8 .smart-dock .menu-fab span { font-size: 18px; }
-        body.active-mod-8 .smart-dock .refresh-fab span { font-size: 16px; }
+        body.active-mod-8 .smart-dock {
+            flex-direction: row; bottom: 10px; right: 10px; padding: 4px; gap: 8px; border-radius: 40px;
+        }
+        body.active-mod-8 .smart-dock .menu-fab, body.active-mod-8 .smart-dock .refresh-fab {
+            width: 35px; height: 35px;
+        }
+        body.active-mod-8 .smart-dock .menu-fab span { font-size: 18px; }
+        body.active-mod-8 .smart-dock .refresh-fab span { font-size: 16px; }
 
-        body.active-mod-9 .smart-dock { bottom: 140px; }
-        */
+        body.active-mod-9 .smart-dock { bottom: 140px; }
+        */
 
-        /* ------------------------------------------- */
+        /* ------------------------------------------- */
 
-        /* GLOBÁLIS GOMB MÉRETEZÉS AZ ÚJ ALAPÉRTELMEZETT KAPSZULÁHOZ */
-        .menu-fab, .refresh-fab {
-            position: relative !important; bottom: auto !important; right: auto !important; top: auto !important;
-            width: 35px; height: 35px; 
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            -webkit-user-select: none; user-select: none;
-            -webkit-touch-callout: none;
-            border: none; 
-            box-shadow: none;
-        }
+        /* GLOBÁLIS GOMB MÉRETEZÉS AZ ÚJ ALAPÉRTELMEZETT KAPSZULÁHOZ */
+        .menu-fab, .refresh-fab {
+            position: relative !important; bottom: auto !important; right: auto !important; top: auto !important;
+            width: 35px; height: 35px; 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            -webkit-user-select: none; user-select: none;
+            -webkit-touch-callout: none;
+            border: none; 
+            box-shadow: none;
+        }
 
-        .menu-fab {
-            background: var(--accent);
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); 
-        }
-        .menu-fab:active { transform: scale(0.92); box-shadow: 0 2px 5px rgba(59, 130, 246, 0.5); }
-        .menu-fab span { font-size: 18px; color: white; line-height: 1; pointer-events: none; transition: transform 0.3s ease; }
+        .menu-fab {
+            background: var(--accent);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); 
+        }
+        .menu-fab:active { transform: scale(0.92); box-shadow: 0 2px 5px rgba(59, 130, 246, 0.5); }
+        .menu-fab span { font-size: 18px; color: white; line-height: 1; pointer-events: none; transition: transform 0.3s ease; }
 
-        .refresh-fab {
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--accent);
-        }
-        
-        @keyframes rotate-center {
-            0% { transform: rotate(0); }
-            100% { transform: rotate(360deg); }
-        }
-        .refresh-fab.active-anim {
-            animation: rotate-center 0.6s ease-in-out both;
-        }
-        
-        .refresh-fab:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.1); }
-        .refresh-fab span { font-size: 16px; color: var(--accent); line-height: 1; font-weight: bold; pointer-events: none; }
+        .refresh-fab {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--accent);
+        }
+        
+        @keyframes rotate-center {
+            0% { transform: rotate(0); }
+            100% { transform: rotate(360deg); }
+        }
+        .refresh-fab.active-anim {
+            animation: rotate-center 0.6s ease-in-out both;
+        }
+        
+        .refresh-fab:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.1); }
+        .refresh-fab span { font-size: 16px; color: var(--accent); line-height: 1; font-weight: bold; pointer-events: none; }
 
-        .overlay {
-            display: none; position: fixed; inset: 0;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 1500;
-        }
-        .overlay.active { display: block; }
+        .overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 1500;
+        }
+        .overlay.active { display: block; }
 
-        footer { padding: 20px; border-top: 1px solid var(--border); text-align: center; color: #64748b; font-size: 0.75rem; }
+        footer { padding: 20px; border-top: 1px solid var(--border); text-align: center; color: #64748b; font-size: 0.75rem; }
 
-        /* --- ÚJ: HOLIDAY MODAL STÍLUSOK (PROFI VERZIÓ) --- */
-        .holiday-modal-backdrop {
-            position: fixed; inset: 0; z-index: 3000;
-            background: rgba(11, 17, 32, 0.95);
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            display: none; align-items: center; justify-content: center;
-            opacity: 0; transition: opacity 0.3s ease;
-        }
-        .holiday-modal-backdrop.open { display: flex; opacity: 1; }
-        
-        .holiday-modal-card {
-            background: #1e293b; border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 20px; width: 90%; max-width: 550px; height: 85vh;
-            display: flex; flex-direction: column; overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        
-        .hm-header {
-            padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.08);
-            display: flex; justify-content: space-between; align-items: center;
-            background: rgba(30, 41, 59, 0.9);
-        }
-        .hm-title { font-size: 1.2rem; font-weight: 800; color: white; margin: 0; letter-spacing: 0.5px; }
-        .hm-close {
-            background: rgba(255,255,255,0.05); width: 32px; height: 32px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; cursor: pointer;
-            font-size: 1.2rem; color: #94a3b8; transition: all 0.2s;
-        }
-        .hm-close:active { background: var(--danger); color: white; }
+        /* --- ÚJ: HOLIDAY MODAL STÍLUSOK (PROFI VERZIÓ) --- */
+        .holiday-modal-backdrop {
+            position: fixed; inset: 0; z-index: 3000;
+            background: rgba(11, 17, 32, 0.95);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            display: none; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .holiday-modal-backdrop.open { display: flex; opacity: 1; }
+        
+        .holiday-modal-card {
+            background: #1e293b; border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px; width: 90%; max-width: 550px; height: 85vh;
+            display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .hm-header {
+            padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(30, 41, 59, 0.9);
+        }
+        .hm-title { font-size: 1.2rem; font-weight: 800; color: white; margin: 0; letter-spacing: 0.5px; }
+        .hm-close {
+            background: rgba(255,255,255,0.05); width: 32px; height: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            font-size: 1.2rem; color: #94a3b8; transition: all 0.2s;
+        }
+        .hm-close:active { background: var(--danger); color: white; }
 
-        .hm-body { flex-grow: 1; overflow-y: auto; padding: 15px; }
-        
-        .hm-row {
-            display: flex; align-items: center; justify-content: space-between;
-            background: rgba(255,255,255,0.02); padding: 12px 14px;
-            margin-bottom: 8px; border-radius: 12px;
-            border-left: 3px solid transparent;
-        }
-        .hm-row.past { opacity: 0.5; filter: grayscale(0.8); }
-        .hm-row.current { background: rgba(59, 130, 246, 0.1); border-color: var(--accent); }
-        .hm-row.type-holiday { border-left-color: #34d399; }
-        .hm-row.type-workday { border-left-color: #fbbf24; }
-        
-        .hm-date-box { display: flex; flex-direction: column; min-width: 50px; }
-        .hm-day-num { font-size: 1.1rem; font-weight: 700; color: white; }
-        .hm-month { font-size: 0.65rem; text-transform: uppercase; color: #94a3b8; font-weight: 600; }
-        
-        .hm-info { flex-grow: 1; padding: 0 15px; }
-        .hm-name { font-size: 0.9rem; font-weight: 600; color: #e2e8f0; line-height: 1.3; }
-        .hm-shifts { display: flex; gap: 8px; margin-top: 6px; }
-        
-        /* ÚJ: PRO SHIFT TAGS (BADGES) */
-        .hm-shift-badge {
-            display: flex; align-items: center; gap: 6px;
-            padding: 4px 8px; border-radius: 6px;
-            font-size: 0.7rem; font-weight: 700;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .hm-shift-badge.day { background: rgba(251, 191, 36, 0.1); border-color: rgba(251, 191, 36, 0.3); color: var(--day-color); }
-        .hm-shift-badge.night { background: rgba(129, 140, 248, 0.1); border-color: rgba(129, 140, 248, 0.3); color: var(--night-color); }
+        .hm-body { flex-grow: 1; overflow-y: auto; padding: 15px; }
+        
+        .hm-row {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255,255,255,0.02); padding: 12px 14px;
+            margin-bottom: 8px; border-radius: 12px;
+            border-left: 3px solid transparent;
+        }
+        .hm-row.past { opacity: 0.5; filter: grayscale(0.8); }
+        .hm-row.current { background: rgba(59, 130, 246, 0.1); border-color: var(--accent); }
+        .hm-row.type-holiday { border-left-color: #34d399; }
+        .hm-row.type-workday { border-left-color: #fbbf24; }
+        
+        .hm-date-box { display: flex; flex-direction: column; min-width: 50px; }
+        .hm-day-num { font-size: 1.1rem; font-weight: 700; color: white; }
+        .hm-month { font-size: 0.65rem; text-transform: uppercase; color: #94a3b8; font-weight: 600; }
+        
+        .hm-info { flex-grow: 1; padding: 0 15px; }
+        .hm-name { font-size: 0.9rem; font-weight: 600; color: #e2e8f0; line-height: 1.3; }
+        .hm-shifts { display: flex; gap: 8px; margin-top: 6px; }
+        
+        /* ÚJ: PRO SHIFT TAGS (BADGES) */
+        .hm-shift-badge {
+            display: flex; align-items: center; gap: 6px;
+            padding: 4px 8px; border-radius: 6px;
+            font-size: 0.7rem; font-weight: 700;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .hm-shift-badge.day { background: rgba(251, 191, 36, 0.1); border-color: rgba(251, 191, 36, 0.3); color: var(--day-color); }
+        .hm-shift-badge.night { background: rgba(129, 140, 248, 0.1); border-color: rgba(129, 140, 248, 0.3); color: var(--night-color); }
 
-        .hm-shift-label { opacity: 0.7; font-size: 0.6rem; text-transform: uppercase; }
-        .hm-shift-val { font-size: 0.85rem; }
+        .hm-shift-label { opacity: 0.7; font-size: 0.6rem; text-transform: uppercase; }
+        .hm-shift-val { font-size: 0.85rem; }
 
-        /* --- HOZZÁADVA: PROFI JELSZÓ BEKÉRŐ (ÁTTERVEZVE) --- */
-        .pin-modal-backdrop { position: fixed; inset: 0; z-index: 4000; background: rgba(11, 17, 32, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; }
-        .pin-modal-backdrop.open { display: flex; opacity: 1; }
-        
-        .pin-modal-card {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1); border-top: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 24px; width: 90%; max-width: 320px; padding: 30px 25px;
-            box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6);
-            animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            display: flex; flex-direction: column; align-items: center;
-        }
-        @keyframes scaleUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        
-        .pin-icon-wrap {
-            width: 50px; height: 50px; border-radius: 50%; background: rgba(59, 130, 246, 0.1);
-            color: var(--accent); display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem; margin-bottom: 15px; border: 1px solid rgba(59, 130, 246, 0.2);
-        }
-        
-        .pin-input {
-            width: 100%; background: rgba(0, 0, 0, 0.2); border: none; border-bottom: 2px solid #334155;
-            color: white; font-size: 1.5rem; font-weight: 300; text-align: center; padding: 10px 5px;
-            outline: none; margin-bottom: 20px; font-family: monospace; letter-spacing: 5px; transition: 0.3s;
-        }
-        .pin-input:focus { border-bottom-color: var(--accent); }
-        
-        .remember-label {
-            display: flex; align-items: center; gap: 8px; cursor: pointer; color: #94a3b8; font-size: 0.8rem; user-select: none; margin-bottom: 25px; width: 100%; justify-content: center;
-        }
-        .remember-label input[type="checkbox"] { display: none; }
-        .custom-checkbox { width: 16px; height: 16px; border: 1px solid #64748b; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .remember-label input[type="checkbox"]:checked + .custom-checkbox { background: var(--accent); border-color: var(--accent); }
-        .custom-checkbox::after { content: '✔'; color: white; font-size: 10px; display: none; }
-        .remember-label input[type="checkbox"]:checked + .custom-checkbox::after { display: block; }
-        
-        .pin-btn-row { display: flex; gap: 12px; width: 100%; }
-        .pin-btn { flex: 1; padding: 12px; border-radius: 12px; font-weight: 600; font-size: 0.85rem; cursor: pointer; text-transform: uppercase; border: none; transition: 0.2s; letter-spacing: 0.5px; }
-        .pin-btn.cancel { background: rgba(255, 255, 255, 0.05); color: #cbd5e1; }
-        .pin-btn.cancel:active { background: rgba(255, 255, 255, 0.1); }
-        .pin-btn.submit { background: var(--accent); color: white; }
-        .pin-btn.submit:active { transform: scale(0.95); background: #2563eb; }
-    </style>
+        /* --- HOZZÁADVA: PROFI JELSZÓ BEKÉRŐ (ÁTTERVEZVE) --- */
+        .pin-modal-backdrop { position: fixed; inset: 0; z-index: 4000; background: rgba(11, 17, 32, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; }
+        .pin-modal-backdrop.open { display: flex; opacity: 1; }
+        
+        .pin-modal-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-top: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px; width: 90%; max-width: 320px; padding: 30px 25px;
+            box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6);
+            animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex; flex-direction: column; align-items: center;
+        }
+        @keyframes scaleUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .pin-icon-wrap {
+            width: 50px; height: 50px; border-radius: 50%; background: rgba(59, 130, 246, 0.1);
+            color: var(--accent); display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; margin-bottom: 15px; border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .pin-input {
+            width: 100%; background: rgba(0, 0, 0, 0.2); border: none; border-bottom: 2px solid #334155;
+            color: white; font-size: 1.5rem; font-weight: 300; text-align: center; padding: 10px 5px;
+            outline: none; margin-bottom: 20px; font-family: monospace; letter-spacing: 5px; transition: 0.3s;
+        }
+        .pin-input:focus { border-bottom-color: var(--accent); }
+        
+        .remember-label {
+            display: flex; align-items: center; gap: 8px; cursor: pointer; color: #94a3b8; font-size: 0.8rem; user-select: none; margin-bottom: 25px; width: 100%; justify-content: center;
+        }
+        .remember-label input[type="checkbox"] { display: none; }
+        .custom-checkbox { width: 16px; height: 16px; border: 1px solid #64748b; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .remember-label input[type="checkbox"]:checked + .custom-checkbox { background: var(--accent); border-color: var(--accent); }
+        .custom-checkbox::after { content: '✔'; color: white; font-size: 10px; display: none; }
+        .remember-label input[type="checkbox"]:checked + .custom-checkbox::after { display: block; }
+        
+        .pin-btn-row { display: flex; gap: 12px; width: 100%; }
+        .pin-btn { flex: 1; padding: 12px; border-radius: 12px; font-weight: 600; font-size: 0.85rem; cursor: pointer; text-transform: uppercase; border: none; transition: 0.2s; letter-spacing: 0.5px; }
+        .pin-btn.cancel { background: rgba(255, 255, 255, 0.05); color: #cbd5e1; }
+        .pin-btn.cancel:active { background: rgba(255, 255, 255, 0.1); }
+        .pin-btn.submit { background: var(--accent); color: white; }
+        .pin-btn.submit:active { transform: scale(0.95); background: #2563eb; }
+    </style>
 </head>
 <body>
 
 <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
 <div class="holiday-modal-backdrop" id="holidayModal">
-    <div class="holiday-modal-card">
-        <div class="hm-header">
-            <h3 class="hm-title">🗓️ 2026 Eseménynaptár</h3>
-            <div class="hm-close" onclick="closeHolidayList()">✕</div>
-        </div>
-        <div class="hm-body" id="holidayListContent">
-            </div>
-    </div>
+    <div class="holiday-modal-card">
+        <div class="hm-header">
+            <h3 class="hm-title">🗓️ 2026 Eseménynaptár</h3>
+            <div class="hm-close" onclick="closeHolidayList()">✕</div>
+        </div>
+        <div class="hm-body" id="holidayListContent">
+            </div>
+    </div>
 </div>
 
 <div class="pin-modal-backdrop" id="pinModal">
-    <div class="pin-modal-card">
-        <div class="pin-icon-wrap">🔐</div>
-        <h3 style="margin:0 0 5px 0; color:white; font-size:1.1rem; font-weight: 700; letter-spacing:0.5px;">Védett Modul</h3>
-        <p style="color:#94a3b8; font-size:0.75rem; margin-bottom:20px; text-align: center; line-height: 1.4;">A <b>Staff Pro 2026</b> megnyitásához hitelesítés szükséges.</p>
-        
-        <input type="password" id="pinInput" placeholder="••••••••" class="pin-input" autocomplete="off" onkeydown="if(event.key === 'Enter') submitPin();">
-        
-        <label class="remember-label">
-            <input type="checkbox" id="pinRemember">
-            <div class="custom-checkbox"></div>
-            <span>Eszköz megjegyzése</span>
-        </label>
-        
-        <div class="pin-btn-row">
-            <button class="pin-btn cancel" onclick="closePinModal()">Mégse</button>
-            <button class="pin-btn submit" onclick="submitPin()">Belépés</button>
-        </div>
-    </div>
+    <div class="pin-modal-card">
+        <div class="pin-icon-wrap">🔐</div>
+        <h3 style="margin:0 0 5px 0; color:white; font-size:1.1rem; font-weight: 700; letter-spacing:0.5px;">Védett Modul</h3>
+        <p style="color:#94a3b8; font-size:0.75rem; margin-bottom:20px; text-align: center; line-height: 1.4;">A <b>Staff Pro 2026</b> megnyitásához hitelesítés szükséges.</p>
+        
+        <input type="password" id="pinInput" placeholder="••••••••" class="pin-input" autocomplete="off" onkeydown="if(event.key === 'Enter') submitPin();">
+        
+        <label class="remember-label">
+            <input type="checkbox" id="pinRemember">
+            <div class="custom-checkbox"></div>
+            <span>Eszköz megjegyzése</span>
+        </label>
+        
+        <div class="pin-btn-row">
+            <button class="pin-btn cancel" onclick="closePinModal()">Mégse</button>
+            <button class="pin-btn submit" onclick="submitPin()">Belépés</button>
+        </div>
+    </div>
 </div>
 
 <div class="pin-modal-backdrop" id="genPinModal">
-    <div class="pin-modal-card">
-        <div class="pin-icon-wrap">⚙️</div>
-        <h3 style="margin:0 0 5px 0; color:white; font-size:1.1rem; font-weight: 700; letter-spacing:0.5px;">Védett Modul</h3>
-        <p style="color:#94a3b8; font-size:0.75rem; margin-bottom:20px; text-align: center; line-height: 1.4;">Az <b>Adatgeneráló</b> megnyitásához hitelesítés szükséges.</p>
-        
-        <input type="password" id="genPinInput" placeholder="••••••••" class="pin-input" autocomplete="off" onkeydown="if(event.key === 'Enter') submitGenPin();">
-        
-        <label class="remember-label">
-            <input type="checkbox" id="genPinRemember">
-            <div class="custom-checkbox"></div>
-            <span>Eszköz megjegyzése</span>
-        </label>
-        
-        <div class="pin-btn-row">
-            <button class="pin-btn cancel" onclick="closeGenPinModal()">Mégse</button>
-            <button class="pin-btn submit" onclick="submitGenPin()">Belépés</button>
-        </div>
-    </div>
+    <div class="pin-modal-card">
+        <div class="pin-icon-wrap">⚙️</div>
+        <h3 style="margin:0 0 5px 0; color:white; font-size:1.1rem; font-weight: 700; letter-spacing:0.5px;">Védett Modul</h3>
+        <p style="color:#94a3b8; font-size:0.75rem; margin-bottom:20px; text-align: center; line-height: 1.4;">Az <b>Adatgeneráló</b> megnyitásához hitelesítés szükséges.</p>
+        
+        <input type="password" id="genPinInput" placeholder="••••••••" class="pin-input" autocomplete="off" onkeydown="if(event.key === 'Enter') submitGenPin();">
+        
+        <label class="remember-label">
+            <input type="checkbox" id="genPinRemember">
+            <div class="custom-checkbox"></div>
+            <span>Eszköz megjegyzése</span>
+        </label>
+        
+        <div class="pin-btn-row">
+            <button class="pin-btn cancel" onclick="closeGenPinModal()">Mégse</button>
+            <button class="pin-btn submit" onclick="submitGenPin()">Belépés</button>
+        </div>
+    </div>
 </div>
 
 <div id="home-screen">
-    <div id="main-card" class="glass-card">
-        <div class="share-card-btn" onclick="shareApp(this)" title="App megosztása">
-            <svg class="share-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
-            </svg>
-        </div>
+    <div id="main-card" class="glass-card">
+        <div class="share-card-btn" onclick="shareApp(this)" title="App megosztása">
+            <svg class="share-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
+            </svg>
+        </div>
 
-        <h1 class="welcome-title"><span id="greeting-text">Üdv</span> <span class="highlight-blue">Felhasználó!</span></h1>
-        
-        <div id="display-date" class="current-date">
-            <span id="date-text">0000. 00. 00.</span>
+        <h1 class="welcome-title"><span id="greeting-text">Üdv</span> <span class="highlight-blue">Felhasználó!</span></h1>
+        
+        <div id="display-date" class="current-date">
+            <span id="date-text">0000. 00. 00.</span>
 
-            <span id="name-day" class="nameday-text">...</span>
-        </div>
+            <span id="name-day" class="nameday-text">...</span>
+        </div>
 
-        <div id="calendar-widget" class="calendar-box" onclick="openHolidayList()">
-            <div class="cal-header">
-                <span id="cal-type-icon">📅</span> 
-                <span id="cal-label" class="cal-label">KÖVETKEZŐ ESEMÉNY</span>
-            </div>
-            <div class="cal-main-row">
-                <span id="cal-date" class="cal-date-text">...</span>
-                <span id="cal-days-left" class="cal-badge">...</span>
-            </div>
-            <div id="cal-name" class="cal-event-name">Betöltés...</div>
-        </div>
+        <div id="calendar-widget" class="calendar-box" onclick="openHolidayList()">
+            <div class="cal-header">
+                <span id="cal-type-icon">📅</span> 
+                <span id="cal-label" class="cal-label">KÖVETKEZŐ ESEMÉNY</span>
+            </div>
+            <div class="cal-main-row">
+                <span id="cal-date" class="cal-date-text">...</span>
+                <span id="cal-days-left" class="cal-badge">...</span>
+            </div>
+            <div id="cal-name" class="cal-event-name">Betöltés...</div>
+        </div>
 
-        <p class="instruction-text">
-            Használd a jobb oldalon lévő <span class="instruction-highlight">menügombot</span>
+        <p class="instruction-text">
+            Használd a jobb oldalon lévő <span class="instruction-highlight">menügombot</span>
 
-            a használat megkezdéséhez.
-        </p>
+            a használat megkezdéséhez.
+        </p>
 
-        <div class="device-info">
-            Forvia-Hub 2026
-            <span class="good-luck">Jó munkát!</span>
-        </div>
-    </div>
+        <div class="device-info">
+            Forvia-Hub 2026
+            <span class="good-luck">Jó munkát!</span>
+        </div>
+    </div>
 
-    <div class="ticker-wrap">
-        <div class="ticker-move">
-            <div class="ticker-item">‼️🚧Folyamatos fejlesztés alatt🚧‼️</div>
-        </div>
-    </div>
+    <div class="ticker-wrap">
+        <div class="ticker-move">
+            <div class="ticker-item">‼️🚧Folyamatos fejlesztés alatt🚧‼️</div>
+        </div>
+    </div>
 </div>
 
 <iframe id="content-frame" name="appFrame"></iframe>
 
 <aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <h2>
-            <span style="color: white;">FORVIA</span>
-            <span style="color: var(--accent);">HUB 2026</span>
-        </h2>
-    </div>
+    <div class="sidebar-header">
+        <h2>
+            <span style="color: white;">FORVIA</span>
+            <span style="color: var(--accent);">HUB 2026</span>
+        </h2>
+    </div>
 
-    <nav class="nav-list">
-        <div onclick="showHome(this)" class="nav-item"><i>🏠</i> Kezdőlap</div>
-        <div onclick="loadModule('1.html', false, this)" class="nav-item"><i>🔍</i> Alkatrész Kereső</div>
-        <div onclick="loadModule('12.html', false, this)" class="nav-item"><i>🧾</i> TSDB.Pro</div>
-        <div onclick="loadModule('2.html', false, this)" class="nav-item"><i>💰</i> Bérkalkulátor</div>
-        <div onclick="loadModule('3.html', false, this)" class="nav-item"><i>📅</i> Műszaknaptár</div>
-        <div onclick="loadModule('4.html', false, this)" class="nav-item"><i>📝</i> Napi Jelentés segédlet</div>
-        <div onclick="loadModule('5.html', false, this)" class="nav-item"><i>🎭</i> Maszk kereső</div>
-        <div onclick="openSecureLink(this)" class="nav-item"><i>⚙️</i>Adatgeneráló 🔐</div>
-        <div onclick="loadModule('7.html', false, this)" class="nav-item"><i>📊</i> Hiba Analízis</div>
-        <div onclick="openStaffPro(this)" class="nav-item"><i>👥</i> Szabadságok 🔐</div>
-        <div onclick="loadModule('9.html', false, this)" class="nav-item"><i>📷</i> Operátori Barcode Scan </div>
-        <div onclick="loadModule('10.html', false, this)" class="nav-item"><i>🚮</i> Szemétkihordás Terv</div>
-        <div onclick="loadModule('11.html', false, this)" class="nav-item"><i>✅</i> Szárak állapota</div>
-        <div onclick="loadModule('13.html', false, this)" class="nav-item"><i>📐</i> CAD elemző</div>
-        <div onclick="loadModule('14.html', false, this)" class="nav-item"><i>📈</i> SPI Dashboard</div>
-    </nav>
+    <nav class="nav-list">
+        <div onclick="showHome(this)" class="nav-item"><i>🏠</i> Kezdőlap</div>
+        <div onclick="loadModule('1.html', false, this)" class="nav-item"><i>🔍</i> Alkatrész Kereső</div>
+        <div onclick="loadModule('12.html', false, this)" class="nav-item"><i>🧾</i> TSDB.Pro</div>
+        <div onclick="loadModule('2.html', false, this)" class="nav-item"><i>💰</i> Bérkalkulátor</div>
+        <div onclick="loadModule('3.html', false, this)" class="nav-item"><i>📅</i> Műszaknaptár</div>
+        <div onclick="loadModule('4.html', false, this)" class="nav-item"><i>📝</i> Napi Jelentés segédlet</div>
+        <div onclick="loadModule('5.html', false, this)" class="nav-item"><i>🎭</i> Maszk kereső</div>
+        <div onclick="openSecureLink(this)" class="nav-item"><i>⚙️</i>Adatgeneráló 🔐</div>
+        <div onclick="loadModule('7.html', false, this)" class="nav-item"><i>📊</i> Hiba Analízis</div>
+        <div onclick="openStaffPro(this)" class="nav-item"><i>👥</i> Szabadságok 🔐</div>
+        <div onclick="loadModule('9.html', false, this)" class="nav-item"><i>📷</i> Operátori Barcode Scan </div>
+        <div onclick="loadModule('10.html', false, this)" class="nav-item"><i>🚮</i> Szemétkihordás Terv</div>
+        <div onclick="loadModule('11.html', false, this)" class="nav-item"><i>✅</i> Szárak állapota</div>
+        <div onclick="loadModule('13.html', false, this)" class="nav-item"><i>📐</i> CAD elemző</div>
+        <div onclick="loadModule('14.html', false, this)" class="nav-item"><i>📈</i> SPI Dashboard</div>
+        <div onclick="loadModule('15.html', false, this)" class="nav-item"><i>🔲</i> Stencil kereső</div>
+    </nav>
 
-    <footer>Szoftverfejlesztő:<br><strong style="color:white">GERGŐ ROLAND</strong><br>2026</footer>
+    <footer>Szoftverfejlesztő:<br><strong style="color:white">GERGŐ ROLAND</strong><br>2026</footer>
 </aside>
 
 <div id="smartDock" class="smart-dock">
-    <div class="refresh-fab" onclick="animateAndReload(this)">
-        <span>↻</span>
-    </div>
+    <div class="refresh-fab" onclick="animateAndReload(this)">
+        <span>↻</span>
+    </div>
 
-    <div class="menu-fab" id="menuFab" onclick="toggleMenu()" oncontextmenu="return false;">
-        <span id="menuIcon">☰</span>
-    </div>
+    <div class="menu-fab" id="menuFab" onclick="toggleMenu()" oncontextmenu="return false;">
+        <span id="menuIcon">☰</span>
+    </div>
 </div>
 
 <script>
-    function cleanUrlOnLoad() {
-        if (window.location.search.length > 0) {
-            const clean = window.location.protocol + "//" + window.location.host + window.location.pathname;
-            window.history.replaceState({}, document.title, clean);
-        }
-    }
-    cleanUrlOnLoad(); 
+    function cleanUrlOnLoad() {
+        if (window.location.search.length > 0) {
+            const clean = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({}, document.title, clean);
+        }
+    }
+    cleanUrlOnLoad(); 
 
-    const nevnapok = {
-        "01-01": "Alpár", "01-02": "Ábel", "01-03": "Genovéva, Benjámin", "01-04": "Titusz, Leona", "01-05": "Simon", "01-06": "Boldizsár", "01-07": "Attila, Ramóna", "01-08": "Gyöngyvér", "01-09": "Marcell", "01-10": "Melánia", "01-11": "Ágota", "01-12": "Ernő", "01-13": "Veronika", "01-14": "Bódog", "01-15": "Lóránt, Loránd", "01-16": "Gusztáv", "01-17": "Antal, Antónia", "01-18": "Piroska", "01-19": "Sára, Márió", "01-20": "Fábián, Sebestyén", "01-21": "Ágnes", "01-22": "Vince", "01-23": "Zelma, Rajmund", "01-24": "Timót", "01-25": "Pál", "01-26": "Vanda, Paula", "01-27": "Angelika", "01-28": "Károly, Karola", "01-29": "Adél", "01-30": "Martina, Gerda", "01-31": "Marcella",
-        "02-01": "Ignác", "02-02": "Karolina, Aida", "02-03": "Balázs", "02-04": "Ráhel, Csenge", "02-05": "Ágota, Ingrid", "02-06": "Dorottya, Dóra", "02-07": "Tódor, Rómeó", "02-08": "Aranka", "02-09": "Abigél, Alex", "02-10": "Elvira", "02-11": "Bertold, Marietta", "02-12": "Lívia, Lídia", "02-13": "Ella, Linda", "02-14": "Bálint, Valentin", "02-15": "Kolos, Georgina", "02-16": "Julianna, Lilla", "02-17": "Donát", "02-18": "Bernadett", "02-19": "Zsuzsanna", "02-20": "Aladár, Álmos", "02-21": "Eleonóra", "02-22": "Gerzson", "02-23": "Alfréd", "02-24": "Mátyás", "02-25": "Géza", "02-26": "Viktor, Győző", "02-27": "Gábor, Edina", "02-28": "Elemér", "02-29": "Auguszta",
-        "03-01": "Albin", "03-02": "Lujza", "03-03": "Kornélia", "03-04": "Kázmér", "03-05": "Adorján, Adrián", "03-06": "Leonóra, Inez", "03-07": "Tamás", "03-08": "Zoltán", "03-09": "Franciska, Fanni", "03-10": "Ildikó", "03-11": "Szilárd", "03-12": "Gergely", "03-13": "Krisztián, Ajtony", "03-14": "Matild", "03-15": "Kristóf", "03-16": "Henrietta", "03-17": "Gertrúd, Patrik", "03-18": "Sándor, Ede", "03-19": "József, Bánk", "03-20": "Klaudia", "03-21": "Benedek", "03-22": "Beáta, Izolda", "03-23": "Emőke", "03-24": "Gábor, Karina", "03-25": "Irén, Irisz", "03-26": "Emánuel", "03-27": "Hajnalka", "03-28": "Gedeon, Johanna", "03-29": "Auguszta", "03-30": "Zalán", "03-31": "Árpád",
-        "04-01": "Hugó", "04-02": "Áron", "04-03": "Buda, Richárd", "04-04": "Izidor", "04-05": "Vince", "04-06": "Vilmos, Bíborka", "04-07": "Herman", "04-08": "Dénes", "04-09": "Erhard", "04-10": "Zsolt", "04-11": "Leó, Szaniszló", "04-12": "Gyula", "04-13": "Ida", "04-14": "Tibor", "04-15": "Anasztázia, Tas", "04-16": "Csongor", "04-17": "Rudolf", "04-18": "Andrea, Ilma", "04-19": "Emma", "04-20": "Tivadar", "04-21": "Konrád", "04-22": "Csilla, Noémi", "04-23": "Béla, Adalbert", "04-24": "György", "04-25": "Márk", "04-26": "Ervin", "04-27": "Zita, Mariann", "04-28": "Valéria", "04-29": "Péter", "04-30": "Katalin, Kitti",
-        "05-01": "Fülöp, Jakab", "05-02": "Zsigmond", "05-03": "Tímea, Irma", "05-04": "Mónika, Flórián", "05-05": "Györgyi", "05-06": "Ivett, Frida", "05-07": "Gizella", "05-08": "Mihály", "05-09": "Gergely", "05-10": "Ármin, Pálma", "05-11": "Ferenc", "05-12": "Pongrác", "05-13": "Szervác, Imola", "05-14": "Bonifác", "05-15": "Zsófia, Szonja", "05-16": "Mózes, Botond", "05-17": "Paszkál", "05-18": "Erik, Alexandra", "05-19": "Ivó, Milán", "05-20": "Bernát, Felícia", "05-21": "Konstantin", "05-22": "Júlia, Rita", "05-23": "Dezső", "05-24": "Eszter, Eliza", "05-25": "Orbán", "05-26": "Fülöp, Evelin", "05-27": "Hella", "05-28": "Emil, Csanád", "05-29": "Magdolna", "05-30": "Janka, Zsanett", "05-31": "Angéla, Petronella",
-        "06-01": "Tünde", "06-02": "Kármen, Anita", "06-03": "Klothild", "06-04": "Bulcsú", "06-05": "Fatime, Bonifác", "06-06": "Norbert, Cintia", "06-07": "Róbert", "06-08": "Medárd", "06-09": "Félix", "06-10": "Margit, Gréta", "06-11": "Barnabás", "06-12": "Villő", "06-13": "Antal, Anett", "06-14": "Vazul", "06-15": "Jolán, Vid", "06-16": "Jusztin", "06-17": "Laura, Alida", "06-18": "Arnold, Levente", "06-19": "Gyárfás", "06-20": "Rafael", "06-21": "Alajos, Leila", "06-22": "Paulina", "06-23": "Zoltán", "06-24": "Iván", "06-25": "Vilmos", "06-26": "János, Pál", "06-27": "László", "06-28": "Levente, Irén", "06-29": "Péter, Pál", "06-30": "Pál",
-        "07-01": "Tihamér, Annamária", "07-02": "Ottó", "07-03": "Kornél, Soma", "07-04": "Ulrik", "07-05": "Emese, Sarolta", "07-06": "Csaba", "07-07": "Apollónia", "07-08": "Ellák", "07-09": "Lukrécia", "07-10": "Amália", "07-11": "Nóra, Lili", "07-12": "Izabella, Dalma", "07-13": "Jenő", "07-14": "Örs, Stella", "07-15": "Henrik, Roland", "07-16": "Valter", "07-17": "Endre, Elek", "07-18": "Frigyes", "07-19": "Emília", "07-20": "Illés", "07-21": "Dániel, Daniella", "07-22": "Magdolna", "07-23": "Lenke", "07-24": "Kinga, Kincső", "07-25": "Kristóf, Jakab", "07-26": "Anna, Anikó", "07-27": "Olga, Liliána", "07-28": "Szabolcs", "07-29": "Márta, Flóra", "07-30": "Judit, Xénia", "07-31": "Oszkár",
-        "08-01": "Boglárka", "08-02": "Lehel", "08-03": "Hermina", "08-04": "Domonkos, Dominika", "08-05": "Krisztina", "08-06": "Berta, Bettina", "08-07": "Ibolya", "08-08": "László", "08-09": "Emőd", "08-10": "Lőrinc", "08-11": "Zsuzsanna, Tiborc", "08-12": "Klára", "08-13": "Ipoly", "08-14": "Marcell", "08-15": "Mária", "08-16": "Ábrahám", "08-17": "Jácint", "08-18": "Ilona", "08-19": "Huba", "08-20": "István", "08-21": "Sámuel, Hajna", "08-22": "Menyhért, Mirjam", "08-23": "Bence", "08-24": "Bertalan", "08-25": "Lajos, Patrícia", "08-26": "Izsó", "08-27": "Gáspár", "08-28": "Ágoston", "08-29": "Beatrix, Erna", "08-30": "Rózsa", "08-31": "Erika, Bella",
-        "09-01": "Egyed, Egon", "09-02": "Rebeka, Dorina", "09-03": "Hilda", "09-04": "Rozália", "09-05": "Viktor, Lőrinc", "09-06": "Zakariás", "09-07": "Regina", "09-08": "Mária, Adrienn", "09-09": "Ádám", "09-10": "Nikolett, Hunor", "09-11": "Teodóra", "09-12": "Mária", "09-13": "Kornél", "09-14": "Szeréna, Roxána", "09-15": "Enikő, Melitta", "09-16": "Edit", "09-17": "Zsófia", "09-18": "Diána", "09-19": "Vilhelmina", "09-20": "Friderika", "09-21": "Máté, Mirella", "09-22": "Móric", "09-23": "Tekla", "09-24": "Gellért, Mercédesz", "09-25": "Eufrozina, Kende", "09-26": "Jusztina", "09-27": "Adalbert", "09-28": "Vencel", "09-29": "Mihály", "09-30": "Jeromos",
-        "10-01": "Malvin", "10-02": "Petra", "10-03": "Helga", "10-04": "Ferenc", "10-05": "Aurél", "10-06": "Brúnó, Renáta", "10-07": "Amália", "10-08": "Koppány", "10-09": "Dénes", "10-10": "Gedeon", "10-11": "Brigitta", "10-12": "Miksa", "10-13": "Kálmán, Ede", "10-14": "Helén", "10-15": "Teréz", "10-16": "Gál", "10-17": "Hedvig", "10-18": "Lukács", "10-19": "Pelbárt", "10-20": "Vendel", "10-21": "Orsolya", "10-22": "Előd", "10-23": "Gyöngyvér", "10-24": "Salamon", "10-25": "Blanka, Bianka", "10-26": "Dömötör", "10-27": "Szabina", "10-28": "Simon, Júdás", "10-29": "Nárcisz", "10-30": "Alfonz", "10-31": "Farkas",
-        "11-01": "Marianna", "11-02": "Achilles", "11-03": "Győző", "11-04": "Károly", "11-05": "Imre", "11-06": "Lénárd", "11-07": "Rezső", "11-08": "Zsombor", "11-09": "Tivadar", "11-10": "Réka", "11-11": "Márton", "11-12": "Jónás, Renátó", "11-13": "Szilvia", "11-14": "Aliz", "11-15": "Albert, Lipót", "11-16": "Ödön", "11-17": "Hortenzia, Gergő", "11-18": "Jenő", "11-19": "Erzsébet", "11-20": "Jolán", "11-21": "Olivér", "11-22": "Cecília", "11-23": "Kelemen, Kolos", "11-24": "Emma", "11-25": "Katalin", "11-26": "Virág", "11-27": "Virgil", "11-28": "Stefánia", "11-29": "Taksony", "11-30": "András, Andor",
-        "12-01": "Elza", "12-02": "Melinda, Vivien", "12-03": "Ferenc, Olívia", "12-04": "Borbála, Barbara", "12-05": "Vilma", "12-06": "Miklós", "12-07": "Ambrus", "12-08": "Mária", "12-09": "Natália", "12-10": "Judit", "12-11": "Árpád", "12-12": "Gabriella", "12-13": "Luca, Otília", "12-14": "Szilárda", "12-15": "Valér", "12-16": "Etelka, Aletta", "12-17": "Lázár, Olimpia", "12-18": "Auguszta", "12-19": "Viola", "12-20": "Teofil", "12-21": "Tamás", "12-22": "Zénó", "12-23": "Viktória", "12-24": "Ádám, Éva", "12-25": "Eugénia", "12-26": "István", "12-27": "János", "12-28": "Kamilla", "12-29": "Tamás, Tamara", "12-30": "Dávid", "12-31": "Szilveszter"
-    };
+    const nevnapok = {
+        "01-01": "Alpár", "01-02": "Ábel", "01-03": "Genovéva, Benjámin", "01-04": "Titusz, Leona", "01-05": "Simon", "01-06": "Boldizsár", "01-07": "Attila, Ramóna", "01-08": "Gyöngyvér", "01-09": "Marcell", "01-10": "Melánia", "01-11": "Ágota", "01-12": "Ernő", "01-13": "Veronika", "01-14": "Bódog", "01-15": "Lóránt, Loránd", "01-16": "Gusztáv", "01-17": "Antal, Antónia", "01-18": "Piroska", "01-19": "Sára, Márió", "01-20": "Fábián, Sebestyén", "01-21": "Ágnes", "01-22": "Vince", "01-23": "Zelma, Rajmund", "01-24": "Timót", "01-25": "Pál", "01-26": "Vanda, Paula", "01-27": "Angelika", "01-28": "Károly, Karola", "01-29": "Adél", "01-30": "Martina, Gerda", "01-31": "Marcella",
+        "02-01": "Ignác", "02-02": "Karolina, Aida", "02-03": "Balázs", "02-04": "Ráhel, Csenge", "02-05": "Ágota, Ingrid", "02-06": "Dorottya, Dóra", "02-07": "Tódor, Rómeó", "02-08": "Aranka", "02-09": "Abigél, Alex", "02-10": "Elvira", "02-11": "Bertold, Marietta", "02-12": "Lívia, Lídia", "02-13": "Ella, Linda", "02-14": "Bálint, Valentin", "02-15": "Kolos, Georgina", "02-16": "Julianna, Lilla", "02-17": "Donát", "02-18": "Bernadett", "02-19": "Zsuzsanna", "02-20": "Aladár, Álmos", "02-21": "Eleonóra", "02-22": "Gerzson", "02-23": "Alfréd", "02-24": "Mátyás", "02-25": "Géza", "02-26": "Viktor, Győző", "02-27": "Gábor, Edina", "02-28": "Elemér", "02-29": "Auguszta",
+        "03-01": "Albin", "03-02": "Lujza", "03-03": "Kornélia", "03-04": "Kázmér", "03-05": "Adorján, Adrián", "03-06": "Leonóra, Inez", "03-07": "Tamás", "03-08": "Zoltán", "03-09": "Franciska, Fanni", "03-10": "Ildikó", "03-11": "Szilárd", "03-12": "Gergely", "03-13": "Krisztián, Ajtony", "03-14": "Matild", "03-15": "Kristóf", "03-16": "Henrietta", "03-17": "Gertrúd, Patrik", "03-18": "Sándor, Ede", "03-19": "József, Bánk", "03-20": "Klaudia", "03-21": "Benedek", "03-22": "Beáta, Izolda", "03-23": "Emőke", "03-24": "Gábor, Karina", "03-25": "Irén, Irisz", "03-26": "Emánuel", "03-27": "Hajnalka", "03-28": "Gedeon, Johanna", "03-29": "Auguszta", "03-30": "Zalán", "03-31": "Árpád",
+        "04-01": "Hugó", "04-02": "Áron", "04-03": "Buda, Richárd", "04-04": "Izidor", "04-05": "Vince", "04-06": "Vilmos, Bíborka", "04-07": "Herman", "04-08": "Dénes", "04-09": "Erhard", "04-10": "Zsolt", "04-11": "Leó, Szaniszló", "04-12": "Gyula", "04-13": "Ida", "04-14": "Tibor", "04-15": "Anasztázia, Tas", "04-16": "Csongor", "04-17": "Rudolf", "04-18": "Andrea, Ilma", "04-19": "Emma", "04-20": "Tivadar", "04-21": "Konrád", "04-22": "Csilla, Noémi", "04-23": "Béla, Adalbert", "04-24": "György", "04-25": "Márk", "04-26": "Ervin", "04-27": "Zita, Mariann", "04-28": "Valéria", "04-29": "Péter", "04-30": "Katalin, Kitti",
+        "05-01": "Fülöp, Jakab", "05-02": "Zsigmond", "05-03": "Tímea, Irma", "05-04": "Mónika, Flórián", "05-05": "Györgyi", "05-06": "Ivett, Frida", "05-07": "Gizella", "05-08": "Mihály", "05-09": "Gergely", "05-10": "Ármin, Pálma", "05-11": "Ferenc", "05-12": "Pongrác", "05-13": "Szervác, Imola", "05-14": "Bonifác", "05-15": "Zsófia, Szonja", "05-16": "Mózes, Botond", "05-17": "Paszkál", "05-18": "Erik, Alexandra", "05-19": "Ivó, Milán", "05-20": "Bernát, Felícia", "05-21": "Konstantin", "05-22": "Júlia, Rita", "05-23": "Dezső", "05-24": "Eszter, Eliza", "05-25": "Orbán", "05-26": "Fülöp, Evelin", "05-27": "Hella", "05-28": "Emil, Csanád", "05-29": "Magdolna", "05-30": "Janka, Zsanett", "05-31": "Angéla, Petronella",
+        "06-01": "Tünde", "06-02": "Kármen, Anita", "06-03": "Klothild", "06-04": "Bulcsú", "06-05": "Fatime, Bonifác", "06-06": "Norbert, Cintia", "06-07": "Róbert", "06-08": "Medárd", "06-09": "Félix", "06-10": "Margit, Gréta", "06-11": "Barnabás", "06-12": "Villő", "06-13": "Antal, Anett", "06-14": "Vazul", "06-15": "Jolán, Vid", "06-16": "Jusztin", "06-17": "Laura, Alida", "06-18": "Arnold, Levente", "06-19": "Gyárfás", "06-20": "Rafael", "06-21": "Alajos, Leila", "06-22": "Paulina", "06-23": "Zoltán", "06-24": "Iván", "06-25": "Vilmos", "06-26": "János, Pál", "06-27": "László", "06-28": "Levente, Irén", "06-29": "Péter, Pál", "06-30": "Pál",
+        "07-01": "Tihamér, Annamária", "07-02": "Ottó", "07-03": "Kornél, Soma", "07-04": "Ulrik", "07-05": "Emese, Sarolta", "07-06": "Csaba", "07-07": "Apollónia", "07-08": "Ellák", "07-09": "Lukrécia", "07-10": "Amália", "07-11": "Nóra, Lili", "07-12": "Izabella, Dalma", "07-13": "Jenő", "07-14": "Örs, Stella", "07-15": "Henrik, Roland", "07-16": "Valter", "07-17": "Endre, Elek", "07-18": "Frigyes", "07-19": "Emília", "07-20": "Illés", "07-21": "Dániel, Daniella", "07-22": "Magdolna", "07-23": "Lenke", "07-24": "Kinga, Kincső", "07-25": "Kristóf, Jakab", "07-26": "Anna, Anikó", "07-27": "Olga, Liliána", "07-28": "Szabolcs", "07-29": "Márta, Flóra", "07-30": "Judit, Xénia", "07-31": "Oszkár",
+        "08-01": "Boglárka", "08-02": "Lehel", "08-03": "Hermina", "08-04": "Domonkos, Dominika", "08-05": "Krisztina", "08-06": "Berta, Bettina", "08-07": "Ibolya", "08-08": "László", "08-09": "Emőd", "08-10": "Lőrinc", "08-11": "Zsuzsanna, Tiborc", "08-12": "Klára", "08-13": "Ipoly", "08-14": "Marcell", "08-15": "Mária", "08-16": "Ábrahám", "08-17": "Jácint", "08-18": "Ilona", "08-19": "Huba", "08-20": "István", "08-21": "Sámuel, Hajna", "08-22": "Menyhért, Mirjam", "08-23": "Bence", "08-24": "Bertalan", "08-25": "Lajos, Patrícia", "08-26": "Izsó", "08-27": "Gáspár", "08-28": "Ágoston", "08-29": "Beatrix, Erna", "08-30": "Rózsa", "08-31": "Erika, Bella",
+        "09-01": "Egyed, Egon", "09-02": "Rebeka, Dorina", "09-03": "Hilda", "09-04": "Rozália", "09-05": "Viktor, Lőrinc", "09-06": "Zakariás", "09-07": "Regina", "09-08": "Mária, Adrienn", "09-09": "Ádám", "09-10": "Nikolett, Hunor", "09-11": "Teodóra", "09-12": "Mária", "09-13": "Kornél", "09-14": "Szeréna, Roxána", "09-15": "Enikő, Melitta", "09-16": "Edit", "09-17": "Zsófia", "09-18": "Diána", "09-19": "Vilhelmina", "09-20": "Friderika", "09-21": "Máté, Mirella", "09-22": "Móric", "09-23": "Tekla", "09-24": "Gellért, Mercédesz", "09-25": "Eufrozina, Kende", "09-26": "Jusztina", "09-27": "Adalbert", "09-28": "Vencel", "09-29": "Mihály", "09-30": "Jeromos",
+        "10-01": "Malvin", "10-02": "Petra", "10-03": "Helga", "10-04": "Ferenc", "10-05": "Aurél", "10-06": "Brúnó, Renáta", "10-07": "Amália", "10-08": "Koppány", "10-09": "Dénes", "10-10": "Gedeon", "10-11": "Brigitta", "10-12": "Miksa", "10-13": "Kálmán, Ede", "10-14": "Helén", "10-15": "Teréz", "10-16": "Gál", "10-17": "Hedvig", "10-18": "Lukács", "10-19": "Pelbárt", "10-20": "Vendel", "10-21": "Orsolya", "10-22": "Előd", "10-23": "Gyöngyvér", "10-24": "Salamon", "10-25": "Blanka, Bianka", "10-26": "Dömötör", "10-27": "Szabina", "10-28": "Simon, Júdás", "10-29": "Nárcisz", "10-30": "Alfonz", "10-31": "Farkas",
+        "11-01": "Marianna", "11-02": "Achilles", "11-03": "Győző", "11-04": "Károly", "11-05": "Imre", "11-06": "Lénárd", "11-07": "Rezső", "11-08": "Zsombor", "11-09": "Tivadar", "11-10": "Réka", "11-11": "Márton", "11-12": "Jónás, Renátó", "11-13": "Szilvia", "11-14": "Aliz", "11-15": "Albert, Lipót", "11-16": "Ödön", "11-17": "Hortenzia, Gergő", "11-18": "Jenő", "11-19": "Erzsébet", "11-20": "Jolán", "11-21": "Olivér", "11-22": "Cecília", "11-23": "Kelemen, Kolos", "11-24": "Emma", "11-25": "Katalin", "11-26": "Virág", "11-27": "Virgil", "11-28": "Stefánia", "11-29": "Taksony", "11-30": "András, Andor",
+        "12-01": "Elza", "12-02": "Melinda, Vivien", "12-03": "Ferenc, Olívia", "12-04": "Borbála, Barbara", "12-05": "Vilma", "12-06": "Miklós", "12-07": "Ambrus", "12-08": "Mária", "12-09": "Natália", "12-10": "Judit", "12-11": "Árpád", "12-12": "Gabriella", "12-13": "Luca, Otília", "12-14": "Szilárda", "12-15": "Valér", "12-16": "Etelka, Aletta", "12-17": "Lázár, Olimpia", "12-18": "Auguszta", "12-19": "Viola", "12-20": "Teofil", "12-21": "Tamás", "12-22": "Zénó", "12-23": "Viktória", "12-24": "Ádám, Éva", "12-25": "Eugénia", "12-26": "István", "12-27": "János", "12-28": "Kamilla", "12-29": "Tamás, Tamara", "12-30": "Dávid", "12-31": "Szilveszter"
+    };
 
-    const calendarEvents = [
-        { date: "2026-03-15", name: "Nemzeti Ünnep (Vasárnap)", type: "holiday", shiftDay: "C", shiftNight: "D" },
-        { date: "2026-04-03", name: "Nagypéntek", type: "holiday", shiftDay: "A", shiftNight: "B" },
-        { date: "2026-04-05", name: "Húsvétvasárnap", type: "holiday", shiftDay: "A", shiftNight: "B" },
-        { date: "2026-04-06", name: "Húsvéthétfő", type: "holiday", shiftDay: "C", shiftNight: "D" },
-        { date: "2026-05-01", name: "Munka Ünnepe (Péntek)", type: "holiday", shiftDay: "C", shiftNight: "D" },
-        { date: "2026-05-24", name: "Pünkösdvasárnap", type: "holiday", shiftDay: "C", shiftNight: "D" },
-        { date: "2026-05-25", name: "Pünkösdhétfő", type: "holiday", shiftDay: "C", shiftNight: "D" },
-        { date: "2026-08-20", name: "Államalapítás Ünnepe", type: "holiday", shiftDay: "B", shiftNight: "A" },
-        { date: "2026-08-21", name: "Pihenőnap (Hosszú hétvége)", type: "holiday", shiftDay: "B", shiftNight: "A" },
-        /* ITT HOZZÁADTUK A MŰSZAKOKAT A SZOMBATI MUNKANAPOKHOZ IS */
-        { date: "2026-08-29", name: "SZOMBATI MUNKANAP (Aug. 21 helyett)", type: "workday", shiftDay: "C", shiftNight: "D" },
-        { date: "2026-10-23", name: "1956-os Forradalom (Péntek)", type: "holiday", shiftDay: "D", shiftNight: "C" },
-        { date: "2026-11-01", name: "Mindenszentek (Vasárnap)", type: "holiday", shiftDay: "B", shiftNight: "A" },
-        /* ITT HOZZÁADTUK A MŰSZAKOKAT A SZOMBATI MUNKANAPOKHOZ IS */
-        { date: "2026-12-12", name: "SZOMBATI MUNKANAP (Dec. 24 helyett)", type: "workday", shiftDay: "A", shiftNight: "B" },
-        { date: "2026-12-24", name: "Szenteste (Pihenőnap)", type: "holiday", shiftDay: "A", shiftNight: "B" },
-        { date: "2026-12-25", name: "Karácsony", type: "holiday", shiftDay: "A", shiftNight: "B" },
-        { date: "2026-12-26", name: "Karácsony", type: "holiday", shiftDay: "C", shiftNight: "D" }
-    ];
+    const calendarEvents = [
+        { date: "2026-03-15", name: "Nemzeti Ünnep (Vasárnap)", type: "holiday", shiftDay: "C", shiftNight: "D" },
+        { date: "2026-04-03", name: "Nagypéntek", type: "holiday", shiftDay: "A", shiftNight: "B" },
+        { date: "2026-04-05", name: "Húsvétvasárnap", type: "holiday", shiftDay: "A", shiftNight: "B" },
+        { date: "2026-04-06", name: "Húsvéthétfő", type: "holiday", shiftDay: "C", shiftNight: "D" },
+        { date: "2026-05-01", name: "Munka Ünnepe (Péntek)", type: "holiday", shiftDay: "C", shiftNight: "D" },
+        { date: "2026-05-24", name: "Pünkösdvasárnap", type: "holiday", shiftDay: "C", shiftNight: "D" },
+        { date: "2026-05-25", name: "Pünkösdhétfő", type: "holiday", shiftDay: "C", shiftNight: "D" },
+        { date: "2026-08-20", name: "Államalapítás Ünnepe", type: "holiday", shiftDay: "B", shiftNight: "A" },
+        { date: "2026-08-21", name: "Pihenőnap (Hosszú hétvége)", type: "holiday", shiftDay: "B", shiftNight: "A" },
+        /* ITT HOZZÁADTUK A MŰSZAKOKAT A SZOMBATI MUNKANAPOKHOZ IS */
+        { date: "2026-08-29", name: "SZOMBATI MUNKANAP (Aug. 21 helyett)", type: "workday", shiftDay: "C", shiftNight: "D" },
+        { date: "2026-10-23", name: "1956-os Forradalom (Péntek)", type: "holiday", shiftDay: "D", shiftNight: "C" },
+        { date: "2026-11-01", name: "Mindenszentek (Vasárnap)", type: "holiday", shiftDay: "B", shiftNight: "A" },
+        /* ITT HOZZÁADTUK A MŰSZAKOKAT A SZOMBATI MUNKANAPOKHOZ IS */
+        { date: "2026-12-12", name: "SZOMBATI MUNKANAP (Dec. 24 helyett)", type: "workday", shiftDay: "A", shiftNight: "B" },
+        { date: "2026-12-24", name: "Szenteste (Pihenőnap)", type: "holiday", shiftDay: "A", shiftNight: "B" },
+        { date: "2026-12-25", name: "Karácsony", type: "holiday", shiftDay: "A", shiftNight: "B" },
+        { date: "2026-12-26", name: "Karácsony", type: "holiday", shiftDay: "C", shiftNight: "D" }
+    ];
 
-    function updateCalendarWidget() {
-        const now = new Date();
-        now.setHours(0, 0, 0, 0);
+    function updateCalendarWidget() {
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
 
-        let nextEvent = calendarEvents.find(e => {
-            const eventDate = new Date(e.date);
-            return eventDate >= now;
-        });
+        let nextEvent = calendarEvents.find(e => {
+            const eventDate = new Date(e.date);
+            return eventDate >= now;
+        });
 
-        if (!nextEvent) {
-            nextEvent = { date: "2027-01-01", name: "Újév", type: "holiday", shiftDay: "-", shiftNight: "-" };
-        }
+        if (!nextEvent) {
+            nextEvent = { date: "2027-01-01", name: "Újév", type: "holiday", shiftDay: "-", shiftNight: "-" };
+        }
 
-        const eventDate = new Date(nextEvent.date);
-        const timeDiff = eventDate - now;
-        const daysLeft = Math.round(timeDiff / (1000 * 60 * 60 * 24));
+        const eventDate = new Date(nextEvent.date);
+        const timeDiff = eventDate - now;
+        const daysLeft = Math.round(timeDiff / (1000 * 60 * 60 * 24));
 
-        const box = document.getElementById('calendar-widget');
-        const label = document.getElementById('cal-label');
-        const dateDisplay = document.getElementById('cal-date');
-        const daysBadge = document.getElementById('cal-days-left');
-        const nameDisplay = document.getElementById('cal-name');
-        const icon = document.getElementById('cal-type-icon');
+        const box = document.getElementById('calendar-widget');
+        const label = document.getElementById('cal-label');
+        const dateDisplay = document.getElementById('cal-date');
+        const daysBadge = document.getElementById('cal-days-left');
+        const nameDisplay = document.getElementById('cal-name');
+        const icon = document.getElementById('cal-type-icon');
 
-        const monthNames = ["Január", "Február", "Március", "Április", "Május", "Június", "Július", "Augusztus", "Szeptember", "Október", "November", "December"];
-        const formattedDate = `${monthNames[eventDate.getMonth()]} ${eventDate.getDate()}.`;
+        const monthNames = ["Január", "Február", "Március", "Április", "Május", "Június", "Július", "Augusztus", "Szeptember", "Október", "November", "December"];
+        const formattedDate = `${monthNames[eventDate.getMonth()]} ${eventDate.getDate()}.`;
 
-        dateDisplay.innerText = formattedDate;
-        nameDisplay.innerText = nextEvent.name;
+        dateDisplay.innerText = formattedDate;
+        nameDisplay.innerText = nextEvent.name;
 
-        // Alaphelyzetbe állítás
-        box.className = "calendar-box"; 
-        daysBadge.className = "cal-badge"; 
-        box.style.borderLeftColor = ''; // Reset inline styles
+        // Alaphelyzetbe állítás
+        box.className = "calendar-box"; 
+        daysBadge.className = "cal-badge"; 
+        box.style.borderLeftColor = ''; // Reset inline styles
 
-        if (nextEvent.type === 'workday') {
-            box.classList.add('type-workday');
-            daysBadge.classList.add('workday');
-            label.innerText = "KÖTELEZŐ MUNKANAP";
-            icon.innerText = "⚠️";
-        } else {
-            box.classList.add('type-holiday');
-            daysBadge.classList.add('holiday');
-            label.innerText = "KÖVETKEZŐ ÜNNEP";
-            icon.innerText = "📅";
-            
-            // --- MÓDOSÍTÁS: Fix Királykék (animáció nélkül) ---
-            box.classList.add('electric-blue');
-        }
+        if (nextEvent.type === 'workday') {
+            box.classList.add('type-workday');
+            daysBadge.classList.add('workday');
+            label.innerText = "KÖTELEZŐ MUNKANAP";
+            icon.innerText = "⚠️";
+        } else {
+            box.classList.add('type-holiday');
+            daysBadge.classList.add('holiday');
+            label.innerText = "KÖVETKEZŐ ÜNNEP";
+            icon.innerText = "📅";
+            
+            // --- MÓDOSÍTÁS: Fix Királykék (animáció nélkül) ---
+            box.classList.add('electric-blue');
+        }
 
-        if (daysLeft === 0) {
-            daysBadge.innerText = "MA!";
-        } else if (daysLeft === 1) {
-            daysBadge.innerText = "HOLNAP";
-        } else {
-            daysBadge.innerText = `${daysLeft} NAP`;
-        }
+        if (daysLeft === 0) {
+            daysBadge.innerText = "MA!";
+        } else if (daysLeft === 1) {
+            daysBadge.innerText = "HOLNAP";
+        } else {
+            daysBadge.innerText = `${daysLeft} NAP`;
+        }
 
-        let shiftDiv = document.getElementById('shift-info-display');
+        let shiftDiv = document.getElementById('shift-info-display');
 
-        if (nextEvent.shiftDay && nextEvent.shiftNight) {
-            if (!shiftDiv) {
-                shiftDiv = document.createElement('div');
-                shiftDiv.id = 'shift-info-display';
-                shiftDiv.className = 'shift-info-box';
-                box.appendChild(shiftDiv);
-            }
-            
-            // --- PRO MEGJELENÉS (Nincs Napocska/Hold) ---
-            shiftDiv.innerHTML = `
-                <div class="shift-header-row">
-                    <span>ÉRINTETT MŰSZAKOK</span>
-                </div>
-                <div class="shift-content-row">
-                    <div class="shift-cell theme-day">
-                        <span class="shift-cell-label">NAPPALOS</span>
-                        <span class="shift-cell-val">${nextEvent.shiftDay}</span>
-                    </div>
-                    <div class="shift-cell theme-night">
-                        <span class="shift-cell-label">ÉJSZAKÁS</span>
-                        <span class="shift-cell-val">${nextEvent.shiftNight}</span>
-                    </div>
-                </div>
-            `;
-        } else {
-            if (shiftDiv) shiftDiv.remove();
-        }
-    }
+        if (nextEvent.shiftDay && nextEvent.shiftNight) {
+            if (!shiftDiv) {
+                shiftDiv = document.createElement('div');
+                shiftDiv.id = 'shift-info-display';
+                shiftDiv.className = 'shift-info-box';
+                box.appendChild(shiftDiv);
+            }
+            
+            // --- PRO MEGJELENÉS (Nincs Napocska/Hold) ---
+            shiftDiv.innerHTML = `
+                <div class="shift-header-row">
+                    <span>ÉRINTETT MŰSZAKOK</span>
+                </div>
+                <div class="shift-content-row">
+                    <div class="shift-cell theme-day">
+                        <span class="shift-cell-label">NAPPALOS</span>
+                        <span class="shift-cell-val">${nextEvent.shiftDay}</span>
+                    </div>
+                    <div class="shift-cell theme-night">
+                        <span class="shift-cell-label">ÉJSZAKÁS</span>
+                        <span class="shift-cell-val">${nextEvent.shiftNight}</span>
+                    </div>
+                </div>
+            `;
+        } else {
+            if (shiftDiv) shiftDiv.remove();
+        }
+    }
 
-    function updateGreeting() {
-        const hour = new Date().getHours();
-        let greeting = "Üdv";
-        
-        if (hour >= 6 && hour < 9) {
-            greeting = "Jó reggelt";
-        } else if (hour >= 9 && hour < 18) {
-            greeting = "Szép napot";
-        } else {
-            greeting = "Jó estét";
-        }
-        
-        document.getElementById('greeting-text').innerText = greeting;
-    }
+    function updateGreeting() {
+        const hour = new Date().getHours();
+        let greeting = "Üdv";
+        
+        if (hour >= 6 && hour < 9) {
+            greeting = "Jó reggelt";
+        } else if (hour >= 9 && hour < 18) {
+            greeting = "Szép napot";
+        } else {
+            greeting = "Jó estét";
+        }
+        
+        document.getElementById('greeting-text').innerText = greeting;
+    }
 
-    function updateInfo() {
-        const now = new Date();
-        
-        updateGreeting();
+    function updateInfo() {
+        const now = new Date();
+        
+        updateGreeting();
 
-        const napok = ["Vasárnap", "Hétfő", "Kedd", "Szerda", "Csütörtök", "Péntek", "Szombat"];
-        const napNeve = napok[now.getDay()];
-        const dateStr = now.getFullYear() + ". " + String(now.getMonth() + 1).padStart(2, '0') + ". " + String(now.getDate()).padStart(2, '0') + ". " + napNeve;
-        
-        const honapNap = String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
-        const maiNevnap = nevnapok[honapNap] || "---";
+        const napok = ["Vasárnap", "Hétfő", "Kedd", "Szerda", "Csütörtök", "Péntek", "Szombat"];
+        const napNeve = napok[now.getDay()];
+        const dateStr = now.getFullYear() + ". " + String(now.getMonth() + 1).padStart(2, '0') + ". " + String(now.getDate()).padStart(2, '0') + ". " + napNeve;
+        
+        const honapNap = String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
+        const maiNevnap = nevnapok[honapNap] || "---";
 
-        document.getElementById('date-text').innerText = dateStr;
-        document.getElementById('name-day').innerText = "Névnap: " + maiNevnap;
+        document.getElementById('date-text').innerText = dateStr;
+        document.getElementById('name-day').innerText = "Névnap: " + maiNevnap;
 
-        updateCalendarWidget();
-    }
+        updateCalendarWidget();
+    }
 
-    updateInfo();
-    setInterval(updateInfo, 1000); 
+    updateInfo();
+    setInterval(updateInfo, 1000); 
 
-    function animateAndReload(btn) {
-        if(navigator.vibrate) navigator.vibrate(20);
-        btn.classList.add('active-anim');
-        setTimeout(() => {
-            window.location.reload();
-        }, 550); 
-    }
+    function animateAndReload(btn) {
+        if(navigator.vibrate) navigator.vibrate(20);
+        btn.classList.add('active-anim');
+        setTimeout(() => {
+            window.location.reload();
+        }, 550); 
+    }
 
-    function toggleMenu() {
-        if(navigator.vibrate) navigator.vibrate(15);
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('overlay');
-        const icon = document.getElementById('menuIcon');
-        sidebar.classList.toggle('open');
-        overlay.classList.toggle('active');
-        icon.innerText = sidebar.classList.contains('open') ? '✕' : '☰';
-        icon.style.transform = sidebar.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
-    }
+    function toggleMenu() {
+        if(navigator.vibrate) navigator.vibrate(15);
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        const icon = document.getElementById('menuIcon');
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+        icon.innerText = sidebar.classList.contains('open') ? '✕' : '☰';
+        icon.style.transform = sidebar.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
+    }
 
-    // --- ÚJ: Ünnepnap Lista Modal Logika (PRO DESIGN) ---
-    function openHolidayList() {
-        if(navigator.vibrate) navigator.vibrate(10);
-        
-        const modal = document.getElementById('holidayModal');
-        const content = document.getElementById('holidayListContent');
-        content.innerHTML = ''; // Törlés
-        
-        const now = new Date();
-        now.setHours(0,0,0,0);
-        
-        calendarEvents.forEach(event => {
-            const evDate = new Date(event.date);
-            const isPast = evDate < now;
-            const isToday = evDate.getTime() === now.getTime();
-            
-            let rowClass = 'hm-row ' + (event.type === 'workday' ? 'type-workday' : 'type-holiday');
-            if(isPast) rowClass += ' past';
-            if(isToday) rowClass += ' current';
+    // --- ÚJ: Ünnepnap Lista Modal Logika (PRO DESIGN) ---
+    function openHolidayList() {
+        if(navigator.vibrate) navigator.vibrate(10);
+        
+        const modal = document.getElementById('holidayModal');
+        const content = document.getElementById('holidayListContent');
+        content.innerHTML = ''; // Törlés
+        
+        const now = new Date();
+        now.setHours(0,0,0,0);
+        
+        calendarEvents.forEach(event => {
+            const evDate = new Date(event.date);
+            const isPast = evDate < now;
+            const isToday = evDate.getTime() === now.getTime();
+            
+            let rowClass = 'hm-row ' + (event.type === 'workday' ? 'type-workday' : 'type-holiday');
+            if(isPast) rowClass += ' past';
+            if(isToday) rowClass += ' current';
 
-            const monthNames = ["JAN", "FEB", "MÁR", "ÁPR", "MÁJ", "JÚN", "JÚL", "AUG", "SZEP", "OKT", "NOV", "DEC"];
-            const mName = monthNames[evDate.getMonth()];
-            const dNum = evDate.getDate();
+            const monthNames = ["JAN", "FEB", "MÁR", "ÁPR", "MÁJ", "JÚN", "JÚL", "AUG", "SZEP", "OKT", "NOV", "DEC"];
+            const mName = monthNames[evDate.getMonth()];
+            const dNum = evDate.getDate();
 
-            // PRO SHIFT TAG GENERATION
-            let shiftHtml = '';
-            if(event.shiftDay && event.shiftNight) {
-                shiftHtml = `
-                    <div class="hm-shifts">
-                        <div class="hm-shift-badge day">
-                            <span class="hm-shift-label">NAPPAL</span>
-                            <span class="hm-shift-val">${event.shiftDay}</span>
-                        </div>
-                        <div class="hm-shift-badge night">
-                            <span class="hm-shift-label">ÉJSZAKA</span>
-                            <span class="hm-shift-val">${event.shiftNight}</span>
-                        </div>
-                    </div>
-                `;
-            } else if (event.type === 'workday') {
-                 // Ha véletlenül nincs megadva műszak, akkor is jelezze
-                 shiftHtml = `<div class="hm-shifts"><span style="color:#fbbf24; font-weight:700; font-size:0.75rem;">⚠️ KÖTELEZŐ</span></div>`;
-            }
+            // PRO SHIFT TAG GENERATION
+            let shiftHtml = '';
+            if(event.shiftDay && event.shiftNight) {
+                shiftHtml = `
+                    <div class="hm-shifts">
+                        <div class="hm-shift-badge day">
+                            <span class="hm-shift-label">NAPPAL</span>
+                            <span class="hm-shift-val">${event.shiftDay}</span>
+                        </div>
+                        <div class="hm-shift-badge night">
+                            <span class="hm-shift-label">ÉJSZAKA</span>
+                            <span class="hm-shift-val">${event.shiftNight}</span>
+                        </div>
+                    </div>
+                `;
+            } else if (event.type === 'workday') {
+                 // Ha véletlenül nincs megadva műszak, akkor is jelezze
+                 shiftHtml = `<div class="hm-shifts"><span style="color:#fbbf24; font-weight:700; font-size:0.75rem;">⚠️ KÖTELEZŐ</span></div>`;
+            }
 
-            const html = `
-                <div class="${rowClass}">
-                    <div class="hm-date-box">
-                        <span class="hm-month">${mName}</span>
-                        <span class="hm-day-num">${dNum}</span>
-                    </div>
-                    <div class="hm-info">
-                        <div class="hm-name">${event.name}</div>
-                        ${shiftHtml}
-                    </div>
-                </div>
-            `;
-            content.insertAdjacentHTML('beforeend', html);
-        });
+            const html = `
+                <div class="${rowClass}">
+                    <div class="hm-date-box">
+                        <span class="hm-month">${mName}</span>
+                        <span class="hm-day-num">${dNum}</span>
+                    </div>
+                    <div class="hm-info">
+                        <div class="hm-name">${event.name}</div>
+                        ${shiftHtml}
+                    </div>
+                </div>
+            `;
+            content.insertAdjacentHTML('beforeend', html);
+        });
 
-        modal.classList.add('open');
-    }
+        modal.classList.add('open');
+    }
 
-    function closeHolidayList() {
-        document.getElementById('holidayModal').classList.remove('open');
-    }
-    
-    const moduleNames = {
-        '1.html': '🔍 Alkatrész Kereső',
-        '12.html': '📟 Model/Pcb kereső',
-        '2.html': '💰 Bérkalkulátor',
-        '3.html': '📅 Műszaknaptár',
-        '4.html': '📝 Napi Jelentés segédlet',
-        '5.html': '🎭 Maszk kereső',
-        '6.html': '⚙️ Adatgeneráló',
-        '7.html': '📊 Hiba Analízis',
-        '8.html': '👥 Szabadságok (Staff Pro)',
-        '9.html': '📷 Barcode Scan',
-        '10.html': '🗑️ Szemétkihordás Terv',
-        '11.html': '🔌 Szárak állapota',
-        '13.html': '📐 CAD elemző',
-        '14.html': '📈 SPI Dashboard',
-        'home':   '🏠 Kezdőlap'
-    };
+    function closeHolidayList() {
+        document.getElementById('holidayModal').classList.remove('open');
+    }
+    
+    const moduleNames = {
+        '1.html': '🔍 Alkatrész Kereső',
+        '12.html': '📟 Model/Pcb kereső',
+        '2.html': '💰 Bérkalkulátor',
+        '3.html': '📅 Műszaknaptár',
+        '4.html': '📝 Napi Jelentés segédlet',
+        '5.html': '🎭 Maszk kereső',
+        '6.html': '⚙️ Adatgeneráló',
+        '7.html': '📊 Hiba Analízis',
+        '8.html': '👥 Szabadságok (Staff Pro)',
+        '9.html': '📷 Barcode Scan',
+        '10.html': '🗑️ Szemétkihordás Terv',
+        '11.html': '🔌 Szárak állapota',
+        '13.html': '📐 CAD elemző',
+        '14.html': '📈 SPI Dashboard',
+        '15.html': '🔲 Stencil kereső',
+        'home':   '🏠 Kezdőlap'
+    };
 
-    let discordQueue = [];
-    let isSending = false;
-    let deviceID = localStorage.getItem('fv_device_id') || Math.floor(Math.random() * 0x10000).toString(16).toUpperCase();
-    if (!localStorage.getItem('fv_device_id')) localStorage.setItem('fv_device_id', deviceID);
-    
-    let totalActivity = parseInt(localStorage.getItem('fv_total_activity') || 0);
+    let discordQueue = [];
+    let isSending = false;
+    let deviceID = localStorage.getItem('fv_device_id') || Math.floor(Math.random() * 0x10000).toString(16).toUpperCase();
+    if (!localStorage.getItem('fv_device_id')) localStorage.setItem('fv_device_id', deviceID);
+    
+    let totalActivity = parseInt(localStorage.getItem('fv_total_activity') || 0);
 
-    function sendDiscordLog(actionName, colorCode = 3883766) {
-        console.log("Log kikapcsolva: " + actionName);
-    }
+    function sendDiscordLog(actionName, colorCode = 3883766) {
+        console.log("Log kikapcsolva: " + actionName);
+    }
 
-    function processDiscordQueue() {
-        return;
-    }
+    function processDiscordQueue() {
+        return;
+    }
 
-    function loadModule(url, autoStart = false, caller = null) {
-        if(navigator.vibrate) navigator.vibrate(15);
-        if(caller) caller.blur();
-        totalActivity++;
-        localStorage.setItem('fv_total_activity', totalActivity);
+    function loadModule(url, autoStart = false, caller = null) {
+        if(navigator.vibrate) navigator.vibrate(15);
+        if(caller) caller.blur();
+        totalActivity++;
+        localStorage.setItem('fv_total_activity', totalActivity);
 
-        document.body.className = document.body.className.replace(/active-mod-\d+/g, '').trim();
-        document.body.classList.add('module-active');
+        document.body.className = document.body.className.replace(/active-mod-\d+/g, '').trim();
+        document.body.classList.add('module-active');
 
-        if (url.includes('.html')) {
-            const modNum = url.split('.')[0];
-            document.body.classList.add(`active-mod-${modNum}`);
-        }
+        if (url.includes('.html')) {
+            const modNum = url.split('.')[0];
+            document.body.classList.add(`active-mod-${modNum}`);
+        }
 
-        if (url === '1.html') {
-            document.body.classList.add('search-mode-active');
-        } else {
-            document.body.classList.remove('search-mode-active');
-        }
-        
-        document.getElementById('home-screen').style.display = 'none';
-        const frame = document.getElementById('content-frame');
-        frame.style.display = 'block';
-        frame.src = url + "?v=" + new Date().getTime() + (autoStart ? "&autostart=true" : "");
-        
-        if(document.getElementById('sidebar').classList.contains('open')) toggleMenu();
-        sendDiscordLog(`📂 Modul: ${moduleNames[url] || url}`, 3066993);
-    }
+        if (url === '1.html') {
+            document.body.classList.add('search-mode-active');
+        } else {
+            document.body.classList.remove('search-mode-active');
+        }
+        
+        document.getElementById('home-screen').style.display = 'none';
+        const frame = document.getElementById('content-frame');
+        frame.style.display = 'block';
+        frame.src = url + "?v=" + new Date().getTime() + (autoStart ? "&autostart=true" : "");
+        
+        if(document.getElementById('sidebar').classList.contains('open')) toggleMenu();
+        sendDiscordLog(`📂 Modul: ${moduleNames[url] || url}`, 3066993);
+    }
 
-    function showHome(caller = null) {
-        if(navigator.vibrate) navigator.vibrate(15);
-        if(caller) caller.blur();
-        
-        document.body.classList.remove('search-mode-active');
-        document.body.classList.remove('module-active');
-        document.body.className = document.body.className.replace(/active-mod-\d+/g, '').trim();
-        
-        document.getElementById('home-screen').style.display = 'flex';
-        const frame = document.getElementById('content-frame');
-        frame.style.display = 'none';
-        frame.src = ""; 
-        if(document.getElementById('sidebar').classList.contains('open')) toggleMenu();
-        sendDiscordLog("🏠 Kezdőlap", 10070709);
-    }
+    function showHome(caller = null) {
+        if(navigator.vibrate) navigator.vibrate(15);
+        if(caller) caller.blur();
+        
+        document.body.classList.remove('search-mode-active');
+        document.body.classList.remove('module-active');
+        document.body.className = document.body.className.replace(/active-mod-\d+/g, '').trim();
+        
+        document.getElementById('home-screen').style.display = 'flex';
+        const frame = document.getElementById('content-frame');
+        frame.style.display = 'none';
+        frame.src = ""; 
+        if(document.getElementById('sidebar').classList.contains('open')) toggleMenu();
+        sendDiscordLog("🏠 Kezdőlap", 10070709);
+    }
 
-    function openSecureLink(caller) {
-        if(navigator.vibrate) navigator.vibrate(15);
-        if(caller) caller.blur();
-        
-        if (localStorage.getItem('fv_gen_auth') === 'true') {
-            loadModule('6.html'); 
-            sendDiscordLog("🔐 ADMIN: Adatgeneráló (Belső)", 65280);
-            return;
-        }
-        
-        const modal = document.getElementById('genPinModal');
-        document.getElementById('genPinInput').value = '';
-        document.getElementById('genPinRemember').checked = false;
-        modal.classList.add('open');
-        
-        setTimeout(() => document.getElementById('genPinInput').focus(), 100);
-    }
+    function openSecureLink(caller) {
+        if(navigator.vibrate) navigator.vibrate(15);
+        if(caller) caller.blur();
+        
+        if (localStorage.getItem('fv_gen_auth') === 'true') {
+            loadModule('6.html'); 
+            sendDiscordLog("🔐 ADMIN: Adatgeneráló (Belső)", 65280);
+            return;
+        }
+        
+        const modal = document.getElementById('genPinModal');
+        document.getElementById('genPinInput').value = '';
+        document.getElementById('genPinRemember').checked = false;
+        modal.classList.add('open');
+        
+        setTimeout(() => document.getElementById('genPinInput').focus(), 100);
+    }
 
-    function closeGenPinModal() {
-        document.getElementById('genPinModal').classList.remove('open');
-    }
+    function closeGenPinModal() {
+        document.getElementById('genPinModal').classList.remove('open');
+    }
 
-    function submitGenPin() {
-        const pin = document.getElementById('genPinInput').value;
-        const remember = document.getElementById('genPinRemember').checked;
-        
-        if (pin === "general") {
-            if (remember) {
-                localStorage.setItem('fv_gen_auth', 'true');
-            } else {
-                localStorage.removeItem('fv_gen_auth'); 
-            }
-            closeGenPinModal();
-            loadModule('6.html');
-            sendDiscordLog("🔐 ADMIN: Adatgeneráló (Belső)", 65280);
-        } else {
-            alert("Hibás kód!");
-            sendDiscordLog("🚨 HIBÁS PIN: Adatgeneráló", 16711680);
-            document.getElementById('genPinInput').value = ''; 
-            document.getElementById('genPinInput').focus();
-        }
-    }
+    function submitGenPin() {
+        const pin = document.getElementById('genPinInput').value;
+        const remember = document.getElementById('genPinRemember').checked;
+        
+        if (pin === "general") {
+            if (remember) {
+                localStorage.setItem('fv_gen_auth', 'true');
+            } else {
+                localStorage.removeItem('fv_gen_auth'); 
+            }
+            closeGenPinModal();
+            loadModule('6.html');
+            sendDiscordLog("🔐 ADMIN: Adatgeneráló (Belső)", 65280);
+        } else {
+            alert("Hibás kód!");
+            sendDiscordLog("🚨 HIBÁS PIN: Adatgeneráló", 16711680);
+            document.getElementById('genPinInput').value = ''; 
+            document.getElementById('genPinInput').focus();
+        }
+    }
 
-    // --- ÚJ PROFI JELSZÓ BEKÉRŐ RENDSZER ---
-    function openStaffPro(caller) {
-        if(navigator.vibrate) navigator.vibrate(15);
-        if(caller) caller.blur();
+    // --- ÚJ PROFI JELSZÓ BEKÉRŐ RENDSZER ---
+    function openStaffPro(caller) {
+        if(navigator.vibrate) navigator.vibrate(15);
+        if(caller) caller.blur();
 
-        // 1. Ellenőrizzük, hogy korábban bepipálta-e az "Emlékezz rám"-ot
-        if (localStorage.getItem('fv_staffpro_auth') === 'true') {
-            loadModule('8.html');
-            return;
-        }
+        // 1. Ellenőrizzük, hogy korábban bepipálta-e az "Emlékezz rám"-ot
+        if (localStorage.getItem('fv_staffpro_auth') === 'true') {
+            loadModule('8.html');
+            return;
+        }
 
-        // 2. Ha nem, megjelenítjük a profi ablakot a prompt() helyett
-        const modal = document.getElementById('pinModal');
-        document.getElementById('pinInput').value = ''; // Mező űrítése
-        document.getElementById('pinRemember').checked = false; // Pipa kiszedése alapból
-        modal.classList.add('open');
-        
-        // Fókusz rárakása a mezőre
-        setTimeout(() => document.getElementById('pinInput').focus(), 100);
-    }
+        // 2. Ha nem, megjelenítjük a profi ablakot a prompt() helyett
+        const modal = document.getElementById('pinModal');
+        document.getElementById('pinInput').value = ''; // Mező űrítése
+        document.getElementById('pinRemember').checked = false; // Pipa kiszedése alapból
+        modal.classList.add('open');
+        
+        // Fókusz rárakása a mezőre
+        setTimeout(() => document.getElementById('pinInput').focus(), 100);
+    }
 
-    // --- A MODAL LOGIKÁJA ---
-    function closePinModal() {
-        document.getElementById('pinModal').classList.remove('open');
-    }
+    // --- A MODAL LOGIKÁJA ---
+    function closePinModal() {
+        document.getElementById('pinModal').classList.remove('open');
+    }
 
-    function submitPin() {
-        const pin = document.getElementById('pinInput').value;
-        const remember = document.getElementById('pinRemember').checked;
-        
-        if (pin === "smtforvia2026") {
-            // CSAK AKKOR menti el, ha be volt pipálva az "Eszköz megjegyzése"
-            if (remember) {
-                localStorage.setItem('fv_staffpro_auth', 'true');
-            } else {
-                localStorage.removeItem('fv_staffpro_auth'); 
-            }
-            closePinModal();
-            loadModule('8.html');
-        } else {
-            alert("Hibás kód!");
-            sendDiscordLog("🚨 HIBÁS PIN: Szabadságok", 16711680);
-            document.getElementById('pinInput').value = ''; // Ürítjük, hogy újra írhassa
-            document.getElementById('pinInput').focus();
-        }
-    }
-    // --- EDDIG TART AZ ÚJ LOGIKA ---
+    function submitPin() {
+        const pin = document.getElementById('pinInput').value;
+        const remember = document.getElementById('pinRemember').checked;
+        
+        if (pin === "smtforvia2026") {
+            // CSAK AKKOR menti el, ha be volt pipálva az "Eszköz megjegyzése"
+            if (remember) {
+                localStorage.setItem('fv_staffpro_auth', 'true');
+            } else {
+                localStorage.removeItem('fv_staffpro_auth'); 
+            }
+            closePinModal();
+            loadModule('8.html');
+        } else {
+            alert("Hibás kód!");
+            sendDiscordLog("🚨 HIBÁS PIN: Szabadságok", 16711680);
+            document.getElementById('pinInput').value = ''; // Ürítjük, hogy újra írhassa
+            document.getElementById('pinInput').focus();
+        }
+    }
+    // --- EDDIG TART AZ ÚJ LOGIKA ---
 
-    async function shareApp(caller) {
-        if(navigator.vibrate) navigator.vibrate(15);
-        if(caller) caller.blur();
-        sendDiscordLog("📤 Megosztás", 3066993);
-        const shareData = { title: 'Forvia Hub', text: 'Forvia SMT app', url: window.location.href };
-        if (navigator.share) { try { await navigator.share(shareData); } catch (err) {} } 
-        else { try { await navigator.clipboard.writeText(window.location.href); alert("Link másolva!"); } catch (err) {} }
-    }
+    async function shareApp(caller) {
+        if(navigator.vibrate) navigator.vibrate(15);
+        if(caller) caller.blur();
+        sendDiscordLog("📤 Megosztás", 3066993);
+        const shareData = { title: 'Forvia Hub', text: 'Forvia SMT app', url: window.location.href };
+        if (navigator.share) { try { await navigator.share(shareData); } catch (err) {} } 
+        else { try { await navigator.clipboard.writeText(window.location.href); alert("Link másolva!"); } catch (err) {} }
+    }
 
-    document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
+    document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
 
-    // --- HOZZÁADOTT BIZTONSÁGOS DRAG & DROP FUNKCIÓ (KATTINTÁS BARÁT, JAVÍTOTT) ---
-    (function() {
-        const nav = document.querySelector('.nav-list');
-        if (!nav) return;
-        
-        // CSS dinamikus betöltése
-        const style = document.createElement('style');
-        style.innerHTML = `
-            .nav-item { cursor: grab; -webkit-user-drag: element; }
-            .nav-item:active { cursor: grabbing; }
-            .nav-item.mobile-dragging { opacity: 1 !important; filter: brightness(0.6); border: 1px dashed var(--accent) !important; background: rgba(59, 130, 246, 0.2) !important; transform: scale(0.98); }
-            .nav-item.drag-over { background: rgba(59, 130, 246, 0.3) !important; }
-        `;
-        document.head.appendChild(style);
+    // --- HOZZÁADOTT BIZTONSÁGOS DRAG & DROP FUNKCIÓ (KATTINTÁS BARÁT, JAVÍTOTT) ---
+    (function() {
+        const nav = document.querySelector('.nav-list');
+        if (!nav) return;
+        
+        // CSS dinamikus betöltése
+        const style = document.createElement('style');
+        style.innerHTML = `
+            .nav-item { cursor: grab; -webkit-user-drag: element; }
+            .nav-item:active { cursor: grabbing; }
+            .nav-item.mobile-dragging { opacity: 1 !important; filter: brightness(0.6); border: 1px dashed var(--accent) !important; background: rgba(59, 130, 246, 0.2) !important; transform: scale(0.98); }
+            .nav-item.drag-over { background: rgba(59, 130, 246, 0.3) !important; }
+        `;
+        document.head.appendChild(style);
 
-        let dragEl = null;
+        let dragEl = null;
 
-        // Sorrend visszatöltése
-        const savedOrder = JSON.parse(localStorage.getItem('fv_nav_order'));
-        if (savedOrder) {
-            const items = Array.from(nav.children);
-            savedOrder.forEach(text => {
-                const item = items.find(i => i.innerText.trim() === text);
-                if (item) nav.appendChild(item);
-            });
-        }
+        // Sorrend visszatöltése
+        const savedOrder = JSON.parse(localStorage.getItem('fv_nav_order'));
+        if (savedOrder) {
+            const items = Array.from(nav.children);
+            savedOrder.forEach(text => {
+                const item = items.find(i => i.innerText.trim() === text);
+                if (item) nav.appendChild(item);
+            });
+        }
 
-        Array.from(nav.children).forEach(item => {
-            item.setAttribute('draggable', 'true');
-            
-            // Asztali események (Egér)
-            item.addEventListener('dragstart', function(e) {
-                dragEl = this;
-                e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('text/html', this.innerHTML);
-                setTimeout(() => this.classList.add('mobile-dragging'), 0);
-            });
-            
-            item.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                this.classList.add('drag-over');
-            });
-            
-            item.addEventListener('dragleave', function(e) {
-                this.classList.remove('drag-over');
-            });
-            
-            item.addEventListener('drop', function(e) {
-                e.stopPropagation();
-                this.classList.remove('drag-over');
-                if (dragEl && dragEl !== this) {
-                    const rect = this.getBoundingClientRect();
-                    const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
-                    nav.insertBefore(dragEl, next && this.nextSibling ? this.nextSibling : this);
-                    saveOrder();
-                }
-                return false;
-            });
-            
-            item.addEventListener('dragend', function(e) {
-                this.classList.remove('mobile-dragging');
-                Array.from(nav.children).forEach(i => {
-                    i.classList.remove('drag-over');
-                    i.classList.remove('mobile-dragging'); // Biztosíték
-                });
-                dragEl = null;
-            });
+        Array.from(nav.children).forEach(item => {
+            item.setAttribute('draggable', 'true');
+            
+            // Asztali események (Egér)
+            item.addEventListener('dragstart', function(e) {
+                dragEl = this;
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', this.innerHTML);
+                setTimeout(() => this.classList.add('mobile-dragging'), 0);
+            });
+            
+            item.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('drag-over');
+            });
+            
+            item.addEventListener('dragleave', function(e) {
+                this.classList.remove('drag-over');
+            });
+            
+            item.addEventListener('drop', function(e) {
+                e.stopPropagation();
+                this.classList.remove('drag-over');
+                if (dragEl && dragEl !== this) {
+                    const rect = this.getBoundingClientRect();
+                    const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+                    nav.insertBefore(dragEl, next && this.nextSibling ? this.nextSibling : this);
+                    saveOrder();
+                }
+                return false;
+            });
+            
+            item.addEventListener('dragend', function(e) {
+                this.classList.remove('mobile-dragging');
+                Array.from(nav.children).forEach(i => {
+                    i.classList.remove('drag-over');
+                    i.classList.remove('mobile-dragging'); // Biztosíték
+                });
+                dragEl = null;
+            });
 
-            // Mobil események (Védett logika a kattintás érdekében)
-            let pressTimer;
-            let isDragging = false;
+            // Mobil események (Védett logika a kattintás érdekében)
+            let pressTimer;
+            let isDragging = false;
 
-            item.addEventListener('touchstart', function(e) {
-                if(e.touches.length > 1) return;
-                isDragging = false;
-                dragEl = this;
-                // Hosszan nyomás aktiválja a húzást (MÓDOSÍTVA: 800ms)
-                pressTimer = setTimeout(() => {
-                    isDragging = true;
-                    dragEl.classList.add('mobile-dragging');
-                    if(navigator.vibrate) navigator.vibrate(50);
-                }, 800); 
-            }, {passive: true});
+            item.addEventListener('touchstart', function(e) {
+                if(e.touches.length > 1) return;
+                isDragging = false;
+                dragEl = this;
+                // Hosszan nyomás aktiválja a húzást (MÓDOSÍTVA: 800ms)
+                pressTimer = setTimeout(() => {
+                    isDragging = true;
+                    dragEl.classList.add('mobile-dragging');
+                    if(navigator.vibrate) navigator.vibrate(50);
+                }, 800); 
+            }, {passive: true});
 
-            item.addEventListener('touchmove', function(e) {
-                if (!isDragging) {
-                    clearTimeout(pressTimer); 
-                    return;
-                }
-                e.preventDefault(); 
-                const touch = e.touches[0];
-                const target = document.elementFromPoint(touch.clientX, touch.clientY);
-                
-                if (target) {
-                    const dropTarget = target.closest('.nav-item');
-                    if (dropTarget && dropTarget !== dragEl) {
-                        const rect = dropTarget.getBoundingClientRect();
-                        const next = (touch.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
-                        nav.insertBefore(dragEl, next && dropTarget.nextSibling ? dropTarget.nextSibling : dropTarget);
-                    }
-                }
-            }, {passive: false});
+            item.addEventListener('touchmove', function(e) {
+                if (!isDragging) {
+                    clearTimeout(pressTimer); 
+                    return;
+                }
+                e.preventDefault(); 
+                const touch = e.touches[0];
+                const target = document.elementFromPoint(touch.clientX, touch.clientY);
+                
+                if (target) {
+                    const dropTarget = target.closest('.nav-item');
+                    if (dropTarget && dropTarget !== dragEl) {
+                        const rect = dropTarget.getBoundingClientRect();
+                        const next = (touch.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+                        nav.insertBefore(dragEl, next && dropTarget.nextSibling ? dropTarget.nextSibling : dropTarget);
+                    }
+                }
+            }, {passive: false});
 
-            item.addEventListener('touchend', function(e) {
-                clearTimeout(pressTimer);
-                if (isDragging) {
-                    // Tisztítás: eltávolítjuk a formázást mindenről
-                    Array.from(nav.children).forEach(i => i.classList.remove('mobile-dragging'));
-                    if (dragEl) dragEl.classList.remove('mobile-dragging');
-                    saveOrder();
-                    
-                    // Késleltetjük az isDragging kikapcsolását, hogy a click eventet blokkolja
-                    setTimeout(() => { isDragging = false; dragEl = null; }, 100);
-                }
-            });
-            
-            item.addEventListener('click', function(e) {
-                if (isDragging) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-            }, true);
-        });
+            item.addEventListener('touchend', function(e) {
+                clearTimeout(pressTimer);
+                if (isDragging) {
+                    // Tisztítás: eltávolítjuk a formázást mindenről
+                    Array.from(nav.children).forEach(i => i.classList.remove('mobile-dragging'));
+                    if (dragEl) dragEl.classList.remove('mobile-dragging');
+                    saveOrder();
+                    
+                    // Késleltetjük az isDragging kikapcsolását, hogy a click eventet blokkolja
+                    setTimeout(() => { isDragging = false; dragEl = null; }, 100);
+                }
+            });
+            
+            item.addEventListener('click', function(e) {
+                if (isDragging) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }, true);
+        });
 
-        function saveOrder() {
-            const order = Array.from(nav.children).map(i => i.innerText.trim());
-            localStorage.setItem('fv_nav_order', JSON.stringify(order));
-        }
-    })();
+        function saveOrder() {
+            const order = Array.from(nav.children).map(i => i.innerText.trim());
+            localStorage.setItem('fv_nav_order', JSON.stringify(order));
+        }
+    })();
 </script>
 </body>
 </html>
