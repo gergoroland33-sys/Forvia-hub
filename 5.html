@@ -45,9 +45,11 @@
                 return;
             }
 
-            // Megkeressük a legfrissebb updatedAt dátumot
+            // JAVÍTVA: Biztonságos dátum összehasonlítás
             let latestItem = window.stencilData.reduce((prev, current) => {
-                return (prev.updatedAt > current.updatedAt) ? prev : current;
+                const datePrev = prev.updatedAt ? new Date(prev.updatedAt).getTime() : 0;
+                const dateCurr = current.updatedAt ? new Date(current.updatedAt).getTime() : 0;
+                return (datePrev > dateCurr) ? prev : current;
             }, window.stencilData[0]);
 
             if (latestItem && latestItem.updatedAt) {
@@ -102,6 +104,7 @@
                 showToast("Sikeres belépés: Admin mód aktív");
             } else {
                 window.isAdmin = false;
+                // Mobil nézeten a CSS elrejti, asztalin megjelenik
                 loginBtn.style.display = 'flex'; 
                 loginBtn.onclick = openLoginModal;
                 document.getElementById('adminPanel').style.display = 'none';
@@ -130,7 +133,6 @@
 
         window.saveToFirebase = async (dataObj) => {
             try {
-                // BŐVÍTÉS: Időbélyeg és Módosító hozzáadása
                 const currentUser = auth.currentUser;
                 const uploadData = {
                     ...dataObj,
@@ -170,7 +172,6 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
         body { background-color: var(--bg-base); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; position: relative; }
 
-        /* Új, letisztult felső sáv - középre igazítva az indikátornak */
         .system-top-center { position: fixed; top: 15px; left: 50%; transform: translateX(-50%); z-index: 1000; pointer-events: none; }
         
         .status-badge {
@@ -193,7 +194,6 @@
 
         .system-top-right { position: fixed; top: 20px; right: 30px; z-index: 1000; }
         
-        /* Ipari, letisztult admin gomb */
         .pro-login-btn { 
             background: rgba(15, 23, 42, 0.8); 
             border: 1px solid #475569; 
@@ -217,7 +217,6 @@
         .public-logo { font-size: 45px; font-weight: 900; margin-bottom: 20px; text-shadow: 0 5px 15px rgba(0,0,0,0.5); letter-spacing: 2px; }
         .public-logo span { color: var(--accent); }
 
-        /* Utolsó módosítás kijelzője */
         .last-modified-badge {
             background: rgba(14, 165, 233, 0.05);
             border: 1px solid rgba(14, 165, 233, 0.1);
@@ -234,19 +233,16 @@
         }
         .last-modified-badge strong { color: var(--accent); font-weight: 600; }
 
-        /* Prémium kereső */
         .giant-search-wrapper { position: relative; width: 85%; max-width: 700px; margin-bottom: 40px; z-index: 100; }
         .giant-search { position: relative; width: 100%; display: flex; align-items: center; }
         .giant-search i { position: absolute; left: 25px; color: var(--text-muted); font-size: 20px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; }
         
-        /* A szöveg középre igazítva */
         .giant-search-input { width: 100%; padding: 22px 50px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15, 23, 42, 0.8); color: white; outline: none; font-size: 20px; font-weight: 500; text-align: center; letter-spacing: 1px; transition: all 0.3s ease; box-shadow: 0 15px 35px rgba(0,0,0,0.3); backdrop-filter: blur(15px); }
         .giant-search-input::placeholder { color: var(--text-muted); opacity: 0.5; font-weight: 400; text-align: center; }
         .giant-search-input:focus { border-color: var(--accent); background: #0f172a; box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 0 4px rgba(14, 165, 233, 0.1); }
         .giant-search:focus-within i { color: var(--accent); text-shadow: 0 0 10px rgba(14, 165, 233, 0.5); }
         .giant-search-input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
 
-        /* Lebegő találati javaslatok (Autocomplete) */
         .search-suggestions {
             position: absolute; top: calc(100% + 10px); left: 0; width: 100%;
             background: #1e293b; border: 1px solid var(--border);
@@ -275,6 +271,9 @@
             .giant-search-input { padding: 18px 40px; font-size: 16px; border-radius: 10px; }
             .suggestion-item { padding: 12px 15px; }
             .sugg-maszk { font-size: 16px; }
+            
+            /* JAVÍTVA: Telefonon eltűnik az admin gomb teljesen */
+            #loginBtn { display: none !important; }
         }
 
         .public-results { width: 90%; max-width: 1000px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; padding-bottom: 50px; }
@@ -367,7 +366,6 @@
         .btn-outline { background: #475569; border: 1px solid #475569; color: white; }
         .btn-outline:hover { background: #334155; }
 
-        /* PRÉMIUM TOGGLE KAPCSOLÓ */
         .toggle-container { display: flex; align-items: center; gap: 10px; margin-top: 5px; cursor: pointer; }
         .premium-toggle { position: relative; display: inline-block; width: 40px; height: 22px; }
         .premium-toggle input { opacity: 0; width: 0; height: 0; }
@@ -380,7 +378,6 @@
         #toast { position: fixed; top: 20px; left: 50%; transform: translate(-50%, -100px); background-color: var(--success); color: white; padding: 15px 25px; border-radius: 8px; font-weight: bold; font-size: 14px; opacity: 0; transition: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 3000; box-shadow: 0 10px 20px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 10px; }
         #toast.show { transform: translate(-50%, 0); opacity: 1; }
 
-        /* NYOMTATÁSI NÉZET */
         #printArea { display: none; }
         
         @media print {
@@ -404,7 +401,6 @@
 </head>
 <body>
 
-    <!-- Letisztult középső állapotjelző -->
     <div class="system-top-center">
         <div class="status-badge">
             <span class="status-dot" id="connectionDot"></span>
@@ -412,7 +408,6 @@
         </div>
     </div>
 
-    <!-- Ipari Admin Belépés Gomb -->
     <div class="system-top-right">
         <button id="loginBtn" class="pro-login-btn"><i class="fas fa-shield-alt"></i> Admin Belépés</button>
     </div>
@@ -423,13 +418,11 @@
             <i class="fas fa-circle-notch fa-spin"></i> Adatok betöltése...
         </div>
         
-        <!-- PRÉMIUM KERESŐ MEZŐ -->
         <div class="giant-search-wrapper">
             <form class="giant-search" onsubmit="executePublicSearch(); return false;" autocomplete="off">
                 <i class="fas fa-search"></i>
                 <input type="search" id="publicSearchInput" class="giant-search-input" placeholder="Stencil szám vagy Modellnév" onkeyup="handleSearchInput()" spellcheck="false" name="search_query_main">
             </form>
-            <!-- Lebegő találatok -->
             <div id="searchSuggestions" class="search-suggestions"></div>
         </div>
         
@@ -504,7 +497,6 @@
                     <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" autocomplete="current-password">
                 </div>
                 
-                <!-- PRÉMIUM KAPCSOLÓ -->
                 <label class="toggle-container">
                     <div class="premium-toggle">
                         <input type="checkbox" id="rememberMe" checked>
@@ -616,7 +608,6 @@
         document.getElementById('tab-' + tabId).classList.add('active');
     }
 
-    // KERESŐ LOGIKA (PRÉMIUM)
     let currentSearchTerm = "";
 
     function clearPublicSearch() {
@@ -625,7 +616,6 @@
         document.getElementById('publicResultsContainer').innerHTML = "";
     }
 
-    // Kezeli a gépelést és a javaslatokat
     function handleSearchInput() {
         const query = document.getElementById('publicSearchInput').value.trim().toLowerCase();
         const suggContainer = document.getElementById('searchSuggestions');
@@ -635,7 +625,6 @@
             return;
         }
 
-        // Csak maszkra és modellre keresünk a kérés szerint
         const results = window.stencilData.filter(d => 
             d.maszk.toLowerCase().includes(query) || 
             (d.modell && d.modell.toLowerCase().includes(query))
@@ -647,7 +636,6 @@
             return;
         }
 
-        // Legfeljebb 5 javaslatot mutatunk a legördülőben a sebesség és az esztétika miatt
         let html = '';
         results.slice(0, 5).forEach(item => {
             html += `
@@ -670,14 +658,12 @@
         suggContainer.classList.add('active');
     }
 
-    // Ha rákattint egy konkrét javaslatra
     function selectSuggestion(maszkId) {
         document.getElementById('publicSearchInput').value = maszkId;
         document.getElementById('searchSuggestions').classList.remove('active');
         executePublicSearch();
     }
 
-    // Végrehajtja a tényleges keresést és megjeleníti a kártyákat
     function executePublicSearch() {
         const query = document.getElementById('publicSearchInput').value.trim().toLowerCase();
         const container = document.getElementById('publicResultsContainer');
@@ -712,10 +698,9 @@
             </div>`;
         });
         
-        document.getElementById('publicSearchInput').blur(); // Billentyűzet eltüntetése mobilon
+        document.getElementById('publicSearchInput').blur(); 
     }
 
-    // Bezárja a dropdown-t, ha máshová kattintanak
     document.addEventListener('click', function(event) {
         const searchWrapper = document.querySelector('.giant-search-wrapper');
         if (searchWrapper && !searchWrapper.contains(event.target)) {
@@ -723,7 +708,6 @@
         }
     });
 
-    // ADMIN RENDSZER LOGIKA (Eredeti grál érintetlen)
     function renderUI() {
         if (!window.isAdmin) return; 
         
