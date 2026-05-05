@@ -45,7 +45,6 @@
                 return;
             }
 
-            // JAVÍTVA: Biztonságos dátum összehasonlítás
             let latestItem = window.stencilData.reduce((prev, current) => {
                 const datePrev = prev.updatedAt ? new Date(prev.updatedAt).getTime() : 0;
                 const dateCurr = current.updatedAt ? new Date(current.updatedAt).getTime() : 0;
@@ -59,7 +58,8 @@
                     hour: '2-digit', minute: '2-digit' 
                 });
                 const email = latestItem.updatedBy ? latestItem.updatedBy : 'Ismeretlen Admin';
-                infoEl.innerHTML = `<i class="fas fa-history"></i> Utolsó frissítés: <strong>${formattedDate}</strong> | Operátor: <strong>${email}</strong>`;
+                // JAVÍTVA: Az "Operátor:" szó kikerült a helytakarékosság érdekében
+                infoEl.innerHTML = `<i class="fas fa-history"></i> Utolsó frissítés: <strong>${formattedDate}</strong> | <strong>${email}</strong>`;
             } else {
                 infoEl.innerHTML = `<i class="fas fa-history"></i> Régi adatkészlet (Nincs frissítési bélyeg)`;
             }
@@ -104,7 +104,6 @@
                 showToast("Sikeres belépés: Admin mód aktív");
             } else {
                 window.isAdmin = false;
-                // Mobil nézeten a CSS elrejti, asztalin megjelenik
                 loginBtn.style.display = 'flex'; 
                 loginBtn.onclick = openLoginModal;
                 document.getElementById('adminPanel').style.display = 'none';
@@ -189,8 +188,9 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            white-space: nowrap; /* JAVÍTVA: Soha nem törik meg a sor */
         }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: var(--success); box-shadow: 0 0 8px var(--success); transition: 0.3s; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: var(--success); box-shadow: 0 0 8px var(--success); transition: 0.3s; flex-shrink: 0; }
 
         .system-top-right { position: fixed; top: 20px; right: 30px; z-index: 1000; }
         
@@ -230,6 +230,10 @@
             gap: 10px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
             backdrop-filter: blur(5px);
+            white-space: nowrap; /* JAVÍTVA: Soha nem törik meg a sor */
+            max-width: 95vw; /* Képernyőről nem tud kilógni */
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .last-modified-badge strong { color: var(--accent); font-weight: 600; }
 
@@ -272,8 +276,11 @@
             .suggestion-item { padding: 12px 15px; }
             .sugg-maszk { font-size: 16px; }
             
-            /* JAVÍTVA: Telefonon eltűnik az admin gomb teljesen */
             #loginBtn { display: none !important; }
+
+            /* JAVÍTVA: Telefonos betűméret finomhangolása, hogy ne lógjon ki az egy sorból */
+            .status-badge { font-size: 10px; padding: 5px 12px; }
+            .last-modified-badge { font-size: 10.5px; padding: 6px 10px; gap: 6px; }
         }
 
         .public-results { width: 90%; max-width: 1000px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; padding-bottom: 50px; }
