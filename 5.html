@@ -37,28 +37,58 @@
             { name: "Szekrény 6", start: 97, end: 132 }
         ];
 
+        function updateLastModifiedDisplay() {
+            if (window.isAdmin) return; // Csak publikus nézetben látszik
+            const infoEl = document.getElementById('lastModifiedInfo');
+            if (!window.stencilData || window.stencilData.length === 0) {
+                infoEl.innerHTML = '<i class="far fa-clock"></i> Nincs még rögzített adat';
+                return;
+            }
+
+            // Megkeressük a legfrissebb updatedAt dátumot
+            let latestItem = window.stencilData.reduce((prev, current) => {
+                return (prev.updatedAt > current.updatedAt) ? prev : current;
+            }, window.stencilData[0]);
+
+            if (latestItem && latestItem.updatedAt) {
+                const date = new Date(latestItem.updatedAt);
+                const formattedDate = date.toLocaleString('hu-HU', { 
+                    year: 'numeric', month: '2-digit', day: '2-digit', 
+                    hour: '2-digit', minute: '2-digit' 
+                });
+                const email = latestItem.updatedBy ? latestItem.updatedBy : 'Ismeretlen Admin';
+                infoEl.innerHTML = `<i class="fas fa-history"></i> Utolsó frissítés: <strong>${formattedDate}</strong> | Operátor: <strong>${email}</strong>`;
+            } else {
+                infoEl.innerHTML = `<i class="fas fa-history"></i> Régi adatkészlet (Nincs frissítési bélyeg)`;
+            }
+        }
+
         onSnapshot(collection(db, "stencils"), (snapshot) => {
             window.stencilData = [];
             snapshot.forEach((doc) => {
                 window.stencilData.push({ id: doc.id, ...doc.data() });
             });
-            if(window.isAdmin) { renderUI(); } else { renderPublicSearch(); }
+            updateLastModifiedDisplay();
+            if(window.isAdmin) { renderUI(); } else { clearPublicSearch(); }
         }, (error) => {
-            const el = document.getElementById('connectionStatus');
-            el.style.color = 'var(--danger)';
-            el.title = "Firebase kapcsolat megszakadt!";
+            const el = document.getElementById('connectionStatusText');
+            const dot = document.getElementById('connectionDot');
+            el.innerText = 'Kapcsolat megszakadt';
+            dot.style.backgroundColor = 'var(--danger)';
             console.error("Firebase hiba:", error);
         });
 
         window.addEventListener('online', () => {
-            const el = document.getElementById('connectionStatus');
-            el.style.color = 'var(--success)';
-            el.title = "Firebase kapcsolat aktív";
+            const el = document.getElementById('connectionStatusText');
+            const dot = document.getElementById('connectionDot');
+            el.innerText = 'Adatbázis: Szinkronizálva';
+            dot.style.backgroundColor = 'var(--success)';
         });
         window.addEventListener('offline', () => {
-            const el = document.getElementById('connectionStatus');
-            el.style.color = 'var(--danger)';
-            el.title = "Nincs internetkapcsolat!";
+            const el = document.getElementById('connectionStatusText');
+            const dot = document.getElementById('connectionDot');
+            el.innerText = 'Nincs internetkapcsolat';
+            dot.style.backgroundColor = 'var(--danger)';
         });
 
         onAuthStateChanged(auth, (user) => {
@@ -76,7 +106,8 @@
                 loginBtn.onclick = openLoginModal;
                 document.getElementById('adminPanel').style.display = 'none';
                 document.getElementById('publicSearchPanel').style.display = 'flex';
-                renderPublicSearch();
+                clearPublicSearch();
+                updateLastModifiedDisplay();
             }
         });
 
@@ -99,7 +130,15 @@
 
         window.saveToFirebase = async (dataObj) => {
             try {
-                await setDoc(doc(db, "stencils", dataObj.maszk), dataObj);
+                // BŐVÍTÉS: Időbélyeg és Módosító hozzáadása
+                const currentUser = auth.currentUser;
+                const uploadData = {
+                    ...dataObj,
+                    updatedAt: new Date().toISOString(),
+                    updatedBy: currentUser ? currentUser.email : 'Ismeretlen'
+                };
+                
+                await setDoc(doc(db, "stencils", dataObj.maszk), uploadData);
                 closeModal('addModal');
                 showToast("Mentés sikeres!");
             } catch (e) { alert("Hiba a mentés során: " + e.message); }
@@ -131,54 +170,115 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
         body { background-color: var(--bg-base); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; position: relative; }
 
+        /* Új, letisztult felső sáv - középre igazítva az indikátornak */
+        .system-top-center { position: fixed; top: 15px; left: 50%; transform: translateX(-50%); z-index: 1000; pointer-events: none; }
+        
+        .status-badge {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 6px 16px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: var(--success); box-shadow: 0 0 8px var(--success); transition: 0.3s; }
+
         .system-top-right { position: fixed; top: 20px; right: 30px; z-index: 1000; }
         
-        #connectionStatus { 
-            position: fixed; 
-            bottom: 20px; 
-            right: 20px; 
-            z-index: 9999; 
-            background: rgba(15, 23, 42, 0.9); 
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            width: 40px; 
-            height: 40px; 
-            border-radius: 50%; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            color: var(--success); 
-            font-size: 16px; 
-            transition: 0.3s;
+        /* Ipari, letisztult admin gomb */
+        .pro-login-btn { 
+            background: rgba(15, 23, 42, 0.8); 
+            border: 1px solid #475569; 
+            color: var(--text-muted); 
+            padding: 10px 20px;
+            border-radius: 6px; 
+            font-size: 12px; 
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer; 
+            transition: all 0.2s ease; 
+            backdrop-filter: blur(10px); 
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        
-        .auth-btn { background: rgba(30, 41, 59, 0.8); border: 1px solid var(--border); color: var(--text-muted); width: 45px; height: 45px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.3s; backdrop-filter: blur(10px); font-size: 18px; }
-        .auth-btn:hover { background: var(--accent); color: white; transform: scale(1.1); box-shadow: 0 0 15px rgba(14, 165, 233, 0.4); border-color: var(--accent); }
+        .pro-login-btn:hover { background: var(--bg-panel); color: white; border-color: var(--text-muted); box-shadow: 0 4px 15px rgba(0,0,0,0.3); transform: translateY(-1px); }
 
         #publicSearchPanel { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 15vh; background: radial-gradient(circle at center, #1e293b 0%, #0b1120 100%); overflow-y: auto; }
-        .public-logo { font-size: 45px; font-weight: 900; margin-bottom: 40px; text-shadow: 0 5px 15px rgba(0,0,0,0.5); letter-spacing: 2px; }
+        .public-logo { font-size: 45px; font-weight: 900; margin-bottom: 20px; text-shadow: 0 5px 15px rgba(0,0,0,0.5); letter-spacing: 2px; }
         .public-logo span { color: var(--accent); }
 
-        .giant-search { position: relative; width: 85%; max-width: 700px; margin-bottom: 40px; }
-        .giant-search i { position: absolute; left: 25px; top: 50%; transform: translateY(-50%); color: var(--accent); font-size: 22px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; }
-        .giant-search-input { width: 100%; padding: 20px 25px 20px 65px; border-radius: 50px; border: 2px solid rgba(14, 165, 233, 0.4); background: rgba(15, 23, 42, 0.7); color: white; outline: none; font-size: 18px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
-        .giant-search-input::placeholder { color: var(--text-muted); opacity: 0.7; transition: 0.3s; }
-        .giant-search-input:focus { border-color: var(--accent); background: #0f172a; box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 20px rgba(14, 165, 233, 0.3); transform: translateY(-2px); }
-        .giant-search-input:focus::placeholder { opacity: 0.4; transform: translateX(5px); }
-        .giant-search:focus-within i { color: #fff; transform: translateY(-50%) scale(1.1); text-shadow: 0 0 10px var(--accent); }
+        /* Utolsó módosítás kijelzője */
+        .last-modified-badge {
+            background: rgba(14, 165, 233, 0.05);
+            border: 1px solid rgba(14, 165, 233, 0.1);
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            backdrop-filter: blur(5px);
+        }
+        .last-modified-badge strong { color: var(--accent); font-weight: 600; }
+
+        /* Prémium kereső */
+        .giant-search-wrapper { position: relative; width: 85%; max-width: 700px; margin-bottom: 40px; z-index: 100; }
+        .giant-search { position: relative; width: 100%; display: flex; align-items: center; }
+        .giant-search i { position: absolute; left: 25px; color: var(--text-muted); font-size: 20px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; }
         
+        /* A szöveg középre igazítva */
+        .giant-search-input { width: 100%; padding: 22px 50px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15, 23, 42, 0.8); color: white; outline: none; font-size: 20px; font-weight: 500; text-align: center; letter-spacing: 1px; transition: all 0.3s ease; box-shadow: 0 15px 35px rgba(0,0,0,0.3); backdrop-filter: blur(15px); }
+        .giant-search-input::placeholder { color: var(--text-muted); opacity: 0.5; font-weight: 400; text-align: center; }
+        .giant-search-input:focus { border-color: var(--accent); background: #0f172a; box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 0 4px rgba(14, 165, 233, 0.1); }
+        .giant-search:focus-within i { color: var(--accent); text-shadow: 0 0 10px rgba(14, 165, 233, 0.5); }
         .giant-search-input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+
+        /* Lebegő találati javaslatok (Autocomplete) */
+        .search-suggestions {
+            position: absolute; top: calc(100% + 10px); left: 0; width: 100%;
+            background: #1e293b; border: 1px solid var(--border);
+            border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            overflow: hidden; opacity: 0; visibility: hidden;
+            transform: translateY(-10px); transition: all 0.2s ease;
+            max-height: 350px; overflow-y: auto;
+        }
+        .search-suggestions.active { opacity: 1; visibility: visible; transform: translateY(0); }
+        .suggestion-item {
+            padding: 15px 25px; border-bottom: 1px solid rgba(255,255,255,0.02);
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; transition: 0.2s;
+        }
+        .suggestion-item:last-child { border-bottom: none; }
+        .suggestion-item:hover { background: rgba(14, 165, 233, 0.1); padding-left: 30px; }
+        .sugg-left { display: flex; flex-direction: column; }
+        .sugg-maszk { font-size: 18px; font-weight: 800; color: white; }
+        .sugg-model { font-size: 12px; color: var(--accent); margin-top: 4px; font-weight: 600; text-transform: uppercase; }
+        .sugg-right { text-align: right; }
+        .sugg-loc { font-size: 14px; font-weight: 600; color: var(--success); }
         
         @media (max-width: 768px) {
-            .public-logo { font-size: 36px; margin-bottom: 30px; }
-            .giant-search { width: 92%; margin-bottom: 30px; }
-            .giant-search-input { padding: 15px 20px 15px 50px; font-size: 16px; border-radius: 30px; }
-            .giant-search i { left: 20px; font-size: 18px; }
+            .public-logo { font-size: 36px; margin-bottom: 15px; }
+            .giant-search-wrapper { width: 92%; }
+            .giant-search-input { padding: 18px 40px; font-size: 16px; border-radius: 10px; }
+            .suggestion-item { padding: 12px 15px; }
+            .sugg-maszk { font-size: 16px; }
         }
 
         .public-results { width: 90%; max-width: 1000px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; padding-bottom: 50px; }
-        .p-card { background: linear-gradient(135deg, var(--bg-panel), #0f172a); border-left: 5px solid var(--success); border-radius: 15px; padding: 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 20px rgba(0,0,0,0.4); transition: 0.3s; animation: fadeIn 0.3s ease-out; }
-        .p-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.6); border-left-color: var(--accent); }
+        .p-card { background: linear-gradient(135deg, var(--bg-panel), #0f172a); border-left: 5px solid var(--success); border-radius: 10px; padding: 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 20px rgba(0,0,0,0.4); animation: fadeIn 0.3s ease-out; }
         .p-card-info h2 { color: white; margin: 0 0 8px 0; font-size: 28px; font-weight: 900; letter-spacing: 1px; }
         .p-card-info p { color: var(--accent); margin: 0; font-size: 14px; font-weight: bold; text-transform: uppercase; background: rgba(14, 165, 233, 0.1); display: inline-block; padding: 4px 10px; border-radius: 6px; }
         .p-card-loc { text-align: right; }
@@ -267,46 +367,35 @@
         .btn-outline { background: #475569; border: 1px solid #475569; color: white; }
         .btn-outline:hover { background: #334155; }
 
+        /* PRÉMIUM TOGGLE KAPCSOLÓ */
+        .toggle-container { display: flex; align-items: center; gap: 10px; margin-top: 5px; cursor: pointer; }
+        .premium-toggle { position: relative; display: inline-block; width: 40px; height: 22px; }
+        .premium-toggle input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-base); border: 1px solid #475569; transition: .3s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: var(--text-muted); transition: .3s; border-radius: 50%; }
+        .premium-toggle input:checked + .slider { background-color: var(--accent); border-color: var(--accent); }
+        .premium-toggle input:checked + .slider:before { transform: translateX(18px); background-color: white; }
+        .toggle-label { font-size: 13px; color: var(--text-muted); }
+
         #toast { position: fixed; top: 20px; left: 50%; transform: translate(-50%, -100px); background-color: var(--success); color: white; padding: 15px 25px; border-radius: 8px; font-weight: bold; font-size: 14px; opacity: 0; transition: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 3000; box-shadow: 0 10px 20px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 10px; }
         #toast.show { transform: translate(-50%, 0); opacity: 1; }
 
-        /* =========================================================
-           JAVÍTOTT NYOMTATÁSI NÉZET
-        ========================================================= */
+        /* NYOMTATÁSI NÉZET */
         #printArea { display: none; }
         
         @media print {
             @page { margin: 10mm; size: A4 portrait; }
             body > *:not(#printArea) { display: none !important; }
-            
             body, html { margin: 0 !important; padding: 0 !important; background: white !important; font-family: Arial, sans-serif !important; height: 100% !important; overflow: hidden !important; }
-            
-            #printArea { 
-                display: flex !important; justify-content: center !important; align-items: flex-start !important; 
-                position: absolute; left: 0; top: 0; width: 100%; height: 100%; 
-                background: white !important; color: black !important; box-sizing: border-box !important;
-            }
-
-            .print-wrapper {
-                display: flex !important; flex-direction: column !important; align-items: center !important;
-                width: 85% !important; height: 98vh !important;
-                margin: 0 auto !important;
-            }
-
+            #printArea { display: flex !important; justify-content: center !important; align-items: flex-start !important; position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: white !important; color: black !important; box-sizing: border-box !important; }
+            .print-wrapper { display: flex !important; flex-direction: column !important; align-items: center !important; width: 85% !important; height: 98vh !important; margin: 0 auto !important; }
             .print-wrapper h1 { margin: 0 0 5px 0 !important; font-size: 18pt !important; font-weight: bold !important; color: black !important; flex-shrink: 0 !important; text-align: center; }
-
-            .print-table {
-                width: 100% !important; height: 100% !important; 
-                border-collapse: collapse !important; border: 2px solid black !important;
-            }
-
+            .print-table { width: 100% !important; height: 100% !important; border-collapse: collapse !important; border: 2px solid black !important; }
             .print-table tr { display: table-row !important; }
             .print-table th, .print-table td { border: 1px solid black !important; text-align: center !important; vertical-align: middle !important; color: black !important; }
-            
             .print-table th { padding: 4px !important; font-size: 12pt !important; font-weight: bold !important; background-color: #d1d5db !important; text-transform: uppercase !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             .print-table td { padding: 2px !important; font-size: 10pt !important; }
             .print-table tr:nth-child(even) td { background-color: #f3f4f6 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-
             .col-polc { width: 25% !important; }
             .col-tartalom { width: 75% !important; }
             .empty-slot { color: #64748b !important; font-style: italic !important; font-weight: normal !important; }
@@ -315,20 +404,34 @@
 </head>
 <body>
 
-    <div class="system-top-right">
-        <button id="loginBtn" class="auth-btn" title="Bejelentkezés"><i class="fas fa-lock"></i></button>
+    <!-- Letisztult középső állapotjelző -->
+    <div class="system-top-center">
+        <div class="status-badge">
+            <span class="status-dot" id="connectionDot"></span>
+            <span id="connectionStatusText">Adatbázis: Szinkronizálva</span>
+        </div>
     </div>
 
-    <div id="connectionStatus" title="Firebase kapcsolat aktív"><i class="fas fa-wifi"></i></div>
+    <!-- Ipari Admin Belépés Gomb -->
+    <div class="system-top-right">
+        <button id="loginBtn" class="pro-login-btn"><i class="fas fa-shield-alt"></i> Admin Belépés</button>
+    </div>
 
     <div id="publicSearchPanel">
         <div class="public-logo"><i class="fas fa-microchip"></i> Stencil<span>PRO</span></div>
+        <div id="lastModifiedInfo" class="last-modified-badge">
+            <i class="fas fa-circle-notch fa-spin"></i> Adatok betöltése...
+        </div>
         
-        <!-- JAVÍTÁS: A keresőt egy teljesen elszeparált, vak űrlapba tettem, így a böngésző békén hagyja! -->
-        <form class="giant-search" onsubmit="return false;" autocomplete="off">
-            <i class="fas fa-search"></i>
-            <input type="search" id="publicSearchInput" class="giant-search-input" placeholder="Keress stencilt, szekrényt, polcot..." onkeyup="renderPublicSearch()" spellcheck="false" name="search_query_main">
-        </form>
+        <!-- PRÉMIUM KERESŐ MEZŐ -->
+        <div class="giant-search-wrapper">
+            <form class="giant-search" onsubmit="executePublicSearch(); return false;" autocomplete="off">
+                <i class="fas fa-search"></i>
+                <input type="search" id="publicSearchInput" class="giant-search-input" placeholder="Stencil szám vagy Modellnév" onkeyup="handleSearchInput()" spellcheck="false" name="search_query_main">
+            </form>
+            <!-- Lebegő találatok -->
+            <div id="searchSuggestions" class="search-suggestions"></div>
+        </div>
         
         <div class="public-results" id="publicResultsContainer"></div>
     </div>
@@ -349,10 +452,9 @@
         <div class="main-content">
             <div class="topbar">
                 
-                <!-- BELSŐ KERESŐ IS JAVÍTVA UGYANEZZEL A MÓDSZERREL -->
                 <form class="search-container" onsubmit="return false;" autocomplete="off">
                     <i class="fas fa-search"></i>
-                    <input type="search" id="adminSearchInput" class="search-input" placeholder="Keresés..." onkeyup="renderUI()" spellcheck="false" name="search_query_admin">
+                    <input type="search" id="adminSearchInput" class="search-input" placeholder="Keresés belső adatbázisban..." onkeyup="renderUI()" spellcheck="false" name="search_query_admin">
                 </form>
 
                 <div class="action-buttons">
@@ -389,7 +491,7 @@
     <div class="modal-overlay" id="loginModal">
         <div class="modal-content">
             <div class="modal-header">
-                <span><i class="fas fa-lock"></i> Adminisztrátor Belépés</span>
+                <span><i class="fas fa-lock"></i> Rendszer Belépés</span>
                 <button class="modal-close" onclick="closeModal('loginModal')">&times;</button>
             </div>
             <div class="modal-body">
@@ -401,14 +503,20 @@
                     <label>Jelszó</label>
                     <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" autocomplete="current-password">
                 </div>
-                <div class="form-group" style="flex-direction: row; align-items: center; gap: 8px; margin-top: 5px;">
-                    <input type="checkbox" id="rememberMe" checked style="width: 16px; height: 16px; cursor: pointer;">
-                    <label for="rememberMe" style="text-transform: none; font-size: 13px; color: var(--text-muted); letter-spacing: 0; cursor: pointer;">Emlékezz rám</label>
-                </div>
+                
+                <!-- PRÉMIUM KAPCSOLÓ -->
+                <label class="toggle-container">
+                    <div class="premium-toggle">
+                        <input type="checkbox" id="rememberMe" checked>
+                        <span class="slider"></span>
+                    </div>
+                    <span class="toggle-label">Munkamenet mentése</span>
+                </label>
+
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeModal('loginModal')">Mégse</button>
-                <button class="btn btn-primary" onclick="login()">Belépés</button>
+                <button class="btn btn-primary" onclick="login()">Hitelesítés</button>
             </div>
         </div>
     </div>
@@ -508,25 +616,83 @@
         document.getElementById('tab-' + tabId).classList.add('active');
     }
 
-    function renderPublicSearch() {
-        const query = document.getElementById('publicSearchInput').value.trim().toLowerCase();
-        const container = document.getElementById('publicResultsContainer');
-        container.innerHTML = '';
+    // KERESŐ LOGIKA (PRÉMIUM)
+    let currentSearchTerm = "";
 
+    function clearPublicSearch() {
+        document.getElementById('publicSearchInput').value = "";
+        document.getElementById('searchSuggestions').classList.remove('active');
+        document.getElementById('publicResultsContainer').innerHTML = "";
+    }
+
+    // Kezeli a gépelést és a javaslatokat
+    function handleSearchInput() {
+        const query = document.getElementById('publicSearchInput').value.trim().toLowerCase();
+        const suggContainer = document.getElementById('searchSuggestions');
+        
         if (query.length < 2) {
-            container.innerHTML = '<div style="width: 100%; text-align: center; color: var(--text-muted); grid-column: 1/-1;">Írj be legalább 2 karaktert a kereséshez...</div>';
+            suggContainer.classList.remove('active');
             return;
         }
 
+        // Csak maszkra és modellre keresünk a kérés szerint
         const results = window.stencilData.filter(d => 
             d.maszk.toLowerCase().includes(query) || 
-            (d.modell && d.modell.toLowerCase().includes(query)) ||
-            d.szekreny.toLowerCase().includes(query) ||
-            d.polc.toString() === query
+            (d.modell && d.modell.toLowerCase().includes(query))
+        );
+
+        if (results.length === 0) {
+            suggContainer.innerHTML = '<div style="padding: 15px; text-align:center; color: var(--text-muted); font-style:italic;">Nincs találat az adatbázisban.</div>';
+            suggContainer.classList.add('active');
+            return;
+        }
+
+        // Legfeljebb 5 javaslatot mutatunk a legördülőben a sebesség és az esztétika miatt
+        let html = '';
+        results.slice(0, 5).forEach(item => {
+            html += `
+            <div class="suggestion-item" onclick="selectSuggestion('${item.maszk}')">
+                <div class="sugg-left">
+                    <span class="sugg-maszk">${item.maszk}</span>
+                    ${item.modell ? `<span class="sugg-model">${item.modell}</span>` : ''}
+                </div>
+                <div class="sugg-right">
+                    <span class="sugg-loc">${item.szekreny} - ${item.polc}. polc</span>
+                </div>
+            </div>`;
+        });
+        
+        if(results.length > 5) {
+            html += `<div style="padding: 10px; text-align:center; color:var(--accent); font-size:12px; font-weight:bold; cursor:pointer;" onclick="executePublicSearch()">+ Még ${results.length - 5} találat. Nyomj Entert a megtekintéshez...</div>`;
+        }
+
+        suggContainer.innerHTML = html;
+        suggContainer.classList.add('active');
+    }
+
+    // Ha rákattint egy konkrét javaslatra
+    function selectSuggestion(maszkId) {
+        document.getElementById('publicSearchInput').value = maszkId;
+        document.getElementById('searchSuggestions').classList.remove('active');
+        executePublicSearch();
+    }
+
+    // Végrehajtja a tényleges keresést és megjeleníti a kártyákat
+    function executePublicSearch() {
+        const query = document.getElementById('publicSearchInput').value.trim().toLowerCase();
+        const container = document.getElementById('publicResultsContainer');
+        document.getElementById('searchSuggestions').classList.remove('active');
+
+        if (query.length < 2) return;
+
+        const results = window.stencilData.filter(d => 
+            d.maszk.toLowerCase().includes(query) || 
+            (d.modell && d.modell.toLowerCase().includes(query))
         );
         
+        container.innerHTML = '';
         if (results.length === 0) {
-            container.innerHTML = '<div style="width: 100%; text-align: center; color: var(--danger); font-weight: bold; grid-column: 1/-1;"><i class="fas fa-times-circle"></i> Nincs találat.</div>';
+            container.innerHTML = '<div style="width: 100%; text-align: center; color: var(--danger); font-weight: bold; grid-column: 1/-1; padding-top: 30px; font-size: 18px;"><i class="fas fa-times-circle"></i> Nincs a keresésnek megfelelő adat.</div>';
             return;
         }
 
@@ -545,8 +711,19 @@
                 </div>
             </div>`;
         });
+        
+        document.getElementById('publicSearchInput').blur(); // Billentyűzet eltüntetése mobilon
     }
 
+    // Bezárja a dropdown-t, ha máshová kattintanak
+    document.addEventListener('click', function(event) {
+        const searchWrapper = document.querySelector('.giant-search-wrapper');
+        if (searchWrapper && !searchWrapper.contains(event.target)) {
+            document.getElementById('searchSuggestions').classList.remove('active');
+        }
+    });
+
+    // ADMIN RENDSZER LOGIKA (Eredeti grál érintetlen)
     function renderUI() {
         if (!window.isAdmin) return; 
         
