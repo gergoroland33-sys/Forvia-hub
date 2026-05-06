@@ -38,7 +38,7 @@
         ];
 
         function updateLastModifiedDisplay() {
-            if (window.isAdmin) return; // Csak publikus nézetben látszik
+            if (window.isAdmin) return; 
             const infoEl = document.getElementById('lastModifiedInfo');
             if (!window.stencilData || window.stencilData.length === 0) {
                 infoEl.innerHTML = '<i class="far fa-clock"></i> Nincs még rögzített adat';
@@ -429,10 +429,8 @@
             @page { margin: 10mm; size: A4 portrait; }
             body > *:not(#printArea) { display: none !important; }
             
-            /* Szigorú reset a nyomtatáshoz, letiltjuk a weboldal normál flex/grid tulajdonságait */
             body, html { display: block !important; margin: 0 !important; padding: 0 !important; background: white !important; font-family: Arial, sans-serif !important; height: 100% !important; overflow: hidden !important; }
             
-            /* Konténer, ami 100%-ban garantálja a tökéletes középre igazítást! */
             #printArea { 
                 display: flex !important; 
                 justify-content: center !important; 
@@ -443,18 +441,26 @@
                 padding-top: 5mm !important; 
             }
             
-            /* Ez maga a keret. Csak akkora, amekkora a táblázat! */
             .print-wrapper { 
                 display: flex !important; 
                 flex-direction: column !important; 
-                align-items: center !important; 
-                width: max-content !important; 
-                height: 96vh !important; /* A TÖKÉLETES FÜGGŐLEGES NYÚJTÁS MEGMARAD! */
+                width: 320px !important; 
+                height: 96vh !important; 
                 margin: 0 auto !important; 
             }
             
-            .print-wrapper h1 { 
-                margin: 0 0 10px 0 !important; 
+            .print-table { 
+                width: 100% !important; 
+                flex-grow: 1 !important; 
+                border-collapse: collapse !important; 
+                border: 2px solid black !important; 
+                margin: 0 auto !important; 
+            }
+            
+            .print-table tr { display: table-row !important; }
+            
+            /* VÁLTOZÁS: A fejléc bekerült a táblázatba, így a keret egybefogja! */
+            .print-header-title {
                 font-size: 20pt !important; 
                 font-weight: 900 !important; 
                 color: black !important; 
@@ -462,33 +468,19 @@
                 text-transform: uppercase !important; 
                 letter-spacing: 2px !important; 
                 border-bottom: 2px solid black !important; 
-                padding: 0 20px 8px 20px !important; 
-                display: inline-block !important; 
-                flex-shrink: 0 !important;
+                padding: 8px !important; 
+                background-color: white !important; 
             }
-            
-            /* A táblázat rátapad az adatokra, és kitölti a 96vh magasságot */
-            .print-table { 
-                width: auto !important; 
-                height: 100% !important; 
-                border-collapse: collapse !important; 
-                border: 2px solid black !important; 
-            }
-            
-            .print-table tr { display: table-row !important; }
-            
-            /* SZOROSABB ÉS ELEGÁNSABB CELLÁK! Csak annyi keret, amennyi kell */
+
             .print-table th, .print-table td { 
                 border: 1px solid black !important; 
                 text-align: center !important; 
                 vertical-align: middle !important; 
                 color: black !important; 
-                padding: 2px 40px !important; /* Ezzel tartjuk szorosan egymás mellett a Polc és Tartalom oszlopot! */
-                white-space: nowrap !important; 
             }
             
-            .print-table th { 
-                padding: 4px 40px !important;
+            .print-table th:not(.print-header-title) { 
+                padding: 4px 10px !important; 
                 font-size: 13pt !important; 
                 font-weight: bold !important; 
                 background-color: #d1d5db !important; 
@@ -498,6 +490,7 @@
             }
             
             .print-table td { 
+                padding: 2px 10px !important; 
                 font-size: 12pt !important; 
                 font-weight: bold !important; 
             }
@@ -508,9 +501,8 @@
                 print-color-adjust: exact !important; 
             }
             
-            /* Törölve a fix %-os oszlopszélesség, hogy magától szűk maradjon */
-            .col-polc { width: auto !important; }
-            .col-tartalom { width: auto !important; }
+            .col-polc { width: 35% !important; }
+            .col-tartalom { width: 65% !important; }
             
             .empty-slot { color: #64748b !important; font-style: italic !important; font-weight: normal !important; }
         }
@@ -1009,10 +1001,13 @@
         const config = window.cabinetsConfig.find(c => c.name === targetCabinet);
         const printArea = document.getElementById('printArea');
         
+        // VÁLTOZÁS: A fejléc (h1) mostantól a táblázaton (table) BELÜL van egy colspan="2" th cellaként!
         let html = `
         <div class="print-wrapper">
-            <h1>${targetCabinet}</h1>
             <table class="print-table">
+                <tr>
+                    <th colspan="2" class="print-header-title">${targetCabinet}</th>
+                </tr>
                 <tr>
                     <th class="col-polc">Polc</th>
                     <th class="col-tartalom">Tartalom</th>
