@@ -429,37 +429,42 @@
             @page { margin: 10mm; size: A4 portrait; }
             body > *:not(#printArea) { display: none !important; }
             
-            body, html { display: block !important; margin: 0 !important; padding: 0 !important; background: white !important; font-family: Arial, sans-serif !important; height: 100% !important; overflow: hidden !important; }
+            /* TÖKÉLETES, KŐBE VÉSETT RESET: A weblap elrendezése nem csúsztathatja el a nyomtatást! */
+            body, html { 
+                display: block !important; 
+                margin: 0 !important; 
+                padding: 0 !important; 
+                background: white !important; 
+                font-family: Arial, sans-serif !important; 
+                height: 100% !important; 
+                overflow: hidden !important; 
+            }
             
+            /* Teljes szélességű tartó, ami egyedül felelős a margókért */
             #printArea { 
-                display: flex !important; 
-                justify-content: center !important; 
-                align-items: flex-start !important; 
-                position: absolute; left: 0; top: 0; width: 100%; height: 100%; 
-                background: white !important; color: black !important; 
+                display: block !important; 
+                position: absolute; left: 0; top: 0; 
+                width: 100% !important; 
+                height: 100% !important; 
+                background: white !important; 
+                color: black !important; 
                 box-sizing: border-box !important; 
                 padding-top: 5mm !important; 
             }
             
-            .print-wrapper { 
-                display: flex !important; 
-                flex-direction: column !important; 
-                width: 320px !important; 
-                height: 96vh !important; 
-                margin: 0 auto !important; 
-            }
-            
+            /* Töröltük a wrapper-t! A táblázat a saját jogán, tisztán áll a lap közepén (margin: 0 auto) */
             .print-table { 
-                width: 100% !important; 
-                flex-grow: 1 !important; 
+                display: table !important; /* Garantált asztal elrendezés */
+                width: 320px !important; /* Pontosan a kért szűk szélesség */
+                height: 98vh !important; /* Továbbra is alkalmazkodik a 20 és a 36 polchoz függőlegesen! */
+                margin: 0 auto !important; /* KÖZÉPRE IGAZÍTÁS! Lehetetlen elcsúsznia */
                 border-collapse: collapse !important; 
                 border: 2px solid black !important; 
-                margin: 0 auto !important; 
             }
             
             .print-table tr { display: table-row !important; }
             
-            /* VÁLTOZÁS: A fejléc bekerült a táblázatba, így a keret egybefogja! */
+            /* Fejléc a táblázatban */
             .print-header-title {
                 font-size: 20pt !important; 
                 font-weight: 900 !important; 
@@ -480,7 +485,7 @@
             }
             
             .print-table th:not(.print-header-title) { 
-                padding: 4px 10px !important; 
+                padding: 4px !important; 
                 font-size: 13pt !important; 
                 font-weight: bold !important; 
                 background-color: #d1d5db !important; 
@@ -490,7 +495,7 @@
             }
             
             .print-table td { 
-                padding: 2px 10px !important; 
+                padding: 2px !important; 
                 font-size: 12pt !important; 
                 font-weight: bold !important; 
             }
@@ -501,6 +506,7 @@
                 print-color-adjust: exact !important; 
             }
             
+            /* Arányok a 320px-en belül (szorosan egymás mellett) */
             .col-polc { width: 35% !important; }
             .col-tartalom { width: 65% !important; }
             
@@ -1001,9 +1007,8 @@
         const config = window.cabinetsConfig.find(c => c.name === targetCabinet);
         const printArea = document.getElementById('printArea');
         
-        // VÁLTOZÁS: A fejléc (h1) mostantól a táblázaton (table) BELÜL van egy colspan="2" th cellaként!
+        // JAVÍTVA: Csak maga a táblázat van (amit a CSS kényszerít középre!)
         let html = `
-        <div class="print-wrapper">
             <table class="print-table">
                 <tr>
                     <th colspan="2" class="print-header-title">${targetCabinet}</th>
@@ -1020,7 +1025,7 @@
             html += `<tr><td class="col-polc">${i}</td><td class="col-tartalom">${contentText}</td></tr>`;
         }
         
-        html += `</table></div>`;
+        html += `</table>`;
         printArea.innerHTML = html;
         closeModal('printModal');
         setTimeout(() => { window.print(); }, 300);
