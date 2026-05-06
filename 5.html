@@ -58,7 +58,6 @@
                     hour: '2-digit', minute: '2-digit' 
                 });
                 const email = latestItem.updatedBy ? latestItem.updatedBy : 'Ismeretlen Admin';
-                // JAVÍTVA: Az "Operátor:" szó kikerült a helytakarékosság érdekében
                 infoEl.innerHTML = `<i class="fas fa-history"></i> Utolsó frissítés: <strong>${formattedDate}</strong> | <strong>${email}</strong>`;
             } else {
                 infoEl.innerHTML = `<i class="fas fa-history"></i> Régi adatkészlet (Nincs frissítési bélyeg)`;
@@ -95,11 +94,11 @@
 
         onAuthStateChanged(auth, (user) => {
             const loginBtn = document.getElementById('loginBtn');
-            const syncStatus = document.querySelector('.system-top-center'); // VÁLTOZÁS: Szinkronizáció rejtéséhez
+            const syncStatus = document.querySelector('.system-top-center');
             if (user) {
                 window.isAdmin = true;
                 loginBtn.style.display = 'none'; 
-                syncStatus.style.display = 'none'; // VÁLTOZÁS: Rejtve Admin módban
+                syncStatus.style.display = 'none';
                 document.getElementById('adminPanel').style.display = 'flex';
                 document.getElementById('publicSearchPanel').style.display = 'none';
                 renderUI();
@@ -107,7 +106,7 @@
             } else {
                 window.isAdmin = false;
                 loginBtn.style.display = 'flex'; 
-                syncStatus.style.display = 'block'; // VÁLTOZÁS: Publikus módban látszik
+                syncStatus.style.display = 'block';
                 loginBtn.onclick = openLoginModal;
                 document.getElementById('adminPanel').style.display = 'none';
                 document.getElementById('publicSearchPanel').style.display = 'flex';
@@ -155,17 +154,15 @@
             } catch (e) { alert("Hiba a törlés során: " + e.message); }
         };
 
-        // VÁLTOZÁS: ÚJ FUNKCIÓ - CSV Export
         window.exportToCSV = () => {
             if (!window.stencilData || window.stencilData.length === 0) {
                 showToast("Nincs exportálható adat!");
                 return;
             }
             
-            let csvContent = "\uFEFF"; // BOM hozzáadása, hogy az Excel helyesen kezelje a magyar ékezeteket
+            let csvContent = "\uFEFF";
             csvContent += "Szekrény;Polc;Stencil Szám;Modellnév;Megjegyzés;Utolsó Frissítés\n";
             
-            // Adatok rendezése szekrény és polc szerint
             let sortedData = [...window.stencilData].sort((a,b) => a.szekreny.localeCompare(b.szekreny) || a.polc - b.polc);
             
             sortedData.forEach(row => {
@@ -176,7 +173,6 @@
                 let megjegyzes = row.megjegyzes || "";
                 let date = row.updatedAt ? new Date(row.updatedAt).toLocaleString('hu-HU') : "";
                 
-                // Cella értékek tisztítása (pontosvesszők és újsorok eltávolítása, hogy ne törjön a CSV)
                 megjegyzes = megjegyzes.replace(/;/g, ",").replace(/\n/g, " ");
                 modell = modell.replace(/;/g, ",");
                 
@@ -231,7 +227,7 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            white-space: nowrap; /* JAVÍTVA: Soha nem törik meg a sor */
+            white-space: nowrap;
         }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: var(--success); box-shadow: 0 0 8px var(--success); transition: 0.3s; flex-shrink: 0; }
 
@@ -273,8 +269,8 @@
             gap: 10px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
             backdrop-filter: blur(5px);
-            white-space: nowrap; /* JAVÍTVA: Soha nem törik meg a sor */
-            max-width: 95vw; /* Képernyőről nem tud kilógni */
+            white-space: nowrap;
+            max-width: 95vw;
             overflow: hidden;
             text-overflow: ellipsis;
         }
@@ -321,7 +317,6 @@
             
             #loginBtn { display: none !important; }
 
-            /* JAVÍTVA: Telefonos betűméret finomhangolása, hogy ne lógjon ki az egy sorból */
             .status-badge { font-size: 10px; padding: 5px 12px; }
             .last-modified-badge { font-size: 10.5px; padding: 6px 10px; gap: 6px; }
         }
@@ -486,9 +481,11 @@
                 <div class="nav-item active" onclick="switchTab('map', this)"><i class="fas fa-border-all"></i> Térkép Nézet</div>
                 <div class="nav-item" onclick="switchTab('db', this)"><i class="fas fa-list-ul"></i> Adatbázis</div>
             </div>
+            <!-- VÁLTOZÁS: Statisztika bővítése a bal menüben -->
             <div class="sidebar-stats">
-                <div class="stat-row"><span>Maszk Készlet</span><strong id="stat-total">0</strong></div>
-                <div class="stat-row"><span>Üres Polcok</span><strong class="free" id="stat-free">0</strong></div>
+                <div class="stat-row"><span>Teljes Férőhely</span><strong id="stat-capacity">0</strong></div>
+                <div class="stat-row"><span>Jelenlegi Terheltség</span><strong style="color: var(--accent);" id="stat-used">0</strong></div>
+                <div class="stat-row"><span>Szabad Helyek</span><strong class="free" id="stat-free">0</strong></div>
             </div>
         </div>
 
@@ -581,7 +578,6 @@
                     <label>Modellnév</label>
                     <input type="text" id="editModel" class="form-control" placeholder="Opcionális (pl. Tosca)" autocomplete="off">
                 </div>
-                <!-- VÁLTOZÁS: Megjegyzés mező hozzáadva -->
                 <div class="form-group">
                     <label>Megjegyzés</label>
                     <input type="text" id="editNote" class="form-control" placeholder="Fontos infó, állapot (opcionális)" autocomplete="off">
@@ -695,7 +691,6 @@
 
         let html = '';
         results.slice(0, 5).forEach(item => {
-            // VÁLTOZÁS: Szekrény és polc infó eltávolítva a javaslatokból
             html += `
             <div class="suggestion-item" onclick="selectSuggestion('${item.maszk}')">
                 <div class="sugg-left">
@@ -767,9 +762,11 @@
         if (!window.isAdmin) return; 
         
         const query = document.getElementById('adminSearchInput').value.toLowerCase();
-        let totalSlots = window.cabinetsConfig.reduce((acc, cab) => acc + (cab.end - cab.start + 1), 0);
         
-        document.getElementById('stat-total').innerText = window.stencilData.length;
+        // VÁLTOZÁS: Statisztikai adatok frissítése az új logikával
+        let totalSlots = window.cabinetsConfig.reduce((acc, cab) => acc + (cab.end - cab.start + 1), 0);
+        document.getElementById('stat-capacity').innerText = totalSlots;
+        document.getElementById('stat-used').innerText = window.stencilData.length;
         document.getElementById('stat-free').innerText = totalSlots - window.stencilData.length;
 
         const mapContainer = document.getElementById('cabinetsContainer');
@@ -792,8 +789,13 @@
                 }
 
                 if (item) {
-                    slot.innerHTML = `<span class="slot-num">${i}</span>${item.maszk}`;
-                    // VÁLTOZÁS: Térkép nézeten is jelezzük a megjegyzést title-ben, ha van
+                    // VÁLTOZÁS: Ha van megjegyzés, a kártya jobb felső sarkában megjelenik a világító ikon
+                    let noteIconHtml = item.megjegyzes 
+                        ? `<i class="fas fa-exclamation-circle" style="position: absolute; top: 4px; right: 5px; color: var(--warning); font-size: 11px; filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.8));"></i>` 
+                        : '';
+                        
+                    slot.innerHTML = `<span class="slot-num">${i}</span>${item.maszk}${noteIconHtml}`;
+                    
                     let tooltipText = `Modell: ${item.modell || '-'}`;
                     if(item.megjegyzes) tooltipText += `\nMegjegy.: ${item.megjegyzes}`;
                     slot.title = tooltipText;
@@ -817,7 +819,6 @@
                 if (!matchSearch) continue;
 
                 if (item) {
-                    // VÁLTOZÁS: Megjegyzés ikon generálása
                     let noteHtml = item.megjegyzes 
                         ? `<i class="fas fa-exclamation-circle" style="color: var(--warning); font-size: 16px; cursor: help; filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.4));" title="${item.megjegyzes}"></i>` 
                         : '-';
@@ -859,7 +860,7 @@
             document.getElementById('editOriginalId').value = item.maszk;
             document.getElementById('editId').value = item.maszk;
             document.getElementById('editModel').value = item.modell || "";
-            document.getElementById('editNote').value = item.megjegyzes || ""; // VÁLTOZÁS: Betöltés
+            document.getElementById('editNote').value = item.megjegyzes || "";
             document.getElementById('editCabinet').value = item.szekreny;
             document.getElementById('editShelf').value = item.polc;
         } else {
@@ -867,7 +868,7 @@
             document.getElementById('editOriginalId').value = '';
             document.getElementById('editId').value = '';
             document.getElementById('editModel').value = '';
-            document.getElementById('editNote').value = ''; // VÁLTOZÁS: Törlés
+            document.getElementById('editNote').value = '';
             document.getElementById('editCabinet').value = prefillCabinet;
             document.getElementById('editShelf').value = prefillShelf;
         }
@@ -893,7 +894,7 @@
         const originalMaszkId = document.getElementById('editOriginalId').value;
         const maszk = document.getElementById('editId').value.trim().toUpperCase();
         const modell = document.getElementById('editModel').value.trim();
-        const megjegyzes = document.getElementById('editNote').value.trim(); // VÁLTOZÁS: Kiolvasás
+        const megjegyzes = document.getElementById('editNote').value.trim();
         const szekreny = document.getElementById('editCabinet').value;
         const polc = parseInt(document.getElementById('editShelf').value);
 
@@ -911,16 +912,16 @@
                 async () => {
                     await window.deleteFromFirebase(existingOnShelf.maszk);
                     if (originalMaszkId && originalMaszkId !== maszk) await window.deleteFromFirebase(originalMaszkId);
-                    window.saveToFirebase({ maszk, modell, megjegyzes, szekreny, polc }); // VÁLTOZÁS: Mentésbe átadás
+                    window.saveToFirebase({ maszk, modell, megjegyzes, szekreny, polc });
                 }
             );
         } else {
             if (originalMaszkId && originalMaszkId !== maszk) {
                 window.deleteFromFirebase(originalMaszkId).then(() => {
-                    window.saveToFirebase({ maszk, modell, megjegyzes, szekreny, polc }); // VÁLTOZÁS: Mentésbe átadás
+                    window.saveToFirebase({ maszk, modell, megjegyzes, szekreny, polc });
                 });
             } else {
-                window.saveToFirebase({ maszk, modell, megjegyzes, szekreny, polc }); // VÁLTOZÁS: Mentésbe átadás
+                window.saveToFirebase({ maszk, modell, megjegyzes, szekreny, polc });
             }
         }
     }
