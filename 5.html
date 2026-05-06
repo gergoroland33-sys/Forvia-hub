@@ -396,17 +396,23 @@
 
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.2s; }
         .modal-overlay.active { display: flex; opacity: 1; }
-        .modal-content { background-color: var(--bg-panel); width: 90%; max-width: 420px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); transform: translateY(20px); transition: transform 0.3s; }
+        /* JAVÍTVA: flex-direction és max-height hozzáadva a biztos méretezéshez */
+        .modal-content { background-color: var(--bg-panel); width: 90%; max-width: 420px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); transform: translateY(20px); transition: transform 0.3s; display: flex; flex-direction: column; max-height: 95vh; }
         .modal-overlay.active .modal-content { transform: translateY(0); }
-        .modal-header { padding: 20px 25px; border-bottom: 1px solid var(--border); font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 16px; color: white; }
+        /* JAVÍTVA: Kisebb padding, flex-shrink: 0 ne engedje összenyomódni */
+        .modal-header { padding: 15px 25px; border-bottom: 1px solid var(--border); font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 16px; color: white; flex-shrink: 0; }
         .modal-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; transition: 0.2s; }
         .modal-close:hover { color: var(--danger); transform: scale(1.1); }
-        .modal-body { padding: 25px; display: flex; flex-direction: column; gap: 15px; }
-        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        /* JAVÍTVA: Kisebb padding felül-alul, kisebb gap, automatikus scrollbar a tartalomnak */
+        .modal-body { padding: 15px 25px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+        /* JAVÍTVA: Kisebb gap a form-groupnál */
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
         .form-group label { font-size: 11px; color: var(--accent); text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
-        .form-control { padding: 12px 15px; background-color: var(--bg-base); border: 1px solid #334155; color: white; border-radius: 6px; outline: none; transition: 0.2s; font-size: 14px; width: 100%; }
+        /* JAVÍTVA: Kisebb belső padding az inputokon */
+        .form-control { padding: 10px 15px; background-color: var(--bg-base); border: 1px solid #334155; color: white; border-radius: 6px; outline: none; transition: 0.2s; font-size: 14px; width: 100%; }
         .form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2); }
-        .modal-footer { padding: 20px 25px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; background: rgba(0,0,0,0.1); border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
+        /* JAVÍTVA: Kisebb padding, flex-shrink: 0 hogy sose tűnjön el a gomb */
+        .modal-footer { padding: 15px 25px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; background: rgba(0,0,0,0.1); border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; flex-shrink: 0; }
         
         .btn-outline { background: #475569; border: 1px solid #475569; color: white; }
         .btn-outline:hover { background: #334155; }
@@ -429,7 +435,6 @@
             @page { margin: 10mm; size: A4 portrait; }
             body > *:not(#printArea) { display: none !important; }
             
-            /* TÖKÉLETES, KŐBE VÉSETT RESET: A weblap elrendezése nem csúsztathatja el a nyomtatást! */
             body, html { 
                 display: block !important; 
                 margin: 0 !important; 
@@ -440,7 +445,6 @@
                 overflow: hidden !important; 
             }
             
-            /* Teljes szélességű tartó, ami egyedül felelős a margókért */
             #printArea { 
                 display: block !important; 
                 position: absolute; left: 0; top: 0; 
@@ -452,19 +456,17 @@
                 padding-top: 5mm !important; 
             }
             
-            /* Töröltük a wrapper-t! A táblázat a saját jogán, tisztán áll a lap közepén (margin: 0 auto) */
             .print-table { 
-                display: table !important; /* Garantált asztal elrendezés */
-                width: 320px !important; /* Pontosan a kért szűk szélesség */
-                height: 98vh !important; /* Továbbra is alkalmazkodik a 20 és a 36 polchoz függőlegesen! */
-                margin: 0 auto !important; /* KÖZÉPRE IGAZÍTÁS! Lehetetlen elcsúsznia */
+                display: table !important; 
+                width: 320px !important; 
+                height: 98vh !important; 
+                margin: 0 auto !important; 
                 border-collapse: collapse !important; 
                 border: 2px solid black !important; 
             }
             
             .print-table tr { display: table-row !important; }
             
-            /* Fejléc a táblázatban */
             .print-header-title {
                 font-size: 20pt !important; 
                 font-weight: 900 !important; 
@@ -506,7 +508,6 @@
                 print-color-adjust: exact !important; 
             }
             
-            /* Arányok a 320px-en belül (szorosan egymás mellett) */
             .col-polc { width: 35% !important; }
             .col-tartalom { width: 65% !important; }
             
@@ -1007,7 +1008,6 @@
         const config = window.cabinetsConfig.find(c => c.name === targetCabinet);
         const printArea = document.getElementById('printArea');
         
-        // JAVÍTVA: Csak maga a táblázat van (amit a CSS kényszerít középre!)
         let html = `
             <table class="print-table">
                 <tr>
