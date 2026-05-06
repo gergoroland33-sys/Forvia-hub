@@ -95,9 +95,11 @@
 
         onAuthStateChanged(auth, (user) => {
             const loginBtn = document.getElementById('loginBtn');
+            const syncStatus = document.querySelector('.system-top-center'); // VÁLTOZÁS: Szinkronizáció rejtéséhez
             if (user) {
                 window.isAdmin = true;
                 loginBtn.style.display = 'none'; 
+                syncStatus.style.display = 'none'; // VÁLTOZÁS: Rejtve Admin módban
                 document.getElementById('adminPanel').style.display = 'flex';
                 document.getElementById('publicSearchPanel').style.display = 'none';
                 renderUI();
@@ -105,6 +107,7 @@
             } else {
                 window.isAdmin = false;
                 loginBtn.style.display = 'flex'; 
+                syncStatus.style.display = 'block'; // VÁLTOZÁS: Publikus módban látszik
                 loginBtn.onclick = openLoginModal;
                 document.getElementById('adminPanel').style.display = 'none';
                 document.getElementById('publicSearchPanel').style.display = 'flex';
@@ -150,6 +153,46 @@
                 await deleteDoc(doc(db, "stencils", maszkId));
                 showToast("Sikeresen törölve!");
             } catch (e) { alert("Hiba a törlés során: " + e.message); }
+        };
+
+        // VÁLTOZÁS: ÚJ FUNKCIÓ - CSV Export
+        window.exportToCSV = () => {
+            if (!window.stencilData || window.stencilData.length === 0) {
+                showToast("Nincs exportálható adat!");
+                return;
+            }
+            
+            let csvContent = "\uFEFF"; // BOM hozzáadása, hogy az Excel helyesen kezelje a magyar ékezeteket
+            csvContent += "Szekrény;Polc;Stencil Szám;Modellnév;Megjegyzés;Utolsó Frissítés\n";
+            
+            // Adatok rendezése szekrény és polc szerint
+            let sortedData = [...window.stencilData].sort((a,b) => a.szekreny.localeCompare(b.szekreny) || a.polc - b.polc);
+            
+            sortedData.forEach(row => {
+                let szekreny = row.szekreny || "";
+                let polc = row.polc || "";
+                let maszk = row.maszk || "";
+                let modell = row.modell || "";
+                let megjegyzes = row.megjegyzes || "";
+                let date = row.updatedAt ? new Date(row.updatedAt).toLocaleString('hu-HU') : "";
+                
+                // Cella értékek tisztítása (pontosvesszők és újsorok eltávolítása, hogy ne törjön a CSV)
+                megjegyzes = megjegyzes.replace(/;/g, ",").replace(/\n/g, " ");
+                modell = modell.replace(/;/g, ",");
+                
+                csvContent += `${szekreny};${polc};${maszk};${modell};${megjegyzes};${date}\n`;
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `InvenPro_Adatbazis_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("CSV Adatbázis exportálva!");
         };
 
     </script>
@@ -458,6 +501,7 @@
                 </form>
 
                 <div class="action-buttons">
+                    <button class="btn btn-outline" style="border-color: var(--success); color: var(--success);" onclick="exportToCSV()"><i class="fas fa-file-csv"></i> CSV Export</button>
                     <button class="btn btn-primary" onclick="openModal()"><i class="fas fa-plus"></i> Új Stencil</button>
                     <button class="btn btn-print" onclick="openPrintModal()"><i class="fas fa-print"></i> Nyomtatás</button>
                     <button class="btn" style="background-color: var(--danger); border-color: var(--danger);" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Kilépés</button>
@@ -477,6 +521,7 @@
                                 <th>Polc</th>
                                 <th>Stencil Szám</th>
                                 <th>Modell</th>
+                                <th style="text-align: center;">Megjegyzés</th>
                                 <th style="text-align: right;">Műveletek</th>
                             </tr>
                         </thead>
@@ -535,6 +580,11 @@
                 <div class="form-group">
                     <label>Modellnév</label>
                     <input type="text" id="editModel" class="form-control" placeholder="Opcionális (pl. Tosca)" autocomplete="off">
+                </div>
+                <!-- VÁLTOZÁS: Megjegyzés mező hozzáadva -->
+                <div class="form-group">
+                    <label>Megjegyzés</label>
+                    <input type="text" id="editNote" class="form-control" placeholder="Fontos infó, állapot (opcionális)" autocomplete="off">
                 </div>
                 <div class="form-group">
                     <label>Cél Szekrény</label>
@@ -645,14 +695,12 @@
 
         let html = '';
         results.slice(0, 5).forEach(item => {
+            // VÁLTOZÁS: Szekrény és polc infó eltávolítva a javaslatokból
             html += `
             <div class="suggestion-item" onclick="selectSuggestion('${item.maszk}')">
                 <div class="sugg-left">
                     <span class="sugg-maszk">${item.maszk}</span>
                     ${item.modell ? `<span class="sugg-model">${item.modell}</span>` : ''}
-                </div>
-                <div class="sugg-right">
-                    <span class="sugg-loc">${item.szekreny} - ${item.polc}. polc</span>
                 </div>
             </div>`;
         });
@@ -745,7 +793,10 @@
 
                 if (item) {
                     slot.innerHTML = `<span class="slot-num">${i}</span>${item.maszk}`;
-                    if(item.modell) slot.title = `Modell: ${item.modell}`;
+                    // VÁLTOZÁS: Térkép nézeten is jelezzük a megjegyzést title-ben, ha van
+                    let tooltipText = `Modell: ${item.modell || '-'}`;
+                    if(item.megjegyzes) tooltipText += `\nMegjegy.: ${item.megjegyzes}`;
+                    slot.title = tooltipText;
                     slot.onclick = () => openModal(item.maszk); 
                 } else {
                     slot.innerHTML = `<span class="slot-num">${i}</span>Üres`;
@@ -766,12 +817,18 @@
                 if (!matchSearch) continue;
 
                 if (item) {
+                    // VÁLTOZÁS: Megjegyzés ikon generálása
+                    let noteHtml = item.megjegyzes 
+                        ? `<i class="fas fa-exclamation-circle" style="color: var(--warning); font-size: 16px; cursor: help; filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.4));" title="${item.megjegyzes}"></i>` 
+                        : '-';
+
                     tbody.innerHTML += `
                         <tr>
                             <td style="color:var(--text-muted); font-size:12px;">${item.szekreny}</td>
                             <td><strong style="color:var(--success);">${item.polc}.</strong></td>
                             <td><strong style="color:white; font-size:15px;">${item.maszk}</strong></td>
                             <td>${item.modell ? `<span class="model-text-table">${item.modell}</span>` : '-'}</td>
+                            <td style="text-align: center;">${noteHtml}</td>
                             <td style="text-align: right;">
                                 <button class="btn-icon btn-edit" onclick="openModal('${item.maszk}')"><i class="fas fa-pencil-alt"></i></button>
                                 <button class="btn-icon btn-delete" onclick="confirmDelete('${item.maszk}')"><i class="fas fa-trash"></i></button>
@@ -784,6 +841,7 @@
                             <td style="color:var(--text-muted);">${i}.</td>
                             <td class="status-empty">Üres polc</td>
                             <td>-</td>
+                            <td style="text-align: center;">-</td>
                             <td style="text-align: right;">
                                 <button class="btn-icon btn-add-inline" onclick="openModal(null, '${cab.name}', ${i})" title="Hozzáadás ide"><i class="fas fa-plus"></i> Hozzáadás</button>
                             </td>
@@ -801,6 +859,7 @@
             document.getElementById('editOriginalId').value = item.maszk;
             document.getElementById('editId').value = item.maszk;
             document.getElementById('editModel').value = item.modell || "";
+            document.getElementById('editNote').value = item.megjegyzes || ""; // VÁLTOZÁS: Betöltés
             document.getElementById('editCabinet').value = item.szekreny;
             document.getElementById('editShelf').value = item.polc;
         } else {
@@ -808,6 +867,7 @@
             document.getElementById('editOriginalId').value = '';
             document.getElementById('editId').value = '';
             document.getElementById('editModel').value = '';
+            document.getElementById('editNote').value = ''; // VÁLTOZÁS: Törlés
             document.getElementById('editCabinet').value = prefillCabinet;
             document.getElementById('editShelf').value = prefillShelf;
         }
@@ -833,6 +893,7 @@
         const originalMaszkId = document.getElementById('editOriginalId').value;
         const maszk = document.getElementById('editId').value.trim().toUpperCase();
         const modell = document.getElementById('editModel').value.trim();
+        const megjegyzes = document.getElementById('editNote').value.trim(); // VÁLTOZÁS: Kiolvasás
         const szekreny = document.getElementById('editCabinet').value;
         const polc = parseInt(document.getElementById('editShelf').value);
 
@@ -850,16 +911,16 @@
                 async () => {
                     await window.deleteFromFirebase(existingOnShelf.maszk);
                     if (originalMaszkId && originalMaszkId !== maszk) await window.deleteFromFirebase(originalMaszkId);
-                    window.saveToFirebase({ maszk, modell, szekreny, polc });
+                    window.saveToFirebase({ maszk, modell, megjegyzes, szekreny, polc }); // VÁLTOZÁS: Mentésbe átadás
                 }
             );
         } else {
             if (originalMaszkId && originalMaszkId !== maszk) {
                 window.deleteFromFirebase(originalMaszkId).then(() => {
-                    window.saveToFirebase({ maszk, modell, szekreny, polc });
+                    window.saveToFirebase({ maszk, modell, megjegyzes, szekreny, polc }); // VÁLTOZÁS: Mentésbe átadás
                 });
             } else {
-                window.saveToFirebase({ maszk, modell, szekreny, polc });
+                window.saveToFirebase({ maszk, modell, megjegyzes, szekreny, polc }); // VÁLTOZÁS: Mentésbe átadás
             }
         }
     }
