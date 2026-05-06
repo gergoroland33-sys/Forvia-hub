@@ -38,7 +38,7 @@
         ];
 
         function updateLastModifiedDisplay() {
-            if (window.isAdmin) return; // Csak publikus nézetben látszik
+            if (window.isAdmin) return; 
             const infoEl = document.getElementById('lastModifiedInfo');
             if (!window.stencilData || window.stencilData.length === 0) {
                 infoEl.innerHTML = '<i class="far fa-clock"></i> Nincs még rögzített adat';
@@ -429,20 +429,21 @@
             @page { margin: 10mm; size: A4 portrait; }
             body > *:not(#printArea) { display: none !important; }
             body, html { margin: 0 !important; padding: 0 !important; background: white !important; font-family: Arial, sans-serif !important; height: 100% !important; overflow: hidden !important; }
-            #printArea { display: flex !important; justify-content: center !important; align-items: flex-start !important; position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: white !important; color: black !important; box-sizing: border-box !important; }
             
-            /* VÁLTOZÁS: 85%-ról 45%-ra csökkentve (de min-width-el védve), hogy a szélek tágasak, fehérek maradjanak */
-            .print-wrapper { display: flex !important; flex-direction: column !important; align-items: center !important; width: 45% !important; min-width: 320px !important; height: 98vh !important; margin: 0 auto !important; }
+            /* VÁLTOZÁS: display block és center text, hogy a böngészők garantáltan tiszteljék a középre igazítást */
+            #printArea { display: block !important; position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: white !important; color: black !important; box-sizing: border-box !important; text-align: center !important; padding-top: 10mm !important; }
             
-            /* VÁLTOZÁS: Esztétikus, prémium megjelenésű, középre igazított, vonalas fejléc */
-            .print-wrapper h1 { margin: 0 0 10px 0 !important; font-size: 20pt !important; font-weight: 900 !important; color: black !important; flex-shrink: 0 !important; text-align: center !important; width: 100% !important; border-bottom: 2px solid black !important; padding-bottom: 5px !important; text-transform: uppercase !important; letter-spacing: 1px !important; }
+            /* VÁLTOZÁS: Szigorú 350px fix szélesség kikényszerítése, és margin: 0 auto a lap közepéhez */
+            .print-wrapper { display: flex !important; flex-direction: column !important; width: 350px !important; height: 90vh !important; margin: 0 auto !important; }
             
-            /* A magasság érintetlen maradt a 20/36 polc egy lapra illesztéséhez! */
-            .print-table { width: 100% !important; height: 100% !important; border-collapse: collapse !important; border: 2px solid black !important; }
+            .print-wrapper h1 { margin: 0 0 10px 0 !important; font-size: 20pt !important; font-weight: 900 !important; color: black !important; text-align: center !important; text-transform: uppercase !important; letter-spacing: 2px !important; border-bottom: 2px solid black !important; padding-bottom: 8px !important; }
+            
+            /* VÁLTOZÁS: flex-grow-val nyújtjuk ki a magasságot, hogy alkalmazkodjon */
+            .print-table { width: 100% !important; flex-grow: 1 !important; border-collapse: collapse !important; border: 2px solid black !important; }
             .print-table tr { display: table-row !important; }
             .print-table th, .print-table td { border: 1px solid black !important; text-align: center !important; vertical-align: middle !important; color: black !important; }
-            .print-table th { padding: 4px !important; font-size: 12pt !important; font-weight: bold !important; background-color: #d1d5db !important; text-transform: uppercase !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            .print-table td { padding: 2px !important; font-size: 10pt !important; }
+            .print-table th { padding: 4px !important; font-size: 14pt !important; font-weight: bold !important; background-color: #d1d5db !important; text-transform: uppercase !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .print-table td { padding: 2px !important; font-size: 12pt !important; font-weight: bold !important; }
             .print-table tr:nth-child(even) td { background-color: #f3f4f6 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             .col-polc { width: 30% !important; }
             .col-tartalom { width: 70% !important; }
