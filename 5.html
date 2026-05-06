@@ -430,16 +430,22 @@
             body > *:not(#printArea) { display: none !important; }
             body, html { margin: 0 !important; padding: 0 !important; background: white !important; font-family: Arial, sans-serif !important; height: 100% !important; overflow: hidden !important; }
             #printArea { display: flex !important; justify-content: center !important; align-items: flex-start !important; position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: white !important; color: black !important; box-sizing: border-box !important; }
-            .print-wrapper { display: flex !important; flex-direction: column !important; align-items: center !important; width: 85% !important; height: 98vh !important; margin: 0 auto !important; }
-            .print-wrapper h1 { margin: 0 0 5px 0 !important; font-size: 18pt !important; font-weight: bold !important; color: black !important; flex-shrink: 0 !important; text-align: center; }
+            
+            /* VÁLTOZÁS: 85%-ról 45%-ra csökkentve (de min-width-el védve), hogy a szélek tágasak, fehérek maradjanak */
+            .print-wrapper { display: flex !important; flex-direction: column !important; align-items: center !important; width: 45% !important; min-width: 320px !important; height: 98vh !important; margin: 0 auto !important; }
+            
+            /* VÁLTOZÁS: Esztétikus, prémium megjelenésű, középre igazított, vonalas fejléc */
+            .print-wrapper h1 { margin: 0 0 10px 0 !important; font-size: 20pt !important; font-weight: 900 !important; color: black !important; flex-shrink: 0 !important; text-align: center !important; width: 100% !important; border-bottom: 2px solid black !important; padding-bottom: 5px !important; text-transform: uppercase !important; letter-spacing: 1px !important; }
+            
+            /* A magasság érintetlen maradt a 20/36 polc egy lapra illesztéséhez! */
             .print-table { width: 100% !important; height: 100% !important; border-collapse: collapse !important; border: 2px solid black !important; }
             .print-table tr { display: table-row !important; }
             .print-table th, .print-table td { border: 1px solid black !important; text-align: center !important; vertical-align: middle !important; color: black !important; }
             .print-table th { padding: 4px !important; font-size: 12pt !important; font-weight: bold !important; background-color: #d1d5db !important; text-transform: uppercase !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             .print-table td { padding: 2px !important; font-size: 10pt !important; }
             .print-table tr:nth-child(even) td { background-color: #f3f4f6 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            .col-polc { width: 25% !important; }
-            .col-tartalom { width: 75% !important; }
+            .col-polc { width: 30% !important; }
+            .col-tartalom { width: 70% !important; }
             .empty-slot { color: #64748b !important; font-style: italic !important; font-weight: normal !important; }
         }
     </style>
@@ -481,7 +487,6 @@
                 <div class="nav-item active" onclick="switchTab('map', this)"><i class="fas fa-border-all"></i> Térkép Nézet</div>
                 <div class="nav-item" onclick="switchTab('db', this)"><i class="fas fa-list-ul"></i> Adatbázis</div>
             </div>
-            <!-- VÁLTOZÁS: Statisztika bővítése a bal menüben -->
             <div class="sidebar-stats">
                 <div class="stat-row"><span>Teljes Férőhely</span><strong id="stat-capacity">0</strong></div>
                 <div class="stat-row"><span>Jelenlegi Terheltség</span><strong style="color: var(--accent);" id="stat-used">0</strong></div>
@@ -763,7 +768,6 @@
         
         const query = document.getElementById('adminSearchInput').value.toLowerCase();
         
-        // VÁLTOZÁS: Statisztikai adatok frissítése az új logikával
         let totalSlots = window.cabinetsConfig.reduce((acc, cab) => acc + (cab.end - cab.start + 1), 0);
         document.getElementById('stat-capacity').innerText = totalSlots;
         document.getElementById('stat-used').innerText = window.stencilData.length;
@@ -789,7 +793,6 @@
                 }
 
                 if (item) {
-                    // VÁLTOZÁS: Ha van megjegyzés, a kártya jobb felső sarkában megjelenik a világító ikon
                     let noteIconHtml = item.megjegyzes 
                         ? `<i class="fas fa-exclamation-circle" style="position: absolute; top: 4px; right: 5px; color: var(--warning); font-size: 11px; filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.8));"></i>` 
                         : '';
