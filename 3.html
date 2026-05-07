@@ -271,6 +271,25 @@
             .p-C { background: var(--color-c) !important; }
             .p-D { background: var(--color-d) !important; }
         }
+
+        /* --- ÚJ: ÉVES STATISZTIKA CSS (KIZÁRÓLAG HOZZÁADVA) --- */
+        @media (max-width: 420px) { .stat-text-hide { display: none; } }
+        .stats-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        @media(min-width: 650px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
+        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.2);}
+        .stat-card-A { border-top: 4px solid var(--color-a); }
+        .stat-card-B { border-top: 4px solid var(--color-b); }
+        .stat-card-C { border-top: 4px solid var(--color-c); }
+        .stat-card-D { border-top: 4px solid var(--color-d); }
+        .stat-card h3 { margin: 0 0 10px 0; text-align: center; font-size: 1.1rem; font-weight: 900; letter-spacing: 0.5px;}
+        .stat-card-A h3 { color: var(--color-a); }
+        .stat-card-B h3 { color: var(--color-b); }
+        .stat-card-C h3 { color: var(--color-c); }
+        .stat-card-D h3 { color: var(--color-d); }
+        .stat-row-stat { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed var(--border-light); font-size: 0.8rem; color: var(--text-muted); font-weight: 600;}
+        .stat-row-stat:last-child { border-bottom: none; }
+        .stat-row-stat strong { color: var(--text-main); font-weight: 800; font-size: 0.85rem;}
+        .stat-highlight { color: var(--accent); font-weight: 900; font-size: 1rem !important;}
     </style>
 </head>
 <body>
@@ -280,6 +299,10 @@
             <h1>FORVIA <span>SMT</span></h1>
         </div>
         <div class="header-actions">
+            <!-- ÚJ: Statisztika gomb a fejlécben (Eredeti gombok érintetlenek) -->
+            <button class="btn-modern" onclick="openYearlyStatsModal()" style="color: var(--color-b); border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.1);">
+                <span style="font-size: 1rem;">📊</span> <span class="stat-text-hide">Éves Stat.</span>
+            </button>
             <button class="btn-modern btn-today" onclick="jumpToToday()">Mai</button>
             <button class="btn-modern btn-print" onclick="prepareAndPrint()">🖨️ Éves Nyomtatás</button>
         </div>
@@ -319,6 +342,24 @@
                 <div class="calendar-grid" id="calGrid"></div>
             </div>
         </section>
+
+        <!-- ÚJ: Éves Statisztika Modal (Hozzáadva a main-layout-on belül, hogy a nyomtatás ne lássa) -->
+        <div class="modal-overlay" id="statsModal">
+            <div class="modal-content" style="max-width: 800px; width: 95%;">
+                <div class="modal-header">
+                    <h2>📊 <span id="statsYearLabel"></span>. Éves Statisztika</h2>
+                    <button class="btn-close" onclick="closeYearlyStatsModal()">×</button>
+                </div>
+                <div style="text-align:center; padding: 8px 15px; background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--border); font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">
+                    Törvényes ünnepnapok száma az évben: <strong id="totalHolidaysLabel" style="color: var(--danger); font-size: 1rem;"></strong>
+                </div>
+                <div class="modal-body" style="padding: 15px; overflow-y: auto;">
+                    <div class="stats-grid" id="statsGrid">
+                        <!-- JS generálja -->
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- A JAVÍTÁS ITT VAN: A Modal a main-layout-on belülre került! 
              Így amikor a nyomtatási CSS eltünteti a main-layout-ot, 
@@ -765,6 +806,87 @@
     function toggleHoliday(key, value) {
         holidayOverrides[key] = value;
         calculateAndRenderOvertime(); 
+    }
+
+    /* --- ÚJ: ÉVES STATISZTIKA LOGIKA (KIZÁRÓLAG HOZZÁADVA) --- */
+    function openYearlyStatsModal() {
+        const year = currentDate.getFullYear();
+        document.getElementById('statsYearLabel').innerText = year;
+        
+        const stats = {
+            'A': { total: 0, day: 0, night: 0, weekend: 0, sunday: 0, holiday: 0 },
+            'B': { total: 0, day: 0, night: 0, weekend: 0, sunday: 0, holiday: 0 },
+            'C': { total: 0, day: 0, night: 0, weekend: 0, sunday: 0, holiday: 0 },
+            'D': { total: 0, day: 0, night: 0, weekend: 0, sunday: 0, holiday: 0 }
+        };
+        
+        const isLeapYear = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+        const daysInYear = isLeapYear ? 366 : 365;
+        let uniqueHolidays = new Set();
+        
+        // Végigmegyünk az év összes napján (szökőévet is figyelembe véve)
+        for (let m = 0; m < 12; m++) {
+            const daysInMonth = new Date(year, m + 1, 0).getDate();
+            for (let d = 1; d <= daysInMonth; d++) {
+                const iterDate = new Date(year, m, d);
+                const isWeekend = iterDate.getDay() === 0 || iterDate.getDay() === 6;
+                const isSunday = iterDate.getDay() === 0;
+                
+                const mmdd = `${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const holidayName = getHolidayName(year, mmdd);
+                const isHoliday = !!holidayName;
+                
+                if (isHoliday) {
+                    uniqueHolidays.add(mmdd);
+                }
+                
+                const shiftData = getShiftForDate(iterDate);
+                
+                const processShift = (shiftId, type) => {
+                    if(stats[shiftId]) {
+                        stats[shiftId].total++;
+                        if (type === 'day') stats[shiftId].day++;
+                        if (type === 'night') stats[shiftId].night++;
+                        if (isWeekend) stats[shiftId].weekend++;
+                        if (isSunday) stats[shiftId].sunday++;
+                        if (isHoliday) stats[shiftId].holiday++;
+                    }
+                };
+                
+                processShift(shiftData.day, 'day');
+                processShift(shiftData.night, 'night');
+            }
+        }
+        
+        document.getElementById('totalHolidaysLabel').innerText = `${uniqueHolidays.size} nap`;
+        
+        const grid = document.getElementById('statsGrid');
+        grid.innerHTML = '';
+        
+        // Kártyák generálása
+        ['A', 'B', 'C', 'D'].forEach(shift => {
+            const s = stats[shift];
+            const restDays = daysInYear - s.total;
+            
+            grid.innerHTML += `
+                <div class="stat-card stat-card-${shift}">
+                    <h3>"${shift}" Műszak Részletek</h3>
+                    <div class="stat-row-stat"><span>Pihenőnapok az évben:</span> <strong class="stat-highlight">${restDays} nap</strong></div>
+                    <div class="stat-row-stat" style="margin-top: 8px;"><span>Összes munkanap (Műszak):</span> <strong>${s.total} nap</strong></div>
+                    <div class="stat-row-stat"><span>&nbsp;&nbsp;├ Ebből nappalos:</span> <strong>${s.day} nap</strong></div>
+                    <div class="stat-row-stat"><span>&nbsp;&nbsp;└ Ebből éjszakás:</span> <strong>${s.night} nap</strong></div>
+                    <div class="stat-row-stat" style="margin-top: 8px;"><span>Hétvégi munkanap:</span> <strong>${s.weekend} nap</strong></div>
+                    <div class="stat-row-stat"><span>&nbsp;&nbsp;└ Ebből vasárnap:</span> <strong style="color: var(--danger);">${s.sunday} nap</strong></div>
+                    <div class="stat-row-stat" style="margin-top: 8px;"><span>Ünnepnapon végzett munka:</span> <strong>${s.holiday} nap</strong></div>
+                </div>
+            `;
+        });
+        
+        document.getElementById('statsModal').classList.add('active');
+    }
+
+    function closeYearlyStatsModal() {
+        document.getElementById('statsModal').classList.remove('active');
     }
 
     initSegmentedControl();
