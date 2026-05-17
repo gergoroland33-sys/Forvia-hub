@@ -21,84 +21,94 @@ background: var(--bg);
 color: var(--text);
 font-family: 'Segoe UI', system-ui, sans-serif;
 margin: 0;
-padding: 30px;
-min-height: 100vh;
+padding: 1.5vh 1.5vw;
+height: 100vh;         /* Szigorúan 100% képernyőmagasság */
+width: 100vw;          /* Szigorúan 100% képernyőszélesség */
 box-sizing: border-box;
+overflow: hidden;      /* TELJES GÖRGETÉS LETILTÁSA A FŐABLAKBAN */
 }
 
 /* KÉTOSZLOPOS ELRENDEZÉS LAPTOPRA */
 .app-container {
 display: flex;
-gap: 30px;
-max-width: 1400px;
+gap: 15px;
+width: 100%;
+height: 100%;          /* Felveszi a body 100%-át */
+max-width: 1600px;
 margin: 0 auto;
-align-items: flex-start;
-flex-wrap: wrap;
 }
 
 .left-panel {
 flex: 1;
-min-width: 350px;
-max-width: 500px;
+min-width: 300px;
+max-width: 450px;
 background: var(--panel);
-padding: 35px;
+padding: 20px;
 border-radius: 16px;
 border: 1px solid var(--border);
 box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-position: sticky;
-top: 30px;
+display: flex;
+flex-direction: column; /* Belső elemek dinamikus igazítása */
+height: 100%;
+box-sizing: border-box;
 }
 
 .right-panel {
 flex: 2;
-min-width: 400px;
+min-width: 300px;
 background: rgba(30, 41, 59, 0.5);
-padding: 30px;
+padding: 20px;
 border-radius: 16px;
 border: 1px dashed var(--border);
-min-height: 80vh;
+height: 100%;
+box-sizing: border-box;
+overflow-y: auto;       /* BELSŐ görgetés engedélyezve a kódoknak! */
 }
 
 h2 {
 color: var(--primary);
-margin-top: 0;
-letter-spacing: 2px;
+margin: 0 0 15px 0;
+letter-spacing: 1.5px;
 text-transform: uppercase;
-font-size: 1.6rem;
+font-size: 1.4rem;
 display: flex;
 align-items: center;
 gap: 10px;
+flex-shrink: 0;         /* Nem nyomódik össze */
 }
 
-/* HASZNÁLATI ÚTMUTATÓ */
+/* HASZNÁLATI ÚTMUTATÓ - Kompaktabb verzió */
 .info-box {
 background: rgba(59, 130, 246, 0.1);
 border-left: 4px solid var(--primary);
-padding: 15px;
+padding: 10px 15px;
 border-radius: 4px 8px 8px 4px;
-margin-bottom: 25px;
-font-size: 0.9rem;
+margin-bottom: 15px;
+font-size: 0.8rem;      /* Kisebb, hogy kevesebb helyet egyen */
 color: #cbd5e1;
-line-height: 1.5;
+line-height: 1.3;
+flex-shrink: 0;
 }
 
 .info-box strong {
 color: white;
 }
 
+/* BEVITELI MEZŐ - Okos méretezés */
 textarea {
 width: 100%;
-height: 200px;
+flex-grow: 1;           /* KITÖLTI AZ ÖSSZES MARADÉK ÜRES HELYET! */
+min-height: 60px;       /* Biztonsági minimum */
 background: #020617;
 border: 1px solid var(--border);
 color: white;
 padding: 15px;
 border-radius: 8px;
 font-family: 'Courier New', monospace;
-resize: vertical;
-margin-bottom: 20px;
+resize: none;           /* Felhasználó ne nyújtsa túl, a flex intézi */
+margin-bottom: 15px;
 box-sizing: border-box;
-font-size: 14px;
+font-size: 13px;
 }
 textarea:focus {
 outline: none;
@@ -108,17 +118,18 @@ box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
 
 /* CSÚSZKA STÍLUSOK */
 .slider-container {
-margin-bottom: 25px;
+margin-bottom: 15px;
 background: #0f172a;
-padding: 15px;
+padding: 12px 15px;
 border-radius: 8px;
 border: 1px solid var(--border);
+flex-shrink: 0;
 }
 .slider-header {
 display: flex;
 justify-content: space-between;
-margin-bottom: 10px;
-font-size: 0.85rem;
+margin-bottom: 8px;
+font-size: 0.8rem;
 font-weight: bold;
 color: var(--text-muted);
 text-transform: uppercase;
@@ -133,10 +144,11 @@ accent-color: var(--primary);
 .btn-group {
 display: flex;
 gap: 15px;
+flex-shrink: 0;
 }
 .btn {
 flex: 1;
-padding: 15px;
+padding: 12px;
 background: var(--primary);
 color: white;
 border: none;
@@ -146,6 +158,7 @@ cursor: pointer;
 letter-spacing: 1px;
 transition: 0.2s;
 text-transform: uppercase;
+font-size: 0.9rem;
 }
 .btn:hover {
 background: var(--primary-hover);
@@ -164,14 +177,15 @@ display: flex;
 flex-wrap: wrap;
 gap: 20px;
 justify-content: center;
+align-items: flex-start;
 }
 
 .code-card {
 background: white;
-padding: 20px;
+padding: 15px;
 border-radius: 12px;
 text-align: center;
-box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+box-shadow: 0 5px 20px rgba(0,0,0,0.3);
 transition: transform 0.2s;
 max-width: 100%;
 box-sizing: border-box;
@@ -191,28 +205,29 @@ image-rendering: pixelated;
 .info {
 color: #111;
 font-weight: bold;
-margin-top: 15px;
-font-size: 0.9rem;
+margin-top: 10px;
+font-size: 0.85rem;
 border-top: 1px solid #e2e8f0;
 padding-top: 10px;
 }
 
 /* NÉV / VÍZJEL */
 .signature {
-margin-top: 20px;
+margin-top: 15px;
 text-align: center;
 font-size: 0.75rem;
 color: var(--text-muted);
 letter-spacing: 1px;
 opacity: 0.6;
+flex-shrink: 0;
 }
 
-/* NYOMTATÁSI NÉZET - Csak a kódok látszanak! */
+/* NYOMTATÁSI NÉZET - Visszaállítjuk a görgetést nyomtatáskor! */
 @media print {
-body { background: white; padding: 0; }
-.app-container { display: block; }
+body { background: white; padding: 0; height: auto; overflow: visible; }
+.app-container { display: block; height: auto; }
 .left-panel { display: none !important; }
-.right-panel { border: none; background: white; padding: 0; min-height: auto; }
+.right-panel { border: none; background: white; padding: 0; height: auto; overflow: visible; }
 .code-card { 
 box-shadow: none; 
 border: 2px dashed #ccc; 
@@ -223,14 +238,25 @@ margin-right: 20px;
 }
 }
 
-/* MOBIL NÉZET */
+/* MOBIL NÉZET - OKOS 50-50% FELOSZTÁS */
 @media (max-width: 900px) {
-body { padding: 15px; }
-.app-container { flex-direction: column; gap: 20px; }
-.left-panel, .right-panel { width: 100%; min-width: 100%; max-width: 100%; box-sizing: border-box; }
-.left-panel { position: static; padding: 20px; }
-.right-panel { padding: 15px; min-height: auto; }
+body { padding: 10px; }
+.app-container { flex-direction: column; gap: 10px; }
+.left-panel, .right-panel { 
+max-width: 100%; 
+width: 100%; 
+min-width: 100%;
+}
+.left-panel { flex: 0 0 50%; height: 50%; padding: 15px; }
+.right-panel { flex: 0 0 calc(50% - 10px); height: calc(50% - 10px); padding: 15px; }
 .btn-group { flex-direction: row; }
+}
+
+/* FEKTETETT MOBIL VAGY NAGYON LAPOS KIJELZŐ - Helyspórolás */
+@media (max-height: 600px) {
+.info-box { display: none; } /* Lapos kijelzőn eltüntetjük a leírást */
+h2 { font-size: 1.1rem; margin-bottom: 10px; }
+.signature { display: none; }
 }
 </style>
 </head>
@@ -244,8 +270,8 @@ body { padding: 15px; }
 
 <div class="info-box">
 <strong>Mire való ez az eszköz?</strong><br>
-Másolj be egy listát (pl. cikkszámokat, vonalkód adatokat) a lenti mezőbe. A program ezekből egyetlen, szkennerrel könnyen olvasható 2D-s DataMatrix kódot generál.<br><br>
-<em>Okos felosztás:</em> Ha a lista túl hosszú (több mint 1300 karakter), a rendszer automatikusan több darab kódra bontja az adatokat, hogy a szkennelés hibátlan maradjon.
+Másolj be egy listát a lenti mezőbe. A program egyetlen DataMatrix kódot generál belőle.<br>
+<em>Okos felosztás:</em> Hosszú lista esetén automatikusan több kódra bontja az adatokat.
 </div>
 
 <textarea id="input" placeholder="Illeszd be ide a cikkszám listát (minden sorba egyet)..."></textarea>
