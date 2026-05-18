@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Túlóra Manager V9 - Enterprise</title>
+<style>
+:root {
+--bg-dark: #0f172a;
+--card-bg: #1e293b;
+--text-main: #f1f5f9;
+--border: #334155;
+--accent: #6366f1; /* Indigo */
+
+/* Műszak színek (Élénkebb, neonszerű a sötét módban) */
+--cA: #ef4444; /* Piros */
+--cB: #3b82f6; /* Kék */
+--cC: #10b981; /* Zöld */
+--cD: #fbbf24; /* Sárga */
+}
+
+body {
+font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+margin: 0; padding: 0;
+background: var(--bg-dark); color: var(--text-main);
+}
+
+/* --- NAVBAR --- */
+.navbar {
+position: fixed; top: 0; width: 100%; height: 64px;
+background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px);
+border-bottom: 1px solid var(--border);
+display: flex; align-items: center; justify-content: space-between;
+padding: 0 24px; box-sizing: border-box; z-index: 1000;
+}
+.brand { font-size: 1.25rem; font-weight: 800; letter-spacing: 0.5px; }
+.brand span { color: var(--accent); }
+
+.btn-action {
+background: var(--accent); color: white; border: none;
+padding: 10px 24px; border-radius: 8px; font-weight: 700;
+cursor: pointer; transition: all 0.2s; font-size: 0.9rem;
+box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+.btn-action:hover { background: #4f46e5; transform: translateY(-1px); }
+
+/* --- SZERKESZTŐ (EDITOR) --- */
+#editor-container {
+max-width: 1000px; margin: 90px auto 30px auto; padding: 0 20px;
+}
+
+/* Dátum elválasztó */
+.date-divider {
+display: flex; align-items: center; justify-content: center;
+margin: 40px 0 20px 0;
+}
+.date-badge {
+background: #334155; color: white; padding: 8px 20px;
+border-radius: 50px; font-weight: bold; font-size: 1rem;
+border: 1px solid #475569;
+}
+
+/* A NAGY ELVÁLASZTÁS: Két külön kártya egymás mellett */
+.shifts-wrapper {
+display: grid;
+grid-template-columns: 1fr 1fr; /* 50-50% */
+gap: 30px; /* Nagy hézag a két műszak között */
+}
+
+.shift-card {
+background: var(--card-bg);
+border: 1px solid var(--border);
+border-radius: 16px;
+overflow: hidden;
+position: relative;
+transition: transform 0.2s;
+box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+.shift-card:hover { border-color: #475569; }
+
+/* Műszak fejléc a kártyán */
+.sc-header {
+padding: 15px 20px;
+background: rgba(0,0,0,0.2);
+border-bottom: 1px solid var(--border);
+display: flex; justify-content: space-between; align-items: center;
+}
+.sc-title { font-size: 0.9rem; font-weight: bold; text-transform: uppercase; color: #94a3b8; }
+.sc-badge {
+font-size: 1.5rem; font-weight: 900;
+width: 40px; height: 40px; border-radius: 8px;
+display: flex; align-items: center; justify-content: center;
+color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* Műszak test */
+.sc-body { padding: 20px; }
+
+/* Input sorok */
+.ctrl-row {
+display: flex; justify-content: space-between; align-items: center;
+background: rgba(255,255,255,0.03); padding: 10px 15px;
+border-radius: 8px; margin-bottom: 10px; border: 1px solid transparent;
+}
+.ctrl-row:hover { border-color: rgba(255,255,255,0.1); }
+
+.role-label { font-weight: 700; font-size: 0.95rem; width: 50px; }
+.c-ins { color: #fbbf24; } .c-tech { color: #38bdf8; } .c-op { color: #4ade80; } .c-sv { color: #a855f7; } .c-gl { color: #ec4899; }
+
+.stepper-group { display: flex; align-items: center; gap: 10px; }
+
+.btn-step {
+width: 32px; height: 32px; background: #334155; border: none;
+border-radius: 6px; color: white; font-size: 1.2rem; cursor: pointer;
+display: flex; align-items: center; justify-content: center;
+}
+.btn-step:hover { background: #475569; }
+
+.val-display { font-weight: bold; font-size: 1.1rem; width: 30px; text-align: center; }
+
+/* --- MEGJEGYZÉS DOBOZ AZ EDITORBAN --- */
+.remark-editor {
+max-width: 1000px; margin: 0 auto 50px auto; padding: 0 20px;
+}
+.remark-box {
+background: var(--card-bg); border: 1px solid var(--border);
+border-radius: 16px; padding: 20px;
+box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+.remark-label {
+display: block; font-weight: bold; margin-bottom: 10px;
+color: var(--accent); text-transform: uppercase; font-size: 0.9rem;
+}
+.remark-input {
+width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2);
+border: 1px solid var(--border); border-radius: 8px; color: white;
+padding: 12px; font-family: inherit; resize: vertical; font-size: 1rem;
+}
+.remark-input:focus { outline: none; border-color: var(--accent); }
+
+
+/* --- NYOMTATÁSI NÉZET (ENTERPRISE STYLE) --- */
+#print-overlay {
+display: none; background: #cbd5e1; min-height: 100vh;
+color: #1e293b; padding-bottom: 50px;
+}
+
+.print-toolbar {
+position: sticky; top: 0; background: #1e293b; padding: 12px;
+text-align: center; z-index: 2000; display: flex; justify-content: center; gap: 20px;
+box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* A4 LAP - ÁLLÓ */
+.a4-sheet {
+width: 210mm;
+min-height: 296mm;
+background: white; margin: 30px auto; padding: 10mm 15mm;
+box-sizing: border-box; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+display: flex; flex-direction: column;
+}
+
+.doc-head {
+border-bottom: 3px solid #0f172a; padding-bottom: 15px; margin-bottom: 25px;
+display: flex; justify-content: space-between; align-items: flex-end;
+}
+.dh-title { font-size: 22pt; font-weight: 900; text-transform: uppercase; color: #0f172a; line-height: 1; }
+.dh-meta { text-align: right; font-size: 9pt; color: #64748b; line-height: 1.4; }
+
+/* Napi blokk a papíron */
+.print-day-block {
+margin-bottom: 25px; /* Távolság a napok között */
+page-break-inside: avoid; /* Egyben tartja a napot */
+}
+
+.pdb-date {
+font-size: 11pt; font-weight: 800; text-transform: uppercase;
+background: #0f172a; color: white; display: inline-block;
+padding: 4px 12px; border-radius: 4px; margin-bottom: 8px;
+-webkit-print-color-adjust: exact;
+}
+
+/* A két műszak egymás mellett a papíron */
+.print-flex-row {
+display: flex;
+gap: 20px; /* FIZIKAI HÉZAG A KÉT MŰSZAK KÖZÖTT */
+}
+
+.print-box {
+flex: 1; /* Egyenlő elosztás */
+border: 2px solid #ccc;
+border-radius: 6px;
+overflow: hidden;
+display: flex; flex-direction: column;
+}
+
+/* Doboz fejléc */
+.pb-head {
+background: #f8fafc; border-bottom: 1px solid #e2e8f0;
+padding: 8px 12px; display: flex; justify-content: space-between; align-items: center;
+-webkit-print-color-adjust: exact;
+}
+.pb-title { font-size: 9pt; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+.pb-badge {
+font-weight: 900; color: white; font-size: 12pt;
+padding: 2px 8px; border-radius: 4px;
+-webkit-print-color-adjust: exact;
+}
+
+/* TÚLÓRA IGÉNY SÁV */
+.pb-summary {
+background: #e2e8f0; padding: 8px 12px; border-bottom: 1px solid #cbd5e1;
+-webkit-print-color-adjust: exact;
+}
+.pbs-label { font-size: 7pt; font-weight: bold; text-transform: uppercase; color: #64748b; display: block; }
+.pbs-value { font-size: 10pt; font-weight: bold; color: #0f172a; }
+
+/* ALÁÍRÁS RÁCS (SMART GRID) */
+.pb-signatures {
+padding: 10px;
+display: grid;
+grid-template-columns: 1fr 1fr; /* 2 OSZLOPOS ELRENDEZÉS */
+column-gap: 15px;
+row-gap: 12px;
+}
+
+.sign-slot {
+display: flex; align-items: flex-end;
+}
+.ss-role {
+font-size: 7pt; font-weight: bold; background: #334155; color: white;
+padding: 2px 5px; border-radius: 3px; margin-right: 6px; min-width: 32px; text-align: center;
+-webkit-print-color-adjust: exact;
+}
+.ss-line { border-bottom: 1px dotted #64748b; flex-grow: 1; height: 14px; }
+
+/* MEGJEGYZÉS A NYOMTATÁSON */
+.print-remark {
+margin-top: 20px; border: 2px solid #0f172a; padding: 12px 15px;
+border-radius: 6px; background: #f8fafc; page-break-inside: avoid;
+-webkit-print-color-adjust: exact;
+}
+.pr-title { font-size: 10pt; font-weight: 900; color: #0f172a; margin-bottom: 6px; text-transform: uppercase; }
+.pr-text { font-size: 10pt; color: #1e293b; white-space: pre-wrap; font-weight: bold; }
+
+
+/* --- NYOMTATÁSI CSS (PRINT ONLY) --- */
+@media print {
+/* KÉNYSZERÍTETT ÁLLÓ MÓD */
+@page { size: A4 portrait; margin: 8mm; }
+
+body { background: white; margin: 0; padding: 0; }
+.navbar, #editor-container, #remark-editor-container { display: none !important; }
+#print-overlay { display: block !important; background: white; padding: 0; }
+.print-toolbar { display: none !important; }
+.a4-sheet { margin: 0; padding: 0; width: 100%; box-shadow: none; border: none; min-height: auto; }
+
+/* Túlcsordulás védelem */
+html, body { height: 100%; overflow: visible; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="navbar">
+<div class="brand">TÚLÓRA <span>MANAGER</span> V9</div>
+<button class="btn-action" onclick="goToPrint()">NYOMTATÁS ELŐNÉZET &#10140;</button>
+</div>
+
+<div id="editor-container">
+</div>
+
+<div id="remark-editor-container" class="remark-editor">
+<div class="remark-box">
+<label class="remark-label" for="global-remark">Megjegyzés / Figyelmeztetés a nyomtatványra</label>
+<textarea id="global-remark" class="remark-input" rows="3" placeholder="Ide írhatod a fontos megjegyzést, ami megjelenik a lap alján..."></textarea>
+</div>
+</div>
+
+<div id="print-overlay">
+<div class="print-toolbar">
+<button class="btn-action" style="background:#475569; margin-right:15px;" onclick="closePrint()">&#8617; Vissza a szerkesztőbe</button>
+<button class="btn-action" onclick="window.print()">&#128424; Nyomtatás indítása</button>
+</div>
+
+<div class="a4-sheet">
+<div class="doc-head">
+<div class="dh-title">Műszak Túlóra<br>2026</div>
+<div class="dh-meta">
+Létrehozva: <span id="p-timestamp"></span><br>
+Dokumentum típusa: igénylés
+</div>
+</div>
+
+<div id="print-content">
+</div>
+
+<div id="print-remark-container" class="print-remark" style="display: none;">
+<div class="pr-title">Figyelem / Megjegyzés:</div>
+<div id="print-remark-text" class="pr-text"></div>
+</div>
+
+<div style="margin-top:auto; padding-top:20px; border-top:1px solid #e2e8f0; text-align:center; font-size:8pt; color:#94a3b8;">
+Dátum: ...................................
+</div>
+</div>
+</div>
+
+<script>
+const start = new Date('2025-11-01T12:00:00');
+let data = [];
+
+function getShifts(d) {
+// JAVÍTÁS ITT: Math.floor helyett Math.round lett beírva az óraátállítás kiküszöbölésére!
+const diff = Math.round((d - start) / (1000 * 60 * 60 * 24));
+let c = diff % 12; if(c<0) c+=12;
+if(c<=2) return {d:'C', n:'D'};
+if(c<=5) return {d:'B', n:'A'};
+if(c<=8) return {d:'D', n:'C'};
+return {d:'A', n:'B'};
+}
+
+function formatDate(d) {
+const days = ['Vasárnap','Hétfő','Kedd','Szerda','Csütörtök','Péntek','Szombat'];
+return `${d.getFullYear()}. ${String(d.getMonth()+1).padStart(2,'0')}. ${String(d.getDate()).padStart(2,'0')}. (${days[d.getDay()]})`;
+}
+
+function init() {
+let d = new Date(); d.setHours(12,0,0,0);
+
+// AUTOMATIKUS FELISMERÉS: Megnézzük mi a mai aktuális műszak
+const todayShift = getShifts(new Date());
+
+// Ha ma az A vagy B dolgozik, akkor a C/D napokat kell behoznunk, egyébként az A/B napokat
+const targetShifts = ['A', 'B'].includes(todayShift.d) ? ['C', 'D'] : ['A', 'B'];
+
+while(data.length < 3) {
+const s = getShifts(d);
+// Ellenőrizzük, hogy a vizsgált nap egyezik-e a keresett célcsoporttal
+if(targetShifts.includes(s.d) || targetShifts.includes(s.n)) {
+data.push({ date: new Date(d), shifts: s, req: { d_sv:0, d_gl:0, d_ins:0, d_tech:0, d_op:0, n_sv:0, n_gl:0, n_ins:0, n_tech:0, n_op:0 } });
+}
+d.setDate(d.getDate()+1);
+}
+renderEditor();
+}
+
+// --- EDITOR GENERÁLÁS ---
+function renderEditor() {
+const container = document.getElementById('editor-container');
+let html = '';
+
+data.forEach((day, i) => {
+html += `
+<div class="date-divider">
+<div class="date-badge">${formatDate(day.date)}</div>
+</div>
+
+<div class="shifts-wrapper">
+${renderShiftCard(i, 'd', 'NAPPAL (06:00 - 18:00)', day.shifts.d)}
+
+${renderShiftCard(i, 'n', 'ÉJJEL (18:00 - 06:00)', day.shifts.n)}
+</div>`;
+});
+container.innerHTML = html;
+}
+
+function renderShiftCard(i, code, name, letter) {
+// Szín logika
+let colorVar = 'var(--cA)';
+if(letter === 'B') colorVar = 'var(--cB)';
+if(letter === 'C') colorVar = 'var(--cC)';
+if(letter === 'D') colorVar = 'var(--cD)';
+
+return `
+<div class="shift-card" style="border-top: 5px solid ${colorVar}">
+<div class="sc-header">
+<span class="sc-title">${name}</span>
+<span class="sc-badge" style="background:${colorVar}">${letter}</span>
+</div>
+<div class="sc-body">
+${renderInput(i, code, 'sv', 'SV', 'c-sv')}
+${renderInput(i, code, 'gl', 'GL', 'c-gl')}
+${renderInput(i, code, 'ins', 'INS', 'c-ins')}
+${renderInput(i, code, 'tech', 'TECH', 'c-tech')}
+${renderInput(i, code, 'op', 'OP', 'c-op')}
+</div>
+</div>`;
+}
+
+function renderInput(i, code, role, label, cls) {
+return `
+<div class="ctrl-row">
+<span class="role-label ${cls}">${label}</span>
+<div class="stepper-group">
+<button class="btn-step" onclick="mod(${i},'${code}','${role}',-1)">-</button>
+<span class="val-display" id="v-${i}-${code}-${role}">0</span>
+<button class="btn-step" onclick="mod(${i},'${code}','${role}',1)">+</button>
+</div>
+</div>`;
+}
+
+window.mod = function(i, c, r, val) {
+let key = `${c}_${r}`;
+let v = data[i].req[key] + val;
+if(v<0) v=0; if(v>25) v=25;
+data[i].req[key] = v;
+document.getElementById(`v-${i}-${c}-${r}`).innerText = v;
+}
+
+// --- NYOMTATÁS GENERÁLÁS ---
+window.goToPrint = function() {
+document.getElementById('p-timestamp').innerText = new Date().toLocaleDateString('hu-HU');
+const pc = document.getElementById('print-content');
+pc.innerHTML = '';
+
+let hasData = false;
+
+data.forEach(day => {
+// Csak akkor mutatjuk, ha van igény BÁRMELYIK műszakban aznap
+const dSum = day.req.d_sv + day.req.d_gl + day.req.d_ins + day.req.d_tech + day.req.d_op;
+const nSum = day.req.n_sv + day.req.n_gl + day.req.n_ins + day.req.n_tech + day.req.n_op;
+
+if(dSum + nSum === 0) return;
+
+hasData = true;
+
+const html = `
+<div class="print-day-block">
+<div class="pdb-date">${formatDate(day.date)}</div>
+
+<div class="print-flex-row">
+${renderPrintBox(day.shifts.d, 'Nappal', day.req.d_sv, day.req.d_gl, day.req.d_ins, day.req.d_tech, day.req.d_op)}
+${renderPrintBox(day.shifts.n, 'Éjjel', day.req.n_sv, day.req.n_gl, day.req.n_ins, day.req.n_tech, day.req.n_op)}
+</div>
+</div>`;
+pc.insertAdjacentHTML('beforeend', html);
+});
+
+if(!hasData) pc.innerHTML = '<div style="text-align:center; padding:60px; color:#64748b;">Nincs rögzített túlóra igény a kiválasztott időszakra.</div>';
+
+// ÚJ: Megjegyzés kezelése
+const remarkVal = document.getElementById('global-remark').value.trim();
+const prContainer = document.getElementById('print-remark-container');
+if(remarkVal) {
+document.getElementById('print-remark-text').innerText = remarkVal;
+prContainer.style.display = 'block';
+} else {
+prContainer.style.display = 'none';
+}
+
+document.getElementById('editor-container').style.display = 'none';
+document.getElementById('remark-editor-container').style.display = 'none';
+document.querySelector('.navbar').style.display = 'none';
+document.getElementById('print-overlay').style.display = 'block';
+window.scrollTo(0,0);
+}
+
+window.closePrint = function() {
+document.getElementById('print-overlay').style.display = 'none';
+document.querySelector('.navbar').style.display = 'flex';
+document.getElementById('editor-container').style.display = 'block';
+document.getElementById('remark-editor-container').style.display = 'block';
+}
+
+function renderPrintBox(letter, name, sv, gl, ins, tech, op) {
+const sum = sv + gl + ins + tech + op;
+let color = '#333';
+if(letter==='A') color='#ef4444';
+if(letter==='B') color='#3b82f6';
+if(letter==='C') color='#10b981';
+if(letter==='D') color='#f59e0b';
+
+if(sum === 0) {
+// Üres doboz, halványan
+return `
+<div class="print-box" style="border-color:#e2e8f0; opacity:0.6;">
+<div class="pb-head" style="background:#f1f5f9; border-bottom-color:#e2e8f0;">
+<span class="pb-title">${name}</span>
+<span class="pb-badge" style="background:#94a3b8">${letter}</span>
+</div>
+<div style="padding:20px; text-align:center; font-style:italic; font-size:9pt; color:#94a3b8;">Nincs túlóra igény</div>
+</div>`;
+}
+
+// Összesítő szöveg
+let details = [];
+if(sv) details.push(`${sv} SV`);
+if(gl) details.push(`${gl} GL`);
+if(op) details.push(`${op} OP`);
+if(tech) details.push(`${tech} TECH`);
+if(ins) details.push(`${ins} INS`);
+
+// Aláírás rács (Smart Grid)
+let signs = '';
+for(let k=0; k<sv; k++) signs += signSlot('SV');
+for(let k=0; k<gl; k++) signs += signSlot('GL');
+for(let k=0; k<op; k++) signs += signSlot('OP');
+for(let k=0; k<tech; k++) signs += signSlot('TECH');
+for(let k=0; k<ins; k++) signs += signSlot('INS');
+
+return `
+<div class="print-box" style="border-top: 4px solid ${color}">
+<div class="pb-head">
+<span class="pb-title">${name}</span>
+<span class="pb-badge" style="background:${color}">${letter}</span>
+</div>
+
+<div class="pb-summary">
+<span class="pbs-label">Túlóra igény:</span>
+<span class="pbs-value">${details.join(', ')} <span style="font-weight:normal">(${sum} fő)</span></span>
+</div>
+
+<div class="pb-signatures">
+${signs}
+</div>
+</div>`;
+}
+
+function signSlot(role) {
+return `
+<div class="sign-slot">
+<span class="ss-role">${role}</span>
+<div class="ss-line"></div>
+</div>`;
+}
+
+init();
+</script>
+</body>
+</html>
