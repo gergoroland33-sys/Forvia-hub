@@ -27,6 +27,7 @@
 
         window.stencilData = [];
         window.isAdmin = false;
+        window.isDataLoaded = false;
         
         window.cabinetsConfig = [
             { name: "Szekrény 1", start: 1, end: 20 },
@@ -41,7 +42,11 @@
             if (window.isAdmin) return; 
             const infoEl = document.getElementById('lastModifiedInfo');
             if (!window.stencilData || window.stencilData.length === 0) {
-                infoEl.innerHTML = '<i class="far fa-clock"></i> Nincs még rögzített adat';
+                if (!window.isDataLoaded) {
+                    infoEl.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Adatok betöltése...';
+                } else {
+                    infoEl.innerHTML = '<i class="far fa-clock"></i> Nincs még rögzített adat';
+                }
                 return;
             }
 
@@ -65,6 +70,7 @@
         }
 
         onSnapshot(collection(db, "stencils"), (snapshot) => {
+            window.isDataLoaded = true;
             window.stencilData = [];
             snapshot.forEach((doc) => {
                 window.stencilData.push({ id: doc.id, ...doc.data() });
@@ -396,22 +402,22 @@
 
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.2s; }
         .modal-overlay.active { display: flex; opacity: 1; }
-        /* JAVÍTVA: flex-direction és max-height hozzáadva a biztos méretezéshez */
+        
         .modal-content { background-color: var(--bg-panel); width: 90%; max-width: 420px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); transform: translateY(20px); transition: transform 0.3s; display: flex; flex-direction: column; max-height: 95vh; }
         .modal-overlay.active .modal-content { transform: translateY(0); }
-        /* JAVÍTVA: Kisebb padding, flex-shrink: 0 ne engedje összenyomódni */
+        
         .modal-header { padding: 15px 25px; border-bottom: 1px solid var(--border); font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 16px; color: white; flex-shrink: 0; }
         .modal-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; transition: 0.2s; }
         .modal-close:hover { color: var(--danger); transform: scale(1.1); }
-        /* JAVÍTVA: Kisebb padding felül-alul, kisebb gap, automatikus scrollbar a tartalomnak */
+        
         .modal-body { padding: 15px 25px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
-        /* JAVÍTVA: Kisebb gap a form-groupnál */
+        
         .form-group { display: flex; flex-direction: column; gap: 4px; }
         .form-group label { font-size: 11px; color: var(--accent); text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
-        /* JAVÍTVA: Kisebb belső padding az inputokon */
+        
         .form-control { padding: 10px 15px; background-color: var(--bg-base); border: 1px solid #334155; color: white; border-radius: 6px; outline: none; transition: 0.2s; font-size: 14px; width: 100%; }
         .form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2); }
-        /* JAVÍTVA: Kisebb padding, flex-shrink: 0 hogy sose tűnjön el a gomb */
+        
         .modal-footer { padding: 15px 25px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; background: rgba(0,0,0,0.1); border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; flex-shrink: 0; }
         
         .btn-outline { background: #475569; border: 1px solid #475569; color: white; }
@@ -551,6 +557,9 @@
             <div class="nav-items">
                 <div class="nav-item active" onclick="switchTab('map', this)"><i class="fas fa-border-all"></i> Térkép Nézet</div>
                 <div class="nav-item" onclick="switchTab('db', this)"><i class="fas fa-list-ul"></i> Adatbázis</div>
+                <div id="missingModelWarning" class="nav-item" style="display: none; color: var(--warning); border-left-color: var(--warning); background: rgba(245, 158, 11, 0.05);" onclick="openMissingModelsModal()">
+                    <i class="fas fa-exclamation-triangle"></i> <span id="warningText">Hiányok</span>
+                </div>
             </div>
             <div class="sidebar-stats">
                 <div class="stat-row"><span>Teljes Férőhely</span><strong id="stat-capacity">0</strong></div>
@@ -709,6 +718,21 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="missingModelsModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header" style="border-bottom-color: var(--warning);">
+                <span style="color: var(--warning);"><i class="fas fa-exclamation-triangle"></i> Hiányzó Modellnevek</span>
+                <button class="modal-close" onclick="closeModal('missingModelsModal')">&times;</button>
+            </div>
+            <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+                <div id="missingModelsList" style="display: flex; flex-direction: column; gap: 10px;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('missingModelsModal')">Bezárás</button>
+            </div>
+        </div>
+    </div>
+
     <div id="printArea"></div>
     <div id="toast"><i class="fas fa-check-circle"></i> <span id="toast-msg"></span></div>
 
@@ -831,6 +855,17 @@
     function renderUI() {
         if (!window.isAdmin) return; 
         
+        const missing = window.stencilData ? window.stencilData.filter(item => !item.modell || item.modell.trim() === "") : [];
+        const warningEl = document.getElementById('missingModelWarning');
+        if (warningEl) {
+            if (missing.length > 0) {
+                warningEl.style.display = 'flex';
+                document.getElementById('warningText').innerText = `Hiányok (${missing.length})`;
+            } else {
+                warningEl.style.display = 'none';
+            }
+        }
+        
         const query = document.getElementById('adminSearchInput').value.toLowerCase();
         
         let totalSlots = window.cabinetsConfig.reduce((acc, cab) => acc + (cab.end - cab.start + 1), 0);
@@ -919,6 +954,33 @@
             }
         });
     }
+
+    window.openMissingModelsModal = () => {
+        const missing = window.stencilData ? window.stencilData.filter(item => !item.modell || item.modell.trim() === "") : [];
+        const listContainer = document.getElementById('missingModelsList');
+        if (listContainer) {
+            listContainer.innerHTML = '';
+            if (missing.length === 0) {
+                listContainer.innerHTML = '<div style="text-align:center; color:var(--success); padding: 10px;">Minden maszkhoz van modellnév rendelve!</div>';
+            } else {
+                missing.forEach(item => {
+                    listContainer.innerHTML += `
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(245, 158, 11, 0.15); border-left: 4px solid var(--warning); padding: 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                            <div>
+                                <strong style="color: white; font-size: 14px;">${item.maszk}</strong>
+                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Nincs modellnév megadva</div>
+                            </div>
+                            <div style="text-align: right; flex-shrink: 0;">
+                                <div style="font-size: 12px; color: white; font-weight: bold;">${item.szekreny}</div>
+                                <div style="font-size: 12px; color: var(--success); font-weight: bold;">${item.polc}. polc</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        }
+        document.getElementById('missingModelsModal').classList.add('active');
+    };
 
     function openModal(maszkId = null, prefillCabinet = "Szekrény 1", prefillShelf = "") {
         const title = document.getElementById('modalTitle');
