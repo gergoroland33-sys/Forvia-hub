@@ -116,11 +116,11 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 40px; 
+            padding: 40px; /* Képernyő margó */
             overflow: hidden; 
         }
 
-        /* Intelligens szövegtároló - NINCS automatikus sortörés! */
+        /* Intelligens szövegtároló */
         .text-container {
             width: 100%;
             height: 100%;
@@ -133,7 +133,7 @@
             text-align: center;
             font-weight: 900;
             line-height: 1.05;
-            white-space: pre; /* <--- EZ A KULCS: Nincs auto sortörés, csak ha Entert nyomsz! */
+            white-space: pre; 
             overflow: hidden;
             position: relative;
             z-index: 2;
@@ -154,20 +154,20 @@
             position: absolute;
             visibility: hidden;
             pointer-events: none;
-            width: auto; /* <--- Alkalmazkodik a szélességhez */
+            width: auto; 
             height: auto;
             text-align: center;
             font-weight: 900;
             line-height: 1.05;
-            white-space: pre; /* Itt is ugyanúgy kell a pre! */
+            white-space: pre; 
             z-index: 1;
         }
 
-        /* --- NYOMTATÁSI STÍLUSOK --- */
+        /* --- NYOMTATÁSI STÍLUSOK (JAVÍTVA) --- */
         @media print {
             @page {
                 size: A4 landscape;
-                margin: 0;
+                margin: 0; /* Letiltja a böngésző alapértelmezett margóit */
             }
             
             body {
@@ -198,7 +198,7 @@
                 width: 297mm;
                 height: 210mm;
                 box-shadow: none;
-                padding: 20mm;
+                padding: 40px; /* JAVÍTVA: Pontosan megegyezik a képernyő méretével, így nincs levágás! */
                 position: absolute;
                 top: 0;
                 left: 0;
@@ -243,7 +243,6 @@
                 return;
             }
 
-            // Rendelkezésre álló fix szélesség és magasság a papíron (40+40px margók levonva)
             const maxWidth = paper.clientWidth - 80;
             const maxHeight = paper.clientHeight - 80;
 
@@ -257,7 +256,6 @@
                 let midSize = Math.floor((minSize + maxSize) / 2);
                 clone.style.fontSize = midSize + "px";
 
-                // Most már a SZÉLESSÉGET is vizsgálnia kell, hiszen a szöveg nem törik sort!
                 if (clone.scrollHeight <= maxHeight && clone.scrollWidth <= maxWidth) {
                     optimalSize = midSize;
                     minSize = midSize + 1; 
