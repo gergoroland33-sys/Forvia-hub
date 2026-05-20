@@ -71,7 +71,7 @@
             margin-top: 2px;
         }
 
-        /* Új stílus a választó gombhoz */
+        /* Tájolás választó gomb */
         .select-orientation {
             background-color: #1e293b;
             color: #f8fafc;
@@ -235,7 +235,6 @@
             <p id="sub-label">A4 Fektetett • Fix Lapnézet • Manuális Sortörés (Enter)</p>
         </div>
         <div style="display: flex; align-items: center; gap: 1rem;">
-            <!-- ÚJ: Tájolás választó -->
             <select class="select-orientation" id="orientation-select">
                 <option value="landscape" selected>Fektetett (A4)</option>
                 <option value="portrait">Álló (A4)</option>
@@ -301,7 +300,7 @@
             editor.style.fontSize = optimalSize + "px";
         }
 
-        // --- 2. RESPONSIVE PAPÍR-SKÁLÁZÁS (Frissítve a dinamikus célméretekhez) ---
+        // --- 2. RESPONSIVE PAPÍR-SKÁLÁZÁS ---
         function responsiveScale() {
             const isPortrait = orientationSelect.value === 'portrait';
             const targetWidth = isPortrait ? 794 : 1123;
@@ -317,35 +316,47 @@
             scaler.style.transform = `scale(${scale})`;
         }
 
-        // --- ÚJ: TÁJOLÁS VÁLTÓ LOGIKA ---
+        // --- TÁJOLÁS VÁLTÓ LOGIKA ---
         function handleOrientationChange() {
             const isPortrait = orientationSelect.value === 'portrait';
             
             if (isPortrait) {
                 document.body.className = "mode-portrait";
                 subLabel.textContent = "A4 Álló • Fix Lapnézet • Manuális Sortörés (Enter)";
-                // Nyomtatási kép felülírása állóra
                 dynamicPrintStyle.innerHTML = `@media print { @page { size: A4 portrait; margin: 0; } .paper-canvas { width: 210mm; height: 297mm; } }`;
             } else {
                 document.body.className = "mode-landscape";
                 subLabel.textContent = "A4 Fektetett • Fix Lapnézet • Manuális Sortörés (Enter)";
-                // Nyomtatási kép felülírása fektetettre
                 dynamicPrintStyle.innerHTML = `@media print { @page { size: A4 landscape; margin: 0; } .paper-canvas { width: 297mm; height: 210mm; } }`;
             }
 
-            // Frissítjük a nézetet és a szöveget az új dobozmérethez
             responsiveScale();
-            setTimeout(autoFitText, 50); // Kis késleltetés a stabil CSS átmenet miatt
+            setTimeout(autoFitText, 50); 
         }
 
         // --- 3. ESEMÉNYKEZELŐK ---
         orientationSelect.addEventListener('change', handleOrientationChange);
+        
         editor.addEventListener('input', autoFitText);
         
         editor.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 setTimeout(autoFitText, 0);
             }
+        });
+
+        // ÚJ FEJLESZTÉS: Tisztított szöveg beillesztése és azonnali átméretezés
+        editor.addEventListener('paste', (e) => {
+            e.preventDefault(); // Megakadályozzuk a formázott (színes, nagybetűs stb.) beillesztést
+            
+            // Kinyerjük a tiszta szöveget a vágólapról
+            const text = (e.originalEvent || e).clipboardData.getData('text/plain');
+            
+            // Beillesztjük formázatlanul a kurzorhoz
+            document.execCommand('insertText', false, text);
+            
+            // Azonnal lefuttatjuk a méretezést
+            setTimeout(autoFitText, 0);
         });
 
         window.addEventListener('resize', () => {
