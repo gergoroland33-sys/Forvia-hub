@@ -15,8 +15,16 @@
             --accent: #38bdf8;
             --accent-hover: #0ea5e9;
             --text-main: #f8fafc;
+        }
+
+        /* Tájolás alapú dinamikus méretek */
+        body.mode-landscape {
             --a4-width: 1123px;
             --a4-height: 794px;
+        }
+        body.mode-portrait {
+            --a4-width: 794px;
+            --a4-height: 1123px;
         }
 
         * {
@@ -61,6 +69,24 @@
             font-size: 0.75rem;
             color: #94a3b8;
             margin-top: 2px;
+        }
+
+        /* Új stílus a választó gombhoz */
+        .select-orientation {
+            background-color: #1e293b;
+            color: #f8fafc;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            outline: none;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+        .select-orientation:focus {
+            border-color: var(--accent);
         }
 
         .btn-print {
@@ -118,6 +144,7 @@
             align-items: center;
             padding: 40px; /* Képernyő margó */
             overflow: hidden; 
+            transition: width 0.2s ease, height 0.2s ease;
         }
 
         /* Intelligens szövegtároló */
@@ -163,13 +190,8 @@
             z-index: 1;
         }
 
-        /* --- NYOMTATÁSI STÍLUSOK (JAVÍTVA) --- */
+        /* --- NYOMTATÁSI STÍLUSOK (STATIKUS RÉSZ) --- */
         @media print {
-            @page {
-                size: A4 landscape;
-                margin: 0; /* Letiltja a böngésző alapértelmezett margóit */
-            }
-            
             body {
                 background: none;
                 color: #000;
@@ -195,10 +217,8 @@
             }
 
             .paper-canvas {
-                width: 297mm;
-                height: 210mm;
                 box-shadow: none;
-                padding: 40px; /* JAVÍTVA: Pontosan megegyezik a képernyő méretével, így nincs levágás! */
+                padding: 40px; 
                 position: absolute;
                 top: 0;
                 left: 0;
@@ -207,17 +227,25 @@
         }
     </style>
 </head>
-<body>
+<body class="mode-landscape">
 
     <header>
         <div class="logo-area">
             <h1>PRO NYOMTATÁS SZERKESZTŐ</h1>
-            <p>A4 Fektetett • Fix Lapnézet • Manuális Sortörés (Enter)</p>
+            <p id="sub-label">A4 Fektetett • Fix Lapnézet • Manuális Sortörés (Enter)</p>
         </div>
-        <button class="btn-print" onclick="window.print()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-            Nyomtatás most
-        </button>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <!-- ÚJ: Tájolás választó -->
+            <select class="select-orientation" id="orientation-select">
+                <option value="landscape" selected>Fektetett (A4)</option>
+                <option value="portrait">Álló (A4)</option>
+            </select>
+
+            <button class="btn-print" onclick="window.print()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                Nyomtatás most
+            </button>
+        </div>
     </header>
 
     <div class="workspace" id="workspace">
@@ -235,6 +263,12 @@
         const scaler = document.getElementById('scaler');
         const workspace = document.getElementById('workspace');
         const paper = document.getElementById('paper');
+        const orientationSelect = document.getElementById('orientation-select');
+        const subLabel = document.getElementById('sub-label');
+
+        // Dinamikus nyomtatási CSS injektáló (hogy a böngésző @page beállítása is kövesse a választást)
+        const dynamicPrintStyle = document.createElement('style');
+        document.head.appendChild(dynamicPrintStyle);
 
         // --- 1. UGRÁLÁSMENTES SZÖVEGMÉRETEZŐ ALGORITMUS ---
         function autoFitText() {
@@ -267,19 +301,45 @@
             editor.style.fontSize = optimalSize + "px";
         }
 
-        // --- 2. RESPONSIVE PAPÍR-SKÁLÁZÁS ---
+        // --- 2. RESPONSIVE PAPÍR-SKÁLÁZÁS (Frissítve a dinamikus célméretekhez) ---
         function responsiveScale() {
+            const isPortrait = orientationSelect.value === 'portrait';
+            const targetWidth = isPortrait ? 794 : 1123;
+            const targetHeight = isPortrait ? 1123 : 794;
+
             const availableWidth = workspace.clientWidth - 40; 
             const availableHeight = workspace.clientHeight - 40;
 
-            const scaleX = availableWidth / 1123;
-            const scaleY = availableHeight / 794;
+            const scaleX = availableWidth / targetWidth;
+            const scaleY = availableHeight / targetHeight;
             
             const scale = Math.min(scaleX, scaleY, 1);
             scaler.style.transform = `scale(${scale})`;
         }
 
+        // --- ÚJ: TÁJOLÁS VÁLTÓ LOGIKA ---
+        function handleOrientationChange() {
+            const isPortrait = orientationSelect.value === 'portrait';
+            
+            if (isPortrait) {
+                document.body.className = "mode-portrait";
+                subLabel.textContent = "A4 Álló • Fix Lapnézet • Manuális Sortörés (Enter)";
+                // Nyomtatási kép felülírása állóra
+                dynamicPrintStyle.innerHTML = `@media print { @page { size: A4 portrait; margin: 0; } .paper-canvas { width: 210mm; height: 297mm; } }`;
+            } else {
+                document.body.className = "mode-landscape";
+                subLabel.textContent = "A4 Fektetett • Fix Lapnézet • Manuális Sortörés (Enter)";
+                // Nyomtatási kép felülírása fektetettre
+                dynamicPrintStyle.innerHTML = `@media print { @page { size: A4 landscape; margin: 0; } .paper-canvas { width: 297mm; height: 210mm; } }`;
+            }
+
+            // Frissítjük a nézetet és a szöveget az új dobozmérethez
+            responsiveScale();
+            setTimeout(autoFitText, 50); // Kis késleltetés a stabil CSS átmenet miatt
+        }
+
         // --- 3. ESEMÉNYKEZELŐK ---
+        orientationSelect.addEventListener('change', handleOrientationChange);
         editor.addEventListener('input', autoFitText);
         
         editor.addEventListener('keydown', (e) => {
@@ -297,7 +357,8 @@
             window.scrollTo(0, 0);
         });
 
-        responsiveScale();
+        // Kezdőállapot meghívások
+        handleOrientationChange();
         editor.focus();
         
         window.addEventListener('load', () => {
