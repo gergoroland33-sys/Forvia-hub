@@ -160,7 +160,8 @@
             text-align: center;
             font-weight: 900;
             line-height: 1.05;
-            white-space: pre; 
+            white-space: pre-wrap; /* JAVÍTVA: Engedi az automatikus sortörést a hosszú szövegeknél */
+            word-break: break-word; /* JAVÍTVA: Ha egyetlen hosszú szó van, azt is eltöri */
             overflow: hidden;
             position: relative;
             z-index: 2;
@@ -168,7 +169,7 @@
 
         /* Placeholder */
         .text-container:empty:before {
-            content: "Kattints ide és kezdj el gépelni...\n(Csak Enterrel nyílik új sor!)";
+            content: "Kattints ide és kezdj el gépelni...\n(A hosszú szöveg automatikusan törik!)";
             color: #cbd5e1;
             font-weight: 400;
             font-size: 2rem;
@@ -186,7 +187,8 @@
             text-align: center;
             font-weight: 900;
             line-height: 1.05;
-            white-space: pre; 
+            white-space: pre-wrap; /* JAVÍTVA */
+            word-break: break-word; /* JAVÍTVA */
             z-index: 1;
         }
 
@@ -232,7 +234,7 @@
     <header>
         <div class="logo-area">
             <h1>PRO NYOMTATÁS SZERKESZTŐ</h1>
-            <p id="sub-label">A4 Fektetett • Fix Lapnézet • Manuális Sortörés (Enter)</p>
+            <p id="sub-label">A4 Fektetett • Fix Lapnézet • Automatikus + Manuális Sortörés</p>
         </div>
         <div style="display: flex; align-items: center; gap: 1rem;">
             <select class="select-orientation" id="orientation-select">
@@ -265,7 +267,6 @@
         const orientationSelect = document.getElementById('orientation-select');
         const subLabel = document.getElementById('sub-label');
 
-        // Dinamikus nyomtatási CSS injektáló (hogy a böngésző @page beállítása is kövesse a választást)
         const dynamicPrintStyle = document.createElement('style');
         document.head.appendChild(dynamicPrintStyle);
 
@@ -280,6 +281,7 @@
             const maxHeight = paper.clientHeight - 80;
 
             clone.innerHTML = editor.innerHTML;
+            clone.style.width = maxWidth + "px"; // JAVÍTVA: Ráerőltetjük a lap szélességét a klónra, hogy a bemásolt szöveget jól tördelje!
 
             let minSize = 1;
             let maxSize = 500;
@@ -322,11 +324,11 @@
             
             if (isPortrait) {
                 document.body.className = "mode-portrait";
-                subLabel.textContent = "A4 Álló • Fix Lapnézet • Manuális Sortörés (Enter)";
+                subLabel.textContent = "A4 Álló • Fix Lapnézet • Automatikus + Manuális Sortörés";
                 dynamicPrintStyle.innerHTML = `@media print { @page { size: A4 portrait; margin: 0; } .paper-canvas { width: 210mm; height: 297mm; } }`;
             } else {
                 document.body.className = "mode-landscape";
-                subLabel.textContent = "A4 Fektetett • Fix Lapnézet • Manuális Sortörés (Enter)";
+                subLabel.textContent = "A4 Fektetett • Fix Lapnézet • Automatikus + Manuális Sortörés";
                 dynamicPrintStyle.innerHTML = `@media print { @page { size: A4 landscape; margin: 0; } .paper-canvas { width: 297mm; height: 210mm; } }`;
             }
 
@@ -345,17 +347,10 @@
             }
         });
 
-        // ÚJ FEJLESZTÉS: Tisztított szöveg beillesztése és azonnali átméretezés
         editor.addEventListener('paste', (e) => {
-            e.preventDefault(); // Megakadályozzuk a formázott (színes, nagybetűs stb.) beillesztést
-            
-            // Kinyerjük a tiszta szöveget a vágólapról
+            e.preventDefault(); 
             const text = (e.originalEvent || e).clipboardData.getData('text/plain');
-            
-            // Beillesztjük formázatlanul a kurzorhoz
             document.execCommand('insertText', false, text);
-            
-            // Azonnal lefuttatjuk a méretezést
             setTimeout(autoFitText, 0);
         });
 
