@@ -110,6 +110,34 @@
             transform: translateY(-1px);
         }
 
+        /* --- ÚJ: PIROS KIEMELÉS STÍLUSOK --- */
+        .highlight-red {
+            color: #ff0000 !important;
+            /* A 0.04em biztosítja, hogy a fekete keret vastagsága együtt nőjön a szöveg méretével */
+            -webkit-text-stroke: 0.04em #000000 !important; 
+            /* Egy kis extra kontraszt árnyék az abszolút olvashatóságért */
+            text-shadow: 2px 2px 0px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+        }
+        .btn-highlight {
+            background-color: #ef4444;
+            color: #ffffff;
+            border: none;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.95rem;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+        .btn-highlight:hover {
+            background-color: #dc2626;
+            transform: translateY(-1px);
+        }
+
         /* Munkafolyamat konténer */
         .workspace {
             flex: 1;
@@ -239,6 +267,12 @@
                 <option value="landscape" selected>Fektetett (A4)</option>
                 <option value="portrait">Álló (A4)</option>
             </select>
+
+            <!-- ÚJ: Kiemelés gomb -->
+            <button class="btn-highlight" id="btn-highlight" title="Jelöld ki a szöveget, majd kattints ide!">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                Kijelölés Pirossal
+            </button>
 
             <button class="btn-print" onclick="window.print()">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
@@ -403,6 +437,32 @@
 
         window.addEventListener('scroll', () => {
             window.scrollTo(0, 0);
+        });
+
+        // --- ÚJ FUNKCIÓ: SZÖVEG KIEMELÉSE PIROSSAL ÉS FEKETE KERETTEL ---
+        document.getElementById('btn-highlight').addEventListener('click', () => {
+            const selection = window.getSelection();
+            if (!selection.isCollapsed) {
+                const range = selection.getRangeAt(0);
+                try {
+                    // Span elem létrehozása az egyedi stílusunkkal
+                    const span = document.createElement('span');
+                    span.className = 'highlight-red';
+                    
+                    // Körbevesszük a kijelölt szöveget az új stílussal
+                    range.surroundContents(span);
+                    
+                    // Újraszámoltatjuk a betűméretet, hátha a keret miatt minimálisan igazítani kell
+                    setTimeout(autoFitText, 0);
+                    
+                    // Levesszük a kijelölést, hogy azonnal jól látszódjon az eredmény
+                    selection.removeAllRanges();
+                } catch (e) {
+                    alert("Kérlek, egyszerre csak egy soron belüli szöveget jelölj ki a formázáshoz!");
+                }
+            } else {
+                alert("Kérlek, először az egereddel jelöld ki azt a betűt vagy szöveget, amit pirosra szeretnél változtatni!");
+            }
         });
 
         // Kezdőállapot meghívások
