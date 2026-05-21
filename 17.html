@@ -1,418 +1,418 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Nyomtatás Szerkesztő</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-    <style>
-        /* --- PRO APPLIKÁCIÓS STÍLUSOK --- */
-        :root {
-            --bg-studio: #0f172a;
-            --bg-card: rgba(30, 41, 59, 1);
-            --accent: #38bdf8;
-            --accent-hover: #0ea5e9;
-            --text-main: #f8fafc;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pro Nyomtatás Szerkesztő</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+/* --- PRO APPLIKÁCIÓS STÍLUSOK --- */
+:root {
+--bg-studio: #0f172a;
+--bg-card: rgba(30, 41, 59, 1);
+--accent: #38bdf8;
+--accent-hover: #0ea5e9;
+--text-main: #f8fafc;
+}
 
-        /* Tájolás alapú dinamikus méretek */
-        body.mode-landscape {
-            --a4-width: 1123px;
-            --a4-height: 794px;
-        }
-        body.mode-portrait {
-            --a4-width: 794px;
-            --a4-height: 1123px;
-        }
+/* Tájolás alapú dinamikus méretek */
+body.mode-landscape {
+--a4-width: 1123px;
+--a4-height: 794px;
+}
+body.mode-portrait {
+--a4-width: 794px;
+--a4-height: 1123px;
+}
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+* {
+box-sizing: border-box;
+margin: 0;
+padding: 0;
+}
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-studio);
-            color: var(--text-main);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden; 
-        }
+body {
+font-family: 'Inter', sans-serif;
+background-color: var(--bg-studio);
+color: var(--text-main);
+height: 100vh;
+display: flex;
+flex-direction: column;
+overflow: hidden; 
+}
 
-        /* Fejléc */
-        header {
-            background: var(--bg-card);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0; 
-            z-index: 10;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        }
+/* Fejléc */
+header {
+background: var(--bg-card);
+border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+padding: 1rem 2rem;
+display: flex;
+justify-content: space-between;
+align-items: center;
+flex-shrink: 0; 
+z-index: 10;
+box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
 
-        .logo-area h1 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            letter-spacing: -0.05em;
-            background: linear-gradient(to right, #fff, var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+.logo-area h1 {
+font-size: 1.25rem;
+font-weight: 700;
+letter-spacing: -0.05em;
+background: linear-gradient(to right, #fff, var(--accent));
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+}
 
-        .logo-area p {
-            font-size: 0.75rem;
-            color: #94a3b8;
-            margin-top: 2px;
-        }
+.logo-area p {
+font-size: 0.75rem;
+color: #94a3b8;
+margin-top: 2px;
+}
 
-        /* Tájolás választó gomb */
-        .select-orientation {
-            background-color: #1e293b;
-            color: #f8fafc;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 0.75rem 1rem;
-            font-size: 0.95rem;
-            font-weight: 700;
-            border-radius: 8px;
-            cursor: pointer;
-            outline: none;
-            font-family: inherit;
-            transition: all 0.2s ease;
-        }
-        .select-orientation:focus {
-            border-color: var(--accent);
-        }
+/* Tájolás választó gomb */
+.select-orientation {
+background-color: #1e293b;
+color: #f8fafc;
+border: 1px solid rgba(255, 255, 255, 0.2);
+padding: 0.75rem 1rem;
+font-size: 0.95rem;
+font-weight: 700;
+border-radius: 8px;
+cursor: pointer;
+outline: none;
+font-family: inherit;
+transition: all 0.2s ease;
+}
+.select-orientation:focus {
+border-color: var(--accent);
+}
 
-        .btn-print {
-            background-color: var(--accent);
-            color: #0f172a;
-            border: none;
-            padding: 0.75rem 1.75rem;
-            font-size: 0.95rem;
-            font-weight: 700;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
-        }
+.btn-print {
+background-color: var(--accent);
+color: #0f172a;
+border: none;
+padding: 0.75rem 1.75rem;
+font-size: 0.95rem;
+font-weight: 700;
+border-radius: 8px;
+cursor: pointer;
+display: flex;
+align-items: center;
+gap: 0.5rem;
+transition: all 0.2s ease;
+box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+}
 
-        .btn-print:hover {
-            background-color: var(--accent-hover);
-            transform: translateY(-1px);
-        }
+.btn-print:hover {
+background-color: var(--accent-hover);
+transform: translateY(-1px);
+}
 
-        /* Munkafolyamat konténer */
-        .workspace {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 2rem;
-            overflow: hidden;
-            position: relative;
-        }
+/* Munkafolyamat konténer */
+.workspace {
+flex: 1;
+display: flex;
+justify-content: center;
+align-items: center;
+padding: 2rem;
+overflow: hidden;
+position: relative;
+}
 
-        /* Skálázódó lap-burkoló */
-        .paper-scaler {
-            transform-origin: center center;
-            transition: transform 0.1s ease-out;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+/* Skálázódó lap-burkoló */
+.paper-scaler {
+transform-origin: center center;
+transition: transform 0.1s ease-out;
+display: flex;
+justify-content: center;
+align-items: center;
+}
 
-        /* --- A4 REÁLIS PAPÍR LAP --- */
-        .paper-canvas {
-            width: var(--a4-width);
-            height: var(--a4-height);
-            background-color: #ffffff;
-            color: #1e293b;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-            border-radius: 2px;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 40px; /* Képernyő margó */
-            overflow: hidden; 
-            transition: width 0.2s ease, height 0.2s ease;
-        }
+/* --- A4 REÁLIS PAPÍR LAP --- */
+.paper-canvas {
+width: var(--a4-width);
+height: var(--a4-height);
+background-color: #ffffff;
+color: #1e293b;
+box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+border-radius: 2px;
+position: relative;
+display: flex;
+justify-content: center;
+align-items: center;
+padding: 40px; /* Képernyő margó */
+overflow: hidden; 
+transition: width 0.2s ease, height 0.2s ease;
+}
 
-        /* Intelligens szövegtároló */
-        .text-container {
-            width: 100%;
-            height: 100%;
-            outline: none;
-            border: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            font-weight: 900;
-            line-height: 1.05;
-            white-space: pre; /* ERREDETI JAVÍTÁS: Visszaállítva a szigorúan manuális Enteres tördelésre */
-            overflow: hidden;
-            position: relative;
-            z-index: 2;
-        }
+/* Intelligens szövegtároló */
+.text-container {
+width: 100%;
+height: 100%;
+outline: none;
+border: none;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+text-align: center;
+font-weight: 900;
+line-height: 1.05;
+white-space: pre; /* ERREDETI JAVÍTÁS: Visszaállítva a szigorúan manuális Enteres tördelésre */
+overflow: hidden;
+position: relative;
+z-index: 2;
+}
 
-        /* Placeholder - JAVÍTVA az általad kért feliratra */
-        .text-container:empty:before {
-            content: "Kattints ide és kezdj el gépelni...(Csak Enterrel nyílik új sor!)";
-            color: #cbd5e1;
-            font-weight: 400;
-            font-size: 2rem;
-            line-height: 1.5;
-            pointer-events: none;
-        }
+/* Placeholder - JAVÍTVA az általad kért feliratra */
+.text-container:empty:before {
+            content: "Kattints ide és kezdj el gépelni...\n(Csak Enterrel nyílik új sor!)";
+            content: "Kattints ide és kezdj el gépelni...(Csak Enterrel nyílik új sor!)";
+color: #cbd5e1;
+font-weight: 400;
+font-size: 2rem;
+line-height: 1.5;
+pointer-events: none;
+}
 
-        /* Láthatatlan Árnyék-mérő a háttérben */
-        #measure-clone {
-            position: absolute;
-            visibility: hidden;
-            pointer-events: none;
-            width: auto; 
-            height: auto;
-            text-align: center;
-            font-weight: 900;
-            line-height: 1.05;
-            white-space: pre; /* EREDETI JAVÍTÁS: Visszaállítva */
-            z-index: 1;
-        }
+/* Láthatatlan Árnyék-mérő a háttérben */
+#measure-clone {
+position: absolute;
+visibility: hidden;
+pointer-events: none;
+width: auto; 
+height: auto;
+text-align: center;
+font-weight: 900;
+line-height: 1.05;
+white-space: pre; /* EREDETI JAVÍTÁS: Visszaállítva */
+z-index: 1;
+}
 
-        /* --- NYOMTATÁSI STÍLUSOK (STATIKUS RÉSZ) --- */
-        @media print {
-            body {
-                background: none;
-                color: #000;
-                padding: 0;
-                margin: 0;
-                height: auto;
-                overflow: visible;
-            }
+/* --- NYOMTATÁSI STÍLUSOK (STATIKUS RÉSZ) --- */
+@media print {
+body {
+background: none;
+color: #000;
+padding: 0;
+margin: 0;
+height: auto;
+overflow: visible;
+}
 
-            header {
-                display: none;
-            }
+header {
+display: none;
+}
 
-            .workspace {
-                padding: 0;
-                margin: 0;
-                display: block;
-                overflow: visible;
-            }
+.workspace {
+padding: 0;
+margin: 0;
+display: block;
+overflow: visible;
+}
 
-            .paper-scaler {
-                transform: none !important;
-            }
+.paper-scaler {
+transform: none !important;
+}
 
-            .paper-canvas {
-                box-shadow: none;
-                padding: 40px; 
-                position: absolute;
-                top: 0;
-                left: 0;
-                page-break-inside: avoid;
-            }
-        }
-    </style>
+.paper-canvas {
+box-shadow: none;
+padding: 40px; 
+position: absolute;
+top: 0;
+left: 0;
+page-break-inside: avoid;
+}
+}
+</style>
 </head>
 <body class="mode-landscape">
 
-    <header>
-        <div class="logo-area">
-            <h1>PRO NYOMTATÁS SZERKESZTŐ</h1>
-            <p id="sub-label">A4 Fektetett • Fix Lapnézet • Manuális Sortörés (Enter)</p>
-        </div>
-        <div style="display: flex; align-items: center; gap: 1rem;">
-            <select class="select-orientation" id="orientation-select">
-                <option value="landscape" selected>Fektetett (A4)</option>
-                <option value="portrait">Álló (A4)</option>
-            </select>
+<header>
+<div class="logo-area">
+<h1>PRO NYOMTATÁS SZERKESZTŐ</h1>
+<p id="sub-label">A4 Fektetett • Fix Lapnézet • Manuális Sortörés (Enter)</p>
+</div>
+<div style="display: flex; align-items: center; gap: 1rem;">
+<select class="select-orientation" id="orientation-select">
+<option value="landscape" selected>Fektetett (A4)</option>
+<option value="portrait">Álló (A4)</option>
+</select>
 
-            <button class="btn-print" onclick="window.print()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                Nyomtatás most
-            </button>
-        </div>
-    </header>
+<button class="btn-print" onclick="window.print()">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+Nyomtatás most
+</button>
+</div>
+</header>
 
-    <div class="workspace" id="workspace">
-        <div class="paper-scaler" id="scaler">
-            <div class="paper-canvas" id="paper">
-                <div id="measure-clone"></div>
-                <div class="text-container" id="editor" contenteditable="true" spellcheck="false"></div>
-            </div>
-        </div>
-    </div>
+<div class="workspace" id="workspace">
+<div class="paper-scaler" id="scaler">
+<div class="paper-canvas" id="paper">
+<div id="measure-clone"></div>
+<div class="text-container" id="editor" contenteditable="true" spellcheck="false"></div>
+</div>
+</div>
+</div>
 
-    <script>
-        const editor = document.getElementById('editor');
-        const clone = document.getElementById('measure-clone');
-        const scaler = document.getElementById('scaler');
-        const workspace = document.getElementById('workspace');
-        const paper = document.getElementById('paper');
-        const orientationSelect = document.getElementById('orientation-select');
-        const subLabel = document.getElementById('sub-label');
+<script>
+const editor = document.getElementById('editor');
+const clone = document.getElementById('measure-clone');
+const scaler = document.getElementById('scaler');
+const workspace = document.getElementById('workspace');
+const paper = document.getElementById('paper');
+const orientationSelect = document.getElementById('orientation-select');
+const subLabel = document.getElementById('sub-label');
 
-        const dynamicPrintStyle = document.createElement('style');
-        document.head.appendChild(dynamicPrintStyle);
+const dynamicPrintStyle = document.createElement('style');
+document.head.appendChild(dynamicPrintStyle);
 
-        // --- 1. UGRÁLÁSMENTES SZÖVEGMÉRETEZŐ ALGORITMUS ---
-        function autoFitText() {
-            if (editor.textContent.trim() === "") {
-                editor.style.fontSize = "";
-                return;
-            }
+// --- 1. UGRÁLÁSMENTES SZÖVEGMÉRETEZŐ ALGORITMUS ---
+function autoFitText() {
+if (editor.textContent.trim() === "") {
+editor.style.fontSize = "";
+return;
+}
 
-            const maxWidth = paper.clientWidth - 80;
-            const maxHeight = paper.clientHeight - 80;
+const maxWidth = paper.clientWidth - 80;
+const maxHeight = paper.clientHeight - 80;
 
-            clone.innerHTML = editor.innerHTML;
-            clone.style.width = "auto"; // EREDETI JAVÍTÁS: Visszaállítva a dinamikus szélességméréshez
+clone.innerHTML = editor.innerHTML;
+clone.style.width = "auto"; // EREDETI JAVÍTÁS: Visszaállítva a dinamikus szélességméréshez
 
-            let minSize = 1;
-            let maxSize = 500;
-            let optimalSize = minSize;
+let minSize = 1;
+let maxSize = 500;
+let optimalSize = minSize;
 
-            while (minSize <= maxSize) {
-                let midSize = Math.floor((minSize + maxSize) / 2);
-                clone.style.fontSize = midSize + "px";
+while (minSize <= maxSize) {
+let midSize = Math.floor((minSize + maxSize) / 2);
+clone.style.fontSize = midSize + "px";
 
-                if (clone.scrollHeight <= maxHeight && clone.scrollWidth <= maxWidth) {
-                    optimalSize = midSize;
-                    minSize = midSize + 1; 
-                } else {
-                    maxSize = midSize - 1; 
-                }
-            }
+if (clone.scrollHeight <= maxHeight && clone.scrollWidth <= maxWidth) {
+optimalSize = midSize;
+minSize = midSize + 1; 
+} else {
+maxSize = midSize - 1; 
+}
+}
 
-            editor.style.fontSize = optimalSize + "px";
-        }
+editor.style.fontSize = optimalSize + "px";
+}
 
-        // --- 2. RESPONSIVE PAPÍR-SKÁLÁZÁS ---
-        function responsiveScale() {
-            const isPortrait = orientationSelect.value === 'portrait';
-            const targetWidth = isPortrait ? 794 : 1123;
-            const targetHeight = isPortrait ? 1123 : 794;
+// --- 2. RESPONSIVE PAPÍR-SKÁLÁZÁS ---
+function responsiveScale() {
+const isPortrait = orientationSelect.value === 'portrait';
+const targetWidth = isPortrait ? 794 : 1123;
+const targetHeight = isPortrait ? 1123 : 794;
 
-            const availableWidth = workspace.clientWidth - 40; 
-            const availableHeight = workspace.clientHeight - 40;
+const availableWidth = workspace.clientWidth - 40; 
+const availableHeight = workspace.clientHeight - 40;
 
-            const scaleX = availableWidth / targetWidth;
-            const scaleY = availableHeight / targetHeight;
-            
-            const scale = Math.min(scaleX, scaleY, 1);
-            scaler.style.transform = `scale(${scale})`;
-        }
+const scaleX = availableWidth / targetWidth;
+const scaleY = availableHeight / targetHeight;
 
-        // --- TÁJOLÁS VÁLTÓ LOGIKA ---
-        function handleOrientationChange() {
-            const isPortrait = orientationSelect.value === 'portrait';
-            
-            if (isPortrait) {
-                document.body.className = "mode-portrait";
-                subLabel.textContent = "A4 Álló • Fix Lapnézet • Manuális Sortörés (Enter)";
-                dynamicPrintStyle.innerHTML = `@media print { @page { size: A4 portrait; margin: 0; } .paper-canvas { width: 210mm; height: 297mm; } }`;
-            } else {
-                document.body.className = "mode-landscape";
-                subLabel.textContent = "A4 Fektetett • Fix Lapnézet • Manuális Sortörés (Enter)";
-                dynamicPrintStyle.innerHTML = `@media print { @page { size: A4 landscape; margin: 0; } .paper-canvas { width: 297mm; height: 210mm; } }`;
-            }
+const scale = Math.min(scaleX, scaleY, 1);
+scaler.style.transform = `scale(${scale})`;
+}
 
-            responsiveScale();
-            setTimeout(autoFitText, 50); 
-        }
+// --- TÁJOLÁS VÁLTÓ LOGIKA ---
+function handleOrientationChange() {
+const isPortrait = orientationSelect.value === 'portrait';
 
-        // --- 3. ESEMÉNYKEZELŐK ---
-        orientationSelect.addEventListener('change', handleOrientationChange);
-        
-        editor.addEventListener('input', autoFitText);
-        
-        editor.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                setTimeout(autoFitText, 0);
-            }
-        });
+if (isPortrait) {
+document.body.className = "mode-portrait";
+subLabel.textContent = "A4 Álló • Fix Lapnézet • Manuális Sortörés (Enter)";
+dynamicPrintStyle.innerHTML = `@media print { @page { size: A4 portrait; margin: 0; } .paper-canvas { width: 210mm; height: 297mm; } }`;
+} else {
+document.body.className = "mode-landscape";
+subLabel.textContent = "A4 Fektetett • Fix Lapnézet • Manuális Sortörés (Enter)";
+dynamicPrintStyle.innerHTML = `@media print { @page { size: A4 landscape; margin: 0; } .paper-canvas { width: 297mm; height: 210mm; } }`;
+}
 
-        // INTELLIGENS BEILLESZTÉS: Csak a bemásolt szöveg kap automatikus fizikai sortöréseket, hogy igazodjon a laphoz!
-        editor.addEventListener('paste', (e) => {
-            e.preventDefault(); 
-            const text = (e.originalEvent || e).clipboardData.getData('text/plain');
-            
-            const maxWidth = paper.clientWidth - 80;
-            
-            // Létrehozunk egy háttérben mérő ideiglenes dobozt, ami kiszámolja, hol kell elvágni a szöveget
-            const tempMeasure = document.createElement('div');
-            tempMeasure.style.position = 'absolute';
-            tempMeasure.style.visibility = 'hidden';
-            tempMeasure.style.whiteSpace = 'pre';
-            tempMeasure.style.fontFamily = window.getComputedStyle(editor).fontFamily;
-            tempMeasure.style.fontWeight = window.getComputedStyle(editor).fontWeight;
-            tempMeasure.style.fontSize = '32px'; // Kiegyensúlyozott bázisméret az ideális sorszélességhez
-            document.body.appendChild(tempMeasure);
+responsiveScale();
+setTimeout(autoFitText, 50); 
+}
 
-            const paragraphs = text.split('\n');
-            const wrappedParagraphs = paragraphs.map(para => {
-                const words = para.split(' ');
-                let currentLine = '';
-                let resultLines = [];
+// --- 3. ESEMÉNYKEZELŐK ---
+orientationSelect.addEventListener('change', handleOrientationChange);
 
-                for (let word of words) {
-                    let testLine = currentLine ? currentLine + ' ' + word : word;
-                    tempMeasure.textContent = testLine;
-                    
-                    if (tempMeasure.scrollWidth > maxWidth) {
-                        if (currentLine) {
-                            resultLines.push(currentLine);
-                            currentLine = word;
-                        } else {
-                            resultLines.push(word);
-                            currentLine = '';
-                        }
-                    } else {
-                        currentLine = testLine;
-                    }
-                }
-                if (currentLine) resultLines.push(currentLine);
-                return resultLines.join('\n');
-            });
+editor.addEventListener('input', autoFitText);
 
-            document.body.removeChild(tempMeasure);
-            const finalHardWrappedText = wrappedParagraphs.join('\n');
-            
-            // Beillesztjük a fizikai Enterekkel ellátott tiszta szöveget
-            document.execCommand('insertText', false, finalHardWrappedText);
-            setTimeout(autoFitText, 0);
-        });
+editor.addEventListener('keydown', (e) => {
+if (e.key === 'Enter') {
+setTimeout(autoFitText, 0);
+}
+});
 
-        window.addEventListener('resize', () => {
-            responsiveScale();
-            autoFitText();
-        });
+// INTELLIGENS BEILLESZTÉS: Csak a bemásolt szöveg kap automatikus fizikai sortöréseket, hogy igazodjon a laphoz!
+editor.addEventListener('paste', (e) => {
+e.preventDefault(); 
+const text = (e.originalEvent || e).clipboardData.getData('text/plain');
 
-        window.addEventListener('scroll', () => {
-            window.scrollTo(0, 0);
-        });
+const maxWidth = paper.clientWidth - 80;
 
-        // Kezdőállapot meghívások
-        handleOrientationChange();
-        editor.focus();
-        
-        window.addEventListener('load', () => {
-            responsiveScale();
-            autoFitText();
-        });
-    </script>
+// Létrehozunk egy háttérben mérő ideiglenes dobozt, ami kiszámolja, hol kell elvágni a szöveget
+const tempMeasure = document.createElement('div');
+tempMeasure.style.position = 'absolute';
+tempMeasure.style.visibility = 'hidden';
+tempMeasure.style.whiteSpace = 'pre';
+tempMeasure.style.fontFamily = window.getComputedStyle(editor).fontFamily;
+tempMeasure.style.fontWeight = window.getComputedStyle(editor).fontWeight;
+tempMeasure.style.fontSize = '32px'; // Kiegyensúlyozott bázisméret az ideális sorszélességhez
+document.body.appendChild(tempMeasure);
+
+const paragraphs = text.split('\n');
+const wrappedParagraphs = paragraphs.map(para => {
+const words = para.split(' ');
+let currentLine = '';
+let resultLines = [];
+
+for (let word of words) {
+let testLine = currentLine ? currentLine + ' ' + word : word;
+tempMeasure.textContent = testLine;
+
+if (tempMeasure.scrollWidth > maxWidth) {
+if (currentLine) {
+resultLines.push(currentLine);
+currentLine = word;
+} else {
+resultLines.push(word);
+currentLine = '';
+}
+} else {
+currentLine = testLine;
+}
+}
+if (currentLine) resultLines.push(currentLine);
+return resultLines.join('\n');
+});
+
+document.body.removeChild(tempMeasure);
+const finalHardWrappedText = wrappedParagraphs.join('\n');
+
+// Beillesztjük a fizikai Enterekkel ellátott tiszta szöveget
+document.execCommand('insertText', false, finalHardWrappedText);
+setTimeout(autoFitText, 0);
+});
+
+window.addEventListener('resize', () => {
+responsiveScale();
+autoFitText();
+});
+
+window.addEventListener('scroll', () => {
+window.scrollTo(0, 0);
+});
+
+// Kezdőállapot meghívások
+handleOrientationChange();
+editor.focus();
+
+window.addEventListener('load', () => {
+responsiveScale();
+autoFitText();
+});
+</script>
 </body>
-</html>
