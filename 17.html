@@ -112,13 +112,11 @@
 
         /* --- ÚJ: PIROS KIEMELÉS STÍLUSOK --- */
         .highlight-red {
-            /* A VARÁZSLAT ITT VAN: Megakadályozza, hogy a szöveg új sorba ugorjon a flexbox miatt! */
-            display: contents; 
-            
             color: #ff0000 !important;
             -webkit-text-stroke: 0.04em #000000 !important; 
             text-shadow: 2px 2px 0px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
         }
+        
         .btn-highlight {
             background-color: #ef4444;
             color: #ffffff;
@@ -137,6 +135,14 @@
         .btn-highlight:hover {
             background-color: #dc2626;
             transform: translateY(-1px);
+        }
+
+        /* --- ÚJ: ELRENDEZÉS FELÜLÍRÁSA A HIBA NÉLKÜLI ENTERHEZ --- 
+           Nem törlünk kódot, csak kötelező érvénnyel felülírjuk a flex elrendezést blokkra, 
+           így a szövegen belüli formázás tökéletes lesz! */
+        .text-container {
+            display: block !important;
+            height: auto !important;
         }
 
         /* Munkafolyamat konténer */
@@ -453,11 +459,22 @@
                     // Körbevesszük a kijelölt szöveget az új stílussal
                     range.surroundContents(span);
                     
+                    // --- VARÁZSLAT 2: KILÉPÜNK A PIROS ZÓNÁBÓL ---
+                    // Beszúrunk egy "láthatatlan null-szélességű karaktert" a span UTÁN
+                    const exitNode = document.createTextNode('\u200B');
+                    span.parentNode.insertBefore(exitNode, span.nextSibling);
+                    
+                    // A kurzort pontosan a láthatatlan karakter MÖGÉ helyezzük
+                    const newRange = document.createRange();
+                    newRange.setStart(exitNode, 1);
+                    newRange.collapse(true);
+                    selection.removeAllRanges();
+                    selection.addRange(newRange);
+                    // Így ha elkezdesz gépelni, az garantáltan már a piros dobozon kívülre kerül!
+
                     // Újraszámoltatjuk a betűméretet
                     setTimeout(autoFitText, 0);
                     
-                    // Levesszük a kijelölést, hogy azonnal jól látszódjon az eredmény
-                    selection.removeAllRanges();
                 } catch (e) {
                     alert("Kérlek, egyszerre csak egy soron belüli szöveget jelölj ki a formázáshoz!");
                 }
