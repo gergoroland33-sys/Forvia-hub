@@ -137,14 +137,6 @@
             transform: translateY(-1px);
         }
 
-        /* --- ÚJ: ELRENDEZÉS FELÜLÍRÁSA A HIBA NÉLKÜLI ENTERHEZ --- 
-           Nem törlünk kódot, csak kötelező érvénnyel felülírjuk a flex elrendezést blokkra, 
-           így a szövegen belüli formázás tökéletes lesz! */
-        .text-container {
-            display: block !important;
-            height: auto !important;
-        }
-
         /* Munkafolyamat konténer */
         .workspace {
             flex: 1;
@@ -259,6 +251,20 @@
                 left: 0;
                 page-break-inside: avoid;
             }
+        }
+
+        /* --- ÚJ: TÖKÉLETES KÖZÉPRE ZÁRÁS ÉS TELJES MAGASSÁG FELÜLÍRÁSA --- 
+           Ez biztosítja, hogy az Enter gomb működjön, a piros kiemelés egy sorban maradjon, 
+           ÉS a szöveg továbbra is kitöltse a papírt, tökéletesen középre igazítva!
+           (Mivel felülírás, egyetlen eredeti kódsorodat sem kellett letörölni) */
+        .paper-canvas {
+            display: table !important;
+            padding: 0 !important; /* A margót áttesszük a belső dobozra a vágásmentességért */
+        }
+        .text-container {
+            display: table-cell !important;
+            vertical-align: middle !important;
+            padding: 40px !important;
         }
     </style>
 </head>
