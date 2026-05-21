@@ -234,14 +234,14 @@ padding: 2px 5px; border-radius: 3px; margin-right: 6px; min-width: 32px; text-a
 }
 .ss-line { border-bottom: 1px dotted #64748b; flex-grow: 1; height: 14px; }
 
-/* MEGJEGYZÉS A NYOMTATÁSON */
+/* MEGJEGYZÉS A NYOMTATÁSON (PRO VERZIÓ - TÚLCSORDULÁS ELLEN VÉDVE) */
 .print-remark {
-margin-top: 20px; border: 2px solid #0f172a; padding: 12px 15px;
-border-radius: 6px; background: #f8fafc; page-break-inside: avoid;
--webkit-print-color-adjust: exact;
+margin-top: 20px; border: 2px solid #ef4444; padding: 12px 15px;
+border-radius: 8px; background: #fffbeb; page-break-inside: avoid;
+-webkit-print-color-adjust: exact; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
-.pr-title { font-size: 10pt; font-weight: 900; color: #0f172a; margin-bottom: 6px; text-transform: uppercase; }
-.pr-text { font-size: 10pt; color: #1e293b; white-space: pre-wrap; font-weight: bold; }
+.pr-title { font-size: 11pt; font-weight: 900; color: #b45309; margin-bottom: 8px; text-transform: uppercase; display: flex; align-items: center; border-bottom: 1px solid #fde68a; padding-bottom: 5px; }
+.pr-text { font-size: 10pt; color: #1e293b; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; font-weight: bold; line-height: 1.5; }
 
 
 /* --- NYOMTATÁSI CSS (PRINT ONLY) --- */
@@ -255,8 +255,8 @@ body { background: white; margin: 0; padding: 0; }
 .print-toolbar { display: none !important; }
 .a4-sheet { margin: 0; padding: 0; width: 100%; box-shadow: none; border: none; min-height: auto; }
 
-/* Túlcsordulás védelem */
-html, body { height: 100%; overflow: visible; }
+/* Túlcsordulás védelem (JAVÍTVA HOSSZÚ SZÖVEGEKHEZ, HOGY NE VÁGJA LE A LAP ALJÁT) */
+html, body { height: auto; min-height: 100%; overflow: visible; }
 }
 
 </style>
@@ -297,7 +297,14 @@ Dokumentum típusa: igénylés
 </div>
 
 <div id="print-remark-container" class="print-remark" style="display: none;">
-<div class="pr-title">Figyelem / Megjegyzés:</div>
+<div class="pr-title">
+  <!-- FIGYELEMFELKELTŐ SÁRGA HÁROMSZÖG PIROS FELKIÁLTÓJELLEL -->
+  <svg width="22" height="22" viewBox="0 0 24 24" style="margin-right: 8px; flex-shrink: 0;">
+    <path d="M12 3L2 20h20L12 3z" fill="#fbbf24" stroke="#d97706" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M11 9h2v6h-2zM11 17h2v2h-2z" fill="#ef4444"/>
+  </svg>
+  Figyelem / Megjegyzés:
+</div>
 <div id="print-remark-text" class="pr-text"></div>
 </div>
 
