@@ -413,17 +413,17 @@
                     // (1) Legkevesebb totalCarries
                     if (sa.carries !== sb.carries) return sa.carries - sb.carries;
                     
-                    // (2) Legrégebben vitt
+                    // (2) ritkább pár a worker1-gyel
+                    const pca = simPairs[pairKey(worker1, a)] || 0;
+                    const pcb = simPairs[pairKey(worker1, b)] || 0;
+                    if (pca !== pcb) return pca - pcb;
+
+                    // (3) Legrégebben vitt
                     if (sa.lastDate === null && sb.lastDate !== null) return -1;
                     if (sa.lastDate !== null && sb.lastDate === null) return 1;
                     if (sa.lastDate !== sb.lastDate && sa.lastDate && sb.lastDate) {
                         return sa.lastDate < sb.lastDate ? -1 : 1;
                     }
-                    
-                    // (3) ritkább pár a worker1-gyel
-                    const pca = simPairs[pairKey(worker1, a)] || 0;
-                    const pcb = simPairs[pairKey(worker1, b)] || 0;
-                    if (pca !== pcb) return pca - pcb;
                     
                     // (4) alfabetikus
                     return a.localeCompare(b, 'hu');
