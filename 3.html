@@ -8,23 +8,38 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
         :root {
-            /* Premium Dark Theme */
-            --bg-base: #020617;
-            --bg-panel: rgba(15, 23, 42, 0.7);
-            --bg-card: rgba(30, 41, 59, 0.8);
-            --border: rgba(51, 65, 85, 0.6);
-            --border-light: rgba(71, 85, 105, 0.4);
+            /* Premium Dark Theme - Modern Refresh */
+            --bg-base: #050816;
+            --bg-deep: #020410;
+            --bg-panel: rgba(15, 23, 42, 0.65);
+            --bg-card: rgba(30, 41, 59, 0.55);
+            --bg-card-hover: rgba(51, 65, 85, 0.6);
+            --border: rgba(71, 85, 105, 0.35);
+            --border-light: rgba(100, 116, 139, 0.25);
+            --border-bright: rgba(148, 163, 184, 0.4);
             
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
+            --text-dim: #64748b;
             --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.4);
             --danger: #ef4444; 
+            --danger-glow: rgba(239, 68, 68, 0.35);
             
-            /* Shift Colors */
+            /* Shift Colors - finomított árnyalatok */
             --color-a: #3b82f6;
+            --color-a-light: #60a5fa;
             --color-b: #10b981;
+            --color-b-light: #34d399;
             --color-c: #f59e0b;
+            --color-c-light: #fbbf24;
             --color-d: #ef4444;
+            --color-d-light: #f87171;
+
+            /* Shadow / glow */
+            --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.25);
+            --shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.5);
+            --shadow-deep: 0 20px 50px rgba(0, 0, 0, 0.6);
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -32,264 +47,985 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-base);
-            background-image: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+            background-image: 
+                radial-gradient(circle at 15% 0%, rgba(59, 130, 246, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 85% 100%, rgba(16, 185, 129, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.04) 0%, transparent 60%);
             color: var(--text-main);
             margin: 0; padding: 0;
             display: flex; flex-direction: column;
-            height: 100dvh; /* Szigorú 100% magasság */
-            overflow: hidden; /* Nincs görgetés */
-            touch-action: manipulation; /* JAVÍTÁS: Gyorsabb és pontosabb érintés mobilon */
+            height: 100dvh;
+            overflow: hidden;
+            touch-action: manipulation;
+            font-feature-settings: "ss01", "cv11";
+            letter-spacing: -0.01em;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+            opacity: 0.025;
+            pointer-events: none;
+            z-index: 0;
+            mix-blend-mode: overlay;
         }
 
         /* --- APP HEADER --- */
         .app-header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 8px 15px; 
-            background: var(--bg-panel);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            padding: 10px 18px; 
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.55) 100%);
+            backdrop-filter: blur(20px) saturate(180%); 
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
             border-bottom: 1px solid var(--border);
-            height: 55px; flex-shrink: 0;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+            height: 60px; flex-shrink: 0;
             z-index: 10;
+            position: relative;
         }
 
-        .logo-area h1 { margin: 0; font-size: 1.2rem; font-weight: 900; letter-spacing: 0.5px; }
-        .logo-area span { color: var(--accent); }
+        .app-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%);
+            opacity: 0.4;
+        }
+
+        .logo-area h1 { 
+            margin: 0; font-size: 1.3rem; font-weight: 900; 
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(248, 250, 252, 0.1);
+        }
+        .logo-area span { 
+            background: linear-gradient(135deg, var(--accent) 0%, #60a5fa 100%);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-left: 2px;
+        }
 
         .header-actions { display: flex; gap: 8px; }
 
         .btn-modern {
-            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border);
-            color: var(--text-main); padding: 6px 12px; border-radius: 8px;
-            font-size: 0.75rem; font-weight: 700; cursor: pointer;
-            transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 1px solid var(--border);
+            color: var(--text-main); 
+            padding: 8px 14px; 
+            border-radius: 10px;
+            font-size: 0.78rem; font-weight: 700; 
+            font-family: inherit;
+            letter-spacing: 0.02em;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; align-items: center; gap: 6px;
+            box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            position: relative;
+            overflow: hidden;
         }
-        .btn-today { color: var(--danger); border-color: rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.1); }
+        .btn-modern::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+            opacity: 0; transition: opacity 0.25s;
+            pointer-events: none;
+        }
+        .btn-modern:hover { 
+            border-color: var(--border-bright); 
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        }
+        .btn-modern:hover::before { opacity: 1; }
+        .btn-modern:active { transform: translateY(0); }
+
+        .btn-today { 
+            color: #fff;
+            border-color: rgba(239, 68, 68, 0.45); 
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.1) 100%);
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        .btn-today:hover {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(239, 68, 68, 0.15) 100%);
+            border-color: rgba(239, 68, 68, 0.6);
+        }
+
         .btn-print { display: none; }
         @media (min-width: 768px) { .btn-print { display: flex; } }
 
+        .btn-stats {
+            color: #fff !important;
+            border-color: rgba(16, 185, 129, 0.45) !important;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%) !important;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+        }
+        .btn-stats:hover {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(16, 185, 129, 0.15) 100%) !important;
+            border-color: rgba(16, 185, 129, 0.6) !important;
+        }
+
         /* --- SZŰRŐ SÁV --- */
-        .filter-container { padding: 8px 15px; background: var(--bg-base); flex-shrink: 0; display: flex; flex-direction: column; gap: 8px;}
+        .filter-container { 
+            padding: 10px 14px 8px 14px; 
+            background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-base) 100%);
+            flex-shrink: 0; 
+            display: flex; flex-direction: column; gap: 10px;
+            position: relative;
+            z-index: 5;
+        }
         .segmented-control {
-            display: flex; background: rgba(15, 23, 42, 0.8);
-            border-radius: 10px; padding: 4px; border: 1px solid var(--border);
-            position: relative; height: 36px;
+            display: flex; 
+            background: linear-gradient(180deg, rgba(2, 6, 23, 0.8) 0%, rgba(15, 23, 42, 0.5) 100%);
+            border-radius: 12px; 
+            padding: 5px; 
+            border: 1px solid var(--border);
+            position: relative; 
+            height: 42px;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(255, 255, 255, 0.05);
         }
         .seg-btn {
-            flex: 1; text-align: center; display: flex; align-items: center; justify-content: center;
-            font-size: 0.8rem; font-weight: 700; color: var(--text-muted);
-            cursor: pointer; z-index: 2; transition: color 0.3s;
+            flex: 1; text-align: center; 
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.85rem; font-weight: 700; 
+            color: var(--text-muted);
+            cursor: pointer; z-index: 2; 
+            transition: color 0.3s, transform 0.15s;
+            letter-spacing: 0.02em;
+            border-radius: 8px;
         }
-        .seg-btn.active { color: var(--text-main); }
+        .seg-btn:active { transform: scale(0.95); }
+        .seg-btn.active { 
+            color: var(--text-main);
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+        }
         .seg-slider {
-            position: absolute; top: 4px; bottom: 4px;
-            background: rgba(255,255,255,0.1); border-radius: 8px;
-            z-index: 1; transition: transform 0.3s ease, width 0.3s;
-            pointer-events: none; /* JAVÍTÁS: A csúszka sosem takarja el az érintést a gombok elől */
+            position: absolute; top: 5px; bottom: 5px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.08) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            z-index: 1; 
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), width 0.35s;
+            pointer-events: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
         }
 
-        /* --- ÚJ GOMB ÉS MODAL CSS --- */
+        /* --- TÚLÓRA gomb --- */
         .overtime-container {
-            display: none; animation: fadeInDown 0.3s ease-out;
+            display: none; animation: fadeInDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .btn-overtime {
-            width: 100%; background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
-            border: 1px solid var(--accent); color: var(--text-main); 
-            padding: 8px; border-radius: 10px; font-weight: 800; font-size: 0.8rem;
-            cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; 
-            transition: all 0.2s;
+            width: 100%; 
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.18) 0%, rgba(139, 92, 246, 0.18) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.4); 
+            color: var(--text-main); 
+            padding: 11px; 
+            border-radius: 11px; 
+            font-weight: 800; font-size: 0.82rem;
+            font-family: inherit;
+            letter-spacing: 0.01em;
+            cursor: pointer; 
+            display: flex; justify-content: center; align-items: center; gap: 8px; 
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            position: relative;
+            overflow: hidden;
         }
-        .btn-overtime:active { transform: scale(0.98); background: rgba(59, 130, 246, 0.25); }
+        .btn-overtime::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
+            transition: left 0.6s ease;
+        }
+        .btn-overtime:hover::before { left: 100%; }
+        .btn-overtime:active { transform: scale(0.985); }
 
+        /* --- MODALS --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-            z-index: 100; display: flex; justify-content: center; align-items: center;
-            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+            background: rgba(2, 6, 23, 0.78); 
+            backdrop-filter: blur(12px) saturate(140%); 
+            -webkit-backdrop-filter: blur(12px) saturate(140%);
+            z-index: 100; 
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; 
+            transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 16px;
         }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         
         .modal-content {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
-            width: 92%; max-width: 420px; max-height: 90vh; display: flex; flex-direction: column;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6); transform: translateY(30px); transition: transform 0.3s ease;
+            background: linear-gradient(180deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.92) 100%);
+            border: 1px solid var(--border-bright); 
+            border-radius: 20px;
+            width: 100%; max-width: 440px; max-height: 90vh; 
+            display: flex; flex-direction: column;
+            box-shadow: 
+                0 30px 80px rgba(0, 0, 0, 0.7),
+                0 0 0 1px rgba(255, 255, 255, 0.04),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            transform: translateY(40px) scale(0.96); 
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .modal-overlay.active .modal-content { transform: translateY(0); }
+        .modal-overlay.active .modal-content { transform: translateY(0) scale(1); }
         
         .modal-header { 
-            padding: 15px; border-bottom: 1px solid var(--border); 
+            padding: 18px 20px; 
+            border-bottom: 1px solid var(--border); 
             display: flex; justify-content: space-between; align-items: center; 
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
         }
-        .modal-header h2 { margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 8px;}
+        .modal-header h2 { 
+            margin: 0; 
+            font-size: 1.05rem; font-weight: 800; 
+            color: var(--text-main); 
+            display: flex; align-items: center; gap: 10px;
+            letter-spacing: -0.01em;
+        }
         .btn-close { 
-            background: rgba(255,255,255,0.1); border: none; color: var(--text-main); 
-            width: 30px; height: 30px; border-radius: 50%; font-size: 1.2rem; 
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            background: rgba(255, 255, 255, 0.06); 
+            border: 1px solid var(--border); 
+            color: var(--text-main); 
+            width: 34px; height: 34px; 
+            border-radius: 10px; 
+            font-size: 1.2rem; font-weight: 600;
+            cursor: pointer; 
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .btn-close:hover { 
+            background: rgba(239, 68, 68, 0.2); 
+            border-color: rgba(239, 68, 68, 0.5);
+            color: var(--danger);
         }
         
-        .modal-body { padding: 15px; overflow-y: auto; flex: 1; }
+        .modal-body { padding: 18px 20px; overflow-y: auto; flex: 1; }
+        
+        .modal-body::-webkit-scrollbar { width: 6px; }
+        .modal-body::-webkit-scrollbar-track { background: transparent; }
+        .modal-body::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 10px; }
+
         .period-select { 
-            width: 100%; padding: 12px; background: rgba(2,6,23,0.8); color: var(--text-main); 
-            border: 1px solid var(--accent); border-radius: 10px; margin-bottom: 15px; 
-            outline: none; font-size: 0.9rem; font-weight: 600; font-family: inherit;
+            width: 100%; padding: 13px 14px; 
+            background: rgba(2, 6, 23, 0.7); 
+            color: var(--text-main); 
+            border: 1.5px solid rgba(59, 130, 246, 0.4); 
+            border-radius: 11px; 
+            margin-bottom: 16px; 
+            outline: none; 
+            font-size: 0.88rem; font-weight: 700; 
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2394a3b8' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 36px;
+        }
+        .period-select:focus { 
+            border-color: var(--accent); 
+            box-shadow: 0 0 0 3px var(--accent-glow);
         }
         
         .holiday-item { 
-            background: rgba(255,255,255,0.03); border: 1px solid var(--border-light); 
-            padding: 12px; border-radius: 10px; margin-bottom: 10px; 
-            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
+            border: 1px solid var(--border-light); 
+            padding: 14px; border-radius: 12px; 
+            margin-bottom: 10px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            flex-wrap: wrap; gap: 10px;
+            transition: all 0.2s;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
         }
-        .holiday-info { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 150px;}
-        .h-date { font-size: 0.85rem; font-weight: 800; color: var(--text-main); }
-        .h-name { font-size: 0.75rem; color: var(--text-muted); font-weight: 600;}
+        .holiday-item:hover { 
+            border-color: var(--border-bright); 
+            transform: translateX(2px);
+        }
+        .holiday-info { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 150px; }
+        .h-date { font-size: 0.88rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.01em; }
+        .h-name { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
         
-        .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0;}
+        .toggle-switch { position: relative; display: inline-block; width: 48px; height: 26px; flex-shrink: 0; }
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
-        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border); transition: .3s; border-radius: 24px; }
-        .toggle-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: var(--text-main); transition: .3s; border-radius: 50%; }
-        input:checked + .toggle-slider { background-color: var(--accent); }
-        input:checked + .toggle-slider:before { transform: translateX(20px); }
+        .toggle-slider { 
+            position: absolute; cursor: pointer; 
+            top: 0; left: 0; right: 0; bottom: 0; 
+            background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-card) 100%);
+            border: 1px solid var(--border);
+            transition: 0.3s; border-radius: 26px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .toggle-slider:before { 
+            position: absolute; content: ""; 
+            height: 20px; width: 20px; 
+            left: 2px; bottom: 2px; 
+            background: linear-gradient(180deg, #f1f5f9 0%, #cbd5e1 100%);
+            transition: 0.3s; 
+            border-radius: 50%; 
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        input:checked + .toggle-slider { 
+            background: linear-gradient(180deg, #60a5fa 0%, var(--accent) 100%); 
+            border-color: var(--accent);
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+        input:checked + .toggle-slider:before { transform: translateX(22px); }
 
         .pro-select {
-            background: rgba(2, 6, 23, 0.9); border: 1px solid var(--border); color: var(--text-main);
-            padding: 6px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 700;
-            outline: none; cursor: pointer; font-family: inherit;
+            background: rgba(2, 6, 23, 0.85); 
+            border: 1px solid var(--border); 
+            color: var(--text-main);
+            padding: 8px 12px; 
+            border-radius: 9px; 
+            font-size: 0.78rem; font-weight: 700;
+            outline: none; cursor: pointer; 
+            font-family: inherit;
+            transition: all 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 12 8'%3E%3Cpath fill='%2394a3b8' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 28px;
         }
-        .pro-select:focus { border-color: var(--color-b); }
+        .pro-select:focus { 
+            border-color: var(--color-b); 
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
 
-        .result-box { margin-top: 20px; background: rgba(2,6,23,0.6); border: 1px solid var(--border); border-radius: 12px; padding: 15px; }
-        .res-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted); font-weight: 600;}
-        .res-row strong { color: var(--text-main); font-size: 0.95rem;}
-        .res-total { 
-            display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; 
-            border-top: 1px solid var(--border); font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+        .result-box { 
+            margin-top: 22px; 
+            background: linear-gradient(180deg, rgba(2, 6, 23, 0.7) 0%, rgba(15, 23, 42, 0.4) 100%);
+            border: 1px solid var(--border); 
+            border-radius: 14px; 
+            padding: 18px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
         }
-        .res-total strong { font-size: 1.4rem; }
-        .res-total .positive { color: var(--color-b); }
-        .res-total .negative { color: var(--danger); }
+        .res-row { 
+            display: flex; justify-content: space-between; 
+            align-items: center;
+            padding: 6px 0;
+            font-size: 0.87rem; color: var(--text-muted); 
+            font-weight: 600;
+        }
+        .res-row strong { color: var(--text-main); font-size: 0.98rem; font-weight: 800; }
+        .res-total { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-top: 14px; padding-top: 16px; 
+            border-top: 1px solid var(--border); 
+            font-size: 0.9rem; font-weight: 800; 
+            text-transform: uppercase; letter-spacing: 0.06em;
+            color: var(--text-muted);
+        }
+        .res-total strong { font-size: 1.6rem; letter-spacing: -0.02em; }
+        .res-total .positive { 
+            color: var(--color-b-light); 
+            text-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        }
+        .res-total .negative { 
+            color: var(--color-d-light); 
+            text-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+        }
         .res-total .neutral { color: var(--text-main); }
 
-        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulseRing {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
 
         /* --- NAPTÁR SZEKCIÓ --- */
         .calendar-section {
             flex: 1; display: flex; flex-direction: column;
-            padding: 0 10px 10px 10px; overflow: hidden;
+            padding: 0 12px 12px 12px; overflow: hidden;
+            position: relative;
+            z-index: 1;
         }
 
         .cal-header {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 8px; flex-shrink: 0;
+            margin-bottom: 10px; flex-shrink: 0;
+            padding: 4px 6px;
         }
         .cal-nav-btn {
-            background: transparent; border: none; color: var(--text-muted);
-            font-size: 1.5rem; cursor: pointer; padding: 0 15px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 1px solid var(--border); 
+            color: var(--text-muted);
+            font-size: 1.15rem; 
+            cursor: pointer; 
+            padding: 0; 
+            width: 38px; height: 38px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.25s;
+            box-shadow: var(--shadow-soft);
         }
-        .month-title { font-size: 1.1rem; font-weight: 900; letter-spacing: 1px; }
+        .cal-nav-btn:hover { 
+            color: var(--text-main); 
+            border-color: var(--border-bright);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.04) 100%);
+            transform: scale(1.05);
+        }
+        .cal-nav-btn:active { transform: scale(0.95); }
+        
+        .month-title { 
+            font-size: 1.15rem; font-weight: 900; 
+            letter-spacing: 0.04em;
+            background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            flex: 1;
+        }
 
         .weekdays {
             display: grid; grid-template-columns: repeat(7, 1fr);
-            text-align: center; margin-bottom: 6px; flex-shrink: 0;
+            text-align: center; 
+            margin-bottom: 8px; 
+            flex-shrink: 0;
+            padding: 0 2px;
         }
-        .weekday { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
+        .weekday { 
+            font-size: 0.7rem; font-weight: 800; 
+            color: var(--text-dim); 
+            text-transform: uppercase; 
+            letter-spacing: 0.08em;
+            padding: 4px 0;
+        }
+        .weekday:nth-child(6), .weekday:nth-child(7) { color: var(--color-d-light); opacity: 0.6; }
 
         .cal-grid-wrapper { flex: 1; overflow: hidden; position: relative; }
         .calendar-grid {
             display: grid; grid-template-columns: repeat(7, 1fr);
             grid-template-rows: repeat(6, 1fr);
-            gap: 4px; height: 100%; width: 100%;
-            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+            gap: 5px; height: 100%; width: 100%;
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease-out;
         }
 
         .cell {
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 8px; padding: 4px; 
+            background: linear-gradient(180deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.7) 100%);
+            border: 1px solid var(--border);
+            border-radius: 10px; 
+            padding: 5px; 
             display: flex; flex-direction: column; overflow: hidden;
+            transition: all 0.2s;
+            position: relative;
+            box-shadow: 
+                inset 0 1px 0 rgba(255, 255, 255, 0.04),
+                0 2px 6px rgba(0, 0, 0, 0.15);
         }
-        .cell.empty { background: transparent; border: none; }
-        .cell.today { border: 2px solid var(--danger); background: rgba(239, 68, 68, 0.05); }
+        .cell:hover { 
+            border-color: var(--border-bright);
+            transform: translateY(-1px);
+            box-shadow: 
+                inset 0 1px 0 rgba(255, 255, 255, 0.08),
+                0 6px 16px rgba(0, 0, 0, 0.3);
+        }
+        .cell.empty { 
+            background: transparent; 
+            border: none; 
+            box-shadow: none; 
+        }
+        .cell.empty:hover { transform: none; }
         
-        .cell-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: auto;}
-        .date-num { font-size: 0.85rem; font-weight: 800; color: var(--text-main); line-height: 1;}
-        .cell.weekend .date-num { color: var(--text-muted); }
-        .cell.today .date-num { color: var(--danger); }
-        .holiday-dot { width: 5px; height: 5px; background: var(--danger); border-radius: 50%; }
+        .cell.weekend { 
+            background: linear-gradient(180deg, rgba(20, 30, 50, 0.7) 0%, rgba(10, 15, 30, 0.6) 100%); 
+        }
+        
+        .cell.today { 
+            border: 2px solid var(--danger); 
+            background: linear-gradient(180deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.04) 100%); 
+            box-shadow: 
+                0 0 0 1px rgba(239, 68, 68, 0.2),
+                0 8px 24px rgba(239, 68, 68, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            animation: pulseRing 2.5s ease-in-out infinite;
+        }
 
-        .shifts-container { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
+        /* --- ÚJ: ÜNNEPNAP KIEMELÉS (markáns) --- */
+        .cell.holiday-cell {
+            background: linear-gradient(180deg, rgba(239, 68, 68, 0.18) 0%, rgba(239, 68, 68, 0.06) 100%) !important;
+            border-color: rgba(239, 68, 68, 0.4) !important;
+        }
+        .cell.holiday-cell.today { /* mai nap + ünnep esetén dominál a mai jelölés */
+            background: linear-gradient(180deg, rgba(239, 68, 68, 0.22) 0%, rgba(239, 68, 68, 0.1) 100%) !important;
+        }
+        /* Bal felső sarokba ferde piros háromszög - markáns ünnepjelző */
+        .cell.holiday-cell::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 0; height: 0;
+            border-top: 18px solid var(--danger);
+            border-right: 18px solid transparent;
+            z-index: 5;
+            filter: drop-shadow(0 1px 3px rgba(239, 68, 68, 0.5));
+        }
+        /* Csillag ikon a háromszögben */
+        .cell.holiday-cell::after {
+            content: '★';
+            position: absolute;
+            top: 0px; left: 2px;
+            font-size: 9px;
+            color: #fff;
+            z-index: 6;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+            line-height: 1;
+            font-weight: 900;
+        }
+        .cell.holiday-cell .date-num { color: var(--color-d-light); font-weight: 900; }
+        
+        .cell-header { 
+            display: flex; justify-content: flex-end; align-items: flex-start; 
+            margin-bottom: auto; 
+        }
+        .date-num { 
+            font-size: 0.9rem; font-weight: 800; 
+            color: var(--text-main); 
+            line-height: 1;
+            letter-spacing: -0.02em;
+        }
+        .cell.weekend .date-num { color: var(--text-muted); }
+        .cell.today .date-num { 
+            color: var(--danger);
+            text-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+            font-weight: 900;
+        }
+
+        .shifts-container { 
+            display: flex; flex-direction: column; 
+            gap: 3px; margin-top: 3px; 
+        }
         .shift-pill {
-            font-size: clamp(0.55rem, 1.5vh, 0.7rem);
-            font-weight: 800; padding: 2px 4px; border-radius: 4px;
+            font-size: clamp(0.55rem, 1.5vh, 0.72rem);
+            font-weight: 800; 
+            padding: 3px 5px; 
+            border-radius: 5px;
             display: flex; justify-content: space-between; align-items: center;
             white-space: nowrap; overflow: hidden;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            letter-spacing: 0.02em;
         }
-        .shift-pill span { opacity: 0.8; font-weight: 600; margin-right: 4px;}
+        .shift-pill span { opacity: 0.65; font-weight: 700; margin-right: 4px; font-size: 0.85em; }
         @media (max-width: 400px) { .shift-pill span { display: none; } .shift-pill { justify-content: center; } }
 
-        .pill-A { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
-        .pill-B { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
-        .pill-C { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
-        .pill-D { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+        .pill-A { 
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.28) 0%, rgba(59, 130, 246, 0.18) 100%); 
+            color: var(--color-a-light); 
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        .pill-B { 
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.28) 0%, rgba(16, 185, 129, 0.18) 100%); 
+            color: var(--color-b-light); 
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        .pill-C { 
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.28) 0%, rgba(245, 158, 11, 0.18) 100%); 
+            color: var(--color-c-light); 
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+        .pill-D { 
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.28) 0%, rgba(239, 68, 68, 0.18) 100%); 
+            color: var(--color-d-light); 
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
 
-        .cell.dimmed { opacity: 0.15; filter: grayscale(1); }
-        .shift-pill.highlight { justify-content: center; font-size: clamp(0.55rem, 1.2vh, 0.7rem); padding: 3px 2px; border: 1px solid currentColor; }
-        .shift-pill.highlight span { display: none; }
+        .cell.dimmed { 
+            opacity: 0.2; 
+            filter: grayscale(0.8); 
+        }
+
+        /* --- ÚJ: SZŰRT NÉZET PRO HIGHLIGHT --- */
+        /* Egész cella kap nagy belső kijelzőt: ☀️ NAPPAL vagy 🌙 ÉJJEL ikonnal, jól olvashatóan */
+        .shift-display-big {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            flex: 1;
+            gap: 2px;
+            padding: 2px;
+            border-radius: 7px;
+            position: relative;
+            margin-top: 2px;
+        }
+        .shift-display-big .sd-icon {
+            font-size: clamp(0.95rem, 2.4vh, 1.3rem);
+            line-height: 1;
+            filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
+        }
+        .shift-display-big .sd-label {
+            font-size: clamp(0.5rem, 1.2vh, 0.66rem);
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            line-height: 1;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+        }
+        /* NAPPAL - meleg sárgás-fehér, fényesebb */
+        .sd-day {
+            background: linear-gradient(180deg, rgba(251, 191, 36, 0.22) 0%, rgba(251, 191, 36, 0.08) 100%);
+            border: 1px solid rgba(251, 191, 36, 0.45);
+            color: #fde68a;
+            box-shadow: 
+                inset 0 1px 0 rgba(255, 255, 255, 0.12),
+                0 0 12px rgba(251, 191, 36, 0.15);
+        }
+        /* ÉJJEL - hideg indigó, sötétebb */
+        .sd-night {
+            background: linear-gradient(180deg, rgba(99, 102, 241, 0.22) 0%, rgba(67, 56, 202, 0.1) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.45);
+            color: #c7d2fe;
+            box-shadow: 
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                0 0 12px rgba(99, 102, 241, 0.18);
+        }
+
+        /* --- ÉVES STATISZTIKA - Modern Cards --- */
+        @media (max-width: 420px) { .stat-text-hide { display: none; } }
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: 1fr; 
+            gap: 14px; 
+        }
+        @media(min-width: 650px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
+        
+        .stat-card { 
+            background: linear-gradient(180deg, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.6) 100%);
+            border: 1px solid var(--border); 
+            border-radius: 14px; 
+            padding: 16px; 
+            box-shadow: 
+                0 12px 30px rgba(0, 0, 0, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.25s;
+        }
+        .stat-card:hover { transform: translateY(-2px); }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            border-radius: 14px 14px 0 0;
+        }
+        .stat-card-A::before { background: linear-gradient(90deg, var(--color-a) 0%, var(--color-a-light) 100%); box-shadow: 0 0 16px var(--accent-glow); }
+        .stat-card-B::before { background: linear-gradient(90deg, var(--color-b) 0%, var(--color-b-light) 100%); box-shadow: 0 0 16px rgba(16, 185, 129, 0.35); }
+        .stat-card-C::before { background: linear-gradient(90deg, var(--color-c) 0%, var(--color-c-light) 100%); box-shadow: 0 0 16px rgba(245, 158, 11, 0.35); }
+        .stat-card-D::before { background: linear-gradient(90deg, var(--color-d) 0%, var(--color-d-light) 100%); box-shadow: 0 0 16px var(--danger-glow); }
+
+        .stat-card h3 { 
+            margin: 0 0 12px 0; 
+            text-align: center; 
+            font-size: 1.05rem; font-weight: 900; 
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+        .stat-card-A h3 { color: var(--color-a-light); }
+        .stat-card-B h3 { color: var(--color-b-light); }
+        .stat-card-C h3 { color: var(--color-c-light); }
+        .stat-card-D h3 { color: var(--color-d-light); }
+        
+        /* --- ÚJ: BIG NUMBER SHOWCASE --- */
+        .stat-big-row {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .stat-big {
+            background: linear-gradient(180deg, rgba(2, 6, 23, 0.55) 0%, rgba(15, 23, 42, 0.35) 100%);
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            padding: 10px 8px;
+            text-align: center;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        }
+        .stat-big-num {
+            font-size: 1.55rem; font-weight: 900;
+            line-height: 1;
+            letter-spacing: -0.02em;
+            color: var(--text-main);
+            display: block;
+            margin-bottom: 3px;
+        }
+        .stat-big-label {
+            font-size: 0.6rem; font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            line-height: 1.1;
+        }
+        .stat-big.acc .stat-big-num { color: var(--color-b-light); text-shadow: 0 0 12px rgba(16, 185, 129, 0.3); }
+        .stat-big.warn .stat-big-num { color: var(--color-c-light); text-shadow: 0 0 12px rgba(245, 158, 11, 0.3); }
+
+        /* Mini bar chart - nappal/éjjel arány */
+        .ratio-bar {
+            display: flex; height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 4px 0 12px 0;
+            background: rgba(2, 6, 23, 0.5);
+            border: 1px solid var(--border-light);
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        .ratio-day {
+            background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+        .ratio-night {
+            background: linear-gradient(90deg, #818cf8 0%, #6366f1 100%);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+        .ratio-legend {
+            display: flex; justify-content: space-between;
+            font-size: 0.7rem; font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+            letter-spacing: 0.02em;
+        }
+        .ratio-legend span:first-child { color: var(--color-c-light); }
+        .ratio-legend span:last-child { color: #a5b4fc; }
+
+        .stat-row-stat { 
+            display: flex; justify-content: space-between; 
+            align-items: center;
+            padding: 7px 0; 
+            border-bottom: 1px dashed var(--border-light); 
+            font-size: 0.82rem; color: var(--text-muted); 
+            font-weight: 600;
+        }
+        .stat-row-stat:last-child { border-bottom: none; }
+        .stat-row-stat strong { 
+            color: var(--text-main); 
+            font-weight: 800; 
+            font-size: 0.87rem;
+        }
+        .stat-highlight { 
+            color: var(--accent) !important; 
+            font-weight: 900 !important; 
+            font-size: 1.05rem !important;
+            text-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        /* Stats section title (divider) */
+        .stat-section-title {
+            font-size: 0.65rem; font-weight: 800;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            padding: 8px 0 4px 0;
+            margin-top: 6px;
+            border-top: 1px solid var(--border-light);
+            display: flex; align-items: center; gap: 6px;
+        }
+        .stat-section-title:first-of-type { border-top: none; padding-top: 4px; margin-top: 0; }
+
+        /* Hours estimate panel */
+        .stat-hours-panel {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(139, 92, 246, 0.08) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 10px;
+            text-align: center;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+        .stat-hours-panel .h-num {
+            font-size: 1.4rem; font-weight: 900;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: block;
+            line-height: 1;
+            margin-bottom: 3px;
+        }
+        .stat-hours-panel .h-label {
+            font-size: 0.62rem; font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
 
         /* --- NYOMTATÁSI NÉZET --- */
         #printContainer { display: none; }
 
         @media print {
-            @page { size: A4 portrait; margin: 10mm; }
+            @page { size: A4 portrait; margin: 8mm; }
             body { background: white !important; color: black !important; display: block; height: auto; overflow: visible; }
+            body::before { display: none !important; }
             .app-header, .filter-container, .main-layout { display: none !important; }
             #printContainer { display: block !important; width: 100%; height: 100%; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
-            .print-header { text-align: center; margin-bottom: 10px; border-bottom: 2px solid black; padding-bottom: 10px; }
-            .print-header h1 { font-size: 16pt; margin: 0; color: black; font-weight: 900; }
+            /* --- PRO HEADER (kompakt) --- */
+            .print-header { 
+                text-align: center; 
+                margin-bottom: 6px; 
+                padding-bottom: 6px;
+                border-bottom: 2px solid #1e293b;
+                position: relative;
+            }
+            .print-header h1 { 
+                font-size: 14pt; margin: 0; 
+                color: #0f172a; 
+                font-weight: 900;
+                letter-spacing: 0.5px;
+            }
+            .print-header h1 .accent {
+                color: #3b82f6;
+            }
+            .print-subtitle {
+                font-size: 7pt; color: #64748b; 
+                margin-top: 2px; font-weight: 600;
+                letter-spacing: 1px;
+                text-transform: uppercase;
+            }
             
-            .year-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(4, 1fr); gap: 6px; height: 260mm; }
+            /* --- LEGEND (műszak színek magyarázata) --- */
+            .print-legend {
+                display: flex; justify-content: center; gap: 14px;
+                font-size: 6.5pt; font-weight: 700;
+                margin: 3px 0 6px 0;
+                color: #334155;
+            }
+            .print-legend-item {
+                display: inline-flex; align-items: center; gap: 4px;
+            }
+            .print-legend-swatch {
+                display: inline-block; 
+                width: 9px; height: 9px;
+                border-radius: 2px;
+                vertical-align: middle;
+            }
             
-            .print-month-box { border: 1px solid #000; padding: 4px; display: flex; flex-direction: column; }
-            .print-month-title { text-align: center; font-weight: 800; font-size: 10pt; background: #eee; border-bottom: 1px solid #000; margin: -4px -4px 4px -4px; padding: 2px 0; text-transform: uppercase;}
+            .year-grid { 
+                display: grid; 
+                grid-template-columns: repeat(3, 1fr); 
+                grid-template-rows: repeat(4, 1fr); 
+                gap: 5px; 
+                height: 258mm;
+            }
             
-            .print-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 6pt; font-weight: bold; border-bottom: 1px solid #ccc; margin-bottom: 2px; }
+            .print-month-box { 
+                border: 1px solid #475569; 
+                border-radius: 4px;
+                padding: 3px; 
+                display: flex; flex-direction: column;
+                background: white;
+            }
+            .print-month-title { 
+                text-align: center; 
+                font-weight: 900; 
+                font-size: 9.5pt; 
+                background: linear-gradient(180deg, #1e293b 0%, #334155 100%);
+                color: white !important;
+                border-bottom: 1px solid #1e293b; 
+                margin: -3px -3px 3px -3px; 
+                padding: 3px 0; 
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                border-radius: 4px 4px 0 0;
+            }
             
-            .print-days-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(6, 1fr); gap: 1px; flex: 1; }
+            .print-weekdays { 
+                display: grid; 
+                grid-template-columns: repeat(7, 1fr); 
+                text-align: center; 
+                font-size: 5.5pt; 
+                font-weight: 800; 
+                border-bottom: 1px solid #cbd5e1; 
+                margin-bottom: 2px;
+                color: #475569;
+                padding-bottom: 1px;
+            }
+            .print-weekdays > div:nth-child(6),
+            .print-weekdays > div:nth-child(7) {
+                color: #ef4444;
+            }
             
-            /* SZENT GRÁL MÉRETEK + KÉRT DIZÁJN (Keret sötétebb, kerekített) */
-            .print-cell { border: 1px solid #666; border-radius: 3px; display: flex; flex-direction: column; padding: 1px; font-size: 6pt; overflow: hidden; position: relative;}
-            .print-cell.empty { border: none; }
-            .print-cell.weekend { background: #f9f9f9; }
+            .print-days-grid { 
+                display: grid; 
+                grid-template-columns: repeat(7, 1fr); 
+                grid-template-rows: repeat(6, 1fr); 
+                gap: 1px; 
+                flex: 1; 
+            }
             
-            /* SZENT GRÁL MÉRETEK + KÉRT DIZÁJN (Középre igazítva) */
-            .print-date-num { font-weight: 900; line-height: 1; text-align: center; }
-            .print-shifts { margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 1px; }
+            .print-cell { 
+                border: 1px solid #94a3b8; 
+                border-radius: 2px; 
+                display: flex; flex-direction: column; 
+                padding: 1px; 
+                font-size: 6pt; 
+                overflow: hidden; 
+                position: relative;
+                background: white;
+            }
+            .print-cell.empty { border: none; background: transparent; }
+            .print-cell.weekend { background: #f1f5f9; }
+            .print-cell.holiday-print { 
+                background: #fee2e2 !important; 
+                border-color: #ef4444 !important;
+            }
+            .print-cell.holiday-print .print-date-num {
+                color: #b91c1c !important;
+            }
+            /* Mai nap kiemelés nyomtatásban is */
+            .print-cell.today-print {
+                border: 1.5px solid #1e293b !important;
+                background: #fef3c7 !important;
+            }
             
-            /* SZENT GRÁL MÉRETEK + KÉRT DIZÁJN (Pirulák szélessége beállítva) */
-            .p-pill { width: 90%; font-size: 5pt; font-weight: 900; text-align: center; border-radius: 2px; color: white !important; line-height: 1.1; padding: 1px 0;}
+            .print-date-num { 
+                font-weight: 900; 
+                line-height: 1; 
+                text-align: center; 
+                color: #0f172a;
+                font-size: 6.5pt;
+            }
+            .print-shifts { 
+                margin-top: auto; 
+                display: flex; 
+                flex-direction: column; 
+                align-items: center; 
+                gap: 1px; 
+            }
+            
+            .p-pill { 
+                width: 90%; 
+                font-size: 5pt; 
+                font-weight: 900; 
+                text-align: center; 
+                border-radius: 2px; 
+                color: white !important; 
+                line-height: 1.1; 
+                padding: 1px 0;
+                letter-spacing: 0.3px;
+            }
             .p-A { background: var(--color-a) !important; }
             .p-B { background: var(--color-b) !important; }
             .p-C { background: var(--color-c) !important; }
             .p-D { background: var(--color-d) !important; }
-        }
 
-        /* --- ÚJ: ÉVES STATISZTIKA CSS (KIZÁRÓLAG HOZZÁADVA) --- */
-        @media (max-width: 420px) { .stat-text-hide { display: none; } }
-        .stats-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
-        @media(min-width: 650px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
-        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.2);}
-        .stat-card-A { border-top: 4px solid var(--color-a); }
-        .stat-card-B { border-top: 4px solid var(--color-b); }
-        .stat-card-C { border-top: 4px solid var(--color-c); }
-        .stat-card-D { border-top: 4px solid var(--color-d); }
-        .stat-card h3 { margin: 0 0 10px 0; text-align: center; font-size: 1.1rem; font-weight: 900; letter-spacing: 0.5px;}
-        .stat-card-A h3 { color: var(--color-a); }
-        .stat-card-B h3 { color: var(--color-b); }
-        .stat-card-C h3 { color: var(--color-c); }
-        .stat-card-D h3 { color: var(--color-d); }
-        .stat-row-stat { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed var(--border-light); font-size: 0.8rem; color: var(--text-muted); font-weight: 600;}
-        .stat-row-stat:last-child { border-bottom: none; }
-        .stat-row-stat strong { color: var(--text-main); font-weight: 800; font-size: 0.85rem;}
-        .stat-highlight { color: var(--accent); font-weight: 900; font-size: 1rem !important;}
+            /* Lábléc kis info */
+            .print-footer {
+                text-align: center;
+                font-size: 5.5pt;
+                color: #94a3b8;
+                margin-top: 3px;
+                font-weight: 600;
+                letter-spacing: 0.5px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -299,8 +1035,7 @@
             <h1>FORVIA <span>SMT</span></h1>
         </div>
         <div class="header-actions">
-            <!-- ÚJ: Statisztika gomb a fejlécben (Eredeti gombok érintetlenek) -->
-            <button class="btn-modern" onclick="openYearlyStatsModal()" style="color: var(--color-b); border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.1);">
+            <button class="btn-modern btn-stats" onclick="openYearlyStatsModal()">
                 <span style="font-size: 1rem;">📊</span> <span class="stat-text-hide">Éves Stat.</span>
             </button>
             <button class="btn-modern btn-today" onclick="jumpToToday()">Mai</button>
@@ -317,7 +1052,6 @@
             <div class="seg-btn" onclick="setFilter('C', 3)">"C"</div>
             <div class="seg-btn" onclick="setFilter('D', 4)">"D"</div>
         </div>
-        <!-- ÚJ: Keret elszámolás gomb -->
         <div class="overtime-container" id="overtimeBtnContainer">
             <button class="btn-overtime" onclick="openOvertimeModal()">
                 ⏱️ Negyedéves Keret Elszámolás (Túlóra)
@@ -343,27 +1077,24 @@
             </div>
         </section>
 
-        <!-- ÚJ: Éves Statisztika Modal (Hozzáadva a main-layout-on belül, hogy a nyomtatás ne lássa) -->
         <div class="modal-overlay" id="statsModal">
-            <div class="modal-content" style="max-width: 800px; width: 95%;">
+            <div class="modal-content" style="max-width: 860px; width: 95%;">
                 <div class="modal-header">
                     <h2>📊 <span id="statsYearLabel"></span>. Éves Statisztika</h2>
                     <button class="btn-close" onclick="closeYearlyStatsModal()">×</button>
                 </div>
-                <div style="text-align:center; padding: 8px 15px; background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--border); font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">
-                    Törvényes ünnepnapok száma az évben: <strong id="totalHolidaysLabel" style="color: var(--danger); font-size: 1rem;"></strong>
+                <div style="padding: 10px 18px; background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%); border-bottom: 1px solid var(--border); font-size: 0.78rem; color: var(--text-muted); font-weight: 600; display: flex; flex-wrap: wrap; gap: 14px; justify-content: center;">
+                    <span>📆 Naptári napok: <strong id="statsTotalDays" style="color: var(--text-main); font-size: 0.95rem;"></strong></span>
+                    <span>🎉 Ünnepnapok: <strong id="totalHolidaysLabel" style="color: var(--danger); font-size: 0.95rem; text-shadow: 0 0 10px var(--danger-glow);"></strong></span>
+                    <span>📅 Hétvégék: <strong id="statsTotalWeekend" style="color: var(--color-c-light); font-size: 0.95rem;"></strong></span>
                 </div>
-                <div class="modal-body" style="padding: 15px; overflow-y: auto;">
+                <div class="modal-body" style="padding: 16px; overflow-y: auto;">
                     <div class="stats-grid" id="statsGrid">
-                        <!-- JS generálja -->
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- A JAVÍTÁS ITT VAN: A Modal a main-layout-on belülre került! 
-             Így amikor a nyomtatási CSS eltünteti a main-layout-ot, 
-             ez a kód is a semmibe vész, garantáltan nulla sortörést hagyva! -->
         <div class="modal-overlay" id="otModal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -391,7 +1122,6 @@
     <div id="printContainer"></div>
 
 <script>
-    /* --- ÚJ: Mozgó ünnepek automatikus számítása (Meeus/Jones/Butcher algoritmus) --- */
     function getEaster(year) {
         let a = year % 19;
         let b = Math.floor(year / 100);
@@ -486,7 +1216,6 @@
         btns[index].classList.add('active');
         document.getElementById('segSlider').style.transform = `translateX(${index * 100}%)`;
         
-        // Gomb megjelenítése/elrejtése a szűrő alapján
         const otBtn = document.getElementById('overtimeBtnContainer');
         if (shift === 'ALL') {
             otBtn.style.display = 'none';
@@ -551,10 +1280,11 @@
             const shiftData = getShiftForDate(iterDate);
             const mmdd = `${String(month + 1).padStart(2, '0')}-${String(dayCounter).padStart(2, '0')}`;
             
-            // Ünnep lekérdezése az új automata algoritmussal
             const holidayName = getHolidayName(year, mmdd);
+            const isHoliday = !!holidayName;
             
-            let cellClass = `cell ${isToday ? 'today' : ''} ${isWeekend ? 'weekend' : ''}`;
+            let cellClass = `cell ${isToday ? 'today' : ''} ${isWeekend ? 'weekend' : ''} ${isHoliday ? 'holiday-cell' : ''}`;
+            let titleAttr = isHoliday ? `title="${holidayName}"` : '';
             let shiftsHtml = '';
 
             if(currentFilter === 'ALL') {
@@ -564,21 +1294,29 @@
                 `;
             } else {
                 if(shiftData.day === currentFilter) {
-                    shiftsHtml = `<div class="shift-pill pill-${shiftData.day} highlight"><strong>NAPPAL</strong></div>`;
+                    // ÚJ: nagy ikon + szöveg nappal/éjjel kijelző
+                    shiftsHtml = `
+                        <div class="shift-display-big sd-day">
+                            <div class="sd-icon">☀️</div>
+                            <div class="sd-label">NAPPAL</div>
+                        </div>`;
                 } else if(shiftData.night === currentFilter) {
-                    shiftsHtml = `<div class="shift-pill pill-${shiftData.night} highlight"><strong>ÉJJEL</strong></div>`;
+                    shiftsHtml = `
+                        <div class="shift-display-big sd-night">
+                            <div class="sd-icon">🌙</div>
+                            <div class="sd-label">ÉJJEL</div>
+                        </div>`;
                 } else {
                     cellClass += ' dimmed';
                 }
             }
 
             grid.innerHTML += `
-                <div class="${cellClass}">
+                <div class="${cellClass}" ${titleAttr}>
                     <div class="cell-header">
                         <span class="date-num">${dayCounter}</span>
-                        ${holidayName ? '<div class="holiday-dot"></div>' : ''}
                     </div>
-                    <div class="shifts-container">${shiftsHtml}</div>
+                    ${shiftsHtml}
                 </div>
             `;
             dayCounter++;
@@ -603,10 +1341,20 @@
     function prepareAndPrint() {
         const year = currentDate.getFullYear();
         const container = document.getElementById('printContainer');
+        const todayDate = new Date();
+        const todayIso = new Date(todayDate.getTime() - (todayDate.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
         
         let html = `
             <div class="print-header">
-                <h1>FORVIA SMT Éves Műszakbeosztás - ${year}</h1>
+                <h1>FORVIA <span class="accent">SMT</span> — Éves Műszakbeosztás <span class="accent">${year}</span></h1>
+                <div class="print-subtitle">12 napos műszakciklus · A, B, C, D műszakok</div>
+            </div>
+            <div class="print-legend">
+                <div class="print-legend-item"><span class="print-legend-swatch p-A"></span> "A" műszak</div>
+                <div class="print-legend-item"><span class="print-legend-swatch p-B"></span> "B" műszak</div>
+                <div class="print-legend-item"><span class="print-legend-swatch p-C"></span> "C" műszak</div>
+                <div class="print-legend-item"><span class="print-legend-swatch p-D"></span> "D" műszak</div>
+                <div class="print-legend-item"><span class="print-legend-swatch" style="background:#fee2e2; border:1px solid #ef4444;"></span> Ünnep</div>
             </div>
             <div class="year-grid">
         `;
@@ -633,8 +1381,21 @@
                 const isWeekend = iterDate.getDay() === 0 || iterDate.getDay() === 6;
                 const shiftData = getShiftForDate(iterDate);
                 
+                // ünnepnap kiemelése a nyomtatásban is
+                const mmdd = `${String(m + 1).padStart(2, '0')}-${String(dayCounter).padStart(2, '0')}`;
+                const isHoliday = !!getHolidayName(year, mmdd);
+                
+                // mai nap a nyomtatás idejéhez képest
+                const iso = new Date(iterDate.getTime() - (iterDate.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+                const isToday = (iso === todayIso);
+                
+                let cellClasses = 'print-cell';
+                if(isWeekend) cellClasses += ' weekend';
+                if(isHoliday) cellClasses += ' holiday-print';
+                if(isToday) cellClasses += ' today-print';
+                
                 html += `
-                    <div class="print-cell ${isWeekend ? 'weekend' : ''}">
+                    <div class="${cellClasses}">
                         <div class="print-date-num">${dayCounter}</div>
                         <div class="print-shifts">
                             <div class="p-pill p-${shiftData.day}">${shiftData.day}</div>
@@ -648,12 +1409,16 @@
         }
 
         html += `</div>`; 
+        
+        // lábléc
+        const printDate = `${todayDate.getFullYear()}.${String(todayDate.getMonth()+1).padStart(2,'0')}.${String(todayDate.getDate()).padStart(2,'0')}`;
+        html += `<div class="print-footer">Nyomtatva: ${printDate} · Forvia SMT Pro Premium Műszaknaptár</div>`;
+        
         container.innerHTML = html;
 
         setTimeout(() => { window.print(); }, 100);
     }
 
-    /* --- TÚLÓRA (KERET) LOGIKA --- */
     let holidayOverrides = {};
     let currentPeriods = [];
 
@@ -747,7 +1512,7 @@
                         workedHours += val;
                         
                         holidayHTML += `
-                            <div class="holiday-item" style="border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.05);">
+                            <div class="holiday-item" style="border-color: rgba(16, 185, 129, 0.4); background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.02) 100%);">
                                 <div class="holiday-info">
                                     <span class="h-date">${monthNames[d.getMonth()]} ${d.getDate()}. - ${holidayName}</span>
                                     <span class="h-name">ÉJSZAKÁS (Módosítható Pro Opció)</span>
@@ -789,9 +1554,9 @@
         
         const hContainer = document.getElementById('holidayQuestions');
         if (holidayHTML !== '') {
-            hContainer.innerHTML = `<div style="font-size: 0.8rem; color: var(--accent); margin-bottom: 10px; font-weight:700;">Érintett ünnepnapok (Állítsd be, ahogy dolgoztál!):</div>` + holidayHTML;
+            hContainer.innerHTML = `<div style="font-size: 0.8rem; color: var(--accent); margin-bottom: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; padding-left: 4px;">Érintett ünnepnapok (Állítsd be, ahogy dolgoztál!):</div>` + holidayHTML;
         } else {
-            hContainer.innerHTML = `<div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px; text-align: center; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px;">Ebben a 3 hónapban a beosztásod nem érintett ünnepnapot.</div>`;
+            hContainer.innerHTML = `<div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 15px; text-align: center; background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%); padding: 14px; border-radius: 12px; border: 1px solid var(--border-light); font-weight: 600;">Ebben a 3 hónapban a beosztásod nem érintett ünnepnapot.</div>`;
         }
         
         let diff = workedHours - baseHours;
@@ -808,29 +1573,34 @@
         calculateAndRenderOvertime(); 
     }
 
-    /* --- ÚJ: ÉVES STATISZTIKA LOGIKA (KIZÁRÓLAG HOZZÁADVA) --- */
     function openYearlyStatsModal() {
         const year = currentDate.getFullYear();
         document.getElementById('statsYearLabel').innerText = year;
         
+        // BŐVÍTETT STATISZTIKA
         const stats = {
-            'A': { total: 0, day: 0, night: 0, weekend: 0, sunday: 0, holiday: 0 },
-            'B': { total: 0, day: 0, night: 0, weekend: 0, sunday: 0, holiday: 0 },
-            'C': { total: 0, day: 0, night: 0, weekend: 0, sunday: 0, holiday: 0 },
-            'D': { total: 0, day: 0, night: 0, weekend: 0, sunday: 0, holiday: 0 }
+            'A': { total: 0, day: 0, night: 0, weekend: 0, sunday: 0, saturday: 0, holiday: 0, holidayDay: 0, holidayNight: 0, friNight: 0, longestStreak: 0, currentStreak: 0, lastWasWork: false, byMonth: Array(12).fill(0) },
+            'B': { total: 0, day: 0, night: 0, weekend: 0, sunday: 0, saturday: 0, holiday: 0, holidayDay: 0, holidayNight: 0, friNight: 0, longestStreak: 0, currentStreak: 0, lastWasWork: false, byMonth: Array(12).fill(0) },
+            'C': { total: 0, day: 0, night: 0, weekend: 0, sunday: 0, saturday: 0, holiday: 0, holidayDay: 0, holidayNight: 0, friNight: 0, longestStreak: 0, currentStreak: 0, lastWasWork: false, byMonth: Array(12).fill(0) },
+            'D': { total: 0, day: 0, night: 0, weekend: 0, sunday: 0, saturday: 0, holiday: 0, holidayDay: 0, holidayNight: 0, friNight: 0, longestStreak: 0, currentStreak: 0, lastWasWork: false, byMonth: Array(12).fill(0) }
         };
         
         const isLeapYear = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
         const daysInYear = isLeapYear ? 366 : 365;
         let uniqueHolidays = new Set();
+        let weekendDaysCount = 0;
         
-        // Végigmegyünk az év összes napján (szökőévet is figyelembe véve)
         for (let m = 0; m < 12; m++) {
             const daysInMonth = new Date(year, m + 1, 0).getDate();
             for (let d = 1; d <= daysInMonth; d++) {
                 const iterDate = new Date(year, m, d);
-                const isWeekend = iterDate.getDay() === 0 || iterDate.getDay() === 6;
-                const isSunday = iterDate.getDay() === 0;
+                const dow = iterDate.getDay();
+                const isSaturday = dow === 6;
+                const isSunday = dow === 0;
+                const isWeekend = isSaturday || isSunday;
+                const isFriday = dow === 5;
+                
+                if (isWeekend) weekendDaysCount++;
                 
                 const mmdd = `${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                 const holidayName = getHolidayName(year, mmdd);
@@ -842,42 +1612,102 @@
                 
                 const shiftData = getShiftForDate(iterDate);
                 
-                const processShift = (shiftId, type) => {
-                    if(stats[shiftId]) {
-                        stats[shiftId].total++;
-                        if (type === 'day') stats[shiftId].day++;
-                        if (type === 'night') stats[shiftId].night++;
-                        if (isWeekend) stats[shiftId].weekend++;
-                        if (isSunday) stats[shiftId].sunday++;
-                        if (isHoliday) stats[shiftId].holiday++;
+                // Set helper: melyik műszakot érinti az adott nap (day és night oldalon)
+                ['A','B','C','D'].forEach(shiftId => {
+                    const isDay = (shiftData.day === shiftId);
+                    const isNight = (shiftData.night === shiftId);
+                    if (isDay || isNight) {
+                        const s = stats[shiftId];
+                        s.total++;
+                        if (isDay) s.day++;
+                        if (isNight) s.night++;
+                        if (isWeekend) s.weekend++;
+                        if (isSunday) s.sunday++;
+                        if (isSaturday) s.saturday++;
+                        if (isHoliday) {
+                            s.holiday++;
+                            if (isDay) s.holidayDay++;
+                            if (isNight) s.holidayNight++;
+                        }
+                        if (isFriday && isNight) s.friNight++;
+                        s.byMonth[m]++;
+                        
+                        // Streak (egymás utáni munkanapok)
+                        if (s.lastWasWork) {
+                            s.currentStreak++;
+                        } else {
+                            s.currentStreak = 1;
+                        }
+                        if (s.currentStreak > s.longestStreak) s.longestStreak = s.currentStreak;
+                        s.lastWasWork = true;
+                    } else {
+                        stats[shiftId].lastWasWork = false;
+                        stats[shiftId].currentStreak = 0;
                     }
-                };
-                
-                processShift(shiftData.day, 'day');
-                processShift(shiftData.night, 'night');
+                });
             }
         }
         
         document.getElementById('totalHolidaysLabel').innerText = `${uniqueHolidays.size} nap`;
+        document.getElementById('statsTotalDays').innerText = `${daysInYear} nap`;
+        document.getElementById('statsTotalWeekend').innerText = `${weekendDaysCount} nap`;
         
         const grid = document.getElementById('statsGrid');
         grid.innerHTML = '';
         
-        // Kártyák generálása
         ['A', 'B', 'C', 'D'].forEach(shift => {
             const s = stats[shift];
             const restDays = daysInYear - s.total;
+            const workedPct = ((s.total / daysInYear) * 100).toFixed(1);
+            const dayPct = s.total > 0 ? Math.round((s.day / s.total) * 100) : 50;
+            const nightPct = 100 - dayPct;
+            const estimatedHours = s.total * 12; // 12 órás műszak alapján
+            const busiestMonth = s.byMonth.indexOf(Math.max(...s.byMonth));
+            const calmestMonth = s.byMonth.indexOf(Math.min(...s.byMonth));
             
             grid.innerHTML += `
                 <div class="stat-card stat-card-${shift}">
-                    <h3>"${shift}" Műszak Részletek</h3>
-                    <div class="stat-row-stat"><span>Pihenőnapok az évben:</span> <strong class="stat-highlight">${restDays} nap</strong></div>
-                    <div class="stat-row-stat" style="margin-top: 8px;"><span>Összes munkanap (Műszak):</span> <strong>${s.total} nap</strong></div>
-                    <div class="stat-row-stat"><span>&nbsp;&nbsp;├ Ebből nappalos:</span> <strong>${s.day} nap</strong></div>
-                    <div class="stat-row-stat"><span>&nbsp;&nbsp;└ Ebből éjszakás:</span> <strong>${s.night} nap</strong></div>
-                    <div class="stat-row-stat" style="margin-top: 8px;"><span>Hétvégi munkanap:</span> <strong>${s.weekend} nap</strong></div>
-                    <div class="stat-row-stat"><span>&nbsp;&nbsp;└ Ebből vasárnap:</span> <strong style="color: var(--danger);">${s.sunday} nap</strong></div>
-                    <div class="stat-row-stat" style="margin-top: 8px;"><span>Ünnepnapon végzett munka:</span> <strong>${s.holiday} nap</strong></div>
+                    <h3>"${shift}" Műszak</h3>
+                    
+                    <div class="stat-big-row">
+                        <div class="stat-big">
+                            <span class="stat-big-num">${s.total}</span>
+                            <span class="stat-big-label">Munkanap<br>(${workedPct}%)</span>
+                        </div>
+                        <div class="stat-big acc">
+                            <span class="stat-big-num">${restDays}</span>
+                            <span class="stat-big-label">Pihenőnap</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-section-title">☀️🌙 Nappal / Éjjel megoszlás</div>
+                    <div class="ratio-bar">
+                        <div class="ratio-day" style="width:${dayPct}%;"></div>
+                        <div class="ratio-night" style="width:${nightPct}%;"></div>
+                    </div>
+                    <div class="ratio-legend">
+                        <span>☀️ ${s.day} nappal (${dayPct}%)</span>
+                        <span>${s.night} éjjel 🌙 (${nightPct}%)</span>
+                    </div>
+
+                    <div class="stat-section-title">📅 Hétvégék & Ünnepek</div>
+                    <div class="stat-row-stat"><span>Hétvégi munkanap:</span> <strong>${s.weekend} nap</strong></div>
+                    <div class="stat-row-stat"><span>&nbsp;&nbsp;├ Szombatok:</span> <strong>${s.saturday} nap</strong></div>
+                    <div class="stat-row-stat"><span>&nbsp;&nbsp;└ Vasárnapok:</span> <strong style="color: var(--danger);">${s.sunday} nap</strong></div>
+                    <div class="stat-row-stat" style="margin-top: 4px;"><span>Ünnepnapon munka:</span> <strong style="color: var(--danger);">${s.holiday} nap</strong></div>
+                    <div class="stat-row-stat"><span>&nbsp;&nbsp;├ Nappalos ünnep:</span> <strong>${s.holidayDay} nap</strong></div>
+                    <div class="stat-row-stat"><span>&nbsp;&nbsp;└ Éjszakás ünnep:</span> <strong>${s.holidayNight} nap</strong></div>
+
+                    <div class="stat-section-title">📊 Heti ritmus</div>
+                    <div class="stat-row-stat"><span>🌃 Péntek esti éjszakás:</span> <strong>${s.friNight} db</strong></div>
+                    <div class="stat-row-stat"><span>🔥 Leghosszabb széria:</span> <strong>${s.longestStreak} nap</strong></div>
+                    <div class="stat-row-stat"><span>📈 Legtöbbet dolgozott hó:</span> <strong>${monthNames[busiestMonth]} (${s.byMonth[busiestMonth]})</strong></div>
+                    <div class="stat-row-stat"><span>📉 Legkevesebbet dolgozott hó:</span> <strong>${monthNames[calmestMonth]} (${s.byMonth[calmestMonth]})</strong></div>
+
+                    <div class="stat-hours-panel">
+                        <span class="h-num">~${estimatedHours.toLocaleString('hu-HU')} óra</span>
+                        <span class="h-label">Becsült éves óraszám (12h/nap)</span>
+                    </div>
                 </div>
             `;
         });
