@@ -38,42 +38,6 @@ body {
 .brand { font-weight: 700; font-size: 1rem; color: var(--accent); letter-spacing: 0.5px; }
 .date-display { font-size: 0.75rem; color: var(--text-secondary); font-family: monospace; }
 
-/* ÚJ: Online/Offline indikátor */
-.net-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.7rem;
-    font-family: monospace;
-    padding: 3px 8px;
-    border-radius: 12px;
-    background: rgba(16, 185, 129, 0.1);
-    border: 1px solid rgba(16, 185, 129, 0.3);
-    color: #6ee7b7;
-    transition: all 0.3s;
-}
-.net-status.offline {
-    background: rgba(245, 158, 11, 0.1);
-    border-color: rgba(245, 158, 11, 0.3);
-    color: #fcd34d;
-}
-.net-status .dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #10b981;
-    box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
-    animation: pulseLed 2s infinite;
-}
-.net-status.offline .dot {
-    background: #f59e0b;
-    box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
-}
-@keyframes pulseLed {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
 /* KERESŐ WRAPPER (PC) */
 .search-wrapper { 
     padding: 30px 15px 15px 15px; 
@@ -302,18 +266,6 @@ input.suggestions-active {
 .idle-text { font-family: monospace; font-size: 1.1rem; font-weight: 800; color: var(--text-secondary); letter-spacing: 2px; margin-bottom: 8px; pointer-events: none;}
 .idle-sub { font-size: 0.85rem; font-weight: normal; color: #64748b; font-family: monospace; text-transform: uppercase; pointer-events: none;}
 .idle-sub span { color: var(--accent); font-weight: bold; font-size: 1.1rem; margin-right: 4px;}
-
-/* ÚJ: Idle state extra info - cache állapot */
-.idle-cache-info {
-    margin-top: 12px;
-    font-size: 0.65rem;
-    font-family: monospace;
-    color: #475569;
-    letter-spacing: 0.5px;
-}
-.idle-cache-info .ok { color: #6ee7b7; }
-.idle-cache-info .warn { color: #fcd34d; }
-.idle-cache-info .speed { color: #93c5fd; font-weight: bold; }
 
 /* --- FELUGRÓ MODAL ABLAK --- */
 .modal-overlay {
@@ -631,11 +583,6 @@ input.suggestions-active {
 <div class="top-bar">
     <div class="brand">FORVIA TERMINAL</div>
     <div style="display:flex; align-items:center; gap:15px;">
-        <!-- ÚJ: Online/Offline státusz indikátor -->
-        <div id="netStatus" class="net-status" title="Hálózati kapcsolat">
-            <span class="dot"></span>
-            <span id="netStatusText">ONLINE</span>
-        </div>
         <button onclick="openSetupModal()" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text-secondary); border-radius: 6px; padding: 4px 10px; font-family: monospace; font-size: 0.75rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 5px;">
             <span style="font-size: 0.9rem;">🖨️</span> SETUP SHEET GENERÁLÁS (KLIKK IDE)
         </button>
@@ -661,8 +608,6 @@ input.suggestions-active {
 <div id="idleState">
     <div class="idle-text">FORVIA TERMINAL KÉSZ</div>
     <div class="idle-sub" id="dbSizeDisplay">ADATBÁZIS BETÖLTÉSE...</div>
-    <!-- ÚJ: cache + index állapot -->
-    <div class="idle-cache-info" id="cacheInfo"></div>
 </div>
 
 <div id="eredmeny"></div>
@@ -744,256 +689,6 @@ let searchFinalized = false;
 let isNumericMode = true;
 let beultetesSzuro = 'BOTH'; 
 
-/* ===================================================== */
-/* === ÚJ: GYORS KERESÉSI INDEX (Map-alapú) ============ */
-/* ===================================================== */
-// bankIndex: Map<részlet_substring, Set<index_a_bank_tömbben>>
-// ultIndex:  Map<részlet_substring, Set<index_az_ultetes_tömbben>>
-// uniqueIdsIndex: Map<részlet_substring, Set<cikkszám>>
-// Háttér: betöltéskor minden cikkszámból kibontunk minden lehetséges
-// 2-7 karakteres substring-et. Kereséskor (kulcs.length >= 2) csak a
-// kulcsot ütjük fel a Map-ben → O(1) lookup egy 50000 soros adatbázisban is.
-let bankIndex = new Map();
-let ultIndex = new Map();
-let uniqueIdsIndex = new Map();
-let indexReady = false;
-
-const INDEX_MIN_LEN = 2;
-const INDEX_MAX_LEN = 7;
-
-function addToIndex(map, key, value) {
-    if (!map.has(key)) map.set(key, new Set());
-    map.get(key).add(value);
-}
-
-function buildIndices() {
-    bankIndex.clear();
-    ultIndex.clear();
-    uniqueIdsIndex.clear();
-    
-    const t0 = performance.now();
-    
-    // BANK index: cikkszám = r[2]
-    for (let i = 0; i < bank.length; i++) {
-        const cikk = (bank[i][2] || "").toUpperCase();
-        if (!cikk) continue;
-        const len = cikk.length;
-        for (let start = 0; start < len; start++) {
-            const maxEnd = Math.min(start + INDEX_MAX_LEN, len);
-            for (let end = start + INDEX_MIN_LEN; end <= maxEnd; end++) {
-                addToIndex(bankIndex, cikk.substring(start, end), i);
-            }
-        }
-    }
-    
-    // ULTETES index: cikkszám = r[0]
-    for (let i = 0; i < ultetes.length; i++) {
-        const cikk = (ultetes[i][0] || "").toUpperCase();
-        if (!cikk) continue;
-        const len = cikk.length;
-        for (let start = 0; start < len; start++) {
-            const maxEnd = Math.min(start + INDEX_MAX_LEN, len);
-            for (let end = start + INDEX_MIN_LEN; end <= maxEnd; end++) {
-                addToIndex(ultIndex, cikk.substring(start, end), i);
-            }
-        }
-    }
-    
-    // Egyedi cikkszámok index (autocomplete-hez)
-    for (const cikk of uniqueIdsArr) {
-        const upper = cikk.toUpperCase();
-        const len = upper.length;
-        for (let start = 0; start < len; start++) {
-            const maxEnd = Math.min(start + INDEX_MAX_LEN, len);
-            for (let end = start + INDEX_MIN_LEN; end <= maxEnd; end++) {
-                addToIndex(uniqueIdsIndex, upper.substring(start, end), cikk);
-            }
-        }
-    }
-    
-    indexReady = true;
-    const elapsed = (performance.now() - t0).toFixed(0);
-    return elapsed;
-}
-
-// Gyors lookup: ha az index-ben benne van a kulcs, használjuk azt;
-// különben (pl. túl hosszú substring vagy nem találat) fallback linear scan.
-function fastFilterBank(needle) {
-    if (!indexReady) return bank.filter(r => r[2] && r[2].toUpperCase().includes(needle));
-    
-    const key = needle.length <= INDEX_MAX_LEN ? needle : needle.substring(0, INDEX_MAX_LEN);
-    const candidates = bankIndex.get(key);
-    
-    if (!candidates) {
-        // Ha nincs még index-bejegyzés erre a substring-re, kétértelmű: vagy nincs találat,
-        // vagy túl hosszú. Biztonság kedvéért fallback linear (defenzív kód).
-        if (needle.length > INDEX_MAX_LEN) {
-            return bank.filter(r => r[2] && r[2].toUpperCase().includes(needle));
-        }
-        return [];
-    }
-    
-    // Ha a needle ≤ INDEX_MAX_LEN, a candidates már pontosan azok akiknek a cikkszáma tartalmazza
-    if (needle.length <= INDEX_MAX_LEN) {
-        return Array.from(candidates).map(i => bank[i]);
-    }
-    // Ha a needle hosszabb, a candidates-en további szűrés kell
-    return Array.from(candidates).map(i => bank[i]).filter(r => r[2] && r[2].toUpperCase().includes(needle));
-}
-
-function fastFilterUltetes(needle) {
-    if (!indexReady) return ultetes.filter(r => r[0] && r[0].toUpperCase().includes(needle));
-    
-    const key = needle.length <= INDEX_MAX_LEN ? needle : needle.substring(0, INDEX_MAX_LEN);
-    const candidates = ultIndex.get(key);
-    
-    if (!candidates) {
-        if (needle.length > INDEX_MAX_LEN) {
-            return ultetes.filter(r => r[0] && r[0].toUpperCase().includes(needle));
-        }
-        return [];
-    }
-    
-    if (needle.length <= INDEX_MAX_LEN) {
-        return Array.from(candidates).map(i => ultetes[i]);
-    }
-    return Array.from(candidates).map(i => ultetes[i]).filter(r => r[0] && r[0].toUpperCase().includes(needle));
-}
-
-function fastSuggestIds(needle) {
-    if (!indexReady) {
-        const m = [];
-        for (let i = 0; i < uniqueIdsArr.length; i++) {
-            if (uniqueIdsArr[i].includes(needle)) {
-                m.push(uniqueIdsArr[i]);
-                if (m.length >= 8) break;
-            }
-        }
-        return m;
-    }
-    
-    const key = needle.length <= INDEX_MAX_LEN ? needle : needle.substring(0, INDEX_MAX_LEN);
-    const candidates = uniqueIdsIndex.get(key);
-    
-    if (!candidates) {
-        if (needle.length > INDEX_MAX_LEN) {
-            const m = [];
-            for (let i = 0; i < uniqueIdsArr.length; i++) {
-                if (uniqueIdsArr[i].includes(needle)) {
-                    m.push(uniqueIdsArr[i]);
-                    if (m.length >= 8) break;
-                }
-            }
-            return m;
-        }
-        return [];
-    }
-    
-    if (needle.length <= INDEX_MAX_LEN) {
-        const arr = Array.from(candidates);
-        return arr.slice(0, 8);
-    }
-    
-    const result = [];
-    for (const cikk of candidates) {
-        if (cikk.includes(needle)) {
-            result.push(cikk);
-            if (result.length >= 8) break;
-        }
-    }
-    return result;
-}
-
-/* ===================================================== */
-/* === ÚJ: localStorage CACHE (offline támogatás) ====== */
-/* ===================================================== */
-const CACHE_VERSION_KEY = 'forviaSearchCache_v1';
-const CACHE_TTL_HOURS = 24; // 24 óra után próbálkozik újra fetch-elni
-
-function getCachedCsv(name) {
-    try {
-        const raw = localStorage.getItem(`${CACHE_VERSION_KEY}_${name}`);
-        if (!raw) return null;
-        const parsed = JSON.parse(raw);
-        return parsed; // { content, timestamp }
-    } catch (e) {
-        return null;
-    }
-}
-
-function setCachedCsv(name, content) {
-    try {
-        const data = JSON.stringify({
-            content: content,
-            timestamp: Date.now()
-        });
-        localStorage.setItem(`${CACHE_VERSION_KEY}_${name}`, data);
-        return true;
-    } catch (e) {
-        // Quota exceeded vagy más hiba - nem kritikus
-        console.warn("Cache mentés kihagyva:", e.message);
-        return false;
-    }
-}
-
-function isCacheFresh(cachedData) {
-    if (!cachedData || !cachedData.timestamp) return false;
-    const ageHours = (Date.now() - cachedData.timestamp) / 3600000;
-    return ageHours < CACHE_TTL_HOURS;
-}
-
-// Hybrid loader: először próbál fetch-elni, ha nem megy, cache-ből szolgál ki
-async function loadCsvWithCache(filename) {
-    const cached = getCachedCsv(filename);
-    
-    // Próbáljunk online betöltést (kivéve ha offline vagyunk és van friss cache)
-    if (navigator.onLine !== false) {
-        try {
-            const response = await fetch(filename, { cache: 'no-cache' });
-            if (response.ok) {
-                const text = await response.text();
-                // Mentjük a cache-be (csendben, ha hibázik se baj)
-                setCachedCsv(filename, text);
-                return { content: text, source: 'network' };
-            }
-        } catch (e) {
-            // Hálózati hiba - cache-re fogunk visszaesni
-            console.warn(`Fetch sikertelen ${filename}-hez, cache-t próbálunk:`, e.message);
-        }
-    }
-    
-    // Fallback cache-re
-    if (cached && cached.content) {
-        return { content: cached.content, source: 'cache' };
-    }
-    
-    throw new Error(`Nem sikerült betölteni: ${filename} (sem hálózat, sem cache)`);
-}
-
-/* ===================================================== */
-/* === ÚJ: Online/Offline állapot kezelése ============= */
-/* ===================================================== */
-function updateNetStatus() {
-    const elem = document.getElementById('netStatus');
-    const textElem = document.getElementById('netStatusText');
-    if (!elem || !textElem) return;
-    
-    if (navigator.onLine) {
-        elem.classList.remove('offline');
-        textElem.textContent = 'ONLINE';
-    } else {
-        elem.classList.add('offline');
-        textElem.textContent = 'OFFLINE';
-    }
-}
-
-window.addEventListener('online', updateNetStatus);
-window.addEventListener('offline', updateNetStatus);
-
-/* ===================================================== */
-/* === EREDETI FUNKCIÓK (egy karakter sem változott) === */
-/* ===================================================== */
-
 window.setBeultetesSzuro = function(val) {
     if(typeof provideFeedback === 'function') provideFeedback(); 
     beultetesSzuro = val;
@@ -1012,7 +707,6 @@ function updateDate(){
     document.getElementById('dateText').textContent=`${n.getFullYear()}.${(n.getMonth()+1).toString().padStart(2,'0')}.${n.getDate().toString().padStart(2,'0')}`;
 }
 updateDate();
-updateNetStatus(); // Kezdeti állapot
 
 function getModelColor(m){
     if(!m||m==="N/A")return"#334155";
@@ -1051,34 +745,11 @@ function calculateStats() {
     }
 }
 
-/* ===================================================== */
-/* === BETÖLTÉS - cache-aware verzió =================== */
-/* ===================================================== */
-Promise.all([
-    loadCsvWithCache('bank.csv'),
-    loadCsvWithCache('ultetes.csv')
-]).then(([bResult, uResult])=>{
-    const bT = bResult.content;
-    const uT = uResult.content;
-    
+Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.text())]).then(([bT,uT])=>{
     bank=feldolgoz(bT); ultetes=feldolgoz(uT);
     bank.forEach(r=>r[2]&&idSet.add(r[2].toUpperCase()));
     ultetes.forEach(r=>r[0]&&idSet.add(r[0].toUpperCase()));
     uniqueIdsArr=Array.from(idSet);
-    
-    // ÚJ: index építése a háttérben
-    const buildTime = buildIndices();
-    
-    // ÚJ: cache info kijelzése
-    const cacheInfo = document.getElementById('cacheInfo');
-    if (cacheInfo) {
-        const fromCache = (bResult.source === 'cache' || uResult.source === 'cache');
-        if (fromCache) {
-            cacheInfo.innerHTML = `<span class="warn">⚡ OFFLINE MÓD</span> · Cache-elt adatok · Index: <span class="speed">${buildTime}ms</span>`;
-        } else {
-            cacheInfo.innerHTML = `<span class="ok">✓ ONLINE</span> · Frissítve · Index: <span class="speed">${buildTime}ms</span>`;
-        }
-    }
     
     const inp=document.getElementById('keres');
     const clearBtn = document.getElementById('clearBtn');
@@ -1156,13 +827,6 @@ Promise.all([
             }
         }
     });
-}).catch(err => {
-    // ÚJ: szebb hibakezelés
-    console.error("CSV betöltési hiba:", err);
-    const cacheInfo = document.getElementById('cacheInfo');
-    const dbSize = document.getElementById('dbSizeDisplay');
-    if (dbSize) dbSize.innerHTML = '<span style="color:#f87171;">⚠️ ADATBÁZIS NEM ELÉRHETŐ</span>';
-    if (cacheInfo) cacheInfo.innerHTML = '<span class="warn">Csatlakozz online egyszer az adatbázis letöltéséhez</span>';
 });
 
 function feldolgoz(t){return t.split('\n').map(s=>s.replace(/"/g,'').trim()).filter(s=>s).slice(1).map(s=>s.split(';').map(e=>e.trim()));}
@@ -1170,9 +834,14 @@ function feldolgoz(t){return t.split('\n').map(s=>s.replace(/"/g,'').trim()).fil
 function updateSuggest(v){
     const b=document.getElementById('suggest'); 
     const inp=document.getElementById('keres');
+    const m=[];
     
-    // ÚJ: gyors lookup
-    const m = fastSuggestIds(v);
+    for(let i=0;i<uniqueIdsArr.length;i++){ 
+        if(uniqueIdsArr[i].includes(v)){ 
+            m.push(uniqueIdsArr[i]); 
+            if(m.length>=8)break; 
+        }
+    }
     
     if(m.length>0){ 
         b.innerHTML=m.map(x=>`<div class="s-item" onmousedown="selectSuggest('${x}')">${highlight(x, v)}</div>`).join(''); 
@@ -1217,8 +886,7 @@ function keres(k){
     if(k.length<2)return;
     let h='';
     
-    // ÚJ: gyors lookup (volt: bank.filter)
-    let bT_raw = fastFilterBank(k);
+    let bT_raw = bank.filter(r=>r[2]&&r[2].toUpperCase().includes(k));
     
     if(bT_raw.length){
         let seenBank = new Set();
@@ -1252,8 +920,7 @@ function keres(k){
         });
     }
     
-    // ÚJ: gyors lookup (volt: ultetes.filter)
-    let uT_raw = fastFilterUltetes(k);
+    let uT_raw = ultetes.filter(r=>r[0]&&r[0].toUpperCase().includes(k));
     
     if(uT_raw.length > 0){
         let seen = new Set();
