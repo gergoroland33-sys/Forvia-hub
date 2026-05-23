@@ -657,7 +657,7 @@
                 let dailyAbsences = absences[dateKey] || {};
                 
                 // Csak azok elérhetők akik MÁR beléptek
-                let availableWorkers = roster.filter(name => {
+                let availableWorkers = [...new Set(roster)].filter(name => {
                     if (dailyAbsences[name]) return false;
                     const ws = simStats[name];
                     if (ws && ws.joinDate) {
@@ -669,7 +669,8 @@
                 
                 const pair = selectPairForDay(availableWorkers, simStats, simPairs, simDate);
                 
-                if (pair[0] !== "-" && pair[1] !== "-") {
+                // 🛡️ Védőszerelvény: a pair két tagja sosem lehet ugyanaz
+                if (pair[0] !== "-" && pair[1] !== "-" && pair[0] !== pair[1]) {
                     simStats[pair[0]] = {
                         ...simStats[pair[0]],
                         carries: (simStats[pair[0]].carries || 0) + 1,
@@ -695,12 +696,17 @@
     // ==========================================
     function recordTodayCarry(dateKey, worker1, worker2) {
         if (!worker1 || !worker2 || worker1 === "-" || worker2 === "-") return;
+        if (worker1 === worker2) return; // védőszerelvény: sosem ugyanaz
         
         const today = new Date();
         if (today.getHours() < 6) today.setDate(today.getDate() - 1);
         const todayKey = getDateKey(today);
         
         if (dateKey !== todayKey) return;
+        
+        // 🛡️ KRITIKUS: ne rögzítsünk vitelt olyan napra, amikor valamelyik hiányzónak van jelölve!
+        const dailyAbsences = absences[dateKey] || {};
+        if (dailyAbsences[worker1] || dailyAbsences[worker2]) return;
         
         const w1Stats = workerStats[worker1] || {};
         const w2Stats = workerStats[worker2] || {};
@@ -721,7 +727,50 @@
     window.markAbsent = function(dateKey, name) {
         if(!name || name === "Nincs több!" || name === "-") return;
         if(confirm(`Szeretnéd jelezni, hogy ${name} hiányzik ezen a napon?\n\nA rendszer automatikusan behívja a következőt, ${name} pedig sorra kerül legközelebb.`)) {
-            db.ref(`absences/${dateKey}/${name}`).set(true);
+            // 🛡️ Kompenzáció: ha ezen a napon már rögzítettünk neki vitelt (automatikusan),
+            // azt vissza kell vonni, hogy ne legyen torzítva a fairness pontszáma
+            const ws = workerStats[name];
+            const updates = {
+                [`absences/${dateKey}/${name}`]: true
+            };
+            
+            if (ws && ws.lastDate === dateKey && ws.carries > 0) {
+                // visszavonjuk a vitelét
+                updates[`workerStats/${name}/carries`] = ws.carries - 1;
+                
+                // a lastDate-et próbáljuk visszaállítani; mivel nem tudjuk pontosan a korábbi értéket,
+                // null-ra állítjuk (a következő render majd helyreteszi ha kell)
+                updates[`workerStats/${name}/lastDate`] = null;
+                
+                // a pair history-t is csökkenteni kell - keressük meg a mai párost
+                const todaySchedule = computedSchedule[dateKey];
+                if (todaySchedule && todaySchedule[0] !== "-" && todaySchedule[1] !== "-") {
+                    // Találjuk meg a másik tagot
+                    const otherWorker = (todaySchedule[0] === name) ? todaySchedule[1] : 
+                                        (todaySchedule[1] === name) ? todaySchedule[0] : null;
+                    
+                    if (otherWorker) {
+                        // A másik ember carries-jét is csökkentjük (ő sem vitt valójában - 
+                        // mert ha az illető hiányzott, akkor a párosítás újraértékelődik)
+                        const otherWs = workerStats[otherWorker];
+                        if (otherWs && otherWs.lastDate === dateKey && otherWs.carries > 0) {
+                            updates[`workerStats/${otherWorker}/carries`] = otherWs.carries - 1;
+                            updates[`workerStats/${otherWorker}/lastDate`] = null;
+                        }
+                        
+                        // pair history csökkentés
+                        const pk = pairKey(name, otherWorker);
+                        if (pairHistory[pk] && pairHistory[pk] > 0) {
+                            updates[`pairHistory/${pk}`] = pairHistory[pk] - 1;
+                        }
+                    }
+                }
+            }
+            
+            db.ref().update(updates).catch(err => {
+                console.error("Hiányzás rögzítése hiba:", err);
+                showToast("❌ Hiba a hiányzás rögzítésénél", 'error');
+            });
         }
     };
 
