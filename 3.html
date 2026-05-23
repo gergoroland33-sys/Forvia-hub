@@ -54,11 +54,19 @@
             color: var(--text-main);
             margin: 0; padding: 0;
             display: flex; flex-direction: column;
-            height: 100dvh;
+            /* ÚJ: többrétegű magasság-fallback, biztos hogy minden eszközön kitölt */
+            height: 100vh;          /* fallback régi böngészőkre */
+            height: 100svh;         /* small viewport - mobil böngésző csíkkal együtt */
+            height: 100dvh;         /* dynamic viewport - modern, auto-igazodik */
+            height: var(--real-100vh, 100dvh); /* JS-által számolt pontos érték - legutolsó precíz fallback */
+            min-height: -webkit-fill-available; /* iOS Safari fix */
             overflow: hidden;
             touch-action: manipulation;
             font-feature-settings: "ss01", "cv11";
             letter-spacing: -0.01em;
+            /* iOS safe area kompatibilitás */
+            padding-bottom: env(safe-area-inset-bottom, 0);
+            padding-top: env(safe-area-inset-top, 0);
         }
 
         body::before {
@@ -444,11 +452,22 @@
         }
 
         /* --- NAPTÁR SZEKCIÓ --- */
+        /* FONTOS: main.main-layout layout kontroller - flex bug elkerülésére min-height: 0 */
+        .main-layout {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;          /* KRITIKUS: enélkül a flex child nem tud zsugorodni */
+            overflow: hidden;
+            position: relative;
+        }
+        
         .calendar-section {
             flex: 1; display: flex; flex-direction: column;
             padding: 0 12px 12px 12px; overflow: hidden;
             position: relative;
             z-index: 1;
+            min-height: 0;          /* KRITIKUS: ugyanaz, hogy a grid-wrapper befogja a tartalmat */
         }
 
         .cal-header {
@@ -503,12 +522,18 @@
         }
         .weekday:nth-child(6), .weekday:nth-child(7) { color: var(--color-d-light); opacity: 0.6; }
 
-        .cal-grid-wrapper { flex: 1; overflow: hidden; position: relative; }
+        .cal-grid-wrapper { 
+            flex: 1; 
+            overflow: hidden; 
+            position: relative;
+            min-height: 0;          /* flex bug elkerülése */
+        }
         .calendar-grid {
             display: grid; grid-template-columns: repeat(7, 1fr);
             grid-template-rows: repeat(6, 1fr);
             gap: 5px; height: 100%; width: 100%;
             transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease-out;
+            min-height: 0;
         }
 
         .cell {
@@ -617,6 +642,74 @@
         }
         .shift-pill span { opacity: 0.65; font-weight: 700; margin-right: 4px; font-size: 0.85em; }
         @media (max-width: 400px) { .shift-pill span { display: none; } .shift-pill { justify-content: center; } }
+        
+        /* === ÚJ: KIS MAGASSÁGÚ VIEWPORT (laptop, landscape mobil) === */
+        /* Ha a viewport magassága szűkös, automatikusan kompakt módba vált */
+        @media (max-height: 750px) {
+            .app-header {
+                height: 50px;
+                padding: 6px 14px;
+            }
+            .logo-area h1 { font-size: 1.1rem; }
+            .btn-modern {
+                padding: 6px 11px;
+                font-size: 0.72rem;
+            }
+            .filter-container {
+                padding: 6px 12px 5px 12px;
+                gap: 6px;
+            }
+            .segmented-control {
+                height: 36px;
+                padding: 4px;
+            }
+            .seg-btn { font-size: 0.78rem; }
+            .btn-overtime {
+                padding: 8px;
+                font-size: 0.76rem;
+            }
+            .calendar-section {
+                padding: 0 10px 8px 10px;
+            }
+            .cal-header {
+                margin-bottom: 5px;
+                padding: 2px 4px;
+            }
+            .cal-nav-btn {
+                width: 32px; height: 32px;
+                font-size: 1rem;
+            }
+            .month-title { font-size: 1rem; }
+            .weekdays { margin-bottom: 4px; }
+            .weekday { font-size: 0.62rem; padding: 2px 0; }
+            .calendar-grid { gap: 3px; }
+            .cell { padding: 3px; border-radius: 7px; }
+            .date-num { font-size: 0.78rem; }
+            .shift-pill {
+                padding: 2px 4px;
+                font-size: clamp(0.5rem, 1.3vh, 0.66rem);
+            }
+            .shift-display-big .sd-icon { font-size: clamp(0.85rem, 2vh, 1.15rem); }
+            .shift-display-big .sd-label { font-size: clamp(0.45rem, 1.1vh, 0.6rem); }
+        }
+        
+        /* Még kisebb magasság (régi laptopok, landscape iPhone) */
+        @media (max-height: 600px) {
+            .app-header { height: 44px; padding: 5px 12px; }
+            .logo-area h1 { font-size: 1rem; }
+            .btn-modern { padding: 5px 9px; font-size: 0.68rem; }
+            .filter-container { padding: 5px 10px 4px 10px; gap: 5px; }
+            .segmented-control { height: 32px; }
+            .seg-btn { font-size: 0.72rem; }
+            .btn-overtime { padding: 6px; font-size: 0.7rem; }
+            .calendar-section { padding: 0 8px 6px 8px; }
+            .cal-nav-btn { width: 28px; height: 28px; font-size: 0.9rem; }
+            .month-title { font-size: 0.9rem; }
+            .weekday { font-size: 0.55rem; }
+            .calendar-grid { gap: 2px; }
+            .cell { padding: 2px; border-radius: 5px; }
+            .date-num { font-size: 0.7rem; }
+        }
 
         .pill-A { 
             background: linear-gradient(135deg, rgba(59, 130, 246, 0.28) 0%, rgba(59, 130, 246, 0.18) 100%); 
@@ -1714,6 +1807,23 @@
     function closeYearlyStatsModal() {
         document.getElementById('statsModal').classList.remove('active');
     }
+
+    // ====================================================
+    // ÚJ: VIEWPORT MAGASSÁG FIX (iOS Safari + minden eszköz)
+    // A 100vh/100dvh nem mindig pontos, ezért dinamikusan állítjuk
+    // ====================================================
+    function setRealVH() {
+        // Tényleges látható magasság a window.innerHeight-ből
+        const vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--real-vh', `${vh}px`);
+        document.documentElement.style.setProperty('--real-100vh', `${window.innerHeight}px`);
+    }
+    setRealVH();
+    window.addEventListener('resize', setRealVH);
+    window.addEventListener('orientationchange', () => {
+        // orientation change után pici delay kell hogy a böngésző stabilizálja a méretet
+        setTimeout(setRealVH, 100);
+    });
 
     initSegmentedControl();
     renderCalendar();
