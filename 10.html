@@ -20,51 +20,99 @@
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg-dark); color: var(--text-main); margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
-        .hero-section { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 70px 20px 20px 20px; position: relative; background: radial-gradient(circle at top right, #2e1065 0%, transparent 50%), radial-gradient(circle at bottom left, #1e1b4b 0%, transparent 50%); z-index: 1; }
+        .hero-section { flex-shrink: 0; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; padding: 65px 20px 15px 20px; position: relative; background: radial-gradient(circle at top right, #2e1065 0%, transparent 50%), radial-gradient(circle at bottom left, #1e1b4b 0%, transparent 50%); z-index: 1; }
         
-        .header-pill { position: absolute; top: 20px; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); color: var(--text-dim); letter-spacing: 1px; transition: all 0.2s; }
+        .header-pill { position: absolute; top: 18px; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); padding: 8px 16px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); color: var(--text-dim); letter-spacing: 1px; transition: all 0.2s; }
         .header-pill:hover { border-color: var(--primary); color: white; }
         
-        .today-card { width: 100%; max-width: 360px; text-align: center; animation: float 6s ease-in-out infinite; }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        .today-label { font-size: 0.9rem; color: var(--accent); font-weight: 700; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;}
-        .today-date { font-size: 1.1rem; color: var(--text-dim); margin-bottom: 15px; }
+        .today-card { width: 100%; max-width: 360px; text-align: center; }
+        .today-label { font-size: 0.85rem; color: var(--accent); font-weight: 700; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px;}
+        .today-date { font-size: 1rem; color: var(--text-dim); margin-bottom: 12px; }
         
         .pill-container { display: flex; justify-content: center; align-items: center; gap: 12px; margin-bottom: 5px; flex-wrap: wrap; }
-        .worker-pill { display: inline-flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(255,255,255,0.05); padding: 12px 25px; border-radius: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: all 0.2s ease; font-size: 1.5rem; font-weight: 800; color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 130px; position: relative; }
+        .worker-pill { display: inline-flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(255,255,255,0.05); padding: 11px 22px; border-radius: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: all 0.2s ease; font-size: 1.4rem; font-weight: 800; color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 130px; position: relative; }
         .worker-pill:hover { background: rgba(255,255,255,0.1); border-color: var(--primary); transform: translateY(-2px); }
         .worker-pill .carry-count { font-size: 0.6rem; font-weight: 600; color: var(--text-dim); margin-top: 3px; letter-spacing: 0.5px; text-transform: uppercase; }
-        .instruction-text { font-size: 0.75rem; color: var(--text-dim); font-weight: normal; margin-top: 10px; opacity: 0.7; }
+        .instruction-text { font-size: 0.72rem; color: var(--text-dim); font-weight: normal; margin-top: 8px; opacity: 0.7; }
         
-        .absent-row { font-size: 0.85rem; color: #f87171; display:flex; justify-content:center; gap:8px; flex-wrap: wrap; margin-bottom: 15px; }
-        .absent-pill { cursor: pointer; background: rgba(248, 113, 113, 0.1); padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(248, 113, 113, 0.2); transition: 0.2s; font-weight: 600;}
+        .absent-row { font-size: 0.8rem; color: #f87171; display:flex; justify-content:center; gap:8px; flex-wrap: wrap; margin-bottom: 12px; }
+        .absent-pill { cursor: pointer; background: rgba(248, 113, 113, 0.1); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(248, 113, 113, 0.2); transition: 0.2s; font-weight: 600;}
         .absent-pill:hover { background: rgba(248, 113, 113, 0.2); }
+        
+        /* DISZKRÉT FAIRNESS PANEL (mindig látható) */
+        .fairness-panel-front {
+            width: 100%; max-width: 360px;
+            margin-top: 14px;
+            background: rgba(255, 255, 255, 0.025);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 10px 14px;
+        }
+        .fp-title {
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 0.65rem; font-weight: 700; color: var(--text-dim);
+            text-transform: uppercase; letter-spacing: 1.2px;
+            margin-bottom: 8px;
+        }
+        .fp-title .fp-avg {
+            color: var(--accent); font-weight: 600; font-size: 0.62rem;
+            background: rgba(6, 182, 212, 0.08); padding: 2px 6px; border-radius: 4px;
+        }
+        .fp-rows { display: flex; flex-direction: column; gap: 4px; }
+        .fp-row {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 0.72rem;
+        }
+        .fp-name {
+            width: 60px; flex-shrink: 0;
+            color: var(--text-main); font-weight: 600;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .fp-bar-wrap {
+            flex: 1; height: 6px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 3px; overflow: hidden;
+            position: relative;
+        }
+        .fp-bar {
+            height: 100%; border-radius: 3px;
+            transition: width 0.4s ease;
+        }
+        .fp-bar.zero { background: linear-gradient(90deg, #475569, #64748b); }
+        .fp-bar.low { background: linear-gradient(90deg, #10b981, #34d399); }
+        .fp-bar.mid { background: linear-gradient(90deg, #06b6d4, #22d3ee); }
+        .fp-bar.high { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .fp-bar.over { background: linear-gradient(90deg, #ef4444, #f87171); }
+        .fp-count {
+            width: 22px; flex-shrink: 0; text-align: right;
+            color: var(--text-dim); font-weight: 700; font-size: 0.7rem;
+        }
+        .fp-count.highlight { color: white; }
 
-        .list-container { height: 45vh; overflow-y: auto; padding: 20px 25px; position: relative; z-index: 2; mask-image: linear-gradient(to bottom, transparent 0%, black 10%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%); }
-        .list-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; margin-bottom: 12px; padding: 15px; display: flex; flex-direction: column; gap: 10px; transition: all 0.2s; }
+        .list-container { flex: 1; overflow-y: auto; padding: 16px 20px; position: relative; z-index: 2; mask-image: linear-gradient(to bottom, transparent 0%, black 8%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 8%); }
+        .list-section-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px; text-align: center; letter-spacing: 1px; }
+        .list-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; margin-bottom: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; transition: all 0.2s; }
         .list-card:hover { background: rgba(255, 255, 255, 0.06); }
         .lc-header { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        .lc-date-text { font-weight: 600; color: var(--text-dim); font-size: 0.9rem; }
-        .lc-pills { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
-        .lc-worker-pill { display: inline-flex; align-items: center; background: rgba(255,255,255,0.05); padding: 6px 14px; border-radius: 8px; font-size: 0.9rem; font-weight: 700; cursor: pointer; border: 1px solid transparent; color: #fff; transition: all 0.2s;}
+        .lc-date-text { font-weight: 600; color: var(--text-dim); font-size: 0.85rem; }
+        .lc-pills { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+        .lc-worker-pill { display: inline-flex; align-items: center; background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border: 1px solid transparent; color: #fff; transition: all 0.2s;}
         .lc-worker-pill:hover { border-color: var(--primary); background: rgba(255,255,255,0.1); }
 
         #adminPanel { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; padding: 20px; overflow-y: auto; backdrop-filter: blur(5px); }
-        .admin-box { background: var(--surface); padding: 25px; border-radius: 16px; max-width: 480px; margin: 20px auto; border: 1px solid var(--primary); box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2); }
+        .admin-box { background: var(--surface); padding: 24px; border-radius: 16px; max-width: 480px; margin: 20px auto; border: 1px solid var(--primary); box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2); }
         .admin-box h2 { color: var(--accent); margin-top: 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; font-weight: 800; letter-spacing: 1px;}
-        .admin-section { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; margin-bottom: 20px; }
-        .admin-section h3 { margin-top: 0; font-size: 0.9rem; color: var(--text-dim); text-transform: uppercase; margin-bottom: 15px; display: flex; align-items: center; gap: 6px;}
-        .admin-input { width: 100%; padding: 12px; margin-bottom: 15px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; transition: border 0.3s; }
+        .admin-section { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 14px; margin-bottom: 18px; }
+        .admin-section h3 { margin-top: 0; font-size: 0.88rem; color: var(--text-dim); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;}
+        .admin-input { width: 100%; padding: 12px; margin-bottom: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; transition: border 0.3s; }
         .admin-input:focus { border-color: var(--primary); outline: none; }
-        .admin-list { background: #000; border-radius: 8px; max-height: 280px; overflow-y: auto; border: 1px solid #333; }
-        .admin-list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #222; gap: 10px;}
+        .admin-list { background: #000; border-radius: 8px; max-height: 320px; overflow-y: auto; border: 1px solid #333; }
+        .admin-list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid #222; gap: 10px;}
         .admin-list-item:last-child { border-bottom: none; }
         
-        /* Fairness bar a dolgozó mellett */
-        .worker-stats-mini { font-size: 0.7rem; color: var(--text-dim); margin-top: 2px; }
+        .worker-stats-mini { font-size: 0.68rem; color: var(--text-dim); margin-top: 2px; }
         .worker-stats-mini .badge { background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; margin-right: 4px; }
-        .worker-stats-mini .badge.high { background: rgba(248, 113, 113, 0.2); color: var(--danger); }
-        .worker-stats-mini .badge.low { background: rgba(16, 185, 129, 0.2); color: var(--success); }
         
         .btn-action { background: rgba(255,255,255,0.1); border: none; color: white; border-radius: 6px; padding: 6px 10px; cursor: pointer; transition: 0.2s; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; min-width: 32px;}
         .btn-action:hover { background: var(--primary); }
@@ -72,10 +120,10 @@
         .btn-delete:hover { background: #f87171; color: white; }
         .btn-save { background: var(--primary); color: white; width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 1rem;}
         .btn-close { background: transparent; color: var(--text-dim); width: 100%; padding: 12px; border: 1px solid #333; border-radius: 8px; cursor: pointer; }
-        .btn-reset { background: rgba(248, 113, 113, 0.1); color: var(--danger); width: 100%; padding: 10px; border: 1px solid rgba(248, 113, 113, 0.3); border-radius: 8px; cursor: pointer; margin-top: 6px; font-size: 0.85rem; font-weight: 600;}
+        .btn-reset { background: rgba(248, 113, 113, 0.1); color: var(--danger); width: 100%; padding: 10px; border: 1px solid rgba(248, 113, 113, 0.3); border-radius: 8px; cursor: pointer; margin-top: 8px; font-size: 0.85rem; font-weight: 600;}
         .btn-reset:hover { background: rgba(248, 113, 113, 0.2); }
-
-        /* Fairness bar (igazságosság szemléltetése) */
+        
+        /* Admin fairness teljes nézet */
         .fairness-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid #222; }
         .fairness-row:last-child { border-bottom: none; }
         .fairness-name { font-weight: 700; min-width: 80px; font-size: 0.85rem; }
@@ -88,7 +136,7 @@
         .fairness-bar.over { background: linear-gradient(90deg, #ef4444, #f87171); }
         .fairness-count { font-size: 0.8rem; font-weight: 700; color: white; min-width: 22px; text-align: right; }
         
-        /* Mini pin modal */
+        /* PIN modal */
         .pin-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
         .pin-overlay.active { display: flex; }
         .pin-card { background: var(--surface); border: 1px solid var(--primary); border-radius: 16px; padding: 24px; max-width: 320px; width: 100%; text-align: center; box-shadow: 0 20px 50px rgba(139, 92, 246, 0.3); animation: pinPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -104,7 +152,6 @@
         .pin-submit:hover { background: #7c3aed; }
         .pin-cancel:hover { color: white; }
 
-        /* Toast üzenet */
         .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--primary); padding: 12px 20px; border-radius: 10px; color: white; font-size: 0.9rem; font-weight: 600; z-index: 300; box-shadow: 0 10px 30px rgba(0,0,0,0.5); opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s; max-width: 90%; text-align: center;}
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(-10px); }
         .toast.error { border-color: var(--danger); }
@@ -118,7 +165,7 @@
     </section>
 
     <div class="list-container">
-        <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 15px; text-align: center; letter-spacing: 1px;">Következő beosztások</div>
+        <div class="list-section-title">Következő beosztások</div>
         <div id="upcomingList"></div>
     </div>
 
@@ -127,27 +174,8 @@
             <h2>PRO Vezérlőpult</h2>
             
             <div class="admin-section">
-                <h3>⚙️ Alapbeállítások</h3>
-                <label style="font-size:0.8rem; color:var(--text-dim);">Műszak Ciklus Kezdete (Fix alap):</label>
-                <input type="date" id="setShiftStart" class="admin-input">
-                <label style="font-size:0.8rem; color:var(--text-dim);">Rotáció Kezdete (Matek indulás):</label>
-                <input type="date" id="setNameStart" class="admin-input">
-                <label style="font-size:0.8rem; color:var(--text-dim);">Jelenlegi Műszak:</label>
-                <select id="setShiftType" class="admin-input" style="margin-bottom:0;">
-                    <option value="A">A Műszak</option><option value="B">B Műszak</option>
-                    <option value="C">C Műszak</option><option value="D">D Műszak</option>
-                </select>
-            </div>
-
-            <div class="admin-section">
-                <h3>👥 Aktív Névsor (Sorbarendezés / Törlés)</h3>
+                <h3>👥 Aktív Névsor</h3>
                 <div class="admin-list" id="adminRosterList"></div>
-            </div>
-
-            <div class="admin-section">
-                <h3>📊 Igazságossági Mérleg (Vitelszámok)</h3>
-                <div class="admin-list" id="fairnessList"></div>
-                <button class="btn-reset" onclick="resetCarries()">🔄 Pontok újranullázása mindenkinek</button>
             </div>
 
             <div class="admin-section">
@@ -156,12 +184,13 @@
                     <input type="text" id="newWorkerName" class="admin-input" style="margin-bottom:0;" placeholder="Új név...">
                     <button onclick="addNewWorker()" style="background:var(--accent); border:none; border-radius:8px; font-weight:bold; padding:0 20px; color:white; font-size:1.2rem; cursor: pointer;">+</button>
                 </div>
-                <p style="font-size:0.75rem; color:var(--text-dim); margin: 10px 0 0 0;">Új belépők automatikusan a ciklus végén lépnek be (0 vitelszámmal indulnak).</p>
+                <p style="font-size:0.72rem; color:var(--text-dim); margin: 10px 0 0 0;">Új belépő 0 vitelszámmal indul → automatikusan ő lesz a következő, észrevétlenül beilleszkedik.</p>
             </div>
 
             <div class="admin-section">
-                <h3>⏳ Várakozó Dolgozók (Ciklus végén lépnek be)</h3>
-                <div class="admin-list" id="pendingWorkers"></div>
+                <h3>📊 Igazságossági Mérleg (Teljes)</h3>
+                <div class="admin-list" id="fairnessList"></div>
+                <button class="btn-reset" onclick="resetCarries()">🔄 Pontok újranullázása mindenkinek</button>
             </div>
 
             <button class="btn-save" onclick="saveAdminSettings()">💾 Mentés a Felhőbe</button>
@@ -169,7 +198,6 @@
         </div>
     </div>
 
-    <!-- PRO PIN modal -->
     <div class="pin-overlay" id="pinOverlay">
         <div class="pin-card">
             <h3>🔐 Admin Hitelesítés</h3>
@@ -182,14 +210,13 @@
         </div>
     </div>
 
-    <!-- Toast üzenet -->
     <div class="toast" id="toast"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
 
 <script>
-    // 🔴 FIREBASE KÓD (érintetlen config)
+    // 🔴 FIREBASE KONFIG (érintetlen)
     const firebaseConfig = {
       apiKey: "AIzaSyDtX_zGGjwEBgRK3-vKRm1tk80kLZbEm4Y",
       authDomain: "szemetkihordas-app.firebaseapp.com",
@@ -203,33 +230,66 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // ==========================================
+    // 🔧 FIX KONSTANSOK (C MŰSZAK)
+    // ==========================================
+    // Forrás: Forvia SMT Műszaknaptár (12 napos ciklus)
+    // anchorDate = 2026.01.09 (UTC)
+    // cycleDay 0-2: A nappal, B éjszaka
+    // cycleDay 3-5: C nappal, D éjszaka    ← C dolgozik
+    // cycleDay 6-8: B nappal, A éjszaka
+    // cycleDay 9-11: D nappal, C éjszaka   ← C dolgozik
+    
+    const SHIFT_ANCHOR = new Date(Date.UTC(2026, 0, 9));
+    const FIXED_SHIFT = "C"; // a teljes alkalmazás csak a C műszakra fókuszál
+
+    function isCShiftWorkingDay(date) {
+        const utc = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+        const diffDays = Math.floor((utc - SHIFT_ANCHOR.getTime()) / 86400000);
+        const cycleDay = ((diffDays % 12) + 12) % 12;
+        // C dolgozik ha cycleDay 3-5 (nappal) vagy 9-11 (éjjel)
+        return (cycleDay >= 3 && cycleDay <= 5) || (cycleDay >= 9 && cycleDay <= 11);
+    }
+
+    function isWorkingDay(date) {
+        return isCShiftWorkingDay(date);
+    }
+
+    // ==========================================
+    // 📦 STATE
+    // ==========================================
     let sysSettings = null;
     let absences = {}; 
-    let workerStats = {}; // ÚJ: {name: {carries: 0, lastDate: "2026-01-15"}}
-    let pairHistory = {}; // ÚJ: {"Laci|Patrik": 5, ...} (alfabetikusan rendezett kulcsok)
-    let computedSchedule = {}; 
+    let workerStats = {};
+    let pairHistory = {};
+    let computedSchedule = {};
 
     const settingsRef = db.ref('settings');
     const absencesRef = db.ref('absences');
     const statsRef = db.ref('workerStats');
     const pairsRef = db.ref('pairHistory');
 
-    // ALAP INICIALIZÁLÁS (csak ha még nem létezik)
+    // ALAP INICIALIZÁLÁS
     settingsRef.get().then((snapshot) => {
         if (!snapshot.exists()) {
             settingsRef.set({
-                shift: "C", shiftStart: "2025-07-31", nameStart: "2025-02-14",
-                roster: "Laci,Jani,Patrik,Zsuzsa,Peti,Barbi,Reni,Böbe,Martina,Kriszti,Dani".split(","),
-                pending: []
+                roster: "Laci,Jani,Patrik,Zsuzsa,Peti,Barbi,Reni,Böbe,Martina,Kriszti,Dani".split(",")
             });
+        } else {
+            // Migráció: ha még benne van a régi shift/shiftStart/nameStart/pending → ne zavarjon, de ne is használjuk
+            const val = snapshot.val();
+            if (!val.roster) {
+                settingsRef.update({
+                    roster: "Laci,Jani,Patrik,Zsuzsa,Peti,Barbi,Reni,Böbe,Martina,Kriszti,Dani".split(",")
+                });
+            }
         }
     }).catch(err => {
         document.getElementById('heroContainer').innerHTML = `<div style="text-align:center; padding: 20px; color: #f87171;">Hiba a Firebase kapcsolattal!</div>`;
     });
 
-    // ÉLŐ FIGYELÉSEK
     let loadingCounter = 0;
-    const expectedLoads = 4; // settings, absences, stats, pairs
+    const expectedLoads = 4;
     function maybeRender() {
         if (loadingCounter >= expectedLoads && sysSettings) {
             calculateAllSchedules();
@@ -241,7 +301,7 @@
         if (snapshot.exists()) {
             sysSettings = snapshot.val();
             if(!sysSettings.roster) sysSettings.roster = [];
-            if(!sysSettings.pending) sysSettings.pending = [];
+            // pending fogalom megszűnik (nem használjuk, de ha benne van, ne zavarjon)
             loadingCounter = Math.max(loadingCounter, 1);
             maybeRender();
         }
@@ -266,32 +326,8 @@
     });
 
     // ==========================================
-    // 🧠 DÁTUM ÉS MŰSZAK SEGÉDFÜGGVÉNYEK
+    // 🧠 SEGÉDFÜGGVÉNYEK
     // ==========================================
-    function parseLocalDate(dateStr) {
-        let p = dateStr.split('-');
-        return new Date(p[0], p[1] - 1, p[2]);
-    }
-
-    function getDaysDiffUTC(d1, d2) {
-        const utc1 = Date.UTC(d1.getFullYear(), d1.getMonth(), d1.getDate());
-        const utc2 = Date.UTC(d2.getFullYear(), d2.getMonth(), d2.getDate());
-        return Math.floor((utc1 - utc2) / 86400000);
-    }
-
-    function isWorkingDay(date) {
-        let startObj = parseLocalDate(sysSettings.shiftStart);
-        let totalDays = getDaysDiffUTC(date, startObj);
-        let cycleIdx = ((totalDays % 12) + 12) % 12;
-        
-        let nap = "", ej = "";
-        if (cycleIdx <= 2) { nap = "B"; ej = "A"; }
-        else if (cycleIdx <= 5) { nap = "D"; ej = "C"; }
-        else if (cycleIdx <= 8) { nap = "A"; ej = "B"; }
-        else { nap = "C"; ej = "D"; }
-        return (sysSettings.shift === nap || sysSettings.shift === ej);
-    }
-
     function getDateKey(date) {
         return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
     }
@@ -301,28 +337,104 @@
     }
 
     // ==========================================
-    // 🧮 KOMBINÁLT FAIRNESS ALGORITMUS
+    // 🎯 PRO PÁROSÍTÁSI ALGORITMUS
     // ==========================================
-    // Pontszámrendszer minden napi választáshoz:
-    //   1) totalCarries (kevesebbet vitt → előny)
-    //   2) lastCarryDate (régebben vitt → előny)
-    //   3) partnerCount (ritkábban volt párban a többivel → előny)
+    // 3 réteg:
+    //   1) totalCarries: legkisebb értékek → ők jönnek először
+    //   2) lastCarryDate: ha holtverseny, a régebben vitt megy
+    //   3) PÁROSÍTÁS OPTIMALIZÁLÁS:
+    //      Az "elérhető" jelöltek közül NEM mohó módon választunk párt,
+    //      hanem megnézzük az összes lehetséges (worker1, worker2) párosítást
+    //      és minimalizáljuk a kombinált "költséget":
+    //        cost = carries1 + carries2 - lastDateBonus + partnerCountBonus
     //
-    // Sim-állapot: a számítás során egy "munkamemóriát" tartunk fent
-    // amit a Firebase-ből betöltött pontszámokkal indítunk.
+    // Eredmény: ha A+B már sokszor ment, akkor még ha mindketten 
+    // alacsony carries-szel rendelkeznek is, az algoritmus kényszeríteni fogja
+    // hogy mással menjenek (mert a partner-bonus magasabb).
     
+    function selectPairForDay(availableWorkers, simStats, simPairs) {
+        if (availableWorkers.length < 2) {
+            return [
+                availableWorkers[0] || "-",
+                availableWorkers[1] || "-"
+            ];
+        }
+        
+        // Minden lehetséges pár költségének kiszámítása
+        let bestPair = null;
+        let bestCost = Infinity;
+        
+        for (let i = 0; i < availableWorkers.length; i++) {
+            for (let j = i + 1; j < availableWorkers.length; j++) {
+                const a = availableWorkers[i];
+                const b = availableWorkers[j];
+                
+                const sa = simStats[a] || { carries: 0, lastDate: null };
+                const sb = simStats[b] || { carries: 0, lastDate: null };
+                
+                // 1. réteg: combined carries (legfontosabb súly: 1000)
+                const carrySum = sa.carries + sb.carries;
+                
+                // 2. réteg: lastDate "frissesség" - minél régebben vitt, annál olcsóbb
+                // Ha null = soha → fix nagyon olcsó (előny)
+                // Ha van date → minél régebbi, annál olcsóbb
+                let freshnessCost = 0;
+                if (sa.lastDate !== null) {
+                    // milyen friss? 0 = ma, 1 = tegnap, stb. Friss = drágább (rossz)
+                    // mivel mindig pozitív szám lesz, az "olcsóbb" = régebben vitt
+                    const dA = new Date(sa.lastDate).getTime();
+                    const today = Date.now();
+                    const daysSinceA = (today - dA) / 86400000;
+                    freshnessCost += Math.max(0, 30 - daysSinceA); // 30 napos referencia
+                } else {
+                    freshnessCost -= 30; // soha nem vitt → nagy előny
+                }
+                if (sb.lastDate !== null) {
+                    const dB = new Date(sb.lastDate).getTime();
+                    const today = Date.now();
+                    const daysSinceB = (today - dB) / 86400000;
+                    freshnessCost += Math.max(0, 30 - daysSinceB);
+                } else {
+                    freshnessCost -= 30;
+                }
+                
+                // 3. réteg: partner ismétlés (ha A+B már sokszor mentek, ez magas)
+                const partnerCount = simPairs[pairKey(a, b)] || 0;
+                
+                // Súlyozott összköltség
+                // Carries dominál (×1000), partnerCount közepes (×100), freshness gyenge (×1)
+                const cost = carrySum * 1000 + partnerCount * 100 + freshnessCost;
+                
+                if (cost < bestCost) {
+                    bestCost = cost;
+                    bestPair = [a, b];
+                }
+            }
+        }
+        
+        // Determinisztikus sorrend: a kisebb carries első helyre
+        if (bestPair) {
+            const sa = simStats[bestPair[0]] || { carries: 0 };
+            const sb = simStats[bestPair[1]] || { carries: 0 };
+            if (sa.carries > sb.carries) {
+                bestPair = [bestPair[1], bestPair[0]];
+            } else if (sa.carries === sb.carries) {
+                // alfabetikus
+                bestPair.sort((x, y) => x.localeCompare(y, 'hu'));
+            }
+        }
+        
+        return bestPair || ["-", "-"];
+    }
+
     function calculateAllSchedules() {
         computedSchedule = {};
         
         if (!sysSettings || !sysSettings.roster || sysSettings.roster.length === 0) return; 
         
-        // Aktív lista (módosítható másolat)
         let roster = [...sysSettings.roster];
-        let pending = [...(sysSettings.pending || [])];
         
-        // ⚠️ KRITIKUS: a sim-állapot a Firebase-be MENTETT pontszámokból indul,
-        // de itt csak SZIMULÁLUNK - a render-be a Firebase érték kerül.
-        // A jövőbeli napokhoz használjuk a szimuláción belüli pontszámokat.
+        // sim-állapot: a Firebase pontszámokból indul
         let simStats = {};
         roster.forEach(name => {
             simStats[name] = {
@@ -332,154 +444,76 @@
         });
         let simPairs = { ...pairHistory };
         
-        // Rotációs index (ciklus végét detektáljuk)
-        let rotIndex = 0;
-        const rosterLengthAtStart = roster.length;
-        let cycleProgressCount = 0; // hányszor mentek emberek vinni a jelenlegi ciklusban
-        
-        let simDate = parseLocalDate(sysSettings.nameStart);
-        simDate.setHours(0,0,0,0);
-        
-        let endDate = new Date();
-        endDate.setDate(endDate.getDate() + 45); 
-        endDate.setHours(0,0,0,0);
-
-        // ÚJ: csak addig megyünk vissza ahonnan érdekes számolnunk
-        // de a workerStats-ban már van valós historikus adat → nem kell visszaszimulálni
-        // EZT A NAPTÓL SZIMULÁLUNK:
-        // - ha még soha senki nem vitt (új deploy), akkor a nameStart-tól
-        // - ha vannak már statok (legalább 1 lastDate), akkor a max lastDate utáni naptól
-        
+        // Mettől szimulálunk? A legutolsó rögzített viteltől
         let lastRecordedCarry = null;
         Object.values(workerStats).forEach(ws => {
             if (ws.lastDate) {
-                const d = parseLocalDate(ws.lastDate);
+                const d = new Date(ws.lastDate);
                 if (!lastRecordedCarry || d > lastRecordedCarry) lastRecordedCarry = d;
             }
         });
         
+        let simDate;
         if (lastRecordedCarry) {
-            // a következő nap utáni napoktól szimulálunk
             simDate = new Date(lastRecordedCarry);
             simDate.setDate(simDate.getDate() + 1);
+        } else {
+            // ha még semmi sincs, ma reggel indulunk
+            simDate = new Date();
         }
+        simDate.setHours(0, 0, 0, 0);
+        
+        let endDate = new Date();
+        endDate.setDate(endDate.getDate() + 45); 
+        endDate.setHours(0, 0, 0, 0);
 
         while (simDate <= endDate) {
             if (isWorkingDay(simDate)) {
                 let dateKey = getDateKey(simDate);
                 let dailyAbsences = absences[dateKey] || {};
                 
-                // 1. Kiválasztjuk a két dolgozót a fairness pontszám alapján
+                // elérhető dolgozók: aki nincs hiányzónak jelölve
                 let availableWorkers = roster.filter(name => !dailyAbsences[name]);
                 
-                if (availableWorkers.length < 2) {
-                    // ha kevés ember van, kiegészítjük "-"-tal
-                    computedSchedule[dateKey] = [
-                        availableWorkers[0] || "-",
-                        availableWorkers[1] || "-"
-                    ];
-                    simDate.setDate(simDate.getDate() + 1);
-                    continue;
+                const pair = selectPairForDay(availableWorkers, simStats, simPairs);
+                
+                if (pair[0] !== "-" && pair[1] !== "-") {
+                    // sim frissítése
+                    simStats[pair[0]] = {
+                        carries: (simStats[pair[0]].carries || 0) + 1,
+                        lastDate: dateKey
+                    };
+                    simStats[pair[1]] = {
+                        carries: (simStats[pair[1]].carries || 0) + 1,
+                        lastDate: dateKey
+                    };
+                    const pk = pairKey(pair[0], pair[1]);
+                    simPairs[pk] = (simPairs[pk] || 0) + 1;
                 }
                 
-                // 2. Első dolgozó kiválasztása (legkevesebbet vitt → legrégebbi → random)
-                availableWorkers.sort((a, b) => {
-                    const sa = simStats[a] || { carries: 0, lastDate: null };
-                    const sb = simStats[b] || { carries: 0, lastDate: null };
-                    
-                    // (1) Legkevesebb totalCarries
-                    if (sa.carries !== sb.carries) return sa.carries - sb.carries;
-                    
-                    // (2) Legrégebben vitt (null = soha = előny)
-                    if (sa.lastDate === null && sb.lastDate !== null) return -1;
-                    if (sa.lastDate !== null && sb.lastDate === null) return 1;
-                    if (sa.lastDate !== sb.lastDate) {
-                        return sa.lastDate < sb.lastDate ? -1 : 1;
-                    }
-                    
-                    // (3) determinisztikus tie-break: alfabetikus
-                    return a.localeCompare(b, 'hu');
-                });
-                
-                const worker1 = availableWorkers[0];
-                
-                // 3. Második dolgozó: a worker1-en kívüliek közül a fairness alapján
-                //    plusz figyelembe vesszük a partnerHistory-t
-                let candidates = availableWorkers.slice(1);
-                candidates.sort((a, b) => {
-                    const sa = simStats[a] || { carries: 0, lastDate: null };
-                    const sb = simStats[b] || { carries: 0, lastDate: null };
-                    
-                    // (1) Legkevesebb totalCarries
-                    if (sa.carries !== sb.carries) return sa.carries - sb.carries;
-                    
-                    // (2) ritkább pár a worker1-gyel
-                    const pca = simPairs[pairKey(worker1, a)] || 0;
-                    const pcb = simPairs[pairKey(worker1, b)] || 0;
-                    if (pca !== pcb) return pca - pcb;
-
-                    // (3) Legrégebben vitt
-                    if (sa.lastDate === null && sb.lastDate !== null) return -1;
-                    if (sa.lastDate !== null && sb.lastDate === null) return 1;
-                    if (sa.lastDate !== sb.lastDate && sa.lastDate && sb.lastDate) {
-                        return sa.lastDate < sb.lastDate ? -1 : 1;
-                    }
-                    
-                    // (4) alfabetikus
-                    return a.localeCompare(b, 'hu');
-                });
-                
-                const worker2 = candidates[0];
-                
-                // 4. Sim-állapot frissítése
-                simStats[worker1] = {
-                    carries: (simStats[worker1].carries || 0) + 1,
-                    lastDate: dateKey
-                };
-                simStats[worker2] = {
-                    carries: (simStats[worker2].carries || 0) + 1,
-                    lastDate: dateKey
-                };
-                const pk = pairKey(worker1, worker2);
-                simPairs[pk] = (simPairs[pk] || 0) + 1;
-                
-                computedSchedule[dateKey] = [worker1, worker2];
-                
-                // 5. Ciklus végét detektáljuk (n vitel = 1 ciklus, ahol n a kezdeti létszám)
-                cycleProgressCount++;
-                if (cycleProgressCount >= rosterLengthAtStart && pending.length > 0) {
-                    // ciklus vége - bevesszük a várakozót
-                    const newWorker = pending.shift();
-                    roster.push(newWorker.name);
-                    // új belépő 0 carries-szel indul
-                    simStats[newWorker.name] = { carries: 0, lastDate: null };
-                    cycleProgressCount = 0;
-                }
+                computedSchedule[dateKey] = pair;
             }
             simDate.setDate(simDate.getDate() + 1);
         }
     }
 
     // ==========================================
-    // ⚡ INTERAKTÍV AKCIÓK
+    // ⚡ INTERAKCIÓK
     // ==========================================
-    
-    // Mai napi vitel rögzítése a Firebase-be (workerStats + pairHistory)
     function recordTodayCarry(dateKey, worker1, worker2) {
         if (!worker1 || !worker2 || worker1 === "-" || worker2 === "-") return;
         
-        // ellenőrizzük hogy nem rögzítettük-e már (mai napra már van rögzítés)
         const today = new Date();
         if (today.getHours() < 6) today.setDate(today.getDate() - 1);
         const todayKey = getDateKey(today);
         
-        if (dateKey !== todayKey) return; // csak mai napot rögzítünk automatikusan
+        if (dateKey !== todayKey) return;
         
-        // ha valakinek a lastDate-je már a mai → már rögzítettük
+        // double-write védelem: ha már ma rögzítettük, ne ismét
         const w1Stats = workerStats[worker1] || {};
-        if (w1Stats.lastDate === dateKey) return;
+        const w2Stats = workerStats[worker2] || {};
+        if (w1Stats.lastDate === dateKey && w2Stats.lastDate === dateKey) return;
         
-        // Egyszerre frissítjük a két dolgozót és a párt
         const updates = {};
         updates[`workerStats/${worker1}/carries`] = ((workerStats[worker1] && workerStats[worker1].carries) || 0) + 1;
         updates[`workerStats/${worker1}/lastDate`] = dateKey;
@@ -494,7 +528,7 @@
     
     window.markAbsent = function(dateKey, name) {
         if(!name || name === "Nincs több!" || name === "-") return;
-        if(confirm(`Szeretnéd jelezni, hogy ${name} hiányzik ezen a napon?\n\nA rendszer automatikusan behívja a következőt, ${name} pedig sorra kerül a következő alkalommal.`)) {
+        if(confirm(`Szeretnéd jelezni, hogy ${name} hiányzik ezen a napon?\n\nA rendszer automatikusan behívja a következőt, ${name} pedig sorra kerül legközelebb.`)) {
             db.ref(`absences/${dateKey}/${name}`).set(true);
         }
     };
@@ -504,7 +538,7 @@
     };
 
     // ==========================================
-    // 🎨 KÉPERNYŐ RAJZOLÁSA
+    // 🎨 RENDER
     // ==========================================
     function renderUI() {
         const hero = document.getElementById('heroContainer');
@@ -515,7 +549,7 @@
         if (today.getHours() < 6) today.setDate(today.getDate() - 1);
         today.setHours(0,0,0,0);
 
-        const headerHTML = `<div class="header-pill" onclick="openAdmin()">${sysSettings.shift} MŰSZAK BEOSZTÁS</div>`;
+        const headerHTML = `<div class="header-pill" onclick="openAdmin()">C MŰSZAK BEOSZTÁS</div>`;
 
         if (!sysSettings.roster || sysSettings.roster.length === 0) {
             hero.innerHTML = `${headerHTML}
@@ -532,9 +566,11 @@
                 <div style="text-align: center; margin-top: 50px; opacity: 0.7;">
                     <div style="font-size: 3rem; margin-bottom: 10px; filter: grayscale(100%);">😴</div>
                     <h2 style="color:white; font-weight: 600;">Pihenőnap</h2>
-                    <p style="color:var(--text-dim)">Ma nincs szemétkihordás.</p>
-                </div>`;
-            fillUpcomingList(today, list); return;
+                    <p style="color:var(--text-dim); margin-top: 4px;">Ma a C műszak pihen.</p>
+                </div>
+                ${renderFrontFairness()}`;
+            fillUpcomingList(today, list);
+            return;
         }
 
         let dateKey = getDateKey(today);
@@ -542,7 +578,7 @@
         let dailyAbs = absences[dateKey] || {};
         let todayStr = today.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric', weekday: 'long' });
 
-        // Mai napi vitel automatikus rögzítése a statokba (ha még nincs)
+        // Mai napi automatikus rögzítés
         if (workers[0] !== "-" && workers[1] !== "-") {
             recordTodayCarry(dateKey, workers[0], workers[1]);
         }
@@ -550,31 +586,74 @@
         let absHTML = Object.keys(dailyAbs).length > 0 ? 
             `<div class="absent-row">Hiányzik: ${Object.keys(dailyAbs).map(n => `<span class="absent-pill" onclick="undoAbsent('${dateKey}', '${n}')" title="Koppints a visszavonáshoz">${n} ↩</span>`).join('')}</div>` : '';
 
-        // Vitel-szám mini badge mindkét emberhez
         const w0Count = (workerStats[workers[0]] && workerStats[workers[0]].carries) || 0;
         const w1Count = (workerStats[workers[1]] && workerStats[workers[1]].carries) || 0;
 
         hero.innerHTML = `
             ${headerHTML}
             <div class="today-card">
-                <div class="today-label">Mai Műszak</div>
+                <div class="today-label">Mai műszak</div>
                 <div class="today-date">${todayStr}</div>
                 ${absHTML}
                 <div class="pill-container">
                     <div class="worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dateKey}', '${workers[0]}')">
                         ${workers[0]}
-                        <div class="carry-count">${w0Count}x összesen</div>
+                        <div class="carry-count">${w0Count}x</div>
                     </div>
-                    <span style="font-size: 1.5rem; color:var(--text-dim); font-weight:300;">&</span>
+                    <span style="font-size: 1.4rem; color:var(--text-dim); font-weight:300;">&</span>
                     <div class="worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dateKey}', '${workers[1]}')">
                         ${workers[1]}
-                        <div class="carry-count">${w1Count}x összesen</div>
+                        <div class="carry-count">${w1Count}x</div>
                     </div>
                 </div>
                 <div class="instruction-text">(Koppints a névre a hiányzás jelzéséhez)</div>
-            </div>`;
+            </div>
+            ${renderFrontFairness()}`;
 
         fillUpcomingList(today, list);
+    }
+    
+    // Diszkrét főoldali fairness mérleg
+    function renderFrontFairness() {
+        if (!sysSettings.roster || sysSettings.roster.length === 0) return '';
+        
+        const carriesArr = sysSettings.roster.map(n => (workerStats[n] && workerStats[n].carries) || 0);
+        const maxCarries = Math.max(...carriesArr, 1);
+        const avgCarries = carriesArr.reduce((a,b)=>a+b, 0) / carriesArr.length;
+        
+        let rowsHtml = '';
+        sysSettings.roster.forEach(name => {
+            const c = (workerStats[name] && workerStats[name].carries) || 0;
+            const pct = (c / maxCarries) * 100;
+            
+            let cls = 'zero';
+            if (c === 0) cls = 'zero';
+            else if (avgCarries === 0) cls = 'mid';
+            else if (c < avgCarries * 0.8) cls = 'low';
+            else if (c < avgCarries * 1.1) cls = 'mid';
+            else if (c < avgCarries * 1.3) cls = 'high';
+            else cls = 'over';
+            
+            const isHighlight = c > 0 ? 'highlight' : '';
+            
+            rowsHtml += `
+                <div class="fp-row">
+                    <span class="fp-name">${name}</span>
+                    <div class="fp-bar-wrap"><div class="fp-bar ${cls}" style="width: ${pct}%;"></div></div>
+                    <span class="fp-count ${isHighlight}">${c}</span>
+                </div>
+            `;
+        });
+        
+        return `
+            <div class="fairness-panel-front">
+                <div class="fp-title">
+                    <span>Igazságossági Mérleg</span>
+                    <span class="fp-avg">Átlag: ${avgCarries.toFixed(1)}x</span>
+                </div>
+                <div class="fp-rows">${rowsHtml}</div>
+            </div>
+        `;
     }
 
     function fillUpcomingList(startDate, container) {
@@ -592,14 +671,14 @@
                 let dateFull = iterDate.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric' });
 
                 let absHTML = Object.keys(dailyAbs).length > 0 ? 
-                    `<div class="absent-row" style="justify-content:flex-end; font-size:0.75rem; margin:0; margin-top:5px;">${Object.keys(dailyAbs).map(n => `<span class="absent-pill" onclick="undoAbsent('${dKey}', '${n}')" style="padding:2px 8px;">${n} ↩</span>`).join('')}</div>` : '';
+                    `<div class="absent-row" style="justify-content:flex-end; font-size:0.72rem; margin:0; margin-top:5px;">${Object.keys(dailyAbs).map(n => `<span class="absent-pill" onclick="undoAbsent('${dKey}', '${n}')" style="padding:2px 8px;">${n} ↩</span>`).join('')}</div>` : '';
 
                 container.innerHTML += `
                     <div class="list-card">
                         <div class="lc-header">
                             <div>
-                                <span style="background:rgba(6,182,212,0.1); color:var(--accent); font-weight:700; font-size:0.8rem; padding:4px 8px; border-radius:6px;">${dayShort}</span>
-                                <span class="lc-date-text" style="margin-left:8px;">${dateFull}</span>
+                                <span style="background:rgba(6,182,212,0.1); color:var(--accent); font-weight:700; font-size:0.75rem; padding:3px 7px; border-radius:6px;">${dayShort}</span>
+                                <span class="lc-date-text" style="margin-left:6px;">${dateFull}</span>
                             </div>
                             <div class="lc-pills">
                                 <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dKey}', '${workers[0]}')">${workers[0]}</div>
@@ -616,7 +695,7 @@
     }
 
     // ==========================================
-    // 🔐 PIN MODAL LOGIKA
+    // 🔐 PIN MODAL
     // ==========================================
     window.openAdmin = function() {
         document.getElementById('pinInput').value = '';
@@ -640,16 +719,12 @@
         }
     };
     
-    // Enter is működjön a PIN-en
     document.getElementById('pinInput').addEventListener('keydown', function(e) {
         if (e.key === 'Enter') submitPin();
     });
 
     function openAdminPanel() {
         document.getElementById('adminPanel').style.display = 'block';
-        document.getElementById('setShiftStart').value = sysSettings.shiftStart;
-        document.getElementById('setNameStart').value = sysSettings.nameStart;
-        document.getElementById('setShiftType').value = sysSettings.shift;
         renderAdminRoster();
         renderFairness();
     }
@@ -658,9 +733,6 @@
         document.getElementById('adminPanel').style.display = 'none';
     };
     
-    // ==========================================
-    // 🎯 TOAST ÜZENET
-    // ==========================================
     function showToast(msg, type = '') {
         const t = document.getElementById('toast');
         t.textContent = msg;
@@ -672,7 +744,7 @@
     }
 
     // ==========================================
-    // ⚙️ ADMIN FUNKCIÓK (PRO VERZIÓ)
+    // ⚙️ ADMIN
     // ==========================================
     function renderAdminRoster() {
         let html = "";
@@ -697,23 +769,6 @@
             </div>`;
         });
         document.getElementById('adminRosterList').innerHTML = html || "<div style='padding:15px; color:var(--text-dim); text-align:center;'>Nincs aktív dolgozó</div>";
-
-        let pHTML = "";
-        if(sysSettings.pending && sysSettings.pending.length > 0) {
-            sysSettings.pending.forEach((p, i) => { 
-                pHTML += `
-                <div class="admin-list-item">
-                    <span style="color:var(--accent);">⏳ ${p.name}</span>
-                    <div style="display:flex; gap:5px;">
-                        <button class="btn-action" style="background:var(--primary);" title="Azonnali aktiválás" onclick="activatePending(${i})">⚡</button>
-                        <button class="btn-action btn-delete" title="Törlés" onclick="removePending(${i})">✖</button>
-                    </div>
-                </div>`; 
-            });
-        } else {
-            pHTML = "<div style='padding:15px; color:var(--text-dim); text-align:center; font-size:0.85rem;'>Jelenleg senki sem várakozik.</div>";
-        }
-        document.getElementById('pendingWorkers').innerHTML = pHTML;
     }
     
     function renderFairness() {
@@ -723,7 +778,6 @@
             return;
         }
         
-        // max carries számolása az aktív dolgozók között
         const carriesArr = sysSettings.roster.map(n => (workerStats[n] && workerStats[n].carries) || 0);
         const maxCarries = Math.max(...carriesArr, 1);
         const avgCarries = carriesArr.reduce((a, b) => a + b, 0) / carriesArr.length;
@@ -735,6 +789,7 @@
             
             let cls = 'zero';
             if (c === 0) cls = 'zero';
+            else if (avgCarries === 0) cls = 'mid';
             else if (c < avgCarries * 0.8) cls = 'low';
             else if (c < avgCarries * 1.1) cls = 'mid';
             else if (c < avgCarries * 1.3) cls = 'high';
@@ -775,37 +830,22 @@
         }
     };
 
-    window.removePending = function(index) {
-        if(confirm(`Biztos törlöd a várakozólistáról?`)) {
-            sysSettings.pending.splice(index, 1);
-            renderAdminRoster();
-        }
-    };
-
-    window.activatePending = function(index) {
-        if (!sysSettings.roster) sysSettings.roster = [];
-        let worker = sysSettings.pending.splice(index, 1)[0];
-        sysSettings.roster.push(worker.name);
-        // azonnali aktiváláskor a stats-ban már lehet érték, vagy 0-val indul automatikusan
-        renderAdminRoster();
-        renderFairness();
-    };
-
     window.addNewWorker = function() {
         let name = document.getElementById('newWorkerName').value.trim();
         if(name === "") return;
         
         if(!sysSettings.roster) sysSettings.roster = [];
-        if(!sysSettings.pending) sysSettings.pending = [];
-
-        if (sysSettings.roster.length === 0) {
-            sysSettings.roster.push(name);
-        } else {
-            sysSettings.pending.push({ name: name, addedDate: new Date().getTime() });
+        if(sysSettings.roster.includes(name)) {
+            showToast("Ez a név már szerepel!", 'error');
+            return;
         }
+        
+        // azonnal a roster-be (semmi pending) - 0 carries-szel indul, így ő lesz a következő
+        sysSettings.roster.push(name);
         
         document.getElementById('newWorkerName').value = "";
         renderAdminRoster();
+        renderFairness();
     };
     
     window.resetCarries = function() {
@@ -815,7 +855,6 @@
         sysSettings.roster.forEach(name => {
             updates[`workerStats/${name}`] = { carries: 0, lastDate: null };
         });
-        // pairHistory is törlés
         updates['pairHistory'] = null;
         
         db.ref().update(updates).then(() => {
@@ -828,10 +867,8 @@
     };
 
     window.saveAdminSettings = function() {
-        sysSettings.shiftStart = document.getElementById('setShiftStart').value;
-        sysSettings.nameStart = document.getElementById('setNameStart').value;
-        sysSettings.shift = document.getElementById('setShiftType').value;
-        db.ref('settings').set(sysSettings).then(() => {
+        // Csak a rostert mentjük (a shift adatok statikusan a kódban vannak)
+        db.ref('settings/roster').set(sysSettings.roster).then(() => {
             document.getElementById('adminPanel').style.display = 'none';
             showToast("💾 Mentve a felhőbe!", 'success');
         }).catch(err => {
