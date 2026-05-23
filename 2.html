@@ -1,1 +1,480 @@
-<!DOCTYPE html><html lang="hu"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Forvia SMT | Bérkalkulátor Pro</title><style>:root{--primary:#3b82f6;--primary-hover:#2563eb;--bg:#0f172a;--card-bg:#1e293b;--card-border:#334155;--text-main:#f1f5f9;--text-muted:#94a3b8;--success:#10b981;--accent:#f59e0b;--danger:#f87171;}body{font-family:'Inter',sans-serif;background-color:var(--bg);background-image:radial-gradient(circle at top right,#1e293b,#0f172a);margin:0;padding:20px;color:var(--text-main);min-height:100vh;display:flex;justify-content:center;}.container{width:100%;max-width:550px;}header{text-align:center;margin-bottom:30px;}header h1{font-size:1.8rem;font-weight:800;margin:0;background:linear-gradient(to right,#60a5fa,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}header p{color:var(--text-muted);font-size:0.9rem;margin-top:5px;}.card{background:var(--card-bg);border:1px solid var(--card-border);padding:24px;border-radius:20px;margin-bottom:20px;box-shadow:0 10px 15px -3px rgba(0,0,0,0.3);}h3{font-size:0.8rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--primary);margin-top:0;margin-bottom:20px;display:flex;align-items:center;gap:8px;}h3::after{content:"";flex:1;height:1px;background:var(--card-border);}.input-group{margin-bottom:18px;}label{display:block;font-size:0.85rem;font-weight:500;margin-bottom:8px;color:var(--text-muted);}input[type="number"]{width:100%;padding:14px;background-color:#0f172a;border:1px solid var(--card-border);border-radius:12px;font-size:16px;color:white;box-sizing:border-box;transition:all 0.2s;}input[type="number"]:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px rgba(59,130,246,0.15);}.checkbox-container{background:rgba(59,130,246,0.05);padding:14px;border-radius:12px;border:1px dashed var(--card-border);display:flex;align-items:center;cursor:pointer;transition:0.2s;}.checkbox-container:hover{background:rgba(59,130,246,0.1);}input[type="checkbox"]{accent-color:var(--primary);width:20px;height:20px;margin-right:12px;}.flex-row{display:flex;gap:15px;}.flex-row>div{flex:1;}button{width:100%;padding:18px;background:linear-gradient(135deg,var(--primary),var(--primary-hover));color:white;border:none;border-radius:16px;font-size:1rem;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(37,99,235,0.3);transition:all 0.2s;margin-top:10px;}button:hover{filter:brightness(1.1);transform:translateY(-1px);}.result-card{display:none;background:linear-gradient(145deg,#064e3b,#065f46);padding:30px;border-radius:24px;margin-top:25px;border:1px solid rgba(16,185,129,0.3);animation:slideUp 0.4s ease-out;}@keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}.netto-title{font-size:0.8rem;color:#a7f3d0;text-transform:uppercase;font-weight:600;text-align:center;}.netto-amount{font-size:3rem;font-weight:900;color:#fff;margin:10px 0;text-align:center;}.breakdown-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:25px;}.breakdown-item{background:rgba(0,0,0,0.2);padding:15px;border-radius:16px;border:1px solid rgba(255,255,255,0.05);}.full-width{grid-column:span 2;background:rgba(255,255,255,0.1);}.breakdown-label{display:block;font-size:0.7rem;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;}.breakdown-value{font-size:1.1rem;font-weight:700;}.income{color:var(--accent);}.deduction{color:var(--danger);}.highlight-box{background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.2);padding:12px;border-radius:12px;}@media (max-width:480px){.flex-row{flex-direction:column;gap:0;}.breakdown-grid{grid-template-columns:1fr;}.full-width{grid-column:span 1;}.netto-amount{font-size:2.2rem;}}</style></head><body><div class="container"><header><h1>FORVIA SMT</h1><p>Bérkalkulátor 2026</p></header><div class="card"><h3>Alap adatok</h3><div class="input-group"><label>Besorolási alapbér (Ft)</label><input type="number" id="alapber" placeholder="Besorolási béred"></div><label class="checkbox-container"><input type="checkbox" id="fiatal"><span>25 év alatti (SZJA mentesség)</span></label></div><div class="card"><h3>Pótlékok és Időadatok</h3><div class="flex-row"><div class="input-group"><label>Éjszakás 30% (óra)</label><input type="number" id="m30" placeholder="0"></div><div class="input-group"><label>Vasárnap 50% (óra)</label><input type="number" id="v50" placeholder="0"></div></div></div><div class="card"><h3>Túlóra elszámolás</h3><div class="flex-row"><div class="input-group"><label>Sima (óra)</label><input type="number" id="t_sima" placeholder="0"></div><div class="input-group"><label>Éjszakai (óra)</label><input type="number" id="t_ejszaka" placeholder="0"></div></div><div class="input-group"><label>Vasárnapi túlóra (óra)</label><input type="number" id="t_vasarnap" placeholder="0"></div><div class="highlight-box"><label style="color:var(--accent);">Keret elszámolás (óra)</label><input type="number" id="t_keret" placeholder="0" style="border-color:rgba(245,158,11,0.3);"></div></div><div class="card"><h3>Egyéb juttatások</h3><div class="flex-row"><div class="input-group"><label>Jelenléti bónusz (Ft)</label><input type="number" id="b_jelenleti" placeholder="0"></div><div class="input-group"><label>Termelékenység (Ft)</label><input type="number" id="b_term" placeholder="0"></div></div></div><button onclick="szamol()">Kalkuláció Futtatása</button><div id="eredmeny_doboz" class="result-card"><div class="netto-title">Várható nettó utalás</div><div class="netto-amount" id="netto_osszeg">0 Ft</div><div id="reszletes_bontas" class="breakdown-grid"></div><p style="text-align:center;font-size:0.7rem;margin-top:25px;color:#a7f3d0;opacity:0.6;">A számítás tájékoztató jellegű, a 2024/25-ös adójogszabályok alapján.</p></div></div><script>function szamol(){const alap=+document.getElementById("alapber").value||0;const isFiatal=document.getElementById("fiatal").checked;const oraber174=alap/174;const oraber180=alap/180;const p_m30=oraber174*0.3*(+document.getElementById("m30").value||0);const p_v50=oraber174*0.5*(+document.getElementById("v50").value||0);const ossz_potlek=p_m30+p_v50;const h_sima=+document.getElementById("t_sima").value||0;const h_ejsz=+document.getElementById("t_ejszaka").value||0;const h_vas=+document.getElementById("t_vasarnap").value||0;const h_keret=+document.getElementById("t_keret").value||0;const ossz_t_ora=h_sima+h_ejsz+h_vas;const t_alap_resz=oraber180*ossz_t_ora;const t_potlek_100=oraber174*1.0*ossz_t_ora;const t_extra_30=oraber174*0.3*h_ejsz;const t_extra_50=oraber174*0.5*h_vas;const keret_alap=oraber180*h_keret;const keret_potlek_50=oraber174*0.5*h_keret;const tulora_total=t_alap_resz+t_potlek_100+t_extra_30+t_extra_50+keret_alap+keret_potlek_50;const b1=+document.getElementById("b_jelenleti").value||0;const b2=+document.getElementById("b_term").value||0;const ossz_bonusz=b1+b2;const brutto=alap+ossz_potlek+tulora_total+ossz_bonusz;let szja=brutto*0.15;if(isFiatal){const mentes_keret=576601;szja=(brutto<=mentes_keret)?0:(brutto-mentes_keret)*0.15;}const tb=brutto*0.185;const netto=brutto-szja-tb;document.getElementById("eredmeny_doboz").style.display="block";document.getElementById("netto_osszeg").innerText=Math.round(netto).toLocaleString()+" Ft";document.getElementById("reszletes_bontas").innerHTML=`<div class="breakdown-item full-width"><span class="breakdown-label">Bruttó jövedelem összesen</span><span class="breakdown-value">${Math.round(brutto).toLocaleString()} Ft</span></div><div class="breakdown-item"><span class="breakdown-label">Alapbér</span><span class="breakdown-value">${alap.toLocaleString()} Ft</span></div><div class="breakdown-item"><span class="breakdown-label income">Pótlékok (Műszak/Vas.)</span><span class="breakdown-value income">+${Math.round(ossz_potlek).toLocaleString()} Ft</span></div><div class="breakdown-item"><span class="breakdown-label income">Túlóra & Keret</span><span class="breakdown-value income">+${Math.round(tulora_total).toLocaleString()} Ft</span></div><div class="breakdown-item"><span class="breakdown-label income">Bónuszok</span><span class="breakdown-value income">+${ossz_bonusz.toLocaleString()} Ft</span></div><div class="breakdown-item"><span class="breakdown-label deduction">SZJA (15%)</span><span class="breakdown-value deduction">-${Math.round(szja).toLocaleString()} Ft</span></div><div class="breakdown-item"><span class="breakdown-label deduction">TB Járulék (18.5%)</span><span class="breakdown-value deduction">-${Math.round(tb).toLocaleString()} Ft</span></div>`;document.getElementById("eredmeny_doboz").scrollIntoView({behavior:'smooth'});}</script></body></html>
+<!DOCTYPE html><html lang="hu"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Forvia SMT | Bérkalkulátor Pro</title><style>:root{--primary:#3b82f6;--primary-hover:#2563eb;--bg:#0f172a;--card-bg:#1e293b;--card-border:#334155;--text-main:#f1f5f9;--text-muted:#94a3b8;--success:#10b981;--accent:#f59e0b;--accent-warm:#fbbf24;--danger:#f87171;}body{font-family:'Inter',sans-serif;background-color:var(--bg);background-image:radial-gradient(circle at top right,#1e293b,#0f172a);margin:0;padding:20px;color:var(--text-main);min-height:100vh;display:flex;justify-content:center;}.container{width:100%;max-width:550px;}header{text-align:center;margin-bottom:30px;}header h1{font-size:1.8rem;font-weight:800;margin:0;background:linear-gradient(to right,#60a5fa,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}header p{color:var(--text-muted);font-size:0.9rem;margin-top:5px;}.card{background:var(--card-bg);border:1px solid var(--card-border);padding:24px;border-radius:20px;margin-bottom:20px;box-shadow:0 10px 15px -3px rgba(0,0,0,0.3);}h3{font-size:0.8rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--primary);margin-top:0;margin-bottom:20px;display:flex;align-items:center;gap:8px;}h3::after{content:"";flex:1;height:1px;background:var(--card-border);}.input-group{margin-bottom:18px;}label{display:block;font-size:0.85rem;font-weight:500;margin-bottom:8px;color:var(--text-muted);}input[type="number"]{width:100%;padding:14px;background-color:#0f172a;border:1px solid var(--card-border);border-radius:12px;font-size:16px;color:white;box-sizing:border-box;transition:all 0.2s;}input[type="number"]:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px rgba(59,130,246,0.15);}.checkbox-container{background:rgba(59,130,246,0.05);padding:14px;border-radius:12px;border:1px dashed var(--card-border);display:flex;align-items:center;cursor:pointer;transition:0.2s;}.checkbox-container:hover{background:rgba(59,130,246,0.1);}input[type="checkbox"]{accent-color:var(--primary);width:20px;height:20px;margin-right:12px;}.flex-row{display:flex;gap:15px;}.flex-row>div{flex:1;}button{width:100%;padding:18px;background:linear-gradient(135deg,var(--primary),var(--primary-hover));color:white;border:none;border-radius:16px;font-size:1rem;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(37,99,235,0.3);transition:all 0.2s;margin-top:10px;}button:hover{filter:brightness(1.1);transform:translateY(-1px);}.highlight-box{background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.2);padding:12px;border-radius:12px;}@media (max-width:480px){.flex-row{flex-direction:column;gap:0;}}
+
+/* ============ PRO EREDMÉNY PANEL ============ */
+.result-card{display:none;margin-top:25px;animation:slideUp 0.4s ease-out;}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+/* === NETTÓ FŐ DOBOZ === */
+.netto-hero{background:linear-gradient(145deg,#064e3b,#065f46);border:1px solid rgba(16,185,129,0.4);border-radius:24px;padding:32px 24px;text-align:center;box-shadow:0 20px 40px -10px rgba(16,185,129,0.2);position:relative;overflow:hidden;}
+.netto-hero::before{content:"";position:absolute;top:-50%;right:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(255,255,255,0.05) 0%,transparent 50%);pointer-events:none;}
+.netto-title{font-size:0.78rem;color:#a7f3d0;text-transform:uppercase;font-weight:600;letter-spacing:0.15em;position:relative;}
+.netto-amount{font-size:3.2rem;font-weight:900;color:#fff;margin:8px 0 4px 0;letter-spacing:-0.02em;position:relative;text-shadow:0 2px 20px rgba(255,255,255,0.1);}
+.netto-sub{font-size:0.78rem;color:#a7f3d0;font-weight:500;opacity:0.8;position:relative;}
+@media (max-width:480px){.netto-amount{font-size:2.4rem;}}
+
+/* === RÉSZLETES KALKULÁCIÓ === */
+.calc-sections{margin-top:20px;display:flex;flex-direction:column;gap:14px;}
+.calc-section{background:var(--card-bg);border:1px solid var(--card-border);border-radius:18px;overflow:hidden;}
+.calc-section-header{padding:14px 18px;font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--card-border);}
+.calc-section.income .calc-section-header{color:#fbbf24;background:linear-gradient(90deg,rgba(245,158,11,0.08) 0%,transparent 100%);border-bottom-color:rgba(245,158,11,0.15);}
+.calc-section.deduction .calc-section-header{color:#fca5a5;background:linear-gradient(90deg,rgba(239,68,68,0.08) 0%,transparent 100%);border-bottom-color:rgba(239,68,68,0.15);}
+.calc-section.summary .calc-section-header{color:#a7f3d0;background:linear-gradient(90deg,rgba(16,185,129,0.08) 0%,transparent 100%);border-bottom-color:rgba(16,185,129,0.15);}
+
+/* Tételek */
+.calc-row{border-bottom:1px solid rgba(255,255,255,0.04);}
+.calc-row:last-child{border-bottom:none;}
+.calc-row-header{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;transition:background 0.2s;}
+.calc-row-header:hover{background:rgba(255,255,255,0.02);}
+.calc-row-label{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
+.calc-row-name{font-size:0.92rem;font-weight:600;color:var(--text-main);}
+.calc-row-name.sub{font-size:0.82rem;color:var(--text-muted);font-weight:500;padding-left:14px;position:relative;}
+.calc-row-name.sub::before{content:"";position:absolute;left:0;top:50%;width:8px;height:1px;background:var(--text-muted);opacity:0.5;}
+.calc-row-value{font-size:0.95rem;font-weight:800;white-space:nowrap;font-feature-settings:"tnum";font-variant-numeric:tabular-nums;}
+.calc-row.income .calc-row-value{color:#fbbf24;}
+.calc-row.deduction .calc-row-value{color:#fca5a5;}
+.calc-row.neutral .calc-row-value{color:var(--text-main);}
+.calc-row.subtotal{background:rgba(255,255,255,0.02);}
+.calc-row.subtotal .calc-row-name{font-weight:800;color:var(--text-main);}
+.calc-row.subtotal .calc-row-value{font-size:1.05rem;}
+
+/* INFÓ IKON GOMB */
+.info-btn{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);color:#fbbf24;font-size:0.75rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.25s;font-family:'Inter',sans-serif;line-height:1;padding:0;}
+.info-btn:hover{background:rgba(245,158,11,0.25);border-color:rgba(245,158,11,0.5);transform:scale(1.08);}
+.info-btn.open{background:linear-gradient(135deg,#f59e0b,#fbbf24);color:white;border-color:#fbbf24;transform:rotate(180deg);}
+.info-btn.open:hover{transform:rotate(180deg) scale(1.08);}
+
+/* ACCORDION TARTALOM */
+.info-content{max-height:0;overflow:hidden;transition:max-height 0.35s cubic-bezier(0.4,0,0.2,1);}
+.info-content.open{max-height:600px;}
+.info-content-inner{padding:0 18px 16px 18px;background:linear-gradient(180deg,rgba(245,158,11,0.04) 0%,rgba(245,158,11,0.01) 100%);border-top:1px dashed rgba(245,158,11,0.15);}
+.info-section{background:rgba(0,0,0,0.25);border:1px solid rgba(245,158,11,0.18);border-radius:14px;padding:14px 16px;margin-top:14px;}
+.info-section .info-title{font-size:0.7rem;color:#fbbf24;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.info-section .info-desc{font-size:0.82rem;color:var(--text-main);line-height:1.6;margin-bottom:10px;}
+.info-section .info-formula{background:rgba(245,158,11,0.08);border:1px dashed rgba(245,158,11,0.3);border-radius:9px;padding:10px 12px;font-family:'SF Mono','Monaco',monospace;font-size:0.78rem;color:#fde68a;margin-bottom:8px;line-height:1.5;}
+.info-section .info-calc{background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:9px;padding:10px 12px;font-family:'SF Mono','Monaco',monospace;font-size:0.78rem;color:#a7f3d0;font-weight:600;line-height:1.6;}
+.info-section .info-calc strong{color:#fff;font-size:0.92rem;}
+.info-section .info-note{font-size:0.72rem;color:var(--text-muted);font-style:italic;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(255,255,255,0.06);line-height:1.5;}
+.info-section .info-note::before{content:"💡 ";opacity:0.7;}
+
+/* ÖSSZESÍTŐ SOR ÉS EREDMÉNY */
+.calc-total{padding:16px 18px;background:linear-gradient(135deg,rgba(16,185,129,0.12) 0%,rgba(16,185,129,0.04) 100%);display:flex;justify-content:space-between;align-items:center;font-size:0.95rem;font-weight:800;border-top:2px solid rgba(16,185,129,0.25);}
+.calc-total.minus{background:linear-gradient(135deg,rgba(239,68,68,0.12) 0%,rgba(239,68,68,0.04) 100%);border-top-color:rgba(239,68,68,0.25);}
+.calc-total .ct-label{color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;font-size:0.78rem;}
+.calc-total .ct-value{font-size:1.25rem;color:#fff;font-feature-settings:"tnum";font-variant-numeric:tabular-nums;}
+.calc-total.minus .ct-value{color:#fca5a5;}
+
+/* SUMMARY ALSÓ DOBOZ */
+.calc-summary-rows{padding:8px 18px;}
+.summary-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:0.88rem;}
+.summary-row.is-bruto .sr-value{color:#fbbf24;font-weight:700;}
+.summary-row.is-deduction .sr-value{color:#fca5a5;font-weight:700;}
+.summary-row.is-netto{font-size:1rem;font-weight:900;border-top:2px solid rgba(16,185,129,0.3);margin-top:6px;padding-top:14px;}
+.summary-row.is-netto .sr-value{color:#34d399;font-size:1.2rem;text-shadow:0 0 12px rgba(16,185,129,0.4);}
+.sr-label{color:var(--text-muted);}
+.sr-value{font-feature-settings:"tnum";font-variant-numeric:tabular-nums;}
+
+.disclaimer{text-align:center;font-size:0.7rem;margin-top:20px;color:var(--text-muted);opacity:0.6;line-height:1.5;}
+</style></head><body><div class="container"><header><h1>FORVIA SMT</h1><p>Bérkalkulátor 2026</p></header><div class="card"><h3>Alap adatok</h3><div class="input-group"><label>Besorolási alapbér (Ft)</label><input type="number" id="alapber" placeholder="Besorolási béred"></div><label class="checkbox-container"><input type="checkbox" id="fiatal"><span>25 év alatti (SZJA mentesség)</span></label></div><div class="card"><h3>Pótlékok és Időadatok</h3><div class="flex-row"><div class="input-group"><label>Éjszakás 30% (óra)</label><input type="number" id="m30" placeholder="0"></div><div class="input-group"><label>Vasárnap 50% (óra)</label><input type="number" id="v50" placeholder="0"></div></div></div><div class="card"><h3>Túlóra elszámolás</h3><div class="flex-row"><div class="input-group"><label>Sima (óra)</label><input type="number" id="t_sima" placeholder="0"></div><div class="input-group"><label>Éjszakai (óra)</label><input type="number" id="t_ejszaka" placeholder="0"></div></div><div class="input-group"><label>Vasárnapi túlóra (óra)</label><input type="number" id="t_vasarnap" placeholder="0"></div><div class="highlight-box"><label style="color:var(--accent);">Keret elszámolás (óra)</label><input type="number" id="t_keret" placeholder="0" style="border-color:rgba(245,158,11,0.3);"></div></div><div class="card"><h3>Egyéb juttatások</h3><div class="flex-row"><div class="input-group"><label>Jelenléti bónusz (Ft)</label><input type="number" id="b_jelenleti" placeholder="0"></div><div class="input-group"><label>Termelékenység (Ft)</label><input type="number" id="b_term" placeholder="0"></div></div></div><button onclick="szamol()">Kalkuláció Futtatása</button>
+
+<!-- === PRO EREDMÉNY PANEL === -->
+<div id="eredmeny_doboz" class="result-card">
+    <!-- Hero nettó box -->
+    <div class="netto-hero">
+        <div class="netto-title">Várható nettó utalás</div>
+        <div class="netto-amount" id="netto_osszeg">0 Ft</div>
+        <div class="netto-sub" id="netto_sub">Tisztázott jövedelem, kézhez kapod</div>
+    </div>
+    
+    <!-- Részletes szekciók -->
+    <div class="calc-sections" id="calc_sections"></div>
+    
+    <p class="disclaimer">A számítás tájékoztató jellegű, a 2024/25-ös magyar adójogszabályok alapján. A pontos összegeket a bérpapír mutatja.</p>
+</div>
+
+</div>
+
+<script>
+let formatFt = (n) => Math.round(n).toLocaleString('hu-HU') + ' Ft';
+
+function toggleInfo(btn) {
+    const content = btn.closest('.calc-row').querySelector('.info-content');
+    const isOpen = content.classList.contains('open');
+    if (isOpen) {
+        content.classList.remove('open');
+        btn.classList.remove('open');
+        btn.innerText = 'i';
+    } else {
+        content.classList.add('open');
+        btn.classList.add('open');
+        btn.innerText = '▼';
+    }
+}
+
+function makeRow(opts) {
+    // opts: {name, value, type (income/deduction/neutral), sub (true/false), info (HTML), subtotal (bool)}
+    const cls = `calc-row ${opts.type || 'neutral'}${opts.subtotal ? ' subtotal' : ''}`;
+    const nameCls = `calc-row-name${opts.sub ? ' sub' : ''}`;
+    const valueDisplay = opts.type === 'deduction' ? '-' + formatFt(Math.abs(opts.value)) :
+                          opts.type === 'income' && opts.value > 0 && !opts.subtotal ? '+' + formatFt(opts.value) :
+                          formatFt(opts.value);
+    let infoBtn = '';
+    let infoContent = '';
+    if (opts.info) {
+        infoBtn = `<button class="info-btn" onclick="toggleInfo(this)" title="Részletes számítás">i</button>`;
+        infoContent = `<div class="info-content"><div class="info-content-inner">${opts.info}</div></div>`;
+    }
+    return `<div class="${cls}">
+        <div class="calc-row-header">
+            <div class="calc-row-label">
+                <span class="${nameCls}">${opts.name}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span class="calc-row-value">${valueDisplay}</span>
+                ${infoBtn}
+            </div>
+        </div>
+        ${infoContent}
+    </div>`;
+}
+
+function makeInfo(title, desc, formula, calc, note) {
+    return `<div class="info-section">
+        <div class="info-title">📖 ${title}</div>
+        <div class="info-desc">${desc}</div>
+        ${formula ? `<div class="info-formula">📐 <strong style="color:#fbbf24;">Képlet:</strong><br>${formula}</div>` : ''}
+        ${calc ? `<div class="info-calc">🧮 <strong style="color:#fff;">Számítás a Te adataiddal:</strong><br>${calc}</div>` : ''}
+        ${note ? `<div class="info-note">${note}</div>` : ''}
+    </div>`;
+}
+
+function szamol(){
+    const alap = +document.getElementById("alapber").value || 0;
+    const isFiatal = document.getElementById("fiatal").checked;
+    const oraber174 = alap / 174;
+    const oraber180 = alap / 180;
+    
+    const h_m30 = +document.getElementById("m30").value || 0;
+    const h_v50 = +document.getElementById("v50").value || 0;
+    const p_m30 = oraber174 * 0.3 * h_m30;
+    const p_v50 = oraber174 * 0.5 * h_v50;
+    const ossz_potlek = p_m30 + p_v50;
+    
+    const h_sima = +document.getElementById("t_sima").value || 0;
+    const h_ejsz = +document.getElementById("t_ejszaka").value || 0;
+    const h_vas = +document.getElementById("t_vasarnap").value || 0;
+    const h_keret = +document.getElementById("t_keret").value || 0;
+    const ossz_t_ora = h_sima + h_ejsz + h_vas;
+    const t_alap_resz = oraber180 * ossz_t_ora;
+    const t_potlek_100 = oraber174 * 1.0 * ossz_t_ora;
+    const t_extra_30 = oraber174 * 0.3 * h_ejsz;
+    const t_extra_50 = oraber174 * 0.5 * h_vas;
+    const keret_alap = oraber180 * h_keret;
+    const keret_potlek_50 = oraber174 * 0.5 * h_keret;
+    const tulora_total = t_alap_resz + t_potlek_100 + t_extra_30 + t_extra_50 + keret_alap + keret_potlek_50;
+    
+    const b1 = +document.getElementById("b_jelenleti").value || 0;
+    const b2 = +document.getElementById("b_term").value || 0;
+    const ossz_bonusz = b1 + b2;
+    
+    const brutto = alap + ossz_potlek + tulora_total + ossz_bonusz;
+    
+    let szja = brutto * 0.15;
+    let szja_note = "";
+    const mentes_keret = 576601;
+    if(isFiatal){
+        if(brutto <= mentes_keret) {
+            szja = 0;
+            szja_note = `A 25 év alattiak SZJA-mentesek a 2025-ös éves összeghatárig (576 601 Ft/hó). A te bruttód (${formatFt(brutto)}) ezalatt van, ezért <strong>NEM kell SZJA-t fizetned.</strong>`;
+        } else {
+            szja = (brutto - mentes_keret) * 0.15;
+            szja_note = `25 év alatt vagy, így a havi 576 601 Ft-ig mentes vagy az SZJA alól. Az e fölötti rész után fizetsz csak 15%-os SZJA-t.`;
+        }
+    }
+    const tb = brutto * 0.185;
+    const netto = brutto - szja - tb;
+    
+    // KIRENDERELÉS
+    document.getElementById("eredmeny_doboz").style.display = "block";
+    document.getElementById("netto_osszeg").innerText = formatFt(netto);
+    document.getElementById("netto_sub").innerText = `Bruttó: ${formatFt(brutto)} · Levonás: ${formatFt(szja + tb)}`;
+    
+    // === BEVÉTELEK SZEKCIÓ ===
+    let sections = '';
+    
+    // 1. Bevételek
+    let incomeRows = '';
+    
+    // Alapbér
+    incomeRows += makeRow({
+        name: 'Besorolási alapbér',
+        value: alap,
+        type: 'neutral',
+        info: makeInfo(
+            'Besorolási Alapbér',
+            'A munkaszerződésedben rögzített havi alapfizetésed bruttó értéke. Ez minden további pótlék és túlóra <strong>matematikai alapja</strong> (a 174-es és 180-as órabér ebből származik).',
+            null,
+            `<strong>${formatFt(alap)}</strong> teljes hónapra`,
+            'A 174-es osztó az átlagos havi munkaórák száma (8 óra × 21,75 munkanap), a 180-as a havibéres elszámoláshoz használt érték. Mt. 136. § (1) bek.'
+        )
+    });
+    
+    // Pótlékok (összesítve)
+    if (ossz_potlek > 0) {
+        incomeRows += makeRow({
+            name: 'Műszak- és Vasárnapi pótlékok',
+            value: ossz_potlek,
+            type: 'income',
+            info: makeInfo(
+                'Pótlékok Áttekintése',
+                'A nem standard munkaidőben (éjszaka, hétvégén, vasárnap) végzett munkáért járó <strong>kiegészítő bérelem</strong>. Munka Törvénykönyve 141-142. § alapján.',
+                null,
+                `Műszakpótlék: ${formatFt(p_m30)}<br>Vasárnapi pótlék: ${formatFt(p_v50)}<br><strong>Összesen: ${formatFt(ossz_potlek)}</strong>`,
+                'Ezek csak a sima havi órákra járnak — a túlóra órák külön bekategorizálva, a "Túlóra" sornál látszanak.'
+            )
+        });
+        
+        // Almoz: Műszakpótlék 30%
+        if (h_m30 > 0) {
+            incomeRows += makeRow({
+                name: 'Műszakpótlék 30%',
+                value: p_m30,
+                type: 'income',
+                sub: true,
+                info: makeInfo(
+                    'Műszakpótlék 30%',
+                    'A délutáni (14-22h) vagy éjszakai (22-06h) műszakban végzett munka után járó <strong>30%-os pótlék</strong>. Munka Törvénykönyve 141. § (1) bekezdés.',
+                    `<strong>alapbér ÷ 174 × 30% × óraszám</strong>`,
+                    `${alap.toLocaleString('hu-HU')} ÷ 174 = ${oraber174.toFixed(2)} Ft/óra<br>${oraber174.toFixed(2)} × 30% × ${h_m30} óra = <strong>${formatFt(p_m30)}</strong>`,
+                    'A 174-es órabér az átlagos havi munkaóra-szám (8 óra × 21,75 munkanap havonta).'
+                )
+            });
+        }
+        
+        // Almoz: Vasárnapi 50%
+        if (h_v50 > 0) {
+            incomeRows += makeRow({
+                name: 'Vasárnapi bérpótlék 50%',
+                value: p_v50,
+                type: 'income',
+                sub: true,
+                info: makeInfo(
+                    'Vasárnapi bérpótlék 50%',
+                    'A vasárnapra eső munkavégzés után <strong>50%-os pótlék</strong> jár (Munka Törvénykönyve 140. §). Ez a pótlék a sima alapbéren felül kerül kifizetésre.',
+                    `<strong>alapbér ÷ 174 × 50% × óraszám</strong>`,
+                    `${alap.toLocaleString('hu-HU')} ÷ 174 = ${oraber174.toFixed(2)} Ft/óra<br>${oraber174.toFixed(2)} × 50% × ${h_v50} óra = <strong>${formatFt(p_v50)}</strong>`,
+                    'Akkor jár, ha többműszakos beosztásban (mint az SMT) dolgozol vasárnap. Ettől eltér a vasárnapi túlóra, amelynek külön extra +50%-a van.'
+                )
+            });
+        }
+    }
+    
+    // Túlóra
+    if (tulora_total > 0) {
+        let tuloraInfo = `Túlóra alap (180-as): <strong>${formatFt(t_alap_resz)}</strong><br>Túlóra 100% pótlék (174-es): <strong>${formatFt(t_potlek_100)}</strong>`;
+        if (t_extra_30 > 0) tuloraInfo += `<br>Éjszakai +30%: <strong>${formatFt(t_extra_30)}</strong>`;
+        if (t_extra_50 > 0) tuloraInfo += `<br>Vasárnapi +50%: <strong>${formatFt(t_extra_50)}</strong>`;
+        if (h_keret > 0) tuloraInfo += `<br>Keret alap: <strong>${formatFt(keret_alap)}</strong><br>Keret +50%: <strong>${formatFt(keret_potlek_50)}</strong>`;
+        tuloraInfo += `<br><strong>Összesen: ${formatFt(tulora_total)}</strong>`;
+        
+        incomeRows += makeRow({
+            name: 'Túlóra & Keret elszámolás',
+            value: tulora_total,
+            type: 'income',
+            info: makeInfo(
+                'Túlóra Áttekintése',
+                'A heti 40 órán felüli munkavégzés ellenértéke. Magyar jogszabály szerint <strong>havibéres dolgozónál</strong> a túlóra <strong>két részből áll</strong>: az "alap" (180-as órabér) és a "pótlék" (174-es órabér × 100%).',
+                null,
+                tuloraInfo,
+                'A 180-as osztó a havi teljes ledolgozott órák átlaga (havibéres alap), a 174-es az átlagos kötelező munkaóra.'
+            )
+        });
+        
+        // Almoz: Túlóra alap
+        if (t_alap_resz > 0) {
+            incomeRows += makeRow({
+                name: `Túlóra alap (${ossz_t_ora} óra)`,
+                value: t_alap_resz,
+                type: 'income',
+                sub: true,
+                info: makeInfo(
+                    'Túlóra Alap (havibéres)',
+                    'A havibéres dolgozóknál a túlórán kapott alapórabér része a <strong>180-as osztó</strong> alapján számolódik (a teljes hónap átlagosan ledolgozható óraszám).',
+                    `<strong>alapbér ÷ 180 × túlóra óraszám</strong>`,
+                    `${alap.toLocaleString('hu-HU')} ÷ 180 = ${oraber180.toFixed(2)} Ft/óra<br>${oraber180.toFixed(2)} × ${ossz_t_ora} óra = <strong>${formatFt(t_alap_resz)}</strong>`,
+                    'A 180-as osztó a havi teljes lehetséges munkaórák száma. Bérpapíron: "Túlóra alap havib. 100%".'
+                )
+            });
+        }
+        
+        // Almoz: 100% pótlék
+        if (t_potlek_100 > 0) {
+            incomeRows += makeRow({
+                name: `Túlóra 100% pótlék (${ossz_t_ora} óra)`,
+                value: t_potlek_100,
+                type: 'income',
+                sub: true,
+                info: makeInfo(
+                    'Túlóra 100% Pótlék',
+                    'A magyar jog szerint a túlóra után a sima óradíj <strong>100%-a is jár pótlékként</strong>. Ez a túlóra "büntető" felára. Munka Törvénykönyve 143. § (4) bekezdés.',
+                    `<strong>alapbér ÷ 174 × 100% × túlóra óraszám</strong>`,
+                    `${alap.toLocaleString('hu-HU')} ÷ 174 = ${oraber174.toFixed(2)} Ft/óra<br>${oraber174.toFixed(2)} × 100% × ${ossz_t_ora} óra = <strong>${formatFt(t_potlek_100)}</strong>`,
+                    'Itt a 174-es osztó a használt, mert ez a pótlék-szempontú alapórabér. Bérpapíron: "Túlóra pótlék 100% havib".'
+                )
+            });
+        }
+        
+        // Almoz: Extra 30%
+        if (t_extra_30 > 0) {
+            incomeRows += makeRow({
+                name: `Éjszakai túlóra +30%`,
+                value: t_extra_30,
+                type: 'income',
+                sub: true,
+                info: makeInfo(
+                    'Éjszakai Túlóra +30% Extra',
+                    'Ha a túlóra éjszakai órákra esik, a 100%-on FELÜL még +30% extra pótlék jár. Tehát az éjszakai túlóra <strong>összesen 130%-os pótlékot</strong> kap (100% + 30%) az alapon felül.',
+                    `<strong>alapbér ÷ 174 × 30% × éjszakai túlóra óraszám</strong>`,
+                    `${oraber174.toFixed(2)} × 30% × ${h_ejsz} óra = <strong>${formatFt(t_extra_30)}</strong>`,
+                    'A 30%-os "éjszakás műszakpótlék" (Mt. 141. §) szabálya itt is érvényesül, csak túlórára vonatkoztatva. Bérpapíron: "Túlóra műszakpótlék 30%".'
+                )
+            });
+        }
+        
+        // Almoz: Extra 50%
+        if (t_extra_50 > 0) {
+            incomeRows += makeRow({
+                name: `Vasárnapi túlóra +50%`,
+                value: t_extra_50,
+                type: 'income',
+                sub: true,
+                info: makeInfo(
+                    'Vasárnapi Túlóra +50% Extra',
+                    'Ha a túlóra vasárnapra esik, a 100% túlórapótlékon FELÜL még +50% extra jár. Vagyis vasárnapi túlóra <strong>összesen 150%-os pótlékot</strong> kap.',
+                    `<strong>alapbér ÷ 174 × 50% × vasárnapi túlóra óraszám</strong>`,
+                    `${oraber174.toFixed(2)} × 50% × ${h_vas} óra = <strong>${formatFt(t_extra_50)}</strong>`,
+                    'A vasárnap önmagában is +50%-os pótlékot ad (Mt. 140. §), és ez túlórára is érvényes.'
+                )
+            });
+        }
+        
+        // Almoz: Keret elszámolás
+        if (h_keret > 0) {
+            incomeRows += makeRow({
+                name: `Keret elszámolás (${h_keret} óra)`,
+                value: keret_alap + keret_potlek_50,
+                type: 'income',
+                sub: true,
+                info: makeInfo(
+                    'Negyedéves Keret Elszámolás',
+                    'A negyedéves munkaidőkeret-elszámolás végén kifizetett óraidő. Az alap (180-as órabér) és a <strong>+50% pótlék</strong> jár utána (Mt. 156. §).',
+                    `Alap: alapbér ÷ 180 × keret óra<br>Pótlék: alapbér ÷ 174 × 50% × keret óra`,
+                    `Alap: ${oraber180.toFixed(2)} × ${h_keret} = <strong>${formatFt(keret_alap)}</strong><br>Pótlék (+50%): ${oraber174.toFixed(2)} × 50% × ${h_keret} = <strong>${formatFt(keret_potlek_50)}</strong><br>Összesen: <strong>${formatFt(keret_alap + keret_potlek_50)}</strong>`,
+                    'A 4 havi (november-január, február-április, május-július, augusztus-október) keretek végén kerül elszámolásra.'
+                )
+            });
+        }
+    }
+    
+    // Bónuszok
+    if (ossz_bonusz > 0) {
+        incomeRows += makeRow({
+            name: 'Bónuszok és Egyéb Juttatások',
+            value: ossz_bonusz,
+            type: 'income',
+            info: makeInfo(
+                'Bónuszok Áttekintése',
+                'A munkáltató által kifizetett <strong>változó bér-elemek</strong>: jelenléti bónusz (a 100%-os jelenlétért), és teljesítmény-alapú bónusz (a normaértékek elérésért vagy túlteljesítésért).',
+                null,
+                (b1 > 0 ? `Jelenléti bónusz: <strong>${formatFt(b1)}</strong><br>` : '') +
+                (b2 > 0 ? `Teljesítmény bónusz: <strong>${formatFt(b2)}</strong><br>` : '') +
+                `<strong>Összesen: ${formatFt(ossz_bonusz)}</strong>`,
+                'A bónuszok ugyanúgy adóznak mint az alapbér (15% SZJA + 18,5% TB), nem adómentesek.'
+            )
+        });
+    }
+    
+    // Bruttó összesen
+    incomeRows += `<div class="calc-total">
+        <span class="ct-label">Bruttó Jövedelem Összesen</span>
+        <span class="ct-value">${formatFt(brutto)}</span>
+    </div>`;
+    
+    sections += `<div class="calc-section income">
+        <div class="calc-section-header">💰 Bevételek (Bruttó Jövedelem)</div>
+        ${incomeRows}
+    </div>`;
+    
+    // === LEVONÁSOK SZEKCIÓ ===
+    let deductionRows = '';
+    
+    // SZJA
+    let szjaCalcText = '';
+    if (isFiatal && szja === 0) {
+        szjaCalcText = `<strong>0 Ft</strong> — mentesülsz az SZJA alól.<br>(A bruttó ${formatFt(brutto)} kisebb mint a havi mentesség 576 601 Ft.)`;
+    } else if (isFiatal && szja > 0) {
+        szjaCalcText = `(${formatFt(brutto)} - 576 601) × 15% = <strong>${formatFt(szja)}</strong><br>(Csak a 576 601 Ft havi mentes keretet meghaladó rész után fizetsz adót.)`;
+    } else {
+        szjaCalcText = `${formatFt(brutto)} × 15% = <strong>${formatFt(szja)}</strong>`;
+    }
+    
+    deductionRows += makeRow({
+        name: isFiatal ? 'SZJA (15%, 25 év alatti mentesség)' : 'SZJA (15%)',
+        value: szja,
+        type: 'deduction',
+        info: makeInfo(
+            'Személyi Jövedelemadó (SZJA)',
+            'A bruttó jövedelem után az állam (NAV) felé fizetett adó. <strong>Általános kulcs: 15%</strong>. A munkáltató vonja le és utalja át a nevedben.' + (szja_note ? '<br><br>' + szja_note : ''),
+            isFiatal ? '<strong>(bruttó - 576 601) × 15%</strong>, ha pozitív' : '<strong>bruttó × 15%</strong>',
+            szjaCalcText,
+            'A 25 év alattiak 2024-től mentesülnek az SZJA alól a havi mentes keret erejéig (2025-ben: 576 601 Ft/hó). Az ezt meghaladó rész után fizetnek 15%-ot.'
+        )
+    });
+    
+    // TB
+    deductionRows += makeRow({
+        name: 'TB Járulék (18,5%)',
+        value: tb,
+        type: 'deduction',
+        info: makeInfo(
+            'Társadalombiztosítási Járulék (TB)',
+            'A bruttó jövedelem után fizetett kötelező járulék, amelyet az állami egészségbiztosítás, nyugdíj és munkaerő-piaci járulékok finanszírozására fordítanak. <strong>Egyetlen kulcs: 18,5%</strong>.',
+            `<strong>bruttó × 18,5%</strong>`,
+            `${formatFt(brutto)} × 18,5% = <strong>${formatFt(tb)}</strong>`,
+            'Magában foglalja: 7% egészségbiztosítási járulékot, 10% nyugdíjjárulékot, és 1,5% munkaerő-piaci járulékot. Az állam egészségügyi ellátást, nyugdíjat és álláskeresési ellátást nyújt érte cserébe.'
+        )
+    });
+    
+    // Levonás összesen
+    deductionRows += `<div class="calc-total minus">
+        <span class="ct-label">Összes Levonás</span>
+        <span class="ct-value">-${formatFt(szja + tb)}</span>
+    </div>`;
+    
+    sections += `<div class="calc-section deduction">
+        <div class="calc-section-header">📉 Levonások (Adók és Járulékok)</div>
+        ${deductionRows}
+    </div>`;
+    
+    // === EREDMÉNY SUMMARY ===
+    sections += `<div class="calc-section summary">
+        <div class="calc-section-header">🎯 Eredmény</div>
+        <div class="calc-summary-rows">
+            <div class="summary-row is-bruto">
+                <span class="sr-label">Bruttó jövedelem</span>
+                <span class="sr-value">${formatFt(brutto)}</span>
+            </div>
+            <div class="summary-row is-deduction">
+                <span class="sr-label">− Összes levonás</span>
+                <span class="sr-value">-${formatFt(szja + tb)}</span>
+            </div>
+            <div class="summary-row is-netto">
+                <span class="sr-label">= Nettó utalás</span>
+                <span class="sr-value">${formatFt(netto)}</span>
+            </div>
+        </div>
+    </div>`;
+    
+    document.getElementById("calc_sections").innerHTML = sections;
+    document.getElementById("eredmeny_doboz").scrollIntoView({behavior: 'smooth'});
+}
+</script></body></html>
