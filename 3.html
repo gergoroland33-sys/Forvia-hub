@@ -8,238 +8,330 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
         :root {
-            /* Premium Dark Theme - Modern Refresh */
-            --bg-base: #050816;
-            --bg-deep: #020410;
-            --bg-panel: rgba(15, 23, 42, 0.65);
-            --bg-card: rgba(30, 41, 59, 0.55);
-            --bg-card-hover: rgba(51, 65, 85, 0.6);
-            --border: rgba(71, 85, 105, 0.35);
-            --border-light: rgba(100, 116, 139, 0.25);
-            --border-bright: rgba(148, 163, 184, 0.4);
+            /* ÚJ MODERN PALETTA */
+            --bg-base: #0a0a0f;
+            --bg-deep: #050507;
+            --bg-elevated: rgba(255, 255, 255, 0.04);
+            --bg-elevated-hover: rgba(255, 255, 255, 0.08);
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-soft: rgba(255, 255, 255, 0.1);
+            --border-strong: rgba(255, 255, 255, 0.18);
             
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --text-dim: #64748b;
-            --accent: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.4);
-            --danger: #ef4444; 
-            --danger-glow: rgba(239, 68, 68, 0.35);
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa;
+            --text-dim: #71717a;
+            --text-dimmest: #52525b;
             
-            /* Shift Colors - finomított árnyalatok */
-            --color-a: #3b82f6;
-            --color-a-light: #60a5fa;
-            --color-b: #10b981;
-            --color-b-light: #34d399;
-            --color-c: #f59e0b;
-            --color-c-light: #fbbf24;
-            --color-d: #ef4444;
-            --color-d-light: #f87171;
-
-            /* Shadow / glow */
-            --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.25);
-            --shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.5);
-            --shadow-deep: 0 20px 50px rgba(0, 0, 0, 0.6);
+            /* NEON ACCENT COLORS - Modern shift palette */
+            --shift-a: #60a5fa;          /* Cyan-blue */
+            --shift-a-glow: rgba(96, 165, 250, 0.5);
+            --shift-a-bg: rgba(96, 165, 250, 0.12);
+            
+            --shift-b: #4ade80;          /* Emerald */
+            --shift-b-glow: rgba(74, 222, 128, 0.5);
+            --shift-b-bg: rgba(74, 222, 128, 0.12);
+            
+            --shift-c: #fbbf24;          /* Amber */
+            --shift-c-glow: rgba(251, 191, 36, 0.5);
+            --shift-c-bg: rgba(251, 191, 36, 0.12);
+            
+            --shift-d: #f472b6;          /* Pink-rose */
+            --shift-d-glow: rgba(244, 114, 182, 0.5);
+            --shift-d-bg: rgba(244, 114, 182, 0.12);
+            
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.5);
+            --danger-bg: rgba(239, 68, 68, 0.12);
+            
+            /* OLD COLORS - belső kompatibilitás megtartva */
+            --color-a: var(--shift-a);
+            --color-a-light: var(--shift-a);
+            --color-b: var(--shift-b);
+            --color-b-light: var(--shift-b);
+            --color-c: var(--shift-c);
+            --color-c-light: var(--shift-c);
+            --color-d: var(--shift-d);
+            --color-d-light: var(--shift-d);
+            --accent: var(--shift-a);
+            --accent-glow: var(--shift-a-glow);
+            --border: var(--border-subtle);
+            --border-light: var(--border-soft);
+            --border-bright: var(--border-strong);
+            --bg-card: var(--bg-elevated);
+            --bg-panel: var(--bg-elevated);
+            --bg-card-hover: var(--bg-elevated-hover);
+            
+            /* Effects */
+            --blur-strong: blur(40px) saturate(180%);
+            --blur-soft: blur(20px) saturate(160%);
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-base);
-            background-image: 
-                radial-gradient(circle at 15% 0%, rgba(59, 130, 246, 0.12) 0%, transparent 45%),
-                radial-gradient(circle at 85% 100%, rgba(16, 185, 129, 0.08) 0%, transparent 45%),
-                radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.04) 0%, transparent 60%);
+        html, body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-base);
             color: var(--text-main);
-            margin: 0; padding: 0;
-            display: flex; flex-direction: column;
-            /* ÚJ: többrétegű magasság-fallback, biztos hogy minden eszközön kitölt */
-            height: 100vh;          /* fallback régi böngészőkre */
-            height: 100svh;         /* small viewport - mobil böngésző csíkkal együtt */
-            height: 100dvh;         /* dynamic viewport - modern, auto-igazodik */
-            height: var(--real-100vh, 100dvh); /* JS-által számolt pontos érték - legutolsó precíz fallback */
-            min-height: -webkit-fill-available; /* iOS Safari fix */
-            overflow: hidden;
-            touch-action: manipulation;
             font-feature-settings: "ss01", "cv11";
             letter-spacing: -0.01em;
-            /* iOS safe area kompatibilitás */
+        }
+        
+        body {
+            /* Mély háttér gradient — élő szín-kompozíció */
+            background: 
+                radial-gradient(ellipse 80% 60% at 15% 0%, rgba(96, 165, 250, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse 70% 50% at 85% 100%, rgba(244, 114, 182, 0.10) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 40% at 50% 50%, rgba(74, 222, 128, 0.05) 0%, transparent 60%),
+                var(--bg-base);
+            
+            display: flex; flex-direction: column;
+            height: 100vh;
+            height: 100svh;
+            height: 100dvh;
+            height: var(--real-100vh, 100dvh);
+            min-height: -webkit-fill-available;
+            overflow: hidden;
+            touch-action: manipulation;
             padding-bottom: env(safe-area-inset-bottom, 0);
             padding-top: env(safe-area-inset-top, 0);
         }
 
+        /* Apró noise overlay a textúrához */
         body::before {
             content: '';
             position: fixed;
             inset: 0;
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
-            opacity: 0.025;
+            opacity: 0.02;
             pointer-events: none;
             z-index: 0;
             mix-blend-mode: overlay;
         }
 
-        /* --- APP HEADER --- */
-        .app-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 18px; 
-            background: linear-gradient(180deg, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.55) 100%);
-            backdrop-filter: blur(20px) saturate(180%); 
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border-bottom: 1px solid var(--border);
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
-            height: 60px; flex-shrink: 0;
+        /* ================================================================== */
+        /* ============= MODERN FLOATING HEADER (lebegő pill) ============== */
+        /* ================================================================== */
+        .float-header {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 18px;
+            margin: 10px 12px 0 12px;
+            background: rgba(15, 15, 20, 0.65);
+            backdrop-filter: var(--blur-strong);
+            -webkit-backdrop-filter: var(--blur-strong);
+            border: 1px solid var(--border-soft);
+            border-radius: 18px;
+            box-shadow: 
+                0 10px 40px rgba(0, 0, 0, 0.45),
+                0 0 0 1px rgba(255, 255, 255, 0.02),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            flex-shrink: 0;
             z-index: 10;
+        }
+
+        .brand {
+            display: flex; align-items: center;
+            gap: 10px;
+            font-size: 1.05rem; font-weight: 900;
+            letter-spacing: -0.02em;
+            color: var(--text-main);
+        }
+        .brand::before {
+            content: '';
+            width: 28px; height: 28px;
+            border-radius: 8px;
+            background: 
+                linear-gradient(135deg, var(--shift-a) 0%, var(--shift-d) 100%);
+            box-shadow: 
+                0 4px 12px rgba(96, 165, 250, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
             position: relative;
         }
-
-        .app-header::after {
-            content: '';
-            position: absolute;
-            bottom: 0; left: 0; right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%);
-            opacity: 0.4;
-        }
-
-        .logo-area h1 { 
-            margin: 0; font-size: 1.3rem; font-weight: 900; 
-            letter-spacing: -0.5px;
-            background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%);
+        .brand .brand-sub {
+            background: linear-gradient(135deg, var(--shift-a) 0%, var(--shift-b) 100%);
             -webkit-background-clip: text; background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 2px 10px rgba(248, 250, 252, 0.1);
-        }
-        .logo-area span { 
-            background: linear-gradient(135deg, var(--accent) 0%, #60a5fa 100%);
-            -webkit-background-clip: text; background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-left: 2px;
         }
 
-        .header-actions { display: flex; gap: 8px; }
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
 
-        .btn-modern {
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
-            border: 1px solid var(--border);
-            color: var(--text-main); 
-            padding: 8px 14px; 
-            border-radius: 10px;
-            font-size: 0.78rem; font-weight: 700; 
-            font-family: inherit;
-            letter-spacing: 0.02em;
+        .icon-btn {
+            width: 38px; height: 38px;
+            border-radius: 12px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-soft);
+            color: var(--text-main);
+            font-size: 1rem;
             cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex; align-items: center; gap: 6px;
-            box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255, 255, 255, 0.08);
             position: relative;
             overflow: hidden;
         }
-        .btn-modern::before {
+        .icon-btn:hover {
+            background: var(--bg-elevated-hover);
+            border-color: var(--border-strong);
+            transform: translateY(-1px);
+        }
+        .icon-btn:active { transform: translateY(0) scale(0.95); }
+
+        .icon-btn.today-btn {
+            min-width: auto;
+            padding: 0 14px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            width: auto;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.18) 0%, rgba(239, 68, 68, 0.08) 100%);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.12);
+        }
+        .icon-btn.today-btn:hover {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.28) 0%, rgba(239, 68, 68, 0.14) 100%);
+            border-color: rgba(239, 68, 68, 0.45);
+            color: #fff;
+        }
+
+        .icon-btn.stats-btn {
+            background: linear-gradient(135deg, rgba(74, 222, 128, 0.15) 0%, rgba(74, 222, 128, 0.05) 100%);
+            border-color: rgba(74, 222, 128, 0.25);
+        }
+        .icon-btn.stats-btn:hover {
+            background: linear-gradient(135deg, rgba(74, 222, 128, 0.25) 0%, rgba(74, 222, 128, 0.1) 100%);
+            border-color: rgba(74, 222, 128, 0.4);
+        }
+
+        .icon-btn.print-btn {
+            display: none;
+        }
+        @media (min-width: 768px) {
+            .icon-btn.print-btn { display: flex; }
+        }
+
+        /* ================================================================== */
+        /* ============= SHIFT FILTER - NEON PILLS ========================== */
+        /* ================================================================== */
+        .shift-filter {
+            display: flex;
+            gap: 6px;
+            padding: 10px 12px 6px 12px;
+            justify-content: center;
+            flex-shrink: 0;
+            z-index: 5;
+            position: relative;
+        }
+
+        .shift-pill-btn {
+            flex: 1;
+            max-width: 90px;
+            height: 44px;
+            border-radius: 14px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-soft);
+            color: var(--text-muted);
+            font-weight: 800;
+            font-size: 0.92rem;
+            font-family: inherit;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: var(--blur-soft);
+        }
+        .shift-pill-btn::before {
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
-            opacity: 0; transition: opacity 0.25s;
-            pointer-events: none;
+            background: var(--pill-gradient, transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: inherit;
         }
-        .btn-modern:hover { 
-            border-color: var(--border-bright); 
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-        }
-        .btn-modern:hover::before { opacity: 1; }
-        .btn-modern:active { transform: translateY(0); }
-
-        .btn-today { 
-            color: #fff;
-            border-color: rgba(239, 68, 68, 0.45); 
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.1) 100%);
-            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        }
-        .btn-today:hover {
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(239, 68, 68, 0.15) 100%);
-            border-color: rgba(239, 68, 68, 0.6);
-        }
-
-        .btn-print { display: none; }
-        @media (min-width: 768px) { .btn-print { display: flex; } }
-
-        .btn-stats {
-            color: #fff !important;
-            border-color: rgba(16, 185, 129, 0.45) !important;
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%) !important;
-            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-        }
-        .btn-stats:hover {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(16, 185, 129, 0.15) 100%) !important;
-            border-color: rgba(16, 185, 129, 0.6) !important;
-        }
-
-        /* --- SZŰRŐ SÁV --- */
-        .filter-container { 
-            padding: 10px 14px 8px 14px; 
-            background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-base) 100%);
-            flex-shrink: 0; 
-            display: flex; flex-direction: column; gap: 10px;
-            position: relative;
-            z-index: 5;
-        }
-        .segmented-control {
-            display: flex; 
-            background: linear-gradient(180deg, rgba(2, 6, 23, 0.8) 0%, rgba(15, 23, 42, 0.5) 100%);
-            border-radius: 12px; 
-            padding: 5px; 
-            border: 1px solid var(--border);
-            position: relative; 
-            height: 42px;
-            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(255, 255, 255, 0.05);
-        }
-        .seg-btn {
-            flex: 1; text-align: center; 
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.85rem; font-weight: 700; 
-            color: var(--text-muted);
-            cursor: pointer; z-index: 2; 
-            transition: color 0.3s, transform 0.15s;
-            letter-spacing: 0.02em;
-            border-radius: 8px;
-        }
-        .seg-btn:active { transform: scale(0.95); }
-        .seg-btn.active { 
+        .shift-pill-btn span { position: relative; z-index: 1; }
+        
+        .shift-pill-btn:hover {
             color: var(--text-main);
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+            transform: translateY(-1px);
         }
-        .seg-slider {
-            position: absolute; top: 5px; bottom: 5px;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.08) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 8px;
-            z-index: 1; 
-            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), width 0.35s;
-            pointer-events: none;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        .shift-pill-btn:active { transform: translateY(0) scale(0.97); }
+
+        .shift-pill-btn.active {
+            color: #fff;
+            font-weight: 900;
+            border-color: var(--pill-border, var(--border-strong));
+            box-shadow: 
+                0 0 0 1px var(--pill-border, transparent),
+                0 8px 24px var(--pill-glow, transparent),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            text-shadow: 0 0 12px var(--pill-text-glow, transparent);
+        }
+        .shift-pill-btn.active::before { opacity: 1; }
+
+        /* Színek mindenkinek */
+        .shift-pill-btn[data-shift="ALL"] {
+            --pill-gradient: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
+            --pill-border: rgba(255, 255, 255, 0.25);
+            --pill-glow: rgba(255, 255, 255, 0.15);
+            --pill-text-glow: rgba(255, 255, 255, 0.5);
+        }
+        .shift-pill-btn[data-shift="A"] {
+            --pill-gradient: linear-gradient(135deg, rgba(96, 165, 250, 0.4) 0%, rgba(96, 165, 250, 0.15) 100%);
+            --pill-border: rgba(96, 165, 250, 0.5);
+            --pill-glow: rgba(96, 165, 250, 0.35);
+            --pill-text-glow: var(--shift-a-glow);
+        }
+        .shift-pill-btn[data-shift="B"] {
+            --pill-gradient: linear-gradient(135deg, rgba(74, 222, 128, 0.4) 0%, rgba(74, 222, 128, 0.15) 100%);
+            --pill-border: rgba(74, 222, 128, 0.5);
+            --pill-glow: rgba(74, 222, 128, 0.35);
+            --pill-text-glow: var(--shift-b-glow);
+        }
+        .shift-pill-btn[data-shift="C"] {
+            --pill-gradient: linear-gradient(135deg, rgba(251, 191, 36, 0.4) 0%, rgba(251, 191, 36, 0.15) 100%);
+            --pill-border: rgba(251, 191, 36, 0.5);
+            --pill-glow: rgba(251, 191, 36, 0.35);
+            --pill-text-glow: var(--shift-c-glow);
+        }
+        .shift-pill-btn[data-shift="D"] {
+            --pill-gradient: linear-gradient(135deg, rgba(244, 114, 182, 0.4) 0%, rgba(244, 114, 182, 0.15) 100%);
+            --pill-border: rgba(244, 114, 182, 0.5);
+            --pill-glow: rgba(244, 114, 182, 0.35);
+            --pill-text-glow: var(--shift-d-glow);
         }
 
-        /* --- TÚLÓRA gomb --- */
+        /* Túlóra gomb - ÚJ stílus */
         .overtime-container {
-            display: none; animation: fadeInDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: none;
+            padding: 0 12px 6px 12px;
+            flex-shrink: 0;
+            animation: fadeInDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .btn-overtime {
-            width: 100%; 
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.18) 0%, rgba(139, 92, 246, 0.18) 100%);
-            border: 1px solid rgba(59, 130, 246, 0.4); 
-            color: var(--text-main); 
-            padding: 11px; 
-            border-radius: 11px; 
-            font-weight: 800; font-size: 0.82rem;
+            width: 100%;
+            height: 40px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(96, 165, 250, 0.18) 0%, rgba(244, 114, 182, 0.12) 100%);
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            color: #fff;
+            font-weight: 800;
+            font-size: 0.82rem;
             font-family: inherit;
-            letter-spacing: 0.01em;
-            cursor: pointer; 
-            display: flex; justify-content: center; align-items: center; gap: 8px; 
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            cursor: pointer;
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+            backdrop-filter: var(--blur-soft);
+            box-shadow: 
+                0 8px 20px rgba(96, 165, 250, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.25s;
             position: relative;
             overflow: hidden;
         }
@@ -248,86 +340,481 @@
             position: absolute;
             top: 0; left: -100%;
             width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
-            transition: left 0.6s ease;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%);
+            transition: left 0.7s ease;
         }
         .btn-overtime:hover::before { left: 100%; }
         .btn-overtime:active { transform: scale(0.985); }
 
-        /* --- MODALS --- */
+        /* ================================================================== */
+        /* ============= MAIN LAYOUT + CALENDAR ============================ */
+        /* ================================================================== */
+        .main-layout {
+            flex: 1;
+            display: flex; flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+
+        .calendar-section {
+            flex: 1;
+            display: flex; flex-direction: column;
+            padding: 4px 12px 12px 12px;
+            overflow: hidden;
+            position: relative;
+            min-height: 0;
+        }
+
+        /* MODERN HÓNAP FEJLÉC - balra igazított nagy tipográfia */
+        .cal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 4px 12px 4px;
+            flex-shrink: 0;
+        }
+
+        .month-title {
+            font-size: 1.6rem;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            color: var(--text-main);
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+        .month-title .year-part {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            letter-spacing: -0.01em;
+        }
+
+        .nav-group {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .cal-nav-btn {
+            width: 38px; height: 38px;
+            border-radius: 12px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-soft);
+            color: var(--text-main);
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .cal-nav-btn:hover {
+            background: var(--bg-elevated-hover);
+            border-color: var(--border-strong);
+        }
+        .cal-nav-btn:active { transform: scale(0.93); }
+
+        /* Hét napjai - finomított */
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            margin-bottom: 6px;
+            flex-shrink: 0;
+            padding: 0 2px;
+        }
+        .weekday {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 4px 0;
+        }
+        .weekday:nth-child(6), .weekday:nth-child(7) {
+            color: var(--shift-d);
+            opacity: 0.7;
+        }
+
+        /* ================================================================== */
+        /* ============= MODERN CELLA DIZÁJN - SPLIT GRADIENT =============== */
+        /* ================================================================== */
+        .cal-grid-wrapper {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            min-height: 0;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            gap: 4px;
+            height: 100%;
+            width: 100%;
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease-out;
+            min-height: 0;
+        }
+
+        .cell {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex; flex-direction: column;
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid var(--border-subtle);
+            transition: transform 0.2s, border-color 0.2s;
+            box-shadow: 
+                inset 0 1px 0 rgba(255, 255, 255, 0.03),
+                0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+        .cell:hover {
+            transform: translateY(-1px);
+            border-color: var(--border-soft);
+            z-index: 2;
+        }
+        .cell.empty {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+        }
+        .cell.empty:hover { transform: none; }
+
+        /* === SPLIT GRADIENT BG — A KULCS DIZÁJN ELEM === */
+        /* Minden cella belseje két részre van vágva: felső fele = nappali műszak színe,
+           alsó fele = éjszakai műszak színe. Halvány, de látható gradient! */
+        .cell-split-bg {
+            position: absolute;
+            inset: 0;
+            display: flex; flex-direction: column;
+            z-index: 0;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        .cell:hover .cell-split-bg { opacity: 0.75; }
+        .cell-split-day {
+            flex: 1;
+            background: var(--split-day-bg, transparent);
+        }
+        .cell-split-night {
+            flex: 1;
+            background: var(--split-night-bg, transparent);
+        }
+        
+        /* Színek a split háttérre */
+        .cell[data-day="A"] { --split-day-bg: linear-gradient(180deg, rgba(96, 165, 250, 0.28) 0%, rgba(96, 165, 250, 0.05) 100%); }
+        .cell[data-day="B"] { --split-day-bg: linear-gradient(180deg, rgba(74, 222, 128, 0.28) 0%, rgba(74, 222, 128, 0.05) 100%); }
+        .cell[data-day="C"] { --split-day-bg: linear-gradient(180deg, rgba(251, 191, 36, 0.28) 0%, rgba(251, 191, 36, 0.05) 100%); }
+        .cell[data-day="D"] { --split-day-bg: linear-gradient(180deg, rgba(244, 114, 182, 0.28) 0%, rgba(244, 114, 182, 0.05) 100%); }
+        
+        .cell[data-night="A"] { --split-night-bg: linear-gradient(0deg, rgba(96, 165, 250, 0.28) 0%, rgba(96, 165, 250, 0.05) 100%); }
+        .cell[data-night="B"] { --split-night-bg: linear-gradient(0deg, rgba(74, 222, 128, 0.28) 0%, rgba(74, 222, 128, 0.05) 100%); }
+        .cell[data-night="C"] { --split-night-bg: linear-gradient(0deg, rgba(251, 191, 36, 0.28) 0%, rgba(251, 191, 36, 0.05) 100%); }
+        .cell[data-night="D"] { --split-night-bg: linear-gradient(0deg, rgba(244, 114, 182, 0.28) 0%, rgba(244, 114, 182, 0.05) 100%); }
+
+        /* Cella tartalom (a split bg fölött) */
+        .cell-content {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            display: flex; flex-direction: column;
+            padding: 5px 6px;
+        }
+
+        /* Dátum szám - bal felső sarok, MODERN */
+        .date-num {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1;
+            letter-spacing: -0.02em;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        .cell.weekend .date-num { color: var(--text-muted); }
+
+        /* Mai nap — markáns pulse + halvány glow ring */
+        .cell.today {
+            border: 1.5px solid var(--danger);
+            background: rgba(239, 68, 68, 0.06);
+            box-shadow: 
+                0 0 0 2px rgba(239, 68, 68, 0.15),
+                0 10px 30px rgba(239, 68, 68, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+        .cell.today .date-num {
+            color: #fff;
+            font-weight: 900;
+            background: var(--danger);
+            border-radius: 7px;
+            width: 22px; height: 22px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5);
+            font-size: 0.78rem;
+            animation: pulseToday 2.5s ease-in-out infinite;
+        }
+        @keyframes pulseToday {
+            0%, 100% { box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5); }
+            50% { box-shadow: 0 4px 20px rgba(239, 68, 68, 0.8), 0 0 0 6px rgba(239, 68, 68, 0.15); }
+        }
+
+        /* Ünnepnap — markáns piros ribbon a tetején */
+        .cell.holiday-cell {
+            border-color: rgba(239, 68, 68, 0.35);
+        }
+        .cell.holiday-cell::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--danger) 0%, #f87171 50%, var(--danger) 100%);
+            z-index: 3;
+            box-shadow: 0 0 12px var(--danger-glow);
+        }
+        .cell.holiday-cell::after {
+            content: '★';
+            position: absolute;
+            top: 2px; right: 5px;
+            font-size: 9px;
+            color: var(--danger);
+            z-index: 3;
+            text-shadow: 0 0 8px var(--danger-glow);
+            line-height: 1;
+        }
+        .cell.holiday-cell .date-num {
+            color: #fca5a5;
+        }
+        .cell.holiday-cell.today .date-num {
+            color: #fff;
+        }
+
+        /* Cella header */
+        .cell-header {
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+            margin-bottom: auto;
+        }
+
+        /* Műszak címkék - SOKKAL modernebbé téve */
+        .shifts-modern {
+            display: flex; flex-direction: column;
+            gap: 2px;
+            margin-top: auto;
+            align-items: flex-end;
+        }
+        .shift-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-size: clamp(0.52rem, 1.5vh, 0.68rem);
+            font-weight: 900;
+            padding: 2px 7px;
+            border-radius: 6px;
+            letter-spacing: 0.04em;
+            backdrop-filter: blur(8px);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+            box-shadow: 
+                0 2px 6px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        }
+        .shift-badge::before {
+            font-size: 0.65em;
+            opacity: 0.85;
+        }
+        .shift-badge.day-badge::before { content: '☀'; }
+        .shift-badge.night-badge::before { content: '☾'; }
+        
+        .shift-badge.shift-A { background: rgba(96, 165, 250, 0.85); color: #fff; }
+        .shift-badge.shift-B { background: rgba(74, 222, 128, 0.85); color: #fff; }
+        .shift-badge.shift-C { background: rgba(251, 191, 36, 0.85); color: #fff; }
+        .shift-badge.shift-D { background: rgba(244, 114, 182, 0.85); color: #fff; }
+
+        @media (max-width: 400px) {
+            .shift-badge { padding: 2px 5px; }
+            .shift-badge::before { display: none; }
+        }
+
+        /* === SZŰRT NÉZET: nagy ikon + szöveg === */
+        .shift-display-big {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            flex: 1;
+            gap: 3px;
+            padding: 4px;
+            border-radius: 9px;
+            margin: 2px;
+            backdrop-filter: blur(8px);
+            box-shadow: 
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        .shift-display-big .sd-icon {
+            font-size: clamp(1.1rem, 2.6vh, 1.5rem);
+            line-height: 1;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+        }
+        .shift-display-big .sd-label {
+            font-size: clamp(0.5rem, 1.2vh, 0.66rem);
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            line-height: 1;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+        }
+        .sd-day {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.4) 0%, rgba(251, 191, 36, 0.12) 100%);
+            border: 1px solid rgba(251, 191, 36, 0.5);
+            color: #fef3c7;
+        }
+        .sd-night {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.4) 0%, rgba(67, 56, 202, 0.15) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.5);
+            color: #e0e7ff;
+        }
+
+        .cell.dimmed {
+            opacity: 0.22;
+            filter: grayscale(0.6);
+        }
+        .cell.dimmed .cell-split-bg { opacity: 0.15; }
+
+        /* ================================================================== */
+        /* ============= KIS VIEWPORT - kompakt mód ======================== */
+        /* ================================================================== */
+        @media (max-height: 800px) {
+            .float-header { padding: 10px 14px; margin: 8px 10px 0 10px; }
+            .brand { font-size: 0.95rem; }
+            .brand::before { width: 24px; height: 24px; }
+            .icon-btn { width: 34px; height: 34px; font-size: 0.9rem; }
+            .icon-btn.today-btn { padding: 0 11px; font-size: 0.76rem; }
+            .shift-filter { padding: 8px 10px 4px 10px; gap: 5px; }
+            .shift-pill-btn { height: 38px; font-size: 0.85rem; }
+            .btn-overtime { height: 36px; font-size: 0.78rem; }
+            .calendar-section { padding: 2px 10px 8px 10px; }
+            .cal-header { padding: 6px 4px 8px 4px; }
+            .month-title { font-size: 1.3rem; }
+            .month-title .year-part { font-size: 0.85rem; }
+            .cal-nav-btn { width: 34px; height: 34px; font-size: 0.85rem; }
+            .calendar-grid { gap: 3px; }
+            .cell { border-radius: 9px; }
+            .cell-content { padding: 4px 5px; }
+            .date-num { font-size: 0.78rem; }
+            .cell.today .date-num { width: 20px; height: 20px; font-size: 0.72rem; }
+        }
+
+        @media (max-height: 650px) {
+            .float-header { padding: 8px 12px; margin: 6px 8px 0 8px; }
+            .icon-btn { width: 30px; height: 30px; font-size: 0.85rem; }
+            .icon-btn.today-btn { padding: 0 9px; font-size: 0.72rem; }
+            .shift-filter { padding: 6px 8px 3px 8px; gap: 4px; }
+            .shift-pill-btn { height: 32px; font-size: 0.78rem; border-radius: 11px; }
+            .btn-overtime { height: 32px; font-size: 0.72rem; }
+            .calendar-section { padding: 2px 8px 6px 8px; }
+            .month-title { font-size: 1.1rem; }
+            .cal-nav-btn { width: 28px; height: 28px; }
+            .cell { border-radius: 7px; }
+            .cell-content { padding: 3px 4px; }
+            .date-num { font-size: 0.72rem; }
+            .shift-badge { padding: 1px 4px; font-size: 0.55rem; }
+        }
+        
+        /* Telefon-specifikus optimalizálás */
+        @media (max-width: 480px) {
+            .brand { font-size: 0.92rem; }
+            .icon-btn.today-btn { padding: 0 10px; }
+            .shift-pill-btn { font-size: 0.82rem; max-width: none; }
+            .month-title { font-size: 1.35rem; }
+        }
+
+        /* Animációk */
+        @keyframes fadeInDown { 
+            from { opacity: 0; transform: translateY(-8px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* ================================================================== */
+        /* ============= MODALS - ÚJ STYLE ================================== */
+        /* ================================================================== */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(2, 6, 23, 0.78); 
-            backdrop-filter: blur(12px) saturate(140%); 
-            -webkit-backdrop-filter: blur(12px) saturate(140%);
-            z-index: 100; 
+            background: rgba(5, 5, 10, 0.8);
+            backdrop-filter: blur(16px) saturate(160%);
+            -webkit-backdrop-filter: blur(16px) saturate(160%);
+            z-index: 100;
             display: flex; justify-content: center; align-items: center;
-            opacity: 0; pointer-events: none; 
+            opacity: 0; pointer-events: none;
             transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
             padding: 16px;
         }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         
         .modal-content {
-            background: linear-gradient(180deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.92) 100%);
-            border: 1px solid var(--border-bright); 
-            border-radius: 20px;
-            width: 100%; max-width: 440px; max-height: 90vh; 
+            background: linear-gradient(180deg, rgba(20, 20, 28, 0.96) 0%, rgba(10, 10, 16, 0.96) 100%);
+            border: 1px solid var(--border-strong);
+            border-radius: 22px;
+            width: 100%; max-width: 440px; max-height: 88vh;
             display: flex; flex-direction: column;
+            backdrop-filter: var(--blur-strong);
             box-shadow: 
-                0 30px 80px rgba(0, 0, 0, 0.7),
-                0 0 0 1px rgba(255, 255, 255, 0.04),
-                inset 0 1px 0 rgba(255, 255, 255, 0.08);
-            transform: translateY(40px) scale(0.96); 
+                0 40px 80px rgba(0, 0, 0, 0.7),
+                0 0 0 1px rgba(255, 255, 255, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transform: translateY(40px) scale(0.96);
             transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: hidden;
         }
         .modal-overlay.active .modal-content { transform: translateY(0) scale(1); }
         
-        .modal-header { 
-            padding: 18px 20px; 
-            border-bottom: 1px solid var(--border); 
-            display: flex; justify-content: space-between; align-items: center; 
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
+        .modal-header {
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--border-soft);
+            display: flex; justify-content: space-between; align-items: center;
+            background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%);
         }
-        .modal-header h2 { 
-            margin: 0; 
-            font-size: 1.05rem; font-weight: 800; 
-            color: var(--text-main); 
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.1rem; font-weight: 800;
+            color: var(--text-main);
             display: flex; align-items: center; gap: 10px;
             letter-spacing: -0.01em;
         }
-        .btn-close { 
-            background: rgba(255, 255, 255, 0.06); 
-            border: 1px solid var(--border); 
-            color: var(--text-main); 
-            width: 34px; height: 34px; 
-            border-radius: 10px; 
+        .btn-close {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-soft);
+            color: var(--text-main);
+            width: 36px; height: 36px;
+            border-radius: 11px;
             font-size: 1.2rem; font-weight: 600;
-            cursor: pointer; 
+            cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             transition: all 0.2s;
         }
-        .btn-close:hover { 
-            background: rgba(239, 68, 68, 0.2); 
+        .btn-close:hover {
+            background: rgba(239, 68, 68, 0.2);
             border-color: rgba(239, 68, 68, 0.5);
             color: var(--danger);
         }
         
-        .modal-body { padding: 18px 20px; overflow-y: auto; flex: 1; }
-        
+        .modal-body { padding: 18px 22px; overflow-y: auto; flex: 1; }
         .modal-body::-webkit-scrollbar { width: 6px; }
         .modal-body::-webkit-scrollbar-track { background: transparent; }
-        .modal-body::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 10px; }
+        .modal-body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 10px; }
 
-        .period-select { 
-            width: 100%; padding: 13px 14px; 
-            background: rgba(2, 6, 23, 0.7); 
-            color: var(--text-main); 
-            border: 1.5px solid rgba(59, 130, 246, 0.4); 
-            border-radius: 11px; 
-            margin-bottom: 16px; 
-            outline: none; 
-            font-size: 0.88rem; font-weight: 700; 
+        /* Modal mezők */
+        .period-select {
+            width: 100%; padding: 13px 16px;
+            background: rgba(0, 0, 0, 0.4);
+            color: var(--text-main);
+            border: 1.5px solid var(--shift-a);
+            border-radius: 12px;
+            margin-bottom: 16px;
+            outline: none;
+            font-size: 0.88rem; font-weight: 700;
             font-family: inherit;
             cursor: pointer;
             transition: all 0.2s;
@@ -335,66 +822,61 @@
             -webkit-appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2394a3b8' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right 14px center;
-            padding-right: 36px;
+            background-position: right 16px center;
+            padding-right: 40px;
         }
-        .period-select:focus { 
-            border-color: var(--accent); 
-            box-shadow: 0 0 0 3px var(--accent-glow);
+        .period-select:focus {
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.25);
         }
-        
-        .holiday-item { 
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
-            border: 1px solid var(--border-light); 
-            padding: 14px; border-radius: 12px; 
-            margin-bottom: 10px; 
-            display: flex; justify-content: space-between; align-items: center; 
+
+        .holiday-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-soft);
+            padding: 14px;
+            border-radius: 13px;
+            margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
             flex-wrap: wrap; gap: 10px;
             transition: all 0.2s;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
         }
-        .holiday-item:hover { 
-            border-color: var(--border-bright); 
-            transform: translateX(2px);
-        }
+        .holiday-item:hover { border-color: var(--border-strong); }
         .holiday-info { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 150px; }
         .h-date { font-size: 0.88rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.01em; }
-        .h-name { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-        
+        .h-name { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+
         .toggle-switch { position: relative; display: inline-block; width: 48px; height: 26px; flex-shrink: 0; }
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
-        .toggle-slider { 
-            position: absolute; cursor: pointer; 
-            top: 0; left: 0; right: 0; bottom: 0; 
-            background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-card) 100%);
-            border: 1px solid var(--border);
+        .toggle-slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-soft);
             transition: 0.3s; border-radius: 26px;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
         }
-        .toggle-slider:before { 
-            position: absolute; content: ""; 
-            height: 20px; width: 20px; 
-            left: 2px; bottom: 2px; 
+        .toggle-slider:before {
+            position: absolute; content: "";
+            height: 20px; width: 20px;
+            left: 2px; bottom: 2px;
             background: linear-gradient(180deg, #f1f5f9 0%, #cbd5e1 100%);
-            transition: 0.3s; 
-            border-radius: 50%; 
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            transition: 0.3s; border-radius: 50%;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
         }
-        input:checked + .toggle-slider { 
-            background: linear-gradient(180deg, #60a5fa 0%, var(--accent) 100%); 
-            border-color: var(--accent);
-            box-shadow: 0 0 12px var(--accent-glow);
+        input:checked + .toggle-slider {
+            background: linear-gradient(135deg, var(--shift-a) 0%, var(--shift-b) 100%);
+            border-color: var(--shift-a);
+            box-shadow: 0 0 16px var(--shift-a-glow);
         }
         input:checked + .toggle-slider:before { transform: translateX(22px); }
 
         .pro-select {
-            background: rgba(2, 6, 23, 0.85); 
-            border: 1px solid var(--border); 
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-soft);
             color: var(--text-main);
-            padding: 8px 12px; 
-            border-radius: 9px; 
+            padding: 8px 12px;
+            border-radius: 9px;
             font-size: 0.78rem; font-weight: 700;
-            outline: none; cursor: pointer; 
+            outline: none; cursor: pointer;
             font-family: inherit;
             transition: all 0.2s;
             appearance: none;
@@ -404,397 +886,55 @@
             background-position: right 10px center;
             padding-right: 28px;
         }
-        .pro-select:focus { 
-            border-color: var(--color-b); 
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        .pro-select:focus {
+            border-color: var(--shift-b);
+            box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.2);
         }
 
-        .result-box { 
-            margin-top: 22px; 
-            background: linear-gradient(180deg, rgba(2, 6, 23, 0.7) 0%, rgba(15, 23, 42, 0.4) 100%);
-            border: 1px solid var(--border); 
-            border-radius: 14px; 
+        .result-box {
+            margin-top: 22px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--border-soft);
+            border-radius: 16px;
             padding: 18px;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
         }
-        .res-row { 
-            display: flex; justify-content: space-between; 
+        .res-row {
+            display: flex; justify-content: space-between;
             align-items: center;
             padding: 6px 0;
-            font-size: 0.87rem; color: var(--text-muted); 
+            font-size: 0.87rem; color: var(--text-muted);
             font-weight: 600;
         }
         .res-row strong { color: var(--text-main); font-size: 0.98rem; font-weight: 800; }
-        .res-total { 
-            display: flex; justify-content: space-between; align-items: center; 
-            margin-top: 14px; padding-top: 16px; 
-            border-top: 1px solid var(--border); 
-            font-size: 0.9rem; font-weight: 800; 
+        .res-total {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 14px; padding-top: 16px;
+            border-top: 1px solid var(--border-soft);
+            font-size: 0.9rem; font-weight: 800;
             text-transform: uppercase; letter-spacing: 0.06em;
             color: var(--text-muted);
         }
         .res-total strong { font-size: 1.6rem; letter-spacing: -0.02em; }
-        .res-total .positive { 
-            color: var(--color-b-light); 
-            text-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
-        }
-        .res-total .negative { 
-            color: var(--color-d-light); 
-            text-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
-        }
+        .res-total .positive { color: var(--shift-b); text-shadow: 0 0 20px var(--shift-b-glow); }
+        .res-total .negative { color: var(--danger); text-shadow: 0 0 20px var(--danger-glow); }
         .res-total .neutral { color: var(--text-main); }
 
-        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulseRing {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-            70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
-
-        /* --- NAPTÁR SZEKCIÓ --- */
-        /* FONTOS: main.main-layout layout kontroller - flex bug elkerülésére min-height: 0 */
-        .main-layout {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-height: 0;          /* KRITIKUS: enélkül a flex child nem tud zsugorodni */
-            overflow: hidden;
-            position: relative;
-        }
-        
-        .calendar-section {
-            flex: 1; display: flex; flex-direction: column;
-            padding: 0 12px 12px 12px; overflow: hidden;
-            position: relative;
-            z-index: 1;
-            min-height: 0;          /* KRITIKUS: ugyanaz, hogy a grid-wrapper befogja a tartalmat */
-        }
-
-        .cal-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 10px; flex-shrink: 0;
-            padding: 4px 6px;
-        }
-        .cal-nav-btn {
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
-            border: 1px solid var(--border); 
-            color: var(--text-muted);
-            font-size: 1.15rem; 
-            cursor: pointer; 
-            padding: 0; 
-            width: 38px; height: 38px;
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.25s;
-            box-shadow: var(--shadow-soft);
-        }
-        .cal-nav-btn:hover { 
-            color: var(--text-main); 
-            border-color: var(--border-bright);
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.04) 100%);
-            transform: scale(1.05);
-        }
-        .cal-nav-btn:active { transform: scale(0.95); }
-        
-        .month-title { 
-            font-size: 1.15rem; font-weight: 900; 
-            letter-spacing: 0.04em;
-            background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
-            -webkit-background-clip: text; background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-align: center;
-            flex: 1;
-        }
-
-        .weekdays {
-            display: grid; grid-template-columns: repeat(7, 1fr);
-            text-align: center; 
-            margin-bottom: 8px; 
-            flex-shrink: 0;
-            padding: 0 2px;
-        }
-        .weekday { 
-            font-size: 0.7rem; font-weight: 800; 
-            color: var(--text-dim); 
-            text-transform: uppercase; 
-            letter-spacing: 0.08em;
-            padding: 4px 0;
-        }
-        .weekday:nth-child(6), .weekday:nth-child(7) { color: var(--color-d-light); opacity: 0.6; }
-
-        .cal-grid-wrapper { 
-            flex: 1; 
-            overflow: hidden; 
-            position: relative;
-            min-height: 0;          /* flex bug elkerülése */
-        }
-        .calendar-grid {
-            display: grid; grid-template-columns: repeat(7, 1fr);
-            grid-template-rows: repeat(6, 1fr);
-            gap: 5px; height: 100%; width: 100%;
-            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease-out;
-            min-height: 0;
-        }
-
-        .cell {
-            background: linear-gradient(180deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.7) 100%);
-            border: 1px solid var(--border);
-            border-radius: 10px; 
-            padding: 5px; 
-            display: flex; flex-direction: column; overflow: hidden;
-            transition: all 0.2s;
-            position: relative;
-            box-shadow: 
-                inset 0 1px 0 rgba(255, 255, 255, 0.04),
-                0 2px 6px rgba(0, 0, 0, 0.15);
-        }
-        .cell:hover { 
-            border-color: var(--border-bright);
-            transform: translateY(-1px);
-            box-shadow: 
-                inset 0 1px 0 rgba(255, 255, 255, 0.08),
-                0 6px 16px rgba(0, 0, 0, 0.3);
-        }
-        .cell.empty { 
-            background: transparent; 
-            border: none; 
-            box-shadow: none; 
-        }
-        .cell.empty:hover { transform: none; }
-        
-        .cell.weekend { 
-            background: linear-gradient(180deg, rgba(20, 30, 50, 0.7) 0%, rgba(10, 15, 30, 0.6) 100%); 
-        }
-        
-        .cell.today { 
-            border: 2px solid var(--danger); 
-            background: linear-gradient(180deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.04) 100%); 
-            box-shadow: 
-                0 0 0 1px rgba(239, 68, 68, 0.2),
-                0 8px 24px rgba(239, 68, 68, 0.25),
-                inset 0 1px 0 rgba(255, 255, 255, 0.08);
-            animation: pulseRing 2.5s ease-in-out infinite;
-        }
-
-        /* --- ÚJ: ÜNNEPNAP KIEMELÉS (markáns) --- */
-        .cell.holiday-cell {
-            background: linear-gradient(180deg, rgba(239, 68, 68, 0.18) 0%, rgba(239, 68, 68, 0.06) 100%) !important;
-            border-color: rgba(239, 68, 68, 0.4) !important;
-        }
-        .cell.holiday-cell.today { /* mai nap + ünnep esetén dominál a mai jelölés */
-            background: linear-gradient(180deg, rgba(239, 68, 68, 0.22) 0%, rgba(239, 68, 68, 0.1) 100%) !important;
-        }
-        /* Bal felső sarokba ferde piros háromszög - markáns ünnepjelző */
-        .cell.holiday-cell::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0;
-            width: 0; height: 0;
-            border-top: 18px solid var(--danger);
-            border-right: 18px solid transparent;
-            z-index: 5;
-            filter: drop-shadow(0 1px 3px rgba(239, 68, 68, 0.5));
-        }
-        /* Csillag ikon a háromszögben */
-        .cell.holiday-cell::after {
-            content: '★';
-            position: absolute;
-            top: 0px; left: 2px;
-            font-size: 9px;
-            color: #fff;
-            z-index: 6;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.6);
-            line-height: 1;
-            font-weight: 900;
-        }
-        .cell.holiday-cell .date-num { color: var(--color-d-light); font-weight: 900; }
-        
-        .cell-header { 
-            display: flex; justify-content: flex-end; align-items: flex-start; 
-            margin-bottom: auto; 
-        }
-        .date-num { 
-            font-size: 0.9rem; font-weight: 800; 
-            color: var(--text-main); 
-            line-height: 1;
-            letter-spacing: -0.02em;
-        }
-        .cell.weekend .date-num { color: var(--text-muted); }
-        .cell.today .date-num { 
-            color: var(--danger);
-            text-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
-            font-weight: 900;
-        }
-
-        .shifts-container { 
-            display: flex; flex-direction: column; 
-            gap: 3px; margin-top: 3px; 
-        }
-        .shift-pill {
-            font-size: clamp(0.55rem, 1.5vh, 0.72rem);
-            font-weight: 800; 
-            padding: 3px 5px; 
-            border-radius: 5px;
-            display: flex; justify-content: space-between; align-items: center;
-            white-space: nowrap; overflow: hidden;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-            letter-spacing: 0.02em;
-        }
-        .shift-pill span { opacity: 0.65; font-weight: 700; margin-right: 4px; font-size: 0.85em; }
-        @media (max-width: 400px) { .shift-pill span { display: none; } .shift-pill { justify-content: center; } }
-        
-        /* === ÚJ: KIS MAGASSÁGÚ VIEWPORT (laptop, landscape mobil) === */
-        /* Ha a viewport magassága szűkös, automatikusan kompakt módba vált */
-        @media (max-height: 750px) {
-            .app-header {
-                height: 50px;
-                padding: 6px 14px;
-            }
-            .logo-area h1 { font-size: 1.1rem; }
-            .btn-modern {
-                padding: 6px 11px;
-                font-size: 0.72rem;
-            }
-            .filter-container {
-                padding: 6px 12px 5px 12px;
-                gap: 6px;
-            }
-            .segmented-control {
-                height: 36px;
-                padding: 4px;
-            }
-            .seg-btn { font-size: 0.78rem; }
-            .btn-overtime {
-                padding: 8px;
-                font-size: 0.76rem;
-            }
-            .calendar-section {
-                padding: 0 10px 8px 10px;
-            }
-            .cal-header {
-                margin-bottom: 5px;
-                padding: 2px 4px;
-            }
-            .cal-nav-btn {
-                width: 32px; height: 32px;
-                font-size: 1rem;
-            }
-            .month-title { font-size: 1rem; }
-            .weekdays { margin-bottom: 4px; }
-            .weekday { font-size: 0.62rem; padding: 2px 0; }
-            .calendar-grid { gap: 3px; }
-            .cell { padding: 3px; border-radius: 7px; }
-            .date-num { font-size: 0.78rem; }
-            .shift-pill {
-                padding: 2px 4px;
-                font-size: clamp(0.5rem, 1.3vh, 0.66rem);
-            }
-            .shift-display-big .sd-icon { font-size: clamp(0.85rem, 2vh, 1.15rem); }
-            .shift-display-big .sd-label { font-size: clamp(0.45rem, 1.1vh, 0.6rem); }
-        }
-        
-        /* Még kisebb magasság (régi laptopok, landscape iPhone) */
-        @media (max-height: 600px) {
-            .app-header { height: 44px; padding: 5px 12px; }
-            .logo-area h1 { font-size: 1rem; }
-            .btn-modern { padding: 5px 9px; font-size: 0.68rem; }
-            .filter-container { padding: 5px 10px 4px 10px; gap: 5px; }
-            .segmented-control { height: 32px; }
-            .seg-btn { font-size: 0.72rem; }
-            .btn-overtime { padding: 6px; font-size: 0.7rem; }
-            .calendar-section { padding: 0 8px 6px 8px; }
-            .cal-nav-btn { width: 28px; height: 28px; font-size: 0.9rem; }
-            .month-title { font-size: 0.9rem; }
-            .weekday { font-size: 0.55rem; }
-            .calendar-grid { gap: 2px; }
-            .cell { padding: 2px; border-radius: 5px; }
-            .date-num { font-size: 0.7rem; }
-        }
-
-        .pill-A { 
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.28) 0%, rgba(59, 130, 246, 0.18) 100%); 
-            color: var(--color-a-light); 
-            border: 1px solid rgba(59, 130, 246, 0.2);
-        }
-        .pill-B { 
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.28) 0%, rgba(16, 185, 129, 0.18) 100%); 
-            color: var(--color-b-light); 
-            border: 1px solid rgba(16, 185, 129, 0.2);
-        }
-        .pill-C { 
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.28) 0%, rgba(245, 158, 11, 0.18) 100%); 
-            color: var(--color-c-light); 
-            border: 1px solid rgba(245, 158, 11, 0.2);
-        }
-        .pill-D { 
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.28) 0%, rgba(239, 68, 68, 0.18) 100%); 
-            color: var(--color-d-light); 
-            border: 1px solid rgba(239, 68, 68, 0.2);
-        }
-
-        .cell.dimmed { 
-            opacity: 0.2; 
-            filter: grayscale(0.8); 
-        }
-
-        /* --- ÚJ: SZŰRT NÉZET PRO HIGHLIGHT --- */
-        /* Egész cella kap nagy belső kijelzőt: ☀️ NAPPAL vagy 🌙 ÉJJEL ikonnal, jól olvashatóan */
-        .shift-display-big {
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            flex: 1;
-            gap: 2px;
-            padding: 2px;
-            border-radius: 7px;
-            position: relative;
-            margin-top: 2px;
-        }
-        .shift-display-big .sd-icon {
-            font-size: clamp(0.95rem, 2.4vh, 1.3rem);
-            line-height: 1;
-            filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
-        }
-        .shift-display-big .sd-label {
-            font-size: clamp(0.5rem, 1.2vh, 0.66rem);
-            font-weight: 900;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            line-height: 1;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-        }
-        /* NAPPAL - meleg sárgás-fehér, fényesebb */
-        .sd-day {
-            background: linear-gradient(180deg, rgba(251, 191, 36, 0.22) 0%, rgba(251, 191, 36, 0.08) 100%);
-            border: 1px solid rgba(251, 191, 36, 0.45);
-            color: #fde68a;
-            box-shadow: 
-                inset 0 1px 0 rgba(255, 255, 255, 0.12),
-                0 0 12px rgba(251, 191, 36, 0.15);
-        }
-        /* ÉJJEL - hideg indigó, sötétebb */
-        .sd-night {
-            background: linear-gradient(180deg, rgba(99, 102, 241, 0.22) 0%, rgba(67, 56, 202, 0.1) 100%);
-            border: 1px solid rgba(99, 102, 241, 0.45);
-            color: #c7d2fe;
-            box-shadow: 
-                inset 0 1px 0 rgba(255, 255, 255, 0.1),
-                0 0 12px rgba(99, 102, 241, 0.18);
-        }
-
-        /* --- ÉVES STATISZTIKA - Modern Cards --- */
+        /* ================================================================== */
+        /* ============= STATS - érintetlenül, csak kissé hangolva ========= */
+        /* ================================================================== */
         @media (max-width: 420px) { .stat-text-hide { display: none; } }
-        .stats-grid { 
-            display: grid; 
-            grid-template-columns: 1fr; 
-            gap: 14px; 
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
         }
         @media(min-width: 650px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
         
-        .stat-card { 
-            background: linear-gradient(180deg, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.6) 100%);
-            border: 1px solid var(--border); 
-            border-radius: 14px; 
-            padding: 16px; 
+        .stat-card {
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid var(--border-soft);
+            border-radius: 16px;
+            padding: 16px;
             box-shadow: 
                 0 12px 30px rgba(0, 0, 0, 0.25),
                 inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -803,44 +943,41 @@
             transition: transform 0.25s;
         }
         .stat-card:hover { transform: translateY(-2px); }
-        
         .stat-card::before {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0;
             height: 3px;
-            border-radius: 14px 14px 0 0;
+            border-radius: 16px 16px 0 0;
         }
-        .stat-card-A::before { background: linear-gradient(90deg, var(--color-a) 0%, var(--color-a-light) 100%); box-shadow: 0 0 16px var(--accent-glow); }
-        .stat-card-B::before { background: linear-gradient(90deg, var(--color-b) 0%, var(--color-b-light) 100%); box-shadow: 0 0 16px rgba(16, 185, 129, 0.35); }
-        .stat-card-C::before { background: linear-gradient(90deg, var(--color-c) 0%, var(--color-c-light) 100%); box-shadow: 0 0 16px rgba(245, 158, 11, 0.35); }
-        .stat-card-D::before { background: linear-gradient(90deg, var(--color-d) 0%, var(--color-d-light) 100%); box-shadow: 0 0 16px var(--danger-glow); }
+        .stat-card-A::before { background: linear-gradient(90deg, var(--shift-a) 0%, #93c5fd 100%); box-shadow: 0 0 16px var(--shift-a-glow); }
+        .stat-card-B::before { background: linear-gradient(90deg, var(--shift-b) 0%, #86efac 100%); box-shadow: 0 0 16px var(--shift-b-glow); }
+        .stat-card-C::before { background: linear-gradient(90deg, var(--shift-c) 0%, #fde68a 100%); box-shadow: 0 0 16px var(--shift-c-glow); }
+        .stat-card-D::before { background: linear-gradient(90deg, var(--shift-d) 0%, #fbcfe8 100%); box-shadow: 0 0 16px var(--shift-d-glow); }
 
-        .stat-card h3 { 
-            margin: 0 0 12px 0; 
-            text-align: center; 
-            font-size: 1.05rem; font-weight: 900; 
+        .stat-card h3 {
+            margin: 0 0 12px 0;
+            text-align: center;
+            font-size: 1.05rem; font-weight: 900;
             letter-spacing: 0.04em;
             text-transform: uppercase;
         }
-        .stat-card-A h3 { color: var(--color-a-light); }
-        .stat-card-B h3 { color: var(--color-b-light); }
-        .stat-card-C h3 { color: var(--color-c-light); }
-        .stat-card-D h3 { color: var(--color-d-light); }
+        .stat-card-A h3 { color: var(--shift-a); }
+        .stat-card-B h3 { color: var(--shift-b); }
+        .stat-card-C h3 { color: var(--shift-c); }
+        .stat-card-D h3 { color: var(--shift-d); }
         
-        /* --- ÚJ: BIG NUMBER SHOWCASE --- */
         .stat-big-row {
             display: grid; grid-template-columns: 1fr 1fr;
             gap: 10px;
             margin-bottom: 14px;
         }
         .stat-big {
-            background: linear-gradient(180deg, rgba(2, 6, 23, 0.55) 0%, rgba(15, 23, 42, 0.35) 100%);
-            border: 1px solid var(--border-light);
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--border-soft);
             border-radius: 10px;
             padding: 10px 8px;
             text-align: center;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
         }
         .stat-big-num {
             font-size: 1.55rem; font-weight: 900;
@@ -857,27 +994,19 @@
             letter-spacing: 0.08em;
             line-height: 1.1;
         }
-        .stat-big.acc .stat-big-num { color: var(--color-b-light); text-shadow: 0 0 12px rgba(16, 185, 129, 0.3); }
-        .stat-big.warn .stat-big-num { color: var(--color-c-light); text-shadow: 0 0 12px rgba(245, 158, 11, 0.3); }
+        .stat-big.acc .stat-big-num { color: var(--shift-b); text-shadow: 0 0 12px var(--shift-b-glow); }
+        .stat-big.warn .stat-big-num { color: var(--shift-c); text-shadow: 0 0 12px var(--shift-c-glow); }
 
-        /* Mini bar chart - nappal/éjjel arány */
         .ratio-bar {
             display: flex; height: 8px;
             border-radius: 4px;
             overflow: hidden;
             margin: 4px 0 12px 0;
-            background: rgba(2, 6, 23, 0.5);
-            border: 1px solid var(--border-light);
-            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-soft);
         }
-        .ratio-day {
-            background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
-        }
-        .ratio-night {
-            background: linear-gradient(90deg, #818cf8 0%, #6366f1 100%);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
-        }
+        .ratio-day { background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%); }
+        .ratio-night { background: linear-gradient(90deg, #818cf8 0%, #6366f1 100%); }
         .ratio-legend {
             display: flex; justify-content: space-between;
             font-size: 0.7rem; font-weight: 700;
@@ -885,31 +1014,24 @@
             margin-bottom: 14px;
             letter-spacing: 0.02em;
         }
-        .ratio-legend span:first-child { color: var(--color-c-light); }
+        .ratio-legend span:first-child { color: var(--shift-c); }
         .ratio-legend span:last-child { color: #a5b4fc; }
 
-        .stat-row-stat { 
-            display: flex; justify-content: space-between; 
+        .stat-row-stat {
+            display: flex; justify-content: space-between;
             align-items: center;
-            padding: 7px 0; 
-            border-bottom: 1px dashed var(--border-light); 
-            font-size: 0.82rem; color: var(--text-muted); 
+            padding: 7px 0;
+            border-bottom: 1px dashed var(--border-soft);
+            font-size: 0.82rem; color: var(--text-muted);
             font-weight: 600;
         }
         .stat-row-stat:last-child { border-bottom: none; }
-        .stat-row-stat strong { 
-            color: var(--text-main); 
-            font-weight: 800; 
+        .stat-row-stat strong {
+            color: var(--text-main);
+            font-weight: 800;
             font-size: 0.87rem;
         }
-        .stat-highlight { 
-            color: var(--accent) !important; 
-            font-weight: 900 !important; 
-            font-size: 1.05rem !important;
-            text-shadow: 0 0 12px var(--accent-glow);
-        }
 
-        /* Stats section title (divider) */
         .stat-section-title {
             font-size: 0.65rem; font-weight: 800;
             color: var(--text-dim);
@@ -917,24 +1039,22 @@
             letter-spacing: 0.12em;
             padding: 8px 0 4px 0;
             margin-top: 6px;
-            border-top: 1px solid var(--border-light);
+            border-top: 1px solid var(--border-soft);
             display: flex; align-items: center; gap: 6px;
         }
         .stat-section-title:first-of-type { border-top: none; padding-top: 4px; margin-top: 0; }
 
-        /* Hours estimate panel */
         .stat-hours-panel {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(139, 92, 246, 0.08) 100%);
-            border: 1px solid rgba(59, 130, 246, 0.25);
-            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(96, 165, 250, 0.15) 0%, rgba(244, 114, 182, 0.1) 100%);
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            border-radius: 12px;
             padding: 10px;
             margin-top: 10px;
             text-align: center;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
         }
         .stat-hours-panel .h-num {
             font-size: 1.4rem; font-weight: 900;
-            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            background: linear-gradient(135deg, var(--shift-a) 0%, var(--shift-d) 100%);
             -webkit-background-clip: text; background-clip: text;
             -webkit-text-fill-color: transparent;
             display: block;
@@ -955,11 +1075,10 @@
             @page { size: A4 portrait; margin: 8mm; }
             body { background: white !important; color: black !important; display: block; height: auto; overflow: visible; }
             body::before { display: none !important; }
-            .app-header, .filter-container, .main-layout { display: none !important; }
+            .float-header, .shift-filter, .overtime-container, .main-layout { display: none !important; }
             #printContainer { display: block !important; width: 100%; height: 100%; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
-            /* --- PRO HEADER (kompakt) --- */
             .print-header { 
                 text-align: center; 
                 margin-bottom: 6px; 
@@ -983,7 +1102,6 @@
                 text-transform: uppercase;
             }
             
-            /* --- LEGEND (műszak színek magyarázata) --- */
             .print-legend {
                 display: flex; justify-content: center; gap: 14px;
                 font-size: 6.5pt; font-weight: 700;
@@ -1072,7 +1190,6 @@
             .print-cell.holiday-print .print-date-num {
                 color: #b91c1c !important;
             }
-            /* Mai nap kiemelés nyomtatásban is */
             .print-cell.today-print {
                 border: 1.5px solid #1e293b !important;
                 background: #fef3c7 !important;
@@ -1104,60 +1221,55 @@
                 padding: 1px 0;
                 letter-spacing: 0.3px;
             }
-            .p-A { background: var(--color-a) !important; }
-            .p-B { background: var(--color-b) !important; }
-            .p-C { background: var(--color-c) !important; }
-            .p-D { background: var(--color-d) !important; }
-
-            /* Lábléc kis info */
-            .print-footer {
-                text-align: center;
-                font-size: 5.5pt;
-                color: #94a3b8;
-                margin-top: 3px;
-                font-weight: 600;
-                letter-spacing: 0.5px;
-            }
+            .p-A { background: #3b82f6 !important; }
+            .p-B { background: #10b981 !important; }
+            .p-C { background: #f59e0b !important; }
+            .p-D { background: #ef4444 !important; }
         }
     </style>
 </head>
 <body>
 
-    <header class="app-header">
-        <div class="logo-area">
-            <h1>FORVIA <span>SMT</span></h1>
-        </div>
+    <!-- ÚJ MODERN LEBEGŐ FEJLÉC -->
+    <header class="float-header">
+        <div class="brand">FORVIA <span class="brand-sub">SMT</span></div>
         <div class="header-actions">
-            <button class="btn-modern btn-stats" onclick="openYearlyStatsModal()">
-                <span style="font-size: 1rem;">📊</span> <span class="stat-text-hide">Éves Stat.</span>
+            <button class="icon-btn stats-btn" onclick="openYearlyStatsModal()" title="Éves statisztika">
+                📊
             </button>
-            <button class="btn-modern btn-today" onclick="jumpToToday()">Mai</button>
-            <button class="btn-modern btn-print" onclick="prepareAndPrint()">🖨️ Éves Nyomtatás</button>
+            <button class="icon-btn today-btn" onclick="jumpToToday()">Mai</button>
+            <button class="icon-btn print-btn" onclick="prepareAndPrint()" title="Éves nyomtatás">
+                🖨
+            </button>
         </div>
     </header>
 
-    <div class="filter-container">
-        <div class="segmented-control" id="segControl">
-            <div class="seg-slider" id="segSlider"></div>
-            <div class="seg-btn active" onclick="setFilter('ALL', 0)">Összes</div>
-            <div class="seg-btn" onclick="setFilter('A', 1)">"A"</div>
-            <div class="seg-btn" onclick="setFilter('B', 2)">"B"</div>
-            <div class="seg-btn" onclick="setFilter('C', 3)">"C"</div>
-            <div class="seg-btn" onclick="setFilter('D', 4)">"D"</div>
-        </div>
-        <div class="overtime-container" id="overtimeBtnContainer">
-            <button class="btn-overtime" onclick="openOvertimeModal()">
-                ⏱️ Negyedéves Keret Elszámolás (Túlóra)
-            </button>
-        </div>
+    <!-- MODERN SHIFT FILTER PILLS -->
+    <div class="shift-filter" id="segControl">
+        <button class="shift-pill-btn active" data-shift="ALL" onclick="setFilter('ALL', 0)"><span>Összes</span></button>
+        <button class="shift-pill-btn" data-shift="A" onclick="setFilter('A', 1)"><span>A</span></button>
+        <button class="shift-pill-btn" data-shift="B" onclick="setFilter('B', 2)"><span>B</span></button>
+        <button class="shift-pill-btn" data-shift="C" onclick="setFilter('C', 3)"><span>C</span></button>
+        <button class="shift-pill-btn" data-shift="D" onclick="setFilter('D', 4)"><span>D</span></button>
+    </div>
+
+    <div class="overtime-container" id="overtimeBtnContainer">
+        <button class="btn-overtime" onclick="openOvertimeModal()">
+            ⏱️ Negyedéves Keret Elszámolás (Túlóra)
+        </button>
     </div>
 
     <main class="main-layout">
         <section class="calendar-section">
             <div class="cal-header">
-                <button class="cal-nav-btn" onclick="changeMonth(-1)">&#10094;</button>
-                <div class="month-title" id="monthLabel"></div>
-                <button class="cal-nav-btn" onclick="changeMonth(1)">&#10095;</button>
+                <div class="month-title" id="monthLabel">
+                    <span class="month-part"></span>
+                    <span class="year-part"></span>
+                </div>
+                <div class="nav-group">
+                    <button class="cal-nav-btn" onclick="changeMonth(-1)" aria-label="Előző hónap">&#10094;</button>
+                    <button class="cal-nav-btn" onclick="changeMonth(1)" aria-label="Következő hónap">&#10095;</button>
+                </div>
             </div>
             
             <div class="weekdays">
@@ -1176,14 +1288,13 @@
                     <h2>📊 <span id="statsYearLabel"></span>. Éves Statisztika</h2>
                     <button class="btn-close" onclick="closeYearlyStatsModal()">×</button>
                 </div>
-                <div style="padding: 10px 18px; background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%); border-bottom: 1px solid var(--border); font-size: 0.78rem; color: var(--text-muted); font-weight: 600; display: flex; flex-wrap: wrap; gap: 14px; justify-content: center;">
+                <div style="padding: 10px 18px; background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%); border-bottom: 1px solid var(--border-soft); font-size: 0.78rem; color: var(--text-muted); font-weight: 600; display: flex; flex-wrap: wrap; gap: 14px; justify-content: center;">
                     <span>📆 Naptári napok: <strong id="statsTotalDays" style="color: var(--text-main); font-size: 0.95rem;"></strong></span>
                     <span>🎉 Ünnepnapok: <strong id="totalHolidaysLabel" style="color: var(--danger); font-size: 0.95rem; text-shadow: 0 0 10px var(--danger-glow);"></strong></span>
-                    <span>📅 Hétvégék: <strong id="statsTotalWeekend" style="color: var(--color-c-light); font-size: 0.95rem;"></strong></span>
+                    <span>📅 Hétvégék: <strong id="statsTotalWeekend" style="color: var(--shift-c); font-size: 0.95rem;"></strong></span>
                 </div>
                 <div class="modal-body" style="padding: 16px; overflow-y: auto;">
-                    <div class="stats-grid" id="statsGrid">
-                    </div>
+                    <div class="stats-grid" id="statsGrid"></div>
                 </div>
             </div>
         </div>
@@ -1196,14 +1307,12 @@
                 </div>
                 <div class="modal-body">
                     <select class="period-select" id="periodSelect" onchange="calculateAndRenderOvertime()"></select>
-                    
                     <div id="holidayQuestions"></div>
-                    
                     <div class="result-box">
                         <div class="res-row"><span>Törvényes alap munkaidő:</span> <strong id="resBase">0 óra</strong></div>
                         <div class="res-row"><span>Ténylegesen ledolgozott:</span> <strong id="resWorked">0 óra</strong></div>
                         <div class="res-total">
-                            <span>Túllépés:</span> 
+                            <span>Túllépés:</span>
                             <strong id="resDiff">0 óra</strong>
                         </div>
                     </div>
@@ -1235,22 +1344,18 @@
 
     function getHolidaysForYear(year) {
         const easter = getEaster(year);
-        
         const addDays = (date, days) => {
             let result = new Date(date);
             result.setDate(result.getDate() + days);
             return result;
         };
-
         const formatDate = (date) => {
             return String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
         };
-
         const goodFriday = addDays(easter, -2);
         const easterMonday = addDays(easter, 1);
         const pentecostSunday = addDays(easter, 49);
         const pentecostMonday = addDays(easter, 50);
-
         return {
             "01-01": "Újév",
             "03-15": "Nemzeti Ünnep",
@@ -1296,18 +1401,16 @@
     
     const monthNames = ["Január","Február","Március","Április","Május","Június","Július","Augusztus","Szeptember","Október","November","December"];
 
+    // ÚJ: már nincs slider animáció, csak active class kezelés
     function initSegmentedControl() {
-        const slider = document.getElementById('segSlider');
-        slider.style.width = '20%';
-        slider.style.transform = 'translateX(0%)';
+        // semmi - shift pill-eknek nincs külön init kell
     }
 
     function setFilter(shift, index) {
         currentFilter = shift;
-        const btns = document.querySelectorAll('.seg-btn');
+        const btns = document.querySelectorAll('.shift-pill-btn');
         btns.forEach(btn => btn.classList.remove('active'));
         btns[index].classList.add('active');
-        document.getElementById('segSlider').style.transform = `translateX(${index * 100}%)`;
         
         const otBtn = document.getElementById('overtimeBtnContainer');
         if (shift === 'ALL') {
@@ -1343,10 +1446,15 @@
         }, 150);
     }
 
+    // ÚJ MODERN RENDER FÜGGVÉNY - split gradient cellákkal
     function renderCalendar() {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
-        document.getElementById('monthLabel').innerText = `${year} ${monthNames[month].toUpperCase()}`;
+        const monthLabel = document.getElementById('monthLabel');
+        monthLabel.innerHTML = `
+            <span class="month-part">${monthNames[month]}</span>
+            <span class="year-part">${year}</span>
+        `;
         
         const grid = document.getElementById('calGrid');
         grid.innerHTML = '';
@@ -1358,10 +1466,11 @@
 
         let totalCells = 42;
         let dayCounter = 1;
+        let cellsHtml = '';
 
         for(let i = 0; i < totalCells; i++) {
             if (i < startDayIndex || dayCounter > lastDay.getDate()) {
-                grid.innerHTML += `<div class="cell empty"></div>`;
+                cellsHtml += `<div class="cell empty"></div>`;
                 continue;
             }
 
@@ -1372,48 +1481,70 @@
             
             const shiftData = getShiftForDate(iterDate);
             const mmdd = `${String(month + 1).padStart(2, '0')}-${String(dayCounter).padStart(2, '0')}`;
-            
             const holidayName = getHolidayName(year, mmdd);
             const isHoliday = !!holidayName;
             
-            let cellClass = `cell ${isToday ? 'today' : ''} ${isWeekend ? 'weekend' : ''} ${isHoliday ? 'holiday-cell' : ''}`;
-            let titleAttr = isHoliday ? `title="${holidayName}"` : '';
-            let shiftsHtml = '';
-
+            let cellClasses = ['cell'];
+            if (isToday) cellClasses.push('today');
+            if (isWeekend) cellClasses.push('weekend');
+            if (isHoliday) cellClasses.push('holiday-cell');
+            
+            let cellContent = '';
+            let dataAttrs = `data-day="${shiftData.day}" data-night="${shiftData.night}"`;
+            
             if(currentFilter === 'ALL') {
-                shiftsHtml = `
-                    <div class="shift-pill pill-${shiftData.day}"><span>N</span><strong>${shiftData.day}</strong></div>
-                    <div class="shift-pill pill-${shiftData.night}"><span>É</span><strong>${shiftData.night}</strong></div>
+                cellContent = `
+                    <div class="cell-split-bg">
+                        <div class="cell-split-day"></div>
+                        <div class="cell-split-night"></div>
+                    </div>
+                    <div class="cell-content">
+                        <div class="cell-header">
+                            <span class="date-num">${dayCounter}</span>
+                        </div>
+                        <div class="shifts-modern">
+                            <div class="shift-badge day-badge shift-${shiftData.day}">${shiftData.day}</div>
+                            <div class="shift-badge night-badge shift-${shiftData.night}">${shiftData.night}</div>
+                        </div>
+                    </div>
                 `;
             } else {
+                let bigDisplayHtml = '';
                 if(shiftData.day === currentFilter) {
-                    // ÚJ: nagy ikon + szöveg nappal/éjjel kijelző
-                    shiftsHtml = `
+                    bigDisplayHtml = `
                         <div class="shift-display-big sd-day">
                             <div class="sd-icon">☀️</div>
                             <div class="sd-label">NAPPAL</div>
                         </div>`;
                 } else if(shiftData.night === currentFilter) {
-                    shiftsHtml = `
+                    bigDisplayHtml = `
                         <div class="shift-display-big sd-night">
                             <div class="sd-icon">🌙</div>
                             <div class="sd-label">ÉJJEL</div>
                         </div>`;
                 } else {
-                    cellClass += ' dimmed';
+                    cellClasses.push('dimmed');
                 }
+                cellContent = `
+                    <div class="cell-split-bg">
+                        <div class="cell-split-day"></div>
+                        <div class="cell-split-night"></div>
+                    </div>
+                    <div class="cell-content">
+                        <div class="cell-header">
+                            <span class="date-num">${dayCounter}</span>
+                        </div>
+                        ${bigDisplayHtml}
+                    </div>
+                `;
             }
 
-            grid.innerHTML += `
-                <div class="${cellClass}" ${titleAttr}>
-                    <div class="cell-header">
-                        <span class="date-num">${dayCounter}</span>
-                    </div>
-                    ${shiftsHtml}
-                </div>
-            `;
+            let titleAttr = isHoliday ? `title="${holidayName}"` : '';
+            cellsHtml += `<div class="${cellClasses.join(' ')}" ${dataAttrs} ${titleAttr}>${cellContent}</div>`;
             dayCounter++;
         }
+        
+        grid.innerHTML = cellsHtml;
     }
 
     function setupSwipe() {
@@ -1431,6 +1562,7 @@
         }, {passive: true});
     }
 
+    // ===== NYOMTATÁS - VÁLTOZATLAN =====
     function prepareAndPrint() {
         const year = currentDate.getFullYear();
         const container = document.getElementById('printContainer');
@@ -1474,11 +1606,9 @@
                 const isWeekend = iterDate.getDay() === 0 || iterDate.getDay() === 6;
                 const shiftData = getShiftForDate(iterDate);
                 
-                // ünnepnap kiemelése a nyomtatásban is
                 const mmdd = `${String(m + 1).padStart(2, '0')}-${String(dayCounter).padStart(2, '0')}`;
                 const isHoliday = !!getHolidayName(year, mmdd);
                 
-                // mai nap a nyomtatás idejéhez képest
                 const iso = new Date(iterDate.getTime() - (iterDate.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
                 const isToday = (iso === todayIso);
                 
@@ -1502,9 +1632,7 @@
         }
 
         html += `</div>`; 
-        
         container.innerHTML = html;
-
         setTimeout(() => { window.print(); }, 100);
     }
 
@@ -1601,10 +1729,10 @@
                         workedHours += val;
                         
                         holidayHTML += `
-                            <div class="holiday-item" style="border-color: rgba(16, 185, 129, 0.4); background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.02) 100%);">
+                            <div class="holiday-item" style="border-color: rgba(74, 222, 128, 0.35); background: rgba(74, 222, 128, 0.06);">
                                 <div class="holiday-info">
                                     <span class="h-date">${monthNames[d.getMonth()]} ${d.getDate()}. - ${holidayName}</span>
-                                    <span class="h-name">ÉJSZAKÁS (Módosítható Pro Opció)</span>
+                                    <span class="h-name">ÉJSZAKÁS (Módosítható)</span>
                                 </div>
                                 <select class="pro-select" onchange="toggleHoliday('${overrideKey}', parseInt(this.value))">
                                     <option value="0" ${val === 0 ? 'selected' : ''}>0 óra (Pihenő)</option>
@@ -1643,9 +1771,9 @@
         
         const hContainer = document.getElementById('holidayQuestions');
         if (holidayHTML !== '') {
-            hContainer.innerHTML = `<div style="font-size: 0.8rem; color: var(--accent); margin-bottom: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; padding-left: 4px;">Érintett ünnepnapok (Állítsd be, ahogy dolgoztál!):</div>` + holidayHTML;
+            hContainer.innerHTML = `<div style="font-size: 0.8rem; color: var(--shift-a); margin-bottom: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; padding-left: 4px;">Érintett ünnepnapok:</div>` + holidayHTML;
         } else {
-            hContainer.innerHTML = `<div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 15px; text-align: center; background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%); padding: 14px; border-radius: 12px; border: 1px solid var(--border-light); font-weight: 600;">Ebben a 3 hónapban a beosztásod nem érintett ünnepnapot.</div>`;
+            hContainer.innerHTML = `<div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 15px; text-align: center; background: rgba(255,255,255,0.03); padding: 14px; border-radius: 12px; border: 1px solid var(--border-soft); font-weight: 600;">Ebben a 3 hónapban a beosztásod nem érintett ünnepnapot.</div>`;
         }
         
         let diff = workedHours - baseHours;
@@ -1666,7 +1794,6 @@
         const year = currentDate.getFullYear();
         document.getElementById('statsYearLabel').innerText = year;
         
-        // BŐVÍTETT STATISZTIKA
         const stats = {
             'A': { total: 0, day: 0, night: 0, weekend: 0, sunday: 0, saturday: 0, holiday: 0, holidayDay: 0, holidayNight: 0, friNight: 0, longestStreak: 0, currentStreak: 0, lastWasWork: false, byMonth: Array(12).fill(0) },
             'B': { total: 0, day: 0, night: 0, weekend: 0, sunday: 0, saturday: 0, holiday: 0, holidayDay: 0, holidayNight: 0, friNight: 0, longestStreak: 0, currentStreak: 0, lastWasWork: false, byMonth: Array(12).fill(0) },
@@ -1701,7 +1828,6 @@
                 
                 const shiftData = getShiftForDate(iterDate);
                 
-                // Set helper: melyik műszakot érinti az adott nap (day és night oldalon)
                 ['A','B','C','D'].forEach(shiftId => {
                     const isDay = (shiftData.day === shiftId);
                     const isNight = (shiftData.night === shiftId);
@@ -1721,7 +1847,6 @@
                         if (isFriday && isNight) s.friNight++;
                         s.byMonth[m]++;
                         
-                        // Streak (egymás utáni munkanapok)
                         if (s.lastWasWork) {
                             s.currentStreak++;
                         } else {
@@ -1750,14 +1875,13 @@
             const workedPct = ((s.total / daysInYear) * 100).toFixed(1);
             const dayPct = s.total > 0 ? Math.round((s.day / s.total) * 100) : 50;
             const nightPct = 100 - dayPct;
-            const estimatedHours = s.total * 12; // 12 órás műszak alapján
+            const estimatedHours = s.total * 12;
             const busiestMonth = s.byMonth.indexOf(Math.max(...s.byMonth));
             const calmestMonth = s.byMonth.indexOf(Math.min(...s.byMonth));
             
             grid.innerHTML += `
                 <div class="stat-card stat-card-${shift}">
                     <h3>"${shift}" Műszak</h3>
-                    
                     <div class="stat-big-row">
                         <div class="stat-big">
                             <span class="stat-big-num">${s.total}</span>
@@ -1768,7 +1892,6 @@
                             <span class="stat-big-label">Pihenőnap</span>
                         </div>
                     </div>
-
                     <div class="stat-section-title">☀️🌙 Nappal / Éjjel megoszlás</div>
                     <div class="ratio-bar">
                         <div class="ratio-day" style="width:${dayPct}%;"></div>
@@ -1778,7 +1901,6 @@
                         <span>☀️ ${s.day} nappal (${dayPct}%)</span>
                         <span>${s.night} éjjel 🌙 (${nightPct}%)</span>
                     </div>
-
                     <div class="stat-section-title">📅 Hétvégék & Ünnepek</div>
                     <div class="stat-row-stat"><span>Hétvégi munkanap:</span> <strong>${s.weekend} nap</strong></div>
                     <div class="stat-row-stat"><span>&nbsp;&nbsp;├ Szombatok:</span> <strong>${s.saturday} nap</strong></div>
@@ -1786,13 +1908,11 @@
                     <div class="stat-row-stat" style="margin-top: 4px;"><span>Ünnepnapon munka:</span> <strong style="color: var(--danger);">${s.holiday} nap</strong></div>
                     <div class="stat-row-stat"><span>&nbsp;&nbsp;├ Nappalos ünnep:</span> <strong>${s.holidayDay} nap</strong></div>
                     <div class="stat-row-stat"><span>&nbsp;&nbsp;└ Éjszakás ünnep:</span> <strong>${s.holidayNight} nap</strong></div>
-
                     <div class="stat-section-title">📊 Heti ritmus</div>
                     <div class="stat-row-stat"><span>🌃 Péntek esti éjszakás:</span> <strong>${s.friNight} db</strong></div>
                     <div class="stat-row-stat"><span>🔥 Leghosszabb széria:</span> <strong>${s.longestStreak} nap</strong></div>
                     <div class="stat-row-stat"><span>📈 Legtöbbet dolgozott hó:</span> <strong>${monthNames[busiestMonth]} (${s.byMonth[busiestMonth]})</strong></div>
                     <div class="stat-row-stat"><span>📉 Legkevesebbet dolgozott hó:</span> <strong>${monthNames[calmestMonth]} (${s.byMonth[calmestMonth]})</strong></div>
-
                     <div class="stat-hours-panel">
                         <span class="h-num">~${estimatedHours.toLocaleString('hu-HU')} óra</span>
                         <span class="h-label">Becsült éves óraszám (12h/nap)</span>
@@ -1808,27 +1928,19 @@
         document.getElementById('statsModal').classList.remove('active');
     }
 
-    // ====================================================
-    // ÚJ: VIEWPORT MAGASSÁG FIX (iOS Safari + minden eszköz)
-    // A 100vh/100dvh nem mindig pontos, ezért dinamikusan állítjuk
-    // ====================================================
+    // Viewport magasság fix
     function setRealVH() {
-        // Tényleges látható magasság a window.innerHeight-ből
-        const vh = window.innerHeight * 0.01;
-        document.documentElement.style.setProperty('--real-vh', `${vh}px`);
         document.documentElement.style.setProperty('--real-100vh', `${window.innerHeight}px`);
     }
     setRealVH();
     window.addEventListener('resize', setRealVH);
     window.addEventListener('orientationchange', () => {
-        // orientation change után pici delay kell hogy a böngésző stabilizálja a méretet
         setTimeout(setRealVH, 100);
     });
 
     initSegmentedControl();
     renderCalendar();
     setupSwipe();
-
 </script>
 </body>
 </html>
