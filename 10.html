@@ -308,42 +308,46 @@
     const metaRef = db.ref('meta'); // ÚJ: verzió + utolsó éves reset
 
     // ==========================================
-    // 🔄 INICIALIZÁLÁS + RESET LOGIKA
+    // 🔄 INICIALIZÁLÁS + RESET LOGIKA (nem-blokkoló!)
     // ==========================================
+    // FONTOS: a fő listener-ek azonnal indulnak alább, ez csak háttér feladat.
+    // Ha bármi hiba van itt, az nem akadályozza meg az app működését.
     
-    // Először betöltjük a metaadatokat, hogy lássuk kell-e reset
-    async function initialize() {
-        const metaSnapshot = await metaRef.get();
-        const meta = metaSnapshot.exists() ? metaSnapshot.val() : {};
-        const currentYear = new Date().getFullYear();
+    function backgroundInit() {
+        // Settings init: ha nincs roster, hozzunk létre egy alapot
+        settingsRef.get().then(snapshot => {
+            if (!snapshot.exists() || !snapshot.val().roster) {
+                settingsRef.update({
+                    roster: "Laci,Jani,Patrik,Zsuzsa,Peti,Barbi,Reni,Böbe,Martina,Kriszti,Dani".split(",")
+                }).catch(e => console.warn("Settings init kihagyva:", e.message));
+            }
+        }).catch(e => console.warn("Settings olvasás kihagyva:", e.message));
         
-        let needsReset = false;
-        let resetReason = '';
-        
-        // Verzió ellenőrzés (új verzió → reset egyszer)
-        if (meta.version !== VERSION_KEY) {
-            needsReset = true;
-            resetReason = 'új verzió';
-        }
-        
-        // Évváltás ellenőrzés
-        if (meta.lastResetYear && meta.lastResetYear !== currentYear) {
-            needsReset = true;
-            resetReason = 'évváltás';
-        }
-        
-        if (needsReset) {
-            console.log('Reset történik:', resetReason);
-            await doYearlyReset(currentYear);
-        }
-        
-        // Settings init
-        const settingsSnapshot = await settingsRef.get();
-        if (!settingsSnapshot.exists()) {
-            await settingsRef.set({
-                roster: "Laci,Jani,Patrik,Zsuzsa,Peti,Barbi,Reni,Böbe,Martina,Kriszti,Dani".split(",")
-            });
-        }
+        // Meta + reset logika: csak ha sikerül, akkor csinálja
+        metaRef.get().then(snapshot => {
+            const meta = snapshot.exists() ? snapshot.val() : {};
+            const currentYear = new Date().getFullYear();
+            
+            let needsReset = false;
+            let resetReason = '';
+            
+            if (meta.version !== VERSION_KEY) {
+                needsReset = true;
+                resetReason = 'új verzió';
+            }
+            if (meta.lastResetYear && meta.lastResetYear !== currentYear) {
+                needsReset = true;
+                resetReason = 'évváltás';
+            }
+            
+            if (needsReset) {
+                console.log('Reset történik:', resetReason);
+                doYearlyReset(currentYear).catch(e => console.warn("Reset kihagyva:", e.message));
+            }
+        }).catch(e => {
+            // Ha a meta ágra nincs jog, csendben átugorjuk
+            console.warn("Meta ellenőrzés kihagyva (nem kritikus):", e.message);
+        });
     }
     
     // Éves reset művelet
@@ -354,7 +358,6 @@
         const yearStart = `${year}-01-01`;
         const updates = {};
         
-        // minden dolgozónak újranullázzuk az adatokat, joinDate = év eleje
         roster.forEach(name => {
             updates[`workerStats/${name}`] = {
                 carries: 0,
@@ -374,19 +377,44 @@
         await db.ref().update(updates);
     }
     
-    initialize().catch(err => {
-        console.error("Init hiba:", err);
-        document.getElementById('heroContainer').innerHTML = `<div style="text-align:center; padding: 20px; color: #f87171;">Hiba a Firebase kapcsolattal!</div>`;
-    });
+    // INDÍTÁS: a háttér init csendben fut, a listener-ek a fő úton mennek
+    try {
+        backgroundInit();
+    } catch (e) {
+        console.warn("Init lépés kihagyva:", e);
+    }
 
     let loadingCounter = 0;
     const expectedLoads = 4;
+    let hasRenderedOnce = false;
+    
     function maybeRender() {
-        if (loadingCounter >= expectedLoads && sysSettings) {
+        // Akkor renderelünk, ha legalább a settings betöltődött
+        // (a többi - absences, stats, pairs - default üres lesz, az is OK)
+        if (sysSettings) {
             calculateAllSchedules();
             renderUI();
+            hasRenderedOnce = true;
         }
     }
+    
+    // Ha 8 másodperc után sem érkezett semmilyen adat, mutassunk egy diszkrét üzenetet
+    // De az app ettől még működik, csak vár az adatra
+    setTimeout(() => {
+        if (!hasRenderedOnce) {
+            const hero = document.getElementById('heroContainer');
+            if (hero && hero.innerHTML.includes('Betöltés a felhőből')) {
+                hero.innerHTML = `
+                    <div style="text-align:center; padding: 40px 20px; color: var(--text-dim);">
+                        <div style="font-size: 2.5rem; margin-bottom: 12px; opacity: 0.5;">📡</div>
+                        <div style="font-weight: 600; color: white; margin-bottom: 6px;">Várakozás a felhőre...</div>
+                        <div style="font-size: 0.8rem;">Ellenőrizd az internet kapcsolatot.</div>
+                        <div style="font-size: 0.75rem; margin-top: 16px; opacity: 0.6;">Az alkalmazás automatikusan újraindul amint az adatok megérkeznek.</div>
+                    </div>
+                `;
+            }
+        }
+    }, 8000);
 
     settingsRef.on('value', (snapshot) => {
         if (snapshot.exists()) {
