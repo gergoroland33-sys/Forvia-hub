@@ -1132,8 +1132,27 @@
         style.innerHTML = `
             .nav-item { cursor: grab; -webkit-user-drag: element; }
             .nav-item:active { cursor: grabbing; }
-            .nav-item.mobile-dragging { opacity: 1 !important; filter: brightness(0.6); border: 1px dashed var(--accent) !important; background: rgba(59, 130, 246, 0.2) !important; transform: scale(0.98); }
-            .nav-item.drag-over { background: rgba(59, 130, 246, 0.3) !important; }
+            /* PIROS: a felvett modul - "ezt húzom" */
+            .nav-item.mobile-dragging { 
+                opacity: 1 !important; 
+                background: rgba(239, 68, 68, 0.25) !important; 
+                color: white !important;
+                border: 1px solid rgba(239, 68, 68, 0.7) !important; 
+                box-shadow: 0 0 18px rgba(239, 68, 68, 0.45), inset 3px 0 0 var(--danger) !important;
+                transform: scale(0.985);
+            }
+            /* ZÖLD: a célhely - "ide fog beülni" */
+            .nav-item.drag-over-target { 
+                background: rgba(16, 185, 129, 0.3) !important; 
+                color: white !important;
+                border: 1px solid rgba(16, 185, 129, 0.75) !important;
+                box-shadow: 0 0 18px rgba(16, 185, 129, 0.5), inset 3px 0 0 var(--success) !important;
+                transform: scale(1.015);
+            }
+            /* Smooth átmenet a színváltáshoz */
+            .nav-item.mobile-dragging, .nav-item.drag-over-target {
+                transition: background 0.2s ease, border 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, color 0.2s ease;
+            }
         `;
         document.head.appendChild(style);
 
@@ -1162,16 +1181,22 @@
             
             item.addEventListener('dragover', function(e) {
                 e.preventDefault();
-                this.classList.add('drag-over');
+                // ZÖLD: ezt a modult célozzuk - csak ezen legyen a zöld
+                if (dragEl && this !== dragEl) {
+                    Array.from(nav.children).forEach(i => {
+                        if (i !== this && i !== dragEl) i.classList.remove('drag-over-target');
+                    });
+                    this.classList.add('drag-over-target');
+                }
             });
             
             item.addEventListener('dragleave', function(e) {
-                this.classList.remove('drag-over');
+                this.classList.remove('drag-over-target');
             });
             
             item.addEventListener('drop', function(e) {
                 e.stopPropagation();
-                this.classList.remove('drag-over');
+                this.classList.remove('drag-over-target');
                 if (dragEl && dragEl !== this) {
                     const rect = this.getBoundingClientRect();
                     const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
@@ -1184,7 +1209,7 @@
             item.addEventListener('dragend', function(e) {
                 this.classList.remove('mobile-dragging');
                 Array.from(nav.children).forEach(i => {
-                    i.classList.remove('drag-over');
+                    i.classList.remove('drag-over-target');
                     i.classList.remove('mobile-dragging'); // Biztosíték
                 });
                 dragEl = null;
@@ -1221,6 +1246,11 @@
                         const rect = dropTarget.getBoundingClientRect();
                         const next = (touch.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
                         nav.insertBefore(dragEl, next && dropTarget.nextSibling ? dropTarget.nextSibling : dropTarget);
+                        // ZÖLD: a célmodul kiemelése - csak ő kap zöldet, a többiről levesszük
+                        Array.from(nav.children).forEach(i => {
+                            if (i !== dropTarget && i !== dragEl) i.classList.remove('drag-over-target');
+                        });
+                        dropTarget.classList.add('drag-over-target');
                     }
                 }
             }, {passive: false});
@@ -1228,8 +1258,11 @@
             item.addEventListener('touchend', function(e) {
                 clearTimeout(pressTimer);
                 if (isDragging) {
-                    // Tisztítás: eltávolítjuk a formázást mindenről
-                    Array.from(nav.children).forEach(i => i.classList.remove('mobile-dragging'));
+                    // Tisztítás: eltávolítjuk a piros ÉS zöld formázást is mindenről
+                    Array.from(nav.children).forEach(i => {
+                        i.classList.remove('mobile-dragging');
+                        i.classList.remove('drag-over-target');
+                    });
                     if (dragEl) dragEl.classList.remove('mobile-dragging');
                     saveOrder();
                     
