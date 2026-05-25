@@ -861,59 +861,78 @@
     }
     
     // === DISZKRÉT FŐOLDALI MÉRLEG (LENYITHATÓ!) ===
+    // Megjelenítés: az év hátralévő részében (MA-tól DEC 31-ig) MENNYIT KELL MÉG VINNI
     function renderFrontFairness() {
         if (!sysSettings.roster || sysSettings.roster.length === 0) return '';
         
         const year = new Date().getFullYear();
         const yearStart = new Date(year, 0, 1);
+        const yearEnd = new Date(year, 11, 31); // december 31
         
-        // arányosított adatok minden emberhez
-        let maxExpected = 0;
+        // MA-tól dec 31-ig (a mai napot már nem számolva, mert ma még folyik)
+        const tomorrow = new Date();
+        tomorrow.setHours(0, 0, 0, 0);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        // hány C munkanap van még hátra dec 31-ig (mai napot beleértve)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const remainingWorkDays = countWorkingDaysInRange(today, yearEnd);
+        const rosterSize = (sysSettings.roster && sysSettings.roster.length) || 1;
+        // teljes hátralévő összes vitel a csapatban: remainingWorkDays × 2
+        // egy emberre arányosan jut: (remainingWorkDays × 2) / rosterSize
+        const remainingQuotaPerPerson = (remainingWorkDays * 2) / rosterSize;
+        
+        // Maximum a vizualizációhoz - a legmagasabb "hátralévő" érték
+        let maxRemaining = 0;
         const data = sysSettings.roster.map(name => {
             const actual = (workerStats[name] && workerStats[name].carries) || 0;
-            const expected = getYearlyExpectedForWorker(name);
             const ws = workerStats[name] || {};
             const joinDateStr = ws.joinDate || `${year}-01-01`;
             const joinDate = parseLocalDate(joinDateStr);
             const isMidYear = joinDate > yearStart;
             
-            if (expected > maxExpected) maxExpected = expected;
+            // hátralévő minden embernél kb. ugyanannyi (az arány a roster mérettől függ)
+            // de a középső belépők számára ugyanaz, mert mostantól számítunk
+            const remaining = remainingQuotaPerPerson;
             
-            return { name, actual, expected, joinDate, isMidYear };
+            if (remaining > maxRemaining) maxRemaining = remaining;
+            
+            return { name, actual, remaining, joinDate, isMidYear };
         });
         
-        // átlag deficit
-        const totalDeficit = data.reduce((sum, d) => sum + (d.expected - d.actual), 0);
-        const avgDeficit = totalDeficit / data.length;
-        
-        // százalék arány a vizualizációhoz (actual / expected)
+        // sorok HTML
         let rowsHtml = '';
         data.forEach(d => {
-            const ratio = d.expected > 0 ? d.actual / d.expected : 0;
-            // Bar szélessége: az "elvárt"-hoz képest hol állunk, 0-150% skálán
-            let barPct = Math.min(150, ratio * 100);
+            // Sávhossz: arányosan a max-hoz - aki nagyobb hátralékot lát, hosszabb a sávja
+            // De mivel mindenkinek ugyanaz a hátralék, mindenki sávja egyforma!
+            // Helyette: a visualPct = mennyi a max-ból (mindig 100% mert egyenlő)
+            const visualPct = maxRemaining > 0 ? (d.remaining / maxRemaining) * 100 : 0;
             
-            let cls = 'zero';
-            if (d.actual === 0 && d.expected < 0.5) cls = 'zero';
-            else if (ratio < 0.7) cls = 'deficit';      // jelentősen lemaradt
-            else if (ratio < 1.05) cls = 'balanced';    // egyensúlyban
-            else if (ratio < 1.3) cls = 'surplus';      // kicsit felül
-            else cls = 'over';                          // nagyon felül
-            
+            // Színlogika a HÁTRALÉVŐ alapján:
+            //   - 0 vagy negatív → ZÖLD (teljesítve / túlteljesítve!)
+            //   - alacsony (< 2) → SÁRGA (közeledik a végéhez)
+            //   - közepes (2 - 10) → KÉK (normál haladás)
+            //   - magas (10+) → SZÜRKE (még sok van hátra, nincs vész)
+            let cls = 'balanced'; // default zöld
             let icon = '';
-            if (d.expected >= 1) {
-                if (ratio < 0.7) icon = '<span class="fp-status-icon" title="Le van maradva">⚠️</span>';
-                else if (ratio >= 0.85 && ratio <= 1.15) icon = '<span class="fp-status-icon" title="Kiegyensúlyozott">✓</span>';
-                else if (ratio > 1.3) icon = '<span class="fp-status-icon" title="Túlteljesít">⚡</span>';
+            
+            if (d.remaining <= 0) {
+                cls = 'balanced'; // ZÖLD: teljesítve
+                icon = '<span class="fp-status-icon" title="Év végi kvóta teljesítve">✓</span>';
+            } else if (d.remaining < 2) {
+                cls = 'surplus'; // KÉK/cián: mindjárt kész
+                icon = '<span class="fp-status-icon" title="Hamarosan vége">🏁</span>';
+            } else if (d.remaining < 10) {
+                cls = 'surplus'; // KÉK: normál haladás
+            } else {
+                cls = 'zero'; // SZÜRKE: még sok van hátra, ne aggódj
             }
             
-            const expectedRounded = d.expected.toFixed(1);
+            const remainingRounded = d.remaining.toFixed(1);
             const midYearNote = d.isMidYear ? 
                 `<span class="fp-joined-note">${d.joinDate.toLocaleDateString('hu-HU', {month:'short', day:'numeric'})} óta</span>` 
                 : '';
-            
-            // bar szélessége a max-hoz képest normalizálva
-            const visualPct = maxExpected > 0 ? (d.actual / maxExpected) * 100 : 0;
             
             rowsHtml += `
                 <div class="fp-row">
@@ -923,7 +942,7 @@
                     </div>
                     <div class="fp-bar-wrap"><div class="fp-bar ${cls}" style="width: ${visualPct}%;"></div></div>
                     <div class="fp-count">
-                        <span class="fp-c-actual">${d.actual}</span><span class="fp-c-expected">/${expectedRounded}</span>
+                        <span class="fp-c-actual">${remainingRounded}</span><span class="fp-c-expected"> hátra</span>
                         ${icon}
                     </div>
                 </div>
@@ -932,14 +951,14 @@
         
         // Összesítő szöveg
         let summaryText = '';
-        if (Math.abs(avgDeficit) < 0.3) {
-            summaryText = '<span style="color: var(--success);">✓ A forgás kiegyensúlyozott</span>';
-        } else if (avgDeficit > 0) {
-            summaryText = '<span style="color: var(--text-dim);">A rendszer kompenzálja a kisebb eltéréseket</span>';
+        if (remainingQuotaPerPerson <= 0) {
+            summaryText = '<span style="color: var(--success);">✓ A csapat teljesítette az éves kvótát</span>';
+        } else if (remainingQuotaPerPerson < 2) {
+            summaryText = '<span style="color: var(--accent);">🏁 Mindjárt vége az évnek - utolsó körök</span>';
         } else {
-            summaryText = '<span style="color: var(--text-dim);">Mindenki közel azonosan vitt</span>';
+            summaryText = `<span style="color: var(--text-dim);">A csapatra ${(remainingQuotaPerPerson * rosterSize).toFixed(0)} vitel vár december 31-ig</span>`;
         }
-        summaryText += `<br><span style="opacity:0.7;">"Vitelszám / Elvárt" év elejétől (illetve belépéstől) számolva</span>`;
+        summaryText += `<br><span style="opacity:0.7;">"X hátra" = még ennyi vitel vár rád ${year}. december 31-ig</span>`;
         
         return `
             <div class="fairness-panel-front ${fairnessOpen ? 'open' : ''}">
@@ -949,7 +968,7 @@
                         <span>Igazságossági Mérleg</span>
                     </div>
                     <div class="fp-toggle-right">
-                        <span class="fp-avg-badge">${data.length} fő · ${year}</span>
+                        <span class="fp-avg-badge">${data.length} fő · ${year} dec 31-ig</span>
                         <span class="fp-chevron">▼</span>
                     </div>
                 </div>
