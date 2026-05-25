@@ -257,7 +257,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
 
 <script>
-    // 🔴 FIREBASE KONFIG (érintetlen)
+    // 🔴 FIREBASE KONFIG
     const firebaseConfig = {
       apiKey: "AIzaSyDtX_zGGjwEBgRK3-vKRm1tk80kLZbEm4Y",
       authDomain: "szemetkihordas-app.firebaseapp.com",
@@ -794,6 +794,7 @@
         fillUpcomingList(today, list);
     }
     
+    // --- ÚJRAÍRT RÉSZ ---
     function renderFrontFairness() {
         if (!sysSettings.roster || sysSettings.roster.length === 0) return '';
         
@@ -801,46 +802,59 @@
         const yearStart = new Date(year, 0, 1);
         const yearEnd = new Date(year, 11, 31);
         
-        const tomorrow = new Date();
-        tomorrow.setHours(0, 0, 0, 0);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const remainingWorkDays = countWorkingDaysInRange(today, yearEnd);
-        const rosterSize = (sysSettings.roster && sysSettings.roster.length) || 1;
-        const remainingQuotaPerPerson = (remainingWorkDays * 2) / rosterSize;
-        
         let maxRemaining = 0;
-        const data = sysSettings.roster.map(name => {
+        let totalRemaining = 0;
+        
+        // 1. Kiszámoljuk mindenkinek a saját személyes hátralévő adagját
+        const rawData = sysSettings.roster.map(name => {
             const actual = (workerStats[name] && workerStats[name].carries) || 0;
             const ws = workerStats[name] || {};
             const joinDateStr = ws.joinDate || `${year}-01-01`;
             const joinDate = parseLocalDate(joinDateStr);
             const isMidYear = joinDate > yearStart;
             
-            const remaining = remainingQuotaPerPerson;
+            // Itt a varázslat: az EGYÉNI év végi elvárást nézzük
+            const expectedAtYearEnd = getExpectedCarriesForWorker(name, yearEnd);
+            
+            // Hátralévő vitel: amit az év végéig még vinnie kell az eddigiek alapján
+            let remaining = expectedAtYearEnd - actual;
+            if (remaining < 0) remaining = 0; // Vizuálisan ne menjen mínuszba
+            
             if (remaining > maxRemaining) maxRemaining = remaining;
+            totalRemaining += remaining;
             
             return { name, actual, remaining, joinDate, isMidYear };
         });
         
+        // Csapat átlagának meghatározása (hogy lássuk, ki lóg ki a sorból)
+        const avgRemaining = rawData.length > 0 ? totalRemaining / rawData.length : 0;
+        
+        // Rendezzük csökkenő sorrendbe: akinek a legtöbb van hátra, az legyen legfelül
+        rawData.sort((a, b) => b.remaining - a.remaining);
+        
         let rowsHtml = '';
-        data.forEach(d => {
-            const visualPct = maxRemaining > 0 ? (d.remaining / maxRemaining) * 100 : 0;
-            let cls = 'balanced';
+        rawData.forEach(d => {
+            // Így a bar méretek egyformák lesznek mindenkinek, akinek ugyanannyi van hátra
+            const visualPct = maxRemaining > 0 ? (d.remaining / maxRemaining) * 100 : 100;
+            
+            let cls = 'balanced'; 
             let icon = '';
             
+            // Eltérés a csapat átlagától
+            const diff = d.remaining - avgRemaining;
+            
             if (d.remaining <= 0) {
-                cls = 'balanced';
+                cls = 'surplus';
                 icon = '<span class="fp-status-icon" title="Év végi kvóta teljesítve">✓</span>';
-            } else if (d.remaining < 2) {
-                cls = 'surplus';
-                icon = '<span class="fp-status-icon" title="Hamarosan vége">🏁</span>';
-            } else if (d.remaining < 10) {
-                cls = 'surplus';
+            } else if (diff > 1.5) {
+                // Több van neki hátra az átlagnál -> le van maradva
+                cls = 'deficit'; 
+            } else if (diff < -1.5) {
+                // Kevesebb van neki hátra az átlagnál -> túlteljesített
+                cls = 'surplus'; 
             } else {
-                cls = 'zero';
+                // Pont az átlagot viszi -> vizuálisan zöld és egyforma
+                cls = 'balanced'; 
             }
             
             const remainingRounded = d.remaining.toFixed(1);
@@ -864,14 +878,12 @@
         });
         
         let summaryText = '';
-        if (remainingQuotaPerPerson <= 0) {
-            summaryText = '<span style="color: var(--success);">✓ A csapat teljesítette az éves kvótát</span>';
-        } else if (remainingQuotaPerPerson < 2) {
-            summaryText = '<span style="color: var(--accent);">🏁 Mindjárt vége az évnek - utolsó körök</span>';
+        if (avgRemaining <= 0) {
+            summaryText = '<span style="color: var(--success);">✓ A csapat teljesítette az éves kvótát!</span>';
         } else {
-            summaryText = `<span style="color: var(--text-dim);">A csapatra ${(remainingQuotaPerPerson * rosterSize).toFixed(0)} vitel vár december 31-ig</span>`;
+            summaryText = `<span style="color: var(--text-dim);">A csapattagokra átlagosan ${avgRemaining.toFixed(1)} vitel vár még idén.</span>`;
         }
-        summaryText += `<br><span style="opacity:0.7;">"X hátra" = még ennyi vitel vár rád ${year}. december 31-ig</span>`;
+        summaryText += `<br><span style="opacity:0.7;">"X hátra" = a saját arányos éves céljából még ennyi van vissza</span>`;
         
         return `
             <div class="fairness-panel-front ${fairnessOpen ? 'open' : ''}">
@@ -881,7 +893,7 @@
                         <span>Igazságossági Mérleg</span>
                     </div>
                     <div class="fp-toggle-right">
-                        <span class="fp-avg-badge">${data.length} fő · ${year} dec 31-ig</span>
+                        <span class="fp-avg-badge">${rawData.length} fő · Átlag: ${avgRemaining.toFixed(1)} hátra</span>
                         <span class="fp-chevron">▼</span>
                     </div>
                 </div>
@@ -894,6 +906,7 @@
             </div>
         `;
     }
+    // --- ÚJRAÍRT RÉSZ VÉGE ---
 
     function fillUpcomingList(startDate, container) {
         let count = 0;
@@ -1106,7 +1119,6 @@
         showToast(`✅ ${name} hozzáadva (${todayKey} óta)`, 'success');
     };
     
-    // JAVÍTÁS: A nullázás mostantól teljesen lecseréli a workerStats ágat, eltüntetve minden hibás/jövőbeli szellemadatot.
     window.resetCarries = function() {
         if (!confirm("⚠️ Biztosan újranullázod MINDENKI vitelszámát?\n\nEz az igazságossági pontokat is törli, és minden dolgozó joinDate-je a mai napra változik. Ez a művelet NEM visszavonható!")) return;
         
@@ -1121,7 +1133,6 @@
             };
         });
         
-        // Teljes felülírás a tiszta lappal induláshoz
         updates['workerStats'] = newStats;
         updates['pairHistory'] = null;
         
