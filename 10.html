@@ -18,7 +18,9 @@
             --danger: #f87171;
         }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg-dark); color: var(--text-main); margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* JAVÍTÁS: Reszponzív body a laptopos nézet miatt (min-height, overflow törölve) */
+        body { background-color: var(--bg-dark); color: var(--text-main); margin: 0; padding: 0; min-height: 100dvh; display: flex; flex-direction: column; }
         
         .hero-section { flex-shrink: 0; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; padding: 65px 20px 12px 20px; position: relative; background: radial-gradient(circle at top right, #2e1065 0%, transparent 50%), radial-gradient(circle at bottom left, #1e1b4b 0%, transparent 50%); z-index: 1; }
         
@@ -276,7 +278,7 @@
     // ==========================================
     const SHIFT_ANCHOR = new Date(Date.UTC(2026, 0, 9));
     const FIXED_SHIFT = "C";
-    const VERSION_KEY = "v4_quota_system"; // ha új a verzió, reset történik
+    const VERSION_KEY = "v4_quota_system";
 
     function isCShiftWorkingDay(date) {
         const utc = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
@@ -298,23 +300,15 @@
     let pairHistory = {};
     let computedSchedule = {};
     
-    // UI state (localStorage)
     let fairnessOpen = localStorage.getItem('fp_open') === 'true';
 
     const settingsRef = db.ref('settings');
     const absencesRef = db.ref('absences');
     const statsRef = db.ref('workerStats');
     const pairsRef = db.ref('pairHistory');
-    const metaRef = db.ref('meta'); // ÚJ: verzió + utolsó éves reset
+    const metaRef = db.ref('meta');
 
-    // ==========================================
-    // 🔄 INICIALIZÁLÁS + RESET LOGIKA (nem-blokkoló!)
-    // ==========================================
-    // FONTOS: a fő listener-ek azonnal indulnak alább, ez csak háttér feladat.
-    // Ha bármi hiba van itt, az nem akadályozza meg az app működését.
-    
     function backgroundInit() {
-        // Settings init: ha nincs roster, hozzunk létre egy alapot
         settingsRef.get().then(snapshot => {
             if (!snapshot.exists() || !snapshot.val().roster) {
                 settingsRef.update({
@@ -323,7 +317,6 @@
             }
         }).catch(e => console.warn("Settings olvasás kihagyva:", e.message));
         
-        // Meta + reset logika: csak ha sikerül, akkor csinálja
         metaRef.get().then(snapshot => {
             const meta = snapshot.exists() ? snapshot.val() : {};
             const currentYear = new Date().getFullYear();
@@ -341,16 +334,13 @@
             }
             
             if (needsReset) {
-                console.log('Reset történik:', resetReason);
                 doYearlyReset(currentYear).catch(e => console.warn("Reset kihagyva:", e.message));
             }
         }).catch(e => {
-            // Ha a meta ágra nincs jog, csendben átugorjuk
-            console.warn("Meta ellenőrzés kihagyva (nem kritikus):", e.message);
+            console.warn("Meta ellenőrzés kihagyva:", e.message);
         });
     }
     
-    // Éves reset művelet
     async function doYearlyReset(year) {
         const settingsSnapshot = await settingsRef.get();
         const roster = (settingsSnapshot.exists() && settingsSnapshot.val().roster) || [];
@@ -377,7 +367,6 @@
         await db.ref().update(updates);
     }
     
-    // INDÍTÁS: a háttér init csendben fut, a listener-ek a fő úton mennek
     try {
         backgroundInit();
     } catch (e) {
@@ -389,8 +378,6 @@
     let hasRenderedOnce = false;
     
     function maybeRender() {
-        // Akkor renderelünk, ha legalább a settings betöltődött
-        // (a többi - absences, stats, pairs - default üres lesz, az is OK)
         if (sysSettings) {
             calculateAllSchedules();
             renderUI();
@@ -398,8 +385,6 @@
         }
     }
     
-    // Ha 8 másodperc után sem érkezett semmilyen adat, mutassunk egy diszkrét üzenetet
-    // De az app ettől még működik, csak vár az adatra
     setTimeout(() => {
         if (!hasRenderedOnce) {
             const hero = document.getElementById('heroContainer');
@@ -443,9 +428,6 @@
         maybeRender();
     });
 
-    // ==========================================
-    // 🧠 SEGÉDFÜGGVÉNYEK
-    // ==========================================
     function getDateKey(date) {
         return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
     }
@@ -459,7 +441,6 @@
         return [a, b].sort().join('|');
     }
     
-    // C műszak munkanapok száma egy dátumtartományban
     function countWorkingDaysInRange(startDate, endDate) {
         let count = 0;
         let d = new Date(startDate);
@@ -474,46 +455,26 @@
         return count;
     }
     
-    // ==========================================
-    // 📊 KVÓTA SZÁMÍTÁS (arányos!)
-    // ==========================================
-    // expectedCarries[X] = (munkanapok száma X belépése óta MÁIG) × 2 / aktív_dolgozók_száma_ezen_időszakban
-    //
-    // Egyszerűsítés: az ÉVES várt kvóta = összes_évi_C_munkanap × 2 / dolgozók_száma
-    // és minden ember számára a "máig elvárt" = összes_munkanap_belépéstől_máig × 2 / dolgozók_száma
-    
     function getExpectedCarriesForWorker(name, asOfDate) {
         const year = asOfDate.getFullYear();
         const yearStart = new Date(year, 0, 1);
         
-        // joinDate: ha nincs, jan 1-től számoljuk
         const ws = workerStats[name] || {};
         const joinDateStr = ws.joinDate || `${year}-01-01`;
         let joinDate = parseLocalDate(joinDateStr);
         
-        // ha a joinDate korábbi mint az év eleje, akkor év eleje
         if (joinDate < yearStart) joinDate = yearStart;
         
-        // Hány C munkanap volt a joinDate-től asOfDate-ig (mai napot beleértve)?
         const workDaysSinceJoin = countWorkingDaysInRange(joinDate, asOfDate);
-        
-        // Roster mérete (átlagosan ennyi ember van — jelen pillanatban használjuk az aktuálisat)
         const rosterSize = (sysSettings.roster && sysSettings.roster.length) || 1;
         
-        // Minden munkanapon 2 ember megy → 2 vitel/nap
-        // Egy emberre jutó arányos kvóta:
         return (workDaysSinceJoin * 2) / rosterSize;
     }
     
-    // Mai napi várt vitelszám (referenciaérték a mérleg ábrázolásához)
     function getYearlyExpectedForWorker(name) {
         const today = new Date();
         return getExpectedCarriesForWorker(name, today);
     }
-
-    // ==========================================
-    // 🎯 PRO PÁROSÍTÁSI ALGORITMUS (deficit alapú)
-    // ==========================================
     
     function selectPairForDay(availableWorkers, simStats, simPairs, currentDate) {
         if (availableWorkers.length < 2) {
@@ -523,7 +484,6 @@
             ];
         }
         
-        // Minden lehetséges pár költségének kiszámítása
         let bestPair = null;
         let bestCost = Infinity;
         
@@ -535,33 +495,21 @@
                 const sa = simStats[a] || { carries: 0, lastDate: null, joinDate: null };
                 const sb = simStats[b] || { carries: 0, lastDate: null, joinDate: null };
                 
-                // === 1. réteg: ARÁNYOS DEFICIT (legnagyobb súly) ===
-                // Aki a saját kvótájához képest a legkisebb, az menjen
-                // expected = arányos kvóta a belépéstől currentDate-ig
                 const expectedA = computeExpectedAtDate(a, sa.joinDate, currentDate);
                 const expectedB = computeExpectedAtDate(b, sb.joinDate, currentDate);
                 
-                // deficit = ha negatív, már túlvitt
-                // ha pozitív, le van maradva
-                // mi a negatív cost-ot akarjuk (akinek nagy a deficitje, kis cost)
                 const deficitA = expectedA - sa.carries;
                 const deficitB = expectedB - sb.carries;
                 
-                // Cost: minél nagyobb a deficit, annál kisebb a cost (előny)
-                // Tehát -1 × deficit a cost összetevője
                 const deficitCost = -(deficitA + deficitB);
-                
-                // === 2. réteg: PARTNER ISMÉTLŐDÉS (kiemelt súly!) ===
-                // Ha A+B már sokszor ment, magas a cost → más párt válassz
                 const partnerCount = simPairs[pairKey(a, b)] || 0;
                 
-                // === 3. réteg: FRISSESSÉG (régebben vitt előny) ===
                 let freshnessCost = 0;
                 if (sa.lastDate) {
                     const daysSince = (currentDate.getTime() - parseLocalDate(sa.lastDate).getTime()) / 86400000;
-                    freshnessCost -= Math.min(30, daysSince); // 30 napos plafon
+                    freshnessCost -= Math.min(30, daysSince);
                 } else {
-                    freshnessCost -= 30; // soha → max előny
+                    freshnessCost -= 30;
                 }
                 if (sb.lastDate) {
                     const daysSince = (currentDate.getTime() - parseLocalDate(sb.lastDate).getTime()) / 86400000;
@@ -570,10 +518,6 @@
                     freshnessCost -= 30;
                 }
                 
-                // === SÚLYOZÁS ===
-                // Deficit ×1000  (igazságosság fontos)
-                // Partner ×10000 (NE legyen fix pár - ezért nagyobb mint deficit)
-                // Freshness ×10  (finomhangolás)
                 const cost = deficitCost * 1000 + partnerCount * 10000 + freshnessCost * 10;
                 
                 if (cost < bestCost) {
@@ -583,7 +527,6 @@
             }
         }
         
-        // Determinisztikus sorrend: kisebb carries első helyre
         if (bestPair) {
             const sa = simStats[bestPair[0]] || { carries: 0 };
             const sb = simStats[bestPair[1]] || { carries: 0 };
@@ -597,7 +540,6 @@
         return bestPair || ["-", "-"];
     }
     
-    // Várt vitel egy adott napon: arányos a joinDate-től az adott napig
     function computeExpectedAtDate(name, joinDateStr, atDate) {
         const year = atDate.getFullYear();
         const yearStart = new Date(year, 0, 1);
@@ -617,8 +559,6 @@
         if (!sysSettings || !sysSettings.roster || sysSettings.roster.length === 0) return; 
         
         let roster = [...sysSettings.roster];
-        
-        // sim-állapot: a Firebase pontszámokból indul
         let simStats = {};
         roster.forEach(name => {
             simStats[name] = {
@@ -629,7 +569,6 @@
         });
         let simPairs = { ...pairHistory };
         
-        // Mettől szimulálunk?
         let lastRecordedCarry = null;
         Object.values(workerStats).forEach(ws => {
             if (ws.lastDate) {
@@ -656,20 +595,18 @@
                 let dateKey = getDateKey(simDate);
                 let dailyAbsences = absences[dateKey] || {};
                 
-                // Csak azok elérhetők akik MÁR beléptek
                 let availableWorkers = [...new Set(roster)].filter(name => {
                     if (dailyAbsences[name]) return false;
                     const ws = simStats[name];
                     if (ws && ws.joinDate) {
                         const jd = parseLocalDate(ws.joinDate);
-                        if (jd > simDate) return false; // még nem lépett be ekkor
+                        if (jd > simDate) return false;
                     }
                     return true;
                 });
                 
                 const pair = selectPairForDay(availableWorkers, simStats, simPairs, simDate);
                 
-                // 🛡️ Védőszerelvény: a pair két tagja sosem lehet ugyanaz
                 if (pair[0] !== "-" && pair[1] !== "-" && pair[0] !== pair[1]) {
                     simStats[pair[0]] = {
                         ...simStats[pair[0]],
@@ -691,12 +628,9 @@
         }
     }
 
-    // ==========================================
-    // ⚡ INTERAKCIÓK
-    // ==========================================
     function recordTodayCarry(dateKey, worker1, worker2) {
         if (!worker1 || !worker2 || worker1 === "-" || worker2 === "-") return;
-        if (worker1 === worker2) return; // védőszerelvény: sosem ugyanaz
+        if (worker1 === worker2) return;
         
         const today = new Date();
         if (today.getHours() < 6) today.setDate(today.getDate() - 1);
@@ -704,7 +638,6 @@
         
         if (dateKey !== todayKey) return;
         
-        // 🛡️ KRITIKUS: ne rögzítsünk vitelt olyan napra, amikor valamelyik hiányzónak van jelölve!
         const dailyAbsences = absences[dateKey] || {};
         if (dailyAbsences[worker1] || dailyAbsences[worker2]) return;
         
@@ -727,48 +660,38 @@
     window.markAbsent = function(dateKey, name) {
         if(!name || name === "Nincs több!" || name === "-") return;
         if(confirm(`Szeretnéd jelezni, hogy ${name} hiányzik ezen a napon?\n\nA rendszer automatikusan behívja a következőt, ${name} pedig sorra kerül legközelebb.`)) {
-            // 🛡️ Kompenzáció: ha ezen a napon már rögzítettünk neki vitelt (automatikusan),
-            // azt vissza kell vonni, hogy ne legyen torzítva a fairness pontszáma
             const ws = workerStats[name];
             const updates = {
                 [`absences/${dateKey}/${name}`]: true
             };
             
             if (ws && ws.lastDate === dateKey && ws.carries > 0) {
-                // visszavonjuk a vitelét
                 updates[`workerStats/${name}/carries`] = ws.carries - 1;
-                
-                // a lastDate-et próbáljuk visszaállítani; mivel nem tudjuk pontosan a korábbi értéket,
-                // null-ra állítjuk (a következő render majd helyreteszi ha kell)
                 updates[`workerStats/${name}/lastDate`] = null;
                 
-                // a pair history-t is csökkenteni kell - keressük meg a mai párost
-                const todaySchedule = computedSchedule[dateKey];
-                if (todaySchedule && todaySchedule[0] !== "-" && todaySchedule[1] !== "-") {
-                    // Találjuk meg a másik tagot
-                    const otherWorker = (todaySchedule[0] === name) ? todaySchedule[1] : 
-                                        (todaySchedule[1] === name) ? todaySchedule[0] : null;
+                // Mivel rögzítve volt a Firebase-ben, keressük meg a mai párt
+                let otherWorker = null;
+                sysSettings.roster.forEach(n => {
+                    if (n !== name && workerStats[n] && workerStats[n].lastDate === dateKey) {
+                        otherWorker = n;
+                    }
+                });
+                
+                if (otherWorker) {
+                    const otherWs = workerStats[otherWorker];
+                    if (otherWs && otherWs.carries > 0) {
+                        updates[`workerStats/${otherWorker}/carries`] = otherWs.carries - 1;
+                        updates[`workerStats/${otherWorker}/lastDate`] = null;
+                    }
                     
-                    if (otherWorker) {
-                        // A másik ember carries-jét is csökkentjük (ő sem vitt valójában - 
-                        // mert ha az illető hiányzott, akkor a párosítás újraértékelődik)
-                        const otherWs = workerStats[otherWorker];
-                        if (otherWs && otherWs.lastDate === dateKey && otherWs.carries > 0) {
-                            updates[`workerStats/${otherWorker}/carries`] = otherWs.carries - 1;
-                            updates[`workerStats/${otherWorker}/lastDate`] = null;
-                        }
-                        
-                        // pair history csökkentés
-                        const pk = pairKey(name, otherWorker);
-                        if (pairHistory[pk] && pairHistory[pk] > 0) {
-                            updates[`pairHistory/${pk}`] = pairHistory[pk] - 1;
-                        }
+                    const pk = pairKey(name, otherWorker);
+                    if (pairHistory[pk] && pairHistory[pk] > 0) {
+                        updates[`pairHistory/${pk}`] = pairHistory[pk] - 1;
                     }
                 }
             }
             
             db.ref().update(updates).catch(err => {
-                console.error("Hiányzás rögzítése hiba:", err);
                 showToast("❌ Hiba a hiányzás rögzítésénél", 'error');
             });
         }
@@ -785,15 +708,13 @@
         if (panel) panel.classList.toggle('open', fairnessOpen);
     };
 
-    // ==========================================
-    // 🎨 RENDER
-    // ==========================================
     function renderUI() {
         const hero = document.getElementById('heroContainer');
         const list = document.getElementById('upcomingList');
         hero.innerHTML = ''; list.innerHTML = '';
 
-        let today = new Date();
+        let realToday = new Date();
+        let today = new Date(realToday);
         if (today.getHours() < 6) today.setDate(today.getDate() - 1);
         today.setHours(0,0,0,0);
 
@@ -822,13 +743,27 @@
         }
 
         let dateKey = getDateKey(today);
-        let workers = computedSchedule[dateKey] || ["-", "-"];
+        let workers = ["-", "-"];
+        
+        // JAVÍTÁS: Mai rögzített páros betöltése (ha már egyszer rögzítve lett)
+        let alreadyCarriedToday = [];
+        sysSettings.roster.forEach(name => {
+            if (workerStats[name] && workerStats[name].lastDate === dateKey) {
+                alreadyCarriedToday.push(name);
+            }
+        });
+
+        if (alreadyCarriedToday.length >= 2) {
+            workers = [alreadyCarriedToday[0], alreadyCarriedToday[1]];
+        } else {
+            workers = computedSchedule[dateKey] || ["-", "-"];
+            if (workers[0] !== "-" && workers[1] !== "-") {
+                recordTodayCarry(dateKey, workers[0], workers[1]);
+            }
+        }
+
         let dailyAbs = absences[dateKey] || {};
         let todayStr = today.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric', weekday: 'long' });
-
-        if (workers[0] !== "-" && workers[1] !== "-") {
-            recordTodayCarry(dateKey, workers[0], workers[1]);
-        }
 
         let absHTML = Object.keys(dailyAbs).length > 0 ? 
             `<div class="absent-row">Hiányzik: ${Object.keys(dailyAbs).map(n => `<span class="absent-pill" onclick="undoAbsent('${dateKey}', '${n}')" title="Koppints a visszavonáshoz">${n} ↩</span>`).join('')}</div>` : '';
@@ -836,10 +771,14 @@
         const w0Count = (workerStats[workers[0]] && workerStats[workers[0]].carries) || 0;
         const w1Count = (workerStats[workers[1]] && workerStats[workers[1]].carries) || 0;
 
+        // JAVÍTÁS: Dinamikus Nappali / Éjszakás műszak felirat a valós óra alapján
+        let currentHour = realToday.getHours();
+        let shiftLabel = (currentHour >= 18 || currentHour < 6) ? "ÉJSZAKÁS MŰSZAK" : "NAPPALI MŰSZAK";
+
         hero.innerHTML = `
             ${headerHTML}
             <div class="today-card">
-                <div class="today-label">Mai műszak</div>
+                <div class="today-label">${shiftLabel}</div>
                 <div class="today-date">${todayStr}</div>
                 ${absHTML}
                 <div class="pill-container">
@@ -860,30 +799,23 @@
         fillUpcomingList(today, list);
     }
     
-    // === DISZKRÉT FŐOLDALI MÉRLEG (LENYITHATÓ!) ===
-    // Megjelenítés: az év hátralévő részében (MA-tól DEC 31-ig) MENNYIT KELL MÉG VINNI
     function renderFrontFairness() {
         if (!sysSettings.roster || sysSettings.roster.length === 0) return '';
         
         const year = new Date().getFullYear();
         const yearStart = new Date(year, 0, 1);
-        const yearEnd = new Date(year, 11, 31); // december 31
+        const yearEnd = new Date(year, 11, 31);
         
-        // MA-tól dec 31-ig (a mai napot már nem számolva, mert ma még folyik)
         const tomorrow = new Date();
         tomorrow.setHours(0, 0, 0, 0);
         tomorrow.setDate(tomorrow.getDate() + 1);
         
-        // hány C munkanap van még hátra dec 31-ig (mai napot beleértve)
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const remainingWorkDays = countWorkingDaysInRange(today, yearEnd);
         const rosterSize = (sysSettings.roster && sysSettings.roster.length) || 1;
-        // teljes hátralévő összes vitel a csapatban: remainingWorkDays × 2
-        // egy emberre arányosan jut: (remainingWorkDays × 2) / rosterSize
         const remainingQuotaPerPerson = (remainingWorkDays * 2) / rosterSize;
         
-        // Maximum a vizualizációhoz - a legmagasabb "hátralévő" érték
         let maxRemaining = 0;
         const data = sysSettings.roster.map(name => {
             const actual = (workerStats[name] && workerStats[name].carries) || 0;
@@ -892,41 +824,28 @@
             const joinDate = parseLocalDate(joinDateStr);
             const isMidYear = joinDate > yearStart;
             
-            // hátralévő minden embernél kb. ugyanannyi (az arány a roster mérettől függ)
-            // de a középső belépők számára ugyanaz, mert mostantól számítunk
             const remaining = remainingQuotaPerPerson;
-            
             if (remaining > maxRemaining) maxRemaining = remaining;
             
             return { name, actual, remaining, joinDate, isMidYear };
         });
         
-        // sorok HTML
         let rowsHtml = '';
         data.forEach(d => {
-            // Sávhossz: arányosan a max-hoz - aki nagyobb hátralékot lát, hosszabb a sávja
-            // De mivel mindenkinek ugyanaz a hátralék, mindenki sávja egyforma!
-            // Helyette: a visualPct = mennyi a max-ból (mindig 100% mert egyenlő)
             const visualPct = maxRemaining > 0 ? (d.remaining / maxRemaining) * 100 : 0;
-            
-            // Színlogika a HÁTRALÉVŐ alapján:
-            //   - 0 vagy negatív → ZÖLD (teljesítve / túlteljesítve!)
-            //   - alacsony (< 2) → SÁRGA (közeledik a végéhez)
-            //   - közepes (2 - 10) → KÉK (normál haladás)
-            //   - magas (10+) → SZÜRKE (még sok van hátra, nincs vész)
-            let cls = 'balanced'; // default zöld
+            let cls = 'balanced';
             let icon = '';
             
             if (d.remaining <= 0) {
-                cls = 'balanced'; // ZÖLD: teljesítve
+                cls = 'balanced';
                 icon = '<span class="fp-status-icon" title="Év végi kvóta teljesítve">✓</span>';
             } else if (d.remaining < 2) {
-                cls = 'surplus'; // KÉK/cián: mindjárt kész
+                cls = 'surplus';
                 icon = '<span class="fp-status-icon" title="Hamarosan vége">🏁</span>';
             } else if (d.remaining < 10) {
-                cls = 'surplus'; // KÉK: normál haladás
+                cls = 'surplus';
             } else {
-                cls = 'zero'; // SZÜRKE: még sok van hátra, ne aggódj
+                cls = 'zero';
             }
             
             const remainingRounded = d.remaining.toFixed(1);
@@ -949,7 +868,6 @@
             `;
         });
         
-        // Összesítő szöveg
         let summaryText = '';
         if (remainingQuotaPerPerson <= 0) {
             summaryText = '<span style="color: var(--success);">✓ A csapat teljesítette az éves kvótát</span>';
@@ -987,7 +905,8 @@
         let iterDate = new Date(startDate);
         iterDate.setDate(iterDate.getDate() + 1);
 
-        while(count < 10 && iterDate.getTime() < startDate.getTime() + 45 * 86400000) {
+        // JAVÍTÁS: Csak a következő 3 munkanapot mutatjuk (10 helyett)
+        while(count < 3 && iterDate.getTime() < startDate.getTime() + 45 * 86400000) {
             if(isWorkingDay(iterDate)) {
                 let dKey = getDateKey(iterDate);
                 let workers = computedSchedule[dKey] || ["-", "-"];
@@ -1020,9 +939,6 @@
         }
     }
 
-    // ==========================================
-    // 🔐 PIN MODAL
-    // ==========================================
     window.openAdmin = function() {
         document.getElementById('pinInput').value = '';
         document.getElementById('pinOverlay').classList.add('active');
@@ -1069,9 +985,6 @@
         }, 2500);
     }
 
-    // ==========================================
-    // ⚙️ ADMIN
-    // ==========================================
     function renderAdminRoster() {
         let html = "";
         if (!sysSettings.roster) sysSettings.roster = [];
@@ -1182,12 +1095,9 @@
             return;
         }
         
-        // Új belépő: roster-be ÉS workerStats-ba is, joinDate = mai nap
         const todayKey = getDateKey(new Date());
         sysSettings.roster.push(name);
         
-        // Azonnal kiírjuk az új belépő workerStats-jét is
-        // (különben null marad amíg a save meg nem megy)
         if (!workerStats[name]) {
             db.ref(`workerStats/${name}`).set({
                 carries: 0,
