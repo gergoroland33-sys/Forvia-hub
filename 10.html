@@ -19,7 +19,6 @@
         }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        /* JAVÍTÁS: Reszponzív body a laptopos nézet miatt (min-height, overflow törölve) */
         body { background-color: var(--bg-dark); color: var(--text-main); margin: 0; padding: 0; min-height: 100dvh; display: flex; flex-direction: column; }
         
         .hero-section { flex-shrink: 0; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; padding: 65px 20px 12px 20px; position: relative; background: radial-gradient(circle at top right, #2e1065 0%, transparent 50%), radial-gradient(circle at bottom left, #1e1b4b 0%, transparent 50%); z-index: 1; }
@@ -41,7 +40,6 @@
         .absent-pill { cursor: pointer; background: rgba(248, 113, 113, 0.1); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(248, 113, 113, 0.2); transition: 0.2s; font-weight: 600;}
         .absent-pill:hover { background: rgba(248, 113, 113, 0.2); }
         
-        /* === LENYITHATÓ FAIRNESS PANEL === */
         .fairness-panel-front {
             width: 100%; max-width: 360px;
             margin-top: 12px;
@@ -669,7 +667,6 @@
                 updates[`workerStats/${name}/carries`] = ws.carries - 1;
                 updates[`workerStats/${name}/lastDate`] = null;
                 
-                // Mivel rögzítve volt a Firebase-ben, keressük meg a mai párt
                 let otherWorker = null;
                 sysSettings.roster.forEach(n => {
                     if (n !== name && workerStats[n] && workerStats[n].lastDate === dateKey) {
@@ -745,7 +742,6 @@
         let dateKey = getDateKey(today);
         let workers = ["-", "-"];
         
-        // JAVÍTÁS: Mai rögzített páros betöltése (ha már egyszer rögzítve lett)
         let alreadyCarriedToday = [];
         sysSettings.roster.forEach(name => {
             if (workerStats[name] && workerStats[name].lastDate === dateKey) {
@@ -771,7 +767,6 @@
         const w0Count = (workerStats[workers[0]] && workerStats[workers[0]].carries) || 0;
         const w1Count = (workerStats[workers[1]] && workerStats[workers[1]].carries) || 0;
 
-        // JAVÍTÁS: Dinamikus Nappali / Éjszakás műszak felirat a valós óra alapján
         let currentHour = realToday.getHours();
         let shiftLabel = (currentHour >= 18 || currentHour < 6) ? "ÉJSZAKÁS MŰSZAK" : "NAPPALI MŰSZAK";
 
@@ -905,7 +900,6 @@
         let iterDate = new Date(startDate);
         iterDate.setDate(iterDate.getDate() + 1);
 
-        // JAVÍTÁS: Csak a következő 3 munkanapot mutatjuk (10 helyett)
         while(count < 3 && iterDate.getTime() < startDate.getTime() + 45 * 86400000) {
             if(isWorkingDay(iterDate)) {
                 let dKey = getDateKey(iterDate);
@@ -1112,24 +1106,27 @@
         showToast(`✅ ${name} hozzáadva (${todayKey} óta)`, 'success');
     };
     
+    // JAVÍTÁS: A nullázás mostantól teljesen lecseréli a workerStats ágat, eltüntetve minden hibás/jövőbeli szellemadatot.
     window.resetCarries = function() {
         if (!confirm("⚠️ Biztosan újranullázod MINDENKI vitelszámát?\n\nEz az igazságossági pontokat is törli, és minden dolgozó joinDate-je a mai napra változik. Ez a művelet NEM visszavonható!")) return;
         
         const todayKey = getDateKey(new Date());
         const updates = {};
+        const newStats = {};
+        
         sysSettings.roster.forEach(name => {
-            updates[`workerStats/${name}`] = { 
+            newStats[name] = { 
                 carries: 0, 
-                lastDate: null,
-                joinDate: todayKey
+                joinDate: todayKey 
             };
         });
+        
+        // Teljes felülírás a tiszta lappal induláshoz
+        updates['workerStats'] = newStats;
         updates['pairHistory'] = null;
         
         db.ref().update(updates).then(() => {
             showToast("✅ Pontok újranullázva!", 'success');
-            renderFairnessAdmin();
-            renderAdminRoster();
         }).catch(err => {
             showToast("❌ Hiba: " + err.message, 'error');
         });
