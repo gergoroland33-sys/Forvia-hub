@@ -710,10 +710,31 @@
         const list = document.getElementById('upcomingList');
         hero.innerHTML = ''; list.innerHTML = '';
 
+        // --- OKOS MŰSZAK-LÉPTETÉS ---
         let realToday = new Date();
-        let today = new Date(realToday);
-        if (today.getHours() < 6) today.setDate(today.getDate() - 1);
-        today.setHours(0,0,0,0);
+        let logicalToday = new Date(realToday);
+        
+        // Alapeset: hajnali 0-6 között még az előző naptári nap logikája él
+        if (logicalToday.getHours() < 6) {
+            logicalToday.setDate(logicalToday.getDate() - 1);
+        }
+        logicalToday.setHours(0,0,0,0);
+
+        // Megnézzük, hogy ez a logikai nap (06:00-tól kezdődően) NAPPALOS-e
+        let utc = Date.UTC(logicalToday.getFullYear(), logicalToday.getMonth(), logicalToday.getDate());
+        let diffDays = Math.floor((utc - SHIFT_ANCHOR.getTime()) / 86400000);
+        let cycleDay = ((diffDays % 12) + 12) % 12;
+        let isDayShift = (cycleDay >= 3 && cycleDay <= 5);
+
+        // Ha NAPPALOS műszak van, és az óra már elütötte a 18:00-t (vagy már < 6 van másnap reggel)
+        // akkor a nappalos műszak véget ért, a kijelzőt rá kell tolni a HOLNAPI műszakra!
+        if (isDayShift && (realToday.getHours() >= 18 || realToday.getHours() < 6)) {
+            logicalToday.setDate(logicalToday.getDate() + 1);
+        }
+
+        // Ez a végleges nap, aminek a párosát mutatni kell
+        let today = logicalToday;
+        // --- LÉPTETÉS VÉGE ---
 
         const headerHTML = `<div class="header-pill" onclick="openAdmin()">C MŰSZAK BEOSZTÁS</div>`;
 
@@ -767,8 +788,14 @@
         const w0Count = (workerStats[workers[0]] && workerStats[workers[0]].carries) || 0;
         const w1Count = (workerStats[workers[1]] && workerStats[workers[1]].carries) || 0;
 
-        let currentHour = realToday.getHours();
-        let shiftLabel = (currentHour >= 18 || currentHour < 6) ? "ÉJSZAKÁS MŰSZAK" : "NAPPALI MŰSZAK";
+        // --- OKOS MŰSZAK CÍMKE ---
+        // A felirat mostantól konkrétan a mutatott naphoz igazodik, nem az aktuális órához
+        let tUtc = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+        let tDiffDays = Math.floor((tUtc - SHIFT_ANCHOR.getTime()) / 86400000);
+        let tCycleDay = ((tDiffDays % 12) + 12) % 12;
+        let isTodayNightShift = (tCycleDay >= 9 && tCycleDay <= 11);
+        let shiftLabel = isTodayNightShift ? "ÉJSZAKÁS MŰSZAK" : "NAPPALI MŰSZAK";
+        // --- OKOS CÍMKE VÉGE ---
 
         hero.innerHTML = `
             ${headerHTML}
@@ -794,7 +821,6 @@
         fillUpcomingList(today, list);
     }
     
-    // --- ÚJRAÍRT RÉSZ ---
     function renderFrontFairness() {
         if (!sysSettings.roster || sysSettings.roster.length === 0) return '';
         
@@ -805,7 +831,6 @@
         let maxRemaining = 0;
         let totalRemaining = 0;
         
-        // 1. Kiszámoljuk mindenkinek a saját személyes hátralévő adagját
         const rawData = sysSettings.roster.map(name => {
             const actual = (workerStats[name] && workerStats[name].carries) || 0;
             const ws = workerStats[name] || {};
@@ -813,12 +838,10 @@
             const joinDate = parseLocalDate(joinDateStr);
             const isMidYear = joinDate > yearStart;
             
-            // Itt a varázslat: az EGYÉNI év végi elvárást nézzük
             const expectedAtYearEnd = getExpectedCarriesForWorker(name, yearEnd);
             
-            // Hátralévő vitel: amit az év végéig még vinnie kell az eddigiek alapján
             let remaining = expectedAtYearEnd - actual;
-            if (remaining < 0) remaining = 0; // Vizuálisan ne menjen mínuszba
+            if (remaining < 0) remaining = 0; 
             
             if (remaining > maxRemaining) maxRemaining = remaining;
             totalRemaining += remaining;
@@ -826,34 +849,27 @@
             return { name, actual, remaining, joinDate, isMidYear };
         });
         
-        // Csapat átlagának meghatározása (hogy lássuk, ki lóg ki a sorból)
         const avgRemaining = rawData.length > 0 ? totalRemaining / rawData.length : 0;
         
-        // Rendezzük csökkenő sorrendbe: akinek a legtöbb van hátra, az legyen legfelül
         rawData.sort((a, b) => b.remaining - a.remaining);
         
         let rowsHtml = '';
         rawData.forEach(d => {
-            // Így a bar méretek egyformák lesznek mindenkinek, akinek ugyanannyi van hátra
             const visualPct = maxRemaining > 0 ? (d.remaining / maxRemaining) * 100 : 100;
             
             let cls = 'balanced'; 
             let icon = '';
             
-            // Eltérés a csapat átlagától
             const diff = d.remaining - avgRemaining;
             
             if (d.remaining <= 0) {
                 cls = 'surplus';
                 icon = '<span class="fp-status-icon" title="Év végi kvóta teljesítve">✓</span>';
             } else if (diff > 1.5) {
-                // Több van neki hátra az átlagnál -> le van maradva
                 cls = 'deficit'; 
             } else if (diff < -1.5) {
-                // Kevesebb van neki hátra az átlagnál -> túlteljesített
                 cls = 'surplus'; 
             } else {
-                // Pont az átlagot viszi -> vizuálisan zöld és egyforma
                 cls = 'balanced'; 
             }
             
@@ -906,7 +922,6 @@
             </div>
         `;
     }
-    // --- ÚJRAÍRT RÉSZ VÉGE ---
 
     function fillUpcomingList(startDate, container) {
         let count = 0;
