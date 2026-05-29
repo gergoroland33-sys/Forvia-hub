@@ -298,7 +298,6 @@ Dokumentum típusa: igénylés
 
 <div id="print-remark-container" class="print-remark" style="display: none;">
 <div class="pr-title">
-  <!-- FIGYELEMFELKELTŐ SÁRGA HÁROMSZÖG PIROS FELKIÁLTÓJELLEL -->
   <svg width="22" height="22" viewBox="0 0 24 24" style="margin-right: 8px; flex-shrink: 0;">
     <path d="M12 3L2 20h20L12 3z" fill="#fbbf24" stroke="#d97706" stroke-width="1" stroke-linejoin="round"/>
     <path d="M11 9h2v6h-2zM11 17h2v2h-2z" fill="#ef4444"/>
@@ -334,10 +333,18 @@ return `${d.getFullYear()}. ${String(d.getMonth()+1).padStart(2,'0')}. ${String(
 }
 
 function init() {
-let d = new Date(); d.setHours(12,0,0,0);
+let d = new Date(); 
+  
+// Szigorú váltás: 05:59-ig még a tegnapi "gyári napon" vagyunk
+if (d.getHours() < 6) {
+d.setDate(d.getDate() - 1);
+}
 
-// AUTOMATIKUS FELISMERÉS: Megnézzük mi a mai aktuális műszak
-const todayShift = getShifts(new Date());
+// Fixáljuk az időt délre, így a Math.round sosem kerekít fel idő előtt este 18:00-kor
+d.setHours(12, 0, 0, 0);
+
+// A módosított, fixált 'd' dátumot adjuk át, nem a pillanatnyi new Date()-et!
+const todayShift = getShifts(d);
 
 // Ha ma az A vagy B dolgozik, akkor a C/D napokat kell behoznunk, egyébként az A/B napokat
 const targetShifts = ['A', 'B'].includes(todayShift.d) ? ['C', 'D'] : ['A', 'B'];
