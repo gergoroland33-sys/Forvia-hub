@@ -114,6 +114,19 @@
             display: inline-block;
             margin-top: 6px;
         }
+        
+        /* --- ÚJ: KIBŐVÍTETT NÉVNAP ÉS NAP NEVE STÍLUSOK (PROFI ELRENDEZÉS) --- */
+        .nameday-wrapper {
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            margin-top: 10px; padding: 10px 20px;
+            background: rgba(30, 41, 59, 0.4); border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .nameday-row { display: flex; align-items: baseline; gap: 6px; }
+        .nameday-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: #64748b; font-weight: 700; }
+        .nameday-tomorrow-text { color: var(--text-dim); font-size: 0.8rem; font-weight: 500; letter-spacing: 0.5px; }
+        
+        .hm-day-name { font-size: 0.65rem; text-transform: uppercase; color: var(--accent); font-weight: 800; margin-top: 2px; }
         /* ------------------------------------------------ */
 
         /* --- KÖZÉPRE IGAZÍTOTT NAPTÁR DOBOZ --- */
@@ -331,54 +344,6 @@
             0% { transform: scale(0.8); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
-
-        /* --- EGYEDI POZÍCIÓK MODULONKÉNT (KIKOMMENTELVE, HOGY NE ZAVARJA A FIX ALSÓ SÁVOT, DE NE is VESSZEN EL) --- */
-        /*
-        body.active-mod-1 .smart-dock,
-        body.active-mod-2 .smart-dock,
-        body.active-mod-10 .smart-dock {
-            bottom: auto; top: 50%; margin-top: -55px; 
-        }
-
-        body.active-mod-13 .smart-dock {
-            right: auto; left: 0; bottom: 20px; animation: none;
-            transform: translateX(calc(-100% + 14px));
-            border-radius: 0 30px 30px 0; border-left: none;
-            padding-right: 24px; padding-left: 8px;
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15);
-        }
-
-        body.active-mod-13 .smart-dock::after {
-            content: ''; position: absolute; top: 50%; right: 5px; transform: translateY(-50%);
-            width: 4px; height: 36px; background: var(--accent); border-radius: 10px;
-            box-shadow: 0 0 8px rgba(59, 130, 246, 0.8); transition: opacity 0.3s ease;
-        }
-
-        body.active-mod-13 .smart-dock::before {
-            content: ''; position: absolute; top: -15px; bottom: -15px; right: -20px; width: 40px; z-index: 10; cursor: pointer;
-        }
-
-        body.active-mod-13 .smart-dock:hover, body.active-mod-13 .smart-dock:focus-within, body.active-mod-13 .smart-dock:active {
-            transform: translateX(0);
-        }
-
-        body.active-mod-13 .smart-dock:hover::after, body.active-mod-13 .smart-dock:focus-within::after, body.active-mod-13 .smart-dock:active::after {
-            opacity: 0.1;
-        }
-
-        body.active-mod-8 .smart-dock {
-            flex-direction: row; bottom: 10px; right: 10px; padding: 4px; gap: 8px; border-radius: 40px;
-        }
-        body.active-mod-8 .smart-dock .menu-fab, body.active-mod-8 .smart-dock .refresh-fab {
-            width: 35px; height: 35px;
-        }
-        body.active-mod-8 .smart-dock .menu-fab span { font-size: 18px; }
-        body.active-mod-8 .smart-dock .refresh-fab span { font-size: 16px; }
-
-        body.active-mod-9 .smart-dock { bottom: 140px; }
-        */
-
-        /* ------------------------------------------- */
 
         /* GLOBÁLIS GOMB MÉRETEZÉS AZ ÚJ ALAPÉRTELMEZETT KAPSZULÁHOZ */
         .menu-fab, .refresh-fab {
@@ -605,7 +570,16 @@
         <div id="display-date" class="current-date">
             <span id="date-text">0000. 00. 00.</span>
 
-            <span id="name-day" class="nameday-text">...</span>
+            <div class="nameday-wrapper">
+                <div class="nameday-row">
+                    <span class="nameday-label">Ma:</span>
+                    <span id="name-day" class="nameday-text" style="margin-top:0;">...</span>
+                </div>
+                <div class="nameday-row">
+                    <span class="nameday-label">Holnap:</span>
+                    <span id="name-day-tom" class="nameday-tomorrow-text">...</span>
+                </div>
+            </div>
         </div>
 
         <div id="calendar-widget" class="calendar-box" onclick="openHolidayList()">
@@ -845,8 +819,15 @@
         const honapNap = String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
         const maiNevnap = nevnapok[honapNap] || "---";
 
+        /* ÚJ: Holnapi nap kiszámítása és névnap lekérése */
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const holnapHonapNap = String(tomorrow.getMonth() + 1).padStart(2, '0') + "-" + String(tomorrow.getDate()).padStart(2, '0');
+        const holnapiNevnap = nevnapok[holnapHonapNap] || "---";
+
         document.getElementById('date-text').innerText = dateStr;
-        document.getElementById('name-day').innerText = "Névnap: " + maiNevnap;
+        document.getElementById('name-day').innerText = maiNevnap; /* A "Névnap:" szöveg most már a fix HTML-ben van megformázva */
+        if(document.getElementById('name-day-tom')) document.getElementById('name-day-tom').innerText = holnapiNevnap; /* ÚJ */
 
         updateCalendarWidget();
     }
@@ -894,8 +875,10 @@
             if(isToday) rowClass += ' current';
 
             const monthNames = ["JAN", "FEB", "MÁR", "ÁPR", "MÁJ", "JÚN", "JÚL", "AUG", "SZEP", "OKT", "NOV", "DEC"];
+            const dayNamesShort = ["VAS", "HÉT", "KED", "SZE", "CSÜ", "PÉN", "SZO"]; /* ÚJ: Napok röviden */
             const mName = monthNames[evDate.getMonth()];
             const dNum = evDate.getDate();
+            const dName = dayNamesShort[evDate.getDay()]; /* ÚJ: Az esemény napjának meghatározása */
 
             // PRO SHIFT TAG GENERATION
             let shiftHtml = '';
@@ -922,7 +905,7 @@
                     <div class="hm-date-box">
                         <span class="hm-month">${mName}</span>
                         <span class="hm-day-num">${dNum}</span>
-                    </div>
+                        <span class="hm-day-name">${dName}</span> </div>
                     <div class="hm-info">
                         <div class="hm-name">${event.name}</div>
                         ${shiftHtml}
