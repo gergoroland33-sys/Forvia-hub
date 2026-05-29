@@ -18,10 +18,16 @@
             --text: #f3f4f6; --text-dim: #94a3b8; --border: #334155;
             --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
             --day-color: #fbbf24; --night-color: #818cf8;
-            /* ÚJ: FORVIA brand színek a 2026-os arculathoz (kép alapján) */
-            --fv-cyan: #22d3ee; --fv-blue: #3b82f6; --fv-indigo: #6366f1;
-            --fv-magenta: #d946ef; --fv-pink: #ec4899; --fv-purple: #8b5cf6;
-            --fv-glow-cyan: rgba(34, 211, 238, 0.5);
+            /* FORVIA 2026 - élesebb kék-cián paletta (kép alapján) */
+            --fv-cyan: #06d4f0;       /* élesebb cián - tisztább neon */
+            --fv-blue: #2563eb;       /* tisztább kék */
+            --fv-indigo: #4f46e5;     /* mélyebb indigo */
+            --fv-magenta: #d946ef;    /* magenta marad (csak akcentus) */
+            --fv-pink: #ec4899;
+            --fv-purple: #8b5cf6;
+            --fv-sky: #38bdf8;        /* ÚJ: világos ég-kék highlight-hoz */
+            --fv-glow-cyan: rgba(6, 212, 240, 0.55);
+            --fv-glow-blue: rgba(37, 99, 235, 0.45);
             --fv-glow-magenta: rgba(217, 70, 239, 0.4);
         }
 
@@ -48,67 +54,84 @@
         #home-screen {
             flex-grow: 1; display: flex; flex-direction: column;
             align-items: center; 
+            justify-content: center;
             text-align: center;
-            /* MODERN HÁTTÉR - FORVIA 2026 arculat (kép alapján: kék-lila naplemente, tech glow) */
+            /* DOMINÁNS HÁTTÉR - FORVIA 2026 kép hangulat (kék-cián naplemente, tech glow) */
             background: 
-                radial-gradient(circle at 75% 15%, rgba(217, 70, 239, 0.12), transparent 40%),
-                radial-gradient(circle at 20% 25%, rgba(34, 211, 238, 0.10), transparent 45%),
-                radial-gradient(circle at 50% 90%, rgba(99, 102, 241, 0.15), transparent 55%),
-                radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.08), transparent 50%),
-                linear-gradient(180deg, #0a0e1f 0%, #0f1429 50%, #12101f 100%);
+                radial-gradient(ellipse 80% 60% at 50% 0%, rgba(6, 212, 240, 0.18), transparent 70%),
+                radial-gradient(ellipse 60% 50% at 15% 30%, rgba(37, 99, 235, 0.18), transparent 65%),
+                radial-gradient(ellipse 70% 60% at 85% 35%, rgba(56, 189, 248, 0.16), transparent 65%),
+                radial-gradient(ellipse 90% 50% at 50% 100%, rgba(99, 102, 241, 0.20), transparent 70%),
+                radial-gradient(ellipse 40% 30% at 85% 90%, rgba(217, 70, 239, 0.10), transparent 65%),
+                linear-gradient(180deg, #050a1a 0%, #0a1230 35%, #0d1438 65%, #0a0e26 100%);
             
-            padding: 20px; position: relative; width: 100%; height: 100%;
-            overflow-y: auto; 
-            padding-bottom: 60px;
+            padding: 15px; position: relative; width: 100%; height: 100%;
+            overflow: hidden;
+            padding-bottom: 50px;
         }
         
-        /* ÚJ: finom hexagon-tech rácsréteg a háttéren (kép tech-érzet) */
+        /* DOMINÁNSABB hexagon-tech rácsréteg a háttéren (kép tech-érzet) */
         #home-screen::before {
             content: '';
             position: absolute; inset: 0;
             background-image: 
-                linear-gradient(rgba(34, 211, 238, 0.025) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(34, 211, 238, 0.025) 1px, transparent 1px);
-            background-size: 44px 44px;
+                linear-gradient(rgba(6, 212, 240, 0.07) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(6, 212, 240, 0.07) 1px, transparent 1px);
+            background-size: 48px 48px;
             pointer-events: none;
-            mask-image: radial-gradient(ellipse at center, black 0%, transparent 75%);
-            -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 75%);
+            mask-image: radial-gradient(ellipse at center, black 0%, transparent 80%);
+            -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 80%);
             z-index: 0;
+        }
+        /* ÚJ: finom vízszintes neon csíkok (kép autópálya fénycsíkok) */
+        #home-screen::after {
+            content: '';
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(180deg, transparent 65%, rgba(6, 212, 240, 0.12) 66%, rgba(6, 212, 240, 0.12) 67%, transparent 68%),
+                linear-gradient(180deg, transparent 75%, rgba(56, 189, 248, 0.08) 76%, rgba(56, 189, 248, 0.08) 77%, transparent 78%);
+            pointer-events: none;
+            mask-image: linear-gradient(90deg, transparent 0%, black 30%, black 70%, transparent 100%);
+            -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 30%, black 70%, transparent 100%);
+            z-index: 0;
+            opacity: 0.6;
         }
         #home-screen > * { position: relative; z-index: 1; }
         
-        /* A TISZTA ÜVEG KÁRTYA (FORVIA 2026 neon-glass stílus) */
+        /* A KOMPAKT ÜVEG KÁRTYA (FORVIA 2026 - elfér viewport-ban) */
         .glass-card {
-            background: linear-gradient(160deg, rgba(30, 41, 59, 0.55) 0%, rgba(20, 22, 45, 0.6) 100%); 
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            background: linear-gradient(160deg, rgba(15, 25, 50, 0.65) 0%, rgba(10, 20, 45, 0.7) 100%); 
+            backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
             
-            /* Finom neon szegély - cián felül, lila hangulat */
-            border: 1px solid rgba(99, 102, 241, 0.18);
-            border-top: 1px solid rgba(34, 211, 238, 0.35);
+            /* Élesebb cián-kék szegély */
+            border: 1px solid rgba(6, 212, 240, 0.22);
+            border-top: 1px solid rgba(6, 212, 240, 0.55);
             
-            padding: 40px 30px; border-radius: 24px;
-            /* Mélység + finom kettős neon glow (kék + magenta) */
+            /* KOMPAKTABB padding fluid sizing-gel */
+            padding: clamp(18px, 3vh, 32px) clamp(20px, 4vw, 30px); 
+            border-radius: 22px;
+            /* Élesebb cián glow */
             box-shadow: 
-                0 25px 60px -12px rgba(0, 0, 0, 0.7),
-                0 0 40px -10px rgba(34, 211, 238, 0.15),
-                0 0 60px -20px rgba(217, 70, 239, 0.12);
+                0 25px 60px -12px rgba(0, 0, 0, 0.75),
+                0 0 50px -8px rgba(6, 212, 240, 0.25),
+                0 0 80px -25px rgba(37, 99, 235, 0.18);
             
-            max-width: 500px; width: 100%; 
+            max-width: 480px; width: 100%; 
             position: relative; 
             margin: auto; 
             overflow: hidden;
             
-            /* Egyszerű megjelenés animáció betöltéskor */
             animation: fadeIn 0.5s ease-out;
         }
-        /* ÚJ: finom felső neon-vonal a kártyán (kép tech-akcentus) */
+        /* Élesebb felső neon-vonal a kártyán */
         .glass-card::before {
             content: '';
             position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-            width: 60%; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--fv-cyan), var(--fv-magenta), transparent);
-            opacity: 0.6;
+            width: 65%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--fv-sky), var(--fv-cyan), var(--fv-sky), transparent);
+            opacity: 0.9;
             border-radius: 2px;
+            box-shadow: 0 0 12px rgba(6, 212, 240, 0.6);
         }
 
         .share-card-btn {
@@ -128,20 +151,24 @@
         .share-icon-svg { width: 20px; height: 20px; fill: currentColor; }
 
         .welcome-title {
-            font-size: 2.2rem; font-weight: 800; margin: 0;
-            color: white; letter-spacing: -1px; margin-bottom: 5px;
-            text-shadow: 0 2px 20px rgba(34, 211, 238, 0.25);
+            font-size: clamp(1.6rem, 4.5vw, 2.1rem); 
+            font-weight: 800; margin: 0;
+            color: white; letter-spacing: -1px; margin-bottom: 4px;
+            text-shadow: 0 2px 24px rgba(6, 212, 240, 0.35);
+            line-height: 1.15;
         }
         .highlight-blue { 
-            background: linear-gradient(120deg, #22d3ee 0%, #6366f1 50%, #d946ef 100%);
+            background: linear-gradient(120deg, var(--fv-sky) 0%, var(--fv-cyan) 50%, var(--fv-blue) 100%);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.35));
+            filter: drop-shadow(0 0 14px rgba(6, 212, 240, 0.5));
         }
 
         .current-date {
-            color: var(--text-dim); font-size: 0.95rem; margin-bottom: 30px; font-weight: 500; line-height: 1.5;
+            color: var(--text-dim); font-size: clamp(0.82rem, 2vw, 0.92rem);
+            margin-bottom: clamp(14px, 2vh, 22px); 
+            font-weight: 500; line-height: 1.4;
             user-select: none;
         }
 
@@ -150,62 +177,62 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 0;
-            margin-top: 14px;
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.55), rgba(20, 22, 45, 0.5));
-            border: 1px solid rgba(99, 102, 241, 0.18);
-            border-radius: 12px;
+            margin-top: 10px;
+            background: linear-gradient(135deg, rgba(10, 20, 45, 0.6), rgba(15, 25, 50, 0.5));
+            border: 1px solid rgba(6, 212, 240, 0.25);
+            border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2), 0 0 16px -6px rgba(6, 212, 240, 0.3);
         }
         .nameday-cell {
-            padding: 10px 12px;
+            padding: 8px 10px;
             text-align: center;
             position: relative;
         }
         .nameday-cell.today {
-            background: linear-gradient(135deg, rgba(34, 211, 238, 0.10), transparent 80%);
-            border-right: 1px solid rgba(99, 102, 241, 0.15);
+            background: linear-gradient(135deg, rgba(6, 212, 240, 0.16), transparent 75%);
+            border-right: 1px solid rgba(6, 212, 240, 0.22);
         }
         .nameday-cell.tomorrow {
-            background: linear-gradient(225deg, rgba(217, 70, 239, 0.07), transparent 80%);
+            background: linear-gradient(225deg, rgba(56, 189, 248, 0.10), transparent 80%);
         }
         .nameday-label {
-            font-size: 0.6rem;
+            font-size: 0.58rem;
             text-transform: uppercase;
             letter-spacing: 1.2px;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
             font-weight: 700;
         }
         .nameday-cell.today .nameday-label { 
             color: var(--fv-cyan);
-            text-shadow: 0 0 6px rgba(34, 211, 238, 0.3);
+            text-shadow: 0 0 8px rgba(6, 212, 240, 0.5);
         }
         .nameday-cell.tomorrow .nameday-label { 
-            color: var(--fv-magenta);
-            opacity: 0.75;
+            color: var(--fv-sky);
+            opacity: 0.85;
         }
         .nameday-value {
-            font-size: 0.92rem;
+            font-size: clamp(0.82rem, 2.2vw, 0.92rem);
             font-weight: 600;
             color: white;
-            line-height: 1.25;
+            line-height: 1.2;
             letter-spacing: 0.2px;
         }
         .nameday-cell.today .nameday-value {
-            text-shadow: 0 0 10px rgba(34, 211, 238, 0.2);
+            text-shadow: 0 0 12px rgba(6, 212, 240, 0.35);
         }
         .nameday-cell.tomorrow .nameday-value {
             color: #cbd5e1;
         }
         /* ------------------------------------------------ */
 
-        /* --- KÖZÉPRE IGAZÍTOTT NAPTÁR DOBOZ (FORVIA 2026 tech-modern) --- */
+        /* --- KÖZÉPRE IGAZÍTOTT NAPTÁR DOBOZ (kompakt + élesebb cián) --- */
         .calendar-box {
-            background: linear-gradient(145deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 30, 60, 0.7) 100%);
-            border: 1px solid rgba(99, 102, 241, 0.15);
-            border-radius: 16px;
-            padding: 20px 22px; 
-            margin-bottom: 30px;
+            background: linear-gradient(145deg, rgba(10, 18, 45, 0.85) 0%, rgba(15, 25, 55, 0.7) 100%);
+            border: 1px solid rgba(6, 212, 240, 0.2);
+            border-radius: 14px;
+            padding: clamp(12px, 2vh, 18px) clamp(14px, 3vw, 20px); 
+            margin: clamp(10px, 2vh, 18px) 0;
             
             position: relative;
             overflow: hidden;
@@ -218,18 +245,17 @@
             
             width: 100%;
             
-            /* Interaktivitás */
             cursor: pointer;
             transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
         }
         .calendar-box:hover {
-            box-shadow: 0 6px 28px rgba(34, 211, 238, 0.15);
+            box-shadow: 0 6px 32px rgba(6, 212, 240, 0.22);
         }
         
-        /* --- MODERN KIRÁLYKÉK GLOW (FORVIA cián akcentus) --- */
+        /* --- ÉLES KIRÁLYKÉK GLOW (FORVIA cián akcentus) --- */
         .calendar-box.electric-blue {
             border-left-color: var(--fv-cyan);
-            box-shadow: 0 4px 24px rgba(0,0,0,0.25), -3px 0 18px rgba(34, 211, 238, 0.35), 0 0 30px -8px rgba(99, 102, 241, 0.2);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.25), -3px 0 22px rgba(6, 212, 240, 0.5), 0 0 30px -8px rgba(37, 99, 235, 0.3);
         }
         
         .calendar-box:active {
@@ -240,41 +266,41 @@
             display: flex; 
             align-items: center; 
             justify-content: center; 
-            gap: 8px; 
-            margin-bottom: 12px; 
+            gap: 6px; 
+            margin-bottom: 8px; 
             width: 100%;
         }
-        .cal-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: #64748b; font-weight: 700; }
+        .cal-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; color: #64748b; font-weight: 700; }
         
         .cal-main-row { 
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            gap: 12px;                
-            margin-bottom: 6px; 
+            gap: 10px;                
+            margin-bottom: 4px; 
             width: 100%;
             flex-wrap: wrap;         
         }
-        .cal-date-text { font-size: 1.4rem; font-weight: 800; color: white; letter-spacing: -0.5px; }
+        .cal-date-text { font-size: clamp(1.1rem, 3vw, 1.3rem); font-weight: 800; color: white; letter-spacing: -0.5px; }
         
         .cal-badge { 
-            font-size: 0.75rem; padding: 6px 12px; border-radius: 20px; 
+            font-size: 0.7rem; padding: 5px 10px; border-radius: 18px; 
             font-weight: 700; text-transform: uppercase; white-space: nowrap;
             letter-spacing: 0.5px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
-        .cal-event-name { font-size: 0.95rem; color: #94a3b8; font-weight: 500; }
+        .cal-event-name { font-size: clamp(0.82rem, 2vw, 0.9rem); color: #94a3b8; font-weight: 500; }
         
         .cal-badge.holiday { 
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(34, 211, 238, 0.12));
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.22), rgba(6, 212, 240, 0.18));
             color: #34d399; 
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            text-shadow: 0 0 8px rgba(16, 185, 129, 0.25);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
         }
         .cal-badge.workday { 
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 70, 239, 0.08)); 
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(56, 189, 248, 0.12)); 
             color: #fbbf24; 
-            border: 1px solid rgba(245, 158, 11, 0.3);
-            text-shadow: 0 0 8px rgba(251, 191, 36, 0.25);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
         }
         
         /* A sárga munkanap felülírja a kéket */
@@ -283,39 +309,39 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;
         }
 
-        /* --- PRO SHIFT INFO BOX (kép kék-magenta hangulat) --- */
+        /* --- PRO SHIFT INFO BOX (kompakt + élesebb kék) --- */
         .shift-info-box {
-            margin-top: 15px; width: 100%; 
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.7), rgba(20, 22, 45, 0.6));
-            border: 1px solid rgba(99, 102, 241, 0.18); 
-            border-radius: 12px;
+            margin-top: 10px; width: 100%; 
+            background: linear-gradient(135deg, rgba(10, 20, 45, 0.75), rgba(15, 25, 55, 0.65));
+            border: 1px solid rgba(6, 212, 240, 0.22); 
+            border-radius: 10px;
             overflow: hidden;
             animation: fadeIn 0.5s ease;
             display: flex; flex-direction: column;
         }
         .shift-header-row {
-            background: linear-gradient(90deg, rgba(34, 211, 238, 0.05), rgba(217, 70, 239, 0.04));
-            border-bottom: 1px solid rgba(99, 102, 241, 0.12);
-            padding: 8px;
+            background: linear-gradient(90deg, rgba(6, 212, 240, 0.10), rgba(56, 189, 248, 0.06));
+            border-bottom: 1px solid rgba(6, 212, 240, 0.18);
+            padding: 6px;
             color: var(--text-dim); 
-            font-size: 0.65rem; font-weight: 700;
+            font-size: 0.62rem; font-weight: 700;
             text-transform: uppercase; letter-spacing: 1.5px;
         }
         .shift-content-row {
             display: flex; width: 100%;
         }
         .shift-cell {
-            flex: 1; padding: 10px;
+            flex: 1; padding: 8px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            border-right: 1px solid rgba(6, 212, 240, 0.10);
             position: relative;
         }
         .shift-cell:last-child { border-right: none; }
         
         .shift-cell-label { 
-            font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; font-weight: 600; 
+            font-size: 0.58rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; font-weight: 600; 
         }
-        .shift-cell-val { font-size: 1.1rem; font-weight: 800; }
+        .shift-cell-val { font-size: 1.05rem; font-weight: 800; }
 
         /* Day / Night Colors for Pro Look */
         .theme-day .shift-cell-label { color: var(--day-color); opacity: 0.8; }
@@ -325,18 +351,19 @@
         .theme-night .shift-cell-val { color: var(--night-color); text-shadow: 0 0 10px rgba(129, 140, 248, 0.2); }
 
         .instruction-text {
-            font-size: 1rem; line-height: 1.6; color: #cbd5e1; margin-bottom: 30px;
+            font-size: clamp(0.85rem, 2.2vw, 0.95rem); line-height: 1.5; 
+            color: #cbd5e1; margin-bottom: clamp(14px, 2vh, 22px);
         }
         .instruction-highlight { 
             color: var(--fv-cyan); 
             font-weight: 600;
-            text-shadow: 0 0 8px rgba(34, 211, 238, 0.2);
+            text-shadow: 0 0 10px rgba(6, 212, 240, 0.4);
         }
 
         .device-info {
-            font-size: 0.8rem; color: #64748b;
-            border-top: 1px solid rgba(99, 102, 241, 0.12);
-            padding-top: 20px; margin-top: 10px;
+            font-size: 0.75rem; color: #64748b;
+            border-top: 1px solid rgba(6, 212, 240, 0.18);
+            padding-top: clamp(12px, 2vh, 16px); margin-top: 8px;
             position: relative;
         }
         .device-info::before {
@@ -345,28 +372,29 @@
             top: -1px; left: 30%; right: 30%;
             height: 1px;
             background: linear-gradient(90deg, transparent, var(--fv-cyan), transparent);
-            opacity: 0.5;
+            opacity: 0.85;
+            box-shadow: 0 0 8px rgba(6, 212, 240, 0.4);
         }
         .good-luck {
-            display: block; margin-top: 5px; 
+            display: block; margin-top: 4px; 
             background: linear-gradient(90deg, #10b981, var(--fv-cyan));
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
             font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
-            filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.3));
+            filter: drop-shadow(0 0 8px rgba(6, 212, 240, 0.4));
+            font-size: 0.85rem;
         }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         .ticker-wrap {
             position: fixed; bottom: 0; left: 0; width: 100%; overflow: hidden; height: 36px;
-            background: linear-gradient(180deg, rgba(15, 23, 42, 0.92) 0%, rgba(20, 18, 40, 0.96) 100%);
-            border-top: 1px solid transparent;
-            border-image: linear-gradient(90deg, transparent, var(--fv-cyan), var(--fv-magenta), transparent) 1;
+            background: linear-gradient(180deg, rgba(8, 15, 35, 0.95) 0%, rgba(12, 20, 45, 0.97) 100%);
+            border-top: 1px solid var(--fv-cyan);
             z-index: 1000; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
             padding-left: 100%; box-sizing: content-box;
-            box-shadow: 0 -8px 24px -8px rgba(34, 211, 238, 0.15);
+            box-shadow: 0 -8px 30px -8px rgba(6, 212, 240, 0.4);
         }
         .ticker-move {
             display: inline-block; height: 36px; line-height: 36px; white-space: nowrap;
@@ -377,7 +405,7 @@
             display: inline-block; padding: 0 2rem; font-size: 0.9rem; 
             color: #fbbf24;
             font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
-            text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+            text-shadow: 0 0 12px rgba(251, 191, 36, 0.4);
         }
         @keyframes ticker {
             0% { transform: translate3d(0, 0, 0); }
@@ -399,11 +427,11 @@
         .sidebar-header {
             padding: 25px 20px;
             border-bottom: 1px solid var(--border);
-            background: linear-gradient(135deg, rgba(34, 211, 238, 0.04), rgba(217, 70, 239, 0.04));
+            background: linear-gradient(135deg, rgba(6, 212, 240, 0.06), rgba(37, 99, 235, 0.06));
         }
         .sidebar-header h2 {
             font-size: 1.3rem; margin: 0; letter-spacing: 1px; font-weight: 700;
-            text-shadow: 0 0 14px rgba(34, 211, 238, 0.25);
+            text-shadow: 0 0 16px rgba(6, 212, 240, 0.4);
         }
 
         .nav-list { padding: 20px; flex-grow: 1; overflow-y: auto; }
@@ -420,19 +448,19 @@
         
         @media (hover: hover) {
             .nav-item:hover { 
-                background: linear-gradient(90deg, rgba(34, 211, 238, 0.12), rgba(99, 102, 241, 0.15)); 
+                background: linear-gradient(90deg, rgba(6, 212, 240, 0.15), rgba(37, 99, 235, 0.18)); 
                 color: white;
                 box-shadow: inset 2px 0 0 var(--fv-cyan);
             }
         }
         .nav-item:active { 
-            background: linear-gradient(90deg, var(--fv-cyan), var(--fv-indigo)) !important; 
+            background: linear-gradient(90deg, var(--fv-cyan), var(--fv-blue)) !important; 
             color: white !important; 
             transform: scale(0.98);
-            box-shadow: 0 4px 20px rgba(34, 211, 238, 0.35) !important;
+            box-shadow: 0 4px 24px rgba(6, 212, 240, 0.5) !important;
         }
 
-        /* --- PRO "SMART DOCK" - FORVIA 2026 neon kapszula --- */
+        /* --- PRO "SMART DOCK" - FORVIA 2026 neon kapszula (élesebb cián) --- */
         .smart-dock {
             position: fixed;
             bottom: 10px;
@@ -443,14 +471,14 @@
             align-items: center;
             gap: 8px;
             
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.75), rgba(20, 22, 45, 0.7));
+            background: linear-gradient(135deg, rgba(15, 25, 50, 0.8), rgba(10, 20, 45, 0.75));
             backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(99, 102, 241, 0.25);
+            border: 1px solid rgba(6, 212, 240, 0.3);
             padding: 4px;
             border-radius: 40px;
             box-shadow: 
-                0 15px 35px rgba(0, 0, 0, 0.5), 
-                0 0 20px -5px rgba(34, 211, 238, 0.25),
+                0 15px 35px rgba(0, 0, 0, 0.55), 
+                0 0 24px -4px rgba(6, 212, 240, 0.35),
                 inset 0 1px 1px rgba(255,255,255,0.1);
             
             transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -529,16 +557,16 @@
         }
 
         .menu-fab {
-            background: linear-gradient(135deg, var(--fv-cyan) 0%, var(--fv-blue) 50%, var(--fv-indigo) 100%);
-            box-shadow: 0 4px 18px rgba(34, 211, 238, 0.45), 0 0 12px -2px rgba(99, 102, 241, 0.35); 
+            background: linear-gradient(135deg, var(--fv-cyan) 0%, var(--fv-sky) 50%, var(--fv-blue) 100%);
+            box-shadow: 0 4px 20px rgba(6, 212, 240, 0.55), 0 0 14px -2px rgba(37, 99, 235, 0.4); 
         }
-        .menu-fab:active { transform: scale(0.92); box-shadow: 0 2px 5px rgba(34, 211, 238, 0.5); }
+        .menu-fab:active { transform: scale(0.92); box-shadow: 0 2px 5px rgba(6, 212, 240, 0.6); }
         .menu-fab span { font-size: 18px; color: white; line-height: 1; pointer-events: none; transition: transform 0.3s ease; }
 
         .refresh-fab {
             background: rgba(255, 255, 255, 0.06);
             color: var(--fv-cyan);
-            border: 1px solid rgba(34, 211, 238, 0.18);
+            border: 1px solid rgba(6, 212, 240, 0.25);
         }
         
         @keyframes rotate-center {
@@ -549,7 +577,7 @@
             animation: rotate-center 0.6s ease-in-out both;
         }
         
-        .refresh-fab:active { transform: scale(0.95); background: rgba(34, 211, 238, 0.15); border-color: rgba(34, 211, 238, 0.35); }
+        .refresh-fab:active { transform: scale(0.95); background: rgba(6, 212, 240, 0.2); border-color: rgba(6, 212, 240, 0.5); }
         .refresh-fab span { font-size: 16px; color: var(--fv-cyan); line-height: 1; font-weight: bold; pointer-events: none; }
 
         .overlay {
@@ -570,8 +598,9 @@
             position: absolute;
             top: -1px; left: 25%; right: 25%;
             height: 1px;
-            background: linear-gradient(90deg, transparent, var(--fv-cyan), var(--fv-magenta), transparent);
-            opacity: 0.5;
+            background: linear-gradient(90deg, transparent, var(--fv-cyan), transparent);
+            opacity: 0.85;
+            box-shadow: 0 0 6px rgba(6, 212, 240, 0.4);
         }
 
         /* --- ÚJ: HOLIDAY MODAL STÍLUSOK (PROFI VERZIÓ) --- */
@@ -597,10 +626,11 @@
         .holiday-modal-card::before {
             content: '';
             position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-            width: 50%; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--fv-cyan), var(--fv-magenta), transparent);
-            opacity: 0.6;
+            width: 55%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--fv-sky), var(--fv-cyan), var(--fv-sky), transparent);
+            opacity: 0.95;
             border-radius: 2px;
+            box-shadow: 0 0 10px rgba(6, 212, 240, 0.5);
         }
         @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         
@@ -686,10 +716,11 @@
         .pin-modal-card::before {
             content: '';
             position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-            width: 50%; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--fv-cyan), var(--fv-magenta), transparent);
-            opacity: 0.65;
+            width: 55%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--fv-sky), var(--fv-cyan), var(--fv-sky), transparent);
+            opacity: 0.95;
             border-radius: 2px;
+            box-shadow: 0 0 10px rgba(6, 212, 240, 0.5);
         }
         @keyframes scaleUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         
@@ -726,11 +757,11 @@
         .pin-btn.cancel { background: rgba(255, 255, 255, 0.05); color: #cbd5e1; }
         .pin-btn.cancel:active { background: rgba(255, 255, 255, 0.1); }
         .pin-btn.submit { 
-            background: linear-gradient(135deg, var(--fv-cyan), var(--fv-indigo));
+            background: linear-gradient(135deg, var(--fv-cyan), var(--fv-blue));
             color: white;
-            box-shadow: 0 4px 14px -2px rgba(34, 211, 238, 0.4);
+            box-shadow: 0 4px 16px -2px rgba(6, 212, 240, 0.55);
         }
-        .pin-btn.submit:active { transform: scale(0.95); background: linear-gradient(135deg, var(--fv-indigo), var(--fv-cyan)); }
+        .pin-btn.submit:active { transform: scale(0.95); background: linear-gradient(135deg, var(--fv-blue), var(--fv-cyan)); }
     </style>
 </head>
 <body>
@@ -844,7 +875,7 @@
     <div class="sidebar-header">
         <h2>
             <span style="color: white;">FORVIA</span>
-            <span style="background: linear-gradient(120deg, #22d3ee, #d946ef); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">HUB 2026</span>
+            <span style="background: linear-gradient(120deg, #06d4f0, #38bdf8 50%, #2563eb); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">HUB 2026</span>
         </h2>
     </div>
 
