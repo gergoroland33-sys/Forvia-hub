@@ -175,8 +175,8 @@ page-break-inside: avoid; /* Egyben tartja a napot */
 
 .pdb-date {
 font-size: 11pt; font-weight: 800; text-transform: uppercase;
-background: #0f172a; color: white; display: inline-block;
-padding: 4px 12px; border-radius: 4px; margin-bottom: 8px;
+background: #0f172a; color: white; display: table; margin: 0 auto 8px auto;
+padding: 4px 12px; border-radius: 4px;
 -webkit-print-color-adjust: exact;
 }
 
@@ -289,6 +289,7 @@ html, body { height: auto; min-height: 100%; overflow: visible; }
 <div class="dh-title">Műszak Túlóra<br>2026</div>
 <div class="dh-meta">
 Létrehozva: <span id="p-timestamp"></span><br>
+Időpont: <span id="p-time"></span><br>
 Dokumentum típusa: igénylés
 </div>
 </div>
@@ -425,7 +426,10 @@ document.getElementById(`v-${i}-${c}-${r}`).innerText = v;
 
 // --- NYOMTATÁS GENERÁLÁS ---
 window.goToPrint = function() {
-document.getElementById('p-timestamp').innerText = new Date().toLocaleDateString('hu-HU');
+const now = new Date();
+document.getElementById('p-timestamp').innerText = now.toLocaleDateString('hu-HU');
+document.getElementById('p-time').innerText = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
 const pc = document.getElementById('print-content');
 pc.innerHTML = '';
 
