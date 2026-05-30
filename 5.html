@@ -435,6 +435,86 @@
         #toast { position: fixed; top: 20px; left: 50%; transform: translate(-50%, -100px); background-color: var(--success); color: white; padding: 15px 25px; border-radius: 8px; font-weight: bold; font-size: 14px; opacity: 0; transition: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 3000; box-shadow: 0 10px 20px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 10px; }
         #toast.show { transform: translate(-50%, 0); opacity: 1; }
 
+        /* ===========================================
+           OPTIMALIZÁCIÓ PRO UI (csak hozzáadás, eredeti érintetlen)
+           =========================================== */
+        .btn-optimize { background: linear-gradient(135deg, #a855f7, #7c3aed); border: none; box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3); }
+        .btn-optimize:hover { box-shadow: 0 6px 20px rgba(168, 85, 247, 0.5); }
+        
+        .opt-modal-wide { max-width: 720px !important; }
+        .opt-modal-xl { max-width: 1200px !important; width: 95% !important; }
+        
+        .opt-intro { background: linear-gradient(135deg, rgba(168, 85, 247, 0.08), rgba(124, 58, 237, 0.04)); border: 1px solid rgba(168, 85, 247, 0.2); border-radius: 10px; padding: 18px; margin-bottom: 15px; color: var(--text-main); font-size: 14px; line-height: 1.6; }
+        .opt-intro strong { color: #c084fc; }
+        .opt-intro ul { margin: 8px 0 0 20px; padding: 0; }
+        .opt-intro li { margin-bottom: 4px; font-size: 13px; color: var(--text-muted); }
+        
+        .opt-strategy-grid { display: flex; flex-direction: column; gap: 12px; }
+        .opt-strategy-card { background: var(--bg-base); border: 2px solid #334155; border-radius: 10px; padding: 18px; cursor: pointer; transition: 0.2s; display: flex; align-items: flex-start; gap: 15px; }
+        .opt-strategy-card:hover { border-color: #a855f7; background: linear-gradient(135deg, rgba(168, 85, 247, 0.08), transparent); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(168, 85, 247, 0.2); }
+        .opt-strategy-card .opt-icon { font-size: 36px; color: #a855f7; flex-shrink: 0; width: 50px; text-align: center; }
+        .opt-strategy-card .opt-text-wrap { flex: 1; }
+        .opt-strategy-card .opt-name { font-size: 16px; font-weight: 800; color: white; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .opt-strategy-card .opt-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+        .opt-strategy-card .opt-recommended { background: var(--success); color: white; padding: 2px 8px; border-radius: 4px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-left: 8px; vertical-align: middle; }
+        
+        .opt-preview-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 15px; }
+        .opt-stat-card { background: var(--bg-base); border: 1px solid #334155; border-radius: 8px; padding: 12px; text-align: center; }
+        .opt-stat-card .v { font-size: 24px; font-weight: 900; color: white; }
+        .opt-stat-card .l { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+        .opt-stat-card.stay .v { color: var(--success); }
+        .opt-stat-card.move .v { color: var(--warning); }
+        .opt-stat-card.percent .v { color: #a855f7; }
+        
+        .opt-legend { display: flex; gap: 15px; padding: 10px 15px; background: rgba(0,0,0,0.2); border-radius: 8px; margin-bottom: 12px; font-size: 12px; flex-wrap: wrap; }
+        .opt-legend-item { display: flex; align-items: center; gap: 6px; color: var(--text-muted); }
+        .opt-legend-item .swatch { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+        .swatch.stay { background: #065f46; border: 1px solid var(--success); }
+        .swatch.move { background: #78350f; border: 1px solid var(--warning); }
+        .swatch.empty { background: var(--slot-empty); border: 1px dashed #334155; }
+        
+        .opt-preview-cabinets { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; max-height: 50vh; overflow-y: auto; padding: 5px; }
+        .opt-cab { background: linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-base) 100%); border-radius: 8px; padding: 12px; border: 1px solid #334155; }
+        .opt-cab-header { font-size: 12px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; text-align: center; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .opt-slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+        
+        .opt-slot { height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-size: 11px; font-weight: bold; position: relative; padding: 2px; overflow: hidden; }
+        .opt-slot .opt-slot-num { position: absolute; top: 2px; left: 3px; font-size: 8px; opacity: 0.5; font-weight: normal; }
+        .opt-slot .opt-slot-from { position: absolute; bottom: 2px; right: 3px; font-size: 7px; opacity: 0.85; font-weight: normal; color: #fbbf24; }
+        .opt-slot.stay { background: linear-gradient(145deg, #065f46, #064e3b); border: 1px solid var(--success); color: #34d399; }
+        .opt-slot.stay .opt-slot-num { color: #fff; opacity: 0.9; }
+        .opt-slot.move { background: linear-gradient(145deg, #78350f, #451a03); border: 1px solid var(--warning); color: #fbbf24; box-shadow: 0 0 12px rgba(245, 158, 11, 0.25); }
+        .opt-slot.move .opt-slot-num { color: #fff; opacity: 0.9; }
+        .opt-slot.empty { background: var(--slot-empty); border: 1px dashed #334155; color: #475569; font-size: 9px; }
+
+        .opt-movement-list { max-height: 250px; overflow-y: auto; background: rgba(0,0,0,0.25); border-radius: 8px; padding: 10px; }
+        .opt-mv-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
+        .opt-mv-row:last-child { border-bottom: none; }
+        .opt-mv-mask { font-weight: 800; color: white; min-width: 80px; }
+        .opt-mv-model { font-size: 11px; color: var(--accent); background: rgba(14,165,233,0.1); padding: 2px 6px; border-radius: 4px; margin-right: auto; }
+        .opt-mv-from { color: var(--text-muted); font-size: 12px; }
+        .opt-mv-arrow { color: var(--warning); font-size: 14px; }
+        .opt-mv-to { color: var(--warning); font-weight: 700; font-size: 13px; }
+
+        .opt-warning-banner { background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05)); border: 1px solid rgba(245, 158, 11, 0.4); color: #fbbf24; padding: 12px 16px; border-radius: 8px; margin: 12px 0; font-size: 13px; line-height: 1.5; display: flex; gap: 10px; align-items: flex-start; }
+        .opt-warning-banner i { font-size: 18px; margin-top: 2px; }
+        
+        .opt-progress-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); z-index: 4000; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        .opt-progress-overlay.active { display: flex; }
+        .opt-progress-spinner { font-size: 60px; color: #a855f7; margin-bottom: 20px; }
+        .opt-progress-text { color: white; font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+        .opt-progress-detail { color: var(--text-muted); font-size: 13px; margin-bottom: 20px; max-width: 80%; text-align: center; }
+        .opt-progress-bar-wrap { width: 60%; max-width: 400px; height: 8px; background: var(--bg-panel); border-radius: 4px; overflow: hidden; }
+        .opt-progress-bar { height: 100%; background: linear-gradient(90deg, #a855f7, #7c3aed); width: 0%; transition: width 0.3s; }
+        
+        /* Mobil tweaks az opt-modal-xl-re */
+        @media (max-width: 768px) {
+            .opt-modal-xl { max-width: 100% !important; width: 100% !important; max-height: 100vh !important; border-radius: 0 !important; }
+            .opt-preview-cabinets { max-height: 45vh; grid-template-columns: 1fr; }
+            .opt-slot { font-size: 10px; height: 38px; }
+            .action-buttons .btn { padding: 8px 12px; font-size: 12px; }
+        }
+
         #printArea { display: none; }
         
         @media print {
@@ -577,6 +657,7 @@
                 </form>
 
                 <div class="action-buttons">
+                    <button class="btn btn-optimize" onclick="openOptimizeIntro()"><i class="fas fa-magic"></i> Optimalizálás</button>
                     <button class="btn btn-outline" style="border-color: var(--success); color: var(--success);" onclick="exportToCSV()"><i class="fas fa-file-csv"></i> CSV Export</button>
                     <button class="btn btn-primary" onclick="openModal()"><i class="fas fa-plus"></i> Új Stencil</button>
                     <button class="btn btn-print" onclick="openPrintModal()"><i class="fas fa-print"></i> Nyomtatás</button>
@@ -730,6 +811,114 @@
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeModal('missingModelsModal')">Bezárás</button>
             </div>
+        </div>
+    </div>
+
+    <!-- ===========================================
+         OPTIMALIZÁCIÓ MODALOK (csak hozzáadás)
+         =========================================== -->
+    
+    <!-- 1. INTRO modal: leírás + 3 stratégia kártya -->
+    <div class="modal-overlay" id="optimizeIntroModal">
+        <div class="modal-content opt-modal-wide">
+            <div class="modal-header" style="border-bottom-color: #a855f7;">
+                <span style="color: #c084fc;"><i class="fas fa-magic"></i> Szekrény Optimalizálás</span>
+                <button class="modal-close" onclick="closeModal('optimizeIntroModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="opt-intro">
+                    <strong><i class="fas fa-info-circle"></i> Mit csinál ez a funkció?</strong><br>
+                    A jelenlegi adatbázis stencil-elrendezését <strong>elemzi és átrendezési javaslatot készít</strong> a könnyebb keresés és gyorsabb munka érdekében. 
+                    <ul>
+                        <li>📊 Először <strong>előnézetet</strong> kapsz, ami pontosan mutatja: <em>mi marad a helyén</em>, <em>mit kell áthelyezni</em>, és <em>hova</em>.</li>
+                        <li>🛡️ Csak ha a <strong>megerősítő gombra</strong> kattintasz, akkor fogja az adatbázist módosítani.</li>
+                        <li>↩️ Bármikor <strong>visszaléphetsz</strong> — a Mégse gombbal nem történik semmi.</li>
+                        <li>📋 A javaslatot <strong>kinyomtathatod</strong> mielőtt fizikailag elkezded a rendezést.</li>
+                    </ul>
+                </div>
+                
+                <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">
+                    <i class="fas fa-cogs"></i> Válassz optimalizálási stratégiát:
+                </div>
+                
+                <div class="opt-strategy-grid">
+                    <div class="opt-strategy-card" onclick="runOptimization('model')">
+                        <div class="opt-icon"><i class="fas fa-layer-group"></i></div>
+                        <div class="opt-text-wrap">
+                            <div class="opt-name">Modell szerinti csoportosítás <span class="opt-recommended">Ajánlott</span></div>
+                            <div class="opt-desc">Az azonos modellhez tartozó maszkok (pl. összes Koito) <strong>egy szekrénybe</strong> kerülnek, lehetőleg folytonos polcokon. A legnépszerűbb modellek a legjobban hozzáférhető szekrényekbe. Modellnév nélküli maszkok külön a végére.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="opt-strategy-card" onclick="runOptimization('abc')">
+                        <div class="opt-icon"><i class="fas fa-sort-alpha-down"></i></div>
+                        <div class="opt-text-wrap">
+                            <div class="opt-name">ABC sorrend</div>
+                            <div class="opt-desc">Az összes maszk <strong>abc sorrendben</strong> kerül felsorolásra a szekrényekben (Szekrény 1 elejétől Szekrény 6 végéig). Nagyon gyors vizuális keresést tesz lehetővé szám szerint.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="opt-strategy-card" onclick="runOptimization('compact')">
+                        <div class="opt-icon"><i class="fas fa-compress-arrows-alt"></i></div>
+                        <div class="opt-text-wrap">
+                            <div class="opt-name">Kompakt töltés</div>
+                            <div class="opt-desc">A maszkok a <strong>jelenlegi sorrendben</strong> (szekrény+polc szerint) a legkisebb sorszámú szabad helyekre kerülnek — a hézagok eltűnnek. A legkisebb mozgatást igényli, de nem csoportosít.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('optimizeIntroModal')"><i class="fas fa-arrow-left"></i> Vissza (Mégse)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. PREVIEW modal: vizuális összehasonlítás -->
+    <div class="modal-overlay" id="optimizePreviewModal">
+        <div class="modal-content opt-modal-xl">
+            <div class="modal-header" style="border-bottom-color: #a855f7;">
+                <span style="color: #c084fc;"><i class="fas fa-eye"></i> Optimalizálási Előnézet <span id="optStrategyName" style="color: white; font-size: 13px; margin-left: 10px; font-weight: 400;"></span></span>
+                <button class="modal-close" onclick="closeModal('optimizePreviewModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="opt-preview-stats" id="optStatsContainer"></div>
+                
+                <div class="opt-warning-banner" id="optWarningBanner" style="display:none;">
+                    <i class="fas fa-info-circle"></i>
+                    <div id="optWarningText"></div>
+                </div>
+                
+                <div style="display: flex; gap: 15px; margin-bottom: 10px; align-items: center; flex-wrap: wrap;">
+                    <div style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;"><i class="fas fa-map"></i> Új szekrény elrendezés:</div>
+                    <div class="opt-legend">
+                        <div class="opt-legend-item"><div class="swatch stay"></div> A helyén marad</div>
+                        <div class="opt-legend-item"><div class="swatch move"></div> Át kell helyezni</div>
+                        <div class="opt-legend-item"><div class="swatch empty"></div> Üres</div>
+                    </div>
+                </div>
+                
+                <div class="opt-preview-cabinets" id="optPreviewCabinets"></div>
+                
+                <div style="margin-top: 15px;">
+                    <div style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;"><i class="fas fa-truck"></i> Pontos mozgatási lista (<span id="optMoveCount">0</span> tétel):</div>
+                    <div class="opt-movement-list" id="optMovementList"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('optimizePreviewModal')"><i class="fas fa-arrow-left"></i> Vissza</button>
+                <button class="btn btn-print" onclick="printOptimization()"><i class="fas fa-print"></i> Lista Nyomtatás</button>
+                <button class="btn btn-primary" id="optApplyBtn" onclick="confirmApplyOptimization()" style="background: linear-gradient(135deg, #a855f7, #7c3aed); border: none;"><i class="fas fa-check"></i> Átrendezés Végrehajtása</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. PROGRESS overlay: futás közben -->
+    <div class="opt-progress-overlay" id="optProgressOverlay">
+        <div class="opt-progress-spinner"><i class="fas fa-cog fa-spin"></i></div>
+        <div class="opt-progress-text" id="optProgressText">Átrendezés folyamatban...</div>
+        <div class="opt-progress-detail" id="optProgressDetail">Az adatbázis frissítése. Kérlek várj.</div>
+        <div class="opt-progress-bar-wrap">
+            <div class="opt-progress-bar" id="optProgressBar"></div>
         </div>
     </div>
 
@@ -1092,6 +1281,451 @@
         closeModal('printModal');
         setTimeout(() => { window.print(); }, 300);
     }
+
+    // ===========================================
+    // OPTIMALIZÁCIÓ - 3 stratégia + biztonságos apply
+    // ===========================================
+    
+    let currentOptimizationPlan = null;  // a kiszámolt új elrendezés (maszk -> {szekreny, polc})
+    let currentOptimizationStrategy = '';
+
+    window.openOptimizeIntro = function() {
+        if (!window.stencilData || window.stencilData.length === 0) {
+            showToast("Nincs még adat amit optimalizálni lehetne!");
+            return;
+        }
+        document.getElementById('optimizeIntroModal').classList.add('active');
+    };
+
+    // A SZEKRÉNYEK KAPACITÁSA - ahogy a cabinetsConfig definiálja
+    function getCabinetSlots(cab) {
+        const slots = [];
+        for (let i = cab.start; i <= cab.end; i++) slots.push(i);
+        return slots;
+    }
+    
+    function totalCapacity() {
+        return window.cabinetsConfig.reduce((acc, c) => acc + (c.end - c.start + 1), 0);
+    }
+
+    // --- STRATÉGIA 1: MODELL SZERINTI CSOPORTOSÍTÁS ---
+    // Az azonos modellhez tartozó maszkok egy szekrénybe csoportosulnak.
+    // A legnagyobb csoportoknak adjuk először a helyet (first-fit decreasing).
+    function strategyByModel() {
+        // Csoportosítás modell szerint
+        const groups = {};
+        const noModelItems = [];
+        
+        window.stencilData.forEach(item => {
+            if (item.modell && item.modell.trim() !== "") {
+                const key = item.modell.trim().toUpperCase();
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(item);
+            } else {
+                noModelItems.push(item);
+            }
+        });
+        
+        // Csoportokat méret szerint csökkenő sorrendbe
+        const sortedGroups = Object.keys(groups).map(k => ({
+            modell: k,
+            items: groups[k].sort((a, b) => a.maszk.localeCompare(b.maszk, undefined, {numeric: true}))
+        })).sort((a, b) => b.items.length - a.items.length);
+
+        // Szekrények kapacitása (másolat)
+        const cabs = window.cabinetsConfig.map(c => ({
+            name: c.name, 
+            start: c.start, 
+            end: c.end, 
+            capacity: c.end - c.start + 1,
+            assigned: []
+        }));
+
+        const plan = {};
+        const unplaced = [];
+
+        // First-fit decreasing: minden csoportot megpróbálunk teljes egészében egy szekrénybe tenni
+        sortedGroups.forEach(grp => {
+            // Keressünk olyan szekrényt amibe BELEFÉR az egész csoport
+            let target = cabs.find(c => (c.capacity - c.assigned.length) >= grp.items.length);
+            
+            if (target) {
+                grp.items.forEach(item => target.assigned.push(item));
+            } else {
+                // Nem fér be sehol egészben → szét kell osztanunk
+                grp.items.forEach(item => {
+                    const c = cabs.find(c => c.assigned.length < c.capacity);
+                    if (c) c.assigned.push(item); else unplaced.push(item);
+                });
+            }
+        });
+
+        // No-model item-ek a végére - oda ahol még van hely
+        noModelItems.sort((a, b) => a.maszk.localeCompare(b.maszk, undefined, {numeric: true})).forEach(item => {
+            const c = cabs.find(c => c.assigned.length < c.capacity);
+            if (c) c.assigned.push(item); else unplaced.push(item);
+        });
+
+        // Most a szekrényeken belül polc-számokra leképezés (folytonosan)
+        cabs.forEach(c => {
+            const slots = getCabinetSlots(c);
+            c.assigned.forEach((item, idx) => {
+                if (idx < slots.length) {
+                    plan[item.maszk] = { szekreny: c.name, polc: slots[idx], modell: item.modell || '', megjegyzes: item.megjegyzes || '' };
+                }
+            });
+        });
+
+        return { plan, unplaced, strategyName: 'Modell szerinti csoportosítás' };
+    }
+
+    // --- STRATÉGIA 2: ABC SORREND ---
+    // Maszkok abc sorrendben (numerikus érzékenységgel) elhelyezve szekrényenként folytonosan.
+    function strategyABC() {
+        const sorted = [...window.stencilData].sort((a, b) => 
+            a.maszk.localeCompare(b.maszk, undefined, {numeric: true, sensitivity: 'base'})
+        );
+
+        const plan = {};
+        const unplaced = [];
+        let cursor = 0;
+
+        window.cabinetsConfig.forEach(cab => {
+            const slots = getCabinetSlots(cab);
+            for (let i = 0; i < slots.length && cursor < sorted.length; i++) {
+                const item = sorted[cursor++];
+                plan[item.maszk] = { szekreny: cab.name, polc: slots[i], modell: item.modell || '', megjegyzes: item.megjegyzes || '' };
+            }
+        });
+
+        for (; cursor < sorted.length; cursor++) unplaced.push(sorted[cursor]);
+
+        return { plan, unplaced, strategyName: 'ABC sorrend' };
+    }
+
+    // --- STRATÉGIA 3: KOMPAKT TÖLTÉS ---
+    // A maszkok a jelenlegi sorrendben (szekrény+polc szerint), kompakt módon az elejétől.
+    function strategyCompact() {
+        const sorted = [...window.stencilData].sort((a, b) => 
+            a.szekreny.localeCompare(b.szekreny) || parseInt(a.polc) - parseInt(b.polc)
+        );
+
+        const plan = {};
+        const unplaced = [];
+        let cursor = 0;
+
+        window.cabinetsConfig.forEach(cab => {
+            const slots = getCabinetSlots(cab);
+            for (let i = 0; i < slots.length && cursor < sorted.length; i++) {
+                const item = sorted[cursor++];
+                plan[item.maszk] = { szekreny: cab.name, polc: slots[i], modell: item.modell || '', megjegyzes: item.megjegyzes || '' };
+            }
+        });
+
+        for (; cursor < sorted.length; cursor++) unplaced.push(sorted[cursor]);
+
+        return { plan, unplaced, strategyName: 'Kompakt töltés' };
+    }
+
+    window.runOptimization = function(strategy) {
+        closeModal('optimizeIntroModal');
+        currentOptimizationStrategy = strategy;
+        
+        let result;
+        if (strategy === 'model') result = strategyByModel();
+        else if (strategy === 'abc') result = strategyABC();
+        else if (strategy === 'compact') result = strategyCompact();
+        else { showToast("Ismeretlen stratégia!"); return; }
+
+        currentOptimizationPlan = result;
+        renderOptimizationPreview(result);
+    };
+
+    function renderOptimizationPreview(result) {
+        const { plan, unplaced, strategyName } = result;
+        
+        // Statisztikák számítása
+        let stayCount = 0, moveCount = 0;
+        const movements = [];
+        
+        window.stencilData.forEach(item => {
+            const newLoc = plan[item.maszk];
+            if (!newLoc) return;
+            
+            if (newLoc.szekreny === item.szekreny && parseInt(newLoc.polc) === parseInt(item.polc)) {
+                stayCount++;
+            } else {
+                moveCount++;
+                movements.push({
+                    maszk: item.maszk,
+                    modell: item.modell || '',
+                    from: { szekreny: item.szekreny, polc: parseInt(item.polc) },
+                    to: { szekreny: newLoc.szekreny, polc: parseInt(newLoc.polc) }
+                });
+            }
+        });
+
+        // Mozgatási listát rendezünk: szekrény + polc szerint
+        movements.sort((a, b) => 
+            a.to.szekreny.localeCompare(b.to.szekreny) || a.to.polc - b.to.polc
+        );
+
+        // Stratégia név
+        document.getElementById('optStrategyName').innerText = '— ' + strategyName;
+
+        // Stat kártyák
+        const totalItems = window.stencilData.length;
+        const movePct = totalItems > 0 ? Math.round((moveCount / totalItems) * 100) : 0;
+        document.getElementById('optStatsContainer').innerHTML = `
+            <div class="opt-stat-card"><div class="v">${totalItems}</div><div class="l">Összes Maszk</div></div>
+            <div class="opt-stat-card stay"><div class="v">${stayCount}</div><div class="l">Helyén marad</div></div>
+            <div class="opt-stat-card move"><div class="v">${moveCount}</div><div class="l">Áthelyezendő</div></div>
+            <div class="opt-stat-card percent"><div class="v">${movePct}%</div><div class="l">Mozgatás aránya</div></div>
+        `;
+
+        // Figyelmeztetések
+        const warningBanner = document.getElementById('optWarningBanner');
+        const warningText = document.getElementById('optWarningText');
+        let warnings = [];
+        if (unplaced.length > 0) {
+            warnings.push(`<strong>⚠️ ${unplaced.length} maszk nem fért el</strong>: ${unplaced.map(u => u.maszk).slice(0,5).join(', ')}${unplaced.length > 5 ? '...' : ''}. Ezek a maszkok az aktuális helyükön maradnak.`);
+        }
+        if (moveCount === 0) {
+            warnings.push(`<strong>✅ A jelenlegi elrendezés már optimális!</strong> Nincs szükség mozgatásra.`);
+        }
+        if (warnings.length > 0) {
+            warningText.innerHTML = warnings.join('<br>');
+            warningBanner.style.display = 'flex';
+        } else {
+            warningBanner.style.display = 'none';
+        }
+
+        // Szekrény preview renderelés
+        const cabContainer = document.getElementById('optPreviewCabinets');
+        cabContainer.innerHTML = '';
+        
+        // Az új elrendezés szerinti reverse map: cabName -> polc -> item
+        const newLayout = {};
+        Object.keys(plan).forEach(maszk => {
+            const loc = plan[maszk];
+            if (!newLayout[loc.szekreny]) newLayout[loc.szekreny] = {};
+            // A jelenlegi adatból kell tudni a régi helyét is
+            const origItem = window.stencilData.find(d => d.maszk === maszk);
+            newLayout[loc.szekreny][loc.polc] = {
+                maszk,
+                modell: loc.modell,
+                origSzekreny: origItem ? origItem.szekreny : '?',
+                origPolc: origItem ? parseInt(origItem.polc) : 0,
+                isStay: origItem && origItem.szekreny === loc.szekreny && parseInt(origItem.polc) === parseInt(loc.polc)
+            };
+        });
+        
+        window.cabinetsConfig.forEach(cab => {
+            const cabDiv = document.createElement('div');
+            cabDiv.className = 'opt-cab';
+            let slotsHtml = '';
+            for (let i = cab.start; i <= cab.end; i++) {
+                const item = newLayout[cab.name] && newLayout[cab.name][i];
+                if (item) {
+                    const cls = item.isStay ? 'stay' : 'move';
+                    const fromTag = !item.isStay 
+                        ? `<span class="opt-slot-from" title="Eredetileg: ${item.origSzekreny}, ${item.origPolc}. polc">←${item.origPolc}</span>` 
+                        : '';
+                    slotsHtml += `<div class="opt-slot ${cls}" title="${item.maszk}${item.modell ? ' / ' + item.modell : ''}${!item.isStay ? ' (eredetileg: ' + item.origSzekreny + ', ' + item.origPolc + '. polc)' : ''}"><span class="opt-slot-num">${i}</span>${item.maszk}${fromTag}</div>`;
+                } else {
+                    slotsHtml += `<div class="opt-slot empty"><span class="opt-slot-num">${i}</span>Üres</div>`;
+                }
+            }
+            cabDiv.innerHTML = `<div class="opt-cab-header">${cab.name}</div><div class="opt-slots">${slotsHtml}</div>`;
+            cabContainer.appendChild(cabDiv);
+        });
+
+        // Mozgatási lista
+        document.getElementById('optMoveCount').innerText = movements.length;
+        const mvList = document.getElementById('optMovementList');
+        if (movements.length === 0) {
+            mvList.innerHTML = '<div style="text-align:center; color:var(--success); padding: 15px; font-style: italic;"><i class="fas fa-check-circle"></i> Egyetlen maszkot sem kell mozgatni!</div>';
+        } else {
+            mvList.innerHTML = movements.map(m => `
+                <div class="opt-mv-row">
+                    <span class="opt-mv-mask">${m.maszk}</span>
+                    ${m.modell ? `<span class="opt-mv-model">${m.modell}</span>` : '<span style="margin-right: auto;"></span>'}
+                    <span class="opt-mv-from">${m.from.szekreny}, ${m.from.polc}. polc</span>
+                    <span class="opt-mv-arrow"><i class="fas fa-arrow-right"></i></span>
+                    <span class="opt-mv-to">${m.to.szekreny}, ${m.to.polc}. polc</span>
+                </div>
+            `).join('');
+        }
+
+        // Az apply gombot tiltsuk ha nincs mit mozgatni
+        const applyBtn = document.getElementById('optApplyBtn');
+        if (moveCount === 0) {
+            applyBtn.disabled = true;
+            applyBtn.style.opacity = '0.4';
+            applyBtn.style.cursor = 'not-allowed';
+            applyBtn.innerHTML = '<i class="fas fa-check"></i> Nincs Mit Végrehajtani';
+        } else {
+            applyBtn.disabled = false;
+            applyBtn.style.opacity = '1';
+            applyBtn.style.cursor = 'pointer';
+            applyBtn.innerHTML = `<i class="fas fa-check"></i> Átrendezés Végrehajtása (${moveCount} db)`;
+        }
+
+        // Eltároljuk a movements listát a print-hez és az apply-hoz
+        currentOptimizationPlan.movements = movements;
+
+        document.getElementById('optimizePreviewModal').classList.add('active');
+    }
+
+    window.confirmApplyOptimization = function() {
+        if (!currentOptimizationPlan || !currentOptimizationPlan.movements || currentOptimizationPlan.movements.length === 0) {
+            showToast("Nincs mit átrendezni!");
+            return;
+        }
+        
+        const moveCount = currentOptimizationPlan.movements.length;
+        
+        customConfirm(
+            '<i class="fas fa-exclamation-triangle" style="color: var(--warning);"></i> Végső Megerősítés',
+            `Most fogod <strong style="color: #c084fc;">${moveCount} darab maszkot</strong> új helyre rendezni az adatbázisban.<br><br>
+            <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); padding: 10px; border-radius: 6px; margin: 10px 0;">
+                <strong>⚠️ FONTOS:</strong> Ez csak az ADATBÁZIST módosítja. A fizikai stencilek mozgatását <strong>NEKED kell megtenned</strong> a szekrényekben!
+            </div>
+            Kinyomtattad már a listát? Készen állsz a fizikai átrendezésre is?`,
+            'Igen, Hajtsd Végre',
+            applyOptimization
+        );
+    };
+
+    async function applyOptimization() {
+        const overlay = document.getElementById('optProgressOverlay');
+        const bar = document.getElementById('optProgressBar');
+        const txt = document.getElementById('optProgressText');
+        const det = document.getElementById('optProgressDetail');
+        
+        overlay.classList.add('active');
+        
+        const movements = currentOptimizationPlan.movements;
+        const total = movements.length;
+        let done = 0;
+        let errors = 0;
+        
+        try {
+            // BIZTONSÁGOS ÁTRENDEZÉS:
+            // Mivel a Firestore-ban a doc id = maszk, és nincs ütközés (a maszk nem változik, csak a szekreny+polc),
+            // egyszerűen overwriteoljuk minden mozgatandó dokumentumot.
+            // A maszkok nem törlődnek, csak a szekreny és polc mezője módosul.
+            for (const mv of movements) {
+                txt.innerText = `Átrendezés folyamatban... (${done + 1}/${total})`;
+                det.innerText = `${mv.maszk}: ${mv.from.szekreny}, ${mv.from.polc}. polc → ${mv.to.szekreny}, ${mv.to.polc}. polc`;
+                bar.style.width = `${Math.round((done / total) * 100)}%`;
+                
+                // Az eredeti item-et megtartjuk minden mezőjével, csak a helyet írjuk át
+                const origItem = window.stencilData.find(d => d.maszk === mv.maszk);
+                if (!origItem) { errors++; done++; continue; }
+                
+                try {
+                    await window.saveToFirebase({
+                        maszk: mv.maszk,
+                        modell: origItem.modell || '',
+                        megjegyzes: origItem.megjegyzes || '',
+                        szekreny: mv.to.szekreny,
+                        polc: mv.to.polc
+                    });
+                } catch (e) {
+                    console.error("Hiba az átrendezésnél:", mv.maszk, e);
+                    errors++;
+                }
+                done++;
+            }
+            
+            bar.style.width = '100%';
+            txt.innerText = 'Sikeres átrendezés!';
+            det.innerText = errors > 0 ? `${done - errors} sikeres, ${errors} hiba` : `${done} maszk sikeresen áthelyezve.`;
+            
+            setTimeout(() => {
+                overlay.classList.remove('active');
+                closeModal('optimizePreviewModal');
+                if (errors > 0) {
+                    showToast(`Befejeződött: ${done - errors} sikeres, ${errors} hiba`);
+                } else {
+                    showToast(`Optimalizálás sikeres! ${done} maszk áthelyezve.`);
+                }
+                currentOptimizationPlan = null;
+            }, 1500);
+        } catch (e) {
+            overlay.classList.remove('active');
+            alert("Hiba az optimalizálás közben: " + e.message);
+        }
+    }
+    
+    // Nyomtatás: Optimalizációs lista
+    window.printOptimization = function() {
+        if (!currentOptimizationPlan || !currentOptimizationPlan.movements) {
+            showToast("Nincs mit nyomtatni!");
+            return;
+        }
+        const movements = currentOptimizationPlan.movements;
+        const strategyName = currentOptimizationPlan.strategyName;
+        
+        const printArea = document.getElementById('printArea');
+        const dateStr = new Date().toLocaleString('hu-HU');
+        
+        let html = `
+            <div style="font-family: Arial, sans-serif; color: black; padding: 20px;">
+                <h1 style="text-align: center; border-bottom: 2px solid black; padding-bottom: 10px; margin-bottom: 15px;">OPTIMALIZÁCIÓS LISTA</h1>
+                <div style="margin-bottom: 20px; font-size: 12pt;">
+                    <strong>Stratégia:</strong> ${strategyName}<br>
+                    <strong>Készítés:</strong> ${dateStr}<br>
+                    <strong>Mozgatandó maszkok:</strong> ${movements.length} db
+                </div>
+                <table style="width: 100%; border-collapse: collapse; border: 2px solid black;">
+                    <thead>
+                        <tr style="background: #d1d5db;">
+                            <th style="border: 1px solid black; padding: 6px; text-align: left;">#</th>
+                            <th style="border: 1px solid black; padding: 6px; text-align: left;">Maszk</th>
+                            <th style="border: 1px solid black; padding: 6px; text-align: left;">Modell</th>
+                            <th style="border: 1px solid black; padding: 6px; text-align: left;">Honnan</th>
+                            <th style="border: 1px solid black; padding: 6px; text-align: left;">Hová</th>
+                            <th style="border: 1px solid black; padding: 6px; text-align: center;">✓</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        movements.forEach((m, idx) => {
+            html += `
+                <tr ${idx % 2 === 0 ? 'style="background: #f3f4f6;"' : ''}>
+                    <td style="border: 1px solid black; padding: 5px;">${idx + 1}</td>
+                    <td style="border: 1px solid black; padding: 5px;"><strong>${m.maszk}</strong></td>
+                    <td style="border: 1px solid black; padding: 5px;">${m.modell || '-'}</td>
+                    <td style="border: 1px solid black; padding: 5px;">${m.from.szekreny}, ${m.from.polc}. polc</td>
+                    <td style="border: 1px solid black; padding: 5px; font-weight: bold;">${m.to.szekreny}, ${m.to.polc}. polc</td>
+                    <td style="border: 1px solid black; padding: 5px; text-align: center; font-size: 16pt;">☐</td>
+                </tr>
+            `;
+        });
+        html += `
+                    </tbody>
+                </table>
+                <div style="margin-top: 30px; font-size: 10pt; color: #555; text-align: center;">
+                    InvenPro Optimalizálási Lista | Kinyomtatva: ${dateStr}
+                </div>
+            </div>
+        `;
+        
+        // Felülírjuk a printArea-t és átkapcsoljuk display-re a nyomtatás idejére
+        const origPrintArea = printArea.innerHTML;
+        printArea.innerHTML = html;
+        // A meglévő print CSS-ben az #printArea már display:block jellemzőkkel rendelkezik,
+        // így a window.print() automatikusan ezt a tartalmat fogja kinyomtatni.
+        // FIGYELEM: a print stílusok az .print-table-re vannak optimalizálva, ezért
+        // saját inline stílusokat is használunk a táblázatban (border, padding, etc).
+        setTimeout(() => { 
+            window.print(); 
+            // Visszaállítjuk a printArea-t (későbbi szekrény nyomtatáshoz)
+            setTimeout(() => { printArea.innerHTML = origPrintArea; }, 500);
+        }, 300);
+    };
 
 </script>
 </body>
