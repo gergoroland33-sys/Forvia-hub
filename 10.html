@@ -582,16 +582,32 @@
             }
         });
         
+        // --- JAVÍTÁS: Betonbiztos logika, ami meggátolja a szimuláció éjféli "átugrását" ---
+        let realTodayForSim = new Date();
+        let logicalTodayForSim = new Date(realTodayForSim);
+        if (logicalTodayForSim.getHours() < 6) {
+            logicalTodayForSim.setDate(logicalTodayForSim.getDate() - 1);
+        }
+        logicalTodayForSim.setHours(0, 0, 0, 0);
+
         let simDate;
         if (lastRecordedCarry) {
             simDate = new Date(lastRecordedCarry);
             simDate.setDate(simDate.getDate() + 1);
+            
+            // Biztosítjuk, hogy a szimuláció semmiképp se kezdődjön később, mint a "mai" logikai műszakunk.
+            // Ez gátolja meg, hogy éjfélkor üres legyen a képernyő (legyen "mai" generált adat is)
+            if (simDate.getTime() > logicalTodayForSim.getTime()) {
+                simDate = new Date(logicalTodayForSim);
+            }
         } else {
-            simDate = new Date();
+            // Ha nincs történet (pl. friss nullázás), pontosan a mai műszak naptól indítunk.
+            simDate = new Date(logicalTodayForSim);
         }
         simDate.setHours(0, 0, 0, 0);
+        // --- JAVÍTÁS VÉGE ---
         
-        let endDate = new Date();
+        let endDate = new Date(logicalTodayForSim);
         endDate.setDate(endDate.getDate() + 45); 
         endDate.setHours(0, 0, 0, 0);
 
@@ -723,13 +739,12 @@
             return;
         }
 
-        // --- ⏱️ IDŐ- ÉS MŰSZAK-TUDATOS MEGJELENÍTÉS ---
         let realToday = new Date();
         let currentHours = realToday.getHours();
         
         let logicalToday = new Date(realToday);
         let shiftLabel = "";
-        let displayStatus = "ACTIVE"; // "ACTIVE" vagy "REST"
+        let displayStatus = "ACTIVE"; 
         let restSubtext = "";
 
         if (currentHours >= 6 && currentHours < 18) {
@@ -790,7 +805,6 @@
             return;
         }
 
-        // --- AKTÍV MŰSZAK LOGIKÁJA ---
         let dateKey = getDateKey(logicalToday);
         let workers = ["-", "-"];
         
