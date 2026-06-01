@@ -278,15 +278,18 @@
     const FIXED_SHIFT = "C";
     const VERSION_KEY = "v4_quota_system";
 
-    function isCShiftWorkingDay(date) {
+    function getShiftType(date) {
         const utc = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
         const diffDays = Math.floor((utc - SHIFT_ANCHOR.getTime()) / 86400000);
         const cycleDay = ((diffDays % 12) + 12) % 12;
-        return (cycleDay >= 3 && cycleDay <= 5) || (cycleDay >= 9 && cycleDay <= 11);
+        if (cycleDay >= 3 && cycleDay <= 5) return "DAY";
+        if (cycleDay >= 9 && cycleDay <= 11) return "NIGHT";
+        return "FREE";
     }
 
     function isWorkingDay(date) {
-        return isCShiftWorkingDay(date);
+        const type = getShiftType(date);
+        return type === "DAY" || type === "NIGHT";
     }
 
     // ==========================================
@@ -379,13 +382,10 @@
         if (sysSettings) {
             calculateAllSchedules();
             renderUI();
-            
-            // Ha nyitva van az admin panel, azt is frissítsük azonnal, mikor a Firebase adat változik (pl. nullázás)
             if (document.getElementById('adminPanel') && document.getElementById('adminPanel').style.display === 'block') {
                 renderAdminRoster();
                 renderFairnessAdmin();
             }
-            
             hasRenderedOnce = true;
         }
     }
@@ -636,9 +636,6 @@
     function recordTodayCarry(dateKey, worker1, worker2) {
         if (!worker1 || !worker2 || worker1 === "-" || worker2 === "-") return;
         if (worker1 === worker2) return;
-        
-        // A Dátum ellenőrzés blokkolta a műszakváltás és a másnapra tolt műszakok (18:00 utáni) rögzítését, ezt kivettem.
-        // A renderUI már kiszámolta a megfelelő dateKey-t, amit továbbít ide, így azt kell alapul venni.
 
         const dailyAbsences = absences[dateKey] || {};
         if (dailyAbsences[worker1] || dailyAbsences[worker2]) return;
@@ -714,32 +711,6 @@
         const list = document.getElementById('upcomingList');
         hero.innerHTML = ''; list.innerHTML = '';
 
-        // --- OKOS MŰSZAK-LÉPTETÉS ---
-        let realToday = new Date();
-        let logicalToday = new Date(realToday);
-        
-        // Alapeset: hajnali 0-6 között még az előző naptári nap logikája él
-        if (logicalToday.getHours() < 6) {
-            logicalToday.setDate(logicalToday.getDate() - 1);
-        }
-        logicalToday.setHours(0,0,0,0);
-
-        // Megnézzük, hogy ez a logikai nap (06:00-tól kezdődően) NAPPALOS-e
-        let utc = Date.UTC(logicalToday.getFullYear(), logicalToday.getMonth(), logicalToday.getDate());
-        let diffDays = Math.floor((utc - SHIFT_ANCHOR.getTime()) / 86400000);
-        let cycleDay = ((diffDays % 12) + 12) % 12;
-        let isDayShift = (cycleDay >= 3 && cycleDay <= 5);
-
-        // Ha NAPPALOS műszak van, és az óra már elütötte a 18:00-t (vagy már < 6 van másnap reggel)
-        // akkor a nappalos műszak véget ért, a kijelzőt rá kell tolni a HOLNAPI műszakra!
-        if (isDayShift && (realToday.getHours() >= 18 || realToday.getHours() < 6)) {
-            logicalToday.setDate(logicalToday.getDate() + 1);
-        }
-
-        // Ez a végleges nap, aminek a párosát mutatni kell
-        let today = logicalToday;
-        // --- LÉPTETÉS VÉGE ---
-
         const headerHTML = `<div class="header-pill" onclick="openAdmin()">C MŰSZAK BEOSZTÁS</div>`;
 
         if (!sysSettings.roster || sysSettings.roster.length === 0) {
@@ -752,19 +723,75 @@
             return;
         }
 
-        if (!isWorkingDay(today)) {
+        // --- ⏱️ IDŐ- ÉS MŰSZAK-TUDATOS MEGJELENÍTÉS ---
+        let realToday = new Date();
+        let currentHours = realToday.getHours();
+        
+        let logicalToday = new Date(realToday);
+        let shiftLabel = "";
+        let displayStatus = "ACTIVE"; // "ACTIVE" vagy "REST"
+        let restSubtext = "";
+
+        if (currentHours >= 6 && currentHours < 18) {
+            // NAPPALI IDŐSÁV (06:00 - 18:00)
+            logicalToday.setHours(0,0,0,0);
+            const type = getShiftType(logicalToday);
+            
+            if (type === "DAY") {
+                shiftLabel = "NAPPALI MŰSZAK";
+                displayStatus = "ACTIVE";
+            } else if (type === "NIGHT") {
+                shiftLabel = "Pihenőidő";
+                displayStatus = "REST";
+                restSubtext = "Felkészülés az éjszakás műszakra (Kezdés 18:00-kor)";
+            } else {
+                shiftLabel = "Pihenőnap";
+                displayStatus = "REST";
+                restSubtext = "Ma a C műszak teljesen szabadnapos.";
+            }
+        } else {
+            // ÉJSZAKAI IDŐSÁV (18:00 - 06:00)
+            if (currentHours < 6) {
+                logicalToday.setDate(logicalToday.getDate() - 1);
+            }
+            logicalToday.setHours(0,0,0,0);
+            const type = getShiftType(logicalToday);
+            
+            if (type === "NIGHT") {
+                shiftLabel = "ÉJSZAKÁS MŰSZAK";
+                displayStatus = "ACTIVE";
+            } else {
+                let nextDay = new Date(logicalToday);
+                nextDay.setDate(nextDay.getDate() + 1);
+                
+                if (getShiftType(nextDay) === "DAY") {
+                    shiftLabel = "Pihenőidő";
+                    displayStatus = "REST";
+                    restSubtext = "Pihenés a reggeli nappali műszak előtt (Kezdés 06:00-kor)";
+                } else {
+                    shiftLabel = "Pihenőnap";
+                    displayStatus = "REST";
+                    restSubtext = "A C műszak éjszakája pihenő.";
+                }
+            }
+        }
+
+        let todayStr = logicalToday.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric', weekday: 'long' });
+
+        if (displayStatus === "REST") {
             hero.innerHTML = `${headerHTML}
                 <div style="text-align: center; margin-top: 40px; opacity: 0.7;">
                     <div style="font-size: 3rem; margin-bottom: 8px; filter: grayscale(100%);">😴</div>
-                    <h2 style="color:white; font-weight: 600; margin: 0;">Pihenőnap</h2>
-                    <p style="color:var(--text-dim); margin-top: 4px;">Ma a C műszak pihen.</p>
+                    <h2 style="color:white; font-weight: 600; margin: 0;">${shiftLabel}</h2>
+                    <p style="color:var(--text-dim); margin-top: 4px;">${restSubtext}</p>
                 </div>
                 ${renderFrontFairness()}`;
-            fillUpcomingList(today, list);
+            fillUpcomingList(logicalToday, list);
             return;
         }
 
-        let dateKey = getDateKey(today);
+        // --- AKTÍV MŰSZAK LOGIKÁJA ---
+        let dateKey = getDateKey(logicalToday);
         let workers = ["-", "-"];
         
         let alreadyCarriedToday = [];
@@ -784,22 +811,11 @@
         }
 
         let dailyAbs = absences[dateKey] || {};
-        let todayStr = today.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric', weekday: 'long' });
-
         let absHTML = Object.keys(dailyAbs).length > 0 ? 
             `<div class="absent-row">Hiányzik: ${Object.keys(dailyAbs).map(n => `<span class="absent-pill" onclick="undoAbsent('${dateKey}', '${n}')" title="Koppints a visszavonáshoz">${n} ↩</span>`).join('')}</div>` : '';
 
         const w0Count = (workerStats[workers[0]] && workerStats[workers[0]].carries) || 0;
         const w1Count = (workerStats[workers[1]] && workerStats[workers[1]].carries) || 0;
-
-        // --- OKOS MŰSZAK CÍMKE ---
-        // A felirat mostantól konkrétan a mutatott naphoz igazodik, nem az aktuális órához
-        let tUtc = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
-        let tDiffDays = Math.floor((tUtc - SHIFT_ANCHOR.getTime()) / 86400000);
-        let tCycleDay = ((tDiffDays % 12) + 12) % 12;
-        let isTodayNightShift = (tCycleDay >= 9 && tCycleDay <= 11);
-        let shiftLabel = isTodayNightShift ? "ÉJSZAKÁS MŰSZAK" : "NAPPALI MŰSZAK";
-        // --- OKOS CÍMKE VÉGE ---
 
         hero.innerHTML = `
             ${headerHTML}
@@ -822,7 +838,7 @@
             </div>
             ${renderFrontFairness()}`;
 
-        fillUpcomingList(today, list);
+        fillUpcomingList(logicalToday, list);
     }
     
     function renderFrontFairness() {
@@ -1148,7 +1164,7 @@
         sysSettings.roster.forEach(name => {
             newStats[name] = { 
                 carries: 0, 
-                lastDate: null, // FIX: Kifejezetten null-ra állítva a tisztítás végett
+                lastDate: null,
                 joinDate: todayKey 
             };
         });
