@@ -379,6 +379,13 @@
         if (sysSettings) {
             calculateAllSchedules();
             renderUI();
+            
+            // Ha nyitva van az admin panel, azt is frissítsük azonnal, mikor a Firebase adat változik (pl. nullázás)
+            if (document.getElementById('adminPanel') && document.getElementById('adminPanel').style.display === 'block') {
+                renderAdminRoster();
+                renderFairnessAdmin();
+            }
+            
             hasRenderedOnce = true;
         }
     }
@@ -630,12 +637,9 @@
         if (!worker1 || !worker2 || worker1 === "-" || worker2 === "-") return;
         if (worker1 === worker2) return;
         
-        const today = new Date();
-        if (today.getHours() < 6) today.setDate(today.getDate() - 1);
-        const todayKey = getDateKey(today);
-        
-        if (dateKey !== todayKey) return;
-        
+        // A Dátum ellenőrzés blokkolta a műszakváltás és a másnapra tolt műszakok (18:00 utáni) rögzítését, ezt kivettem.
+        // A renderUI már kiszámolta a megfelelő dateKey-t, amit továbbít ide, így azt kell alapul venni.
+
         const dailyAbsences = absences[dateKey] || {};
         if (dailyAbsences[worker1] || dailyAbsences[worker2]) return;
         
@@ -1144,6 +1148,7 @@
         sysSettings.roster.forEach(name => {
             newStats[name] = { 
                 carries: 0, 
+                lastDate: null, // FIX: Kifejezetten null-ra állítva a tisztítás végett
                 joinDate: todayKey 
             };
         });
