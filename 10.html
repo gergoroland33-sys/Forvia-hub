@@ -21,24 +21,166 @@
         
         body { background-color: var(--bg-dark); color: var(--text-main); margin: 0; padding: 0; min-height: 100dvh; display: flex; flex-direction: column; }
         
-        .hero-section { flex-shrink: 0; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; padding: 65px 20px 12px 20px; position: relative; background: radial-gradient(circle at top right, #2e1065 0%, transparent 50%), radial-gradient(circle at bottom left, #1e1b4b 0%, transparent 50%); z-index: 1; }
+        /* ✨ PREMIUM ANIMÁCIÓK */
+        @keyframes bgFloat {
+            0% { background-position: 0% 0%, 100% 100%; }
+            100% { background-position: 30% 10%, 70% 90%; }
+        }
+        @keyframes pillBorderShine {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        @keyframes nameShine {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        @keyframes shimmerSweep {
+            0% { transform: translateX(-100%); }
+            60%, 100% { transform: translateX(200%); }
+        }
+        @keyframes labelGlow {
+            0%, 100% { 
+                background-position: 0% 50%;
+                filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.4));
+            }
+            50% { 
+                background-position: 100% 50%;
+                filter: drop-shadow(0 0 16px rgba(139, 92, 246, 0.5));
+            }
+        }
+        @keyframes separatorPulse {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        @keyframes gentleFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        @keyframes cardEntry {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes restGlow {
+            0%, 100% { box-shadow: 0 0 30px rgba(139, 92, 246, 0.1); }
+            50% { box-shadow: 0 0 50px rgba(139, 92, 246, 0.25); }
+        }
+        @keyframes carryPop {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; text-shadow: 0 0 8px rgba(6, 182, 212, 0.6); }
+        }
+        
+        .hero-section { flex-shrink: 0; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; padding: 65px 20px 12px 20px; position: relative; background: radial-gradient(circle at 20% 0%, #2e1065 0%, transparent 50%), radial-gradient(circle at 80% 100%, #1e1b4b 0%, transparent 50%); background-size: 200% 200%; animation: bgFloat 20s ease-in-out infinite alternate; z-index: 1; }
         
         .header-pill { position: absolute; top: 18px; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); padding: 8px 16px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); color: var(--text-dim); letter-spacing: 1px; transition: all 0.2s; }
         .header-pill:hover { border-color: var(--primary); color: white; }
         
         .today-card { width: 100%; max-width: 360px; text-align: center; }
-        .today-label { font-size: 0.85rem; color: var(--accent); font-weight: 700; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px;}
+        .today-label { 
+            font-size: 0.95rem; font-weight: 800; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 2px;
+            background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 50%, #06b6d4 100%);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: labelGlow 3s ease-in-out infinite;
+        }
         .today-date { font-size: 1rem; color: var(--text-dim); margin-bottom: 12px; }
         
         .pill-container { display: flex; justify-content: center; align-items: center; gap: 12px; margin-bottom: 5px; flex-wrap: wrap; }
-        .worker-pill { display: inline-flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(255,255,255,0.05); padding: 11px 22px; border-radius: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: all 0.2s ease; font-size: 1.4rem; font-weight: 800; color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 130px; position: relative; }
-        .worker-pill:hover { background: rgba(255,255,255,0.1); border-color: var(--primary); transform: translateY(-2px); }
-        .worker-pill .carry-count { font-size: 0.6rem; font-weight: 600; color: var(--text-dim); margin-top: 3px; letter-spacing: 0.5px; text-transform: uppercase; }
+        
+        /* ✨ PRÉMIUM WORKER PILL */
+        .worker-pill { 
+            display: inline-flex; flex-direction: column; justify-content: center; align-items: center; 
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(6, 182, 212, 0.12)); 
+            background-size: 200% 200%;
+            padding: 12px 22px; border-radius: 14px; cursor: pointer; 
+            border: 1px solid rgba(139, 92, 246, 0.3); 
+            transition: all 0.3s ease; 
+            font-size: 1.4rem; font-weight: 800; color: #fff; 
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.18), inset 0 1px 0 rgba(255,255,255,0.06); 
+            width: 130px; position: relative; overflow: hidden;
+            animation: pillBorderShine 6s ease-in-out infinite;
+        }
+        .worker-pill::after {
+            content: '';
+            position: absolute; top: 0; left: 0; 
+            width: 60%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+            transform: translateX(-100%);
+            animation: shimmerSweep 5s ease-in-out infinite;
+            pointer-events: none;
+        }
+        .worker-pill:hover { 
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(6, 182, 212, 0.2));
+            border-color: var(--primary); 
+            transform: translateY(-3px); 
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4), 0 0 0 2px rgba(139, 92, 246, 0.3);
+        }
+        .worker-pill .worker-name {
+            background: linear-gradient(135deg, #fff 0%, #ddd6fe 25%, #a5f3fc 50%, #ddd6fe 75%, #fff 100%);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: nameShine 4s ease-in-out infinite;
+            position: relative; z-index: 2;
+        }
+        .worker-pill .carry-count { 
+            font-size: 0.65rem; font-weight: 700; 
+            color: var(--accent); 
+            margin-top: 4px; letter-spacing: 0.5px; text-transform: uppercase;
+            animation: carryPop 3s ease-in-out infinite;
+            position: relative; z-index: 2;
+        }
+        
+        .pair-separator {
+            font-size: 1.5rem; font-weight: 300;
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: separatorPulse 2s ease-in-out infinite;
+        }
+        
         .instruction-text { font-size: 0.72rem; color: var(--text-dim); font-weight: normal; margin-top: 8px; opacity: 0.7; }
         
         .absent-row { font-size: 0.8rem; color: #f87171; display:flex; justify-content:center; gap:8px; flex-wrap: wrap; margin-bottom: 12px; }
         .absent-pill { cursor: pointer; background: rgba(248, 113, 113, 0.1); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(248, 113, 113, 0.2); transition: 0.2s; font-weight: 600;}
         .absent-pill:hover { background: rgba(248, 113, 113, 0.2); }
+        
+        /* ✨ PRÉMIUM REST CARD */
+        .rest-card {
+            width: 100%; max-width: 360px;
+            margin-top: 30px;
+            padding: 28px 24px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(6, 182, 212, 0.05));
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 18px;
+            text-align: center;
+            animation: restGlow 4s ease-in-out infinite, cardEntry 0.5s ease-out;
+            backdrop-filter: blur(8px);
+        }
+        .rest-emoji {
+            font-size: 3.5rem;
+            margin-bottom: 12px;
+            display: inline-block;
+            animation: gentleFloat 3s ease-in-out infinite;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+        }
+        .rest-title {
+            color: white; font-weight: 700; margin: 0 0 8px 0;
+            font-size: 1.3rem;
+            background: linear-gradient(135deg, #fff 0%, #c4b5fd 50%, #67e8f9 100%);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: nameShine 5s ease-in-out infinite;
+        }
+        .rest-subtext {
+            color: var(--text-dim); margin: 0;
+            font-size: 0.9rem; line-height: 1.5;
+        }
         
         .fairness-panel-front {
             /* Eltávolítva - user kérése: igazság mérleg nem kell */
@@ -47,13 +189,53 @@
 
         .list-container { flex: 1; overflow-y: auto; padding: 14px 20px; position: relative; z-index: 2; mask-image: linear-gradient(to bottom, transparent 0%, black 8%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 8%); }
         .list-section-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px; text-align: center; letter-spacing: 1px; }
-        .list-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; margin-bottom: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; transition: all 0.2s; }
-        .list-card:hover { background: rgba(255, 255, 255, 0.06); }
+        
+        /* ✨ PRÉMIUM LIST CARD */
+        .list-card { 
+            background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(139, 92, 246, 0.03)); 
+            backdrop-filter: blur(8px); 
+            border: 1px solid rgba(139, 92, 246, 0.15); 
+            border-radius: 14px; 
+            margin-bottom: 10px; padding: 12px 14px; 
+            display: flex; flex-direction: column; gap: 8px; 
+            transition: all 0.25s ease; 
+            animation: cardEntry 0.4s ease-out backwards;
+        }
+        .list-card:nth-child(1) { animation-delay: 0.05s; }
+        .list-card:nth-child(2) { animation-delay: 0.1s; }
+        .list-card:nth-child(3) { animation-delay: 0.15s; }
+        .list-card:hover { 
+            background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(139, 92, 246, 0.06)); 
+            border-color: rgba(139, 92, 246, 0.35);
+            transform: translateX(2px);
+        }
         .lc-header { display: flex; justify-content: space-between; align-items: center; width: 100%; }
         .lc-date-text { font-weight: 600; color: var(--text-dim); font-size: 0.85rem; }
         .lc-pills { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
-        .lc-worker-pill { display: inline-flex; align-items: center; background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border: 1px solid transparent; color: #fff; transition: all 0.2s;}
-        .lc-worker-pill:hover { border-color: var(--primary); background: rgba(255,255,255,0.1); }
+        
+        /* ✨ Upcoming pill, halványabb animált verzió */
+        .lc-worker-pill { 
+            display: inline-flex; align-items: center; 
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(6, 182, 212, 0.05)); 
+            padding: 6px 12px; border-radius: 9px; 
+            font-size: 0.85rem; font-weight: 700; 
+            cursor: pointer; 
+            border: 1px solid rgba(139, 92, 246, 0.15); 
+            color: #fff; transition: all 0.25s ease;
+        }
+        .lc-worker-pill:hover { 
+            border-color: var(--primary); 
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(6, 182, 212, 0.12));
+            transform: scale(1.04);
+        }
+        .lc-worker-pill .worker-name {
+            background: linear-gradient(135deg, #fff 0%, #ddd6fe 50%, #fff 100%);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: nameShine 5s ease-in-out infinite;
+        }
 
         #adminPanel { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; padding: 20px; overflow-y: auto; backdrop-filter: blur(5px); }
         .admin-box { background: var(--surface); padding: 24px; border-radius: 16px; max-width: 480px; margin: 20px auto; border: 1px solid var(--primary); box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2); }
@@ -644,14 +826,41 @@
                 }
             }
             
+            // OPTIMISTA UI: azonnal mutassuk a változást, ne várjunk a Firebase round-tripre.
+            // Ez kritikus: a user otthon, gyenge mobilneten kattint, és a Firebase 1-3 másodperc
+            // alatt válaszol vissza. Korábban ezért tűnt úgy, hogy "nem reagál" a kattintásra.
+            if (!absences[dateKey]) absences[dateKey] = {};
+            absences[dateKey][name] = true;
+            maybeRender();
+            showToast(`✓ ${name} hiányzása rögzítve`, 'success');
+            
+            // Firebase szinkron a háttérben — hiba esetén visszaállítjuk a friss állapotot
             db.ref().update(updates).catch(err => {
-                showToast("❌ Hiba a hiányzás rögzítésénél", 'error');
+                showToast("❌ Hiba: " + err.message, 'error');
+                absencesRef.once('value').then(snapshot => {
+                    absences = snapshot.val() || {};
+                    maybeRender();
+                });
             });
         }
     };
 
     window.undoAbsent = function(dateKey, name) {
-        db.ref(`absences/${dateKey}/${name}`).set(null);
+        // OPTIMISTA UI: azonnali helyi update
+        if (absences[dateKey] && absences[dateKey][name]) {
+            delete absences[dateKey][name];
+            if (Object.keys(absences[dateKey]).length === 0) delete absences[dateKey];
+            maybeRender();
+        }
+        showToast(`↩ ${name} hiányzása visszavonva`, 'success');
+        
+        db.ref(`absences/${dateKey}/${name}`).set(null).catch(err => {
+            showToast("❌ Hiba: " + err.message, 'error');
+            absencesRef.once('value').then(snapshot => {
+                absences = snapshot.val() || {};
+                maybeRender();
+            });
+        });
     };
 
     function renderUI() {
@@ -677,7 +886,9 @@
         let logicalToday = new Date(realToday);
         let shiftLabel = "";
         let displayStatus = "ACTIVE"; 
+        let restTitle = "";
         let restSubtext = "";
+        let restEmoji = "😴";
 
         if (currentHours >= 6 && currentHours < 18) {
             // NAPPALI IDŐSÁV (06:00 - 18:00)
@@ -688,13 +899,19 @@
                 shiftLabel = "NAPPALI MŰSZAK";
                 displayStatus = "ACTIVE";
             } else if (type === "NIGHT") {
-                shiftLabel = "Pihenőidő";
+                // Műszaknap, de a műszak még nem kezdődött (18:00-ig várunk)
+                shiftLabel = "Felkészülés a műszakra";
+                restTitle = "Hamarosan kezdünk ⏰";
+                restEmoji = "☕";
                 displayStatus = "REST";
-                restSubtext = "Felkészülés az éjszakás műszakra (Kezdés 18:00-kor)";
+                restSubtext = "Az éjszakás műszak 18:00-kor indul. Pihend ki magad addig, lesz erőd!";
             } else {
-                shiftLabel = "Pihenőnap";
+                // Teljes pihenőnap nappal
+                shiftLabel = "Szabadnap";
+                restTitle = "Pihenj jól! 🌿";
+                restEmoji = "🌿";
                 displayStatus = "REST";
-                restSubtext = "Ma a C műszak teljesen szabadnapos.";
+                restSubtext = "Ma teljesen szabadnap a C műszakon. Élvezd a napod, töltődj fel!";
             }
         } else {
             // ÉJSZAKAI IDŐSÁV (18:00 - 06:00)
@@ -712,13 +929,26 @@
                 nextDay.setDate(nextDay.getDate() + 1);
                 
                 if (getShiftType(nextDay) === "DAY") {
-                    shiftLabel = "Pihenőidő";
+                    // Este, holnap reggel kezdődik a nappali műszak
+                    shiftLabel = "Felkészülés a műszakra";
+                    restTitle = "Lassan ébredünk ☕";
+                    restEmoji = "☕";
                     displayStatus = "REST";
-                    restSubtext = "Pihenés a reggeli nappali műszak előtt (Kezdés 06:00-kor)";
+                    restSubtext = "A nappali műszak 06:00-kor folytatódik. Csak nyugodtan, van még idő pihenni!";
+                } else if (type === "DAY") {
+                    // Műszak után, de holnap is dolgozunk vagy szabadnap
+                    shiftLabel = "Műszak vége";
+                    restTitle = "Most már pihenj! 🎉";
+                    restEmoji = "🎉";
+                    displayStatus = "REST";
+                    restSubtext = "A mai nappali műszaknak vége. Csak nyugodtan a következő alkalomig!";
                 } else {
-                    shiftLabel = "Pihenőnap";
+                    // Csendes éjszaka, nincs műszak
+                    shiftLabel = "Csendes éjszaka";
+                    restTitle = "Csendes éjszaka 🌙";
+                    restEmoji = "🌙";
                     displayStatus = "REST";
-                    restSubtext = "A C műszak éjszakája pihenő.";
+                    restSubtext = "A C műszak ma éjjel pihen. Aludj jól, kapcsolj ki!";
                 }
             }
         }
@@ -727,10 +957,10 @@
 
         if (displayStatus === "REST") {
             hero.innerHTML = `${headerHTML}
-                <div style="text-align: center; margin-top: 40px; opacity: 0.7;">
-                    <div style="font-size: 3rem; margin-bottom: 8px; filter: grayscale(100%);">😴</div>
-                    <h2 style="color:white; font-weight: 600; margin: 0;">${shiftLabel}</h2>
-                    <p style="color:var(--text-dim); margin-top: 4px;">${restSubtext}</p>
+                <div class="rest-card">
+                    <div class="rest-emoji">${restEmoji}</div>
+                    <h2 class="rest-title">${restTitle}</h2>
+                    <p class="rest-subtext">${restSubtext}</p>
                 </div>`;
             fillUpcomingList(logicalToday, list);
             return;
@@ -770,13 +1000,13 @@
                 ${absHTML}
                 <div class="pill-container">
                     <div class="worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dateKey}', '${workers[0]}')">
-                        ${workers[0]}
-                        <div class="carry-count">${w0Count}x</div>
+                        <span class="worker-name">${workers[0]}</span>
+                        <div class="carry-count">${w0Count}×</div>
                     </div>
-                    <span style="font-size: 1.4rem; color:var(--text-dim); font-weight:300;">&</span>
+                    <span class="pair-separator">&amp;</span>
                     <div class="worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dateKey}', '${workers[1]}')">
-                        ${workers[1]}
-                        <div class="carry-count">${w1Count}x</div>
+                        <span class="worker-name">${workers[1]}</span>
+                        <div class="carry-count">${w1Count}×</div>
                     </div>
                 </div>
                 <div class="instruction-text">(Koppints a névre a hiányzás jelzéséhez)</div>
@@ -810,8 +1040,8 @@
                                 <span class="lc-date-text" style="margin-left:6px;">${dateFull}</span>
                             </div>
                             <div class="lc-pills">
-                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dKey}', '${workers[0]}')">${workers[0]}</div>
-                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dKey}', '${workers[1]}')">${workers[1]}</div>
+                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dKey}', '${workers[0]}')"><span class="worker-name">${workers[0]}</span></div>
+                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dKey}', '${workers[1]}')"><span class="worker-name">${workers[1]}</span></div>
                             </div>
                         </div>
                         ${absHTML}
@@ -872,11 +1102,17 @@
     function renderAdminRoster() {
         let html = "";
         if (!sysSettings.roster) sysSettings.roster = [];
+        const year = new Date().getFullYear();
+        const yearEnd = new Date(year, 11, 31);
+        
         sysSettings.roster.forEach((name, i) => {
             const ws = workerStats[name] || { carries: 0, lastDate: null, joinDate: null };
             const lastTxt = ws.lastDate ? `${ws.lastDate.split('-').slice(1).join('.')}` : 'soha';
             const joinTxt = ws.joinDate ? `belépés: ${ws.joinDate}` : 'év elejétől';
             const carries = ws.carries || 0;
+            const expected = getExpectedCarriesForWorker(name, yearEnd);
+            const remaining = Math.max(0, Math.round(expected - carries));
+            
             html += `
             <div class="admin-list-item">
                 <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px;">
@@ -884,6 +1120,7 @@
                     <div style="flex: 1; min-width: 0;">
                         <span style="font-weight:bold; display:block;">${name}</span>
                         <div class="worker-stats-mini">
+                            <span class="badge" style="color: var(--accent);">⏳ hátra: ${remaining}×</span>
                             <span class="badge">utoljára: ${lastTxt}</span>
                             <span class="badge">${joinTxt}</span>
                         </div>
@@ -908,16 +1145,25 @@
         }
         
         const year = new Date().getFullYear();
+        const yearEnd = new Date(year, 11, 31);
+        
         let totalCarries = 0;
+        let totalRemaining = 0;
         sysSettings.roster.forEach(name => {
-            totalCarries += (workerStats[name] && workerStats[name].carries) || 0;
+            const actual = (workerStats[name] && workerStats[name].carries) || 0;
+            const expected = getExpectedCarriesForWorker(name, yearEnd);
+            const remaining = Math.max(0, expected - actual);
+            totalCarries += actual;
+            totalRemaining += remaining;
         });
         
         const teamSize = sysSettings.roster.length;
         const avgCarries = teamSize > 0 ? (totalCarries / teamSize).toFixed(1) : 0;
+        const avgRemaining = teamSize > 0 ? (totalRemaining / teamSize).toFixed(1) : 0;
         
         container.innerHTML = `<div class="admin-team-summary">
-            <strong>${teamSize} fő</strong> · ${year}. évben összesen: <strong>${totalCarries}</strong> vitel · átlag/fő: <strong>${avgCarries}</strong>
+            <div><strong>${teamSize} fő</strong> · ${year}-ben eddig: <strong>${totalCarries}×</strong> vitel · átlag <strong>${avgCarries}×</strong>/fő</div>
+            <div style="margin-top: 4px; color: var(--accent);">⏳ Évvégéig hátra: átlag <strong>${avgRemaining}×</strong>/fő (${Math.round(totalRemaining)}× összesen)</div>
         </div>`;
     }
 
