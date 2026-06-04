@@ -301,6 +301,20 @@
         .pin-submit:hover { background: #7c3aed; }
         .pin-cancel:hover { color: white; }
 
+        /* Custom megerősítő modal */
+        .confirm-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); backdrop-filter: blur(8px); z-index: 250; align-items: center; justify-content: center; padding: 20px; }
+        .confirm-overlay.active { display: flex; }
+        .confirm-card { background: var(--surface); border: 1px solid var(--danger); border-radius: 16px; padding: 28px 24px; max-width: 350px; width: 100%; text-align: center; box-shadow: 0 20px 50px rgba(248, 113, 113, 0.3); animation: pinPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .confirm-icon { font-size: 2.8rem; margin-bottom: 12px; }
+        .confirm-title { color: white; font-size: 1.15rem; margin: 0 0 10px 0; font-weight: 700; }
+        .confirm-message { color: var(--text-dim); font-size: 0.9rem; margin: 0 0 22px 0; line-height: 1.55; white-space: pre-line; }
+        .confirm-buttons { display: flex; gap: 10px; }
+        .confirm-buttons button { flex: 1; padding: 14px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 0.9rem; }
+        .confirm-cancel { background: transparent; color: var(--text-dim); border: 1px solid #333 !important; }
+        .confirm-cancel:hover { color: white; }
+        .confirm-ok { background: var(--danger); color: white; }
+        .confirm-ok:hover { background: #ef4444; transform: scale(1.03); }
+
         .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--primary); padding: 12px 20px; border-radius: 10px; color: white; font-size: 0.9rem; font-weight: 600; z-index: 300; box-shadow: 0 10px 30px rgba(0,0,0,0.5); opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s; max-width: 90%; text-align: center;}
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(-10px); }
         .toast.error { border-color: var(--danger); }
@@ -356,6 +370,18 @@
             <div class="pin-buttons">
                 <button class="pin-cancel" onclick="closePinModal()">Mégse</button>
                 <button class="pin-submit" onclick="submitPin()">Belépés</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="confirm-overlay" id="confirmOverlay">
+        <div class="confirm-card">
+            <div class="confirm-icon" id="confirmIcon">⚠️</div>
+            <h3 class="confirm-title" id="confirmTitle">Megerősítés</h3>
+            <p class="confirm-message" id="confirmMessage">Biztos vagy benne?</p>
+            <div class="confirm-buttons">
+                <button class="confirm-cancel" id="confirmCancelBtn">Mégse</button>
+                <button class="confirm-ok" id="confirmOkBtn">Igen, megerősítem</button>
             </div>
         </div>
     </div>
@@ -1099,6 +1125,26 @@
         }, 2500);
     }
 
+    // Custom megerősítő modal — megbízhatóbb mint a natív confirm() mobilon
+    function showConfirm(title, message, onConfirm, icon = '⚠️', okLabel = 'Igen, megerősítem') {
+        const overlay = document.getElementById('confirmOverlay');
+        document.getElementById('confirmIcon').textContent = icon;
+        document.getElementById('confirmTitle').textContent = title;
+        document.getElementById('confirmMessage').textContent = message;
+        document.getElementById('confirmOkBtn').textContent = okLabel;
+        
+        // onclick assignment lecseréli az előző handlert — nincs stacking
+        document.getElementById('confirmOkBtn').onclick = () => {
+            overlay.classList.remove('active');
+            onConfirm();
+        };
+        document.getElementById('confirmCancelBtn').onclick = () => {
+            overlay.classList.remove('active');
+        };
+        
+        overlay.classList.add('active');
+    }
+
     function renderAdminRoster() {
         let html = "";
         if (!sysSettings.roster) sysSettings.roster = [];
@@ -1182,11 +1228,18 @@
 
     window.removeWorker = function(index) {
         const name = sysSettings.roster[index];
-        if(confirm(`Biztos törlöd ${name}-t a fő névsorból?\n\n(A historikus adatai megmaradnak Firebase-ben, ha visszavennéd, onnan folytatja.)`)) {
-            sysSettings.roster.splice(index, 1);
-            renderAdminRoster();
-            renderAdminTeamSummary();
-        }
+        showConfirm(
+            "Dolgozó törlése",
+            `Biztos törlöd ${name}-t a fő névsorból?\n\nA historikus adatai megmaradnak — ha később visszateszed, onnan folytatja.`,
+            () => {
+                sysSettings.roster.splice(index, 1);
+                renderAdminRoster();
+                renderAdminTeamSummary();
+                showToast(`✓ ${name} eltávolítva a névsorból`, 'success');
+            },
+            '🗑️',
+            'Igen, törlöm'
+        );
     };
 
     window.addNewWorker = function() {
@@ -1217,28 +1270,47 @@
     };
     
     window.resetCarries = function() {
-        if (!confirm("⚠️ Biztosan újranullázod MINDENKI vitelszámát?\n\nEz az igazságossági pontokat is törli, és minden dolgozó joinDate-je a mai napra változik. Ez a művelet NEM visszavonható!")) return;
-        
-        const todayKey = getDateKey(new Date());
-        const updates = {};
-        const newStats = {};
-        
-        sysSettings.roster.forEach(name => {
-            newStats[name] = { 
-                carries: 0, 
-                lastDate: null,
-                joinDate: todayKey 
-            };
-        });
-        
-        updates['workerStats'] = newStats;
-        updates['pairHistory'] = null;
-        
-        db.ref().update(updates).then(() => {
-            showToast("✅ Pontok újranullázva!", 'success');
-        }).catch(err => {
-            showToast("❌ Hiba: " + err.message, 'error');
-        });
+        showConfirm(
+            "Pontok újranullázása",
+            "Biztosan újranullázod MINDENKI vitelszámát?\n\nMinden dolgozó joinDate-je a mai napra változik, a párostörténet és a hiányzások törlődnek. A művelet NEM visszavonható!",
+            () => {
+                const todayKey = getDateKey(new Date());
+                const updates = {};
+                
+                // PATH-SZERŰ írás: minden workert egyenként frissítünk, NEM az egész
+                // workerStats node-ot cseréljük le. Így biztosan átmegy a Firebase
+                // security rules-on (a teljes-node csere validation hibát okozhatott,
+                // ezért tűnt úgy, hogy "nem csinál semmit").
+                sysSettings.roster.forEach(name => {
+                    updates[`workerStats/${name}/carries`] = 0;
+                    updates[`workerStats/${name}/lastDate`] = null;
+                    updates[`workerStats/${name}/joinDate`] = todayKey;
+                });
+                updates['pairHistory'] = null;
+                updates['absences'] = null;
+                
+                // OPTIMISTA UI: azonnal nullázzuk lokálisan, ne várjunk a felhőre
+                sysSettings.roster.forEach(name => {
+                    workerStats[name] = { carries: 0, lastDate: null, joinDate: todayKey };
+                });
+                pairHistory = {};
+                absences = {};
+                maybeRender();
+                showToast("✅ Pontok újranullázva mindenkinek!", 'success');
+                
+                // Firebase szinkron a háttérben
+                db.ref().update(updates).catch(err => {
+                    showToast("❌ Hiba: " + err.message, 'error');
+                    // Hiba esetén visszatöltjük a friss állapotot
+                    statsRef.once('value').then(snap => {
+                        workerStats = snap.val() || {};
+                        maybeRender();
+                    });
+                });
+            },
+            '🔄',
+            'Igen, nullázom'
+        );
     };
 
     window.saveAdminSettings = function() {
