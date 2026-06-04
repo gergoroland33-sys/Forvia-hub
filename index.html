@@ -18,6 +18,12 @@
             --text: #f3f4f6; --text-dim: #94a3b8; --border: #334155;
             --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
             --day-color: #fbbf24; --night-color: #818cf8;
+            /* ÚJ: Finom kék-paletta a főoldal harmonikus átmeneteihez */
+            --blue-lightest: #93c5fd;
+            --blue-light: #60a5fa;
+            --blue-mid: #3b82f6;
+            --blue-deep: #2563eb;
+            --blue-darkest: #1e40af;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -44,9 +50,12 @@
             flex-grow: 1; display: flex; flex-direction: column;
             align-items: center; 
             text-align: center;
-            /* STATIKUS HÁTTÉR - Nincs animáció, nincs lassulás */
-            background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 45%),
-            radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.05), transparent 45%), #0b1120;
+            /* FINOMÍTOTT KÉK HARMÓNIA - 3 rétegű, lágyabb átmenetek */
+            background: 
+                radial-gradient(ellipse at 80% 0%, rgba(96, 165, 250, 0.14), transparent 50%),
+                radial-gradient(ellipse at 20% 100%, rgba(37, 99, 235, 0.10), transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.04), transparent 70%),
+                linear-gradient(180deg, #0b1120 0%, #0d1428 50%, #0b1120 100%);
             
             padding: 20px; position: relative; width: 100%; height: 100%;
             overflow-y: auto; 
@@ -55,16 +64,22 @@
         
         /* A TISZTA ÜVEG KÁRTYA (Animációk nélkül) */
         .glass-card {
-            background: rgba(30, 41, 59, 0.4); 
+            /* FINOMÍTOTT KÉK GRADIENS: enyhe kék árnyalat felül, sötétebb alul */
+            background: linear-gradient(160deg, 
+                rgba(59, 130, 246, 0.10) 0%,
+                rgba(30, 41, 59, 0.5) 35%,
+                rgba(30, 41, 59, 0.4) 100%);
             backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
             
             /* Visszaállítottuk az elegáns, vékony keretet */
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(96, 165, 250, 0.12);
+            border-top: 1px solid rgba(147, 197, 253, 0.22);
             
             padding: 40px 30px; border-radius: 24px;
-            /* Statikus árnyék a mélységérzetért */
-            box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6);
+            /* Statikus árnyék a mélységérzetért + kék glow */
+            box-shadow: 
+                0 25px 60px -12px rgba(0, 0, 0, 0.6),
+                0 0 30px rgba(59, 130, 246, 0.08);
             
             max-width: 500px; width: 100%; 
             position: relative; 
@@ -95,9 +110,12 @@
             text-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
         .highlight-blue { 
-            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            /* FINOMÍTOTT 3-SZÍNŰ KÉK GRADIENS: világos → mély → még mélyebb */
+            background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 45%, #2563eb 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 2px 8px rgba(59, 130, 246, 0.25));
         }
 
         .current-date {
@@ -121,18 +139,38 @@
             margin-top: 10px; padding: 10px 20px;
             background: rgba(30, 41, 59, 0.4); border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.05);
+            /* ÚJ: kattintható + finom kék hover */
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+                        background 0.25s ease, border-color 0.25s ease;
         }
+        @media (hover: hover) {
+            .nameday-wrapper:hover {
+                background: rgba(59, 130, 246, 0.10);
+                border-color: rgba(96, 165, 250, 0.25);
+            }
+        }
+        .nameday-wrapper:active { transform: scale(0.97); }
         .nameday-row { display: flex; align-items: baseline; gap: 6px; }
         .nameday-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: #64748b; font-weight: 700; }
         .nameday-tomorrow-text { color: var(--text-dim); font-size: 0.8rem; font-weight: 500; letter-spacing: 0.5px; }
+        .nameday-hint {
+            font-size: 0.62rem; color: #60a5fa; font-weight: 700;
+            letter-spacing: 1px; margin-top: 4px; opacity: 0.85;
+            text-transform: uppercase;
+        }
         
         .hm-day-name { font-size: 0.65rem; text-transform: uppercase; color: var(--accent); font-weight: 800; margin-top: 2px; }
         /* ------------------------------------------------ */
 
         /* --- KÖZÉPRE IGAZÍTOTT NAPTÁR DOBOZ --- */
         .calendar-box {
-            background: linear-gradient(145deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            /* FINOMÍTOTT KÉK ALAP: enyhe kékesszürkés árnyalat felül */
+            background: linear-gradient(145deg, 
+                rgba(30, 64, 175, 0.18) 0%,
+                rgba(15, 23, 42, 0.78) 35%,
+                rgba(30, 41, 59, 0.6) 100%);
+            border: 1px solid rgba(96, 165, 250, 0.14);
             border-radius: 16px;
             padding: 20px 22px; 
             margin-bottom: 30px;
@@ -153,11 +191,14 @@
             transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         
-        /* --- STATIKUS KIRÁLYKÉK (Nincs animáció) --- */
+        /* --- FINOMÍTOTT KIRÁLYKÉK (Lágyabb átmenet, mélyebb glow) --- */
         .calendar-box.electric-blue {
-            border-left-color: #4169E1; /* Királykék */
-            /* Statikus ragyogás */
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2), -2px 0 15px rgba(65, 105, 225, 0.4);
+            border-left-color: #60a5fa;
+            /* Mélyebb, harmonikusabb glow két rétegben */
+            box-shadow: 
+                0 4px 20px rgba(0,0,0,0.25), 
+                -2px 0 18px rgba(96, 165, 250, 0.32),
+                inset 0 0 30px rgba(59, 130, 246, 0.04);
         }
         
         .calendar-box:active {
@@ -257,6 +298,51 @@
         }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* ============================================================
+           ÚJ: LAPTOP-OPTIMALIZÁCIÓ — alacsony viewportokra (kompakt nézet)
+           Sok laptopon nem fér ki minden — kompaktabb spacing, méretek.
+           Mobilon nem érintett, mert ott a magasság nagyobb arányban.
+           ============================================================ */
+        @media (max-height: 800px) {
+            .glass-card { padding: 24px 24px; }
+            .welcome-title { font-size: 1.8rem; }
+            .current-date { font-size: 0.88rem; margin-bottom: 18px; }
+            .nameday-wrapper { padding: 8px 16px; margin-top: 8px; }
+            .nameday-hint { font-size: 0.58rem; }
+            .calendar-box { padding: 14px 16px; margin-bottom: 18px; }
+            .cal-date-text { font-size: 1.2rem; }
+            .cal-event-name { font-size: 0.85rem; }
+            .instruction-text { font-size: 0.9rem; margin-bottom: 18px; }
+            .device-info { padding-top: 14px; font-size: 0.72rem; }
+            .shift-info-box { margin-top: 10px; }
+            .shift-cell { padding: 7px; }
+            .shift-cell-val { font-size: 1rem; }
+        }
+        
+        /* Még alacsonyabb (700px alatt — pl. landscape mobil, régi laptop) */
+        @media (max-height: 700px) {
+            .glass-card { padding: 18px 20px; border-radius: 18px; }
+            .welcome-title { font-size: 1.5rem; }
+            .current-date { font-size: 0.82rem; margin-bottom: 12px; }
+            .nameday-wrapper { padding: 6px 14px; gap: 2px; }
+            .nameday-label { font-size: 0.6rem; }
+            .nameday-hint { font-size: 0.55rem; margin-top: 2px; }
+            .calendar-box { padding: 10px 14px; margin-bottom: 12px; }
+            .cal-date-text { font-size: 1rem; }
+            .cal-event-name { font-size: 0.8rem; }
+            .cal-label { font-size: 0.62rem; }
+            .instruction-text { font-size: 0.82rem; margin-bottom: 12px; }
+            .device-info { padding-top: 10px; font-size: 0.68rem; }
+            .shift-cell-val { font-size: 0.9rem; }
+            .shift-cell-label { font-size: 0.55rem; }
+            .shift-header-row { padding: 5px; font-size: 0.58rem; }
+        }
+        
+        /* Széles laptop képernyőre (≥1200px szélesség): kicsit nagyobb max-width a kártyához */
+        @media (min-width: 1200px) and (min-height: 800px) {
+            .glass-card { max-width: 540px; }
+        }
 
         .ticker-wrap {
             position: fixed; bottom: 0; left: 0; width: 100%; overflow: hidden; height: 36px;
@@ -503,6 +589,140 @@
         .hm-shift-label { opacity: 0.7; font-size: 0.6rem; text-transform: uppercase; }
         .hm-shift-val { font-size: 0.85rem; }
 
+        /* --- ÚJ: ÉV-SZEPARÁTOR az eseménynaptárban (több év esetén) --- */
+        .hm-year-divider {
+            background: linear-gradient(135deg, rgba(59,130,246,0.18) 0%, rgba(96,165,250,0.08) 100%);
+            border: 1px solid rgba(96, 165, 250, 0.25);
+            color: #93c5fd; font-weight: 800; font-size: 1.05rem;
+            letter-spacing: 2px; padding: 8px 14px;
+            border-radius: 10px; margin: 14px 0 8px 0; text-align: center;
+            text-shadow: 0 1px 6px rgba(59,130,246,0.4);
+        }
+        .hm-year-divider:first-child { margin-top: 0; }
+        
+        /* ============================================================
+           ÚJ: GÖRGETHETŐ MŰSZAKNAPTÁR MODAL (bármely év, auto-jump a mai napra)
+           ============================================================ */
+        .shift-modal-backdrop {
+            position: fixed; inset: 0; z-index: 3100;
+            background: rgba(11, 17, 32, 0.95);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            display: none; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .shift-modal-backdrop.open { display: flex; opacity: 1; }
+        .shift-modal-card {
+            background: #1e293b; border: 1px solid rgba(96, 165, 250, 0.2);
+            border-radius: 20px; width: 92%; max-width: 520px; height: 85vh;
+            display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.55);
+            animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .sm-header {
+            padding: 16px 18px; border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex; justify-content: space-between; align-items: center;
+            background: linear-gradient(180deg, rgba(59,130,246,0.12) 0%, rgba(30,41,59,0.9) 100%);
+            flex-shrink: 0;
+        }
+        .sm-title { font-size: 1.1rem; font-weight: 800; color: white; margin: 0; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
+        .sm-close {
+            background: rgba(255,255,255,0.05); width: 32px; height: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            font-size: 1.2rem; color: #94a3b8; transition: all 0.2s;
+        }
+        .sm-close:active { background: var(--danger); color: white; }
+        
+        .sm-controls {
+            display: flex; gap: 8px; padding: 10px 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: rgba(0,0,0,0.15); flex-shrink: 0;
+            align-items: center; justify-content: space-between;
+        }
+        .sm-jump-today {
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            color: white; border: none; padding: 7px 14px; border-radius: 8px;
+            font-weight: 700; font-size: 0.78rem; cursor: pointer; letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(59,130,246,0.35);
+        }
+        .sm-jump-today:active { transform: scale(0.95); }
+        .sm-year-nav { display: flex; gap: 4px; align-items: center; }
+        .sm-year-btn {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: #cbd5e1; width: 28px; height: 28px; border-radius: 6px;
+            cursor: pointer; font-size: 0.9rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .sm-year-btn:active { background: var(--accent); color: white; }
+        .sm-year-label { color: white; font-weight: 800; font-size: 0.9rem; min-width: 50px; text-align: center; }
+        
+        .sm-body { flex-grow: 1; overflow-y: auto; padding: 10px 14px; }
+        
+        .sm-month-header {
+            font-size: 0.75rem; font-weight: 800; color: #93c5fd;
+            letter-spacing: 2px; padding: 12px 4px 6px 4px;
+            text-transform: uppercase; border-bottom: 1px solid rgba(96, 165, 250, 0.15);
+            margin-bottom: 8px; position: sticky; top: -10px;
+            background: #1e293b; z-index: 2;
+        }
+        
+        .sm-day {
+            display: flex; align-items: center; padding: 9px 10px;
+            background: rgba(255,255,255,0.02); margin-bottom: 4px;
+            border-radius: 9px; border-left: 3px solid transparent;
+            transition: background 0.15s;
+        }
+        .sm-day:hover { background: rgba(255,255,255,0.04); }
+        .sm-day.today { background: rgba(239, 68, 68, 0.12); border-left-color: var(--danger); box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.25); }
+        .sm-day.weekend { background: rgba(255,255,255,0.015); }
+        .sm-day.holiday { background: rgba(16, 185, 129, 0.08); border-left-color: #34d399; }
+        .sm-day.today.holiday { background: rgba(239, 68, 68, 0.15); border-left-color: var(--danger); }
+        
+        .sm-day-num {
+            font-size: 1rem; font-weight: 800; color: white;
+            min-width: 26px; text-align: center;
+        }
+        .sm-day-name {
+            font-size: 0.7rem; font-weight: 700; color: #94a3b8;
+            min-width: 32px; text-align: center; text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .sm-day.today .sm-day-num { color: var(--danger); }
+        .sm-day.weekend .sm-day-name { color: #f87171; }
+        
+        .sm-day-shifts {
+            display: flex; gap: 6px; margin-left: auto;
+        }
+        .sm-shift-tag {
+            display: flex; align-items: center; gap: 4px;
+            padding: 3px 8px; border-radius: 6px;
+            font-size: 0.7rem; font-weight: 700;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .sm-shift-tag.day { background: rgba(251, 191, 36, 0.1); color: var(--day-color); border-color: rgba(251, 191, 36, 0.25); }
+        .sm-shift-tag.night { background: rgba(129, 140, 248, 0.1); color: var(--night-color); border-color: rgba(129, 140, 248, 0.25); }
+        .sm-shift-tag-icon { font-size: 0.75rem; opacity: 0.8; }
+        
+        .sm-holiday-note {
+            font-size: 0.65rem; color: #34d399; font-weight: 600;
+            margin-left: 10px; padding: 2px 6px; background: rgba(16, 185, 129, 0.12);
+            border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        
+        /* --- ÚJ: NÉVNAPTÁR sor stílus (a műszaknaptárral azonos modal szkelettben) --- */
+        .nd-name {
+            flex-grow: 1; padding: 0 12px;
+            font-size: 0.92rem; color: #e2e8f0; font-weight: 600;
+            letter-spacing: 0.2px;
+            text-align: left;
+        }
+        .sm-day.nd-row { padding: 10px 12px; }
+        .sm-day.nd-row.today { background: rgba(96, 165, 250, 0.18); border-left-color: #60a5fa; box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.25); }
+        .sm-day.nd-row.today .sm-day-num { color: #93c5fd; }
+        .sm-day.nd-row.today .nd-name { color: #93c5fd; font-weight: 800; }
+        .nd-namesake-icon {
+            font-size: 0.85rem; margin-right: 4px; opacity: 0.7;
+        }
+
         /* --- HOZZÁADVA: PROFI JELSZÓ BEKÉRŐ (ÁTTERVEZVE) --- */
         .pin-modal-backdrop { position: fixed; inset: 0; z-index: 4000; background: rgba(11, 17, 32, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; }
         .pin-modal-backdrop.open { display: flex; opacity: 1; }
@@ -563,6 +783,46 @@
     </div>
 </div>
 
+<!-- ÚJ: GÖRGETHETŐ MŰSZAKNAPTÁR MODAL — bármely év, auto-jump a mai napra, görgethető -->
+<div class="shift-modal-backdrop" id="shiftModal">
+    <div class="shift-modal-card">
+        <div class="sm-header">
+            <h3 class="sm-title">☀️🌙 Műszaknaptár</h3>
+            <div class="sm-close" onclick="closeShiftCalendar()">✕</div>
+        </div>
+        <div class="sm-controls">
+            <button class="sm-jump-today" onclick="scrollShiftToToday()">📍 Ugrás a mai napra</button>
+            <div class="sm-year-nav">
+                <button class="sm-year-btn" onclick="changeShiftYear(-1)">◀</button>
+                <span class="sm-year-label" id="smYearLabel">2026</span>
+                <button class="sm-year-btn" onclick="changeShiftYear(1)">▶</button>
+            </div>
+        </div>
+        <div class="sm-body" id="shiftCalendarBody">
+            </div>
+    </div>
+</div>
+
+<!-- ÚJ: GÖRGETHETŐ NÉVNAPTÁR MODAL — minden napra, év-független, auto-jump a mai napra -->
+<div class="shift-modal-backdrop" id="namedayModal">
+    <div class="shift-modal-card">
+        <div class="sm-header">
+            <h3 class="sm-title">👤 Névnaptár</h3>
+            <div class="sm-close" onclick="closeNamedayBrowser()">✕</div>
+        </div>
+        <div class="sm-controls">
+            <button class="sm-jump-today" onclick="scrollNamedayToToday()">📍 Ugrás a mai napra</button>
+            <div class="sm-year-nav">
+                <button class="sm-year-btn" onclick="changeNamedayYear(-1)">◀</button>
+                <span class="sm-year-label" id="ndYearLabel">2026</span>
+                <button class="sm-year-btn" onclick="changeNamedayYear(1)">▶</button>
+            </div>
+        </div>
+        <div class="sm-body" id="namedayBrowserBody">
+            </div>
+    </div>
+</div>
+
 <div class="pin-modal-backdrop" id="pinModal">
     <div class="pin-modal-card">
         <div class="pin-icon-wrap">🔐</div>
@@ -618,7 +878,7 @@
         <div id="display-date" class="current-date">
             <span id="date-text">0000. 00. 00.</span>
 
-            <div class="nameday-wrapper">
+            <div class="nameday-wrapper" onclick="openNamedayBrowser()" title="Teljes névnaptár">
                 <div class="nameday-row">
                     <span class="nameday-label">Ma:</span>
                     <span id="name-day" class="nameday-text" style="margin-top:0;">...</span>
@@ -751,11 +1011,203 @@
         { date: "2026-12-26", name: "Karácsony", type: "holiday", shiftDay: "C", shiftNight: "D" }
     ];
 
+    /* ====================================================
+       ÚJ: DINAMIKUS ÜNNEP- ÉS MŰSZAK-SZÁMÍTÁS
+       2026 utáni évekre is automatikusan generálja az ünnepeket
+       a Műszaknaptár modul algoritmusát követve (12 napos ciklus).
+       A 2026-os hardcode events ÉRINTETLENÜL maradnak — a special
+       szombati munkanapok (Aug.29, Dec.12) csak így megőrizhetők.
+       ==================================================== */
+    
+    /* Húsvét vasárnap dátuma egy adott évre (Gauss-féle algoritmus) */
+    function getEaster(year) {
+        let a = year % 19;
+        let b = Math.floor(year / 100);
+        let c = year % 100;
+        let d = Math.floor(b / 4);
+        let e = b % 4;
+        let f = Math.floor((b + 8) / 25);
+        let g = Math.floor((b - f + 1) / 3);
+        let h = (19 * a + b - d - g + 15) % 30;
+        let i = Math.floor(c / 4);
+        let k = c % 4;
+        let l = (32 + 2 * e + 2 * i - h - k) % 7;
+        let m = Math.floor((a + 11 * h + 22 * l) / 451);
+        let month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+        let day = ((h + l - 7 * m + 114) % 31) + 1;
+        return new Date(year, month, day);
+    }
+    
+    /* Magyar ünnepek egy évre — mmdd → név map */
+    function getHolidaysForYear(year) {
+        const easter = getEaster(year);
+        const addDays = (date, days) => {
+            let r = new Date(date); r.setDate(r.getDate() + days); return r;
+        };
+        const formatDate = (date) => {
+            return String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+        };
+        const goodFriday = addDays(easter, -2);
+        const easterMonday = addDays(easter, 1);
+        const pentecostSunday = addDays(easter, 49);
+        const pentecostMonday = addDays(easter, 50);
+        
+        return {
+            "01-01": "Újév",
+            "03-15": "Nemzeti Ünnep",
+            [formatDate(goodFriday)]: "Nagypéntek",
+            [formatDate(easter)]: "Húsvétvasárnap",
+            [formatDate(easterMonday)]: "Húsvéthétfő",
+            "05-01": "Munka Ünnepe",
+            [formatDate(pentecostSunday)]: "Pünkösdvasárnap",
+            [formatDate(pentecostMonday)]: "Pünkösdhétfő",
+            "08-20": "Államalapítás Ünnepe",
+            "10-23": "1956-os Forradalom",
+            "11-01": "Mindenszentek",
+            "12-24": "Szenteste",
+            "12-25": "Karácsony",
+            "12-26": "Karácsony"
+        };
+    }
+    
+    /* Műszak-ciklus algoritmus a Műszaknaptár modulból (12 napos rotáció) */
+    const SHIFT_ANCHOR = new Date(Date.UTC(2026, 0, 9));
+    function getShiftForDate(dateObj) {
+        const utcDate = new Date(Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()));
+        const diffDays = Math.floor((utcDate - SHIFT_ANCHOR) / 86400000);
+        const cycleDay = ((diffDays % 12) + 12) % 12;
+        if (cycleDay >= 0 && cycleDay <= 2) return { day: 'A', night: 'B' };
+        if (cycleDay >= 3 && cycleDay <= 5) return { day: 'C', night: 'D' };
+        if (cycleDay >= 6 && cycleDay <= 8) return { day: 'B', night: 'A' };
+        return { day: 'D', night: 'C' }; /* cycleDay 9-11 */
+    }
+    
+    /* ÚJ: Bridge day algoritmus — szombati munkanapok + pihenőnapok jövőbeli évekre.
+       Magyar szabály: kedd/csütörtök ünnep esetén bridge-day (hosszú hétvége) jön,
+       a kompenzáció az előző/következő szombat. Karácsony körül: ha dec 25 péntek,
+       dec 24 csüt → pihenőnap és előző szombat munkanap. */
+    function getBridgeDaysForYear(year, holidaysMap) {
+        const result = [];
+        const addedDates = new Set();
+        const fmt = (d) => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+        
+        const tryAddBridge = (holidayDate, holidayName, restDate, workDate) => {
+            const restMmdd = String(restDate.getMonth()+1).padStart(2,'0') + '-' + String(restDate.getDate()).padStart(2,'0');
+            /* Ha a "rest" napon már ünnep van, vagy hétvégére esne, kihagyjuk */
+            if (holidaysMap[restMmdd]) return;
+            if (restDate.getDay() === 0 || restDate.getDay() === 6) return;
+            
+            const restKey = fmt(restDate);
+            const workKey = fmt(workDate);
+            
+            if (!addedDates.has(restKey)) {
+                const restShift = getShiftForDate(restDate);
+                result.push({
+                    date: restKey,
+                    name: 'Pihenőnap (Hosszú hétvége – ' + holidayName + ')',
+                    type: 'holiday',
+                    shiftDay: restShift.day, shiftNight: restShift.night
+                });
+                addedDates.add(restKey);
+            }
+            if (!addedDates.has(workKey)) {
+                const workShift = getShiftForDate(workDate);
+                const restLabel = restDate.getDate() + '. ' + ['jan','feb','már','ápr','máj','jún','júl','aug','szep','okt','nov','dec'][restDate.getMonth()] + '.';
+                result.push({
+                    date: workKey,
+                    name: 'SZOMBATI MUNKANAP (Várható, ' + restLabel + ' helyett)',
+                    type: 'workday',
+                    shiftDay: workShift.day, shiftNight: workShift.night
+                });
+                addedDates.add(workKey);
+            }
+        };
+        
+        /* Standard kedd/csütörtök ünnepekre */
+        for (const mmdd in holidaysMap) {
+            const dateStr = year + '-' + mmdd;
+            const dateObj = new Date(dateStr);
+            const dow = dateObj.getDay();
+            
+            if (dow === 2) {
+                /* Kedd ünnep → hétfő pihenő, előző szombat munkanap */
+                const mon = new Date(dateObj); mon.setDate(mon.getDate() - 1);
+                const sat = new Date(dateObj); sat.setDate(sat.getDate() - 3);
+                tryAddBridge(dateObj, holidaysMap[mmdd], mon, sat);
+            } else if (dow === 4) {
+                /* Csüt ünnep → péntek pihenő, következő szombat munkanap */
+                const fri = new Date(dateObj); fri.setDate(fri.getDate() + 1);
+                const sat = new Date(dateObj); sat.setDate(sat.getDate() + 2);
+                tryAddBridge(dateObj, holidaysMap[mmdd], fri, sat);
+            }
+        }
+        
+        /* Karácsony-spec: ha dec 25 péntek → dec 24 (csüt) pihenő + előző szombat munkanap */
+        const dec25 = new Date(year, 11, 25);
+        if (dec25.getDay() === 5) {
+            const dec24 = new Date(year, 11, 24);
+            /* Előző szombat: dec 24-től 8 nap visszafelé (két héttel előbb, de a kötelező 
+               kompenzáció a karácsonyt megelőző első szombat lenne) */
+            const sat = new Date(year, 11, 24);
+            sat.setDate(sat.getDate() - 12); /* dec 12 a jellemző (a karácsony előtti 2. szombat) */
+            const dec24Key = fmt(dec24);
+            const satKey = fmt(sat);
+            if (!addedDates.has(dec24Key)) {
+                const s = getShiftForDate(dec24);
+                result.push({date: dec24Key, name: 'Szenteste (Pihenőnap)', type: 'holiday', shiftDay: s.day, shiftNight: s.night});
+                addedDates.add(dec24Key);
+            }
+            if (!addedDates.has(satKey)) {
+                const s = getShiftForDate(sat);
+                result.push({date: satKey, name: 'SZOMBATI MUNKANAP (Várható, Dec. 24. helyett)', type: 'workday', shiftDay: s.day, shiftNight: s.night});
+                addedDates.add(satKey);
+            }
+        }
+        
+        return result;
+    }
+    
+    /* Egyesített eseménylista: 2026 hardcode + minden más év dinamikusan generálva */
+    function getAllEvents() {
+        let events = [...calendarEvents]; /* 2026 hardcode ÉRINTETLEN (kézi szombat-munkanapokkal) */
+        
+        const currentYear = new Date().getFullYear();
+        const startYear = Math.min(currentYear, 2026);
+        const endYear = Math.max(currentYear + 5, 2030); /* min 5 év előre, legalább 2030-ig */
+        
+        for (let y = startYear; y <= endYear; y++) {
+            if (y === 2026) continue; /* 2026-ot már a hardcode tartalmazza */
+            const holidays = getHolidaysForYear(y);
+            
+            /* Standard ünnepek */
+            for (const mmdd in holidays) {
+                const dateStr = y + '-' + mmdd;
+                const dateObj = new Date(dateStr);
+                const shift = getShiftForDate(dateObj);
+                events.push({
+                    date: dateStr,
+                    name: holidays[mmdd],
+                    type: "holiday",
+                    shiftDay: shift.day,
+                    shiftNight: shift.night
+                });
+            }
+            
+            /* ÚJ: Bridge days (pihenőnap + szombati munkanap) */
+            const bridges = getBridgeDaysForYear(y, holidays);
+            events.push(...bridges);
+        }
+        
+        events.sort((a, b) => new Date(a.date) - new Date(b.date));
+        return events;
+    }
+    /* ==================================================== */
+
     function updateCalendarWidget() {
         const now = new Date();
         now.setHours(0, 0, 0, 0);
 
-        let nextEvent = calendarEvents.find(e => {
+        let nextEvent = getAllEvents().find(e => {
             const eventDate = new Date(e.date);
             return eventDate >= now;
         });
@@ -874,11 +1326,241 @@
         const holnapiNevnap = nevnapok[holnapHonapNap] || "---";
 
         document.getElementById('date-text').innerText = dateStr;
-        document.getElementById('name-day').innerText = maiNevnap; /* A "Névnap:" szöveg most már a fix HTML-ben van megformázva */
-        if(document.getElementById('name-day-tom')) document.getElementById('name-day-tom').innerText = holnapiNevnap; /* ÚJ */
+        document.getElementById('name-day').innerText = maiNevnap; /* A "Ma:" cimke a fix HTML-ben */
+        if(document.getElementById('name-day-tom')) document.getElementById('name-day-tom').innerText = holnapiNevnap;
 
         updateCalendarWidget();
     }
+
+    /* ================================================================
+       ÚJ: GÖRGETHETŐ MŰSZAKNAPTÁR MODAL
+       Bármely évre, görgethető, auto-jump a mai napra megnyitáskor.
+       ================================================================ */
+    let shiftCalCurrentYear = new Date().getFullYear();
+    
+    function openShiftCalendar() {
+        if (navigator.vibrate) navigator.vibrate(10);
+        shiftCalCurrentYear = new Date().getFullYear();
+        renderShiftCalendar(shiftCalCurrentYear);
+        document.getElementById('shiftModal').classList.add('open');
+        /* Auto-scroll a mai napra a megnyitáskor */
+        setTimeout(() => scrollShiftToToday(), 150);
+    }
+    
+    function closeShiftCalendar() {
+        document.getElementById('shiftModal').classList.remove('open');
+    }
+    
+    function changeShiftYear(delta) {
+        shiftCalCurrentYear += delta;
+        renderShiftCalendar(shiftCalCurrentYear);
+        /* Ha a mai évre váltunk vissza, görgetés a mai napra */
+        if (shiftCalCurrentYear === new Date().getFullYear()) {
+            setTimeout(() => scrollShiftToToday(), 50);
+        } else {
+            /* Más évnél tetejére */
+            const body = document.getElementById('shiftCalendarBody');
+            if (body) body.scrollTop = 0;
+        }
+    }
+    
+    function scrollShiftToToday() {
+        const todayEl = document.querySelector('#shiftCalendarBody .sm-day.today');
+        const body = document.getElementById('shiftCalendarBody');
+        if (todayEl && body) {
+            const containerTop = body.getBoundingClientRect().top;
+            const targetTop = todayEl.getBoundingClientRect().top;
+            const offset = targetTop - containerTop - 50; /* 50px buffer a sticky header miatt */
+            body.scrollTo({ top: body.scrollTop + offset, behavior: 'smooth' });
+        }
+    }
+    
+    function renderShiftCalendar(year) {
+        const body = document.getElementById('shiftCalendarBody');
+        const yearLabel = document.getElementById('smYearLabel');
+        if (!body || !yearLabel) return;
+        
+        yearLabel.innerText = year;
+        body.innerHTML = '';
+        
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        /* JAVÍTÁS: lokális dátum-komponensek (mint a renderNamedayList-ben) */
+        const todayKey = today.getFullYear() + '-' + 
+                         String(today.getMonth()+1).padStart(2,'0') + '-' + 
+                         String(today.getDate()).padStart(2,'0');
+        
+        const monthsHU = ["JANUÁR","FEBRUÁR","MÁRCIUS","ÁPRILIS","MÁJUS","JÚNIUS","JÚLIUS","AUGUSZTUS","SZEPTEMBER","OKTÓBER","NOVEMBER","DECEMBER"];
+        const dayNamesShort = ["VAS","HÉT","KED","SZE","CSÜ","PÉN","SZO"];
+        
+        /* Ünnepek az évre — ha 2026, akkor a kézi listából, különben generálva */
+        const holidaysMap = {};
+        if (year === 2026) {
+            /* 2026 hardcode adatok — speciális szombati munkanapokkal */
+            calendarEvents.forEach(ev => {
+                holidaysMap[ev.date] = { name: ev.name, type: ev.type };
+            });
+        } else {
+            const h = getHolidaysForYear(year);
+            for (const mmdd in h) {
+                holidaysMap[year + '-' + mmdd] = { name: h[mmdd], type: 'holiday' };
+            }
+        }
+        
+        for (let m = 0; m < 12; m++) {
+            const monthHeader = '<div class="sm-month-header">' + monthsHU[m] + ' ' + year + '</div>';
+            body.insertAdjacentHTML('beforeend', monthHeader);
+            
+            const daysInMonth = new Date(year, m + 1, 0).getDate();
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateObj = new Date(year, m, d);
+                const dateKey = year + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+                const isToday = (dateKey === todayKey);
+                const dow = dateObj.getDay();
+                const isWeekend = (dow === 0 || dow === 6);
+                const holidayInfo = holidaysMap[dateKey];
+                const isHoliday = !!holidayInfo;
+                
+                const shift = getShiftForDate(dateObj);
+                
+                let cls = 'sm-day';
+                if (isToday) cls += ' today';
+                if (isWeekend) cls += ' weekend';
+                if (isHoliday) cls += ' holiday';
+                
+                let holidayNote = '';
+                if (isHoliday) {
+                    const icon = holidayInfo.type === 'workday' ? '⚠️' : '🎉';
+                    holidayNote = '<span class="sm-holiday-note">' + icon + ' ' + holidayInfo.name + '</span>';
+                }
+                
+                const html = '<div class="' + cls + '" data-date="' + dateKey + '">'
+                    + '<span class="sm-day-num">' + d + '</span>'
+                    + '<span class="sm-day-name">' + dayNamesShort[dow] + '</span>'
+                    + holidayNote
+                    + '<div class="sm-day-shifts">'
+                        + '<div class="sm-shift-tag day"><span class="sm-shift-tag-icon">☀️</span><span>' + shift.day + '</span></div>'
+                        + '<div class="sm-shift-tag night"><span class="sm-shift-tag-icon">🌙</span><span>' + shift.night + '</span></div>'
+                    + '</div>'
+                    + '</div>';
+                body.insertAdjacentHTML('beforeend', html);
+            }
+        }
+    }
+    /* ================================================================ */
+
+    /* ================================================================
+       ÚJ: NÉVNAPTÁR BROWSER MODAL
+       Görgethető lista az összes nap névnapjaival, év-független
+       (mert a névnapok napra-hónapra alapulnak, év nem változtat),
+       de a heti nap a választott év szerint frissül. Auto-jump a mai napra.
+       ================================================================ */
+    let namedayCurrentYear = new Date().getFullYear();
+    
+    function openNamedayBrowser() {
+        if (navigator.vibrate) navigator.vibrate(10);
+        namedayCurrentYear = new Date().getFullYear();
+        renderNamedayList(namedayCurrentYear);
+        document.getElementById('namedayModal').classList.add('open');
+        setTimeout(() => scrollNamedayToToday(), 150);
+    }
+    
+    function closeNamedayBrowser() {
+        document.getElementById('namedayModal').classList.remove('open');
+    }
+    
+    function changeNamedayYear(delta) {
+        namedayCurrentYear += delta;
+        renderNamedayList(namedayCurrentYear);
+        if (namedayCurrentYear === new Date().getFullYear()) {
+            setTimeout(() => scrollNamedayToToday(), 50);
+        } else {
+            const body = document.getElementById('namedayBrowserBody');
+            if (body) body.scrollTop = 0;
+        }
+    }
+    
+    function scrollNamedayToToday() {
+        const body = document.getElementById('namedayBrowserBody');
+        const todayEl = body ? body.querySelector('.sm-day.nd-row.today') : null;
+        if (todayEl && body) {
+            const containerTop = body.getBoundingClientRect().top;
+            const targetTop = todayEl.getBoundingClientRect().top;
+            const offset = targetTop - containerTop - 50;
+            body.scrollTo({ top: body.scrollTop + offset, behavior: 'smooth' });
+        }
+    }
+    
+    function renderNamedayList(year) {
+        const body = document.getElementById('namedayBrowserBody');
+        const yearLabel = document.getElementById('ndYearLabel');
+        if (!body || !yearLabel) return;
+        
+        yearLabel.innerText = year;
+        body.innerHTML = '';
+        
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        const isCurrentYear = (year === today.getFullYear());
+        /* JAVÍTÁS: lokális dátum-komponensekkel, NEM toISOString UTC-vel! 
+           Magyar idő UTC+2 → éjjel 0-2 között UTC-tegnap, ezért scroll-olt az előző napra. */
+        const todayKey = today.getFullYear() + '-' + 
+                         String(today.getMonth()+1).padStart(2,'0') + '-' + 
+                         String(today.getDate()).padStart(2,'0');
+        
+        const monthsHU = ["JANUÁR","FEBRUÁR","MÁRCIUS","ÁPRILIS","MÁJUS","JÚNIUS","JÚLIUS","AUGUSZTUS","SZEPTEMBER","OKTÓBER","NOVEMBER","DECEMBER"];
+        const dayNamesShort = ["VAS","HÉT","KED","SZE","CSÜ","PÉN","SZO"];
+        
+        /* Ünnepek az évre — a 2026 hardcode adatokat is figyelembe vesszük */
+        const holidaysMap = {};
+        if (year === 2026) {
+            calendarEvents.forEach(ev => {
+                holidaysMap[ev.date] = { name: ev.name, type: ev.type };
+            });
+        } else {
+            const h = getHolidaysForYear(year);
+            for (const mmdd in h) {
+                holidaysMap[year + '-' + mmdd] = { name: h[mmdd], type: 'holiday' };
+            }
+        }
+        
+        for (let m = 0; m < 12; m++) {
+            body.insertAdjacentHTML('beforeend', '<div class="sm-month-header">' + monthsHU[m] + ' ' + year + '</div>');
+            const daysInMonth = new Date(year, m + 1, 0).getDate();
+            
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateObj = new Date(year, m, d);
+                const dateKey = year + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+                const mmdd = String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+                const nevnap = nevnapok[mmdd] || '---';
+                const isToday = (dateKey === todayKey);
+                const dow = dateObj.getDay();
+                const isWeekend = (dow === 0 || dow === 6);
+                const holidayInfo = holidaysMap[dateKey];
+                const isHoliday = !!holidayInfo;
+                
+                let cls = 'sm-day nd-row';
+                if (isToday) cls += ' today';
+                if (isWeekend) cls += ' weekend';
+                if (isHoliday) cls += ' holiday';
+                
+                let holidayNote = '';
+                if (isHoliday) {
+                    const icon = holidayInfo.type === 'workday' ? '⚠️' : '🎉';
+                    holidayNote = '<span class="sm-holiday-note">' + icon + ' ' + holidayInfo.name + '</span>';
+                }
+                
+                const html = '<div class="' + cls + '" data-date="' + dateKey + '">'
+                    + '<span class="sm-day-num">' + d + '</span>'
+                    + '<span class="sm-day-name">' + dayNamesShort[dow] + '</span>'
+                    + '<span class="nd-name"><span class="nd-namesake-icon">👤</span>' + nevnap + '</span>'
+                    + holidayNote
+                    + '</div>';
+                body.insertAdjacentHTML('beforeend', html);
+            }
+        }
+    }
+    /* ================================================================ */
 
     updateInfo();
     setInterval(updateInfo, 1000); 
@@ -913,20 +1595,50 @@
         const now = new Date();
         now.setHours(0,0,0,0);
         
-        calendarEvents.forEach(event => {
+        /* ÚJ: dinamikus eseménylista a getAllEvents()-ből (2026 hardcode + jövőbeli évek) */
+        const allEvents = getAllEvents();
+        
+        /* ÚJ: A modal cím dinamikus — több év is lehet a listában */
+        const years = [...new Set(allEvents.map(e => e.date.substring(0,4)))];
+        const titleEl = modal.querySelector('.hm-title');
+        if (titleEl) {
+            titleEl.innerText = years.length === 1 
+                ? '🗓️ ' + years[0] + ' Eseménynaptár'
+                : '🗓️ Eseménynaptár · ' + years[0] + '–' + years[years.length-1];
+        }
+        
+        const monthNames = ["JAN", "FEB", "MÁR", "ÁPR", "MÁJ", "JÚN", "JÚL", "AUG", "SZEP", "OKT", "NOV", "DEC"];
+        const dayNamesShort = ["VAS", "HÉT", "KED", "SZE", "CSÜ", "PÉN", "SZO"];
+        let lastYear = null;
+        let firstUpcomingIndex = -1;
+        let upcomingIndex = 0;
+        
+        allEvents.forEach(event => {
             const evDate = new Date(event.date);
             const isPast = evDate < now;
             const isToday = evDate.getTime() === now.getTime();
+            const evYear = event.date.substring(0,4);
+            
+            /* ÚJ: Év-szeparátor minden új évszám előtt */
+            if (evYear !== lastYear) {
+                content.insertAdjacentHTML('beforeend', 
+                    '<div class="hm-year-divider" data-year="' + evYear + '">' + evYear + '</div>');
+                lastYear = evYear;
+            }
             
             let rowClass = 'hm-row ' + (event.type === 'workday' ? 'type-workday' : 'type-holiday');
             if(isPast) rowClass += ' past';
             if(isToday) rowClass += ' current';
+            
+            /* ÚJ: Az első upcoming/today esemény indexének elmentése scroll-hoz */
+            if (firstUpcomingIndex === -1 && !isPast) {
+                firstUpcomingIndex = upcomingIndex;
+            }
+            upcomingIndex++;
 
-            const monthNames = ["JAN", "FEB", "MÁR", "ÁPR", "MÁJ", "JÚN", "JÚL", "AUG", "SZEP", "OKT", "NOV", "DEC"];
-            const dayNamesShort = ["VAS", "HÉT", "KED", "SZE", "CSÜ", "PÉN", "SZO"]; /* ÚJ: Napok röviden */
             const mName = monthNames[evDate.getMonth()];
             const dNum = evDate.getDate();
-            const dName = dayNamesShort[evDate.getDay()]; /* ÚJ: Az esemény napjának meghatározása */
+            const dName = dayNamesShort[evDate.getDay()];
 
             // PRO SHIFT TAG GENERATION
             let shiftHtml = '';
@@ -949,11 +1661,11 @@
             }
 
             const html = `
-                <div class="${rowClass}">
+                <div class="${rowClass}" data-upcoming="${!isPast ? '1' : '0'}">
                     <div class="hm-date-box">
                         <span class="hm-month">${mName}</span>
                         <span class="hm-day-num">${dNum}</span>
-                        <span class="hm-day-name">${dName}</span> <!-- ÚJ: Beillesztve a nap neve a dátum alá -->
+                        <span class="hm-day-name">${dName}</span>
                     </div>
                     <div class="hm-info">
                         <div class="hm-name">${event.name}</div>
@@ -965,6 +1677,19 @@
         });
 
         modal.classList.add('open');
+        
+        /* ÚJ: AUTO-SCROLL a következő (vagy mai) eseményre, hogy ne kelljen lefele görgetni */
+        setTimeout(() => {
+            const firstUpcoming = content.querySelector('.hm-row.current') 
+                                  || content.querySelector('.hm-row[data-upcoming="1"]');
+            if (firstUpcoming) {
+                /* finom scroll, hogy a fejléccel együtt szépen látszódjon */
+                const containerTop = content.getBoundingClientRect().top;
+                const targetTop = firstUpcoming.getBoundingClientRect().top;
+                const offset = targetTop - containerTop - 12; /* 12px tetejétől */
+                content.scrollTo({ top: content.scrollTop + offset, behavior: 'smooth' });
+            }
+        }, 100);
     }
 
     function closeHolidayList() {
