@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>INVEN PRO - Enterprise Stencil Control</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- Firebase SDK-k -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
         import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
@@ -436,7 +435,7 @@
         #toast.show { transform: translate(-50%, 0); opacity: 1; }
 
         /* ===========================================
-           OPTIMALIZÁCIÓ PRO UI (csak hozzáadás, eredeti érintetlen)
+           OPTIMALIZÁCIÓ PRO UI
            =========================================== */
         .btn-optimize { background: linear-gradient(135deg, #a855f7, #7c3aed); border: none; box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3); }
         .btn-optimize:hover { box-shadow: 0 6px 20px rgba(168, 85, 247, 0.5); }
@@ -473,7 +472,7 @@
         .swatch.move { background: #78350f; border: 1px solid var(--warning); }
         .swatch.empty { background: var(--slot-empty); border: 1px dashed #334155; }
         
-        .opt-preview-cabinets { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; max-height: 50vh; overflow-y: auto; padding: 5px; }
+        .opt-preview-cabinets { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; max-height: 50vh; min-height: 250px; flex-shrink: 0; overflow-y: auto; padding: 5px; }
         .opt-cab { background: linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-base) 100%); border-radius: 8px; padding: 12px; border: 1px solid #334155; }
         .opt-cab-header { font-size: 12px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; text-align: center; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .opt-slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
@@ -487,7 +486,7 @@
         .opt-slot.move .opt-slot-num { color: #fff; opacity: 0.9; }
         .opt-slot.empty { background: var(--slot-empty); border: 1px dashed #334155; color: #475569; font-size: 9px; }
 
-        .opt-movement-list { max-height: 250px; overflow-y: auto; background: rgba(0,0,0,0.25); border-radius: 8px; padding: 10px; }
+        .opt-movement-list { max-height: 250px; min-height: 150px; flex-shrink: 0; overflow-y: auto; background: rgba(0,0,0,0.25); border-radius: 8px; padding: 10px; }
         .opt-mv-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
         .opt-mv-row:last-child { border-bottom: none; }
         .opt-mv-mask { font-weight: 800; color: white; min-width: 80px; }
@@ -507,10 +506,9 @@
         .opt-progress-bar-wrap { width: 60%; max-width: 400px; height: 8px; background: var(--bg-panel); border-radius: 4px; overflow: hidden; }
         .opt-progress-bar { height: 100%; background: linear-gradient(90deg, #a855f7, #7c3aed); width: 0%; transition: width 0.3s; }
         
-        /* Mobil tweaks az opt-modal-xl-re */
         @media (max-width: 768px) {
             .opt-modal-xl { max-width: 100% !important; width: 100% !important; max-height: 100vh !important; border-radius: 0 !important; }
-            .opt-preview-cabinets { max-height: 45vh; grid-template-columns: 1fr; }
+            .opt-preview-cabinets { max-height: 45vh; min-height: 250px; grid-template-columns: 1fr; }
             .opt-slot { font-size: 10px; height: 38px; }
             .action-buttons .btn { padding: 8px 12px; font-size: 12px; }
         }
@@ -527,15 +525,15 @@
                 padding: 0 !important; 
                 background: white !important; 
                 font-family: Arial, sans-serif !important; 
-                height: 100% !important; 
-                overflow: hidden !important; 
+                height: auto !important; 
+                overflow: visible !important; 
             }
             
             #printArea { 
                 display: block !important; 
-                position: absolute; left: 0; top: 0; 
+                position: relative !important; left: 0; top: 0; 
                 width: 100% !important; 
-                height: 100% !important; 
+                height: auto !important; 
                 background: white !important; 
                 color: black !important; 
                 box-sizing: border-box !important; 
@@ -689,7 +687,6 @@
         </div>
     </div>
 
-    <!-- Modals -->
     <div class="modal-overlay" id="loginModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -814,11 +811,6 @@
         </div>
     </div>
 
-    <!-- ===========================================
-         OPTIMALIZÁCIÓ MODALOK (csak hozzáadás)
-         =========================================== -->
-    
-    <!-- 1. INTRO modal: leírás + 3 stratégia kártya -->
     <div class="modal-overlay" id="optimizeIntroModal">
         <div class="modal-content opt-modal-wide">
             <div class="modal-header" style="border-bottom-color: #a855f7;">
@@ -873,7 +865,6 @@
         </div>
     </div>
 
-    <!-- 2. PREVIEW modal: vizuális összehasonlítás -->
     <div class="modal-overlay" id="optimizePreviewModal">
         <div class="modal-content opt-modal-xl">
             <div class="modal-header" style="border-bottom-color: #a855f7;">
@@ -912,7 +903,6 @@
         </div>
     </div>
 
-    <!-- 3. PROGRESS overlay: futás közben -->
     <div class="opt-progress-overlay" id="optProgressOverlay">
         <div class="opt-progress-spinner"><i class="fas fa-cog fa-spin"></i></div>
         <div class="opt-progress-text" id="optProgressText">Átrendezés folyamatban...</div>
