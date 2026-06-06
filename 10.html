@@ -982,86 +982,86 @@
         let todayStr = logicalToday.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric', weekday: 'long' });
 
         if (displayStatus === "REST") {
-            // === ÚJ: REST állapotban is mutassuk a releváns munkanap párját ===
-            // A user kérte: amikor REST kártya jelenik meg (pl. Hamarosan kezdünk,
-            // Most már pihenj, Lassan ébredünk), akkor látszódjon a mai/holnapi pár neve is.
-            // Az "Pihenj jól" és "Csendes éjszaka" eseteknél viszont semmit nem mutatunk,
-            // mert ott genuinely nincs is releváns műszak.
-            let pairDay = null;
-            let pairDayLabel = '';
-            const todayShiftType = getShiftType(logicalToday);
-            
-            if (todayShiftType !== "FREE") {
-                // logicalToday maga is munkanap (Hamarosan kezdünk / Most már pihenj eset)
-                pairDay = logicalToday;
-                pairDayLabel = (todayShiftType === "NIGHT") ? "MAI ÉJSZAKÁS PÁR" : "MAI NAPPALI PÁR";
-            } else {
-                // logicalToday FREE — megnézzük, hogy holnap (Lassan ébredünk eset) DAY-e
-                const nextDay = new Date(logicalToday);
-                nextDay.setDate(nextDay.getDate() + 1);
-                if (getShiftType(nextDay) === "DAY") {
-                    pairDay = nextDay;
-                    pairDayLabel = "MAI NAPPALI PÁR"; // a user szempontjából a "calendar today"
-                }
-                // Egyéb (Pihenj jól, Csendes éjszaka) → pairDay marad null → nincs pair megjelenítés
-            }
-            
-            // Pair HTML építése (ha van releváns nap)
-            let pairBlock = '';
-            if (pairDay) {
-                const pdKey = getDateKey(pairDay);
-                let pdWorkers = ["-", "-"];
-                let alreadyPd = [];
-                sysSettings.roster.forEach(name => {
-                    if (workerStats[name] && workerStats[name].lastDate === pdKey) {
-                        alreadyPd.push(name);
-                    }
-                });
-                if (alreadyPd.length >= 2) {
-                    pdWorkers = [alreadyPd[0], alreadyPd[1]];
-                } else {
-                    pdWorkers = computedSchedule[pdKey] || ["-", "-"];
-                    if (pdWorkers[0] !== "-" && pdWorkers[1] !== "-") {
-                        recordTodayCarry(pdKey, pdWorkers[0], pdWorkers[1]);
-                    }
-                }
-                
-                if (pdWorkers[0] !== "-" && pdWorkers[1] !== "-") {
-                    const w0c = (workerStats[pdWorkers[0]] && workerStats[pdWorkers[0]].carries) || 0;
-                    const w1c = (workerStats[pdWorkers[1]] && workerStats[pdWorkers[1]].carries) || 0;
-                    let dailyAbsPd = absences[pdKey] || {};
-                    let absHtmlPd = Object.keys(dailyAbsPd).length > 0 ? 
-                        `<div class="absent-row" style="margin-top:14px;">Hiányzik: ${Object.keys(dailyAbsPd).map(n => `<span class="absent-pill" onclick="undoAbsent('${pdKey}', '${n}')" title="Koppints a visszavonáshoz">${n} ↩</span>`).join('')}</div>` : '';
-                    
-                    pairBlock = `
-                        <div style="margin-top: 22px; padding-top: 20px; border-top: 1px solid rgba(139, 92, 246, 0.15);">
-                            <div class="today-label" style="font-size: 0.78rem; margin-bottom: 10px; letter-spacing: 1.5px;">${pairDayLabel}</div>
-                            ${absHtmlPd}
-                            <div class="pill-container">
-                                <div class="worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${pdKey}', '${pdWorkers[0]}')">
-                                    <span class="worker-name">${pdWorkers[0]}</span>
-                                    <div class="carry-count">${w0c}×</div>
-                                </div>
-                                <span class="pair-separator">&amp;</span>
-                                <div class="worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${pdKey}', '${pdWorkers[1]}')">
-                                    <span class="worker-name">${pdWorkers[1]}</span>
-                                    <div class="carry-count">${w1c}×</div>
-                                </div>
-                            </div>
-                            <div class="instruction-text" style="margin-top:8px;">(Koppints a névre a hiányzás jelzéséhez)</div>
-                        </div>
-                    `;
-                }
-            }
-            
+            // === STEP 1: Az eredeti rest card ELŐSZÖR renderelődik, garantáltan ===
+            // Ez biztosítja, hogy a user MINDIG lát valamit, akkor is, ha a pair-blokk
+            // számítása valami runtime okból elhasal (pl. iOS Safari kiszámíthatatlanság).
             hero.innerHTML = `${headerHTML}
                 <div class="rest-card">
                     <div class="rest-emoji">${restEmoji}</div>
                     <h2 class="rest-title">${restTitle}</h2>
                     <p class="rest-subtext">${restSubtext}</p>
-                    ${pairBlock}
                 </div>`;
-            /* Az upcoming lista a pair-day UTÁNI napokról szóljon — ne duplázzuk a pairBlock-kal */
+            
+            // === STEP 2: Pair-blokk hozzáadása, BIZTONSÁGOS try-catch-ben ===
+            // Ha bármi hibázik, a rest card már látszik, csak a pair-blokk marad le.
+            let pairDay = null;
+            try {
+                let pairDayLabel = '';
+                const todayShiftType = getShiftType(logicalToday);
+                
+                if (todayShiftType !== "FREE") {
+                    pairDay = logicalToday;
+                    pairDayLabel = (todayShiftType === "NIGHT") ? "MAI ÉJSZAKÁS PÁR" : "MAI NAPPALI PÁR";
+                } else {
+                    const nextDay = new Date(logicalToday);
+                    nextDay.setDate(nextDay.getDate() + 1);
+                    if (getShiftType(nextDay) === "DAY") {
+                        pairDay = nextDay;
+                        pairDayLabel = "MAI NAPPALI PÁR";
+                    }
+                }
+                
+                if (pairDay) {
+                    const pdKey = getDateKey(pairDay);
+                    let pdWorkers = ["-", "-"];
+                    let alreadyPd = [];
+                    sysSettings.roster.forEach(name => {
+                        if (workerStats[name] && workerStats[name].lastDate === pdKey) {
+                            alreadyPd.push(name);
+                        }
+                    });
+                    if (alreadyPd.length >= 2) {
+                        pdWorkers = [alreadyPd[0], alreadyPd[1]];
+                    } else {
+                        pdWorkers = computedSchedule[pdKey] || ["-", "-"];
+                        if (pdWorkers[0] !== "-" && pdWorkers[1] !== "-") {
+                            recordTodayCarry(pdKey, pdWorkers[0], pdWorkers[1]);
+                        }
+                    }
+                    
+                    if (pdWorkers[0] !== "-" && pdWorkers[1] !== "-") {
+                        const w0c = (workerStats[pdWorkers[0]] && workerStats[pdWorkers[0]].carries) || 0;
+                        const w1c = (workerStats[pdWorkers[1]] && workerStats[pdWorkers[1]].carries) || 0;
+                        let dailyAbsPd = absences[pdKey] || {};
+                        let absHtmlPd = Object.keys(dailyAbsPd).length > 0 ? 
+                            `<div class="absent-row" style="margin-bottom:12px;">Hiányzik: ${Object.keys(dailyAbsPd).map(n => `<span class="absent-pill" onclick="undoAbsent('${pdKey}', '${n}')" title="Koppints a visszavonáshoz">${n} ↩</span>`).join('')}</div>` : '';
+                        
+                        /* Külön kártyaként appendelünk a hero VÉGÉRE — biztosabb mint az eredetit átírni */
+                        const pairCardHTML = `
+                            <div class="rest-card" style="margin-top: 14px; animation: cardEntry 0.4s ease-out;">
+                                <div class="today-label" style="font-size: 0.85rem; margin-bottom: 14px; letter-spacing: 1.5px;">${pairDayLabel}</div>
+                                ${absHtmlPd}
+                                <div class="pill-container">
+                                    <div class="worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${pdKey}', '${pdWorkers[0]}')">
+                                        <span class="worker-name">${pdWorkers[0]}</span>
+                                        <div class="carry-count">${w0c}×</div>
+                                    </div>
+                                    <span class="pair-separator">&amp;</span>
+                                    <div class="worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${pdKey}', '${pdWorkers[1]}')">
+                                        <span class="worker-name">${pdWorkers[1]}</span>
+                                        <div class="carry-count">${w1c}×</div>
+                                    </div>
+                                </div>
+                                <div class="instruction-text" style="margin-top:10px;">(Koppints a névre a hiányzás jelzéséhez)</div>
+                            </div>
+                        `;
+                        hero.insertAdjacentHTML('beforeend', pairCardHTML);
+                    }
+                }
+            } catch (err) {
+                console.warn('Pair-blokk skip (a rest card már látszik):', err && err.message);
+            }
+            
             fillUpcomingList(pairDay || logicalToday, list);
             return;
         }
