@@ -3,12 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pro Nyomtatás Szerkesztő</title>
+<title>Pro Nyomtatás Szerkesztő v2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-/* --- PRO APPLIKÁCIÓS STÍLUSOK --- */
+/* ====================================================== */
+/* === EREDETI PRO APPLIKÁCIÓS STÍLUSOK - SZENT GRÁL === */
+/* ====================================================== */
 :root {
     --bg-studio: #0f172a;
     --bg-card: rgba(30, 41, 59, 1);
@@ -354,14 +356,125 @@ header {
         print-color-adjust: exact;
     }
 }
+
+/* ====================================================== */
+/* === ÚJ v2 - KÉPKEZELÉSI STÍLUSOK (HOZZÁADVA) ======== */
+/* ====================================================== */
+
+/* Kép vezérlő gomb */
+.btn-image-action {
+    background-color: #1e293b;
+    color: #f8fafc;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 0.55rem 0.85rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.btn-image-action:hover {
+    background-color: #334155;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.btn-image-action.danger:hover {
+    background-color: #dc2626;
+    border-color: #dc2626;
+}
+
+/* A kép konténere a papíron */
+.paper-image {
+    position: absolute;
+    display: none;
+    cursor: move;
+    user-select: none;
+    -webkit-user-select: none;
+    z-index: 5;
+    border: 2px dashed transparent;
+    box-sizing: border-box;
+    touch-action: none;
+}
+
+.paper-image.has-image {
+    display: block;
+}
+
+.paper-image:hover {
+    border-color: rgba(56, 189, 248, 0.45);
+}
+
+.paper-image.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.3);
+}
+
+.paper-image img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    pointer-events: none;
+    -webkit-user-drag: none;
+    user-drag: none;
+}
+
+/* Méretező fogantyúk a sarkokban */
+.resize-handle {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background: var(--accent);
+    border: 2px solid white;
+    border-radius: 50%;
+    z-index: 10;
+    display: none;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    touch-action: none;
+}
+
+.paper-image.selected .resize-handle,
+.paper-image:hover .resize-handle {
+    display: block;
+}
+
+.resize-handle.nw { top: -9px; left: -9px; cursor: nw-resize; }
+.resize-handle.ne { top: -9px; right: -9px; cursor: ne-resize; }
+.resize-handle.sw { bottom: -9px; left: -9px; cursor: sw-resize; }
+.resize-handle.se { bottom: -9px; right: -9px; cursor: se-resize; }
+
+/* Ha kép van, az editor abszolút pozícióba kerül a szabad területre */
+.paper-canvas.has-image .text-container {
+    position: absolute;
+    /* left/top/width/height JS-ből kerül beállításra */
+}
+
+/* Nyomtatási kiegészítés - kép igen, fogantyúk és keret NEM */
+@media print {
+    .paper-image {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    .resize-handle {
+        display: none !important;
+    }
+    .paper-image img {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
 </style>
 </head>
 <body class="mode-landscape">
 
 <header>
     <div class="logo-area">
-        <h1>PRO NYOMTATÁS SZERKESZTŐ</h1>
-        <p id="sub-label">A4 Fektetett • Tökéletes középre igazítás • Manuális sortörés (Enter)</p>
+        <h1>PRO NYOMTATÁS SZERKESZTŐ v2</h1>
+        <p id="sub-label">A4 Fektetett • Tökéletes középre igazítás • Manuális sortörés (Enter) • Kép tallózás</p>
     </div>
     <div class="toolbar">
 
@@ -402,6 +515,21 @@ header {
             </div>
         </div>
 
+        <!-- ÚJ v2 - KÉP VEZÉRLŐK -->
+        <div class="control-group">
+            <label>Kép</label>
+            <input type="file" id="image-input" accept="image/*" style="display:none">
+            <button class="btn-image-action" id="browse-btn" title="Kép tallózása (bármilyen kiterjesztés)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                Tallózás
+            </button>
+            <button class="btn-image-action danger" id="remove-image-btn" title="Kép eltávolítása" style="display:none">✕</button>
+        </div>
+
         <!-- NYOMTATÁS -->
         <button class="btn-print" onclick="window.print()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
@@ -414,12 +542,25 @@ header {
     <div class="paper-scaler" id="scaler">
         <div class="paper-canvas" id="paper">
             <div id="measure-clone"></div>
+
+            <!-- ÚJ v2 - KÉP KONTÉNER A PAPÍRON -->
+            <div class="paper-image" id="paper-image">
+                <img id="paper-img-el" src="" alt="">
+                <div class="resize-handle nw" data-corner="nw"></div>
+                <div class="resize-handle ne" data-corner="ne"></div>
+                <div class="resize-handle sw" data-corner="sw"></div>
+                <div class="resize-handle se" data-corner="se"></div>
+            </div>
+
             <div class="text-container" id="editor" contenteditable="true" spellcheck="false"></div>
         </div>
     </div>
 </div>
 
 <script>
+/* ====================================================== */
+/* === EREDETI SZENT GRÁL VÁLTOZÓK - VÁLTOZATLAN ======= */
+/* ====================================================== */
 const editor = document.getElementById('editor');
 const clone = document.getElementById('measure-clone');
 const scaler = document.getElementById('scaler');
@@ -435,15 +576,128 @@ const customStroke = document.getElementById('custom-stroke');
 const dynamicPrintStyle = document.createElement('style');
 document.head.appendChild(dynamicPrintStyle);
 
-// --- 1. SZÖVEGMÉRETEZŐ ALGORITMUS - TELJES LAPKITÖLTÉSSEL ---
+/* ====================================================== */
+/* === ÚJ v2 - KÉPKEZELÉSI VÁLTOZÓK (HOZZÁADVA) ======== */
+/* ====================================================== */
+const imageInput = document.getElementById('image-input');
+const browseBtn = document.getElementById('browse-btn');
+const removeImageBtn = document.getElementById('remove-image-btn');
+const imageContainer = document.getElementById('paper-image');
+const imageEl = document.getElementById('paper-img-el');
+
+let imageVisible = false;
+let dragState = null; // { type:'move'|'resize', corner, startX, startY, origX, origY, origW, origH, keepAspect }
+
+/* ====================================================== */
+/* === ÚJ v2 - LEGNAGYOBB SZABAD TERÜLET FÜGGVÉNY ====== */
+/* ====================================================== */
+// Megkeresi a papíron a legnagyobb szabad téglalapot a kép körül.
+// Ha nincs kép: a teljes belső 40px paddinges terület (= eredeti viselkedés).
+function getFreeArea() {
+    const padding = 40;
+    const paperW = paper.clientWidth;
+    const paperH = paper.clientHeight;
+
+    if (!imageVisible) {
+        return {
+            x: padding,
+            y: padding,
+            w: paperW - 2 * padding,
+            h: paperH - 2 * padding
+        };
+    }
+
+    const gap = 12; // térköz a kép és a szöveg között
+    const imgX = imageContainer.offsetLeft;
+    const imgY = imageContainer.offsetTop;
+    const imgW = imageContainer.offsetWidth;
+    const imgH = imageContainer.offsetHeight;
+
+    // A négy lehetséges szabad téglalap a kép körül
+    const candidates = [
+        // Felül
+        { x: padding, y: padding,
+          w: paperW - 2 * padding,
+          h: Math.max(0, imgY - padding - gap) },
+        // Alul
+        { x: padding, y: imgY + imgH + gap,
+          w: paperW - 2 * padding,
+          h: Math.max(0, paperH - imgY - imgH - padding - gap) },
+        // Bal oldal
+        { x: padding, y: padding,
+          w: Math.max(0, imgX - padding - gap),
+          h: paperH - 2 * padding },
+        // Jobb oldal
+        { x: imgX + imgW + gap, y: padding,
+          w: Math.max(0, paperW - imgX - imgW - padding - gap),
+          h: paperH - 2 * padding }
+    ];
+
+    // A legnagyobb területű jelölt nyer
+    let best = candidates[0];
+    let bestArea = best.w * best.h;
+    for (const c of candidates) {
+        const area = c.w * c.h;
+        if (area > bestArea) {
+            best = c;
+            bestArea = area;
+        }
+    }
+
+    // Biztonsági fallback: ha a kép gyakorlatilag mindent eltakar,
+    // visszaadjuk a teljes területet hogy a szöveg ne tűnjön el.
+    if (best.w < 50 || best.h < 50) {
+        return {
+            x: padding, y: padding,
+            w: paperW - 2 * padding, h: paperH - 2 * padding
+        };
+    }
+
+    return best;
+}
+
+/* ====================================================== */
+/* === ÚJ v2 - EDITOR POZÍCIÓFRISSÍTÉS ================ */
+/* ====================================================== */
+// Ha van kép, az editor abszolút pozícióba kerül a szabad téglalapra.
+// Ha nincs kép, töröljük az inline stílusokat hogy az eredeti
+// width:100%/height:100% + flex-centrum viselkedés visszatérjen.
+function updateEditorPosition() {
+    if (imageVisible) {
+        paper.classList.add('has-image');
+        const area = getFreeArea();
+        editor.style.left = area.x + 'px';
+        editor.style.top = area.y + 'px';
+        editor.style.width = area.w + 'px';
+        editor.style.height = area.h + 'px';
+    } else {
+        paper.classList.remove('has-image');
+        editor.style.left = '';
+        editor.style.top = '';
+        editor.style.width = '';
+        editor.style.height = '';
+    }
+}
+
+/* ====================================================== */
+/* === EREDETI - SZÖVEGMÉRETEZŐ ALGORITMUS ============ */
+/* === FINOMÍTÁS v2: getFreeArea() kép-tudatosan ======= */
+/* ====================================================== */
 function autoFitText() {
+    // ÚJ v2: editor pozíció szinkronizálása (no-op ha nincs kép)
+    updateEditorPosition();
+
     if (editor.textContent.trim() === "") {
         editor.style.fontSize = "";
         return;
     }
 
-    const maxWidth = paper.clientWidth - 80;
-    const maxHeight = paper.clientHeight - 80;
+    // FINOMÍTÁS v2: a szabad területet használjuk határértékként.
+    // Ha nincs kép, getFreeArea() pontosan ugyanazt adja vissza mint
+    // korábban a paper.clientWidth - 80 és paper.clientHeight - 80.
+    const area = getFreeArea();
+    const maxWidth = area.w;
+    const maxHeight = area.h;
 
     // A mérő klón pontosan ugyanúgy néz ki mint az editor
     clone.innerHTML = editor.innerHTML;
@@ -469,7 +723,7 @@ function autoFitText() {
     editor.style.fontSize = optimalSize + "px";
 }
 
-// --- 2. RESPONSIVE PAPÍR-SKÁLÁZÁS ---
+/* === EREDETI - RESPONSIVE PAPÍR-SKÁLÁZÁS - VÁLTOZATLAN === */
 function responsiveScale() {
     const isPortrait = orientationSelect.value === 'portrait';
     const targetWidth = isPortrait ? 794 : 1123;
@@ -485,17 +739,17 @@ function responsiveScale() {
     scaler.style.transform = `scale(${scale})`;
 }
 
-// --- TÁJOLÁS VÁLTÓ LOGIKA ---
+/* === EREDETI - TÁJOLÁS VÁLTÓ LOGIKA - VÁLTOZATLAN === */
 function handleOrientationChange() {
     const isPortrait = orientationSelect.value === 'portrait';
 
     if (isPortrait) {
         document.body.className = "mode-portrait";
-        subLabel.textContent = "A4 Álló • Tökéletes középre igazítás • Manuális sortörés (Enter)";
+        subLabel.textContent = "A4 Álló • Tökéletes középre igazítás • Manuális sortörés (Enter) • Kép tallózás";
         dynamicPrintStyle.innerHTML = `@media print { @page { size: A4 portrait; margin: 0; } .paper-canvas { width: 210mm; height: 297mm; } }`;
     } else {
         document.body.className = "mode-landscape";
-        subLabel.textContent = "A4 Fektetett • Tökéletes középre igazítás • Manuális sortörés (Enter)";
+        subLabel.textContent = "A4 Fektetett • Tökéletes középre igazítás • Manuális sortörés (Enter) • Kép tallózás";
         dynamicPrintStyle.innerHTML = `@media print { @page { size: A4 landscape; margin: 0; } .paper-canvas { width: 297mm; height: 210mm; } }`;
     }
 
@@ -503,12 +757,11 @@ function handleOrientationChange() {
     setTimeout(autoFitText, 50);
 }
 
-// --- 3. SZÍNEZÉSI LOGIKA ---
+/* === EREDETI - SZÍNEZÉSI LOGIKA - VÁLTOZATLAN === */
 function setFillColor(color) {
     document.documentElement.style.setProperty('--text-fill', color);
     customFill.value = color;
 
-    // Aktív swatch frissítése
     document.querySelectorAll('#fill-swatches .swatch').forEach(s => {
         s.classList.toggle('active', s.dataset.color === color);
     });
@@ -517,12 +770,10 @@ function setFillColor(color) {
 function setStrokeWidth(width) {
     document.documentElement.style.setProperty('--stroke-width', width + 'px');
 
-    // Aktív gomb frissítése
     document.querySelectorAll('#stroke-buttons .stroke-btn').forEach(b => {
         b.classList.toggle('active', b.dataset.stroke === String(width));
     });
 
-    // Méretezés újraszámolása mert a stroke befolyásolja a méretet
     setTimeout(autoFitText, 10);
 }
 
@@ -541,7 +792,6 @@ fillSwatches.addEventListener('click', (e) => {
 // Egyéni betűszín
 customFill.addEventListener('input', (e) => {
     document.documentElement.style.setProperty('--text-fill', e.target.value);
-    // Aktív swatch eltávolítása mert egyéni szín lett választva
     document.querySelectorAll('#fill-swatches .swatch').forEach(s => {
         s.classList.toggle('active', s.dataset.color === e.target.value);
     });
@@ -559,7 +809,7 @@ customStroke.addEventListener('input', (e) => {
     setStrokeColor(e.target.value);
 });
 
-// --- 4. ESEMÉNYKEZELŐK ---
+/* === EREDETI - ESEMÉNYKEZELŐK - VÁLTOZATLAN === */
 orientationSelect.addEventListener('change', handleOrientationChange);
 
 editor.addEventListener('input', autoFitText);
@@ -570,15 +820,18 @@ editor.addEventListener('keydown', (e) => {
     }
 });
 
-// INTELLIGENS BEILLESZTÉS: A bemásolt szöveg automatikusan kitölti a teljes lapot
+// INTELLIGENS BEILLESZTÉS - FINOMÍTÁS v2: getFreeArea() használata
 editor.addEventListener('paste', (e) => {
     e.preventDefault();
     const text = (e.originalEvent || e).clipboardData.getData('text/plain');
 
     if (!text.trim()) return;
 
-    const maxWidth = paper.clientWidth - 80;
-    const maxHeight = paper.clientHeight - 80;
+    // FINOMÍTÁS v2: a szabad területre tördelünk és méretezünk.
+    // Kép nélkül ez ugyanazt adja vissza mint a régi paper.clientWidth - 80.
+    const area = getFreeArea();
+    const maxWidth = area.w;
+    const maxHeight = area.h;
 
     // Háttér mérő doboz létrehozása
     const tempMeasure = document.createElement('div');
@@ -673,7 +926,204 @@ window.addEventListener('afterprint', () => {
     autoFitText();
 });
 
-// Kezdőállapot meghívások
+/* ====================================================== */
+/* === ÚJ v2 - KÉPKEZELŐ FUNKCIÓK ===================== */
+/* ====================================================== */
+
+// Skálafaktor lekérése a scaler transformból (mozgatás/méretezés pontossághoz)
+function getScale() {
+    const m = scaler.style.transform.match(/scale\(([\d.]+)\)/);
+    return m ? parseFloat(m[1]) : 1;
+}
+
+// Kép tallózás indítása
+browseBtn.addEventListener('click', () => imageInput.click());
+
+// Kép betöltése
+imageInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        alert('Kérlek csak képet tölts fel! Bármilyen képformátum elfogadott (JPG, PNG, WebP, GIF, BMP, SVG stb.)');
+        imageInput.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        imageEl.onload = () => {
+            // Kezdő méret számítása - a papír max 35%-a a hosszabb oldalon
+            const paperW = paper.clientWidth;
+            const paperH = paper.clientHeight;
+            const maxInitW = paperW * 0.35;
+            const maxInitH = paperH * 0.35;
+
+            let w = imageEl.naturalWidth;
+            let h = imageEl.naturalHeight;
+            const ratio = Math.min(maxInitW / w, maxInitH / h, 1);
+            w = Math.round(w * ratio);
+            h = Math.round(h * ratio);
+
+            // Kezdő pozíció: jobb felső sarokba (a 40px-es paddingtól beljebb)
+            const x = paperW - w - 60;
+            const y = 60;
+
+            imageContainer.style.left = x + 'px';
+            imageContainer.style.top = y + 'px';
+            imageContainer.style.width = w + 'px';
+            imageContainer.style.height = h + 'px';
+
+            imageVisible = true;
+            imageContainer.classList.add('has-image');
+            removeImageBtn.style.display = 'inline-flex';
+
+            updateEditorPosition();
+            autoFitText();
+        };
+        imageEl.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+});
+
+// Kép eltávolítása - vissza az eredeti, kép nélküli állapotba
+removeImageBtn.addEventListener('click', () => {
+    imageVisible = false;
+    imageContainer.classList.remove('has-image');
+    imageContainer.classList.remove('selected');
+    removeImageBtn.style.display = 'none';
+    imageInput.value = '';
+    imageEl.src = '';
+
+    updateEditorPosition();
+    autoFitText();
+});
+
+/* ====================================================== */
+/* === ÚJ v2 - KÉP HÚZÁS ÉS MÉRETEZÉS ================== */
+/* ====================================================== */
+
+// Pointer-down a képen vagy a fogantyún
+imageContainer.addEventListener('pointerdown', (e) => {
+    const isHandle = e.target.classList.contains('resize-handle');
+    e.preventDefault();
+    imageContainer.classList.add('selected');
+
+    if (isHandle) {
+        // Méretezés indítása
+        dragState = {
+            type: 'resize',
+            corner: e.target.dataset.corner,
+            startX: e.clientX,
+            startY: e.clientY,
+            origX: imageContainer.offsetLeft,
+            origY: imageContainer.offsetTop,
+            origW: imageContainer.offsetWidth,
+            origH: imageContainer.offsetHeight,
+            keepAspect: !e.shiftKey  // Shift = szabad torzítás
+        };
+        try { e.target.setPointerCapture(e.pointerId); } catch (err) {}
+    } else {
+        // Mozgatás indítása
+        dragState = {
+            type: 'move',
+            startX: e.clientX,
+            startY: e.clientY,
+            origX: imageContainer.offsetLeft,
+            origY: imageContainer.offsetTop
+        };
+        try { imageContainer.setPointerCapture(e.pointerId); } catch (err) {}
+    }
+});
+
+// Pointer-move: mozgatás vagy méretezés végrehajtása
+document.addEventListener('pointermove', (e) => {
+    if (!dragState) return;
+
+    const scale = getScale();
+    const dx = (e.clientX - dragState.startX) / scale;
+    const dy = (e.clientY - dragState.startY) / scale;
+
+    const paperW = paper.clientWidth;
+    const paperH = paper.clientHeight;
+
+    if (dragState.type === 'move') {
+        let newX = dragState.origX + dx;
+        let newY = dragState.origY + dy;
+
+        // Kép határai: a papíron belül kell maradnia
+        newX = Math.max(0, Math.min(paperW - imageContainer.offsetWidth, newX));
+        newY = Math.max(0, Math.min(paperH - imageContainer.offsetHeight, newY));
+
+        imageContainer.style.left = newX + 'px';
+        imageContainer.style.top = newY + 'px';
+    } else if (dragState.type === 'resize') {
+        let newX = dragState.origX;
+        let newY = dragState.origY;
+        let newW = dragState.origW;
+        let newH = dragState.origH;
+
+        const corner = dragState.corner;
+
+        // Új szélesség/magasság a sarok iránya alapján
+        if (corner.includes('e')) newW = dragState.origW + dx;
+        if (corner.includes('w')) newW = dragState.origW - dx;
+        if (corner.includes('s')) newH = dragState.origH + dy;
+        if (corner.includes('n')) newH = dragState.origH - dy;
+
+        // Méretarány tartása (alapértelmezett), kivéve ha Shift volt nyomva
+        if (dragState.keepAspect && dragState.origH > 0) {
+            const aspect = dragState.origW / dragState.origH;
+            const wChange = Math.abs(newW - dragState.origW);
+            const hChange = Math.abs(newH - dragState.origH);
+            if (wChange > hChange) {
+                newH = newW / aspect;
+            } else {
+                newW = newH * aspect;
+            }
+        }
+
+        // Minimum méret
+        newW = Math.max(30, newW);
+        newH = Math.max(30, newH);
+
+        // Pozíció igazítása ha északi vagy nyugati sarok
+        if (corner.includes('w')) newX = dragState.origX + (dragState.origW - newW);
+        if (corner.includes('n')) newY = dragState.origY + (dragState.origH - newH);
+
+        // Papíron belüli határolás
+        if (newX < 0) { newW += newX; newX = 0; }
+        if (newY < 0) { newH += newY; newY = 0; }
+        if (newX + newW > paperW) newW = paperW - newX;
+        if (newY + newH > paperH) newH = paperH - newY;
+
+        imageContainer.style.left = newX + 'px';
+        imageContainer.style.top = newY + 'px';
+        imageContainer.style.width = newW + 'px';
+        imageContainer.style.height = newH + 'px';
+    }
+
+    // Szabad terület újraszámítása + szöveg újra-méretezése valós időben
+    updateEditorPosition();
+    autoFitText();
+});
+
+// Pointer-up: a drag/resize befejezése
+document.addEventListener('pointerup', () => {
+    dragState = null;
+});
+document.addEventListener('pointercancel', () => {
+    dragState = null;
+});
+
+// Kattintás a képen kívül = deszelektálás (fogantyúk elrejtése)
+document.addEventListener('pointerdown', (e) => {
+    if (!imageContainer.contains(e.target) && imageVisible) {
+        imageContainer.classList.remove('selected');
+    }
+});
+
+/* === EREDETI - KEZDŐÁLLAPOT MEGHÍVÁSOK - VÁLTOZATLAN === */
 handleOrientationChange();
 editor.focus();
 
