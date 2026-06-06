@@ -183,7 +183,6 @@
         }
         
         .fairness-panel-front {
-            /* Eltávolítva - user kérése: igazság mérleg nem kell */
             display: none !important;
         }
 
@@ -213,7 +212,6 @@
         .lc-date-text { font-weight: 600; color: var(--text-dim); font-size: 0.85rem; }
         .lc-pills { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
         
-        /* ✨ Upcoming pill, halványabb animált verzió */
         .lc-worker-pill { 
             display: inline-flex; align-items: center; 
             background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(6, 182, 212, 0.05)); 
@@ -251,7 +249,6 @@
         .worker-stats-mini { font-size: 0.68rem; color: var(--text-dim); margin-top: 2px; }
         .worker-stats-mini .badge { background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; margin-right: 4px; }
         
-        /* Új: kompakt stat ikon (vitelszám) az admin sorokban */
         .admin-carry-badge {
             display: inline-block;
             background: linear-gradient(135deg, rgba(139, 92, 246, 0.18), rgba(6, 182, 212, 0.12));
@@ -542,10 +539,6 @@
     // ==========================================
     // 🔄 AUTO-REFRESH (percenként)
     // ==========================================
-    // A Firebase onValue csak adatváltozásra triggerel, de óraalapú váltásokra
-    // (pl. 18:00 nappalos vége → Pihenőidő, vagy éjfél → új nap dateKey-vel) NEM.
-    // Ezért percenként újrafuttatjuk a renderUI-t, hogy a műszakhatárokon
-    // azonnal váltson a kijelző. Ez kritikus a "automata frissül" követelményhez.
     setInterval(() => {
         if (sysSettings) {
             maybeRender();
@@ -729,7 +722,6 @@
             }
         });
         
-        // --- JAVÍTÁS: Betonbiztos logika, ami meggátolja a szimuláció éjféli "átugrását" ---
         let realTodayForSim = new Date();
         let logicalTodayForSim = new Date(realTodayForSim);
         if (logicalTodayForSim.getHours() < 6) {
@@ -742,17 +734,13 @@
             simDate = new Date(lastRecordedCarry);
             simDate.setDate(simDate.getDate() + 1);
             
-            // Biztosítjuk, hogy a szimuláció semmiképp se kezdődjön később, mint a "mai" logikai műszakunk.
-            // Ez gátolja meg, hogy éjfélkor üres legyen a képernyő (legyen "mai" generált adat is)
             if (simDate.getTime() > logicalTodayForSim.getTime()) {
                 simDate = new Date(logicalTodayForSim);
             }
         } else {
-            // Ha nincs történet (pl. friss nullázás), pontosan a mai műszak naptól indítunk.
             simDate = new Date(logicalTodayForSim);
         }
         simDate.setHours(0, 0, 0, 0);
-        // --- JAVÍTÁS VÉGE ---
         
         let endDate = new Date(logicalTodayForSim);
         endDate.setDate(endDate.getDate() + 45); 
@@ -852,15 +840,11 @@
                 }
             }
             
-            // OPTIMISTA UI: azonnal mutassuk a változást, ne várjunk a Firebase round-tripre.
-            // Ez kritikus: a user otthon, gyenge mobilneten kattint, és a Firebase 1-3 másodperc
-            // alatt válaszol vissza. Korábban ezért tűnt úgy, hogy "nem reagál" a kattintásra.
             if (!absences[dateKey]) absences[dateKey] = {};
             absences[dateKey][name] = true;
             maybeRender();
             showToast(`✓ ${name} hiányzása rögzítve`, 'success');
             
-            // Firebase szinkron a háttérben — hiba esetén visszaállítjuk a friss állapotot
             db.ref().update(updates).catch(err => {
                 showToast("❌ Hiba: " + err.message, 'error');
                 absencesRef.once('value').then(snapshot => {
@@ -872,7 +856,6 @@
     };
 
     window.undoAbsent = function(dateKey, name) {
-        // OPTIMISTA UI: azonnali helyi update
         if (absences[dateKey] && absences[dateKey][name]) {
             delete absences[dateKey][name];
             if (Object.keys(absences[dateKey]).length === 0) delete absences[dateKey];
@@ -917,7 +900,6 @@
         let restEmoji = "😴";
 
         if (currentHours >= 6 && currentHours < 18) {
-            // NAPPALI IDŐSÁV (06:00 - 18:00)
             logicalToday.setHours(0,0,0,0);
             const type = getShiftType(logicalToday);
             
@@ -925,14 +907,12 @@
                 shiftLabel = "NAPPALI MŰSZAK";
                 displayStatus = "ACTIVE";
             } else if (type === "NIGHT") {
-                // Műszaknap, de a műszak még nem kezdődött (18:00-ig várunk)
                 shiftLabel = "Felkészülés a műszakra";
                 restTitle = "Hamarosan kezdünk ⏰";
                 restEmoji = "☕";
                 displayStatus = "REST";
                 restSubtext = "Az éjszakás műszak 18:00-kor indul. Pihend ki magad addig, lesz erőd!";
             } else {
-                // Teljes pihenőnap nappal
                 shiftLabel = "Szabadnap";
                 restTitle = "Pihenj jól! 🌿";
                 restEmoji = "🌿";
@@ -940,7 +920,6 @@
                 restSubtext = "Ma teljesen szabadnap a C műszakon. Élvezd a napod, töltődj fel!";
             }
         } else {
-            // ÉJSZAKAI IDŐSÁV (18:00 - 06:00)
             if (currentHours < 6) {
                 logicalToday.setDate(logicalToday.getDate() - 1);
             }
@@ -955,21 +934,18 @@
                 nextDay.setDate(nextDay.getDate() + 1);
                 
                 if (getShiftType(nextDay) === "DAY") {
-                    // Este, holnap reggel kezdődik a nappali műszak
                     shiftLabel = "Felkészülés a műszakra";
                     restTitle = "Lassan ébredünk ☕";
                     restEmoji = "☕";
                     displayStatus = "REST";
                     restSubtext = "A nappali műszak 06:00-kor folytatódik. Csak nyugodtan, van még idő pihenni!";
                 } else if (type === "DAY") {
-                    // Műszak után, de holnap is dolgozunk vagy szabadnap
                     shiftLabel = "Műszak vége";
                     restTitle = "Most már pihenj! 🎉";
                     restEmoji = "🎉";
                     displayStatus = "REST";
                     restSubtext = "A mai nappali műszaknak vége. Csak nyugodtan a következő alkalomig!";
                 } else {
-                    // Csendes éjszaka, nincs műszak
                     shiftLabel = "Csendes éjszaka";
                     restTitle = "Csendes éjszaka 🌙";
                     restEmoji = "🌙";
@@ -982,9 +958,6 @@
         let todayStr = logicalToday.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric', weekday: 'long' });
 
         if (displayStatus === "REST") {
-            // === STEP 1: Az eredeti rest card ELŐSZÖR renderelődik, garantáltan ===
-            // Ez biztosítja, hogy a user MINDIG lát valamit, akkor is, ha a pair-blokk
-            // számítása valami runtime okból elhasal (pl. iOS Safari kiszámíthatatlanság).
             hero.innerHTML = `${headerHTML}
                 <div class="rest-card">
                     <div class="rest-emoji">${restEmoji}</div>
@@ -992,22 +965,36 @@
                     <p class="rest-subtext">${restSubtext}</p>
                 </div>`;
             
-            // === STEP 2: Pair-blokk hozzáadása, BIZTONSÁGOS try-catch-ben ===
-            // Ha bármi hibázik, a rest card már látszik, csak a pair-blokk marad le.
+            // === STEP 2 JAVÍTVA: Csak ezt a blokkot írtam át! ===
             let pairDay = null;
             try {
                 let pairDayLabel = '';
-                const todayShiftType = getShiftType(logicalToday);
                 
-                if (todayShiftType !== "FREE") {
-                    pairDay = logicalToday;
-                    pairDayLabel = (todayShiftType === "NIGHT") ? "MAI ÉJSZAKÁS PÁR" : "MAI NAPPALI PÁR";
+                if (currentHours >= 6 && currentHours < 18) {
+                    if (getShiftType(logicalToday) === "NIGHT") {
+                        pairDay = logicalToday;
+                        pairDayLabel = "MAI ÉJSZAKÁS PÁR";
+                    } else {
+                        let nextDay = new Date(logicalToday);
+                        nextDay.setDate(nextDay.getDate() + 1);
+                        if (getShiftType(nextDay) === "DAY") {
+                            pairDay = nextDay;
+                            pairDayLabel = "HOLNAPI NAPPALI PÁR";
+                        } else if (getShiftType(nextDay) === "NIGHT") {
+                            pairDay = nextDay;
+                            pairDayLabel = "HOLNAPI ÉJSZAKÁS PÁR";
+                        }
+                    }
                 } else {
-                    const nextDay = new Date(logicalToday);
+                    let nextDay = new Date(logicalToday);
                     nextDay.setDate(nextDay.getDate() + 1);
+                    
                     if (getShiftType(nextDay) === "DAY") {
                         pairDay = nextDay;
-                        pairDayLabel = "MAI NAPPALI PÁR";
+                        pairDayLabel = (currentHours < 6) ? "MAI NAPPALI PÁR" : "HOLNAPI NAPPALI PÁR";
+                    } else if (getShiftType(nextDay) === "NIGHT") {
+                        pairDay = nextDay;
+                        pairDayLabel = (currentHours < 6) ? "MAI ÉJSZAKÁS PÁR" : "HOLNAPI ÉJSZAKÁS PÁR";
                     }
                 }
                 
@@ -1036,7 +1023,6 @@
                         let absHtmlPd = Object.keys(dailyAbsPd).length > 0 ? 
                             `<div class="absent-row" style="margin-bottom:12px;">Hiányzik: ${Object.keys(dailyAbsPd).map(n => `<span class="absent-pill" onclick="undoAbsent('${pdKey}', '${n}')" title="Koppints a visszavonáshoz">${n} ↩</span>`).join('')}</div>` : '';
                         
-                        /* Külön kártyaként appendelünk a hero VÉGÉRE — biztosabb mint az eredetit átírni */
                         const pairCardHTML = `
                             <div class="rest-card" style="margin-top: 14px; animation: cardEntry 0.4s ease-out;">
                                 <div class="today-label" style="font-size: 0.85rem; margin-bottom: 14px; letter-spacing: 1.5px;">${pairDayLabel}</div>
@@ -1199,7 +1185,6 @@
         }, 2500);
     }
 
-    // Custom megerősítő modal — megbízhatóbb mint a natív confirm() mobilon
     function showConfirm(title, message, onConfirm, icon = '⚠️', okLabel = 'Igen, megerősítem') {
         const overlay = document.getElementById('confirmOverlay');
         document.getElementById('confirmIcon').textContent = icon;
@@ -1207,7 +1192,6 @@
         document.getElementById('confirmMessage').textContent = message;
         document.getElementById('confirmOkBtn').textContent = okLabel;
         
-        // onclick assignment lecseréli az előző handlert — nincs stacking
         document.getElementById('confirmOkBtn').onclick = () => {
             overlay.classList.remove('active');
             onConfirm();
@@ -1351,10 +1335,6 @@
                 const todayKey = getDateKey(new Date());
                 const updates = {};
                 
-                // PATH-SZERŰ írás: minden workert egyenként frissítünk, NEM az egész
-                // workerStats node-ot cseréljük le. Így biztosan átmegy a Firebase
-                // security rules-on (a teljes-node csere validation hibát okozhatott,
-                // ezért tűnt úgy, hogy "nem csinál semmit").
                 sysSettings.roster.forEach(name => {
                     updates[`workerStats/${name}/carries`] = 0;
                     updates[`workerStats/${name}/lastDate`] = null;
@@ -1363,7 +1343,6 @@
                 updates['pairHistory'] = null;
                 updates['absences'] = null;
                 
-                // OPTIMISTA UI: azonnal nullázzuk lokálisan, ne várjunk a felhőre
                 sysSettings.roster.forEach(name => {
                     workerStats[name] = { carries: 0, lastDate: null, joinDate: todayKey };
                 });
@@ -1372,10 +1351,8 @@
                 maybeRender();
                 showToast("✅ Pontok újranullázva mindenkinek!", 'success');
                 
-                // Firebase szinkron a háttérben
                 db.ref().update(updates).catch(err => {
                     showToast("❌ Hiba: " + err.message, 'error');
-                    // Hiba esetén visszatöltjük a friss állapotot
                     statsRef.once('value').then(snap => {
                         workerStats = snap.val() || {};
                         maybeRender();
