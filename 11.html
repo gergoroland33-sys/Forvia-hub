@@ -567,6 +567,54 @@
             { id: 4, name: 'Multi', s1: 3,  s2: 3 }
         ];
 
+        // ===================================================================
+        // ÚJ (v3.1 - F04 BŐVÍTÉS): Az F04 sor 4 gépről 5 gépre bővült.
+        // Egy ÚJ gép került az élre (kijelzett "Gép #1", 15-15 szár).
+        //
+        // *** SZENT GRÁL BIZTONSÁGI ELV ***
+        // A meglévő mentések kulcsai (M1..M4) NEM változnak! Az új gép FRISS
+        // M5 kulcsot kap, ezért SEMMILYEN korábbi adat nem vész el és nem
+        // csúszik át más gépre. Csak a KIJELZETT sorszám tolódik el:
+        //
+        //   tárolási kulcs (DB)   ->   kijelzett sorszám (UI)
+        //   --------------------       ----------------------
+        //   M5 (ÚJ, üres)         ->   Gép #1   (most került be)
+        //   M1 (meglévő adat)     ->   Gép #2   (régi 1-es gép)
+        //   M2 (meglévő adat)     ->   Gép #3   (régi 2-es gép)
+        //   M3 (meglévő adat)     ->   Gép #4   (régi 3-as gép)
+        //   M4 (meglévő adat)     ->   Gép #5   (régi 4-es gép)
+        //
+        // Ez KIZÁRÓLAG az F04 sort érinti. F05/F06/F08 teljesen változatlan.
+        // ===================================================================
+        const machinesF04 = [
+            { id: 5, displayNo: 1, name: 'High speed', s1: 15, s2: 15 }, // ÚJ gép -> M5 (üres)
+            { id: 1, displayNo: 2, name: 'High speed', s1: 15, s2: 15 }, // régi 1 -> M1 (adat marad)
+            { id: 2, displayNo: 3, name: 'High speed', s1: 15, s2: 15 }, // régi 2 -> M2 (adat marad)
+            { id: 3, displayNo: 4, name: 'Multi',      s1: 3,  s2: 15 }, // régi 3 -> M3 (adat marad)
+            { id: 4, displayNo: 5, name: 'Multi',      s1: 3,  s2: 3  }  // régi 4 -> M4 (adat marad)
+        ];
+
+        // Visszaadja az adott sorhoz tartozó géplistát (csak F04 tér el).
+        function getMachinesForLine(lineId) {
+            return lineId === 'F04' ? machinesF04 : machines;
+        }
+
+        // TÁROLÁSI gép-id -> KIJELZETT sorszám fordítás soronként.
+        // Nem-F04 soroknál azonosság: a kijelzett szám = tárolási id (minden marad).
+        function getDisplayNoForLine(lineId, storageId) {
+            if (lineId === 'F04') {
+                const map = { 5: 1, 1: 2, 2: 3, 3: 4, 4: 5 };
+                return map[storageId] || storageId;
+            }
+            return storageId;
+        }
+
+        // Hány géposzlopot mutasson a diagram (F04 / ALL nézetben akár 5).
+        function getMachineCountForLine(lineId) {
+            if (lineId === 'F04' || lineId === 'ALL') return 5;
+            return 4;
+        }
+
         const allLines = ["F04", "F05", "F06", "F08"];
         let globalData = {};
         let currentSelection = null;
@@ -767,7 +815,8 @@
                 const grid = document.createElement('div');
                 grid.className = 'dashboard-grid';
 
-                machines.forEach(m => {
+                // VÁLTOZÁS (F04 BŐVÍTÉS): soronkénti géplista (F04 = 5 gép, többi = 4).
+                getMachinesForLine(lineId).forEach(m => {
                     let machineErrors = 0;
                     Object.keys(lineErrors).forEach(k => { if(k.includes(`M${m.id}_`)) machineErrors++; });
                     const totalNozzles = m.s1 + m.s2;
@@ -789,7 +838,7 @@
 
                     card.innerHTML = `
                         <div class="machine-header">
-                            <span class="machine-name">Gép #${m.id} <span style="font-weight:700; color:#94a3b8; font-size:0.85rem;">| ${m.name}</span></span>
+                            <span class="machine-name">Gép #${m.displayNo || m.id} <span style="font-weight:700; color:#94a3b8; font-size:0.85rem;">| ${m.name}</span></span>
                             ${statusHtml}
                         </div>
                         <div class="machine-body">
@@ -882,16 +931,18 @@
 
             allLines.forEach(lineId => {
                 const lineErrors = globalData[lineId] || {};
+                // VÁLTOZÁS (F04 BŐVÍTÉS): soronkénti géplista és ahhoz igazított oszlopszám.
+                const repMachines = getMachinesForLine(lineId);
                 
                 html += `
                     <div class="rep-line-section">
                         <div class="rep-line-title">
                             <span>${lineId} GÉPSOR</span>
                         </div>
-                        <div class="rep-machines-grid">
+                        <div class="rep-machines-grid" style="grid-template-columns: repeat(${repMachines.length}, 1fr);">
                 `;
 
-                machines.forEach(m => {
+                repMachines.forEach(m => {
                     let machineErrorList = [];
                     Object.entries(lineErrors).forEach(([key, errorData]) => {
                         if(key.includes(`M${m.id}_`)) {
@@ -926,7 +977,7 @@
 
                     html += `
                         <div class="rep-machine">
-                            <div class="rep-m-name">Gép ${m.id} (${m.name})</div>
+                            <div class="rep-m-name">Gép ${m.displayNo || m.id} (${m.name})</div>
                             <div class="rep-capacity-box">
                                 <div class="rep-cap-label">Jelenlegi Kapacitás</div>
                                 <div class="rep-cap-val ${!isPerfect ? 'warning' : ''}">${capacity}%</div>
@@ -960,7 +1011,8 @@
             currentSelection = { line, key, mId, side, nId };
             const error = (globalData[line] || {})[key];
             document.getElementById('modalTitle').innerText = error ? 'Hiba Szerkesztése' : 'Hiba Bejelentése';
-            document.getElementById('modalSubtitle').innerHTML = `<strong>${line}</strong> &bull; Gép ${mId} &bull; ${side}. Oldal &bull; Nozzle ${nId}`;
+            // VÁLTOZÁS (F04 BŐVÍTÉS): a feliraton a kijelzett sorszám (F04-nél eltolt), de a mentés továbbra is mId (M-kulcs) szerint megy.
+            document.getElementById('modalSubtitle').innerHTML = `<strong>${line}</strong> &bull; Gép ${getDisplayNoForLine(line, mId)} &bull; ${side}. Oldal &bull; Nozzle ${nId}`;
             document.getElementById('errorReason').value = 'Nozzle kicsúszott';
             document.getElementById('otherInputContainer').style.display = 'none';
             if(error) {
@@ -1069,7 +1121,7 @@
             allEntries.forEach(log => {
                 if (log.type === 'DISABLE') {
                     totalStops++;
-                    const mName = `Gép #${log.machineId} (${log._line})`;
+                    const mName = `Gép #${getDisplayNoForLine(log._line, log.machineId)} (${log._line})`;
                     machineFails[mName] = (machineFails[mName] || 0) + 1;
                     reasonFails[log.reason] = (reasonFails[log.reason] || 0) + 1;
                 }
@@ -1108,7 +1160,7 @@
             allEntries.forEach(log => {
                 if (log.type === 'DISABLE') {
                     const lineName = log._line;
-                    const keyName = `Gép ${log.machineId} / ${log.side}. oldal / N${log.nozzle}`;
+                    const keyName = `Gép ${getDisplayNoForLine(log._line, log.machineId)} / ${log.side}. oldal / N${log.nozzle}`;
                     if (!errorCounts[lineName][keyName]) errorCounts[lineName][keyName] = 0;
                     errorCounts[lineName][keyName]++;
                 }
@@ -1151,7 +1203,9 @@
             const tbody = document.getElementById('historyTableBody');
             tbody.innerHTML = '';
             
-            let chartData = { 1: {}, 2: {}, 3: {}, 4: {} };
+            // VÁLTOZÁS (F04 BŐVÍTÉS): 5 gépet is kezel (1..5). A crash elkerülése
+            // végett az 5-ös kulcs is előre inicializálva van.
+            let chartData = { 1: {}, 2: {}, 3: {}, 4: {}, 5: {} };
             let allReasonsSet = new Set();
             
             allEntries.forEach(log => {
@@ -1160,9 +1214,11 @@
                 const isError = log.type === 'DISABLE';
                 
                 if(isError) {
-                    const mId = log.machineId;
+                    // VÁLTOZÁS: KIJELZETT sorszám szerint összesítünk (F04-nél eltolt, máshol azonos).
+                    const mId = getDisplayNoForLine(log._line, log.machineId);
                     const r = log.reason;
                     allReasonsSet.add(r);
+                    if(!chartData[mId]) chartData[mId] = {};
                     if(!chartData[mId][r]) chartData[mId][r] = 0;
                     chartData[mId][r]++;
                 }
@@ -1175,7 +1231,7 @@
                     <tr class="${rowClass}">
                         <td data-label="Időpont" class="log-date">${dateStr}</td>
                         <td data-label="Állapot">${badge}</td>
-                        <td data-label="Hely" class="log-loc">${locationPrefix}Gép ${log.machineId} / ${log.side}. oldal / Nozzle ${log.nozzle}</td>
+                        <td data-label="Hely" class="log-loc">${locationPrefix}Gép ${getDisplayNoForLine(log._line, log.machineId)} / ${log.side}. oldal / Nozzle ${log.nozzle}</td>
                         <td data-label="Ok / Megjegyzés" style="font-weight:700; color:var(--text-main);">${log.reason}</td>
                         <td data-label="Művelet" class="no-print" align="center">
                             <button class="btn-delete" onclick="window.deleteLog('${log._line}', '${log._id}')" title="Törlés">✕</button>
@@ -1188,10 +1244,15 @@
             const allReasons = Array.from(allReasonsSet);
             const colorPalette = ['#dc2626', '#2563eb', '#d97706', '#7c3aed', '#059669', '#ea580c', '#475569'];
             
+            // VÁLTOZÁS (F04 BŐVÍTÉS): dinamikus géptengely (4 vagy 5 oszlop).
+            const machineCount = getMachineCountForLine(line);
+            const machineIndexes = [];
+            for (let i = 1; i <= machineCount; i++) machineIndexes.push(i);
+
             const datasets = allReasons.map((reason, index) => {
                 return {
                     label: reason,
-                    data: [1, 2, 3, 4].map(mId => chartData[mId][reason] || 0),
+                    data: machineIndexes.map(mId => (chartData[mId] && chartData[mId][reason]) || 0),
                     backgroundColor: colorPalette[index % colorPalette.length],
                     borderRadius: 4
                 };
@@ -1200,7 +1261,7 @@
             mainChart = new Chart(document.getElementById('mainChart'), {
                 type: 'bar',
                 data: { 
-                    labels: ['Gép 1', 'Gép 2', 'Gép 3', 'Gép 4'], 
+                    labels: machineIndexes.map(n => `Gép ${n}`), 
                     datasets: datasets 
                 },
                 options: { 
