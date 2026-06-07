@@ -698,7 +698,7 @@
         return (workDays * 2) / rosterSize;
     }
 
-    // --- JAVÍTOTT SZIMULÁTOR ---
+    // --- JAVÍTOTT SZIMULÁTOR: Visszatettük az atombiztos "felzárkózó" logikát! ---
     function calculateAllSchedules() {
         computedSchedule = {};
         
@@ -715,6 +715,14 @@
         });
         let simPairs = { ...pairHistory };
         
+        let lastRecordedCarry = null;
+        Object.values(workerStats).forEach(ws => {
+            if (ws.lastDate) {
+                const d = parseLocalDate(ws.lastDate);
+                if (!lastRecordedCarry || d > lastRecordedCarry) lastRecordedCarry = d;
+            }
+        });
+        
         let realTodayForSim = new Date();
         let logicalTodayForSim = new Date(realTodayForSim);
         if (logicalTodayForSim.getHours() < 6) {
@@ -722,8 +730,17 @@
         }
         logicalTodayForSim.setHours(0, 0, 0, 0);
 
-        // A szimuláció MINDIG a logikai maitól indul
-        let simDate = new Date(logicalTodayForSim);
+        let simDate;
+        if (lastRecordedCarry) {
+            // A szimulátor Szigorúan a legutolsó mentett nap UTÁN kezdi a számolást,
+            // így ha napok maradtak ki (mert nem nyitottátok meg az appot), 
+            // azokat a háttérben hibátlanul pótolja és nem ismétli az embereket!
+            simDate = new Date(lastRecordedCarry);
+            simDate.setDate(simDate.getDate() + 1);
+        } else {
+            simDate = new Date(logicalTodayForSim);
+        }
+        
         let endDate = new Date(logicalTodayForSim);
         endDate.setDate(endDate.getDate() + 45); 
 
@@ -731,50 +748,35 @@
             if (isWorkingDay(simDate)) {
                 let dateKey = getDateKey(simDate);
                 
-                // JAVÍTÁS 2: Ellenőrizzük, hogy ez a nap rögzítve van-e MÁR a valóságban (Firebase-ben)!
-                let recordedForThisDay = [];
-                roster.forEach(name => {
-                    if (workerStats[name] && workerStats[name].lastDate === dateKey) {
-                        recordedForThisDay.push(name);
+                let dailyAbsences = absences[dateKey] || {};
+                let availableWorkers = [...new Set(roster)].filter(name => {
+                    if (dailyAbsences[name]) return false;
+                    const ws = simStats[name];
+                    if (ws && ws.joinDate) {
+                        const jd = parseLocalDate(ws.joinDate);
+                        if (jd > simDate) return false;
                     }
+                    return true;
                 });
-
-                if (recordedForThisDay.length >= 2) {
-                    // MÁR MEGTÖRTÉNT! A szimulátor ezt a napot átveszi a valóságból, nem találgat.
-                    // A simStats-hoz nem is kell nyúlni, mert abba az elején bekerült a valóságos adat.
-                    computedSchedule[dateKey] = [recordedForThisDay[0], recordedForThisDay[1]];
-                } else {
-                    // NINCS RÖGZÍTVE: a gépnek kell kitalálnia a jövőt
-                    let dailyAbsences = absences[dateKey] || {};
-                    let availableWorkers = [...new Set(roster)].filter(name => {
-                        if (dailyAbsences[name]) return false;
-                        const ws = simStats[name];
-                        if (ws && ws.joinDate) {
-                            const jd = parseLocalDate(ws.joinDate);
-                            if (jd > simDate) return false;
-                        }
-                        return true;
-                    });
-                    
-                    const pair = selectPairForDay(availableWorkers, simStats, simPairs, simDate);
-                    
-                    if (pair[0] !== "-" && pair[1] !== "-" && pair[0] !== pair[1]) {
-                        simStats[pair[0]] = {
-                            ...simStats[pair[0]],
-                            carries: (simStats[pair[0]].carries || 0) + 1,
-                            lastDate: dateKey
-                        };
-                        simStats[pair[1]] = {
-                            ...simStats[pair[1]],
-                            carries: (simStats[pair[1]].carries || 0) + 1,
-                            lastDate: dateKey
-                        };
-                        const pk = pairKey(pair[0], pair[1]);
-                        simPairs[pk] = (simPairs[pk] || 0) + 1;
-                    }
-                    
-                    computedSchedule[dateKey] = pair;
+                
+                const pair = selectPairForDay(availableWorkers, simStats, simPairs, simDate);
+                
+                if (pair[0] !== "-" && pair[1] !== "-" && pair[0] !== pair[1]) {
+                    simStats[pair[0]] = {
+                        ...simStats[pair[0]],
+                        carries: (simStats[pair[0]].carries || 0) + 1,
+                        lastDate: dateKey
+                    };
+                    simStats[pair[1]] = {
+                        ...simStats[pair[1]],
+                        carries: (simStats[pair[1]].carries || 0) + 1,
+                        lastDate: dateKey
+                    };
+                    const pk = pairKey(pair[0], pair[1]);
+                    simPairs[pk] = (simPairs[pk] || 0) + 1;
                 }
+                
+                computedSchedule[dateKey] = pair;
             }
             simDate.setDate(simDate.getDate() + 1);
         }
@@ -1007,8 +1009,6 @@
                         pdWorkers = [alreadyPd[0], alreadyPd[1]];
                     } else {
                         pdWorkers = computedSchedule[pdKey] || ["-", "-"];
-                        // JAVÍTÁS 1: Itt TÖRÖLTEM a recordTodayCarry()-t! 
-                        // Ez a rész csak mutatja a jövőt, nem írhatja be a Firebase-be azonnal!
                     }
                     
                     if (pdWorkers[0] !== "-" && pdWorkers[1] !== "-") {
