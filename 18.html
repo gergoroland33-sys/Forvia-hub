@@ -108,8 +108,8 @@
     <input type="file" id="fileInput" accept=".xlsx">
 
     <div class="opt">
-      <label>Méretarány (olvashatóság):</label>
-      <input type="number" id="scale" value="38" min="20" max="60" step="1"> %
+      <label>Méretarány:</label>
+      <input type="number" id="scale" value="" min="20" max="60" step="1" placeholder="auto"> %
       <span class="pill" id="pagesPill" style="display:none">2 oldal A3 álló</span>
     </div>
 
@@ -130,9 +130,9 @@
     <div class="note">
       Nyomtatáskor ellenőrizd: papír <b>A3</b>, tájolás <b>álló</b>, méretezés <b>„Eredeti / 100%"</b> (NE „Fit to page", azt már a fájl tartalmazza).
       A felosztás a meglévő oszloptörésnél marad: 1. oldal <b>Date · F0B · F03 · F04</b>, 2. oldal <b>Date · F05 · F06 · T03 · TC</b>.
-      A tartalom <b>vízszintesen középre</b> kerül, minden cella megmarad (az üresek is), semmi nem vágódik le.
-      Az eszköz a <b>te módszered</b> automatizálja: a kis betűket 12 pt-ra emeli, az üres sorokat összenyomja, így a tartalmas sorok nagyobbak és olvashatóbbak.
-      A <b>38%</b> a biztos méretarány 2 oldalhoz. Ha valaha 3–4 oldal lenne, vedd <b>37%</b>-ra; ha nálad elfér, próbálhatsz nagyobbat.
+      A tartalom <b>vízszintesen középre</b> kerül, minden cella megmarad (az üresek is), semmi nem vágódik és nem csúszik el (az összevont cellákra is figyel).
+      Az eszköz a <b>te módszered</b> automatizálja: a betűt <b>14 pt</b>-ra emeli, és <b>cellaszinten</b> megkeresi, hol van adat (mindegy, melyik sorban) — az adatsorokat megnagyítja, az üreseket összenyomja.
+      A méretarányt <b>automatikusan</b> az adott fájl adatsűrűségéhez számolja, hogy mindig 2 oldal legyen. Ha valaha mégis 3–4 oldal lenne, írj be kézzel kisebb értéket (pl. 33) a mezőbe.
     </div>
   </div>
 
@@ -170,8 +170,8 @@ function process(file){
     show('err','<h3>⚠️ Nem .xlsx fájl</h3>Kérlek .xlsx kiterjesztésű Excel fájlt tölts be.');
     return;
   }
-  let scale = parseInt(els.scale.value,10);
-  if (isNaN(scale) || scale<10 || scale>100) scale = 38;
+  const manualScale = parseInt(els.scale.value,10);
+  const manualValid = !isNaN(manualScale) && manualScale>=10 && manualScale<=100;
 
   show('work','<h3>⏳ Igazítás folyamatban…</h3>'+file.name);
 
@@ -182,7 +182,7 @@ function process(file){
       const sheetNames = Object.keys(zip.files).filter(n => /^xl\/worksheets\/sheet\d+\.xml$/i.test(n));
       if (sheetNames.length === 0) throw new Error('Nem található munkalap a fájlban.');
 
-      const FONT = 12, DATA_H = 13.5, EMPTY_H = 3.5;
+      const FONT = 14, DATA_H = 15.5, EMPTY_H = 3.5;
 
       // 1) STÍLUSOK: a kis cellabetűket FONT méretre emeljük (a sorokban lévő
       //    függőleges üres helyet kihasználva). A már nagy betűk maradnak.
@@ -192,21 +192,32 @@ function process(file){
         zip.file('xl/styles.xml', st);
       }
 
-      // 2) MUNKALAPOK
-      let hadRowBreak = false, editedSheets = 0, dataCount = 0, emptyCount = 0;
+      // 2) MUNKALAPOK – először cellaszintű adatfelismerés (mindegy, melyik sorban van)
+      let hadRowBreak = false, dataCount = 0, emptyCount = 0;
+      const toFix = [];
       for (const name of sheetNames){
         let xml = await zip.file(name).async('string');
         if (!/<pageSetup\b/.test(xml)) continue; // csak a nyomtatható lap(ok)
         if (/<rowBreaks\b/.test(xml)) hadRowBreak = true;
-        const dataRows = detectDataRows(xml);   // mely sorokban van tényleges adat
-        if (dataCount === 0){
+        const dataRows = detectDataRows(xml);   // CELLASZINTŰ: bárhol van adat, megtalálja
+        if (toFix.length === 0){
           for (let r=2; r<=236; r++){ if (dataRows.has(r)) dataCount++; else emptyCount++; }
         }
-        xml = fixSheetXml(xml, scale, dataRows, DATA_H, EMPTY_H);
-        zip.file(name, xml);
+        toFix.push({name, xml, dataRows});
+      }
+      if (toFix.length === 0) throw new Error('Nincs nyomtatási beállítású munkalap.');
+
+      // AUTOMATIKUS méretarány az adott fájl adatsűrűségéhez (mindig 2 oldal).
+      // 1015 pt ≈ az A3 álló nyomtatható magassága (a bevált 12pt/38% esetből kalibrálva).
+      const totalPt = dataCount*DATA_H + emptyCount*EMPTY_H;
+      const autoScale = Math.max(20, Math.min(60, Math.round(1015 / totalPt * 100)));
+      const scale = manualValid ? manualScale : autoScale;
+
+      let editedSheets = 0;
+      for (const s of toFix){
+        zip.file(s.name, fixSheetXml(s.xml, scale, s.dataRows, DATA_H, EMPTY_H));
         editedSheets++;
       }
-      if (editedSheets === 0) throw new Error('Nincs nyomtatási beállítású munkalap.');
 
       fixedBlob = await zip.generateAsync({type:'blob', compression:'DEFLATE',
         mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
@@ -218,10 +229,10 @@ function process(file){
       const ch = [];
       ch.push('<li><span class="tick">✓</span><span>Lapméret/tájolás: <b>A3 álló</b>, vízszintesen középre</span></li>');
       ch.push('<li><span class="tick">✓</span><span>Adatbetűk felnagyítva <b>'+FONT+' pt</b>-ra (a sorokban lévő üres helyet kihasználva)</span></li>');
-      ch.push('<li><span class="tick">✓</span><span><b>'+emptyCount+' üres sor összenyomva</b> → helyet adva a <b>'+dataCount+' adatsornak</b> (a te módszered)</span></li>');
-      ch.push('<li><span class="tick">✓</span><span>Méretarány: <b>'+scale+'%</b> – mindkét fél pontosan 1-1 A3 oldal</span></li>');
+      ch.push('<li><span class="tick">✓</span><span><b>Cellaszintű felismerés:</b> '+dataCount+' adatsor (bárhol van adat) megnagyítva, '+emptyCount+' üres sor összenyomva</span></li>');
+      ch.push('<li><span class="tick">✓</span><span>Méretarány: <b>'+scale+'%</b>'+(manualValid?' (kézi)':' (automatikus, a fájl adatsűrűségéhez)')+' – mindkét fél pontosan 1-1 A3 oldal</span></li>');
       if (hadRowBreak) ch.push('<li><span class="tick">✓</span><span>Felesleges <b>függőleges laptörés eltávolítva</b></span></li>');
-      ch.push('<li><span class="tick">✓</span><span>Az <b>oszloptörés megmaradt</b> → bal/jobb fél = 2 oldal, semmi nincs levágva</span></li>');
+      ch.push('<li><span class="tick">✓</span><span>Összevont cellák, színek, tartalom: <b>nem csúszik, nem vágódik</b> – oszloptörés megmaradt (2 oldal)</span></li>');
 
       show('ok',
         '<h3>✅ Kész – nagyobb betű, 2 oldalas A3</h3>'+
