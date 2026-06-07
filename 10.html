@@ -249,6 +249,18 @@
         .worker-stats-mini { font-size: 0.68rem; color: var(--text-dim); margin-top: 2px; }
         .worker-stats-mini .badge { background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; margin-right: 4px; }
         
+        .admin-carry-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.18), rgba(6, 182, 212, 0.12));
+            color: white;
+            font-weight: 800;
+            font-size: 0.72rem;
+            padding: 3px 9px;
+            border-radius: 6px;
+            min-width: 32px;
+            text-align: center;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
         .admin-team-summary {
             background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(6, 182, 212, 0.05));
             border: 1px solid rgba(139, 92, 246, 0.15);
@@ -575,6 +587,17 @@
         return [a, b].sort().join('|');
     }
     
+    // 🔥 DETERMINISZTIKUS HASH ALGORITMUS A STABIL KEVERÉSHEZ
+    function getHashTieBreaker(name1, name2, date) {
+        let str = [name1, name2].sort().join('|') + '|' + date.getFullYear() + '-' + date.getMonth() + '-' + date.getDate();
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash |= 0;
+        }
+        return Math.abs(hash) / 2147483647; // 0.0 és 1.0 közötti fix számot ad az adott napra
+    }
+
     function countWorkingDaysInRange(startDate, endDate) {
         let count = 0;
         let d = new Date(startDate);
@@ -652,9 +675,9 @@
                     freshnessCost -= 30;
                 }
                 
-                // 🔥 ANTI-LOOP: Pici véletlenszerűség a tökéletes egyezések (holtversenyek) feloldására
-                let randomTieBreaker = Math.random() * 0.5; 
-                const cost = deficitCost * 1000 + partnerCount * 10000 + freshnessCost * 10 + randomTieBreaker;
+                // Atomstabil tie-breaker: Ugyanarra a napra és névre mindig pontosan ugyanazt adja
+                let tieBreaker = getHashTieBreaker(a, b, currentDate) * 0.5;
+                const cost = deficitCost * 1000 + partnerCount * 10000 + freshnessCost * 10 + tieBreaker;
                 
                 if (cost < bestCost) {
                     bestCost = cost;
@@ -689,7 +712,7 @@
         return (workDays * 2) / rosterSize;
     }
 
-    // --- JAVÍTOTT SZIMULÁTOR: Visszatettük az atombiztos "felzárkózó" logikát! ---
+    // --- JAVÍTOTT SZIMULÁTOR ---
     function calculateAllSchedules() {
         computedSchedule = {};
         
@@ -797,7 +820,7 @@
         db.ref().update(updates);
     }
     
-    // 🔥 Új Manulális Pontszabályzó
+    // 🔥 Új Manuális Pontszabályzó
     window.adjustCarries = function(name, delta) {
         let currentCarries = (workerStats[name] && workerStats[name].carries) || 0;
         let newCarries = Math.max(0, currentCarries + delta);
