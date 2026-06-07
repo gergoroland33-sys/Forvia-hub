@@ -249,18 +249,6 @@
         .worker-stats-mini { font-size: 0.68rem; color: var(--text-dim); margin-top: 2px; }
         .worker-stats-mini .badge { background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; margin-right: 4px; }
         
-        .admin-carry-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.18), rgba(6, 182, 212, 0.12));
-            color: white;
-            font-weight: 800;
-            font-size: 0.72rem;
-            padding: 3px 9px;
-            border-radius: 6px;
-            min-width: 32px;
-            text-align: center;
-            border: 1px solid rgba(139, 92, 246, 0.3);
-        }
         .admin-team-summary {
             background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(6, 182, 212, 0.05));
             border: 1px solid rgba(139, 92, 246, 0.15);
@@ -327,6 +315,7 @@
     <div class="list-container">
         <div class="list-section-title">Következő beosztások</div>
         <div id="upcomingList"></div>
+        <div style="text-align: center; color: var(--text-dim); font-size: 0.65rem; margin-top: 30px; opacity: 0.5; font-weight: 600; letter-spacing: 1px;">GERGŐ ROLAND 2026</div>
     </div>
 
     <div id="adminPanel">
@@ -663,7 +652,9 @@
                     freshnessCost -= 30;
                 }
                 
-                const cost = deficitCost * 1000 + partnerCount * 10000 + freshnessCost * 10;
+                // 🔥 ANTI-LOOP: Pici véletlenszerűség a tökéletes egyezések (holtversenyek) feloldására
+                let randomTieBreaker = Math.random() * 0.5; 
+                const cost = deficitCost * 1000 + partnerCount * 10000 + freshnessCost * 10 + randomTieBreaker;
                 
                 if (cost < bestCost) {
                     bestCost = cost;
@@ -725,16 +716,17 @@
         
         let realTodayForSim = new Date();
         let logicalTodayForSim = new Date(realTodayForSim);
-        if (logicalTodayForSim.getHours() < 6) {
+        
+        // 5:59 Logika: Reggel 05:59-ig még az előző naphoz tartozik!
+        let simHours = logicalTodayForSim.getHours();
+        let simMins = logicalTodayForSim.getMinutes();
+        if (simHours < 5 || (simHours === 5 && simMins < 59)) {
             logicalTodayForSim.setDate(logicalTodayForSim.getDate() - 1);
         }
         logicalTodayForSim.setHours(0, 0, 0, 0);
 
         let simDate;
         if (lastRecordedCarry) {
-            // A szimulátor Szigorúan a legutolsó mentett nap UTÁN kezdi a számolást,
-            // így ha napok maradtak ki (mert nem nyitottátok meg az appot), 
-            // azokat a háttérben hibátlanul pótolja és nem ismétli az embereket!
             simDate = new Date(lastRecordedCarry);
             simDate.setDate(simDate.getDate() + 1);
         } else {
@@ -805,6 +797,15 @@
         db.ref().update(updates);
     }
     
+    // 🔥 Új Manulális Pontszabályzó
+    window.adjustCarries = function(name, delta) {
+        let currentCarries = (workerStats[name] && workerStats[name].carries) || 0;
+        let newCarries = Math.max(0, currentCarries + delta);
+        if (newCarries !== currentCarries) {
+            db.ref(`workerStats/${name}/carries`).set(newCarries);
+        }
+    };
+    
     window.markAbsent = function(dateKey, name) {
         if(!name || name === "Nincs több!" || name === "-") return;
         if(confirm(`Szeretnéd jelezni, hogy ${name} hiányzik ezen a napon?\n\nA rendszer automatikusan behívja a következőt, ${name} pedig sorra kerül legközelebb.`)) {
@@ -873,7 +874,15 @@
     function renderUI() {
         const hero = document.getElementById('heroContainer');
         const list = document.getElementById('upcomingList');
-        hero.innerHTML = ''; list.innerHTML = '';
+        
+        // Hagyjuk meg a formázást, csak a tartalmat töröljük a list_container-ből, hogy a footer ott maradjon.
+        let oldChildren = Array.from(list.children);
+        oldChildren.forEach(child => {
+            if (child.className === 'list-card' || child.className === 'list-section-title') {
+                list.removeChild(child);
+            }
+        });
+        hero.innerHTML = '';
 
         const headerHTML = `<div class="header-pill" onclick="openAdmin()">C MŰSZAK BEOSZTÁS</div>`;
 
@@ -889,6 +898,7 @@
 
         let realToday = new Date();
         let currentHours = realToday.getHours();
+        let currentMins = realToday.getMinutes();
         
         let logicalToday = new Date(realToday);
         let shiftLabel = "";
@@ -897,7 +907,10 @@
         let restSubtext = "";
         let restEmoji = "😴";
 
-        if (currentHours >= 6 && currentHours < 18) {
+        // Pontos 05:59-es átállás
+        let isDayTime = (currentHours > 5 || (currentHours === 5 && currentMins >= 59)) && currentHours < 18;
+
+        if (isDayTime) {
             logicalToday.setHours(0,0,0,0);
             const type = getShiftType(logicalToday);
             
@@ -918,7 +931,7 @@
                 restSubtext = "Ma teljesen szabadnap a C műszakon. Élvezd a napod, töltődj fel!";
             }
         } else {
-            if (currentHours < 6) {
+            if (currentHours < 5 || (currentHours === 5 && currentMins < 59)) {
                 logicalToday.setDate(logicalToday.getDate() - 1);
             }
             logicalToday.setHours(0,0,0,0);
@@ -967,7 +980,7 @@
             try {
                 let pairDayLabel = '';
                 
-                if (currentHours >= 6 && currentHours < 18) {
+                if (isDayTime) {
                     if (getShiftType(logicalToday) === "NIGHT") {
                         pairDay = logicalToday;
                         pairDayLabel = "MAI ÉJSZAKÁS PÁR";
@@ -988,10 +1001,10 @@
                     
                     if (getShiftType(nextDay) === "DAY") {
                         pairDay = nextDay;
-                        pairDayLabel = (currentHours < 6) ? "MAI NAPPALI PÁR" : "HOLNAPI NAPPALI PÁR";
+                        pairDayLabel = (currentHours < 5 || (currentHours === 5 && currentMins < 59)) ? "MAI NAPPALI PÁR" : "HOLNAPI NAPPALI PÁR";
                     } else if (getShiftType(nextDay) === "NIGHT") {
                         pairDay = nextDay;
-                        pairDayLabel = (currentHours < 6) ? "MAI ÉJSZAKÁS PÁR" : "HOLNAPI ÉJSZAKÁS PÁR";
+                        pairDayLabel = (currentHours < 5 || (currentHours === 5 && currentMins < 59)) ? "MAI ÉJSZAKÁS PÁR" : "HOLNAPI ÉJSZAKÁS PÁR";
                     }
                 }
                 
@@ -1101,6 +1114,11 @@
         let count = 0;
         let iterDate = new Date(startDate);
         iterDate.setDate(iterDate.getDate() + 1);
+        
+        let titleDiv = document.createElement('div');
+        titleDiv.className = 'list-section-title';
+        titleDiv.textContent = 'Következő beosztások';
+        container.insertBefore(titleDiv, container.firstChild);
 
         while(count < 3 && iterDate.getTime() < startDate.getTime() + 45 * 86400000) {
             if(isWorkingDay(iterDate)) {
@@ -1114,7 +1132,7 @@
                 let absHTML = Object.keys(dailyAbs).length > 0 ? 
                     `<div class="absent-row" style="justify-content:flex-end; font-size:0.72rem; margin:0; margin-top:5px;">${Object.keys(dailyAbs).map(n => `<span class="absent-pill" onclick="undoAbsent('${dKey}', '${n}')" style="padding:2px 8px;">${n} ↩</span>`).join('')}</div>` : '';
 
-                container.innerHTML += `
+                let cardHTML = `
                     <div class="list-card">
                         <div class="lc-header">
                             <div>
@@ -1129,6 +1147,11 @@
                         ${absHTML}
                     </div>
                 `;
+                
+                // Beszúrás a cím után, a footer elé
+                let wrapper = document.createElement('div');
+                wrapper.innerHTML = cardHTML;
+                container.insertBefore(wrapper.firstElementChild, container.children[count+1]);
                 count++;
             }
             iterDate.setDate(iterDate.getDate() + 1);
@@ -1216,7 +1239,11 @@
             html += `
             <div class="admin-list-item">
                 <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px;">
-                    <span class="admin-carry-badge">${carries}×</span>
+                    <div style="display:flex; align-items:center; background: rgba(139, 92, 246, 0.15); border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3);">
+                        <button class="btn-action" style="border-radius:0; padding: 4px 8px; font-weight:bold; background: transparent; color: white;" onclick="adjustCarries('${name}', -1)">-</button>
+                        <div style="padding: 0 4px; font-weight: 800; font-size: 0.8rem; color: white; min-width: 24px; text-align: center;">${carries}</div>
+                        <button class="btn-action" style="border-radius:0; padding: 4px 8px; font-weight:bold; background: transparent; color: white;" onclick="adjustCarries('${name}', 1)">+</button>
+                    </div>
                     <div style="flex: 1; min-width: 0;">
                         <span style="font-weight:bold; display:block;">${name}</span>
                         <div class="worker-stats-mini">
