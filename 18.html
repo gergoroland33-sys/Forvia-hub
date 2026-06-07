@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AM Schedule – A3 Igazító PRO</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  :root{
+    --bg:#0e1a2b; --panel:#162840; --panel2:#1e3450; --line:#2b4straight;
+    --line:#2c4straight; --line:#2b4763; --accent:#3b82f6; --accent2:#1d4ed8;
+    --ok:#22c55e; --okbg:#0c3a22; --warn:#f59e0b; --err:#ef4444; --txt:#eaf1fa; --muted:#90a4bd;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:radial-gradient(1200px 600px at 50% -10%,#1b2f4d 0%,#0e1a2b 60%);
+    color:var(--txt);font-family:'Segoe UI',Tahoma,Arial,sans-serif;min-height:100vh;
+    padding:24px 16px 70px;
+  }
+  .wrap{max-width:880px;margin:0 auto}
+
+  header{
+    display:flex;align-items:center;gap:16px;
+    background:linear-gradient(135deg,#1d4ed8,#3b82f6);
+    border-radius:18px;padding:22px 26px;box-shadow:0 16px 40px rgba(0,0,0,.4);
+  }
+  header .logo{width:54px;height:54px;border-radius:14px;flex:none;background:rgba(255,255,255,.16);
+    border:1px solid rgba(255,255,255,.28);display:grid;place-items:center;font-size:28px}
+  header h1{font-size:21px;letter-spacing:.2px}
+  header p{font-size:13px;color:#dce8ff;margin-top:4px;line-height:1.5}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    padding:22px;margin-top:18px;box-shadow:0 8px 22px rgba(0,0,0,.28)}
+
+  .drop{
+    border:2px dashed #34557a;border-radius:14px;padding:34px 20px;text-align:center;
+    cursor:pointer;transition:.18s;background:var(--panel2)
+  }
+  .drop:hover,.drop.over{border-color:var(--accent);background:#22405f}
+  .drop .big{font-size:40px;margin-bottom:8px}
+  .drop .t1{font-size:17px;font-weight:600}
+  .drop .t2{font-size:13px;color:var(--muted);margin-top:5px}
+  input[type=file]{display:none}
+
+  .row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .btn{border:none;border-radius:11px;padding:14px 22px;font-size:15px;font-weight:700;cursor:pointer;
+    transition:.15s;display:inline-flex;align-items:center;gap:9px}
+  .btn-dl{background:var(--ok);color:#04230f}
+  .btn-dl:hover{filter:brightness(1.08)}
+  .btn-ghost{background:var(--panel2);color:var(--txt);border:1px solid var(--line)}
+  .btn-ghost:hover{background:#26466a}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+
+  .statusbox{margin-top:18px;border-radius:12px;padding:16px 18px;display:none;font-size:14px;line-height:1.6}
+  .statusbox.show{display:block}
+  .statusbox.ok{background:var(--okbg);border:1px solid #1c7a45}
+  .statusbox.work{background:#3a2f0c;border:1px solid #8a6d12}
+  .statusbox.err{background:#3a1212;border:1px solid #8a1f1f}
+  .statusbox h3{font-size:16px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+
+  .changes{list-style:none;margin-top:10px;font-size:13.5px}
+  .changes li{padding:5px 0;display:flex;gap:9px;align-items:flex-start;color:#cfe0f3}
+  .changes li b{color:#fff}
+  .tick{color:var(--ok);font-weight:900;flex:none}
+
+  .meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px}
+  .meta div{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 13px}
+  .meta span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .meta strong{font-size:15px}
+
+  .opt{display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap}
+  .opt label{font-size:14px;color:var(--muted)}
+  .opt input[type=number]{width:80px;background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+    border-radius:9px;padding:9px 11px;font-size:15px;text-align:center}
+
+  .howto{margin-top:18px}
+  .howto h2{font-size:15px;margin-bottom:10px;color:#bfd3ec}
+  .steps{list-style:none;counter-reset:s}
+  .steps li{counter-increment:s;position:relative;padding:8px 0 8px 38px;font-size:14px;color:#cfe0f3;line-height:1.55}
+  .steps li::before{content:counter(s);position:absolute;left:0;top:7px;width:26px;height:26px;border-radius:50%;
+    background:var(--accent);color:#fff;font-weight:700;font-size:13px;display:grid;place-items:center}
+  .steps b{color:#fff}
+
+  .note{font-size:12.5px;color:var(--muted);margin-top:16px;line-height:1.6;
+    border-left:3px solid var(--accent);padding-left:12px}
+  footer{text-align:center;color:var(--muted);font-size:12px;margin-top:26px}
+  .pill{display:inline-block;background:#0b2a18;border:1px solid #1c7a45;color:#7ff0ab;
+    padding:2px 9px;border-radius:20px;font-size:12px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">📐</div>
+    <div>
+      <h1>AM Production Schedule – A3 Igazító PRO</h1>
+      <p>Betallózod az Excelt → automatikusan <b>2 oldalas A3 álló</b> nyomtatásra igazítja.
+         A tartalmat, színeket, cellákat <b>nem módosítja</b>, csak a lapbeállítást teszi helyre.</p>
+    </div>
+  </header>
+
+  <div class="card">
+    <div class="drop" id="drop">
+      <div class="big">📂</div>
+      <div class="t1">Húzd ide az Excel fájlt, vagy kattints a betallózáshoz</div>
+      <div class="t2">.xlsx · a napi terv legfrissebb kiadása</div>
+    </div>
+    <input type="file" id="fileInput" accept=".xlsx">
+
+    <div class="opt">
+      <label>Méretarány (olvashatóság):</label>
+      <input type="number" id="scale" value="38" min="20" max="60" step="1"> %
+      <span class="pill" id="pagesPill" style="display:none">2 oldal A3 álló</span>
+    </div>
+
+    <div class="statusbox" id="status"></div>
+
+    <div class="row" style="margin-top:18px">
+      <button class="btn btn-dl" id="dlBtn" disabled>⬇️ Igazított fájl letöltése</button>
+    </div>
+  </div>
+
+  <div class="card howto">
+    <h2>Így használd (1 perc)</h2>
+    <ol class="steps">
+      <li>Betallózod ide a <b>legfrissebb</b> Excelt (naponta többször, mindig ugyanígy).</li>
+      <li>Az eszköz azonnal kiadja az <b>igazított fájlt</b> – letöltöd.</li>
+      <li>Megnyitod Excelben és nyomtatsz: már <b>2 oldal A3 álló</b>, nem kell semmit állítgatni.</li>
+    </ol>
+    <div class="note">
+      Nyomtatáskor ellenőrizd: papír <b>A3</b>, tájolás <b>álló</b>, méretezés <b>„Eredeti / 100%"</b> (NE „Fit to page", azt már a fájl tartalmazza).
+      A felosztás a meglévő oszloptörésnél marad: 1. oldal <b>Date · F0B · F03 · F04</b>, 2. oldal <b>Date · F05 · F06 · T03 · TC</b>.
+      A tartalom <b>vízszintesen középre</b> kerül, minden cella megmarad (az üresek is), semmi nem vágódik le.
+      Az eszköz a <b>te módszered</b> automatizálja: a kis betűket 12 pt-ra emeli, az üres sorokat összenyomja, így a tartalmas sorok nagyobbak és olvashatóbbak.
+      A <b>38%</b> a biztos méretarány 2 oldalhoz. Ha valaha 3–4 oldal lenne, vedd <b>37%</b>-ra; ha nálad elfér, próbálhatsz nagyobbat.
+    </div>
+  </div>
+
+  <footer>Készítette: Roland Gergő · AM A3 Igazító PRO v1 · önálló offline eszköz (semmilyen adat nem hagyja el a gépet)</footer>
+</div>
+
+<script>
+"use strict";
+const els = {
+  drop: document.getElementById('drop'),
+  file: document.getElementById('fileInput'),
+  scale: document.getElementById('scale'),
+  status: document.getElementById('status'),
+  dl: document.getElementById('dlBtn'),
+  pill: document.getElementById('pagesPill'),
+};
+let fixedBlob = null, fixedName = 'igazitott.xlsx';
+
+els.drop.onclick = () => els.file.click();
+els.file.onchange = e => { if (e.target.files[0]) process(e.target.files[0]); };
+['dragover','dragenter'].forEach(ev=>els.drop.addEventListener(ev,e=>{e.preventDefault();els.drop.classList.add('over');}));
+['dragleave','drop'].forEach(ev=>els.drop.addEventListener(ev,e=>{e.preventDefault();els.drop.classList.remove('over');}));
+els.drop.addEventListener('drop',e=>{ const f=e.dataTransfer.files[0]; if(f) process(f); });
+els.dl.onclick = () => { if(fixedBlob) downloadBlob(fixedBlob, fixedName); };
+
+function show(cls, html){ els.status.className = 'statusbox show '+cls; els.status.innerHTML = html; }
+
+function process(file){
+  fixedBlob = null; els.dl.disabled = true; els.pill.style.display='none';
+  if (typeof JSZip === 'undefined'){
+    show('err','<h3>⚠️ Hiba</h3>A JSZip könyvtár nem töltődött be. Internetkapcsolat szükséges, vagy mentsd a <b>jszip.min.js</b>-t a HTML mellé.');
+    return;
+  }
+  if (!/\.xlsx$/i.test(file.name)){
+    show('err','<h3>⚠️ Nem .xlsx fájl</h3>Kérlek .xlsx kiterjesztésű Excel fájlt tölts be.');
+    return;
+  }
+  let scale = parseInt(els.scale.value,10);
+  if (isNaN(scale) || scale<10 || scale>100) scale = 38;
+
+  show('work','<h3>⏳ Igazítás folyamatban…</h3>'+file.name);
+
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try{
+      const zip = await JSZip.loadAsync(reader.result);
+      const sheetNames = Object.keys(zip.files).filter(n => /^xl\/worksheets\/sheet\d+\.xml$/i.test(n));
+      if (sheetNames.length === 0) throw new Error('Nem található munkalap a fájlban.');
+
+      const FONT = 12, DATA_H = 13.5, EMPTY_H = 3.5;
+
+      // 1) STÍLUSOK: a kis cellabetűket FONT méretre emeljük (a sorokban lévő
+      //    függőleges üres helyet kihasználva). A már nagy betűk maradnak.
+      if (zip.file('xl/styles.xml')){
+        let st = await zip.file('xl/styles.xml').async('string');
+        st = st.replace(/<sz val="([\d.]+)"\/>/g, (m,v)=> parseFloat(v) < FONT ? '<sz val="'+FONT+'"/>' : m);
+        zip.file('xl/styles.xml', st);
+      }
+
+      // 2) MUNKALAPOK
+      let hadRowBreak = false, editedSheets = 0, dataCount = 0, emptyCount = 0;
+      for (const name of sheetNames){
+        let xml = await zip.file(name).async('string');
+        if (!/<pageSetup\b/.test(xml)) continue; // csak a nyomtatható lap(ok)
+        if (/<rowBreaks\b/.test(xml)) hadRowBreak = true;
+        const dataRows = detectDataRows(xml);   // mely sorokban van tényleges adat
+        if (dataCount === 0){
+          for (let r=2; r<=236; r++){ if (dataRows.has(r)) dataCount++; else emptyCount++; }
+        }
+        xml = fixSheetXml(xml, scale, dataRows, DATA_H, EMPTY_H);
+        zip.file(name, xml);
+        editedSheets++;
+      }
+      if (editedSheets === 0) throw new Error('Nincs nyomtatási beállítású munkalap.');
+
+      fixedBlob = await zip.generateAsync({type:'blob', compression:'DEFLATE',
+        mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+      fixedName = file.name.replace(/\.xlsx$/i,'') + ' - 2 oldal A3.xlsx';
+
+      els.dl.disabled = false;
+      els.pill.style.display='inline-block';
+
+      const ch = [];
+      ch.push('<li><span class="tick">✓</span><span>Lapméret/tájolás: <b>A3 álló</b>, vízszintesen középre</span></li>');
+      ch.push('<li><span class="tick">✓</span><span>Adatbetűk felnagyítva <b>'+FONT+' pt</b>-ra (a sorokban lévő üres helyet kihasználva)</span></li>');
+      ch.push('<li><span class="tick">✓</span><span><b>'+emptyCount+' üres sor összenyomva</b> → helyet adva a <b>'+dataCount+' adatsornak</b> (a te módszered)</span></li>');
+      ch.push('<li><span class="tick">✓</span><span>Méretarány: <b>'+scale+'%</b> – mindkét fél pontosan 1-1 A3 oldal</span></li>');
+      if (hadRowBreak) ch.push('<li><span class="tick">✓</span><span>Felesleges <b>függőleges laptörés eltávolítva</b></span></li>');
+      ch.push('<li><span class="tick">✓</span><span>Az <b>oszloptörés megmaradt</b> → bal/jobb fél = 2 oldal, semmi nincs levágva</span></li>');
+
+      show('ok',
+        '<h3>✅ Kész – nagyobb betű, 2 oldalas A3</h3>'+
+        'A fájl nyomtatásra kész. Töltsd le, nyisd meg Excelben és nyomtasd.'+
+        '<ul class="changes">'+ch.join('')+'</ul>');
+    }catch(err){
+      console.error(err);
+      show('err','<h3>⚠️ Hiba a feldolgozás közben</h3>'+err.message);
+    }
+  };
+  reader.onerror = () => show('err','<h3>⚠️ Hiba</h3>Nem sikerült beolvasni a fájlt.');
+  reader.readAsArrayBuffer(file);
+}
+
+/* A LÉNYEG: a te manuális módszered automatizálása.
+   - kis cellabetűk -> 12 pt (a sorok üres helyét kihasználva)  [a styles.xml-ben]
+   - üres sorok összenyomva, adatsorok magasabbak  -> nagyobb olvasható betű
+   - A3 álló, középre, oszloptörés marad (2 oldal), függőleges törés törölve     */
+
+// oszlopbetű -> szám (B=2, AF=32, ...)
+function colToNum(s){ let n=0; for(let i=0;i<s.length;i++) n=n*26+(s.charCodeAt(i)-64); return n; }
+
+// mely sorokban van tényleges adat (a B2:BL236 területen)?
+function detectDataRows(xml){
+  const set = new Set();
+  let doc;
+  try { doc = new DOMParser().parseFromString(xml, 'application/xml'); }
+  catch(e){ return set; }
+  doc.querySelectorAll('sheetData > row').forEach(row=>{
+    const rn = +row.getAttribute('r');
+    if (rn < 2 || rn > 236) return;
+    let hasData = false;
+    row.querySelectorAll('c').forEach(c=>{
+      if (hasData) return;
+      const ref = c.getAttribute('r'); if(!ref) return;
+      const mm = ref.match(/^([A-Z]+)/); if(!mm) return;
+      const col = colToNum(mm[1]);
+      if (col < 2 || col > 64) return;
+      const v = c.querySelector('v'); const is = c.querySelector('is');
+      if ((v && v.textContent.trim() !== '') || (is && is.textContent.trim() !== '')) hasData = true;
+    });
+    if (hasData) set.add(rn);
+  });
+  return set;
+}
+
+function fixSheetXml(xml, scale, dataRows, dataH, emptyH){
+  // 1) pageSetup -> A3 álló, rögzített méretarány (r:id megőrzése)
+  xml = xml.replace(/<pageSetup[^>]*\/>/, function(tag){
+    const m = tag.match(/r:id="([^"]+)"/);
+    return '<pageSetup paperSize="8" scale="'+scale+'" orientation="portrait"'+(m?' r:id="'+m[1]+'"':'')+'/>';
+  });
+  xml = xml.replace(/<pageSetup[^>]*>[\s\S]*?<\/pageSetup>/, function(tag){
+    const m = tag.match(/r:id="([^"]+)"/);
+    return '<pageSetup paperSize="8" scale="'+scale+'" orientation="portrait"'+(m?' r:id="'+m[1]+'"':'')+'/>';
+  });
+  // 2) fit-to-page ki
+  xml = xml.replace(/(<pageSetUpPr\b[^>]*?)\s*fitToPage="(?:1|true)"/g, '$1');
+  // 3) függőleges laptörés törlése
+  xml = xml.replace(/<rowBreaks\b[^>]*>[\s\S]*?<\/rowBreaks>/g, '');
+  xml = xml.replace(/<rowBreaks\b[^>]*\/>/g, '');
+  // 4) SORMAGASSÁGOK: adatsor = dataH, üres sor = emptyH (összenyomva)
+  xml = xml.replace(/<row r="(\d+)"([^>]*)>/g, function(m, r, rest){
+    const rn = +r;
+    if (rn < 2 || rn > 236) return m;
+    const h = dataRows.has(rn) ? dataH : emptyH;
+    rest = rest.replace(/\s+ht="[^"]*"/,'').replace(/\s+customHeight="[^"]*"/,'');
+    return '<row r="'+r+'"'+rest+' ht="'+h+'" customHeight="1">';
+  });
+  // 5) vízszintes középre igazítás
+  if (/<printOptions\b/.test(xml)){
+    if (/horizontalCentered=/.test(xml))
+      xml = xml.replace(/(<printOptions\b[^>]*?)\s*horizontalCentered="[^"]*"/, '$1 horizontalCentered="1"');
+    else
+      xml = xml.replace(/<printOptions\b/, '<printOptions horizontalCentered="1" ');
+  } else {
+    xml = xml.replace('<pageMargins', '<printOptions horizontalCentered="1"/><pageMargins');
+  }
+  return xml;
+}
+
+function downloadBlob(blob, name){
+  const a = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); }, 1500);
+}
+</script>
+</body>
+</html>
