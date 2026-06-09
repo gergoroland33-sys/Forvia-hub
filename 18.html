@@ -436,10 +436,12 @@ function downloadBlob(blob, name){
         let sp=''; const a=anchor[r+'_'+c]; if(a){ if(a.rs>1) sp+=' rowspan="'+a.rs+'"'; if(a.cs>1) sp+=' colspan="'+a.cs+'"'; }
         tds+='<td'+sp+' style="'+st+'">'+(cell?esc(fmtCell(cell,xf,data.numFmts)):'')+'</td>'; }
       trs+='<tr style="height:'+rh.toFixed(1)+'px">'+tds+'</tr>'; }
-    const topMM=20,botMM=8,sideMM=6;
-    const printH=(420-topMM-botMM)*PXmm, printW=(297-2*sideMM)*PXmm, pageW=297*PXmm;
+    // MARGÓ-BIZTOS méret: a böngésző nyomtató-ablak alap-margóival is elférjen 1 lapon.
+    // Az A3 (297×420) helyett a tartalmat egy biztonságos dobozba tesszük, középre.
+    const PAGE_W=268, PAGE_H=384, HDRMM=16, PADMM=3;
+    const printH=(PAGE_H-HDRMM)*PXmm, printW=(PAGE_W-2*PADMM)*PXmm, pgW=PAGE_W*PXmm;
     const s=Math.min(printH/natH, printW/natW);
-    const left=(pageW - natW*s)/2, top=topMM*PXmm;
+    const left=(pgW - natW*s)/2, top=HDRMM*PXmm;
     const hdr='<div class="hdr"><div class="doc">'+esc(data.docNo)+'<br>'+esc(data.conf)+'</div><div class="ti">AM PRODUCTION SCHEDULE</div></div>';
     return '<div class="page">'+hdr+'<div class="sc" style="left:'+left.toFixed(0)+'px;top:'+top.toFixed(0)+'px;transform:scale('+s.toFixed(4)+')"><table><colgroup>'+cg+'</colgroup>'+trs+'</table></div></div>';
   }
@@ -448,11 +450,13 @@ function downloadBlob(blob, name){
     const pages=renderHalf(data,2,32)+renderHalf(data,33,64);
     return '<!DOCTYPE html><html><head><meta charset="utf-8"><style>'+
       '@page{size:A3 portrait;margin:0}*{margin:0;padding:0;box-sizing:border-box}'+
+      'html,body{margin:0;padding:0}'+
       'body{font-family:\'Arial Narrow\',Arial,sans-serif}'+
-      '.page{width:297mm;height:420mm;position:relative;overflow:hidden;page-break-after:always}'+
-      '.page:last-child{page-break-after:auto}'+
-      '.hdr{position:absolute;top:6mm;left:8mm;right:8mm;height:12mm}'+
-      '.hdr .doc{font-size:8pt;line-height:1.35}'+
+      /* a doboz kisebb az A3-nál, így a nyomtató-ablak alap-margóival is 1 lapra fér */
+      '.page{width:268mm;height:384mm;margin:0 auto;position:relative;overflow:hidden;page-break-after:always;break-after:page}'+
+      '.page:last-child{page-break-after:auto;break-after:auto}'+
+      '.hdr{position:absolute;top:2mm;left:3mm;right:3mm;height:13mm}'+
+      '.hdr .doc{font-size:8pt;line-height:1.3}'+
       '.hdr .ti{position:absolute;top:1mm;left:0;right:0;text-align:center;font-weight:bold;font-size:13pt}'+
       '.sc{position:absolute;transform-origin:top left}'+
       'table{border-collapse:collapse;table-layout:fixed}'+
