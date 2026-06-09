@@ -117,6 +117,7 @@
 
     <div class="row" style="margin-top:18px">
       <button class="btn btn-dl" id="dlBtn" disabled>⬇️ Igazított fájl letöltése</button>
+      <button class="btn btn-ghost" id="printBtn" disabled>🖨️ Azonnali nyomtatás (2 oldal A3)</button>
     </div>
   </div>
 
@@ -182,7 +183,7 @@ function process(file){
       const sheetNames = Object.keys(zip.files).filter(n => /^xl\/worksheets\/sheet\d+\.xml$/i.test(n));
       if (sheetNames.length === 0) throw new Error('Nem található munkalap a fájlban.');
 
-      const FONT = 14, DATA_H = 15.5, EMPTY_H = 3.5;
+      const FONT = 14, DATA_H = 15.5, EMPTY_H = 3.0;
 
       // 1) STÍLUSOK: a kis cellabetűket FONT méretre emeljük (a sorokban lévő
       //    függőleges üres helyet kihasználva). A már nagy betűk maradnak.
@@ -208,9 +209,9 @@ function process(file){
       if (toFix.length === 0) throw new Error('Nincs nyomtatási beállítású munkalap.');
 
       // AUTOMATIKUS méretarány az adott fájl adatsűrűségéhez (mindig 2 oldal).
-      // 1015 pt ≈ az A3 álló nyomtatható magassága (a bevált 12pt/38% esetből kalibrálva).
+      // 1035 pt ≈ az A3 álló nyomtatható magassága (csökkentett alsó margóval, a bevált esetből kalibrálva).
       const totalPt = dataCount*DATA_H + emptyCount*EMPTY_H;
-      const autoScale = Math.max(20, Math.min(60, Math.round(1015 / totalPt * 100)));
+      const autoScale = Math.max(20, Math.min(60, Math.round(1035 / totalPt * 100)));
       const scale = manualValid ? manualScale : autoScale;
 
       let editedSheets = 0;
@@ -291,6 +292,13 @@ function fixSheetXml(xml, scale, dataRows, dataH, emptyH){
   });
   // 2) fit-to-page ki
   xml = xml.replace(/(<pageSetUpPr\b[^>]*?)\s*fitToPage="(?:1|true)"/g, '$1');
+  // 2b) MARGÓK: alsó és oldalsó csökkentve a nagyobb betűért; a FELSŐ margó (fejléc!)
+  //     és a header-margó VÁLTOZATLAN marad, hogy a fejléc ne lógjon a táblázatba.
+  xml = xml.replace(/<pageMargins([^>]*)\/>/, function(m, attrs){
+    const top = (attrs.match(/top="([^"]*)"/)    || [])[1] || '1.5748';
+    const hdr = (attrs.match(/header="([^"]*)"/) || [])[1] || '0.31';
+    return '<pageMargins left="0.2" right="0.2" top="'+top+'" bottom="0.236" header="'+hdr+'" footer="0.12"/>';
+  });
   // 3) függőleges laptörés törlése
   xml = xml.replace(/<rowBreaks\b[^>]*>[\s\S]*?<\/rowBreaks>/g, '');
   xml = xml.replace(/<rowBreaks\b[^>]*\/>/g, '');
@@ -321,6 +329,137 @@ function downloadBlob(blob, name){
   document.body.appendChild(a); a.click();
   setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); }, 1500);
 }
+</script>
+<script>
+"use strict";
+/* ===== AZONNALI NYOMTATÁS – PLUSZ MODUL ===========================================
+   A meglévő működést NEM módosítja. A kész (igazított) fájlt böngészőből,
+   A3 álló tájolásban, pontosan 2 oldalon kinyomtatja (bal fél / jobb fél).
+   A letöltött Excel marad a hiteles változat; ez a gyors helyszíni nyomtatáshoz. */
+(function(){
+  const printBtn = document.getElementById('printBtn');
+  const dlBtn = document.getElementById('dlBtn');
+  if(!printBtn) return;
+  try{ new MutationObserver(()=>{ printBtn.disabled = dlBtn.disabled; })
+        .observe(dlBtn,{attributes:true,attributeFilter:['disabled']}); }catch(e){}
+  printBtn.addEventListener('click', printFixed);
+
+  const DATE_BUILTINS = {14:'m/d/yy',15:'d-mmm-yy',16:'d-mmm',17:'mmm-yy',22:'m/d/yy h:mm'};
+  const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const PXmm=3.7795, CW=7, RHf=1.333;
+  const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  async function printFixed(){
+    if (typeof fixedBlob === 'undefined' || !fixedBlob){ alert('Előbb tölts be egy fájlt.'); return; }
+    const old = printBtn.textContent; printBtn.textContent='🖨️ Előkészítés…'; printBtn.disabled=true;
+    try{
+      const zip  = await JSZip.loadAsync(fixedBlob);
+      const data = await parseWB(zip);
+      const html = buildDoc(data);
+      const ifr = document.createElement('iframe');
+      ifr.style.cssText='position:fixed;left:-9999px;top:0;width:0;height:0;border:0';
+      document.body.appendChild(ifr);
+      ifr.onload = ()=>{ try{ ifr.contentWindow.focus(); ifr.contentWindow.print(); }catch(e){ console.error(e); }
+        setTimeout(()=>{ try{ document.body.removeChild(ifr); }catch(e){} }, 4000); };
+      const d = ifr.contentWindow.document; d.open(); d.write(html); d.close();
+    }catch(err){ console.error(err); alert('Nyomtatási hiba: '+err.message); }
+    printBtn.textContent = old; printBtn.disabled = false;
+  }
+
+  async function parseWB(zip){
+    const get = async p => zip.file(p) ? await zip.file(p).async('string') : '';
+    const P = s => new DOMParser().parseFromString(s,'application/xml');
+    // megosztott szövegek
+    const sst=[]; const ssx=await get('xl/sharedStrings.xml');
+    if(ssx){ P(ssx).querySelectorAll('sst > si').forEach(si=>{ let t=''; si.querySelectorAll('t').forEach(x=>t+=x.textContent); sst.push(t); }); }
+    // stílusok
+    const sd=P(await get('xl/styles.xml'));
+    const fills=[...sd.querySelectorAll('fills > fill')].map(f=>{ const pf=f.querySelector('patternFill');
+      if(pf && pf.getAttribute('patternType')==='solid'){ const fg=pf.querySelector('fgColor'); const rgb=fg&&fg.getAttribute('rgb'); if(rgb&&rgb.length===8) return '#'+rgb.slice(2); } return null; });
+    const fonts=[...sd.querySelectorAll('fonts > font')].map(f=>{ const sz=f.querySelector('sz'); return {size:sz?parseFloat(sz.getAttribute('val')):11, bold:!!f.querySelector('b')}; });
+    const borders=[...sd.querySelectorAll('borders > border')].map(bd=>{ const h=s=>{const e=bd.querySelector(s);const v=e&&e.getAttribute('style');return !!(v&&v!=='none');}; return {t:h('top'),b:h('bottom'),l:h('left'),r:h('right')}; });
+    const numFmts={}; sd.querySelectorAll('numFmts > numFmt').forEach(n=>numFmts[n.getAttribute('numFmtId')]=n.getAttribute('formatCode'));
+    const xfs=[...sd.querySelectorAll('cellXfs > xf')].map(xf=>({ fillId:+xf.getAttribute('fillId')||0, fontId:+xf.getAttribute('fontId')||0, borderId:+xf.getAttribute('borderId')||0, numFmtId:+xf.getAttribute('numFmtId')||0, align:(xf.querySelector('alignment')||{getAttribute:()=>null}).getAttribute('horizontal') }));
+    // munkalap
+    const wd=P(await get('xl/worksheets/sheet1.xml'));
+    const cols={}; wd.querySelectorAll('cols > col').forEach(c=>{ const a=+c.getAttribute('min'),b=+c.getAttribute('max'),w=parseFloat(c.getAttribute('width')); for(let i=a;i<=b;i++) cols[i]=w; });
+    const rows={};
+    wd.querySelectorAll('sheetData > row').forEach(row=>{ const rn=+row.getAttribute('r'); const ht=row.getAttribute('ht'); const cells={};
+      row.querySelectorAll('c').forEach(c=>{ const ref=c.getAttribute('r'); const mm=ref&&ref.match(/^([A-Z]+)\d+/); if(!mm) return; const col=colToNum(mm[1]); const s=+c.getAttribute('s')||0; const t=c.getAttribute('t'); let val='';
+        const v=c.querySelector('v'); const is=c.querySelector('is');
+        if(t==='s'&&v){ val=sst[+v.textContent]||''; } else if(is){ is.querySelectorAll('t').forEach(x=>val+=x.textContent); } else if(v){ val=v.textContent; }
+        cells[col]={s,val,t}; });
+      rows[rn]={ht:ht?parseFloat(ht):null, cells}; });
+    const merges=[]; wd.querySelectorAll('mergeCells > mergeCell').forEach(mc=>{ const m=(mc.getAttribute('ref')||'').match(/^([A-Z]+)(\d+):([A-Z]+)(\d+)/); if(m) merges.push({c1:colToNum(m[1]),r1:+m[2],c2:colToNum(m[3]),r2:+m[4]}); });
+    // fejléc-infó (logó nélkül)
+    let docNo='',conf='';
+    const oh=wd.querySelector('headerFooter > oddHeader');
+    if(oh){ const raw=(oh.textContent||'').replace(/&"[^"]*"/g,'').replace(/&[A-Za-z0-9]/g,'');
+      const dn=raw.match(/Document no\.?:\s*([^\n]{1,30})/i); if(dn) docNo='Document no.: '+dn[1].trim();
+      const cf=raw.match(/Confidentiality:\s*([A-Za-z0-9 ]{1,15})/i); if(cf) conf='Confidentiality: '+cf[1].trim(); }
+    return {sst,fills,fonts,borders,xfs,numFmts,cols,rows,merges,docNo,conf};
+  }
+
+  function fmtCell(cell,xf,numFmts){
+    let v=cell.val; if(v==null||v==='') return '';
+    if(cell.t==='s'||cell.t==='inlineStr'||cell.t==='str') return v;
+    const num=parseFloat(v);
+    const fmt=((numFmts[xf.numFmtId]||DATE_BUILTINS[xf.numFmtId]||'')+'').toLowerCase();
+    if(!isNaN(num) && /m/.test(fmt) && /[dy]/.test(fmt) && num>20 && num<80000){
+      const dt=new Date(Date.UTC(1899,11,30)+Math.round(num)*86400000);
+      if(/mmm/.test(fmt)) return dt.getUTCDate()+'-'+MONTHS[dt.getUTCMonth()];
+      return dt.getUTCDate()+'.'+(dt.getUTCMonth()+1)+'.';
+    }
+    if(!isNaN(num)) return Number.isInteger(num)?String(num):String(parseFloat(num.toFixed(4)));
+    return v;
+  }
+
+  function renderHalf(data,c0,c1){
+    const R1=2,R2=236;
+    const cwpx=c=>(data.cols[c]||8.43)*CW;
+    const rhpx=r=>(((data.rows[r]&&data.rows[r].ht)||14))*RHf;
+    const covered={},anchor={};
+    data.merges.forEach(m=>{ if(m.c2<c0||m.c1>c1||m.r2<R1||m.r1>R2) return;
+      const cc1=Math.max(m.c1,c0),cc2=Math.min(m.c2,c1);
+      for(let r=m.r1;r<=m.r2;r++) for(let c=cc1;c<=cc2;c++){ if(r===m.r1&&c===m.c1) continue; covered[r+'_'+c]=1; }
+      anchor[m.r1+'_'+m.c1]={rs:m.r2-m.r1+1, cs:cc2-Math.max(m.c1,c0)+1}; });
+    let natW=0; for(let c=c0;c<=c1;c++) natW+=cwpx(c);
+    let natH=0; for(let r=R1;r<=R2;r++) natH+=rhpx(r);
+    let cg=''; for(let c=c0;c<=c1;c++) cg+='<col style="width:'+cwpx(c).toFixed(1)+'px">';
+    let trs='';
+    for(let r=R1;r<=R2;r++){ const row=data.rows[r]||{cells:{}}; const rh=rhpx(r); let tds='';
+      for(let c=c0;c<=c1;c++){ if(covered[r+'_'+c]) continue; const cell=row.cells[c]; const xf=cell?(data.xfs[cell.s]||{}):{};
+        const fill=cell?data.fills[xf.fillId]:null; const font=data.fonts[xf.fontId||0]||{size:11}; const bd=data.borders[xf.borderId||0]||{};
+        let st='font-size:'+(font.size*RHf).toFixed(1)+'px;'+(font.bold?'font-weight:bold;':'')+'text-align:'+(xf.align||'left')+';';
+        if(fill) st+='background:'+fill+';';
+        st+='border-top:'+(bd.t?'1px solid #000':'0')+';border-bottom:'+(bd.b?'1px solid #000':'0')+';border-left:'+(bd.l?'1px solid #000':'0')+';border-right:'+(bd.r?'1px solid #000':'0')+';';
+        let sp=''; const a=anchor[r+'_'+c]; if(a){ if(a.rs>1) sp+=' rowspan="'+a.rs+'"'; if(a.cs>1) sp+=' colspan="'+a.cs+'"'; }
+        tds+='<td'+sp+' style="'+st+'">'+(cell?esc(fmtCell(cell,xf,data.numFmts)):'')+'</td>'; }
+      trs+='<tr style="height:'+rh.toFixed(1)+'px">'+tds+'</tr>'; }
+    const topMM=20,botMM=8,sideMM=6;
+    const printH=(420-topMM-botMM)*PXmm, printW=(297-2*sideMM)*PXmm, pageW=297*PXmm;
+    const s=Math.min(printH/natH, printW/natW);
+    const left=(pageW - natW*s)/2, top=topMM*PXmm;
+    const hdr='<div class="hdr"><div class="doc">'+esc(data.docNo)+'<br>'+esc(data.conf)+'</div><div class="ti">AM PRODUCTION SCHEDULE</div></div>';
+    return '<div class="page">'+hdr+'<div class="sc" style="left:'+left.toFixed(0)+'px;top:'+top.toFixed(0)+'px;transform:scale('+s.toFixed(4)+')"><table><colgroup>'+cg+'</colgroup>'+trs+'</table></div></div>';
+  }
+
+  function buildDoc(data){
+    const pages=renderHalf(data,2,32)+renderHalf(data,33,64);
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"><style>'+
+      '@page{size:A3 portrait;margin:0}*{margin:0;padding:0;box-sizing:border-box}'+
+      'body{font-family:\'Arial Narrow\',Arial,sans-serif}'+
+      '.page{width:297mm;height:420mm;position:relative;overflow:hidden;page-break-after:always}'+
+      '.page:last-child{page-break-after:auto}'+
+      '.hdr{position:absolute;top:6mm;left:8mm;right:8mm;height:12mm}'+
+      '.hdr .doc{font-size:8pt;line-height:1.35}'+
+      '.hdr .ti{position:absolute;top:1mm;left:0;right:0;text-align:center;font-weight:bold;font-size:13pt}'+
+      '.sc{position:absolute;transform-origin:top left}'+
+      'table{border-collapse:collapse;table-layout:fixed}'+
+      'td{overflow:hidden;white-space:nowrap;padding:0 1px;vertical-align:middle;line-height:1}'+
+      '</style></head><body>'+pages+'</body></html>';
+  }
+})();
 </script>
 </body>
 </html>
