@@ -7,8 +7,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root{
-    --bg:#0e1a2b; --panel:#162840; --panel2:#1e3450; --line:#2b4straight;
-    --line:#2c4straight; --line:#2b4763; --accent:#3b82f6; --accent2:#1d4ed8;
+    --bg:#0e1a2b; --panel:#162840; --panel2:#1e3450; --line:#2b4763;
+    --accent:#3b82f6; --accent2:#1d4ed8;
     --ok:#22c55e; --okbg:#0c3a22; --warn:#f59e0b; --err:#ef4444; --txt:#eaf1fa; --muted:#90a4bd;
   }
   *{margin:0;padding:0;box-sizing:border-box}
@@ -18,7 +18,6 @@
     padding:24px 16px 70px;
   }
   .wrap{max-width:880px;margin:0 auto}
-
   header{
     display:flex;align-items:center;gap:16px;
     background:linear-gradient(135deg,#1d4ed8,#3b82f6);
@@ -28,10 +27,8 @@
     border:1px solid rgba(255,255,255,.28);display:grid;place-items:center;font-size:28px}
   header h1{font-size:21px;letter-spacing:.2px}
   header p{font-size:13px;color:#dce8ff;margin-top:4px;line-height:1.5}
-
   .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;
     padding:22px;margin-top:18px;box-shadow:0 8px 22px rgba(0,0,0,.28)}
-
   .drop{
     border:2px dashed #34557a;border-radius:14px;padding:34px 20px;text-align:center;
     cursor:pointer;transition:.18s;background:var(--panel2)
@@ -41,38 +38,26 @@
   .drop .t1{font-size:17px;font-weight:600}
   .drop .t2{font-size:13px;color:var(--muted);margin-top:5px}
   input[type=file]{display:none}
-
   .row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
   .btn{border:none;border-radius:11px;padding:14px 22px;font-size:15px;font-weight:700;cursor:pointer;
     transition:.15s;display:inline-flex;align-items:center;gap:9px}
   .btn-dl{background:var(--ok);color:#04230f}
   .btn-dl:hover{filter:brightness(1.08)}
-  .btn-ghost{background:var(--panel2);color:var(--txt);border:1px solid var(--line)}
-  .btn-ghost:hover{background:#26466a}
   .btn:disabled{opacity:.4;cursor:not-allowed}
-
   .statusbox{margin-top:18px;border-radius:12px;padding:16px 18px;display:none;font-size:14px;line-height:1.6}
   .statusbox.show{display:block}
   .statusbox.ok{background:var(--okbg);border:1px solid #1c7a45}
   .statusbox.work{background:#3a2f0c;border:1px solid #8a6d12}
   .statusbox.err{background:#3a1212;border:1px solid #8a1f1f}
   .statusbox h3{font-size:16px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
-
   .changes{list-style:none;margin-top:10px;font-size:13.5px}
   .changes li{padding:5px 0;display:flex;gap:9px;align-items:flex-start;color:#cfe0f3}
   .changes li b{color:#fff}
   .tick{color:var(--ok);font-weight:900;flex:none}
-
-  .meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px}
-  .meta div{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 13px}
-  .meta span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-  .meta strong{font-size:15px}
-
   .opt{display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap}
   .opt label{font-size:14px;color:var(--muted)}
   .opt input[type=number]{width:80px;background:var(--panel2);border:1px solid var(--line);color:var(--txt);
     border-radius:9px;padding:9px 11px;font-size:15px;text-align:center}
-
   .howto{margin-top:18px}
   .howto h2{font-size:15px;margin-bottom:10px;color:#bfd3ec}
   .steps{list-style:none;counter-reset:s}
@@ -80,7 +65,6 @@
   .steps li::before{content:counter(s);position:absolute;left:0;top:7px;width:26px;height:26px;border-radius:50%;
     background:var(--accent);color:#fff;font-weight:700;font-size:13px;display:grid;place-items:center}
   .steps b{color:#fff}
-
   .note{font-size:12.5px;color:var(--muted);margin-top:16px;line-height:1.6;
     border-left:3px solid var(--accent);padding-left:12px}
   footer{text-align:center;color:var(--muted);font-size:12px;margin-top:26px}
@@ -94,8 +78,9 @@
     <div class="logo">📐</div>
     <div>
       <h1>AM Production Schedule – A3 Igazító PRO</h1>
-      <p>Betallózod az Excelt → automatikusan <b>2 oldalas A3 álló</b> nyomtatásra igazítja.
-         A tartalmat, színeket, cellákat <b>nem módosítja</b>, csak a lapbeállítást teszi helyre.</p>
+      <p>Betallózod az Excelt → automatikusan <b>2 oldalas A3 álló</b> nyomtatásra igazítja,
+         a lehető <b>legnagyobb olvasható betűvel</b>, a teljes lapot kihasználva.
+         A tartalmat, színeket, cellákat <b>nem módosítja</b>.</p>
     </div>
   </header>
 
@@ -116,7 +101,7 @@
     <div class="statusbox" id="status"></div>
 
     <div class="row" style="margin-top:18px">
-      <button class="btn btn-dl" id="dlBtn" disabled>⬇️ Igazított fájl letöltése</button>
+      <button class="btn btn-dl" id="dlBtn" disabled>⬇️ Jelölt terv letöltése</button>
     </div>
   </div>
 
@@ -124,19 +109,19 @@
     <h2>Így használd (1 perc)</h2>
     <ol class="steps">
       <li>Betallózod ide a <b>legfrissebb</b> Excelt (naponta többször, mindig ugyanígy).</li>
-      <li>Az eszköz azonnal kiadja az <b>igazított fájlt</b> – letöltöd.</li>
-      <li>Megnyitod Excelben és nyomtatsz: már <b>2 oldal A3 álló</b>, nem kell semmit állítgatni.</li>
+      <li>Az eszköz azonnal kiadja az <b>igazított fájlt</b> – letöltöd (a neve a mai dátum + „Jelölt terv").</li>
+      <li>Megnyitod Excelben és nyomtatsz: már <b>2 oldal A3 álló</b>, nagyobb betűvel, nem kell semmit állítgatni.</li>
     </ol>
     <div class="note">
       Nyomtatáskor ellenőrizd: papír <b>A3</b>, tájolás <b>álló</b>, méretezés <b>„Eredeti / 100%"</b> (NE „Fit to page", azt már a fájl tartalmazza).
       A felosztás a meglévő oszloptörésnél marad: 1. oldal <b>Date · F0B · F03 · F04</b>, 2. oldal <b>Date · F05 · F06 · T03 · TC</b>.
       A tartalom <b>vízszintesen középre</b> kerül, minden cella megmarad (az üresek is), semmi nem vágódik és nem csúszik el (az összevont cellákra is figyel).
-      Az eszköz a <b>te módszered</b> automatizálja: a betűt <b>14 pt</b>-ra emeli, és <b>cellaszinten</b> megkeresi, hol van adat (mindegy, melyik sorban) — az adatsorokat megnagyítja, az üreseket összenyomja.
-      A méretarányt <b>automatikusan</b> az adott fájl adatsűrűségéhez számolja, hogy mindig 2 oldal legyen. Ha valaha mégis 3–4 oldal lenne, írj be kézzel kisebb értéket (pl. 33) a mezőbe.
+      Az eszköz a <b>te módszered</b> automatizálja: a betűt <b>14 pt</b>-ra emeli, az adatsorokat a lehető legtömörebbre húzza (de a betű nem vágódik), az üres sorokat erősen összenyomja, és a <b>teljes lapmagasságot kihasználja</b> – így a betű a maximális, ami még 2 oldalra fér.
+      A méretarányt <b>automatikusan</b> az adott fájl adatsűrűségéhez számolja. Ha valaha mégis 3–4 oldal lenne, írj be kézzel kisebb értéket (pl. 35) a mezőbe.
     </div>
   </div>
 
-  <footer>Készítette: Roland Gergő · AM A3 Igazító PRO v1 · önálló offline eszköz (semmilyen adat nem hagyja el a gépet)</footer>
+  <footer>Készítette: Roland Gergő · AM A3 Igazító PRO · önálló offline eszköz (semmilyen adat nem hagyja el a gépet)</footer>
 </div>
 
 <script>
@@ -160,6 +145,12 @@ els.dl.onclick = () => { if(fixedBlob) downloadBlob(fixedBlob, fixedName); };
 
 function show(cls, html){ els.status.className = 'statusbox show '+cls; els.status.innerHTML = html; }
 
+// A letöltött fájl neve MINDIG a mai dátum + "Jelölt terv" (pl. 2026.06.13 Jelölt terv.xlsx)
+function todayName(){
+  const d = new Date(), p = x => String(x).padStart(2,'0');
+  return d.getFullYear()+'.'+p(d.getMonth()+1)+'.'+p(d.getDate())+' Jelölt terv.xlsx';
+}
+
 function process(file){
   fixedBlob = null; els.dl.disabled = true; els.pill.style.display='none';
   if (typeof JSZip === 'undefined'){
@@ -182,24 +173,27 @@ function process(file){
       const sheetNames = Object.keys(zip.files).filter(n => /^xl\/worksheets\/sheet\d+\.xml$/i.test(n));
       if (sheetNames.length === 0) throw new Error('Nem található munkalap a fájlban.');
 
-      const FONT = 14, DATA_H = 15.5, EMPTY_H = 3.0;
+      // ===== A betű a 2 oldalra még biztonságosan ráférő MAXIMUM =====
+      // FONT marad 14. Az adatsort a betűhöz tömörítjük (a betű nem vágódik, mert
+      // csupa nagybetű/szám), az üres sorokat erősen összenyomjuk, és a teljes
+      // lapmagasságot kihasználjuk -> magasabb méretarány -> nagyobb nyomtatott betű.
+      const FONT = 14, DATA_H = 14.0, EMPTY_H = 1.0;
 
-      // 1) STÍLUSOK: a kis cellabetűket FONT méretre emeljük (a sorokban lévő
-      //    függőleges üres helyet kihasználva). A már nagy betűk maradnak.
+      // 1) STÍLUSOK: a kis cellabetűket FONT méretre emeljük. A már nagy betűk maradnak.
       if (zip.file('xl/styles.xml')){
         let st = await zip.file('xl/styles.xml').async('string');
         st = st.replace(/<sz val="([\d.]+)"\/>/g, (m,v)=> parseFloat(v) < FONT ? '<sz val="'+FONT+'"/>' : m);
         zip.file('xl/styles.xml', st);
       }
 
-      // 2) MUNKALAPOK – először cellaszintű adatfelismerés (mindegy, melyik sorban van)
+      // 2) MUNKALAPOK – cellaszintű adatfelismerés (mindegy, melyik sorban van)
       let hadRowBreak = false, dataCount = 0, emptyCount = 0;
       const toFix = [];
       for (const name of sheetNames){
         let xml = await zip.file(name).async('string');
         if (!/<pageSetup\b/.test(xml)) continue; // csak a nyomtatható lap(ok)
         if (/<rowBreaks\b/.test(xml)) hadRowBreak = true;
-        const dataRows = detectDataRows(xml);   // CELLASZINTŰ: bárhol van adat, megtalálja
+        const dataRows = detectDataRows(xml);
         if (toFix.length === 0){
           for (let r=2; r<=236; r++){ if (dataRows.has(r)) dataCount++; else emptyCount++; }
         }
@@ -207,36 +201,34 @@ function process(file){
       }
       if (toFix.length === 0) throw new Error('Nincs nyomtatási beállítású munkalap.');
 
-      // AUTOMATIKUS méretarány az adott fájl adatsűrűségéhez (mindig 2 oldal).
-      // 1035 pt ≈ az A3 álló nyomtatható magassága (csökkentett alsó margóval, a bevált esetből kalibrálva).
+      // AUTOMATIKUS méretarány a teljes A3 magasság kihasználásával (mindig 2 oldal).
+      // 1045 pt ≈ az A3 álló nyomtatható magassága a fejléc alatt (a lap aljáig kihasználva).
       const totalPt = dataCount*DATA_H + emptyCount*EMPTY_H;
-      const autoScale = Math.max(20, Math.min(60, Math.round(1035 / totalPt * 100)));
+      const autoScale = Math.max(20, Math.min(60, Math.round(1045 / totalPt * 100)));
       const scale = manualValid ? manualScale : autoScale;
 
-      let editedSheets = 0;
       for (const s of toFix){
         zip.file(s.name, fixSheetXml(s.xml, scale, s.dataRows, DATA_H, EMPTY_H));
-        editedSheets++;
       }
 
       fixedBlob = await zip.generateAsync({type:'blob', compression:'DEFLATE',
         mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-      fixedName = file.name.replace(/\.xlsx$/i,'') + ' - 2 oldal A3.xlsx';
+      fixedName = todayName();
 
       els.dl.disabled = false;
       els.pill.style.display='inline-block';
 
       const ch = [];
       ch.push('<li><span class="tick">✓</span><span>Lapméret/tájolás: <b>A3 álló</b>, vízszintesen középre</span></li>');
-      ch.push('<li><span class="tick">✓</span><span>Adatbetűk felnagyítva <b>'+FONT+' pt</b>-ra (a sorokban lévő üres helyet kihasználva)</span></li>');
-      ch.push('<li><span class="tick">✓</span><span><b>Cellaszintű felismerés:</b> '+dataCount+' adatsor (bárhol van adat) megnagyítva, '+emptyCount+' üres sor összenyomva</span></li>');
-      ch.push('<li><span class="tick">✓</span><span>Méretarány: <b>'+scale+'%</b>'+(manualValid?' (kézi)':' (automatikus, a fájl adatsűrűségéhez)')+' – mindkét fél pontosan 1-1 A3 oldal</span></li>');
+      ch.push('<li><span class="tick">✓</span><span>Adatbetűk <b>'+FONT+' pt</b>, a sorok a betűhöz tömörítve – <b>nagyobb, olvashatóbb</b> nyomtatás</span></li>');
+      ch.push('<li><span class="tick">✓</span><span><b>Cellaszintű felismerés:</b> '+dataCount+' adatsor megnagyítva, '+emptyCount+' üres sor erősen összenyomva</span></li>');
+      ch.push('<li><span class="tick">✓</span><span>Méretarány: <b>'+scale+'%</b>'+(manualValid?' (kézi)':' (automatikus, teljes lap kihasználva)')+' – mindkét fél pontosan 1-1 A3 oldal</span></li>');
       if (hadRowBreak) ch.push('<li><span class="tick">✓</span><span>Felesleges <b>függőleges laptörés eltávolítva</b></span></li>');
       ch.push('<li><span class="tick">✓</span><span>Összevont cellák, színek, tartalom: <b>nem csúszik, nem vágódik</b> – oszloptörés megmaradt (2 oldal)</span></li>');
 
       show('ok',
         '<h3>✅ Kész – nagyobb betű, 2 oldalas A3</h3>'+
-        'A fájl nyomtatásra kész. Töltsd le, nyisd meg Excelben és nyomtasd.'+
+        'A fájl nyomtatásra kész: <b>'+fixedName+'</b>. Töltsd le, nyisd meg Excelben és nyomtasd.'+
         '<ul class="changes">'+ch.join('')+'</ul>');
     }catch(err){
       console.error(err);
@@ -246,11 +238,6 @@ function process(file){
   reader.onerror = () => show('err','<h3>⚠️ Hiba</h3>Nem sikerült beolvasni a fájlt.');
   reader.readAsArrayBuffer(file);
 }
-
-/* A LÉNYEG: a te manuális módszered automatizálása.
-   - kis cellabetűk -> 12 pt (a sorok üres helyét kihasználva)  [a styles.xml-ben]
-   - üres sorok összenyomva, adatsorok magasabbak  -> nagyobb olvasható betű
-   - A3 álló, középre, oszloptörés marad (2 oldal), függőleges törés törölve     */
 
 // oszlopbetű -> szám (B=2, AF=32, ...)
 function colToNum(s){ let n=0; for(let i=0;i<s.length;i++) n=n*26+(s.charCodeAt(i)-64); return n; }
