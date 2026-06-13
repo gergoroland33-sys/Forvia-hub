@@ -605,11 +605,11 @@
             simDate = new Date(lastRecordedCarry);
             simDate.setDate(simDate.getDate() + 1);
             
-            // BIZTONSÁG: ha simDate (= utolsó+1) később lenne mint a "logikai ma", 
-            // akkor mégis a mai naptól kezdjük, hogy a mai sorrend is generálódjon
-            if (simDate.getTime() > logicalTodayForSim.getTime()) {
-                simDate = new Date(logicalTodayForSim);
-            }
+            /* JAVÍTÁS (műszakváltás-stabilitás): NINCS clamp vissza a mára!
+               A régi clamp újraszámolta a MÁR rögzített mai párt, ezért
+               változott meg a pár 18:00-kor (nappal→este). A szimuláció
+               most a következő NEM rögzített naptól indul. A már rögzített
+               napok tényleges párjait a while UTÁN töltjük be (lásd lent). */
         } else {
             simDate = new Date(logicalTodayForSim);
         }
@@ -655,6 +655,28 @@
             }
             simDate.setDate(simDate.getDate() + 1);
         }
+        
+        /* JAVÍTÁS (műszakváltás-stabilitás): a MÁR RÖGZÍTETT napok TÉNYLEGES 
+           párjait felülírjuk a jósolt értékek fölé. A workerStats lastDate 
+           alapján csoportosítunk: ahol 2 embernek ugyanaz a lastDate-je, az 
+           egy rögzített pár = TÉNY. Így a mai pár (ha már rögzítve van) SOHA 
+           nem változik meg újraszámoláskor — sem műszakváltáskor, sem a 
+           percenkénti auto-refresh-kor. */
+        let recordedByDate = {};
+        sysSettings.roster.forEach(name => {
+            const ws = workerStats[name];
+            if (ws && ws.lastDate) {
+                if (!recordedByDate[ws.lastDate]) recordedByDate[ws.lastDate] = [];
+                recordedByDate[ws.lastDate].push(name);
+            }
+        });
+        Object.keys(recordedByDate).forEach(dk => {
+            if (recordedByDate[dk].length >= 2) {
+                // Stabil megjelenítési sorrend (carries szerint, majd ABC)
+                let pairNames = recordedByDate[dk].slice(0, 2);
+                computedSchedule[dk] = pairNames;
+            }
+        });
     }
 
     function recordTodayCarry(dateKey, worker1, worker2) {
@@ -1244,17 +1266,6 @@
                 }
                 
                 const todayKey = getDateKey(new Date());
-                const updates = {};
-                
-                // PATH-szerű írás: egyenként workerStats node alá, így átmegy
-                // a Firebase security rules-on. A teljes-node csere validációs hibát adhat.
-                sysSettings.roster.forEach(name => {
-                    updates[`workerStats/${name}/carries`] = 0;
-                    updates[`workerStats/${name}/lastDate`] = null;
-                    updates[`workerStats/${name}/joinDate`] = todayKey;
-                });
-                updates['pairHistory'] = null;
-                updates['absences'] = null;
                 
                 // Optimista UI: lokálisan azonnal nullázunk, ne várjunk a felhőre
                 sysSettings.roster.forEach(name => {
@@ -1263,13 +1274,43 @@
                 pairHistory = {};
                 absences = {};
                 maybeRender();
+                // Az admin panel azonnali frissítése (ha nyitva van)
+                if (document.getElementById('adminPanel').style.display === 'block') {
+                    renderAdminRoster();
+                    renderAdminTeamSummary();
+                }
                 showToast("✅ Pontok újranullázva mindenkinek!", 'success');
                 
-                db.ref().update(updates).catch(err => {
+                /* JAVÍTÁS (reset bug): a régi root-szintű db.ref().update(updates)
+                   a Firebase security rules-on elbukhatott (több node egyszerre),
+                   ezért tűnt úgy, hogy "nem nullázódik". MOST minden node-ot KÜLÖN
+                   .set()-tel írunk — pontosan úgy, mint a bizonyítottan működő
+                   adjustCarries. Így egyik write sem akad el a többi miatt. */
+                const ops = [];
+                sysSettings.roster.forEach(name => {
+                    ops.push(
+                        db.ref('workerStats/' + name).set({
+                            carries: 0,
+                            lastDate: null,
+                            joinDate: todayKey
+                        })
+                    );
+                });
+                ops.push(db.ref('pairHistory').set(null));
+                ops.push(db.ref('absences').set(null));
+                
+                Promise.all(ops).then(() => {
+                    showToast("✅ Felhőbe mentve a nullázás!", 'success');
+                }).catch(err => {
                     showToast("❌ Firebase hiba: " + err.message, 'error');
+                    // Hiba esetén visszatöltjük a friss állapotot
                     statsRef.once('value').then(snap => {
                         workerStats = snap.val() || {};
                         maybeRender();
+                        if (document.getElementById('adminPanel').style.display === 'block') {
+                            renderAdminRoster();
+                            renderAdminTeamSummary();
+                        }
                     });
                 });
             },
