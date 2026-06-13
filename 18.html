@@ -6,11 +6,8 @@
 <title>AM Schedule – A3 Igazító PRO</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
-  :root{
-    --bg:#0e1a2b; --panel:#162840; --panel2:#1e3450; --line:#2b4763;
-    --accent:#3b82f6; --accent2:#1d4ed8;
-    --ok:#22c55e; --okbg:#0c3a22; --warn:#f59e0b; --err:#ef4444; --txt:#eaf1fa; --muted:#90a4bd;
-  }
+  :root{--bg:#0e1a2b;--panel:#162840;--panel2:#1e3450;--line:#2b4763;--accent:#3b82f6;--accent2:#1d4ed8;
+    --ok:#22c55e;--okbg:#0c3a22;--warn:#f59e0b;--err:#ef4444;--txt:#eaf1fa;--muted:#90a4bd;}
   *{margin:0;padding:0;box-sizing:border-box}
   body{background:radial-gradient(1200px 600px at 50% -10%,#1b2f4d 0%,#0e1a2b 60%);
     color:var(--txt);font-family:'Segoe UI',Tahoma,Arial,sans-serif;min-height:100vh;padding:24px 16px 70px}
@@ -63,8 +60,8 @@
     <div class="logo">📐</div>
     <div>
       <h1>AM Production Schedule – A3 Igazító PRO</h1>
-      <p>Betallózod az Excelt → automatikusan <b>2 oldalas A3 álló</b> nyomtatásra igazítja, a lehető
-         <b>legnagyobb olvasható betűvel</b>, a teljes lapot kihasználva. A tartalmat, színeket, cellákat <b>nem módosítja</b>.</p>
+      <p>Betallózod az Excelt → <b>2 oldalas A3 álló</b> nyomtatásra igazítja, a lehető <b>legnagyobb olvasható
+         betűvel</b>, ami magasságban ÉS szélességben is ráfér 2 oldalra. A tartalmat <b>nem módosítja</b>.</p>
     </div>
   </header>
 
@@ -89,16 +86,16 @@
   <div class="card howto">
     <h2>Így használd (1 perc)</h2>
     <ol class="steps">
-      <li>Betallózod ide a <b>legfrissebb</b> Excelt (naponta többször, mindig ugyanígy).</li>
-      <li>Az eszköz azonnal kiadja az <b>igazított fájlt</b> – letöltöd (a neve a mai dátum + „Jelölt terv").</li>
-      <li>Megnyitod Excelben és nyomtatsz: <b>2 oldal A3 álló</b>, a lehető legnagyobb betűvel.</li>
+      <li>Betallózod ide a <b>legfrissebb</b> Excelt.</li>
+      <li>Az eszköz kiadja az igazított fájlt – letöltöd (neve: mai dátum + „Jelölt terv").</li>
+      <li>Megnyitod Excelben és nyomtatsz: <b>pontosan 2 oldal A3 álló</b>, a lehető legnagyobb betűvel.</li>
     </ol>
     <div class="note">
       Nyomtatáskor: papír <b>A3</b>, tájolás <b>álló</b>, méretezés <b>„Eredeti / 100%"</b> (NE „Fit to page").
-      A betűt <b>14 pt</b>-ra emeli, az adatsorokat a betűhöz tömöríti (de nem vágja), az üres sorokat erősen összenyomja,
-      és a <b>teljes lapmagasságot</b> kihasználja – ez a maximális betű, ami még 2 oldalra fér.
-      A <b>cím- és gépsor-név sor</b> (1–2. sor) külön, fix magasságon marad, hogy a gépsorok nevei <b>ne csússzanak el</b>.
-      Ha valaha mégis 3 oldal lenne, írj be kézzel kisebb értéket (pl. 38) a méretarány mezőbe.
+      A méretarányt automatikusan a <b>magasság ÉS a szélesség</b> közül a kisebb korláthoz választja, hogy
+      a 2 oldal mindkét irányban biztosan ráférjen (a 2. oldal – F05·F06·T03·IC – a szélesebb, ez a határ).
+      A betű 14 pt, az adatsorok a betűhöz tömörítve; a <b>cím- és gépsor-név sor</b> külön, fix magasságon
+      marad, hogy a nevek ne csússzanak el. Kézi méretarányt a mezőbe írva felülbírálhatsz.
     </div>
   </div>
 
@@ -123,18 +120,43 @@ els.dl.onclick = () => { if(fixedBlob) downloadBlob(fixedBlob, fixedName); };
 
 function show(cls, html){ els.status.className = 'statusbox show '+cls; els.status.innerHTML = html; }
 
-// A letöltött fájl neve MINDIG a mai dátum + "Jelölt terv" (pl. 2026.06.13 Jelölt terv.xlsx)
+// A letöltött fájl neve MINDIG a mai dátum + "Jelölt terv"
 function todayName(){
   const d = new Date(), p = x => String(x).padStart(2,'0');
   return d.getFullYear()+'.'+p(d.getMonth()+1)+'.'+p(d.getDate())+' Jelölt terv.xlsx';
 }
 
+// SZÉLESSÉG-KORLÁT: a méretarány szélességben is nagyít. A 2 oldal (oszloptörésnél)
+// közül a szélesebb oldal nem lóghat túl az A3 álló nyomtatható szélességén, különben
+// új (3.) oldalra csúszik. Kiszámoljuk a legszélesebb oldalt a tényleges oszlop-
+// szélességekből, és ebből a maximális méretarányt.
+function widthScaleCap(xml){
+  const cols = {};
+  let m; const colRe=/<col [^>]*?min="(\d+)"[^>]*?max="(\d+)"[^>]*?width="([\d.]+)"[^>]*?\/>/g;
+  while((m=colRe.exec(xml))){ const a=+m[1], b=+m[2], w=parseFloat(m[3]); for(let c=a;c<=Math.min(b,120);c++) cols[c]=w; }
+  const DEFW=8.43, PT_PER_CHAR=7.2;       // Arial CE 10 (a sablon alapbetűje) – valós nyomtatásból kalibrálva
+  const PRINT_C1=2, PRINT_C2=64;          // nyomtatási terület: B..BL
+  const LEFT=0.2, RIGHT=0.2;              // ugyanaz, amit a margóknál is beállítunk
+  const PW = 841.89 - (LEFT+RIGHT)*72;    // A3 álló nyomtatható szélesség (pt)
+  // csak az OSZLOP-törések a nyomtatási területen belül (a sorbeli <brk> nem számít)
+  const cb = (xml.match(/<colBreaks[^>]*>[\s\S]*?<\/colBreaks>/) || [''])[0];
+  const brks=[]; let bm; const bRe=/<brk id="(\d+)"/g; while((bm=bRe.exec(cb))) brks.push(+bm[1]);
+  const splits = brks.filter(b => b>PRINT_C1 && b<=PRINT_C2).sort((a,b)=>a-b);
+  if (splits.length === 0) return 60;     // nincs oszloptörés a területen -> ne korlátozzon
+  const bounds = [PRINT_C1, ...splits, PRINT_C2+1];
+  let widerPt = 0;
+  for (let i=0;i<bounds.length-1;i++){
+    let sc=0; for (let c=bounds[i]; c<=bounds[i+1]-1; c++) sc += (cols[c]!=null?cols[c]:DEFW);
+    widerPt = Math.max(widerPt, sc*PT_PER_CHAR);
+  }
+  if (widerPt <= 0) return 60;
+  return Math.max(20, Math.round(PW / widerPt * 100 * 0.96));   // 0.96 = biztonsági ráhagyás
+}
+
 function process(file){
   fixedBlob = null; els.dl.disabled = true; els.pill.style.display='none';
-  if (typeof JSZip === 'undefined'){
-    show('err','<h3>⚠️ Hiba</h3>A JSZip könyvtár nem töltődött be. Internetkapcsolat szükséges, vagy mentsd a <b>jszip.min.js</b>-t a HTML mellé.'); return;
-  }
-  if (!/\.xlsx$/i.test(file.name)){ show('err','<h3>⚠️ Nem .xlsx fájl</h3>Kérlek .xlsx kiterjesztésű Excel fájlt tölts be.'); return; }
+  if (typeof JSZip === 'undefined'){ show('err','<h3>⚠️ Hiba</h3>A JSZip nem töltődött be (internet kell, vagy tedd a jszip.min.js-t a HTML mellé).'); return; }
+  if (!/\.xlsx$/i.test(file.name)){ show('err','<h3>⚠️ Nem .xlsx fájl</h3>Tölts be .xlsx fájlt.'); return; }
   const manualScale = parseInt(els.scale.value,10);
   const manualValid = !isNaN(manualScale) && manualScale>=10 && manualScale<=100;
   show('work','<h3>⏳ Igazítás folyamatban…</h3>'+file.name);
@@ -146,45 +168,40 @@ function process(file){
       const sheetNames = Object.keys(zip.files).filter(n => /^xl\/worksheets\/sheet\d+\.xml$/i.test(n));
       if (sheetNames.length === 0) throw new Error('Nem található munkalap a fájlban.');
 
-      // ===== A betű a 2 oldalra még biztonságosan ráférő MAXIMUM =====
-      // FONT marad 14. Az ADATSOROKAT (3. sortól) a betűhöz tömörítjük (a betű nem vágódik,
-      // mert csupa nagybetű/szám), az üres sorokat erősen összenyomjuk.
-      // Az 1. (cím) és 2. (gépsor-nevek) sor FIX magasságon marad -> a nevek nem csúsznak el,
-      // és ezeket a méretarány-számításba IS beleszámoljuk, hogy mindig pontosan 2 oldal legyen.
-      const FONT = 14, DATA_H = 13.0, EMPTY_H = 1.0, ROW2_H = 16.0;
+      // FONT 14. Az ADATSOROK (3. sortól) a betűhöz tömörítve; az 1. (cím) és 2. (gépsor-nevek)
+      // sor FIX magasságon marad (a nevek nem csúsznak), és beleszámít a méretarányba.
+      const FONT = 14, DATA_H = 14.0, EMPTY_H = 1.0, ROW2_H = 16.0;
 
-      // 1) STÍLUSOK: a kis cellabetűket FONT méretre emeljük. A már nagy betűk maradnak.
       if (zip.file('xl/styles.xml')){
         let st = await zip.file('xl/styles.xml').async('string');
         st = st.replace(/<sz val="([\d.]+)"\/>/g, (m,v)=> parseFloat(v) < FONT ? '<sz val="'+FONT+'"/>' : m);
         zip.file('xl/styles.xml', st);
       }
 
-      // 2) MUNKALAPOK – cellaszintű adatfelismerés
-      let hadRowBreak = false, dataCount = 0, emptyCount = 0, row1H = 26.25;
+      let hadRowBreak = false, dataCount = 0, emptyCount = 0, row1H = 26.25, wCap = 60;
       const toFix = [];
       for (const name of sheetNames){
         let xml = await zip.file(name).async('string');
-        if (!/<pageSetup\b/.test(xml)) continue; // csak a nyomtatható lap(ok)
+        if (!/<pageSetup\b/.test(xml)) continue;
         if (/<rowBreaks\b/.test(xml)) hadRowBreak = true;
         const dataRows = detectDataRows(xml);
         if (toFix.length === 0){
-          // a cím-sor (1.) eredeti magassága a fejléc-számításhoz
-          const r1 = xml.match(/<row r="1"[^>]*?\bht="([\d.]+)"/);
-          if (r1) row1H = parseFloat(r1[1]);
-          // csak a TÖMÖRÍTHETŐ adatterületet számoljuk: 3..236 (az 1-2. fejléc-sor külön)
+          const r1 = xml.match(/<row r="1"[^>]*?\bht="([\d.]+)"/); if (r1) row1H = parseFloat(r1[1]);
           for (let r=3; r<=236; r++){ if (dataRows.has(r)) dataCount++; else emptyCount++; }
+          wCap = widthScaleCap(xml);
         }
         toFix.push({name, xml, dataRows});
       }
       if (toFix.length === 0) throw new Error('Nincs nyomtatási beállítású munkalap.');
 
-      // AUTOMATIKUS méretarány a TELJES tartalommagassághoz (fejléc-sorok beleszámítva).
-      // 1045 pt ≈ az A3 álló nyomtatható tartalommagassága. Mindig pontosan 2 oldal.
+      // MAGASSÁGI méretarány (fejléc-sorok beleszámítva). 1045 pt ≈ a nyomtatható tartalommagasság.
       const headerPt = row1H + ROW2_H;
       const totalPt = headerPt + dataCount*DATA_H + emptyCount*EMPTY_H;
-      const autoScale = Math.max(20, Math.min(60, Math.round(1045 / totalPt * 100)));
+      const heightScale = Math.max(20, Math.min(60, Math.round(1045 / totalPt * 100)));
+      // A VÉGSŐ méretarány a magasság és a szélesség közül a KISEBB -> mindkét irányban 2 oldal.
+      const autoScale = Math.min(heightScale, wCap);
       const scale = manualValid ? manualScale : autoScale;
+      const widthBound = !manualValid && (wCap <= heightScale);
 
       for (const s of toFix){
         zip.file(s.name, fixSheetXml(s.xml, scale, s.dataRows, DATA_H, EMPTY_H, ROW2_H));
@@ -196,22 +213,21 @@ function process(file){
 
       els.dl.disabled = false; els.pill.style.display='inline-block';
       const ch = [];
-      ch.push('<li><span class="tick">✓</span><span>A3 álló, középre · adatbetűk <b>'+FONT+' pt</b>, a sorok a betűhöz tömörítve – <b>maximális olvasható méret</b></span></li>');
-      ch.push('<li><span class="tick">✓</span><span><b>'+dataCount+'</b> adatsor nagyítva, <b>'+emptyCount+'</b> üres sor összenyomva · méretarány <b>'+scale+'%</b>'+(manualValid?' (kézi)':' (auto, teljes lap)')+'</span></li>');
-      ch.push('<li><span class="tick">✓</span><span><b>Gépsor-nevek a helyükön:</b> a cím- és név-sor külön, fix magasságon (nem csúszik, nem vágódik)</span></li>');
+      ch.push('<li><span class="tick">✓</span><span>A3 álló, középre · adatbetűk <b>'+FONT+' pt</b>, a sorok a betűhöz tömörítve</span></li>');
+      ch.push('<li><span class="tick">✓</span><span>Méretarány: <b>'+scale+'%</b>'+(manualValid?' (kézi)':(widthBound?' (a szélesség a határ – 2. oldal)':' (a magasság a határ)'))+' – pontosan 2 oldal, magasságban és szélességben is</span></li>');
+      ch.push('<li><span class="tick">✓</span><span><b>'+dataCount+'</b> adatsor nagyítva, <b>'+emptyCount+'</b> üres összenyomva</span></li>');
+      ch.push('<li><span class="tick">✓</span><span><b>Gépsor-nevek a helyükön:</b> a cím- és név-sor fix magasságon (nem csúszik, nem vágódik)</span></li>');
       if (hadRowBreak) ch.push('<li><span class="tick">✓</span><span>Felesleges függőleges laptörés eltávolítva</span></li>');
       ch.push('<li><span class="tick">✓</span><span>Összevont cellák, színek, tartalom: <b>nem csúszik, nem vágódik</b> – oszloptörés megmaradt (2 oldal)</span></li>');
-      show('ok','<h3>✅ Kész – nagyobb betű, 2 oldalas A3</h3>A fájl: <b>'+fixedName+'</b>. Töltsd le, nyisd meg Excelben és nyomtasd.<ul class="changes">'+ch.join('')+'</ul>');
+      show('ok','<h3>✅ Kész – 2 oldalas A3, max. betű</h3>A fájl: <b>'+fixedName+'</b>. Töltsd le, nyisd meg Excelben és nyomtasd.<ul class="changes">'+ch.join('')+'</ul>');
     }catch(err){ console.error(err); show('err','<h3>⚠️ Hiba a feldolgozás közben</h3>'+err.message); }
   };
   reader.onerror = () => show('err','<h3>⚠️ Hiba</h3>Nem sikerült beolvasni a fájlt.');
   reader.readAsArrayBuffer(file);
 }
 
-// oszlopbetű -> szám (B=2, AF=32, ...)
 function colToNum(s){ let n=0; for(let i=0;i<s.length;i++) n=n*26+(s.charCodeAt(i)-64); return n; }
 
-// mely sorokban van tényleges adat (a B2:BL236 területen)?
 function detectDataRows(xml){
   const set = new Set();
   let doc;
@@ -235,44 +251,27 @@ function detectDataRows(xml){
 }
 
 function fixSheetXml(xml, scale, dataRows, dataH, emptyH, row2H){
-  // 1) pageSetup -> A3 álló, rögzített méretarány (r:id megőrzése)
-  xml = xml.replace(/<pageSetup[^>]*\/>/, function(tag){
-    const m = tag.match(/r:id="([^"]+)"/);
-    return '<pageSetup paperSize="8" scale="'+scale+'" orientation="portrait"'+(m?' r:id="'+m[1]+'"':'')+'/>';
-  });
-  xml = xml.replace(/<pageSetup[^>]*>[\s\S]*?<\/pageSetup>/, function(tag){
-    const m = tag.match(/r:id="([^"]+)"/);
-    return '<pageSetup paperSize="8" scale="'+scale+'" orientation="portrait"'+(m?' r:id="'+m[1]+'"':'')+'/>';
-  });
-  // 2) fit-to-page ki
+  xml = xml.replace(/<pageSetup[^>]*\/>/, function(tag){ const m = tag.match(/r:id="([^"]+)"/);
+    return '<pageSetup paperSize="8" scale="'+scale+'" orientation="portrait"'+(m?' r:id="'+m[1]+'"':'')+'/>'; });
+  xml = xml.replace(/<pageSetup[^>]*>[\s\S]*?<\/pageSetup>/, function(tag){ const m = tag.match(/r:id="([^"]+)"/);
+    return '<pageSetup paperSize="8" scale="'+scale+'" orientation="portrait"'+(m?' r:id="'+m[1]+'"':'')+'/>'; });
   xml = xml.replace(/(<pageSetUpPr\b[^>]*?)\s*fitToPage="(?:1|true)"/g, '$1');
-  // 2b) MARGÓK: alsó és oldalsó csökkentve; a FELSŐ margó (fejléc!) és a header-margó VÁLTOZATLAN.
   xml = xml.replace(/<pageMargins([^>]*)\/>/, function(m, attrs){
     const top = (attrs.match(/top="([^"]*)"/)    || [])[1] || '1.5748';
     const hdr = (attrs.match(/header="([^"]*)"/) || [])[1] || '0.31';
-    return '<pageMargins left="0.2" right="0.2" top="'+top+'" bottom="0.236" header="'+hdr+'" footer="0.12"/>';
-  });
-  // 3) függőleges laptörés törlése
+    return '<pageMargins left="0.2" right="0.2" top="'+top+'" bottom="0.236" header="'+hdr+'" footer="0.12"/>'; });
   xml = xml.replace(/<rowBreaks\b[^>]*>[\s\S]*?<\/rowBreaks>/g, '');
   xml = xml.replace(/<rowBreaks\b[^>]*\/>/g, '');
-  // 4) SORMAGASSÁGOK: 1. sor (cím) VÁLTOZATLAN; 2. sor (gépsor-nevek) = row2H (fix);
-  //    3..236: adatsor = dataH, üres sor = emptyH (összenyomva).
   xml = xml.replace(/<row r="(\d+)"([^>]*)>/g, function(m, r, rest){
     const rn = +r;
-    if (rn === 1 || rn > 236) return m;                 // cím-sor érintetlen
+    if (rn === 1 || rn > 236) return m;                       // cím-sor érintetlen
     rest = rest.replace(/\s+ht="[^"]*"/,'').replace(/\s+customHeight="[^"]*"/,'');
-    const h = (rn === 2) ? row2H : (dataRows.has(rn) ? dataH : emptyH);
-    return '<row r="'+r+'"'+rest+' ht="'+h+'" customHeight="1">';
-  });
-  // 5) vízszintes középre igazítás
+    const h = (rn === 2) ? row2H : (dataRows.has(rn) ? dataH : emptyH);   // 2. sor: gépsor-nevek, fix
+    return '<row r="'+r+'"'+rest+' ht="'+h+'" customHeight="1">'; });
   if (/<printOptions\b/.test(xml)){
-    if (/horizontalCentered=/.test(xml))
-      xml = xml.replace(/(<printOptions\b[^>]*?)\s*horizontalCentered="[^"]*"/, '$1 horizontalCentered="1"');
-    else
-      xml = xml.replace(/<printOptions\b/, '<printOptions horizontalCentered="1" ');
-  } else {
-    xml = xml.replace('<pageMargins', '<printOptions horizontalCentered="1"/><pageMargins');
-  }
+    if (/horizontalCentered=/.test(xml)) xml = xml.replace(/(<printOptions\b[^>]*?)\s*horizontalCentered="[^"]*"/, '$1 horizontalCentered="1"');
+    else xml = xml.replace(/<printOptions\b/, '<printOptions horizontalCentered="1" ');
+  } else { xml = xml.replace('<pageMargins', '<printOptions horizontalCentered="1"/><pageMargins'); }
   return xml;
 }
 
