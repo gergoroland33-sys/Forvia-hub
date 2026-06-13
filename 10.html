@@ -192,6 +192,8 @@
             <div class="admin-section">
                 <h3>👥 Aktív Névsor</h3>
                 <div id="adminTeamSummary"></div>
+                <div id="todayCarrierSummary"></div>
+                <p style="font-size:0.7rem; color:var(--text-dim); margin: 0 0 10px 0; opacity: 0.85;">📍 = kézi kijelölés, hogy <strong>ma ki vigye</strong> (felülbírálja az automatikát). Jelölj ki pontosan 2 főt. A − / + a vitelszámot állítja.</p>
                 <div class="admin-list" id="adminRosterList"></div>
             </div>
 
@@ -287,6 +289,7 @@
     let workerStats = {};
     let pairHistory = {};
     let computedSchedule = {};
+    let recordedDays = {}; // ÚJ: mely napokon történt MÁR rögzítés (auto vagy kézi)
     let hasRenderedOnce = false;
 
     const settingsRef = db.ref('settings');
@@ -294,6 +297,7 @@
     const statsRef = db.ref('workerStats');
     const pairsRef = db.ref('pairHistory');
     const metaRef = db.ref('meta');
+    const recordedDaysRef = db.ref('recordedDays'); // ÚJ
 
     // ==========================================
     // 🛡️ INIT — BIZTONSÁGOS, NEM TÖRÖL ÖNMAGÁTÓL
@@ -345,6 +349,7 @@
         
         updates['pairHistory'] = null;
         updates['absences'] = null;
+        updates['recordedDays'] = null; // ÚJ: évváltáskor a rögzített-nap flag-ek is törlődnek
         updates['meta'] = {
             lastResetYear: year,
             lastResetDate: new Date().toISOString()
@@ -419,8 +424,26 @@
         maybeRender();
     });
 
+    recordedDaysRef.on('value', (snapshot) => {
+        recordedDays = snapshot.val() || {};
+        maybeRender();
+    });
+
     function getDateKey(date) {
         return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+    }
+
+    /* ÚJ: a "logikai mai nap" — ugyanaz az 05:59 szabály mint a renderUI-ban.
+       Az admin kézi pár-kijelölés ezt használja, hogy konzisztens legyen
+       a főképernyő által mutatott nappal. */
+    function getLogicalToday() {
+        let d = new Date();
+        let h = d.getHours(), m = d.getMinutes();
+        if (h < 5 || (h === 5 && m < 59)) {
+            d.setDate(d.getDate() - 1);
+        }
+        d.setHours(0, 0, 0, 0);
+        return d;
     }
 
     function parseLocalDate(dateStr) {
@@ -683,6 +706,12 @@
         if (!worker1 || !worker2 || worker1 === "-" || worker2 === "-") return;
         if (worker1 === worker2) return;
 
+        /* JAVÍTÁS: ha erre a napra MÁR történt rögzítés (recordedDays flag),
+           akkor NEM rögzítünk újra automatikusan. Ez teszi lehetővé, hogy az
+           admin a kézi "📍 Ma ő viszi" kapcsolóval szabadon átállítsa a párt,
+           anélkül hogy az automatika visszahozná az eredeti párt. */
+        if (recordedDays[dateKey]) return;
+
         const dailyAbsences = absences[dateKey] || {};
         if (dailyAbsences[worker1] || dailyAbsences[worker2]) return;
         
@@ -699,8 +728,56 @@
         const pk = pairKey(worker1, worker2);
         updates[`pairHistory/${pk}`] = (pairHistory[pk] || 0) + 1;
         
+        // Megjelöljük: erre a napra megtörtént az (auto) rögzítés
+        updates[`recordedDays/${dateKey}`] = true;
+        // Lokális optimista flag, hogy ne fusson kétszer egy renderben
+        recordedDays[dateKey] = true;
+        
         db.ref().update(updates);
     }
+    
+    /* ÚJ: kézi "ma ő viszi" kapcsoló az admin menühöz.
+       A vitelszámot is szinkronban tartja (kijelöléskor +1, levételkor −1),
+       és a lastDate-et a logikai mai napra állítja. A főképernyő a lastDate=ma
+       embereket mutatja párként (recordedByDate), így azonnal látszik. */
+    window.toggleCarrierToday = function(name) {
+        const todayKey = getDateKey(getLogicalToday());
+        const ws = workerStats[name] || { carries: 0, lastDate: null, joinDate: null };
+        const isTodayCarrier = (ws.lastDate === todayKey);
+        
+        let newCarries, newLastDate;
+        if (isTodayCarrier) {
+            // Levesszük a mai vivő státuszt
+            newCarries = Math.max(0, (ws.carries || 0) - 1);
+            newLastDate = null;
+        } else {
+            // Kijelöljük mai vivőnek
+            newCarries = (ws.carries || 0) + 1;
+            newLastDate = todayKey;
+        }
+        
+        // Optimista UI: azonnal frissítünk lokálisan
+        workerStats[name] = { ...ws, carries: newCarries, lastDate: newLastDate };
+        // A napot megjelöljük rögzítettként, hogy az auto-rögzítés ne avatkozzon be
+        recordedDays[todayKey] = true;
+        
+        maybeRender();
+        if (document.getElementById('adminPanel').style.display === 'block') {
+            renderAdminRoster();
+            renderAdminTeamSummary();
+        }
+        
+        // Firebase szinkron a háttérben
+        const updates = {};
+        updates[`workerStats/${name}/carries`] = newCarries;
+        updates[`workerStats/${name}/lastDate`] = newLastDate;
+        updates[`recordedDays/${todayKey}`] = true;
+        db.ref().update(updates).catch(err => {
+            showToast("❌ Hiba: " + err.message, 'error');
+        });
+        
+        showToast(isTodayCarrier ? `↩ ${name} levéve a mai párból` : `📍 ${name} ma viszi`, 'success');
+    };
     
     window.adjustCarries = function(name, delta) {
         let currentCarries = (workerStats[name] && workerStats[name].carries) || 0;
@@ -1132,6 +1209,10 @@
         if (!sysSettings.roster) sysSettings.roster = [];
         const year = new Date().getFullYear();
         const yearEnd = new Date(year, 11, 31);
+        const todayKey = getDateKey(getLogicalToday()); // ÚJ: a mai logikai nap
+        
+        // ÚJ: hány embert jelöltek ki mára (lastDate === ma)
+        let todayCarriers = sysSettings.roster.filter(n => workerStats[n] && workerStats[n].lastDate === todayKey);
         
         sysSettings.roster.forEach((name, i) => {
             const ws = workerStats[name] || { carries: 0, lastDate: null, joinDate: null };
@@ -1140,9 +1221,10 @@
             const carries = ws.carries || 0;
             const expected = getExpectedCarriesForWorker(name, yearEnd);
             const remaining = Math.max(0, Math.round(expected - carries));
+            const isTodayCarrier = (ws.lastDate === todayKey); // ÚJ
             
             html += `
-            <div class="admin-list-item">
+            <div class="admin-list-item" ${isTodayCarrier ? 'style="background: rgba(6, 182, 212, 0.08);"' : ''}>
                 <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px;">
                     <div style="display:flex; align-items:center; background: rgba(139, 92, 246, 0.15); border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3);">
                         <button class="btn-action" style="border-radius:0; padding: 4px 8px; font-weight:bold; background: transparent; color: white;" onclick="adjustCarries('${name}', -1)">−</button>
@@ -1158,7 +1240,10 @@
                         </div>
                     </div>
                 </div>
-                <div style="display:flex; gap:5px;">
+                <div style="display:flex; gap:5px; align-items:center;">
+                    <button class="btn-action" title="${isTodayCarrier ? 'Ma mégsem ő viszi' : 'Ma ő viszi'}" 
+                        style="${isTodayCarrier ? 'background: var(--accent); color: #000;' : ''} font-size: 1rem; min-width: 36px;"
+                        onclick="toggleCarrierToday('${name}')">📍</button>
                     <button class="btn-action" title="Fel" onclick="moveWorker(${i}, -1)">▲</button>
                     <button class="btn-action" title="Le" onclick="moveWorker(${i}, 1)">▼</button>
                     <button class="btn-action btn-delete" title="Törlés" onclick="removeWorker(${i})">✖</button>
@@ -1166,6 +1251,18 @@
             </div>`;
         });
         document.getElementById('adminRosterList').innerHTML = html || "<div style='padding:15px; color:var(--text-dim); text-align:center;'>Nincs aktív dolgozó</div>";
+        
+        // ÚJ: mai kijelölés összegzése + figyelmeztetés ha nem pontosan 2
+        const summaryEl = document.getElementById('todayCarrierSummary');
+        if (summaryEl) {
+            if (todayCarriers.length === 0) {
+                summaryEl.innerHTML = '';
+            } else {
+                let warnColor = todayCarriers.length === 2 ? 'var(--success)' : 'var(--warning)';
+                let warnText = todayCarriers.length === 2 ? '' : ` ⚠️ (a pár pontosan 2 fő legyen!)`;
+                summaryEl.innerHTML = `<div style="background: rgba(6,182,212,0.08); border: 1px solid rgba(6,182,212,0.2); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; font-size: 0.78rem; color: ${warnColor}; text-align: center;">📍 Ma viszi: <strong>${todayCarriers.join(' & ')}</strong>${warnText}</div>`;
+            }
+        }
     }
     
     function renderAdminTeamSummary() {
@@ -1273,6 +1370,7 @@
                 });
                 pairHistory = {};
                 absences = {};
+                recordedDays = {}; // ÚJ: a rögzített-nap flag-ek is törlődnek
                 maybeRender();
                 // Az admin panel azonnali frissítése (ha nyitva van)
                 if (document.getElementById('adminPanel').style.display === 'block') {
@@ -1298,6 +1396,7 @@
                 });
                 ops.push(db.ref('pairHistory').set(null));
                 ops.push(db.ref('absences').set(null));
+                ops.push(db.ref('recordedDays').set(null)); // ÚJ
                 
                 Promise.all(ops).then(() => {
                     showToast("✅ Felhőbe mentve a nullázás!", 'success');
