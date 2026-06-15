@@ -798,36 +798,102 @@
                     [`absences/${dateKey}/${name}`]: true
                 };
                 
-                if (ws && ws.lastDate === dateKey && ws.carries > 0) {
-                    updates[`workerStats/${name}/carries`] = ws.carries - 1;
+                /* JAVÍTÁS (hiányzás-bug): KORÁBBAN a hiányzó PÁRJÁT is kivettük
+                   (lastDate=null, carries-1), ezért MINDKÉT név helyén "-" jelent
+                   meg, és teljesen új pár jött be. MOST csak a hiányzót vesszük ki,
+                   a párja MARAD, és behívunk EGY új embert a hiányzó helyére. */
+                
+                // 1. A hiányzó kiesik: ha ma vivő volt, levonjuk a vitelét
+                let partnerOfAbsent = null; // a hiányzó párja (ő MARAD)
+                if (ws && ws.lastDate === dateKey) {
+                    if (ws.carries > 0) {
+                        updates[`workerStats/${name}/carries`] = ws.carries - 1;
+                    }
                     updates[`workerStats/${name}/lastDate`] = null;
                     
-                    let otherWorker = null;
+                    // Megkeressük a párját (aki szintén ma vivő)
                     sysSettings.roster.forEach(n => {
                         if (n !== name && workerStats[n] && workerStats[n].lastDate === dateKey) {
-                            otherWorker = n;
+                            partnerOfAbsent = n;
                         }
                     });
                     
-                    if (otherWorker) {
-                        const otherWs = workerStats[otherWorker];
-                        if (otherWs && otherWs.carries > 0) {
-                            updates[`workerStats/${otherWorker}/carries`] = otherWs.carries - 1;
-                            updates[`workerStats/${otherWorker}/lastDate`] = null;
-                        }
-                        
-                        const pk = pairKey(name, otherWorker);
-                        if (pairHistory[pk] && pairHistory[pk] > 0) {
-                            updates[`pairHistory/${pk}`] = pairHistory[pk] - 1;
+                    // A régi pár-történetet csökkentjük (a hiányzó + párja már nem pár)
+                    if (partnerOfAbsent) {
+                        const pkOld = pairKey(name, partnerOfAbsent);
+                        if (pairHistory[pkOld] && pairHistory[pkOld] > 0) {
+                            updates[`pairHistory/${pkOld}`] = pairHistory[pkOld] - 1;
                         }
                     }
                 }
                 
-                // Optimista UI
+                // 2. Behívunk egy ÚJ embert a hiányzó helyére (a párja mellé)
+                //    A jelöltek: akik elérhetők, nem hiányoznak, nem a párja, nem a hiányzó,
+                //    és nem már ma vivők. Közülük a forgás-elv szerint a legrégebbi.
+                let newPartner = null;
+                if (partnerOfAbsent) {
+                    const dailyAbs = absences[dateKey] || {};
+                    let candidates = sysSettings.roster.filter(n => {
+                        if (n === name || n === partnerOfAbsent) return false;
+                        if (dailyAbs[n]) return false;
+                        if (n === name) return false;
+                        // joinDate ellenőrzés
+                        const cws = workerStats[n];
+                        if (cws && cws.joinDate) {
+                            const jd = parseLocalDate(cws.joinDate);
+                            const dd = parseLocalDate(dateKey);
+                            if (jd > dd) return false;
+                        }
+                        // ne legyen már ma vivő
+                        if (cws && cws.lastDate === dateKey) return false;
+                        return true;
+                    });
+                    
+                    // Forgás-elv: a legrégebben nem vivő (legnagyobb days-since)
+                    if (candidates.length > 0) {
+                        const dd = parseLocalDate(dateKey);
+                        candidates.sort((a, b) => {
+                            const wa = workerStats[a] || {}, wb = workerStats[b] || {};
+                            const da = wa.lastDate ? (dd - parseLocalDate(wa.lastDate)) / 86400000 : 9999;
+                            const db_ = wb.lastDate ? (dd - parseLocalDate(wb.lastDate)) / 86400000 : 9999;
+                            if (db_ !== da) return db_ - da; // több nap eltelte előre
+                            return a.localeCompare(b, 'hu');
+                        });
+                        newPartner = candidates[0];
+                        
+                        // Az új embert beállítjuk mai vivőnek
+                        updates[`workerStats/${newPartner}/carries`] = ((workerStats[newPartner] && workerStats[newPartner].carries) || 0) + 1;
+                        updates[`workerStats/${newPartner}/lastDate`] = dateKey;
+                        
+                        // Az új pár-történet növelése (párja + új ember)
+                        const pkNew = pairKey(partnerOfAbsent, newPartner);
+                        updates[`pairHistory/${pkNew}`] = (pairHistory[pkNew] || 0) + 1;
+                    }
+                }
+                
+                // A napot rögzítettként jelöljük (ne avatkozzon be az auto-rögzítés)
+                updates[`recordedDays/${dateKey}`] = true;
+                
+                // Optimista UI: lokálisan azonnal alkalmazzuk a változásokat
                 if (!absences[dateKey]) absences[dateKey] = {};
                 absences[dateKey][name] = true;
+                if (ws && ws.lastDate === dateKey) {
+                    workerStats[name] = { ...workerStats[name], 
+                        carries: Math.max(0, (ws.carries || 0) - (ws.carries > 0 ? 1 : 0)), 
+                        lastDate: null };
+                }
+                if (newPartner) {
+                    workerStats[newPartner] = { ...workerStats[newPartner],
+                        carries: ((workerStats[newPartner] && workerStats[newPartner].carries) || 0) + 1,
+                        lastDate: dateKey };
+                }
+                recordedDays[dateKey] = true;
                 maybeRender();
-                showToast(`✓ ${name} hiányzása rögzítve`, 'success');
+                if (newPartner) {
+                    showToast(`✓ ${name} hiányzik — ${newPartner} viszi helyette`, 'success');
+                } else {
+                    showToast(`✓ ${name} hiányzása rögzítve`, 'success');
+                }
                 
                 db.ref().update(updates).catch(err => {
                     showToast("❌ Hiba: " + err.message, 'error');
@@ -1363,6 +1429,7 @@
                 }
                 
                 const todayKey = getDateKey(new Date());
+                const logicalTodayKey = getDateKey(getLogicalToday()); // a mai műszaknap
                 
                 // Optimista UI: lokálisan azonnal nullázunk, ne várjunk a felhőre
                 sysSettings.roster.forEach(name => {
@@ -1370,7 +1437,12 @@
                 });
                 pairHistory = {};
                 absences = {};
-                recordedDays = {}; // ÚJ: a rögzített-nap flag-ek is törlődnek
+                /* JAVÍTÁS (reset bug): NEM ürítjük teljesen a recordedDays-t, hanem
+                   a MAI műszaknapot rögzítettként jelöljük. Így a reset után az aktív
+                   műszak NEM rögzít automatikusan egy új párt 1x-szel — minden 0 marad.
+                   A mai pár csak javaslatként jelenik meg; te a 📍-vel kijelölheted ki
+                   vigye ma, vagy a következő naptól indul az automatikus forgás. */
+                recordedDays = { [logicalTodayKey]: true };
                 maybeRender();
                 // Az admin panel azonnali frissítése (ha nyitva van)
                 if (document.getElementById('adminPanel').style.display === 'block') {
@@ -1396,7 +1468,8 @@
                 });
                 ops.push(db.ref('pairHistory').set(null));
                 ops.push(db.ref('absences').set(null));
-                ops.push(db.ref('recordedDays').set(null)); // ÚJ
+                // A mai napot rögzítettként mentjük (ne rögzítsen auto-párt ma)
+                ops.push(db.ref('recordedDays').set({ [logicalTodayKey]: true }));
                 
                 Promise.all(ops).then(() => {
                     showToast("✅ Felhőbe mentve a nullázás!", 'success');
