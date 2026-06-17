@@ -289,7 +289,7 @@
     let workerStats = {};
     let pairHistory = {};
     let computedSchedule = {};
-    let recordedDays = {}; // ÚJ: mely napokon történt MÁR rögzítés (auto vagy kézi)
+    let recordedDays = {}; 
     let hasRenderedOnce = false;
 
     const settingsRef = db.ref('settings');
@@ -297,21 +297,12 @@
     const statsRef = db.ref('workerStats');
     const pairsRef = db.ref('pairHistory');
     const metaRef = db.ref('meta');
-    const recordedDaysRef = db.ref('recordedDays'); // ÚJ
+    const recordedDaysRef = db.ref('recordedDays'); 
 
     // ==========================================
-    // 🛡️ INIT — BIZTONSÁGOS, NEM TÖRÖL ÖNMAGÁTÓL
+    // 🛡️ INIT 
     // ==========================================
     function backgroundInit() {
-        /* JAVÍTÁS: 
-           — NEM töltünk fel hardcoded névlistát (régen: "Laci,Jani,Patrik,..."). 
-             Ha üres a Firebase roster, a UI "Üres a névsor" üzenetet mutat,
-             és a user az admin panelből veszi fel a tagokat.
-           — VERSION_KEY alapú automatikus reset MEGSZÜNTETVE — túl veszélyes volt
-             (kódfrissítéskor véletlenül nullázódhatott az összes adat).
-           — CSAK ÉVVÁLTÁSKOR fut automatikus reset, és csak ha tényleg
-             áthaladtunk egy éven. */
-        
         metaRef.get().then(snapshot => {
             const meta = snapshot.exists() ? snapshot.val() : {};
             const currentYear = new Date().getFullYear();
@@ -320,8 +311,6 @@
                 console.log("Évváltás detektálva (" + meta.lastResetYear + " → " + currentYear + "): automatikus reset.");
                 doYearlyReset(currentYear).catch(e => console.warn("Évváltás reset kihagyva:", e.message));
             } else if (!meta.lastResetYear) {
-                // Első indítás VAGY meta hiányzik — csak inicializáljuk a meta-t.
-                // NEM nullázunk adatokat, mert ez egy létező telepítés is lehet.
                 metaRef.update({
                     lastResetYear: currentYear,
                     lastInitDate: new Date().toISOString()
@@ -349,7 +338,7 @@
         
         updates['pairHistory'] = null;
         updates['absences'] = null;
-        updates['recordedDays'] = null; // ÚJ: évváltáskor a rögzített-nap flag-ek is törlődnek
+        updates['recordedDays'] = null; 
         updates['meta'] = {
             lastResetYear: year,
             lastResetDate: new Date().toISOString()
@@ -392,7 +381,6 @@
         }
     }, 8000);
 
-    // Auto-refresh percenként a műszakhatárokon átlépéshez
     setInterval(() => {
         if (sysSettings) {
             maybeRender();
@@ -433,9 +421,6 @@
         return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
     }
 
-    /* ÚJ: a "logikai mai nap" — ugyanaz az 05:59 szabály mint a renderUI-ban.
-       Az admin kézi pár-kijelölés ezt használja, hogy konzisztens legyen
-       a főképernyő által mutatott nappal. */
     function getLogicalToday() {
         let d = new Date();
         let h = d.getHours(), m = d.getMinutes();
@@ -453,18 +438,6 @@
 
     function pairKey(a, b) {
         return [a, b].sort().join('|');
-    }
-    
-    // Determinisztikus tie-breaker hash — ugyanarra a dátumra+pár névre mindig
-    // pontosan ugyanazt adja (stabil választás holtversenyben).
-    function getHashTieBreaker(name1, name2, date) {
-        let str = [name1, name2].sort().join('|') + '|' + date.getFullYear() + '-' + date.getMonth() + '-' + date.getDate();
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            hash = ((hash << 5) - hash) + str.charCodeAt(i);
-            hash |= 0;
-        }
-        return Math.abs(hash) / 2147483647;
     }
 
     function countWorkingDaysInRange(startDate, endDate) {
@@ -513,13 +486,6 @@
     // ==========================================
     // 🎯 PÁRVÁLASZTÓ ALGORITMUS — FORGÁS-ELV
     // ==========================================
-    /* JAVÍTÁS: az új algoritmus prioritása:
-       1. FRESHNESS (legerősebb): aki LEGRÉGEBB ÓTA nem vitt, az jön elsőként.
-          Ez a klasszikus forgás-elv, amit a user kért: 
-          "aki volt a legtávolabbi időben legyen újra".
-       2. PAIR HISTORY (közepes): kerüljük a gyakran ismétlődő párok ismétlését.
-       3. DEFICIT (gyenge): finomhangolás a kvóta-fairness miatt.
-       4. HASH TIE-BREAKER (mikro): stabil választás ha minden egyenlő. */
     function selectPairForDay(availableWorkers, simStats, simPairs, currentDate) {
         if (availableWorkers.length < 2) {
             return [availableWorkers[0] || "-", availableWorkers[1] || "-"];
@@ -527,7 +493,7 @@
         
         function getDaysSince(name) {
             const ws = simStats[name];
-            if (!ws || !ws.lastDate) return 9999; // soha nem vitt → legmagasabb prioritás
+            if (!ws || !ws.lastDate) return 9999; 
             const last = parseLocalDate(ws.lastDate);
             return Math.max(0, (currentDate.getTime() - last.getTime()) / 86400000);
         }
@@ -543,25 +509,31 @@
                 const sa = simStats[a] || { carries: 0, lastDate: null, joinDate: null };
                 const sb = simStats[b] || { carries: 0, lastDate: null, joinDate: null };
                 
-                // 1. FRESHNESS — fő szempont (legmagasabb súly)
+                // 1. FRESHNESS — fő szempont
                 const daysA = getDaysSince(a);
                 const daysB = getDaysSince(b);
-                const freshnessCost = -(daysA + daysB); // több nap eltelte = jobb = kisebb cost
+                const freshnessCost = -(daysA + daysB); 
                 
                 // 2. PAIR HISTORY — másodlagos
                 const partnerCount = simPairs[pairKey(a, b)] || 0;
                 
-                // 3. DEFICIT — harmadlagos, fairness finomhangolás
+                // 3. DEFICIT — harmadlagos
                 const expectedA = computeExpectedAtDate(a, sa.joinDate, currentDate);
                 const expectedB = computeExpectedAtDate(b, sb.joinDate, currentDate);
                 const deficitA = Math.max(0, expectedA - (sa.carries || 0));
                 const deficitB = Math.max(0, expectedB - (sb.carries || 0));
                 const deficitCost = -(deficitA + deficitB);
                 
-                // 4. TIE-BREAKER — mikro-bontás
-                const tieBreaker = getHashTieBreaker(a, b, currentDate);
+                // 4. TIE-BREAKER — SZIGORÚ ADMIN NÉVSOR SORREND
+                // Kicseréltem a régi random "hash" logikát. Mostantól aki előrébb
+                // van a beállított admin névsorban, az élvez szigorú prioritást.
+                const idxA = sysSettings.roster.indexOf(a);
+                const idxB = sysSettings.roster.indexOf(b);
+                const minIdx = Math.min(idxA !== -1 ? idxA : 999, idxB !== -1 ? idxB : 999);
+                const maxIdx = Math.max(idxA !== -1 ? idxA : 999, idxB !== -1 ? idxB : 999);
+                const tieBreaker = minIdx + (maxIdx * 0.01);
                 
-                // Súlyozás: freshness ÉRDEMBEN dominál minden mást
+                // Súlyozás
                 const cost = freshnessCost * 1000 + partnerCount * 100 + deficitCost * 10 + tieBreaker;
                 
                 if (cost < bestCost) {
@@ -572,13 +544,17 @@
         }
         
         if (bestPair) {
-            // Megjelenítési sorrend stabilizálása
+            // Megjelenítési sorrend stabilizálása (aki feljebb van az admin listán, az kerül balra)
             const sa = simStats[bestPair[0]] || { carries: 0 };
             const sb = simStats[bestPair[1]] || { carries: 0 };
             if (sa.carries > sb.carries) {
                 bestPair = [bestPair[1], bestPair[0]];
             } else if (sa.carries === sb.carries) {
-                bestPair.sort((x, y) => x.localeCompare(y, 'hu'));
+                const idx0 = sysSettings.roster.indexOf(bestPair[0]);
+                const idx1 = sysSettings.roster.indexOf(bestPair[1]);
+                if ((idx0 !== -1 ? idx0 : 999) > (idx1 !== -1 ? idx1 : 999)) {
+                    bestPair = [bestPair[1], bestPair[0]];
+                }
             }
         }
         
@@ -615,7 +591,6 @@
         let realTodayForSim = new Date();
         let logicalTodayForSim = new Date(realTodayForSim);
         
-        // 5:59 logika: hajnal 06:00 előtt még a tegnapi műszakhoz tartozunk
         let simHours = logicalTodayForSim.getHours();
         let simMins = logicalTodayForSim.getMinutes();
         if (simHours < 5 || (simHours === 5 && simMins < 59)) {
@@ -628,9 +603,6 @@
             simDate = new Date(lastRecordedCarry);
             simDate.setDate(simDate.getDate() + 1);
         } else {
-            // JAVÍTÁS: Ha még nincs rögzített vitel (pl. nullázás után), 
-            // ne az aktuális naptól induljon a szimuláció (mert az 06:00-kor ugrik), 
-            // hanem a nullázás/belépés pontos dátumától! Így sosem tolódik el a lista.
             let minDate = new Date(logicalTodayForSim);
             sysSettings.roster.forEach(name => {
                 const ws = workerStats[name];
@@ -684,12 +656,6 @@
             simDate.setDate(simDate.getDate() + 1);
         }
         
-        /* JAVÍTÁS (műszakváltás-stabilitás): a MÁR RÖGZÍTETT napok TÉNYLEGES 
-           párjait felülírjuk a jósolt értékek fölé. A workerStats lastDate 
-           alapján csoportosítunk: ahol 2 embernek ugyanaz a lastDate-je, az 
-           egy rögzített pár = TÉNY. Így a mai pár (ha már rögzítve van) SOHA 
-           nem változik meg újraszámoláskor — sem műszakváltáskor, sem a 
-           percenkénti auto-refresh-kor. */
         let recordedByDate = {};
         sysSettings.roster.forEach(name => {
             const ws = workerStats[name];
@@ -700,7 +666,6 @@
         });
         Object.keys(recordedByDate).forEach(dk => {
             if (recordedByDate[dk].length >= 2) {
-                // Stabil megjelenítési sorrend (carries szerint, majd ABC)
                 let pairNames = recordedByDate[dk].slice(0, 2);
                 computedSchedule[dk] = pairNames;
             }
@@ -711,10 +676,6 @@
         if (!worker1 || !worker2 || worker1 === "-" || worker2 === "-") return;
         if (worker1 === worker2) return;
 
-        /* JAVÍTÁS: ha erre a napra MÁR történt rögzítés (recordedDays flag),
-           akkor NEM rögzítünk újra automatikusan. Ez teszi lehetővé, hogy az
-           admin a kézi "📍 Ma ő viszi" kapcsolóval szabadon átállítsa a párt,
-           anélkül hogy az automatika visszahozná az eredeti párt. */
         if (recordedDays[dateKey]) return;
 
         const dailyAbsences = absences[dateKey] || {};
@@ -733,18 +694,12 @@
         const pk = pairKey(worker1, worker2);
         updates[`pairHistory/${pk}`] = (pairHistory[pk] || 0) + 1;
         
-        // Megjelöljük: erre a napra megtörtént az (auto) rögzítés
         updates[`recordedDays/${dateKey}`] = true;
-        // Lokális optimista flag, hogy ne fusson kétszer egy renderben
         recordedDays[dateKey] = true;
         
         db.ref().update(updates);
     }
     
-    /* ÚJ: kézi "ma ő viszi" kapcsoló az admin menühöz.
-       A vitelszámot is szinkronban tartja (kijelöléskor +1, levételkor −1),
-       és a lastDate-et a logikai mai napra állítja. A főképernyő a lastDate=ma
-       embereket mutatja párként (recordedByDate), így azonnal látszik. */
     window.toggleCarrierToday = function(name) {
         const todayKey = getDateKey(getLogicalToday());
         const ws = workerStats[name] || { carries: 0, lastDate: null, joinDate: null };
@@ -752,18 +707,14 @@
         
         let newCarries, newLastDate;
         if (isTodayCarrier) {
-            // Levesszük a mai vivő státuszt
             newCarries = Math.max(0, (ws.carries || 0) - 1);
             newLastDate = null;
         } else {
-            // Kijelöljük mai vivőnek
             newCarries = (ws.carries || 0) + 1;
             newLastDate = todayKey;
         }
         
-        // Optimista UI: azonnal frissítünk lokálisan
         workerStats[name] = { ...ws, carries: newCarries, lastDate: newLastDate };
-        // A napot megjelöljük rögzítettként, hogy az auto-rögzítés ne avatkozzon be
         recordedDays[todayKey] = true;
         
         maybeRender();
@@ -772,7 +723,6 @@
             renderAdminTeamSummary();
         }
         
-        // Firebase szinkron a háttérben
         const updates = {};
         updates[`workerStats/${name}/carries`] = newCarries;
         updates[`workerStats/${name}/lastDate`] = newLastDate;
@@ -803,27 +753,19 @@
                     [`absences/${dateKey}/${name}`]: true
                 };
                 
-                /* JAVÍTÁS (hiányzás-bug): KORÁBBAN a hiányzó PÁRJÁT is kivettük
-                   (lastDate=null, carries-1), ezért MINDKÉT név helyén "-" jelent
-                   meg, és teljesen új pár jött be. MOST csak a hiányzót vesszük ki,
-                   a párja MARAD, és behívunk EGY új embert a hiányzó helyére. */
-                
-                // 1. A hiányzó kiesik: ha ma vivő volt, levonjuk a vitelét
-                let partnerOfAbsent = null; // a hiányzó párja (ő MARAD)
+                let partnerOfAbsent = null; 
                 if (ws && ws.lastDate === dateKey) {
                     if (ws.carries > 0) {
                         updates[`workerStats/${name}/carries`] = ws.carries - 1;
                     }
                     updates[`workerStats/${name}/lastDate`] = null;
                     
-                    // Megkeressük a párját (aki szintén ma vivő)
                     sysSettings.roster.forEach(n => {
                         if (n !== name && workerStats[n] && workerStats[n].lastDate === dateKey) {
                             partnerOfAbsent = n;
                         }
                     });
                     
-                    // A régi pár-történetet csökkentjük (a hiányzó + párja már nem pár)
                     if (partnerOfAbsent) {
                         const pkOld = pairKey(name, partnerOfAbsent);
                         if (pairHistory[pkOld] && pairHistory[pkOld] > 0) {
@@ -832,9 +774,6 @@
                     }
                 }
                 
-                // 2. Behívunk egy ÚJ embert a hiányzó helyére (a párja mellé)
-                //    A jelöltek: akik elérhetők, nem hiányoznak, nem a párja, nem a hiányzó,
-                //    és nem már ma vivők. Közülük a forgás-elv szerint a legrégebbi.
                 let newPartner = null;
                 if (partnerOfAbsent) {
                     const dailyAbs = absences[dateKey] || {};
@@ -842,44 +781,41 @@
                         if (n === name || n === partnerOfAbsent) return false;
                         if (dailyAbs[n]) return false;
                         if (n === name) return false;
-                        // joinDate ellenőrzés
                         const cws = workerStats[n];
                         if (cws && cws.joinDate) {
                             const jd = parseLocalDate(cws.joinDate);
                             const dd = parseLocalDate(dateKey);
                             if (jd > dd) return false;
                         }
-                        // ne legyen már ma vivő
                         if (cws && cws.lastDate === dateKey) return false;
                         return true;
                     });
                     
-                    // Forgás-elv: a legrégebben nem vivő (legnagyobb days-since)
                     if (candidates.length > 0) {
                         const dd = parseLocalDate(dateKey);
                         candidates.sort((a, b) => {
                             const wa = workerStats[a] || {}, wb = workerStats[b] || {};
                             const da = wa.lastDate ? (dd - parseLocalDate(wa.lastDate)) / 86400000 : 9999;
                             const db_ = wb.lastDate ? (dd - parseLocalDate(wb.lastDate)) / 86400000 : 9999;
-                            if (db_ !== da) return db_ - da; // több nap eltelte előre
-                            return a.localeCompare(b, 'hu');
+                            if (db_ !== da) return db_ - da; 
+                            
+                            // Ha a pihentség azonos, a hiányzónál is a Szigorú Admin Sorrend dönt!
+                            const idxA = sysSettings.roster.indexOf(a);
+                            const idxB = sysSettings.roster.indexOf(b);
+                            return (idxA !== -1 ? idxA : 999) - (idxB !== -1 ? idxB : 999);
                         });
                         newPartner = candidates[0];
                         
-                        // Az új embert beállítjuk mai vivőnek
                         updates[`workerStats/${newPartner}/carries`] = ((workerStats[newPartner] && workerStats[newPartner].carries) || 0) + 1;
                         updates[`workerStats/${newPartner}/lastDate`] = dateKey;
                         
-                        // Az új pár-történet növelése (párja + új ember)
                         const pkNew = pairKey(partnerOfAbsent, newPartner);
                         updates[`pairHistory/${pkNew}`] = (pairHistory[pkNew] || 0) + 1;
                     }
                 }
                 
-                // A napot rögzítettként jelöljük (ne avatkozzon be az auto-rögzítés)
                 updates[`recordedDays/${dateKey}`] = true;
                 
-                // Optimista UI: lokálisan azonnal alkalmazzuk a változásokat
                 if (!absences[dateKey]) absences[dateKey] = {};
                 absences[dateKey][name] = true;
                 if (ws && ws.lastDate === dateKey) {
@@ -935,7 +871,6 @@
         const list = document.getElementById('upcomingList');
         const upcomingTitle = document.getElementById('upcomingSectionTitle');
         
-        // Tisztítás
         list.innerHTML = '';
         hero.innerHTML = '';
 
@@ -952,7 +887,7 @@
             return;
         }
         
-        upcomingTitle.style.display = ''; // látszik (default)
+        upcomingTitle.style.display = ''; 
 
         let realToday = new Date();
         let currentHours = realToday.getHours();
@@ -965,7 +900,6 @@
         let restSubtext = "";
         let restEmoji = "😴";
 
-        // Pontos 05:59-es átállás — addig még az előző napi műszak számít
         let isDayTime = (currentHours > 5 || (currentHours === 5 && currentMins >= 59)) && currentHours < 18;
 
         if (isDayTime) {
@@ -1027,7 +961,6 @@
         let todayStr = logicalToday.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric', weekday: 'long' });
 
         if (displayStatus === "REST") {
-            // STEP 1: az eredeti rest card MINDIG elsőként megjelenik
             hero.innerHTML = `${headerHTML}
                 <div class="rest-card">
                     <div class="rest-emoji">${restEmoji}</div>
@@ -1035,7 +968,6 @@
                     <p class="rest-subtext">${restSubtext}</p>
                 </div>`;
             
-            // STEP 2: pár-kártya hozzáadása biztonságos try-catch-ben
             let pairDay = null;
             try {
                 let pairDayLabel = '';
@@ -1123,7 +1055,6 @@
             return;
         }
 
-        // ACTIVE műszak
         let dateKey = getDateKey(logicalToday);
         let workers = ["-", "-"];
         
@@ -1280,9 +1211,8 @@
         if (!sysSettings.roster) sysSettings.roster = [];
         const year = new Date().getFullYear();
         const yearEnd = new Date(year, 11, 31);
-        const todayKey = getDateKey(getLogicalToday()); // ÚJ: a mai logikai nap
+        const todayKey = getDateKey(getLogicalToday()); 
         
-        // ÚJ: hány embert jelöltek ki mára (lastDate === ma)
         let todayCarriers = sysSettings.roster.filter(n => workerStats[n] && workerStats[n].lastDate === todayKey);
         
         sysSettings.roster.forEach((name, i) => {
@@ -1292,7 +1222,7 @@
             const carries = ws.carries || 0;
             const expected = getExpectedCarriesForWorker(name, yearEnd);
             const remaining = Math.max(0, Math.round(expected - carries));
-            const isTodayCarrier = (ws.lastDate === todayKey); // ÚJ
+            const isTodayCarrier = (ws.lastDate === todayKey); 
             
             html += `
             <div class="admin-list-item" ${isTodayCarrier ? 'style="background: rgba(6, 182, 212, 0.08);"' : ''}>
@@ -1323,7 +1253,6 @@
         });
         document.getElementById('adminRosterList').innerHTML = html || "<div style='padding:15px; color:var(--text-dim); text-align:center;'>Nincs aktív dolgozó</div>";
         
-        // ÚJ: mai kijelölés összegzése + figyelmeztetés ha nem pontosan 2
         const summaryEl = document.getElementById('todayCarrierSummary');
         if (summaryEl) {
             if (todayCarriers.length === 0) {
@@ -1434,33 +1363,21 @@
                 }
                 
                 const todayKey = getDateKey(new Date());
-                const logicalTodayKey = getDateKey(getLogicalToday()); // a mai műszaknap
+                const logicalTodayKey = getDateKey(getLogicalToday()); 
                 
-                // Optimista UI: lokálisan azonnal nullázunk, ne várjunk a felhőre
                 sysSettings.roster.forEach(name => {
                     workerStats[name] = { carries: 0, lastDate: null, joinDate: todayKey };
                 });
                 pairHistory = {};
                 absences = {};
-                /* JAVÍTÁS (reset bug): NEM ürítjük teljesen a recordedDays-t, hanem
-                   a MAI műszaknapot rögzítettként jelöljük. Így a reset után az aktív
-                   műszak NEM rögzít automatikusan egy új párt 1x-szel — minden 0 marad.
-                   A mai pár csak javaslatként jelenik meg; te a 📍-vel kijelölheted ki
-                   vigye ma, vagy a következő naptól indul az automatikus forgás. */
                 recordedDays = { [logicalTodayKey]: true };
                 maybeRender();
-                // Az admin panel azonnali frissítése (ha nyitva van)
                 if (document.getElementById('adminPanel').style.display === 'block') {
                     renderAdminRoster();
                     renderAdminTeamSummary();
                 }
                 showToast("✅ Pontok újranullázva mindenkinek!", 'success');
                 
-                /* JAVÍTÁS (reset bug): a régi root-szintű db.ref().update(updates)
-                   a Firebase security rules-on elbukhatott (több node egyszerre),
-                   ezért tűnt úgy, hogy "nem nullázódik". MOST minden node-ot KÜLÖN
-                   .set()-tel írunk — pontosan úgy, mint a bizonyítottan működő
-                   adjustCarries. Így egyik write sem akad el a többi miatt. */
                 const ops = [];
                 sysSettings.roster.forEach(name => {
                     ops.push(
@@ -1473,14 +1390,12 @@
                 });
                 ops.push(db.ref('pairHistory').set(null));
                 ops.push(db.ref('absences').set(null));
-                // A mai napot rögzítettként mentjük (ne rögzítsen auto-párt ma)
                 ops.push(db.ref('recordedDays').set({ [logicalTodayKey]: true }));
                 
                 Promise.all(ops).then(() => {
                     showToast("✅ Felhőbe mentve a nullázás!", 'success');
                 }).catch(err => {
                     showToast("❌ Firebase hiba: " + err.message, 'error');
-                    // Hiba esetén visszatöltjük a friss állapotot
                     statsRef.once('value').then(snap => {
                         workerStats = snap.val() || {};
                         maybeRender();
