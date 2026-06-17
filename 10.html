@@ -627,14 +627,19 @@
         if (lastRecordedCarry) {
             simDate = new Date(lastRecordedCarry);
             simDate.setDate(simDate.getDate() + 1);
-            
-            /* JAVÍTÁS (műszakváltás-stabilitás): NINCS clamp vissza a mára!
-               A régi clamp újraszámolta a MÁR rögzített mai párt, ezért
-               változott meg a pár 18:00-kor (nappal→este). A szimuláció
-               most a következő NEM rögzített naptól indul. A már rögzített
-               napok tényleges párjait a while UTÁN töltjük be (lásd lent). */
         } else {
-            simDate = new Date(logicalTodayForSim);
+            // JAVÍTÁS: Ha még nincs rögzített vitel (pl. nullázás után), 
+            // ne az aktuális naptól induljon a szimuláció (mert az 06:00-kor ugrik), 
+            // hanem a nullázás/belépés pontos dátumától! Így sosem tolódik el a lista.
+            let minDate = new Date(logicalTodayForSim);
+            sysSettings.roster.forEach(name => {
+                const ws = workerStats[name];
+                if (ws && ws.joinDate) {
+                    let jd = parseLocalDate(ws.joinDate);
+                    if (jd < minDate) minDate = jd;
+                }
+            });
+            simDate = new Date(minDate);
         }
         simDate.setHours(0, 0, 0, 0);
         
