@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="hu">
-<head>
+<html lang="hu"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Szemétkihordás - PRO</title>
@@ -175,13 +173,58 @@
 </head>
 <body>
 
-    <section class="hero-section" id="heroContainer">
-        <div style="text-align:center; margin-top:50px; color: var(--text-dim);">Betöltés a felhőből...</div>
-    </section>
+    <section class="hero-section" id="heroContainer"><div class="header-pill" onclick="openAdmin()">C MŰSZAK BEOSZTÁS</div>
+                <div class="rest-card">
+                    <div class="rest-emoji">🎉</div>
+                    <h2 class="rest-title">Most már pihenj! 🎉</h2>
+                    <p class="rest-subtext">A mai nappali műszaknak vége. Csak nyugodtan a következő alkalomig!</p>
+                </div></section>
 
     <div class="list-container">
-        <div class="list-section-title" id="upcomingSectionTitle" style="display:none;">Következő beosztások</div>
-        <div id="upcomingList"></div>
+        <div class="list-section-title" id="upcomingSectionTitle" style="">Következő beosztások</div>
+        <div id="upcomingList">
+                    <div class="list-card">
+                        <div class="lc-header">
+                            <div>
+                                <span style="background:rgba(6,182,212,0.1); color:var(--accent); font-weight:700; font-size:0.75rem; padding:3px 7px; border-radius:6px;">K</span>
+                                <span class="lc-date-text" style="margin-left:6px;">június 23.</span>
+                            </div>
+                            <div class="lc-pills">
+                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('2026-06-23', 'E.Krisztina')"><span class="worker-name">E.Krisztina</span></div>
+                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('2026-06-23', 'Reni')"><span class="worker-name">Reni</span></div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                
+                    <div class="list-card">
+                        <div class="lc-header">
+                            <div>
+                                <span style="background:rgba(6,182,212,0.1); color:var(--accent); font-weight:700; font-size:0.75rem; padding:3px 7px; border-radius:6px;">Sze</span>
+                                <span class="lc-date-text" style="margin-left:6px;">június 24.</span>
+                            </div>
+                            <div class="lc-pills">
+                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('2026-06-24', 'Dani')"><span class="worker-name">Dani</span></div>
+                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('2026-06-24', 'Judit')"><span class="worker-name">Judit</span></div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                
+                    <div class="list-card">
+                        <div class="lc-header">
+                            <div>
+                                <span style="background:rgba(6,182,212,0.1); color:var(--accent); font-weight:700; font-size:0.75rem; padding:3px 7px; border-radius:6px;">Cs</span>
+                                <span class="lc-date-text" style="margin-left:6px;">június 25.</span>
+                            </div>
+                            <div class="lc-pills">
+                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('2026-06-25', 'Kriszti')"><span class="worker-name">Kriszti</span></div>
+                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('2026-06-25', 'Zsuzsa')"><span class="worker-name">Zsuzsa</span></div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
         <div style="text-align: center; color: var(--text-dim); font-size: 0.65rem; margin-top: 30px; opacity: 0.5; font-weight: 600; letter-spacing: 1px;">GERGŐ ROLAND 2026</div>
     </div>
 
@@ -670,26 +713,116 @@
                 computedSchedule[dk] = pairNames;
             }
         });
+
+        // === LOGIKAI MAI NAP ÉRVÉNYES PÁRJÁNAK BIZTOSÍTÁSA (hiányzások, részleges rögzítés, elavult computed kezelése) ===
+        // Ez oldja meg a fő hibát: ha ma többen hiányoznak jelölve, vagy részleges a pár, akkor is mindig
+        // helyes, hiányzó nélküli aktív pár legyen a fő képernyőn, és a következő legpihentebb aktiválódjon.
+        try {
+            const logicalToday = getLogicalToday();
+            const todayKey = getDateKey(logicalToday);
+            if (isWorkingDay(logicalToday)) {
+                const dailyAbsToday = absences[todayKey] || {};
+                
+                // Érvényes rögzített hordozók ma (akiknek lastDate ma van ÉS nem hiányoznak)
+                let validRecordedToday = (sysSettings.roster || []).filter(n => {
+                    const ws = workerStats[n];
+                    return ws && ws.lastDate === todayKey && !dailyAbsToday[n];
+                });
+                
+                if (validRecordedToday.length >= 2) {
+                    computedSchedule[todayKey] = validRecordedToday.slice(0, 2);
+                } else if (validRecordedToday.length === 1) {
+                    const remaining = validRecordedToday[0];
+                    let candidates = (sysSettings.roster || []).filter(n => {
+                        if (n === remaining) return false;
+                        if (dailyAbsToday[n]) return false;
+                        const cws = workerStats[n] || {};
+                        if (cws.joinDate) {
+                            const jd = parseLocalDate(cws.joinDate);
+                            if (jd > logicalToday) return false;
+                        }
+                        if (cws.lastDate === todayKey) return false;
+                        return true;
+                    });
+                    if (candidates.length > 0) {
+                        const dd = logicalToday;
+                        candidates.sort((a, b) => {
+                            const wa = workerStats[a] || {}, wb = workerStats[b] || {};
+                            const da = wa.lastDate ? Math.floor((dd.getTime() - parseLocalDate(wa.lastDate).getTime()) / 86400000) : 9999;
+                            const db_ = wb.lastDate ? Math.floor((dd.getTime() - parseLocalDate(wb.lastDate).getTime()) / 86400000) : 9999;
+                            if (db_ !== da) return db_ - da;
+                            const idxA = (sysSettings.roster || []).indexOf(a);
+                            const idxB = (sysSettings.roster || []).indexOf(b);
+                            return (idxA !== -1 ? idxA : 999) - (idxB !== -1 ? idxB : 999);
+                        });
+                        const extra = candidates[0];
+                        computedSchedule[todayKey] = [remaining, extra];
+                    } else {
+                        computedSchedule[todayKey] = [remaining, "-"];
+                    }
+                } else {
+                    // 0 érvényes rögzített: friss pár kiválasztása ha szükséges
+                    let available = (sysSettings.roster || []).filter(n => {
+                        if (dailyAbsToday[n]) return false;
+                        const ws = workerStats[n] || {};
+                        if (ws.joinDate) {
+                            const jd = parseLocalDate(ws.joinDate);
+                            if (jd > logicalToday) return false;
+                        }
+                        return true;
+                    });
+                    if (available.length >= 2) {
+                        let curr = computedSchedule[todayKey] || ["-", "-"];
+                        const currValid = curr.filter(w => w !== "-" && !dailyAbsToday[w]);
+                        if (currValid.length < 2) {
+                            let tempSimStats = {};
+                            (sysSettings.roster || []).forEach(name => {
+                                tempSimStats[name] = {
+                                    carries: (workerStats[name] && workerStats[name].carries) || 0,
+                                    lastDate: (workerStats[name] && workerStats[name].lastDate) || null,
+                                    joinDate: (workerStats[name] && workerStats[name].joinDate) || null
+                                };
+                            });
+                            let tempSimPairs = { ...pairHistory };
+                            const freshPair = selectPairForDay(available, tempSimStats, tempSimPairs, logicalToday);
+                            if (freshPair && freshPair[0] !== "-" && freshPair[1] !== "-") {
+                                computedSchedule[todayKey] = freshPair;
+                            }
+                        }
+                    } else if (available.length === 1) {
+                        computedSchedule[todayKey] = [available[0], "-"];
+                    } else {
+                        computedSchedule[todayKey] = ["-", "-"];
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn("Mai pár biztosítása kihagyva:", e && e.message);
+        }
     }
 
     function recordTodayCarry(dateKey, worker1, worker2) {
         if (!worker1 || !worker2 || worker1 === "-" || worker2 === "-") return;
         if (worker1 === worker2) return;
 
-        if (recordedDays[dateKey]) return;
-
         const dailyAbsences = absences[dateKey] || {};
         if (dailyAbsences[worker1] || dailyAbsences[worker2]) return;
         
         const w1Stats = workerStats[worker1] || {};
         const w2Stats = workerStats[worker2] || {};
-        if (w1Stats.lastDate === dateKey && w2Stats.lastDate === dateKey) return;
+        const w1Already = (w1Stats.lastDate === dateKey);
+        const w2Already = (w2Stats.lastDate === dateKey);
+        if (w1Already && w2Already) return;
         
         const updates = {};
-        updates[`workerStats/${worker1}/carries`] = ((workerStats[worker1] && workerStats[worker1].carries) || 0) + 1;
-        updates[`workerStats/${worker1}/lastDate`] = dateKey;
-        updates[`workerStats/${worker2}/carries`] = ((workerStats[worker2] && workerStats[worker2].carries) || 0) + 1;
-        updates[`workerStats/${worker2}/lastDate`] = dateKey;
+        if (!w1Already) {
+            updates[`workerStats/${worker1}/carries`] = ((workerStats[worker1] && workerStats[worker1].carries) || 0) + 1;
+            updates[`workerStats/${worker1}/lastDate`] = dateKey;
+        }
+        if (!w2Already) {
+            updates[`workerStats/${worker2}/carries`] = ((workerStats[worker2] && workerStats[worker2].carries) || 0) + 1;
+            updates[`workerStats/${worker2}/lastDate`] = dateKey;
+        }
         
         const pk = pairKey(worker1, worker2);
         updates[`pairHistory/${pk}`] = (pairHistory[pk] || 0) + 1;
@@ -1424,5 +1557,6 @@
         });
     };
 </script>
-</body>
-</html>
+
+
+</body></html>
