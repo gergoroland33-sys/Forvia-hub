@@ -335,12 +335,65 @@
     let recordedDays = {}; 
     let hasRenderedOnce = false;
 
+    // 🔑 NYERS (Firebase-kulcsolt) másolatok a kulcs-átképzéshez. NEM törlünk semmit,
+    // csak egy biztonságos réteget adunk a tiltott karaktert (pl. ".") tartalmazó nevekhez.
+    let _rawWorkerStats = {};
+    let _rawAbsences = {};
+    let _rawPairHistory = {};
+
     const settingsRef = db.ref('settings');
     const absencesRef = db.ref('absences');
     const statsRef = db.ref('workerStats');
     const pairsRef = db.ref('pairHistory');
     const metaRef = db.ref('meta');
     const recordedDaysRef = db.ref('recordedDays'); 
+
+    // ==========================================
+    // 🔑 FIREBASE-BIZTOS KULCSOK
+    // A Firebase Realtime Database kulcs NEM tartalmazhat . # $ [ ] / karaktert.
+    // Az "E.Krisztina" név pontja miatt a régi írások (workerStats/E.Krisztina/...,
+    // pairHistory/E.Krisztina|Reni) ÉRVÉNYTELEN útvonalat adtak → a db.update() KIVÉTELT
+    // dobott, ami a renderUI közben üres képernyőt okozott a műszak indulásakor.
+    // fbKey() CSAK a tiltott karaktereket cseréli; a "tiszta" nevekre (Reni, Dani, ...)
+    // azonosság → a meglévő felhő-adat érintetlen marad.
+    function fbKey(name) {
+        return String(name).replace(/[.#$\[\]\/]/g, '_');
+    }
+    // Pár-kulcs a FELHŐBE íráshoz (fbKey-alapú). A memóriabeli pairKey() továbbra is a
+    // megjelenített neveket használja, így a beolvasott (visszaképzett) pairHistory-val konzisztens.
+    function fbPairKey(a, b) {
+        return [fbKey(a), fbKey(b)].sort().join('|');
+    }
+    // Beolvasáskor a Firebase-kulcsokat visszaképezzük a megjelenített nevekre a névsor alapján,
+    // így a kód VÁLTOZATLANUL a neveken keresztül olvashatja a workerStats/absences/pairHistory-t.
+    function remapFromFirebase() {
+        const unmap = {};
+        const roster = (sysSettings && sysSettings.roster) ? sysSettings.roster : [];
+        roster.forEach(n => { unmap[fbKey(n)] = n; });
+        const toName = (k) => (unmap[k] !== undefined ? unmap[k] : k);
+
+        // workerStats
+        const ws = {};
+        Object.keys(_rawWorkerStats || {}).forEach(k => { ws[toName(k)] = _rawWorkerStats[k]; });
+        workerStats = ws;
+
+        // absences (beágyazott: dateKey -> { név: true })
+        const ab = {};
+        Object.keys(_rawAbsences || {}).forEach(dk => {
+            ab[dk] = {};
+            Object.keys(_rawAbsences[dk] || {}).forEach(k => { ab[dk][toName(k)] = _rawAbsences[dk][k]; });
+        });
+        absences = ab;
+
+        // pairHistory ("fbA|fbB" -> szám); szétbontás, visszaképzés, újrarendezés
+        const ph = {};
+        Object.keys(_rawPairHistory || {}).forEach(pk => {
+            const parts = pk.split('|').map(toName).sort();
+            ph[parts.join('|')] = _rawPairHistory[pk];
+        });
+        pairHistory = ph;
+    }
+
 
     // ==========================================
     // 🛡️ INIT 
@@ -372,7 +425,7 @@
         const updates = {};
         
         roster.forEach(name => {
-            updates[`workerStats/${name}`] = {
+            updates[`workerStats/${fbKey(name)}`] = {
                 carries: 0,
                 lastDate: null,
                 joinDate: yearStart
@@ -437,21 +490,25 @@
         } else {
             sysSettings = { roster: [] };
         }
+        remapFromFirebase(); // a névsor megérkezett → újraképezzük a kulcsokat
         maybeRender();
     });
 
     absencesRef.on('value', (snapshot) => {
-        absences = snapshot.val() || {};
+        _rawAbsences = snapshot.val() || {};
+        remapFromFirebase();
         maybeRender();
     });
 
     statsRef.on('value', (snapshot) => {
-        workerStats = snapshot.val() || {};
+        _rawWorkerStats = snapshot.val() || {};
+        remapFromFirebase();
         maybeRender();
     });
 
     pairsRef.on('value', (snapshot) => {
-        pairHistory = snapshot.val() || {};
+        _rawPairHistory = snapshot.val() || {};
+        remapFromFirebase();
         maybeRender();
     });
 
@@ -816,21 +873,29 @@
         
         const updates = {};
         if (!w1Already) {
-            updates[`workerStats/${worker1}/carries`] = ((workerStats[worker1] && workerStats[worker1].carries) || 0) + 1;
-            updates[`workerStats/${worker1}/lastDate`] = dateKey;
+            updates[`workerStats/${fbKey(worker1)}/carries`] = ((workerStats[worker1] && workerStats[worker1].carries) || 0) + 1;
+            updates[`workerStats/${fbKey(worker1)}/lastDate`] = dateKey;
         }
         if (!w2Already) {
-            updates[`workerStats/${worker2}/carries`] = ((workerStats[worker2] && workerStats[worker2].carries) || 0) + 1;
-            updates[`workerStats/${worker2}/lastDate`] = dateKey;
+            updates[`workerStats/${fbKey(worker2)}/carries`] = ((workerStats[worker2] && workerStats[worker2].carries) || 0) + 1;
+            updates[`workerStats/${fbKey(worker2)}/lastDate`] = dateKey;
         }
         
         const pk = pairKey(worker1, worker2);
-        updates[`pairHistory/${pk}`] = (pairHistory[pk] || 0) + 1;
+        updates[`pairHistory/${fbPairKey(worker1, worker2)}`] = (pairHistory[pk] || 0) + 1;
         
         updates[`recordedDays/${dateKey}`] = true;
         recordedDays[dateKey] = true;
         
-        db.ref().update(updates);
+        // KRITIKUS: az írás SOHA nem buktathatja meg a renderUI-t (se szinkron kivétel, se async hiba).
+        try {
+            const p = db.ref().update(updates);
+            if (p && typeof p.catch === 'function') {
+                p.catch(err => console.warn("recordTodayCarry mentés kihagyva:", err && err.message));
+            }
+        } catch (err) {
+            console.warn("recordTodayCarry mentés kihagyva (kivétel):", err && err.message);
+        }
     }
     
     window.toggleCarrierToday = function(name) {
@@ -857,8 +922,8 @@
         }
         
         const updates = {};
-        updates[`workerStats/${name}/carries`] = newCarries;
-        updates[`workerStats/${name}/lastDate`] = newLastDate;
+        updates[`workerStats/${fbKey(name)}/carries`] = newCarries;
+        updates[`workerStats/${fbKey(name)}/lastDate`] = newLastDate;
         updates[`recordedDays/${todayKey}`] = true;
         db.ref().update(updates).catch(err => {
             showToast("❌ Hiba: " + err.message, 'error');
@@ -871,7 +936,7 @@
         let currentCarries = (workerStats[name] && workerStats[name].carries) || 0;
         let newCarries = Math.max(0, currentCarries + delta);
         if (newCarries !== currentCarries) {
-            db.ref(`workerStats/${name}/carries`).set(newCarries);
+            db.ref(`workerStats/${fbKey(name)}/carries`).set(newCarries);
         }
     };
     
@@ -883,15 +948,15 @@
             () => {
                 const ws = workerStats[name];
                 const updates = {
-                    [`absences/${dateKey}/${name}`]: true
+                    [`absences/${dateKey}/${fbKey(name)}`]: true
                 };
                 
                 let partnerOfAbsent = null; 
                 if (ws && ws.lastDate === dateKey) {
                     if (ws.carries > 0) {
-                        updates[`workerStats/${name}/carries`] = ws.carries - 1;
+                        updates[`workerStats/${fbKey(name)}/carries`] = ws.carries - 1;
                     }
-                    updates[`workerStats/${name}/lastDate`] = null;
+                    updates[`workerStats/${fbKey(name)}/lastDate`] = null;
                     
                     sysSettings.roster.forEach(n => {
                         if (n !== name && workerStats[n] && workerStats[n].lastDate === dateKey) {
@@ -902,7 +967,7 @@
                     if (partnerOfAbsent) {
                         const pkOld = pairKey(name, partnerOfAbsent);
                         if (pairHistory[pkOld] && pairHistory[pkOld] > 0) {
-                            updates[`pairHistory/${pkOld}`] = pairHistory[pkOld] - 1;
+                            updates[`pairHistory/${fbPairKey(name, partnerOfAbsent)}`] = pairHistory[pkOld] - 1;
                         }
                     }
                 }
@@ -939,11 +1004,11 @@
                         });
                         newPartner = candidates[0];
                         
-                        updates[`workerStats/${newPartner}/carries`] = ((workerStats[newPartner] && workerStats[newPartner].carries) || 0) + 1;
-                        updates[`workerStats/${newPartner}/lastDate`] = dateKey;
+                        updates[`workerStats/${fbKey(newPartner)}/carries`] = ((workerStats[newPartner] && workerStats[newPartner].carries) || 0) + 1;
+                        updates[`workerStats/${fbKey(newPartner)}/lastDate`] = dateKey;
                         
                         const pkNew = pairKey(partnerOfAbsent, newPartner);
-                        updates[`pairHistory/${pkNew}`] = (pairHistory[pkNew] || 0) + 1;
+                        updates[`pairHistory/${fbPairKey(partnerOfAbsent, newPartner)}`] = (pairHistory[pkNew] || 0) + 1;
                     }
                 }
                 
@@ -990,7 +1055,7 @@
         }
         showToast(`↩ ${name} hiányzása visszavonva`, 'success');
         
-        db.ref(`absences/${dateKey}/${name}`).set(null).catch(err => {
+        db.ref(`absences/${dateKey}/${fbKey(name)}`).set(null).catch(err => {
             showToast("❌ Hiba: " + err.message, 'error');
             absencesRef.once('value').then(snapshot => {
                 absences = snapshot.val() || {};
@@ -999,7 +1064,42 @@
         });
     };
 
+    // 🛡️ A renderUI SOHA nem hagyhat üres képernyőt. Ha bármi kivételt dobna, biztonságos
+    // tartalék nézetet rajzolunk (fejléc + üzenet + ha lehet, a mai pár), nem hagyjuk üresen a hőst.
     function renderUI() {
+        try {
+            renderUICore();
+        } catch (e) {
+            console.warn("renderUI hiba — tartalék nézet:", e && e.message);
+            try {
+                const hero = document.getElementById('heroContainer');
+                const headerHTML = `<div class="header-pill" onclick="openAdmin()">C MŰSZAK BEOSZTÁS</div>`;
+                let pairLine = '';
+                try {
+                    const tKey = getDateKey(getLogicalToday());
+                    const w = computedSchedule[tKey];
+                    if (w && w[0] && w[0] !== "-" && w[1] && w[1] !== "-") {
+                        pairLine = `<div class="pill-container" style="margin-top:14px;">
+                            <div class="worker-pill"><span class="worker-name">${w[0]}</span></div>
+                            <span class="pair-separator">&amp;</span>
+                            <div class="worker-pill"><span class="worker-name">${w[1]}</span></div>
+                        </div>`;
+                    }
+                } catch (e2) {}
+                hero.innerHTML = `${headerHTML}
+                    <div class="rest-card">
+                        <div class="rest-emoji">♻️</div>
+                        <h2 class="rest-title">Mai beosztás</h2>
+                        <p class="rest-subtext">Az alkalmazás fut, az adatok szinkronizálnak. Ha a lista nem frissül, húzd le az oldalt az újratöltéshez.</p>
+                        ${pairLine}
+                    </div>`;
+            } catch (e3) {
+                console.warn("Tartalék nézet is hibázott:", e3 && e3.message);
+            }
+        }
+    }
+
+    function renderUICore() {
         const hero = document.getElementById('heroContainer');
         const list = document.getElementById('upcomingList');
         const upcomingTitle = document.getElementById('upcomingSectionTitle');
@@ -1472,7 +1572,7 @@
         sysSettings.roster.push(name);
         
         if (!workerStats[name]) {
-            db.ref(`workerStats/${name}`).set({
+            db.ref(`workerStats/${fbKey(name)}`).set({
                 carries: 0,
                 lastDate: null,
                 joinDate: todayKey
@@ -1514,7 +1614,7 @@
                 const ops = [];
                 sysSettings.roster.forEach(name => {
                     ops.push(
-                        db.ref('workerStats/' + name).set({
+                        db.ref('workerStats/' + fbKey(name)).set({
                             carries: 0,
                             lastDate: null,
                             joinDate: todayKey
