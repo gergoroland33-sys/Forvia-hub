@@ -5,198 +5,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Szemétkihordás - PRO</title>
     <style>
-        :root { 
-            --bg-dark: #09090b; 
-            --surface: #18181b; 
-            --primary: #8b5cf6; 
-            --accent: #06b6d4; 
-            --text-main: #ffffff; 
-            --text-dim: #a1a1aa; 
-            --card-glass: rgba(255, 255, 255, 0.08);
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #f87171;
-        }
+        :root { --bg-dark: #09090b; --surface: #18181b; --primary: #8b5cf6; --accent: #06b6d4; --text-main: #ffffff; --text-dim: #a1a1aa; --card-glass: rgba(255, 255, 255, 0.08); }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-dark); color: var(--text-main); margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
-        body { background-color: var(--bg-dark); color: var(--text-main); margin: 0; padding: 0; min-height: 100dvh; display: flex; flex-direction: column; }
+        .hero-section { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 70px 20px 20px 20px; position: relative; background: radial-gradient(circle at top right, #2e1065 0%, transparent 50%), radial-gradient(circle at bottom left, #1e1b4b 0%, transparent 50%); z-index: 1; }
         
-        .hero-section { flex-shrink: 0; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; padding: 65px 20px 12px 20px; position: relative; background: radial-gradient(circle at top right, #2e1065 0%, transparent 50%), radial-gradient(circle at bottom left, #1e1b4b 0%, transparent 50%); z-index: 1; }
+        /* ADMIN GOMB (Láthatatlan) */
+        .header-pill { position: absolute; top: 20px; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); color: var(--text-dim); letter-spacing: 1px; }
         
-        .header-pill { position: absolute; top: 18px; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); padding: 8px 16px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); color: var(--text-dim); letter-spacing: 1px; transition: all 0.2s; }
-        .header-pill:hover { border-color: var(--primary); color: white; }
+        .today-card { width: 100%; max-width: 360px; text-align: center; animation: float 6s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .today-label { font-size: 0.9rem; color: var(--accent); font-weight: 700; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;}
+        .today-date { font-size: 1.1rem; color: var(--text-dim); margin-bottom: 15px; }
         
-        .today-card { width: 100%; max-width: 360px; text-align: center; }
-        .today-label { font-size: 0.85rem; color: var(--accent); font-weight: 700; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px;}
-        .today-date { font-size: 1rem; color: var(--text-dim); margin-bottom: 12px; }
-        
+        /* INTERAKTÍV PILLE GOMBOK */
         .pill-container { display: flex; justify-content: center; align-items: center; gap: 12px; margin-bottom: 5px; flex-wrap: wrap; }
-        .worker-pill { display: inline-flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(255,255,255,0.05); padding: 11px 22px; border-radius: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: all 0.2s ease; font-size: 1.4rem; font-weight: 800; color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 130px; position: relative; }
+        .worker-pill { display: inline-flex; justify-content: center; align-items: center; background: rgba(255,255,255,0.05); padding: 12px 25px; border-radius: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: all 0.2s ease; font-size: 1.5rem; font-weight: 800; color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 130px;}
         .worker-pill:hover { background: rgba(255,255,255,0.1); border-color: var(--primary); transform: translateY(-2px); }
-        .worker-pill .carry-count { font-size: 0.6rem; font-weight: 600; color: var(--text-dim); margin-top: 3px; letter-spacing: 0.5px; text-transform: uppercase; }
-        .instruction-text { font-size: 0.72rem; color: var(--text-dim); font-weight: normal; margin-top: 8px; opacity: 0.7; }
+        .instruction-text { font-size: 0.75rem; color: var(--text-dim); font-weight: normal; margin-top: 10px; opacity: 0.7; }
         
-        .absent-row { font-size: 0.8rem; color: #f87171; display:flex; justify-content:center; gap:8px; flex-wrap: wrap; margin-bottom: 12px; }
-        .absent-pill { cursor: pointer; background: rgba(248, 113, 113, 0.1); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(248, 113, 113, 0.2); transition: 0.2s; font-weight: 600;}
+        .absent-row { font-size: 0.85rem; color: #f87171; display:flex; justify-content:center; gap:8px; flex-wrap: wrap; margin-bottom: 15px; }
+        .absent-pill { cursor: pointer; background: rgba(248, 113, 113, 0.1); padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(248, 113, 113, 0.2); transition: 0.2s; font-weight: 600;}
         .absent-pill:hover { background: rgba(248, 113, 113, 0.2); }
-        
-        .fairness-panel-front {
-            width: 100%; max-width: 360px;
-            margin-top: 12px;
-            background: rgba(255, 255, 255, 0.025);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-        .fp-toggle {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 10px 14px;
-            cursor: pointer;
-            user-select: none;
-            transition: background 0.2s;
-        }
-        .fp-toggle:hover { background: rgba(255, 255, 255, 0.03); }
-        .fp-toggle-left {
-            display: flex; align-items: center; gap: 8px;
-            font-size: 0.7rem; font-weight: 700; color: var(--text-dim);
-            text-transform: uppercase; letter-spacing: 1.2px;
-        }
-        .fp-toggle-left .fp-icon { font-size: 1rem; }
-        .fp-toggle-right {
-            display: flex; align-items: center; gap: 8px;
-        }
-        .fp-avg-badge {
-            color: var(--accent); font-weight: 600; font-size: 0.62rem;
-            background: rgba(6, 182, 212, 0.08); padding: 2px 7px; border-radius: 4px;
-        }
-        .fp-chevron {
-            color: var(--text-dim); font-size: 0.7rem;
-            transition: transform 0.3s ease;
-        }
-        .fairness-panel-front.open .fp-chevron { transform: rotate(180deg); }
-        
-        .fp-body {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.35s ease;
-        }
-        .fairness-panel-front.open .fp-body {
-            max-height: 600px;
-        }
-        .fp-body-inner {
-            padding: 4px 14px 12px 14px;
-            border-top: 1px solid rgba(255,255,255,0.04);
-        }
-        .fp-rows { display: flex; flex-direction: column; gap: 5px; margin-top: 8px;}
-        .fp-row {
-            display: grid; grid-template-columns: 64px 1fr auto;
-            align-items: center; gap: 8px;
-            font-size: 0.72rem;
-        }
-        .fp-name {
-            color: var(--text-main); font-weight: 600;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .fp-name .fp-joined-note {
-            font-size: 0.58rem; color: var(--text-dim); font-weight: 500;
-            display: block;
-            line-height: 1;
-        }
-        .fp-bar-wrap {
-            height: 7px;
-            background: rgba(0,0,0,0.45);
-            border-radius: 4px; overflow: hidden;
-            position: relative;
-        }
-        .fp-bar {
-            height: 100%; border-radius: 4px;
-            transition: width 0.4s ease;
-        }
-        .fp-bar.zero { background: linear-gradient(90deg, #475569, #64748b); }
-        .fp-bar.deficit { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
-        .fp-bar.balanced { background: linear-gradient(90deg, #10b981, #34d399); }
-        .fp-bar.surplus { background: linear-gradient(90deg, #06b6d4, #22d3ee); }
-        .fp-bar.over { background: linear-gradient(90deg, #ef4444, #f87171); }
-        .fp-count {
-            text-align: right;
-            font-weight: 700; font-size: 0.7rem;
-            color: var(--text-main);
-            font-feature-settings: "tnum";
-            font-variant-numeric: tabular-nums;
-            min-width: 38px;
-        }
-        .fp-count .fp-c-actual { color: white; }
-        .fp-count .fp-c-expected { color: var(--text-dim); font-weight: 500; }
-        .fp-status-icon {
-            font-size: 0.65rem;
-            display: inline-block;
-            margin-left: 2px;
-        }
-        .fp-summary {
-            margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px dashed rgba(255,255,255,0.06);
-            font-size: 0.62rem;
-            color: var(--text-dim);
-            text-align: center;
-            line-height: 1.5;
-        }
 
-        .list-container { flex: 1; overflow-y: auto; padding: 14px 20px; position: relative; z-index: 2; mask-image: linear-gradient(to bottom, transparent 0%, black 8%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 8%); }
-        .list-section-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px; text-align: center; letter-spacing: 1px; }
-        .list-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; margin-bottom: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; transition: all 0.2s; }
+        /* LISTA DESIGN */
+        .list-container { height: 45vh; overflow-y: auto; padding: 20px 25px; position: relative; z-index: 2; mask-image: linear-gradient(to bottom, transparent 0%, black 10%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%); }
+        .list-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; margin-bottom: 12px; padding: 15px; display: flex; flex-direction: column; gap: 10px; transition: all 0.2s; }
         .list-card:hover { background: rgba(255, 255, 255, 0.06); }
         .lc-header { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        .lc-date-text { font-weight: 600; color: var(--text-dim); font-size: 0.85rem; }
-        .lc-pills { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
-        .lc-worker-pill { display: inline-flex; align-items: center; background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border: 1px solid transparent; color: #fff; transition: all 0.2s;}
+        .lc-date-text { font-weight: 600; color: var(--text-dim); font-size: 0.9rem; }
+        .lc-pills { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+        .lc-worker-pill { display: inline-flex; align-items: center; background: rgba(255,255,255,0.05); padding: 6px 14px; border-radius: 8px; font-size: 0.9rem; font-weight: 700; cursor: pointer; border: 1px solid transparent; color: #fff; transition: all 0.2s;}
         .lc-worker-pill:hover { border-color: var(--primary); background: rgba(255,255,255,0.1); }
 
+        /* ADMIN PANEL UI - PRO VERZIÓ */
         #adminPanel { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; padding: 20px; overflow-y: auto; backdrop-filter: blur(5px); }
-        .admin-box { background: var(--surface); padding: 24px; border-radius: 16px; max-width: 480px; margin: 20px auto; border: 1px solid var(--primary); box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2); }
+        .admin-box { background: var(--surface); padding: 25px; border-radius: 16px; max-width: 450px; margin: 20px auto; border: 1px solid var(--primary); box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2); }
         .admin-box h2 { color: var(--accent); margin-top: 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; font-weight: 800; letter-spacing: 1px;}
-        .admin-section { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 14px; margin-bottom: 18px; }
-        .admin-section h3 { margin-top: 0; font-size: 0.88rem; color: var(--text-dim); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;}
-        .admin-input { width: 100%; padding: 12px; margin-bottom: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; transition: border 0.3s; }
+        .admin-section { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; margin-bottom: 20px; }
+        .admin-section h3 { margin-top: 0; font-size: 0.9rem; color: var(--text-dim); text-transform: uppercase; margin-bottom: 15px; }
+        .admin-input { width: 100%; padding: 12px; margin-bottom: 15px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; transition: border 0.3s; }
         .admin-input:focus { border-color: var(--primary); outline: none; }
-        .admin-list { background: #000; border-radius: 8px; max-height: 320px; overflow-y: auto; border: 1px solid #333; }
-        .admin-list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid #222; gap: 10px;}
+        .admin-list { background: #000; border-radius: 8px; max-height: 250px; overflow-y: auto; border: 1px solid #333; }
+        .admin-list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #222; }
         .admin-list-item:last-child { border-bottom: none; }
-        
-        .worker-stats-mini { font-size: 0.68rem; color: var(--text-dim); margin-top: 2px; }
-        .worker-stats-mini .badge { background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; margin-right: 4px; }
-        
-        .btn-action { background: rgba(255,255,255,0.1); border: none; color: white; border-radius: 6px; padding: 6px 10px; cursor: pointer; transition: 0.2s; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; min-width: 32px;}
+        .btn-action { background: rgba(255,255,255,0.1); border: none; color: white; border-radius: 6px; padding: 6px 12px; cursor: pointer; transition: 0.2s; font-size: 0.85rem; display: flex; align-items: center; justify-content: center;}
         .btn-action:hover { background: var(--primary); }
         .btn-delete { background: rgba(248, 113, 113, 0.1); color: #f87171; }
         .btn-delete:hover { background: #f87171; color: white; }
         .btn-save { background: var(--primary); color: white; width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 1rem;}
         .btn-close { background: transparent; color: var(--text-dim); width: 100%; padding: 12px; border: 1px solid #333; border-radius: 8px; cursor: pointer; }
-        .btn-reset { background: rgba(248, 113, 113, 0.1); color: var(--danger); width: 100%; padding: 10px; border: 1px solid rgba(248, 113, 113, 0.3); border-radius: 8px; cursor: pointer; margin-top: 8px; font-size: 0.85rem; font-weight: 600;}
-        .btn-reset:hover { background: rgba(248, 113, 113, 0.2); }
-        
-        /* PIN modal */
-        .pin-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
-        .pin-overlay.active { display: flex; }
-        .pin-card { background: var(--surface); border: 1px solid var(--primary); border-radius: 16px; padding: 24px; max-width: 320px; width: 100%; text-align: center; box-shadow: 0 20px 50px rgba(139, 92, 246, 0.3); animation: pinPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        @keyframes pinPop { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .pin-card h3 { margin: 0 0 6px 0; color: white; font-size: 1.05rem; }
-        .pin-card p { margin: 0 0 16px 0; color: var(--text-dim); font-size: 0.8rem; }
-        .pin-input { width: 100%; padding: 14px; background: #000; border: 2px solid #333; color: white; border-radius: 10px; font-size: 1.5rem; text-align: center; letter-spacing: 8px; font-family: monospace; outline: none; transition: border 0.2s; }
-        .pin-input:focus { border-color: var(--primary); }
-        .pin-buttons { display: flex; gap: 10px; margin-top: 14px; }
-        .pin-buttons button { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 0.9rem;}
-        .pin-cancel { background: transparent; color: var(--text-dim); border: 1px solid #333 !important;}
-        .pin-submit { background: var(--primary); color: white; }
-        .pin-submit:hover { background: #7c3aed; }
-        .pin-cancel:hover { color: white; }
-
-        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--primary); padding: 12px 20px; border-radius: 10px; color: white; font-size: 0.9rem; font-weight: 600; z-index: 300; box-shadow: 0 10px 30px rgba(0,0,0,0.5); opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s; max-width: 90%; text-align: center;}
-        .toast.show { opacity: 1; transform: translateX(-50%) translateY(-10px); }
-        .toast.error { border-color: var(--danger); }
-        .toast.success { border-color: var(--success); }
     </style>
 </head>
 <body>
@@ -206,7 +65,7 @@
     </section>
 
     <div class="list-container">
-        <div class="list-section-title">Következő beosztások</div>
+        <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 15px; text-align: center; letter-spacing: 1px;">Következő beosztások</div>
         <div id="upcomingList"></div>
     </div>
 
@@ -215,49 +74,46 @@
             <h2>PRO Vezérlőpult</h2>
             
             <div class="admin-section">
-                <h3>👥 Aktív Névsor</h3>
+                <h3>Alapbeállítások</h3>
+                <label style="font-size:0.8rem; color:var(--text-dim);">Műszak Ciklus Kezdete (Fix alap):</label>
+                <input type="date" id="setShiftStart" class="admin-input">
+                <label style="font-size:0.8rem; color:var(--text-dim);">Rotáció Kezdete (Matek indulás):</label>
+                <input type="date" id="setNameStart" class="admin-input">
+                <label style="font-size:0.8rem; color:var(--text-dim);">Jelenlegi Műszak:</label>
+                <select id="setShiftType" class="admin-input" style="margin-bottom:0;">
+                    <option value="A">A Műszak</option><option value="B">B Műszak</option>
+                    <option value="C">C Műszak</option><option value="D">D Műszak</option>
+                </select>
+            </div>
+
+            <div class="admin-section">
+                <h3>Aktív Névsor (Sorbarendezés / Törlés)</h3>
                 <div class="admin-list" id="adminRosterList"></div>
             </div>
 
             <div class="admin-section">
-                <h3>➕ Új dolgozó hozzáadása</h3>
+                <h3>Új dolgozó hozzáadása</h3>
                 <div style="display:flex; gap:10px;">
                     <input type="text" id="newWorkerName" class="admin-input" style="margin-bottom:0;" placeholder="Új név...">
-                    <button onclick="addNewWorker()" style="background:var(--accent); border:none; border-radius:8px; font-weight:bold; padding:0 20px; color:white; font-size:1.2rem; cursor: pointer;">+</button>
+                    <button onclick="addNewWorker()" style="background:var(--accent); border:none; border-radius:8px; font-weight:bold; padding:0 20px; color:white; font-size:1.2rem;">+</button>
                 </div>
-                <p style="font-size:0.72rem; color:var(--text-dim); margin: 10px 0 0 0;">Az új belépő a hozzáadás napjától kapja a saját arányos kvótáját — automatikusan beilleszkedik a forgásba.</p>
             </div>
 
             <div class="admin-section">
-                <h3>📊 Teljes Statisztika</h3>
-                <div class="admin-list" id="fairnessList"></div>
-                <button class="btn-reset" onclick="resetCarries()">🔄 Pontok újranullázása mindenkinek</button>
+                <h3>Várakozó Dolgozók (Ciklus végén lépnek be)</h3>
+                <div class="admin-list" id="pendingWorkers"></div>
             </div>
 
-            <button class="btn-save" onclick="saveAdminSettings()">💾 Mentés a Felhőbe</button>
-            <button class="btn-close" onclick="closeAdmin()">Mégsem</button>
+            <button class="btn-save" onclick="saveAdminSettings()">Mentés a Felhőbe</button>
+            <button class="btn-close" onclick="document.getElementById('adminPanel').style.display='none'">Mégsem</button>
         </div>
     </div>
-
-    <div class="pin-overlay" id="pinOverlay">
-        <div class="pin-card">
-            <h3>🔐 Admin Hitelesítés</h3>
-            <p>Add meg a 4 jegyű PIN kódot a folytatáshoz</p>
-            <input type="password" inputmode="numeric" maxlength="4" id="pinInput" class="pin-input" placeholder="••••" autocomplete="off">
-            <div class="pin-buttons">
-                <button class="pin-cancel" onclick="closePinModal()">Mégse</button>
-                <button class="pin-submit" onclick="submitPin()">Belépés</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="toast" id="toast"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
 
 <script>
-    // 🔴 FIREBASE KONFIG
+    // 🔴 FIREBASE KÓD (Érintetlen config)
     const firebaseConfig = {
       apiKey: "AIzaSyDtX_zGGjwEBgRK3-vKRm1tk80kLZbEm4Y",
       authDomain: "szemetkihordas-app.firebaseapp.com",
@@ -271,473 +127,192 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // ==========================================
-    // 🔧 FIX KONSTANSOK (C MŰSZAK)
-    // ==========================================
-    const SHIFT_ANCHOR = new Date(Date.UTC(2026, 0, 9));
-    const FIXED_SHIFT = "C";
-    const VERSION_KEY = "v4_quota_system";
-
-    function isCShiftWorkingDay(date) {
-        const utc = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
-        const diffDays = Math.floor((utc - SHIFT_ANCHOR.getTime()) / 86400000);
-        const cycleDay = ((diffDays % 12) + 12) % 12;
-        return (cycleDay >= 3 && cycleDay <= 5) || (cycleDay >= 9 && cycleDay <= 11);
-    }
-
-    function isWorkingDay(date) {
-        return isCShiftWorkingDay(date);
-    }
-
-    // ==========================================
-    // 📦 STATE
-    // ==========================================
     let sysSettings = null;
     let absences = {}; 
-    let workerStats = {};
-    let pairHistory = {};
-    let computedSchedule = {};
-    
-    let fairnessOpen = localStorage.getItem('fp_open') === 'true';
+    let computedSchedule = {}; 
 
     const settingsRef = db.ref('settings');
     const absencesRef = db.ref('absences');
-    const statsRef = db.ref('workerStats');
-    const pairsRef = db.ref('pairHistory');
-    const metaRef = db.ref('meta');
 
-    function backgroundInit() {
-        settingsRef.get().then(snapshot => {
-            if (!snapshot.exists() || !snapshot.val().roster) {
-                settingsRef.update({
-                    roster: "Laci,Jani,Patrik,Zsuzsa,Peti,Barbi,Reni,Böbe,Martina,Kriszti,Dani".split(",")
-                }).catch(e => console.warn("Settings init kihagyva:", e.message));
-            }
-        }).catch(e => console.warn("Settings olvasás kihagyva:", e.message));
-        
-        metaRef.get().then(snapshot => {
-            const meta = snapshot.exists() ? snapshot.val() : {};
-            const currentYear = new Date().getFullYear();
-            
-            let needsReset = false;
-            let resetReason = '';
-            
-            if (meta.version !== VERSION_KEY) {
-                needsReset = true;
-                resetReason = 'új verzió';
-            }
-            if (meta.lastResetYear && meta.lastResetYear !== currentYear) {
-                needsReset = true;
-                resetReason = 'évváltás';
-            }
-            
-            if (needsReset) {
-                doYearlyReset(currentYear).catch(e => console.warn("Reset kihagyva:", e.message));
-            }
-        }).catch(e => {
-            console.warn("Meta ellenőrzés kihagyva:", e.message);
-        });
-    }
-    
-    async function doYearlyReset(year) {
-        const settingsSnapshot = await settingsRef.get();
-        const roster = (settingsSnapshot.exists() && settingsSnapshot.val().roster) || [];
-        
-        const yearStart = `${year}-01-01`;
-        const updates = {};
-        
-        roster.forEach(name => {
-            updates[`workerStats/${name}`] = {
-                carries: 0,
-                lastDate: null,
-                joinDate: yearStart
-            };
-        });
-        
-        updates['pairHistory'] = null;
-        updates['absences'] = null;
-        updates['meta'] = {
-            version: VERSION_KEY,
-            lastResetYear: year,
-            lastResetDate: new Date().toISOString()
-        };
-        
-        await db.ref().update(updates);
-    }
-    
-    try {
-        backgroundInit();
-    } catch (e) {
-        console.warn("Init lépés kihagyva:", e);
-    }
-
-    let loadingCounter = 0;
-    const expectedLoads = 4;
-    let hasRenderedOnce = false;
-    
-    function maybeRender() {
-        if (sysSettings) {
-            calculateAllSchedules();
-            renderUI();
-            hasRenderedOnce = true;
+    settingsRef.get().then((snapshot) => {
+        if (!snapshot.exists()) {
+            settingsRef.set({
+                shift: "C", shiftStart: "2025-07-31", nameStart: "2025-02-14",
+                roster: "Laci,Jani,Patrik,Zsuzsa,Peti,Barbi,Reni,Böbe,Martina,Kriszti,Dani".split(","),
+                pending: []
+            });
         }
-    }
-    
-    setTimeout(() => {
-        if (!hasRenderedOnce) {
-            const hero = document.getElementById('heroContainer');
-            if (hero && hero.innerHTML.includes('Betöltés a felhőből')) {
-                hero.innerHTML = `
-                    <div style="text-align:center; padding: 40px 20px; color: var(--text-dim);">
-                        <div style="font-size: 2.5rem; margin-bottom: 12px; opacity: 0.5;">📡</div>
-                        <div style="font-weight: 600; color: white; margin-bottom: 6px;">Várakozás a felhőre...</div>
-                        <div style="font-size: 0.8rem;">Ellenőrizd az internet kapcsolatot.</div>
-                        <div style="font-size: 0.75rem; margin-top: 16px; opacity: 0.6;">Az alkalmazás automatikusan újraindul amint az adatok megérkeznek.</div>
-                    </div>
-                `;
-            }
-        }
-    }, 8000);
+    }).catch(err => {
+        document.getElementById('heroContainer').innerHTML = `<div style="text-align:center; padding: 20px; color: #f87171;">Hiba a Firebase kapcsolattal!</div>`;
+    });
 
     settingsRef.on('value', (snapshot) => {
         if (snapshot.exists()) {
             sysSettings = snapshot.val();
+            // Biztonsági ellenőrzések: ha a Firebase törölte az üres tömböket, hozzuk létre őket!
             if(!sysSettings.roster) sysSettings.roster = [];
-            loadingCounter = Math.max(loadingCounter, 1);
-            maybeRender();
+            if(!sysSettings.pending) sysSettings.pending = [];
+            
+            if(Object.keys(absences).length >= 0) { calculateAllSchedules(); renderUI(); }
         }
     });
 
     absencesRef.on('value', (snapshot) => {
         absences = snapshot.val() || {};
-        loadingCounter = Math.max(loadingCounter, 2);
-        maybeRender();
+        if(sysSettings) { calculateAllSchedules(); renderUI(); }
     });
 
-    statsRef.on('value', (snapshot) => {
-        workerStats = snapshot.val() || {};
-        loadingCounter = Math.max(loadingCounter, 3);
-        maybeRender();
-    });
-
-    pairsRef.on('value', (snapshot) => {
-        pairHistory = snapshot.val() || {};
-        loadingCounter = Math.max(loadingCounter, 4);
-        maybeRender();
-    });
-
-    function getDateKey(date) {
-        return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
-    }
-
+    // ==========================================
+    // 🧠 GOLYÓÁLLÓ DÁTUMSÁMOLÓ ÉS LOGIKA
+    // ==========================================
     function parseLocalDate(dateStr) {
         let p = dateStr.split('-');
         return new Date(p[0], p[1] - 1, p[2]);
     }
 
-    function pairKey(a, b) {
-        return [a, b].sort().join('|');
+    function getDaysDiffUTC(d1, d2) {
+        const utc1 = Date.UTC(d1.getFullYear(), d1.getMonth(), d1.getDate());
+        const utc2 = Date.UTC(d2.getFullYear(), d2.getMonth(), d2.getDate());
+        return Math.floor((utc1 - utc2) / 86400000);
     }
-    
-    function countWorkingDaysInRange(startDate, endDate) {
-        let count = 0;
-        let d = new Date(startDate);
-        d.setHours(0, 0, 0, 0);
-        const end = new Date(endDate);
-        end.setHours(0, 0, 0, 0);
+
+    function isWorkingDay(date) {
+        let startObj = parseLocalDate(sysSettings.shiftStart);
+        let totalDays = getDaysDiffUTC(date, startObj);
+        let cycleIdx = ((totalDays % 12) + 12) % 12;
         
-        while (d <= end) {
-            if (isWorkingDay(d)) count++;
-            d.setDate(d.getDate() + 1);
-        }
-        return count;
-    }
-    
-    function getExpectedCarriesForWorker(name, asOfDate) {
-        const year = asOfDate.getFullYear();
-        const yearStart = new Date(year, 0, 1);
-        
-        const ws = workerStats[name] || {};
-        const joinDateStr = ws.joinDate || `${year}-01-01`;
-        let joinDate = parseLocalDate(joinDateStr);
-        
-        if (joinDate < yearStart) joinDate = yearStart;
-        
-        const workDaysSinceJoin = countWorkingDaysInRange(joinDate, asOfDate);
-        const rosterSize = (sysSettings.roster && sysSettings.roster.length) || 1;
-        
-        return (workDaysSinceJoin * 2) / rosterSize;
-    }
-    
-    function getYearlyExpectedForWorker(name) {
-        const today = new Date();
-        return getExpectedCarriesForWorker(name, today);
-    }
-    
-    function selectPairForDay(availableWorkers, simStats, simPairs, currentDate) {
-        if (availableWorkers.length < 2) {
-            return [
-                availableWorkers[0] || "-",
-                availableWorkers[1] || "-"
-            ];
-        }
-        
-        let bestPair = null;
-        let bestCost = Infinity;
-        
-        for (let i = 0; i < availableWorkers.length; i++) {
-            for (let j = i + 1; j < availableWorkers.length; j++) {
-                const a = availableWorkers[i];
-                const b = availableWorkers[j];
-                
-                const sa = simStats[a] || { carries: 0, lastDate: null, joinDate: null };
-                const sb = simStats[b] || { carries: 0, lastDate: null, joinDate: null };
-                
-                const expectedA = computeExpectedAtDate(a, sa.joinDate, currentDate);
-                const expectedB = computeExpectedAtDate(b, sb.joinDate, currentDate);
-                
-                const deficitA = expectedA - sa.carries;
-                const deficitB = expectedB - sb.carries;
-                
-                const deficitCost = -(deficitA + deficitB);
-                const partnerCount = simPairs[pairKey(a, b)] || 0;
-                
-                let freshnessCost = 0;
-                if (sa.lastDate) {
-                    const daysSince = (currentDate.getTime() - parseLocalDate(sa.lastDate).getTime()) / 86400000;
-                    freshnessCost -= Math.min(30, daysSince);
-                } else {
-                    freshnessCost -= 30;
-                }
-                if (sb.lastDate) {
-                    const daysSince = (currentDate.getTime() - parseLocalDate(sb.lastDate).getTime()) / 86400000;
-                    freshnessCost -= Math.min(30, daysSince);
-                } else {
-                    freshnessCost -= 30;
-                }
-                
-                const cost = deficitCost * 1000 + partnerCount * 10000 + freshnessCost * 10;
-                
-                if (cost < bestCost) {
-                    bestCost = cost;
-                    bestPair = [a, b];
-                }
-            }
-        }
-        
-        if (bestPair) {
-            const sa = simStats[bestPair[0]] || { carries: 0 };
-            const sb = simStats[bestPair[1]] || { carries: 0 };
-            if (sa.carries > sb.carries) {
-                bestPair = [bestPair[1], bestPair[0]];
-            } else if (sa.carries === sb.carries) {
-                bestPair.sort((x, y) => x.localeCompare(y, 'hu'));
-            }
-        }
-        
-        return bestPair || ["-", "-"];
-    }
-    
-    function computeExpectedAtDate(name, joinDateStr, atDate) {
-        const year = atDate.getFullYear();
-        const yearStart = new Date(year, 0, 1);
-        
-        let joinDate = joinDateStr ? parseLocalDate(joinDateStr) : yearStart;
-        if (joinDate < yearStart) joinDate = yearStart;
-        
-        const workDays = countWorkingDaysInRange(joinDate, atDate);
-        const rosterSize = (sysSettings.roster && sysSettings.roster.length) || 1;
-        
-        return (workDays * 2) / rosterSize;
+        let nap = "", ej = "";
+        if (cycleIdx <= 2) { nap = "B"; ej = "A"; }
+        else if (cycleIdx <= 5) { nap = "D"; ej = "C"; }
+        else if (cycleIdx <= 8) { nap = "A"; ej = "B"; }
+        else { nap = "C"; ej = "D"; }
+        return (sysSettings.shift === nap || sysSettings.shift === ej);
     }
 
     function calculateAllSchedules() {
         computedSchedule = {};
         
+        // Biztonsági ellenőrzés: Ha senki sincs az aktív listán, leállítjuk a számolást.
         if (!sysSettings || !sysSettings.roster || sysSettings.roster.length === 0) return; 
         
         let roster = [...sysSettings.roster];
-        let simStats = {};
-        roster.forEach(name => {
-            simStats[name] = {
-                carries: (workerStats[name] && workerStats[name].carries) || 0,
-                lastDate: (workerStats[name] && workerStats[name].lastDate) || null,
-                joinDate: (workerStats[name] && workerStats[name].joinDate) || null
-            };
-        });
-        let simPairs = { ...pairHistory };
+        let pending = [...(sysSettings.pending || [])];
+        let n = roster.length;
         
-        let lastRecordedCarry = null;
-        Object.values(workerStats).forEach(ws => {
-            if (ws.lastDate) {
-                const d = parseLocalDate(ws.lastDate);
-                if (!lastRecordedCarry || d > lastRecordedCarry) lastRecordedCarry = d;
-            }
-        });
-        
-        let simDate;
-        if (lastRecordedCarry) {
-            simDate = new Date(lastRecordedCarry);
-            simDate.setDate(simDate.getDate() + 1);
-        } else {
-            simDate = new Date();
-        }
-        simDate.setHours(0, 0, 0, 0);
+        let rotIndex = 0;
+        let pushed = []; 
+
+        let simDate = parseLocalDate(sysSettings.nameStart);
+        simDate.setHours(0,0,0,0);
         
         let endDate = new Date();
         endDate.setDate(endDate.getDate() + 45); 
-        endDate.setHours(0, 0, 0, 0);
+        endDate.setHours(0,0,0,0);
 
         while (simDate <= endDate) {
             if (isWorkingDay(simDate)) {
                 let dateKey = getDateKey(simDate);
-                let dailyAbsences = absences[dateKey] || {};
-                
-                let availableWorkers = [...new Set(roster)].filter(name => {
-                    if (dailyAbsences[name]) return false;
-                    const ws = simStats[name];
-                    if (ws && ws.joinDate) {
-                        const jd = parseLocalDate(ws.joinDate);
-                        if (jd > simDate) return false;
+                let dailyAbsences = absences[dateKey] || {}; 
+                let todayWorkers = [];
+                let todayPushed = [...pushed];
+                pushed = [];
+                let checkedToday = new Set();
+
+                while (todayWorkers.length < 2) {
+                    if (checkedToday.size >= roster.length + todayPushed.length) {
+                        todayWorkers.push("-"); // Kötőjel, ha tényleg nincs több elérhető ember
+                        if(todayWorkers.length === 2) break; 
+                        continue;
                     }
-                    return true;
-                });
-                
-                const pair = selectPairForDay(availableWorkers, simStats, simPairs, simDate);
-                
-                if (pair[0] !== "-" && pair[1] !== "-" && pair[0] !== pair[1]) {
-                    simStats[pair[0]] = {
-                        ...simStats[pair[0]],
-                        carries: (simStats[pair[0]].carries || 0) + 1,
-                        lastDate: dateKey
-                    };
-                    simStats[pair[1]] = {
-                        ...simStats[pair[1]],
-                        carries: (simStats[pair[1]].carries || 0) + 1,
-                        lastDate: dateKey
-                    };
-                    const pk = pairKey(pair[0], pair[1]);
-                    simPairs[pk] = (simPairs[pk] || 0) + 1;
+
+                    let candidate;
+                    let isFromPushed = false;
+                    
+                    if (todayPushed.length > 0) {
+                        candidate = todayPushed[0];
+                        isFromPushed = true;
+                    } else {
+                        candidate = roster[rotIndex % n];
+                    }
+
+                    if (checkedToday.has(candidate)) {
+                         if (isFromPushed) { todayPushed.shift(); pushed.push(candidate); }
+                         else { advanceRotation(); }
+                         continue;
+                    }
+                    checkedToday.add(candidate);
+
+                    if (dailyAbsences[candidate]) {
+                        pushed.push(candidate); 
+                        if (isFromPushed) todayPushed.shift();
+                        else { advanceRotation(); }
+                    } else {
+                        todayWorkers.push(candidate);
+                        if (isFromPushed) todayPushed.shift();
+                        else { advanceRotation(); }
+                    }
+
+                    // Forgás logikája (Páros létszám fixálva!)
+                    function advanceRotation() {
+                        rotIndex++;
+                        // Ha egy teljes kör lement (mindenki sorra került)
+                        if (rotIndex > 0 && rotIndex % n === 0) {
+                            // Új dolgozó beillesztése a ciklus végén
+                            if (pending.length > 0 && simDate.getTime() >= pending[0].addedDate) {
+                                roster.push(pending[0].name);
+                                n = roster.length;
+                                pending.shift();
+                            }
+                            
+                            // PRO FIX: Ha páros a létszám, csúsztatunk egyet, 
+                            // hogy a következő körben mással kerüljenek párba!
+                            if (n % 2 === 0) {
+                                rotIndex++; 
+                            }
+                        }
+                    }
                 }
                 
-                computedSchedule[dateKey] = pair;
+                pushed = pushed.concat(todayPushed);
+                computedSchedule[dateKey] = todayWorkers;
             }
             simDate.setDate(simDate.getDate() + 1);
         }
     }
 
-    function recordTodayCarry(dateKey, worker1, worker2) {
-        if (!worker1 || !worker2 || worker1 === "-" || worker2 === "-") return;
-        if (worker1 === worker2) return;
-        
-        const today = new Date();
-        if (today.getHours() < 6) today.setDate(today.getDate() - 1);
-        const todayKey = getDateKey(today);
-        
-        if (dateKey !== todayKey) return;
-        
-        const dailyAbsences = absences[dateKey] || {};
-        if (dailyAbsences[worker1] || dailyAbsences[worker2]) return;
-        
-        const w1Stats = workerStats[worker1] || {};
-        const w2Stats = workerStats[worker2] || {};
-        if (w1Stats.lastDate === dateKey && w2Stats.lastDate === dateKey) return;
-        
-        const updates = {};
-        updates[`workerStats/${worker1}/carries`] = ((workerStats[worker1] && workerStats[worker1].carries) || 0) + 1;
-        updates[`workerStats/${worker1}/lastDate`] = dateKey;
-        updates[`workerStats/${worker2}/carries`] = ((workerStats[worker2] && workerStats[worker2].carries) || 0) + 1;
-        updates[`workerStats/${worker2}/lastDate`] = dateKey;
-        
-        const pk = pairKey(worker1, worker2);
-        updates[`pairHistory/${pk}`] = (pairHistory[pk] || 0) + 1;
-        
-        db.ref().update(updates);
+    function getDateKey(date) {
+        return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
     }
-    
+
+    // ==========================================
+    // ⚡ INTERAKTÍV AKCIÓK
+    // ==========================================
     window.markAbsent = function(dateKey, name) {
         if(!name || name === "Nincs több!" || name === "-") return;
-        if(confirm(`Szeretnéd jelezni, hogy ${name} hiányzik ezen a napon?\n\nA rendszer automatikusan behívja a következőt, ${name} pedig sorra kerül legközelebb.`)) {
-            const ws = workerStats[name];
-            const updates = {
-                [`absences/${dateKey}/${name}`]: true
-            };
-            
-            if (ws && ws.lastDate === dateKey && ws.carries > 0) {
-                updates[`workerStats/${name}/carries`] = ws.carries - 1;
-                updates[`workerStats/${name}/lastDate`] = null;
-                
-                let otherWorker = null;
-                sysSettings.roster.forEach(n => {
-                    if (n !== name && workerStats[n] && workerStats[n].lastDate === dateKey) {
-                        otherWorker = n;
-                    }
-                });
-                
-                if (otherWorker) {
-                    const otherWs = workerStats[otherWorker];
-                    if (otherWs && otherWs.carries > 0) {
-                        updates[`workerStats/${otherWorker}/carries`] = otherWs.carries - 1;
-                        updates[`workerStats/${otherWorker}/lastDate`] = null;
-                    }
-                    
-                    const pk = pairKey(name, otherWorker);
-                    if (pairHistory[pk] && pairHistory[pk] > 0) {
-                        updates[`pairHistory/${pk}`] = pairHistory[pk] - 1;
-                    }
-                }
-            }
-            
-            db.ref().update(updates).catch(err => {
-                showToast("❌ Hiba a hiányzás rögzítésénél", 'error');
-            });
+        if(confirm(`Szeretnéd jelezni, hogy ${name} hiányzik ezen a napon?\n\nA rendszer automatikusan behívja a következőt, ${name} pedig átkerül a következő munkanapra.`)) {
+            db.ref(`absences/${dateKey}/${name}`).set(true);
         }
     };
 
     window.undoAbsent = function(dateKey, name) {
         db.ref(`absences/${dateKey}/${name}`).set(null);
     };
-    
-    window.toggleFairness = function() {
-        fairnessOpen = !fairnessOpen;
-        localStorage.setItem('fp_open', fairnessOpen);
-        const panel = document.querySelector('.fairness-panel-front');
-        if (panel) panel.classList.toggle('open', fairnessOpen);
-    };
 
+    // ==========================================
+    // 🎨 KÉPERNYŐ RAJZOLÁSA
+    // ==========================================
     function renderUI() {
         const hero = document.getElementById('heroContainer');
         const list = document.getElementById('upcomingList');
         hero.innerHTML = ''; list.innerHTML = '';
 
-        // --- OKOS MŰSZAK-LÉPTETÉS ---
-        let realToday = new Date();
-        let logicalToday = new Date(realToday);
-        
-        // Alapeset: hajnali 0-6 között még az előző naptári nap logikája él
-        if (logicalToday.getHours() < 6) {
-            logicalToday.setDate(logicalToday.getDate() - 1);
-        }
-        logicalToday.setHours(0,0,0,0);
+        let today = new Date();
+        if (today.getHours() < 6) today.setDate(today.getDate() - 1);
+        today.setHours(0,0,0,0);
 
-        // Megnézzük, hogy ez a logikai nap (06:00-tól kezdődően) NAPPALOS-e
-        let utc = Date.UTC(logicalToday.getFullYear(), logicalToday.getMonth(), logicalToday.getDate());
-        let diffDays = Math.floor((utc - SHIFT_ANCHOR.getTime()) / 86400000);
-        let cycleDay = ((diffDays % 12) + 12) % 12;
-        let isDayShift = (cycleDay >= 3 && cycleDay <= 5);
+        const headerHTML = `<div class="header-pill" onclick="openAdmin()">${sysSettings.shift} MŰSZAK BEOSZTÁS</div>`;
 
-        // Ha NAPPALOS műszak van, és az óra már elütötte a 18:00-t (vagy már < 6 van másnap reggel)
-        // akkor a nappalos műszak véget ért, a kijelzőt rá kell tolni a HOLNAPI műszakra!
-        if (isDayShift && (realToday.getHours() >= 18 || realToday.getHours() < 6)) {
-            logicalToday.setDate(logicalToday.getDate() + 1);
-        }
-
-        // Ez a végleges nap, aminek a párosát mutatni kell
-        let today = logicalToday;
-        // --- LÉPTETÉS VÉGE ---
-
-        const headerHTML = `<div class="header-pill" onclick="openAdmin()">C MŰSZAK BEOSZTÁS</div>`;
-
+        // Ha üres az aktív lista
         if (!sysSettings.roster || sysSettings.roster.length === 0) {
             hero.innerHTML = `${headerHTML}
                 <div style="text-align: center; margin-top: 50px; opacity: 0.7;">
@@ -750,177 +325,37 @@
 
         if (!isWorkingDay(today)) {
             hero.innerHTML = `${headerHTML}
-                <div style="text-align: center; margin-top: 40px; opacity: 0.7;">
-                    <div style="font-size: 3rem; margin-bottom: 8px; filter: grayscale(100%);">😴</div>
-                    <h2 style="color:white; font-weight: 600; margin: 0;">Pihenőnap</h2>
-                    <p style="color:var(--text-dim); margin-top: 4px;">Ma a C műszak pihen.</p>
-                </div>
-                ${renderFrontFairness()}`;
-            fillUpcomingList(today, list);
-            return;
+                <div style="text-align: center; margin-top: 50px; opacity: 0.7;">
+                    <div style="font-size: 3rem; margin-bottom: 10px; filter: grayscale(100%);">😴</div>
+                    <h2 style="color:white; font-weight: 600;">Pihenőnap</h2>
+                    <p style="color:var(--text-dim)">Ma nincs szemétkihordás.</p>
+                </div>`;
+            fillUpcomingList(today, list); return;
         }
 
         let dateKey = getDateKey(today);
-        let workers = ["-", "-"];
-        
-        let alreadyCarriedToday = [];
-        sysSettings.roster.forEach(name => {
-            if (workerStats[name] && workerStats[name].lastDate === dateKey) {
-                alreadyCarriedToday.push(name);
-            }
-        });
-
-        if (alreadyCarriedToday.length >= 2) {
-            workers = [alreadyCarriedToday[0], alreadyCarriedToday[1]];
-        } else {
-            workers = computedSchedule[dateKey] || ["-", "-"];
-            if (workers[0] !== "-" && workers[1] !== "-") {
-                recordTodayCarry(dateKey, workers[0], workers[1]);
-            }
-        }
-
+        let workers = computedSchedule[dateKey] || ["-", "-"];
         let dailyAbs = absences[dateKey] || {};
         let todayStr = today.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric', weekday: 'long' });
 
         let absHTML = Object.keys(dailyAbs).length > 0 ? 
             `<div class="absent-row">Hiányzik: ${Object.keys(dailyAbs).map(n => `<span class="absent-pill" onclick="undoAbsent('${dateKey}', '${n}')" title="Koppints a visszavonáshoz">${n} ↩</span>`).join('')}</div>` : '';
 
-        const w0Count = (workerStats[workers[0]] && workerStats[workers[0]].carries) || 0;
-        const w1Count = (workerStats[workers[1]] && workerStats[workers[1]].carries) || 0;
-
-        // --- OKOS MŰSZAK CÍMKE ---
-        // A felirat mostantól konkrétan a mutatott naphoz igazodik, nem az aktuális órához
-        let tUtc = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
-        let tDiffDays = Math.floor((tUtc - SHIFT_ANCHOR.getTime()) / 86400000);
-        let tCycleDay = ((tDiffDays % 12) + 12) % 12;
-        let isTodayNightShift = (tCycleDay >= 9 && tCycleDay <= 11);
-        let shiftLabel = isTodayNightShift ? "ÉJSZAKÁS MŰSZAK" : "NAPPALI MŰSZAK";
-        // --- OKOS CÍMKE VÉGE ---
-
         hero.innerHTML = `
             ${headerHTML}
             <div class="today-card">
-                <div class="today-label">${shiftLabel}</div>
+                <div class="today-label">Mai Műszak</div>
                 <div class="today-date">${todayStr}</div>
                 ${absHTML}
                 <div class="pill-container">
-                    <div class="worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dateKey}', '${workers[0]}')">
-                        ${workers[0]}
-                        <div class="carry-count">${w0Count}x</div>
-                    </div>
-                    <span style="font-size: 1.4rem; color:var(--text-dim); font-weight:300;">&</span>
-                    <div class="worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dateKey}', '${workers[1]}')">
-                        ${workers[1]}
-                        <div class="carry-count">${w1Count}x</div>
-                    </div>
+                    <div class="worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dateKey}', '${workers[0]}')">${workers[0]}</div>
+                    <span style="font-size: 1.5rem; color:var(--text-dim); font-weight:300;">&</span>
+                    <div class="worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dateKey}', '${workers[1]}')">${workers[1]}</div>
                 </div>
                 <div class="instruction-text">(Koppints a névre a hiányzás jelzéséhez)</div>
-            </div>
-            ${renderFrontFairness()}`;
+            </div>`;
 
         fillUpcomingList(today, list);
-    }
-    
-    function renderFrontFairness() {
-        if (!sysSettings.roster || sysSettings.roster.length === 0) return '';
-        
-        const year = new Date().getFullYear();
-        const yearStart = new Date(year, 0, 1);
-        const yearEnd = new Date(year, 11, 31);
-        
-        let maxRemaining = 0;
-        let totalRemaining = 0;
-        
-        const rawData = sysSettings.roster.map(name => {
-            const actual = (workerStats[name] && workerStats[name].carries) || 0;
-            const ws = workerStats[name] || {};
-            const joinDateStr = ws.joinDate || `${year}-01-01`;
-            const joinDate = parseLocalDate(joinDateStr);
-            const isMidYear = joinDate > yearStart;
-            
-            const expectedAtYearEnd = getExpectedCarriesForWorker(name, yearEnd);
-            
-            let remaining = expectedAtYearEnd - actual;
-            if (remaining < 0) remaining = 0; 
-            
-            if (remaining > maxRemaining) maxRemaining = remaining;
-            totalRemaining += remaining;
-            
-            return { name, actual, remaining, joinDate, isMidYear };
-        });
-        
-        const avgRemaining = rawData.length > 0 ? totalRemaining / rawData.length : 0;
-        
-        rawData.sort((a, b) => b.remaining - a.remaining);
-        
-        let rowsHtml = '';
-        rawData.forEach(d => {
-            const visualPct = maxRemaining > 0 ? (d.remaining / maxRemaining) * 100 : 100;
-            
-            let cls = 'balanced'; 
-            let icon = '';
-            
-            const diff = d.remaining - avgRemaining;
-            
-            if (d.remaining <= 0) {
-                cls = 'surplus';
-                icon = '<span class="fp-status-icon" title="Év végi kvóta teljesítve">✓</span>';
-            } else if (diff > 1.5) {
-                cls = 'deficit'; 
-            } else if (diff < -1.5) {
-                cls = 'surplus'; 
-            } else {
-                cls = 'balanced'; 
-            }
-            
-            const remainingRounded = d.remaining.toFixed(1);
-            const midYearNote = d.isMidYear ? 
-                `<span class="fp-joined-note">${d.joinDate.toLocaleDateString('hu-HU', {month:'short', day:'numeric'})} óta</span>` 
-                : '';
-            
-            rowsHtml += `
-                <div class="fp-row">
-                    <div class="fp-name">
-                        ${d.name}
-                        ${midYearNote}
-                    </div>
-                    <div class="fp-bar-wrap"><div class="fp-bar ${cls}" style="width: ${visualPct}%;"></div></div>
-                    <div class="fp-count">
-                        <span class="fp-c-actual">${remainingRounded}</span><span class="fp-c-expected"> hátra</span>
-                        ${icon}
-                    </div>
-                </div>
-            `;
-        });
-        
-        let summaryText = '';
-        if (avgRemaining <= 0) {
-            summaryText = '<span style="color: var(--success);">✓ A csapat teljesítette az éves kvótát!</span>';
-        } else {
-            summaryText = `<span style="color: var(--text-dim);">A csapattagokra átlagosan ${avgRemaining.toFixed(1)} vitel vár még idén.</span>`;
-        }
-        summaryText += `<br><span style="opacity:0.7;">"X hátra" = a saját arányos éves céljából még ennyi van vissza</span>`;
-        
-        return `
-            <div class="fairness-panel-front ${fairnessOpen ? 'open' : ''}">
-                <div class="fp-toggle" onclick="toggleFairness()">
-                    <div class="fp-toggle-left">
-                        <span class="fp-icon">📊</span>
-                        <span>Igazságossági Mérleg</span>
-                    </div>
-                    <div class="fp-toggle-right">
-                        <span class="fp-avg-badge">${rawData.length} fő · Átlag: ${avgRemaining.toFixed(1)} hátra</span>
-                        <span class="fp-chevron">▼</span>
-                    </div>
-                </div>
-                <div class="fp-body">
-                    <div class="fp-body-inner">
-                        <div class="fp-rows">${rowsHtml}</div>
-                        <div class="fp-summary">${summaryText}</div>
-                    </div>
-                </div>
-            </div>
-        `;
     }
 
     function fillUpcomingList(startDate, container) {
@@ -928,7 +363,7 @@
         let iterDate = new Date(startDate);
         iterDate.setDate(iterDate.getDate() + 1);
 
-        while(count < 3 && iterDate.getTime() < startDate.getTime() + 45 * 86400000) {
+        while(count < 10 && iterDate.getTime() < startDate.getTime() + 45 * 86400000) {
             if(isWorkingDay(iterDate)) {
                 let dKey = getDateKey(iterDate);
                 let workers = computedSchedule[dKey] || ["-", "-"];
@@ -938,14 +373,14 @@
                 let dateFull = iterDate.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric' });
 
                 let absHTML = Object.keys(dailyAbs).length > 0 ? 
-                    `<div class="absent-row" style="justify-content:flex-end; font-size:0.72rem; margin:0; margin-top:5px;">${Object.keys(dailyAbs).map(n => `<span class="absent-pill" onclick="undoAbsent('${dKey}', '${n}')" style="padding:2px 8px;">${n} ↩</span>`).join('')}</div>` : '';
+                    `<div class="absent-row" style="justify-content:flex-end; font-size:0.75rem; margin:0; margin-top:5px;">${Object.keys(dailyAbs).map(n => `<span class="absent-pill" onclick="undoAbsent('${dKey}', '${n}')" style="padding:2px 8px;">${n} ↩</span>`).join('')}</div>` : '';
 
                 container.innerHTML += `
                     <div class="list-card">
                         <div class="lc-header">
                             <div>
-                                <span style="background:rgba(6,182,212,0.1); color:var(--accent); font-weight:700; font-size:0.75rem; padding:3px 7px; border-radius:6px;">${dayShort}</span>
-                                <span class="lc-date-text" style="margin-left:6px;">${dateFull}</span>
+                                <span style="background:rgba(6,182,212,0.1); color:var(--accent); font-weight:700; font-size:0.8rem; padding:4px 8px; border-radius:6px;">${dayShort}</span>
+                                <span class="lc-date-text" style="margin-left:8px;">${dateFull}</span>
                             </div>
                             <div class="lc-pills">
                                 <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dKey}', '${workers[0]}')">${workers[0]}</div>
@@ -961,69 +396,27 @@
         }
     }
 
+    // ==========================================
+    // ⚙️ ADMIN FUNKCIÓK (PRO VERZIÓ)
+    // ==========================================
     window.openAdmin = function() {
-        document.getElementById('pinInput').value = '';
-        document.getElementById('pinOverlay').classList.add('active');
-        setTimeout(() => document.getElementById('pinInput').focus(), 50);
-    };
-    
-    window.closePinModal = function() {
-        document.getElementById('pinOverlay').classList.remove('active');
-    };
-    
-    window.submitPin = function() {
-        const pin = document.getElementById('pinInput').value;
-        if (pin === "1234") {
-            closePinModal();
-            openAdminPanel();
-        } else {
-            showToast("Hibás PIN kód!", 'error');
-            document.getElementById('pinInput').value = '';
-            document.getElementById('pinInput').focus();
-        }
-    };
-    
-    document.getElementById('pinInput').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') submitPin();
-    });
-
-    function openAdminPanel() {
+        let pin = prompt("Admin hitelesítés (PIN):");
+        if (pin !== "1234") { if(pin) alert("Hibás PIN!"); return; }
+        
         document.getElementById('adminPanel').style.display = 'block';
+        document.getElementById('setShiftStart').value = sysSettings.shiftStart;
+        document.getElementById('setNameStart').value = sysSettings.nameStart;
+        document.getElementById('setShiftType').value = sysSettings.shift;
         renderAdminRoster();
-        renderFairnessAdmin();
-    }
-    
-    window.closeAdmin = function() {
-        document.getElementById('adminPanel').style.display = 'none';
     };
-    
-    function showToast(msg, type = '') {
-        const t = document.getElementById('toast');
-        t.textContent = msg;
-        t.className = 'toast show ' + type;
-        clearTimeout(window._toastTimer);
-        window._toastTimer = setTimeout(() => {
-            t.className = 'toast';
-        }, 2500);
-    }
 
     function renderAdminRoster() {
         let html = "";
         if (!sysSettings.roster) sysSettings.roster = [];
         sysSettings.roster.forEach((name, i) => {
-            const ws = workerStats[name] || { carries: 0, lastDate: null, joinDate: null };
-            const lastTxt = ws.lastDate ? `${ws.lastDate.split('-').slice(1).join('.')}` : 'soha';
-            const joinTxt = ws.joinDate ? `belépés: ${ws.joinDate}` : 'év elejétől';
             html += `
             <div class="admin-list-item">
-                <div style="flex: 1; min-width: 0;">
-                    <span style="font-weight:bold; display:block;">${name}</span>
-                    <div class="worker-stats-mini">
-                        <span class="badge">${ws.carries}x vitt</span>
-                        <span class="badge">utoljára: ${lastTxt}</span>
-                        <span class="badge">${joinTxt}</span>
-                    </div>
-                </div>
+                <span style="font-weight:bold;">${name}</span>
                 <div style="display:flex; gap:5px;">
                     <button class="btn-action" title="Fel" onclick="moveWorker(${i}, -1)">▲</button>
                     <button class="btn-action" title="Le" onclick="moveWorker(${i}, 1)">▼</button>
@@ -1032,57 +425,23 @@
             </div>`;
         });
         document.getElementById('adminRosterList').innerHTML = html || "<div style='padding:15px; color:var(--text-dim); text-align:center;'>Nincs aktív dolgozó</div>";
-    }
-    
-    function renderFairnessAdmin() {
-        const container = document.getElementById('fairnessList');
-        if (!sysSettings.roster || sysSettings.roster.length === 0) {
-            container.innerHTML = "<div style='padding:15px; color:var(--text-dim); text-align:center; font-size:0.85rem;'>Nincs dolgozó.</div>";
-            return;
+
+        let pHTML = "";
+        if(sysSettings.pending && sysSettings.pending.length > 0) {
+            sysSettings.pending.forEach((p, i) => { 
+                pHTML += `
+                <div class="admin-list-item">
+                    <span style="color:var(--accent);">⏳ ${p.name}</span>
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn-action" style="background:var(--primary);" title="Azonnali aktiválás" onclick="activatePending(${i})">⚡</button>
+                        <button class="btn-action btn-delete" title="Törlés" onclick="removePending(${i})">✖</button>
+                    </div>
+                </div>`; 
+            });
+        } else {
+            pHTML = "<div style='padding:15px; color:var(--text-dim); text-align:center; font-size:0.85rem;'>Jelenleg senki sem várakozik.</div>";
         }
-        
-        const year = new Date().getFullYear();
-        
-        let html = `<div style="padding: 12px; background: rgba(255,255,255,0.02); border-bottom: 1px solid #222; font-size: 0.7rem; color: var(--text-dim); text-align: center;">
-            <strong style="color: var(--accent);">${year}.</strong> évi adatok · arányos kvóta-rendszer
-        </div>`;
-        
-        sysSettings.roster.forEach(name => {
-            const actual = (workerStats[name] && workerStats[name].carries) || 0;
-            const expected = getYearlyExpectedForWorker(name);
-            const ratio = expected > 0 ? actual / expected : 0;
-            const visualPct = Math.min(150, ratio * 100);
-            
-            let cls = 'zero';
-            if (actual === 0 && expected < 0.5) cls = 'zero';
-            else if (ratio < 0.7) cls = 'deficit';
-            else if (ratio < 1.05) cls = 'balanced';
-            else if (ratio < 1.3) cls = 'surplus';
-            else cls = 'over';
-            
-            const ws = workerStats[name] || {};
-            const joinDateStr = ws.joinDate || `${year}-01-01`;
-            const joinDate = parseLocalDate(joinDateStr);
-            const yearStart = new Date(year, 0, 1);
-            const isMidYear = joinDate > yearStart;
-            const joinNote = isMidYear ? `<span style="color:var(--accent); font-size:0.7rem;">(${joinDate.toLocaleDateString('hu-HU', {month:'short', day:'numeric'})} óta)</span>` : '';
-            
-            html += `
-                <div style="padding: 10px 14px; border-bottom: 1px solid #222; display: flex; align-items: center; gap: 10px;">
-                    <div style="flex: 1; min-width: 80px;">
-                        <div style="font-weight: 700; font-size: 0.85rem;">${name} ${joinNote}</div>
-                    </div>
-                    <div style="flex: 1.5; height: 12px; background: #000; border-radius: 6px; overflow: hidden; border: 1px solid #222;">
-                        <div class="fp-bar ${cls}" style="width: ${visualPct}%; height: 100%; border-radius: 6px;"></div>
-                    </div>
-                    <div style="font-size: 0.78rem; font-weight: 700; min-width: 70px; text-align: right;">
-                        <span style="color: white;">${actual}</span><span style="color: var(--text-dim);">/${expected.toFixed(1)}</span>
-                    </div>
-                </div>
-            `;
-        });
-        
-        container.innerHTML = html;
+        document.getElementById('pendingWorkers').innerHTML = pHTML;
     }
 
     window.moveWorker = function(index, direction) {
@@ -1099,12 +458,25 @@
     };
 
     window.removeWorker = function(index) {
-        const name = sysSettings.roster[index];
-        if(confirm(`Biztos törlöd ${name}-t a fő névsorból?\n\n(A historikus adatai megmaradnak Firebase-ben, ha visszavennéd, onnan folytatja.)`)) {
+        if(confirm(`Biztos törlöd ${sysSettings.roster[index]}-t a fő névsorból?`)) {
             sysSettings.roster.splice(index, 1);
             renderAdminRoster();
-            renderFairnessAdmin();
         }
+    };
+
+    window.removePending = function(index) {
+        if(confirm(`Biztos törlöd a várakozólistáról?`)) {
+            sysSettings.pending.splice(index, 1);
+            renderAdminRoster();
+        }
+    };
+
+    // ÚJ FUNKCIÓ: Várakozó azonnali áthelyezése az aktívak közé
+    window.activatePending = function(index) {
+        if (!sysSettings.roster) sysSettings.roster = [];
+        let worker = sysSettings.pending.splice(index, 1)[0];
+        sysSettings.roster.push(worker.name);
+        renderAdminRoster();
     };
 
     window.addNewWorker = function() {
@@ -1112,58 +484,25 @@
         if(name === "") return;
         
         if(!sysSettings.roster) sysSettings.roster = [];
-        if(sysSettings.roster.includes(name)) {
-            showToast("Ez a név már szerepel!", 'error');
-            return;
-        }
-        
-        const todayKey = getDateKey(new Date());
-        sysSettings.roster.push(name);
-        
-        if (!workerStats[name]) {
-            db.ref(`workerStats/${name}`).set({
-                carries: 0,
-                lastDate: null,
-                joinDate: todayKey
-            });
+        if(!sysSettings.pending) sysSettings.pending = [];
+
+        // Ha az aktív lista teljesen üres, azonnal oda tesszük, hogy beinduljon a rendszer!
+        if (sysSettings.roster.length === 0) {
+            sysSettings.roster.push(name);
+        } else {
+            sysSettings.pending.push({ name: name, addedDate: new Date().getTime() });
         }
         
         document.getElementById('newWorkerName').value = "";
         renderAdminRoster();
-        renderFairnessAdmin();
-        showToast(`✅ ${name} hozzáadva (${todayKey} óta)`, 'success');
-    };
-    
-    window.resetCarries = function() {
-        if (!confirm("⚠️ Biztosan újranullázod MINDENKI vitelszámát?\n\nEz az igazságossági pontokat is törli, és minden dolgozó joinDate-je a mai napra változik. Ez a művelet NEM visszavonható!")) return;
-        
-        const todayKey = getDateKey(new Date());
-        const updates = {};
-        const newStats = {};
-        
-        sysSettings.roster.forEach(name => {
-            newStats[name] = { 
-                carries: 0, 
-                joinDate: todayKey 
-            };
-        });
-        
-        updates['workerStats'] = newStats;
-        updates['pairHistory'] = null;
-        
-        db.ref().update(updates).then(() => {
-            showToast("✅ Pontok újranullázva!", 'success');
-        }).catch(err => {
-            showToast("❌ Hiba: " + err.message, 'error');
-        });
     };
 
     window.saveAdminSettings = function() {
-        db.ref('settings/roster').set(sysSettings.roster).then(() => {
+        sysSettings.shiftStart = document.getElementById('setShiftStart').value;
+        sysSettings.nameStart = document.getElementById('setNameStart').value;
+        sysSettings.shift = document.getElementById('setShiftType').value;
+        db.ref('settings').set(sysSettings).then(() => {
             document.getElementById('adminPanel').style.display = 'none';
-            showToast("💾 Mentve a felhőbe!", 'success');
-        }).catch(err => {
-            showToast("❌ Mentési hiba: " + err.message, 'error');
         });
     };
 </script>
