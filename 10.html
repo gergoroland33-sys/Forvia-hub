@@ -1,9 +1,4 @@
-A probléma gyökere az volt, hogy a markAbsent függvény megpróbálta **kézileg** ("erőszakkal") kicserélni a hiányzó embert a partnerek között, ami összeakadt a beépített, amúgy nagyon is okos automatikus szimulátoroddal (calculateAllSchedules). Ha valaki hiányzott egy jövőbeli vagy már elkönyvelt napon, a lokális adat és a Firebase elkezdett harcolni egymással.
-**A javítások a kódban:**
- 1. **markAbsent egyszerűsítése:** Teljesen kivettem belőle a "keressünk új partnert" logikát. Mostantól csak beírja a hiányzást (és ha már rögzítve volt a vitel, leveszi a pontot), majd rábízza a maybeRender()-re a matekot. A szimulátorod automatikusan gondoskodni fog a legtisztább helyettesítőről.
- 2. **recordTodayCarry optimalizálása:** Hozzáadtam a lokális (optimistic) frissítést is, mielőtt a Firebase-be küldené az adatot. Így megszűnik az a villogás / dupla levonás, amikor az internet egy pillanatig késik.
-Itt a javított, teljes és hibamentes kód egy az egyben. Másold be bátran:
-```html
+
 <!DOCTYPE html>
 <html lang="hu">
 <head>
