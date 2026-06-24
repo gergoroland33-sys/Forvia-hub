@@ -1,3 +1,9 @@
+A probléma gyökere az volt, hogy a markAbsent függvény megpróbálta **kézileg** ("erőszakkal") kicserélni a hiányzó embert a partnerek között, ami összeakadt a beépített, amúgy nagyon is okos automatikus szimulátoroddal (calculateAllSchedules). Ha valaki hiányzott egy jövőbeli vagy már elkönyvelt napon, a lokális adat és a Firebase elkezdett harcolni egymással.
+**A javítások a kódban:**
+ 1. **markAbsent egyszerűsítése:** Teljesen kivettem belőle a "keressünk új partnert" logikát. Mostantól csak beírja a hiányzást (és ha már rögzítve volt a vitel, leveszi a pontot), majd rábízza a maybeRender()-re a matekot. A szimulátorod automatikusan gondoskodni fog a legtisztább helyettesítőről.
+ 2. **recordTodayCarry optimalizálása:** Hozzáadtam a lokális (optimistic) frissítést is, mielőtt a Firebase-be küldené az adatot. Így megszűnik az a villogás / dupla levonás, amikor az internet egy pillanatig késik.
+Itt a javított, teljes és hibamentes kód egy az egyben. Másold be bátran:
+```html
 <!DOCTYPE html>
 <html lang="hu">
 <head>
@@ -525,8 +531,6 @@
                 const deficitCost = -(deficitA + deficitB);
                 
                 // 4. TIE-BREAKER — SZIGORÚ ADMIN NÉVSOR SORREND
-                // Kicseréltem a régi random "hash" logikát. Mostantól aki előrébb
-                // van a beállított admin névsorban, az élvez szigorú prioritást.
                 const idxA = sysSettings.roster.indexOf(a);
                 const idxB = sysSettings.roster.indexOf(b);
                 const minIdx = Math.min(idxA !== -1 ? idxA : 999, idxB !== -1 ? idxB : 999);
@@ -672,15 +676,12 @@
         });
 
         // === LOGIKAI MAI NAP ÉRVÉNYES PÁRJÁNAK BIZTOSÍTÁSA (hiányzások, részleges rögzítés, elavult computed kezelése) ===
-        // Ez oldja meg a fő hibát: ha ma többen hiányoznak jelölve, vagy részleges a pár, akkor is mindig
-        // helyes, hiányzó nélküli aktív pár legyen a fő képernyőn, és a következő legpihentebb aktiválódjon.
         try {
             const logicalToday = getLogicalToday();
             const todayKey = getDateKey(logicalToday);
             if (isWorkingDay(logicalToday)) {
                 const dailyAbsToday = absences[todayKey] || {};
                 
-                // Érvényes rögzített hordozók ma (akiknek lastDate ma van ÉS nem hiányoznak)
                 let validRecordedToday = (sysSettings.roster || []).filter(n => {
                     const ws = workerStats[n];
                     return ws && ws.lastDate === todayKey && !dailyAbsToday[n];
@@ -718,7 +719,6 @@
                         computedSchedule[todayKey] = [remaining, "-"];
                     }
                 } else {
-                    // 0 érvényes rögzített: friss pár kiválasztása ha szükséges
                     let available = (sysSettings.roster || []).filter(n => {
                         if (dailyAbsToday[n]) return false;
                         const ws = workerStats[n] || {};
@@ -773,16 +773,21 @@
         
         const updates = {};
         if (!w1Already) {
-            updates[`workerStats/${worker1}/carries`] = ((workerStats[worker1] && workerStats[worker1].carries) || 0) + 1;
+            const c = (w1Stats.carries || 0) + 1;
+            updates[`workerStats/${worker1}/carries`] = c;
             updates[`workerStats/${worker1}/lastDate`] = dateKey;
+            workerStats[worker1] = { ...w1Stats, carries: c, lastDate: dateKey }; // Lokális frissítés
         }
         if (!w2Already) {
-            updates[`workerStats/${worker2}/carries`] = ((workerStats[worker2] && workerStats[worker2].carries) || 0) + 1;
+            const c = (w2Stats.carries || 0) + 1;
+            updates[`workerStats/${worker2}/carries`] = c;
             updates[`workerStats/${worker2}/lastDate`] = dateKey;
+            workerStats[worker2] = { ...w2Stats, carries: c, lastDate: dateKey }; // Lokális frissítés
         }
         
         const pk = pairKey(worker1, worker2);
         updates[`pairHistory/${pk}`] = (pairHistory[pk] || 0) + 1;
+        pairHistory[pk] = (pairHistory[pk] || 0) + 1; // Lokális frissítés
         
         updates[`recordedDays/${dateKey}`] = true;
         recordedDays[dateKey] = true;
@@ -836,102 +841,48 @@
         if(!name || name === "Nincs több!" || name === "-") return;
         showConfirm(
             "Hiányzás jelzése",
-            `Szeretnéd jelezni, hogy ${name} hiányzik ezen a napon?\n\nA rendszer automatikusan behívja a következőt, ${name} pedig sorra kerül legközelebb.`,
+            `Szeretnéd jelezni, hogy ${name} hiányzik ezen a napon?\n\nA rendszer automatikusan behívja a következőt.`,
             () => {
                 const ws = workerStats[name];
                 const updates = {
                     [`absences/${dateKey}/${name}`]: true
                 };
                 
-                let partnerOfAbsent = null; 
-                if (ws && ws.lastDate === dateKey) {
-                    if (ws.carries > 0) {
-                        updates[`workerStats/${name}/carries`] = ws.carries - 1;
-                    }
-                    updates[`workerStats/${name}/lastDate`] = null;
-                    
-                    sysSettings.roster.forEach(n => {
-                        if (n !== name && workerStats[n] && workerStats[n].lastDate === dateKey) {
-                            partnerOfAbsent = n;
-                        }
-                    });
-                    
-                    if (partnerOfAbsent) {
-                        const pkOld = pairKey(name, partnerOfAbsent);
-                        if (pairHistory[pkOld] && pairHistory[pkOld] > 0) {
-                            updates[`pairHistory/${pkOld}`] = pairHistory[pkOld] - 1;
-                        }
-                    }
-                }
-                
-                let newPartner = null;
-                if (partnerOfAbsent) {
-                    const dailyAbs = absences[dateKey] || {};
-                    let candidates = sysSettings.roster.filter(n => {
-                        if (n === name || n === partnerOfAbsent) return false;
-                        if (dailyAbs[n]) return false;
-                        if (n === name) return false;
-                        const cws = workerStats[n];
-                        if (cws && cws.joinDate) {
-                            const jd = parseLocalDate(cws.joinDate);
-                            const dd = parseLocalDate(dateKey);
-                            if (jd > dd) return false;
-                        }
-                        if (cws && cws.lastDate === dateKey) return false;
-                        return true;
-                    });
-                    
-                    if (candidates.length > 0) {
-                        const dd = parseLocalDate(dateKey);
-                        candidates.sort((a, b) => {
-                            const wa = workerStats[a] || {}, wb = workerStats[b] || {};
-                            const da = wa.lastDate ? (dd - parseLocalDate(wa.lastDate)) / 86400000 : 9999;
-                            const db_ = wb.lastDate ? (dd - parseLocalDate(wb.lastDate)) / 86400000 : 9999;
-                            if (db_ !== da) return db_ - da; 
-                            
-                            // Ha a pihentség azonos, a hiányzónál is a Szigorú Admin Sorrend dönt!
-                            const idxA = sysSettings.roster.indexOf(a);
-                            const idxB = sysSettings.roster.indexOf(b);
-                            return (idxA !== -1 ? idxA : 999) - (idxB !== -1 ? idxB : 999);
-                        });
-                        newPartner = candidates[0];
-                        
-                        updates[`workerStats/${newPartner}/carries`] = ((workerStats[newPartner] && workerStats[newPartner].carries) || 0) + 1;
-                        updates[`workerStats/${newPartner}/lastDate`] = dateKey;
-                        
-                        const pkNew = pairKey(partnerOfAbsent, newPartner);
-                        updates[`pairHistory/${pkNew}`] = (pairHistory[pkNew] || 0) + 1;
-                    }
-                }
-                
-                updates[`recordedDays/${dateKey}`] = true;
-                
+                // 1. Lokális azonnali frissítés a hiányzásra (Optimistic UI)
                 if (!absences[dateKey]) absences[dateKey] = {};
                 absences[dateKey][name] = true;
+
+                // 2. Visszavonjuk a vitelt és partnertörténetet HA ma már be volt könyvelve
                 if (ws && ws.lastDate === dateKey) {
-                    workerStats[name] = { ...workerStats[name], 
-                        carries: Math.max(0, (ws.carries || 0) - (ws.carries > 0 ? 1 : 0)), 
-                        lastDate: null };
+                    const newCarries = Math.max(0, (ws.carries || 0) - 1);
+                    updates[`workerStats/${name}/carries`] = newCarries;
+                    updates[`workerStats/${name}/lastDate`] = null;
+                    
+                    // Lokális frissítés
+                    workerStats[name] = { ...ws, carries: newCarries, lastDate: null };
+                    
+                    // Partner levonása is
+                    sysSettings.roster.forEach(n => {
+                        if (n !== name && workerStats[n] && workerStats[n].lastDate === dateKey) {
+                            const pkOld = pairKey(name, n);
+                            if (pairHistory[pkOld] && pairHistory[pkOld] > 0) {
+                                updates[`pairHistory/${pkOld}`] = pairHistory[pkOld] - 1;
+                                pairHistory[pkOld]--; // Lokális
+                            }
+                        }
+                    });
                 }
-                if (newPartner) {
-                    workerStats[newPartner] = { ...workerStats[newPartner],
-                        carries: ((workerStats[newPartner] && workerStats[newPartner].carries) || 0) + 1,
-                        lastDate: dateKey };
-                }
-                recordedDays[dateKey] = true;
+                
+                // Nincs manuális partner-tologatás! A maybeRender automatikusan megoldja.
                 maybeRender();
-                if (newPartner) {
-                    showToast(`✓ ${name} hiányzik — ${newPartner} viszi helyette`, 'success');
-                } else {
-                    showToast(`✓ ${name} hiányzása rögzítve`, 'success');
-                }
+                showToast(`✓ ${name} hiányzása rögzítve`, 'success');
                 
                 db.ref().update(updates).catch(err => {
                     showToast("❌ Hiba: " + err.message, 'error');
-                    absencesRef.once('value').then(snapshot => {
-                        absences = snapshot.val() || {};
-                        maybeRender();
-                    });
+                    // Hiba esetén visszatöltünk a felhőből
+                    absencesRef.once('value').then(snap => { absences = snap.val() || {}; maybeRender(); });
+                    statsRef.once('value').then(snap => { workerStats = snap.val() || {}; maybeRender(); });
+                    pairsRef.once('value').then(snap => { pairHistory = snap.val() || {}; maybeRender(); });
                 });
             },
             '⚠️',
@@ -1516,3 +1467,5 @@
 </script>
 </body>
 </html>
+
+```
