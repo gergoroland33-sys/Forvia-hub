@@ -1,4 +1,6 @@
-<html lang="hu"><head>
+<!DOCTYPE html>
+<html lang="hu">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Szemétkihordás - PRO</title>
@@ -173,58 +175,13 @@
 </head>
 <body>
 
-    <section class="hero-section" id="heroContainer"><div class="header-pill" onclick="openAdmin()">C MŰSZAK BEOSZTÁS</div>
-                <div class="rest-card">
-                    <div class="rest-emoji">🎉</div>
-                    <h2 class="rest-title">Most már pihenj! 🎉</h2>
-                    <p class="rest-subtext">A mai nappali műszaknak vége. Csak nyugodtan a következő alkalomig!</p>
-                </div></section>
+    <section class="hero-section" id="heroContainer">
+        <div style="text-align:center; margin-top:50px; color: var(--text-dim);">Betöltés a felhőből...</div>
+    </section>
 
     <div class="list-container">
-        <div class="list-section-title" id="upcomingSectionTitle" style="">Következő beosztások</div>
-        <div id="upcomingList">
-                    <div class="list-card">
-                        <div class="lc-header">
-                            <div>
-                                <span style="background:rgba(6,182,212,0.1); color:var(--accent); font-weight:700; font-size:0.75rem; padding:3px 7px; border-radius:6px;">K</span>
-                                <span class="lc-date-text" style="margin-left:6px;">június 23.</span>
-                            </div>
-                            <div class="lc-pills">
-                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('2026-06-23', 'E.Krisztina')"><span class="worker-name">E.Krisztina</span></div>
-                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('2026-06-23', 'Reni')"><span class="worker-name">Reni</span></div>
-                            </div>
-                        </div>
-                        
-                    </div>
-                
-                    <div class="list-card">
-                        <div class="lc-header">
-                            <div>
-                                <span style="background:rgba(6,182,212,0.1); color:var(--accent); font-weight:700; font-size:0.75rem; padding:3px 7px; border-radius:6px;">Sze</span>
-                                <span class="lc-date-text" style="margin-left:6px;">június 24.</span>
-                            </div>
-                            <div class="lc-pills">
-                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('2026-06-24', 'Dani')"><span class="worker-name">Dani</span></div>
-                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('2026-06-24', 'Judit')"><span class="worker-name">Judit</span></div>
-                            </div>
-                        </div>
-                        
-                    </div>
-                
-                    <div class="list-card">
-                        <div class="lc-header">
-                            <div>
-                                <span style="background:rgba(6,182,212,0.1); color:var(--accent); font-weight:700; font-size:0.75rem; padding:3px 7px; border-radius:6px;">Cs</span>
-                                <span class="lc-date-text" style="margin-left:6px;">június 25.</span>
-                            </div>
-                            <div class="lc-pills">
-                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('2026-06-25', 'Kriszti')"><span class="worker-name">Kriszti</span></div>
-                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('2026-06-25', 'Zsuzsa')"><span class="worker-name">Zsuzsa</span></div>
-                            </div>
-                        </div>
-                        
-                    </div>
-                </div>
+        <div class="list-section-title" id="upcomingSectionTitle" style="display:none;">Következő beosztások</div>
+        <div id="upcomingList"></div>
         <div style="text-align: center; color: var(--text-dim); font-size: 0.65rem; margin-top: 30px; opacity: 0.5; font-weight: 600; letter-spacing: 1px;">GERGŐ ROLAND 2026</div>
     </div>
 
@@ -235,8 +192,6 @@
             <div class="admin-section">
                 <h3>👥 Aktív Névsor</h3>
                 <div id="adminTeamSummary"></div>
-                <div id="todayCarrierSummary"></div>
-                <p style="font-size:0.7rem; color:var(--text-dim); margin: 0 0 10px 0; opacity: 0.85;">📍 = kézi kijelölés, hogy <strong>ma ki vigye</strong> (felülbírálja az automatikát). Jelölj ki pontosan 2 főt. A − / + a vitelszámot állítja.</p>
                 <div class="admin-list" id="adminRosterList"></div>
             </div>
 
@@ -332,73 +287,27 @@
     let workerStats = {};
     let pairHistory = {};
     let computedSchedule = {};
-    let recordedDays = {}; 
     let hasRenderedOnce = false;
-
-    // 🔑 NYERS (Firebase-kulcsolt) másolatok a kulcs-átképzéshez. NEM törlünk semmit,
-    // csak egy biztonságos réteget adunk a tiltott karaktert (pl. ".") tartalmazó nevekhez.
-    let _rawWorkerStats = {};
-    let _rawAbsences = {};
-    let _rawPairHistory = {};
 
     const settingsRef = db.ref('settings');
     const absencesRef = db.ref('absences');
     const statsRef = db.ref('workerStats');
     const pairsRef = db.ref('pairHistory');
     const metaRef = db.ref('meta');
-    const recordedDaysRef = db.ref('recordedDays'); 
 
     // ==========================================
-    // 🔑 FIREBASE-BIZTOS KULCSOK
-    // A Firebase Realtime Database kulcs NEM tartalmazhat . # $ [ ] / karaktert.
-    // Az "E.Krisztina" név pontja miatt a régi írások (workerStats/E.Krisztina/...,
-    // pairHistory/E.Krisztina|Reni) ÉRVÉNYTELEN útvonalat adtak → a db.update() KIVÉTELT
-    // dobott, ami a renderUI közben üres képernyőt okozott a műszak indulásakor.
-    // fbKey() CSAK a tiltott karaktereket cseréli; a "tiszta" nevekre (Reni, Dani, ...)
-    // azonosság → a meglévő felhő-adat érintetlen marad.
-    function fbKey(name) {
-        return String(name).replace(/[.#$\[\]\/]/g, '_');
-    }
-    // Pár-kulcs a FELHŐBE íráshoz (fbKey-alapú). A memóriabeli pairKey() továbbra is a
-    // megjelenített neveket használja, így a beolvasott (visszaképzett) pairHistory-val konzisztens.
-    function fbPairKey(a, b) {
-        return [fbKey(a), fbKey(b)].sort().join('|');
-    }
-    // Beolvasáskor a Firebase-kulcsokat visszaképezzük a megjelenített nevekre a névsor alapján,
-    // így a kód VÁLTOZATLANUL a neveken keresztül olvashatja a workerStats/absences/pairHistory-t.
-    function remapFromFirebase() {
-        const unmap = {};
-        const roster = (sysSettings && sysSettings.roster) ? sysSettings.roster : [];
-        roster.forEach(n => { unmap[fbKey(n)] = n; });
-        const toName = (k) => (unmap[k] !== undefined ? unmap[k] : k);
-
-        // workerStats
-        const ws = {};
-        Object.keys(_rawWorkerStats || {}).forEach(k => { ws[toName(k)] = _rawWorkerStats[k]; });
-        workerStats = ws;
-
-        // absences (beágyazott: dateKey -> { név: true })
-        const ab = {};
-        Object.keys(_rawAbsences || {}).forEach(dk => {
-            ab[dk] = {};
-            Object.keys(_rawAbsences[dk] || {}).forEach(k => { ab[dk][toName(k)] = _rawAbsences[dk][k]; });
-        });
-        absences = ab;
-
-        // pairHistory ("fbA|fbB" -> szám); szétbontás, visszaképzés, újrarendezés
-        const ph = {};
-        Object.keys(_rawPairHistory || {}).forEach(pk => {
-            const parts = pk.split('|').map(toName).sort();
-            ph[parts.join('|')] = _rawPairHistory[pk];
-        });
-        pairHistory = ph;
-    }
-
-
-    // ==========================================
-    // 🛡️ INIT 
+    // 🛡️ INIT — BIZTONSÁGOS, NEM TÖRÖL ÖNMAGÁTÓL
     // ==========================================
     function backgroundInit() {
+        /* JAVÍTÁS: 
+           — NEM töltünk fel hardcoded névlistát (régen: "Laci,Jani,Patrik,..."). 
+             Ha üres a Firebase roster, a UI "Üres a névsor" üzenetet mutat,
+             és a user az admin panelből veszi fel a tagokat.
+           — VERSION_KEY alapú automatikus reset MEGSZÜNTETVE — túl veszélyes volt
+             (kódfrissítéskor véletlenül nullázódhatott az összes adat).
+           — CSAK ÉVVÁLTÁSKOR fut automatikus reset, és csak ha tényleg
+             áthaladtunk egy éven. */
+        
         metaRef.get().then(snapshot => {
             const meta = snapshot.exists() ? snapshot.val() : {};
             const currentYear = new Date().getFullYear();
@@ -407,6 +316,8 @@
                 console.log("Évváltás detektálva (" + meta.lastResetYear + " → " + currentYear + "): automatikus reset.");
                 doYearlyReset(currentYear).catch(e => console.warn("Évváltás reset kihagyva:", e.message));
             } else if (!meta.lastResetYear) {
+                // Első indítás VAGY meta hiányzik — csak inicializáljuk a meta-t.
+                // NEM nullázunk adatokat, mert ez egy létező telepítés is lehet.
                 metaRef.update({
                     lastResetYear: currentYear,
                     lastInitDate: new Date().toISOString()
@@ -425,7 +336,7 @@
         const updates = {};
         
         roster.forEach(name => {
-            updates[`workerStats/${fbKey(name)}`] = {
+            updates[`workerStats/${name}`] = {
                 carries: 0,
                 lastDate: null,
                 joinDate: yearStart
@@ -434,7 +345,6 @@
         
         updates['pairHistory'] = null;
         updates['absences'] = null;
-        updates['recordedDays'] = null; 
         updates['meta'] = {
             lastResetYear: year,
             lastResetDate: new Date().toISOString()
@@ -477,6 +387,7 @@
         }
     }, 8000);
 
+    // Auto-refresh percenként a műszakhatárokon átlépéshez
     setInterval(() => {
         if (sysSettings) {
             maybeRender();
@@ -490,45 +401,26 @@
         } else {
             sysSettings = { roster: [] };
         }
-        remapFromFirebase(); // a névsor megérkezett → újraképezzük a kulcsokat
         maybeRender();
     });
 
     absencesRef.on('value', (snapshot) => {
-        _rawAbsences = snapshot.val() || {};
-        remapFromFirebase();
+        absences = snapshot.val() || {};
         maybeRender();
     });
 
     statsRef.on('value', (snapshot) => {
-        _rawWorkerStats = snapshot.val() || {};
-        remapFromFirebase();
+        workerStats = snapshot.val() || {};
         maybeRender();
     });
 
     pairsRef.on('value', (snapshot) => {
-        _rawPairHistory = snapshot.val() || {};
-        remapFromFirebase();
-        maybeRender();
-    });
-
-    recordedDaysRef.on('value', (snapshot) => {
-        recordedDays = snapshot.val() || {};
+        pairHistory = snapshot.val() || {};
         maybeRender();
     });
 
     function getDateKey(date) {
         return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
-    }
-
-    function getLogicalToday() {
-        let d = new Date();
-        let h = d.getHours(), m = d.getMinutes();
-        if (h < 5 || (h === 5 && m < 59)) {
-            d.setDate(d.getDate() - 1);
-        }
-        d.setHours(0, 0, 0, 0);
-        return d;
     }
 
     function parseLocalDate(dateStr) {
@@ -538,6 +430,18 @@
 
     function pairKey(a, b) {
         return [a, b].sort().join('|');
+    }
+    
+    // Determinisztikus tie-breaker hash — ugyanarra a dátumra+pár névre mindig
+    // pontosan ugyanazt adja (stabil választás holtversenyben).
+    function getHashTieBreaker(name1, name2, date) {
+        let str = [name1, name2].sort().join('|') + '|' + date.getFullYear() + '-' + date.getMonth() + '-' + date.getDate();
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash |= 0;
+        }
+        return Math.abs(hash) / 2147483647;
     }
 
     function countWorkingDaysInRange(startDate, endDate) {
@@ -586,61 +490,13 @@
     // ==========================================
     // 🎯 PÁRVÁLASZTÓ ALGORITMUS — FORGÁS-ELV
     // ==========================================
-    // ==========================================
-    // 🔁 KÖRFORGÁSOS FORGATÁS (round-robin, "circle method")
-    // Mindenki mindenkivel pontosan egyszer kerül párba, ismétlés nélkül, igazságos darabszámmal.
-    // Így ugyanaz a pár nem ismétlődik, amíg minden lehetséges párosítás sorra nem került,
-    // és aki vitte, csak akkor jön újra, ha mindenki más is sorra került.
-    // ==========================================
-    let _rotCache = { n: -1, seq: null };
-    function buildRotationRounds(n) {
-        let idx = [];
-        for (let i = 0; i < n; i++) idx.push(i);
-        const BYE = -1;
-        let m = n;
-        if (m % 2 === 1) { idx.push(BYE); m = n + 1; } // páratlan létszám: körönként 1 fő pihen
-        const fixed = idx[0];
-        let rest = idx.slice(1);
-        const rounds = [];
-        for (let r = 0; r < m - 1; r++) {
-            const arr = [fixed, ...rest];
-            const round = [];
-            for (let i = 0; i < m / 2; i++) {
-                const a = arr[i], b = arr[m - 1 - i];
-                if (a !== BYE && b !== BYE) round.push([a, b]);
-            }
-            rounds.push(round);
-            rest.unshift(rest.pop()); // forgatás: utolsó a sor elejére
-        }
-        return rounds;
-    }
-    function rotationSequence(n) {
-        if (_rotCache.n === n && _rotCache.seq) return _rotCache.seq;
-        const seq = [];
-        buildRotationRounds(n).forEach(rd => rd.forEach(p => seq.push(p)));
-        _rotCache = { n: n, seq: seq };
-        return seq;
-    }
-    // Hány munkanap telt el a műszak-horgonytól az adott napig (a forgás indexéhez)
-    const ROT_PREFIX = [0, 0, 0, 1, 2, 3, 3, 3, 3, 4, 5, 6]; // munkanapok a [0..c] ciklusnapokban
-    function rotationWorkdayIndex(date) {
-        const utc = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
-        let diff = Math.floor((utc - SHIFT_ANCHOR.getTime()) / 86400000);
-        if (diff < 0) return 0;
-        const fc = Math.floor(diff / 12);
-        const rem = ((diff % 12) + 12) % 12;
-        const idx = fc * 6 + ROT_PREFIX[rem] - 1;
-        return idx < 0 ? 0 : idx;
-    }
-    function rotationPairNames(date, roster) {
-        const n = roster.length;
-        if (n < 2) return [roster[0] || "-", roster[1] || "-"];
-        const seq = rotationSequence(n);
-        const k = ((rotationWorkdayIndex(date) % seq.length) + seq.length) % seq.length;
-        const pr = seq[k];
-        return [roster[pr[0]], roster[pr[1]]];
-    }
-
+    /* JAVÍTÁS: az új algoritmus prioritása:
+       1. FRESHNESS (legerősebb): aki LEGRÉGEBB ÓTA nem vitt, az jön elsőként.
+          Ez a klasszikus forgás-elv, amit a user kért: 
+          "aki volt a legtávolabbi időben legyen újra".
+       2. PAIR HISTORY (közepes): kerüljük a gyakran ismétlődő párok ismétlését.
+       3. DEFICIT (gyenge): finomhangolás a kvóta-fairness miatt.
+       4. HASH TIE-BREAKER (mikro): stabil választás ha minden egyenlő. */
     function selectPairForDay(availableWorkers, simStats, simPairs, currentDate) {
         if (availableWorkers.length < 2) {
             return [availableWorkers[0] || "-", availableWorkers[1] || "-"];
@@ -648,40 +504,11 @@
         
         function getDaysSince(name) {
             const ws = simStats[name];
-            if (!ws || !ws.lastDate) return 9999; 
+            if (!ws || !ws.lastDate) return 9999; // soha nem vitt → legmagasabb prioritás
             const last = parseLocalDate(ws.lastDate);
             return Math.max(0, (currentDate.getTime() - last.getTime()) / 86400000);
         }
-        // Megjelenítési/pótlási rendezés: aki a LEGRÉGEBBEN vitte, az elöl (balra); döntetlennél névsor.
-        function _restCmp(a, b) {
-            const da = getDaysSince(a), db = getDaysSince(b);
-            if (db !== da) return db - da;
-            const ia = sysSettings.roster.indexOf(a), ib = sysSettings.roster.indexOf(b);
-            return (ia !== -1 ? ia : 999) - (ib !== -1 ? ib : 999);
-        }
-
-        // ===== ELSŐDLEGES: KÖRFORGÁSOS PÁROSÍTÁS =====
-        // A nap párja a forgás-menetrendből jön (mindenki mindenkivel, ismétlés nélkül, igazságosan).
-        // Ha a forgás-pár valamelyik tagja ma hiányzik vagy még nem lépett be, a legpihentebb
-        // elérhetővel pótoljuk — így MINDIG van érvényes, 2 fős pár, és a kieső helyére jön valaki.
-        {
-            const _avail = new Set(availableWorkers);
-            const _roster = sysSettings.roster || [];
-            let _chosen = [];
-            try {
-                const _rot = rotationPairNames(currentDate, _roster);
-                _rot.forEach(n => { if (n && n !== "-" && _avail.has(n) && !_chosen.includes(n)) _chosen.push(n); });
-            } catch (e) { /* hiba esetén a lenti tartalék logika dönt */ }
-            if (_chosen.length < 2) {
-                const _subs = availableWorkers.filter(n => !_chosen.includes(n)).sort(_restCmp);
-                for (const s of _subs) { if (_chosen.length >= 2) break; _chosen.push(s); }
-            }
-            if (_chosen.length >= 2) {
-                return _chosen.slice(0, 2).sort(_restCmp);
-            }
-        }
         
-        // ===== TARTALÉK (megőrzött régi, pihentség-alapú logika) =====
         let bestPair = null;
         let bestCost = Infinity;
         
@@ -693,31 +520,25 @@
                 const sa = simStats[a] || { carries: 0, lastDate: null, joinDate: null };
                 const sb = simStats[b] || { carries: 0, lastDate: null, joinDate: null };
                 
-                // 1. FRESHNESS — fő szempont
+                // 1. FRESHNESS — fő szempont (legmagasabb súly)
                 const daysA = getDaysSince(a);
                 const daysB = getDaysSince(b);
-                const freshnessCost = -(daysA + daysB); 
+                const freshnessCost = -(daysA + daysB); // több nap eltelte = jobb = kisebb cost
                 
                 // 2. PAIR HISTORY — másodlagos
                 const partnerCount = simPairs[pairKey(a, b)] || 0;
                 
-                // 3. DEFICIT — harmadlagos
+                // 3. DEFICIT — harmadlagos, fairness finomhangolás
                 const expectedA = computeExpectedAtDate(a, sa.joinDate, currentDate);
                 const expectedB = computeExpectedAtDate(b, sb.joinDate, currentDate);
                 const deficitA = Math.max(0, expectedA - (sa.carries || 0));
                 const deficitB = Math.max(0, expectedB - (sb.carries || 0));
                 const deficitCost = -(deficitA + deficitB);
                 
-                // 4. TIE-BREAKER — SZIGORÚ ADMIN NÉVSOR SORREND
-                // Kicseréltem a régi random "hash" logikát. Mostantól aki előrébb
-                // van a beállított admin névsorban, az élvez szigorú prioritást.
-                const idxA = sysSettings.roster.indexOf(a);
-                const idxB = sysSettings.roster.indexOf(b);
-                const minIdx = Math.min(idxA !== -1 ? idxA : 999, idxB !== -1 ? idxB : 999);
-                const maxIdx = Math.max(idxA !== -1 ? idxA : 999, idxB !== -1 ? idxB : 999);
-                const tieBreaker = minIdx + (maxIdx * 0.01);
+                // 4. TIE-BREAKER — mikro-bontás
+                const tieBreaker = getHashTieBreaker(a, b, currentDate);
                 
-                // Súlyozás
+                // Súlyozás: freshness ÉRDEMBEN dominál minden mást
                 const cost = freshnessCost * 1000 + partnerCount * 100 + deficitCost * 10 + tieBreaker;
                 
                 if (cost < bestCost) {
@@ -728,17 +549,13 @@
         }
         
         if (bestPair) {
-            // Megjelenítési sorrend stabilizálása (aki feljebb van az admin listán, az kerül balra)
+            // Megjelenítési sorrend stabilizálása
             const sa = simStats[bestPair[0]] || { carries: 0 };
             const sb = simStats[bestPair[1]] || { carries: 0 };
             if (sa.carries > sb.carries) {
                 bestPair = [bestPair[1], bestPair[0]];
             } else if (sa.carries === sb.carries) {
-                const idx0 = sysSettings.roster.indexOf(bestPair[0]);
-                const idx1 = sysSettings.roster.indexOf(bestPair[1]);
-                if ((idx0 !== -1 ? idx0 : 999) > (idx1 !== -1 ? idx1 : 999)) {
-                    bestPair = [bestPair[1], bestPair[0]];
-                }
+                bestPair.sort((x, y) => x.localeCompare(y, 'hu'));
             }
         }
         
@@ -775,6 +592,7 @@
         let realTodayForSim = new Date();
         let logicalTodayForSim = new Date(realTodayForSim);
         
+        // 5:59 logika: hajnal 06:00 előtt még a tegnapi műszakhoz tartozunk
         let simHours = logicalTodayForSim.getHours();
         let simMins = logicalTodayForSim.getMinutes();
         if (simHours < 5 || (simHours === 5 && simMins < 59)) {
@@ -786,16 +604,14 @@
         if (lastRecordedCarry) {
             simDate = new Date(lastRecordedCarry);
             simDate.setDate(simDate.getDate() + 1);
+            
+            // BIZTONSÁG: ha simDate (= utolsó+1) később lenne mint a "logikai ma", 
+            // akkor mégis a mai naptól kezdjük, hogy a mai sorrend is generálódjon
+            if (simDate.getTime() > logicalTodayForSim.getTime()) {
+                simDate = new Date(logicalTodayForSim);
+            }
         } else {
-            let minDate = new Date(logicalTodayForSim);
-            sysSettings.roster.forEach(name => {
-                const ws = workerStats[name];
-                if (ws && ws.joinDate) {
-                    let jd = parseLocalDate(ws.joinDate);
-                    if (jd < minDate) minDate = jd;
-                }
-            });
-            simDate = new Date(minDate);
+            simDate = new Date(logicalTodayForSim);
         }
         simDate.setHours(0, 0, 0, 0);
         
@@ -839,107 +655,6 @@
             }
             simDate.setDate(simDate.getDate() + 1);
         }
-        
-        let recordedByDate = {};
-        sysSettings.roster.forEach(name => {
-            const ws = workerStats[name];
-            if (ws && ws.lastDate) {
-                if (!recordedByDate[ws.lastDate]) recordedByDate[ws.lastDate] = [];
-                recordedByDate[ws.lastDate].push(name);
-            }
-        });
-        Object.keys(recordedByDate).forEach(dk => {
-            if (recordedByDate[dk].length >= 2) {
-                let pairNames = recordedByDate[dk].slice(0, 2);
-                computedSchedule[dk] = pairNames;
-            }
-        });
-
-        // === LOGIKAI MAI NAP ÉRVÉNYES PÁRJÁNAK BIZTOSÍTÁSA (hiányzások, részleges rögzítés, elavult computed kezelése) ===
-        // Ez oldja meg a fő hibát: ha ma többen hiányoznak jelölve, vagy részleges a pár, akkor is mindig
-        // helyes, hiányzó nélküli aktív pár legyen a fő képernyőn, és a következő legpihentebb aktiválódjon.
-        try {
-            const logicalToday = getLogicalToday();
-            const todayKey = getDateKey(logicalToday);
-            if (isWorkingDay(logicalToday)) {
-                const dailyAbsToday = absences[todayKey] || {};
-                
-                // Érvényes rögzített hordozók ma (akiknek lastDate ma van ÉS nem hiányoznak)
-                let validRecordedToday = (sysSettings.roster || []).filter(n => {
-                    const ws = workerStats[n];
-                    return ws && ws.lastDate === todayKey && !dailyAbsToday[n];
-                });
-                
-                if (validRecordedToday.length >= 2) {
-                    computedSchedule[todayKey] = validRecordedToday.slice(0, 2);
-                } else if (validRecordedToday.length === 1) {
-                    const remaining = validRecordedToday[0];
-                    let candidates = (sysSettings.roster || []).filter(n => {
-                        if (n === remaining) return false;
-                        if (dailyAbsToday[n]) return false;
-                        const cws = workerStats[n] || {};
-                        if (cws.joinDate) {
-                            const jd = parseLocalDate(cws.joinDate);
-                            if (jd > logicalToday) return false;
-                        }
-                        if (cws.lastDate === todayKey) return false;
-                        return true;
-                    });
-                    if (candidates.length > 0) {
-                        const dd = logicalToday;
-                        candidates.sort((a, b) => {
-                            const wa = workerStats[a] || {}, wb = workerStats[b] || {};
-                            const da = wa.lastDate ? Math.floor((dd.getTime() - parseLocalDate(wa.lastDate).getTime()) / 86400000) : 9999;
-                            const db_ = wb.lastDate ? Math.floor((dd.getTime() - parseLocalDate(wb.lastDate).getTime()) / 86400000) : 9999;
-                            if (db_ !== da) return db_ - da;
-                            const idxA = (sysSettings.roster || []).indexOf(a);
-                            const idxB = (sysSettings.roster || []).indexOf(b);
-                            return (idxA !== -1 ? idxA : 999) - (idxB !== -1 ? idxB : 999);
-                        });
-                        const extra = candidates[0];
-                        computedSchedule[todayKey] = [remaining, extra];
-                    } else {
-                        computedSchedule[todayKey] = [remaining, "-"];
-                    }
-                } else {
-                    // 0 érvényes rögzített: friss pár kiválasztása ha szükséges
-                    let available = (sysSettings.roster || []).filter(n => {
-                        if (dailyAbsToday[n]) return false;
-                        const ws = workerStats[n] || {};
-                        if (ws.joinDate) {
-                            const jd = parseLocalDate(ws.joinDate);
-                            if (jd > logicalToday) return false;
-                        }
-                        return true;
-                    });
-                    if (available.length >= 2) {
-                        let curr = computedSchedule[todayKey] || ["-", "-"];
-                        const currValid = curr.filter(w => w !== "-" && !dailyAbsToday[w]);
-                        if (currValid.length < 2) {
-                            let tempSimStats = {};
-                            (sysSettings.roster || []).forEach(name => {
-                                tempSimStats[name] = {
-                                    carries: (workerStats[name] && workerStats[name].carries) || 0,
-                                    lastDate: (workerStats[name] && workerStats[name].lastDate) || null,
-                                    joinDate: (workerStats[name] && workerStats[name].joinDate) || null
-                                };
-                            });
-                            let tempSimPairs = { ...pairHistory };
-                            const freshPair = selectPairForDay(available, tempSimStats, tempSimPairs, logicalToday);
-                            if (freshPair && freshPair[0] !== "-" && freshPair[1] !== "-") {
-                                computedSchedule[todayKey] = freshPair;
-                            }
-                        }
-                    } else if (available.length === 1) {
-                        computedSchedule[todayKey] = [available[0], "-"];
-                    } else {
-                        computedSchedule[todayKey] = ["-", "-"];
-                    }
-                }
-            }
-        } catch (e) {
-            console.warn("Mai pár biztosítása kihagyva:", e && e.message);
-        }
     }
 
     function recordTodayCarry(dateKey, worker1, worker2) {
@@ -951,76 +666,25 @@
         
         const w1Stats = workerStats[worker1] || {};
         const w2Stats = workerStats[worker2] || {};
-        const w1Already = (w1Stats.lastDate === dateKey);
-        const w2Already = (w2Stats.lastDate === dateKey);
-        if (w1Already && w2Already) return;
+        if (w1Stats.lastDate === dateKey && w2Stats.lastDate === dateKey) return;
         
         const updates = {};
-        if (!w1Already) {
-            updates[`workerStats/${fbKey(worker1)}/carries`] = ((workerStats[worker1] && workerStats[worker1].carries) || 0) + 1;
-            updates[`workerStats/${fbKey(worker1)}/lastDate`] = dateKey;
-        }
-        if (!w2Already) {
-            updates[`workerStats/${fbKey(worker2)}/carries`] = ((workerStats[worker2] && workerStats[worker2].carries) || 0) + 1;
-            updates[`workerStats/${fbKey(worker2)}/lastDate`] = dateKey;
-        }
+        updates[`workerStats/${worker1}/carries`] = ((workerStats[worker1] && workerStats[worker1].carries) || 0) + 1;
+        updates[`workerStats/${worker1}/lastDate`] = dateKey;
+        updates[`workerStats/${worker2}/carries`] = ((workerStats[worker2] && workerStats[worker2].carries) || 0) + 1;
+        updates[`workerStats/${worker2}/lastDate`] = dateKey;
         
         const pk = pairKey(worker1, worker2);
-        updates[`pairHistory/${fbPairKey(worker1, worker2)}`] = (pairHistory[pk] || 0) + 1;
+        updates[`pairHistory/${pk}`] = (pairHistory[pk] || 0) + 1;
         
-        updates[`recordedDays/${dateKey}`] = true;
-        recordedDays[dateKey] = true;
-        
-        // KRITIKUS: az írás SOHA nem buktathatja meg a renderUI-t (se szinkron kivétel, se async hiba).
-        try {
-            const p = db.ref().update(updates);
-            if (p && typeof p.catch === 'function') {
-                p.catch(err => console.warn("recordTodayCarry mentés kihagyva:", err && err.message));
-            }
-        } catch (err) {
-            console.warn("recordTodayCarry mentés kihagyva (kivétel):", err && err.message);
-        }
+        db.ref().update(updates);
     }
-    
-    window.toggleCarrierToday = function(name) {
-        const todayKey = getDateKey(getLogicalToday());
-        const ws = workerStats[name] || { carries: 0, lastDate: null, joinDate: null };
-        const isTodayCarrier = (ws.lastDate === todayKey);
-        
-        let newCarries, newLastDate;
-        if (isTodayCarrier) {
-            newCarries = Math.max(0, (ws.carries || 0) - 1);
-            newLastDate = null;
-        } else {
-            newCarries = (ws.carries || 0) + 1;
-            newLastDate = todayKey;
-        }
-        
-        workerStats[name] = { ...ws, carries: newCarries, lastDate: newLastDate };
-        recordedDays[todayKey] = true;
-        
-        maybeRender();
-        if (document.getElementById('adminPanel').style.display === 'block') {
-            renderAdminRoster();
-            renderAdminTeamSummary();
-        }
-        
-        const updates = {};
-        updates[`workerStats/${fbKey(name)}/carries`] = newCarries;
-        updates[`workerStats/${fbKey(name)}/lastDate`] = newLastDate;
-        updates[`recordedDays/${todayKey}`] = true;
-        db.ref().update(updates).catch(err => {
-            showToast("❌ Hiba: " + err.message, 'error');
-        });
-        
-        showToast(isTodayCarrier ? `↩ ${name} levéve a mai párból` : `📍 ${name} ma viszi`, 'success');
-    };
     
     window.adjustCarries = function(name, delta) {
         let currentCarries = (workerStats[name] && workerStats[name].carries) || 0;
         let newCarries = Math.max(0, currentCarries + delta);
         if (newCarries !== currentCarries) {
-            db.ref(`workerStats/${fbKey(name)}/carries`).set(newCarries);
+            db.ref(`workerStats/${name}/carries`).set(newCarries);
         }
     };
     
@@ -1032,97 +696,44 @@
             () => {
                 const ws = workerStats[name];
                 const updates = {
-                    [`absences/${dateKey}/${fbKey(name)}`]: true
+                    [`absences/${dateKey}/${name}`]: true
                 };
                 
-                let partnerOfAbsent = null; 
-                if (ws && ws.lastDate === dateKey) {
-                    if (ws.carries > 0) {
-                        updates[`workerStats/${fbKey(name)}/carries`] = ws.carries - 1;
-                    }
-                    updates[`workerStats/${fbKey(name)}/lastDate`] = null;
+                if (ws && ws.lastDate === dateKey && ws.carries > 0) {
+                    updates[`workerStats/${name}/carries`] = ws.carries - 1;
+                    updates[`workerStats/${name}/lastDate`] = null;
                     
+                    let otherWorker = null;
                     sysSettings.roster.forEach(n => {
                         if (n !== name && workerStats[n] && workerStats[n].lastDate === dateKey) {
-                            partnerOfAbsent = n;
+                            otherWorker = n;
                         }
                     });
                     
-                    if (partnerOfAbsent) {
-                        const pkOld = pairKey(name, partnerOfAbsent);
-                        if (pairHistory[pkOld] && pairHistory[pkOld] > 0) {
-                            updates[`pairHistory/${fbPairKey(name, partnerOfAbsent)}`] = pairHistory[pkOld] - 1;
+                    if (otherWorker) {
+                        const otherWs = workerStats[otherWorker];
+                        if (otherWs && otherWs.carries > 0) {
+                            updates[`workerStats/${otherWorker}/carries`] = otherWs.carries - 1;
+                            updates[`workerStats/${otherWorker}/lastDate`] = null;
+                        }
+                        
+                        const pk = pairKey(name, otherWorker);
+                        if (pairHistory[pk] && pairHistory[pk] > 0) {
+                            updates[`pairHistory/${pk}`] = pairHistory[pk] - 1;
                         }
                     }
                 }
                 
-                let newPartner = null;
-                if (partnerOfAbsent) {
-                    const dailyAbs = absences[dateKey] || {};
-                    let candidates = sysSettings.roster.filter(n => {
-                        if (n === name || n === partnerOfAbsent) return false;
-                        if (dailyAbs[n]) return false;
-                        if (n === name) return false;
-                        const cws = workerStats[n];
-                        if (cws && cws.joinDate) {
-                            const jd = parseLocalDate(cws.joinDate);
-                            const dd = parseLocalDate(dateKey);
-                            if (jd > dd) return false;
-                        }
-                        if (cws && cws.lastDate === dateKey) return false;
-                        return true;
-                    });
-                    
-                    if (candidates.length > 0) {
-                        const dd = parseLocalDate(dateKey);
-                        candidates.sort((a, b) => {
-                            const wa = workerStats[a] || {}, wb = workerStats[b] || {};
-                            const da = wa.lastDate ? (dd - parseLocalDate(wa.lastDate)) / 86400000 : 9999;
-                            const db_ = wb.lastDate ? (dd - parseLocalDate(wb.lastDate)) / 86400000 : 9999;
-                            if (db_ !== da) return db_ - da; 
-                            
-                            // Ha a pihentség azonos, a hiányzónál is a Szigorú Admin Sorrend dönt!
-                            const idxA = sysSettings.roster.indexOf(a);
-                            const idxB = sysSettings.roster.indexOf(b);
-                            return (idxA !== -1 ? idxA : 999) - (idxB !== -1 ? idxB : 999);
-                        });
-                        newPartner = candidates[0];
-                        
-                        updates[`workerStats/${fbKey(newPartner)}/carries`] = ((workerStats[newPartner] && workerStats[newPartner].carries) || 0) + 1;
-                        updates[`workerStats/${fbKey(newPartner)}/lastDate`] = dateKey;
-                        
-                        const pkNew = pairKey(partnerOfAbsent, newPartner);
-                        updates[`pairHistory/${fbPairKey(partnerOfAbsent, newPartner)}`] = (pairHistory[pkNew] || 0) + 1;
-                    }
-                }
-                
-                updates[`recordedDays/${dateKey}`] = true;
-                
+                // Optimista UI
                 if (!absences[dateKey]) absences[dateKey] = {};
                 absences[dateKey][name] = true;
-                if (ws && ws.lastDate === dateKey) {
-                    workerStats[name] = { ...workerStats[name], 
-                        carries: Math.max(0, (ws.carries || 0) - (ws.carries > 0 ? 1 : 0)), 
-                        lastDate: null };
-                }
-                if (newPartner) {
-                    workerStats[newPartner] = { ...workerStats[newPartner],
-                        carries: ((workerStats[newPartner] && workerStats[newPartner].carries) || 0) + 1,
-                        lastDate: dateKey };
-                }
-                recordedDays[dateKey] = true;
                 maybeRender();
-                if (newPartner) {
-                    showToast(`✓ ${name} hiányzik — ${newPartner} viszi helyette`, 'success');
-                } else {
-                    showToast(`✓ ${name} hiányzása rögzítve`, 'success');
-                }
+                showToast(`✓ ${name} hiányzása rögzítve`, 'success');
                 
                 db.ref().update(updates).catch(err => {
                     showToast("❌ Hiba: " + err.message, 'error');
                     absencesRef.once('value').then(snapshot => {
-                        _rawAbsences = snapshot.val() || {};
-                        remapFromFirebase();
+                        absences = snapshot.val() || {};
                         maybeRender();
                     });
                 });
@@ -1140,56 +751,21 @@
         }
         showToast(`↩ ${name} hiányzása visszavonva`, 'success');
         
-        db.ref(`absences/${dateKey}/${fbKey(name)}`).set(null).catch(err => {
+        db.ref(`absences/${dateKey}/${name}`).set(null).catch(err => {
             showToast("❌ Hiba: " + err.message, 'error');
             absencesRef.once('value').then(snapshot => {
-                _rawAbsences = snapshot.val() || {};
-                remapFromFirebase();
+                absences = snapshot.val() || {};
                 maybeRender();
             });
         });
     };
 
-    // 🛡️ A renderUI SOHA nem hagyhat üres képernyőt. Ha bármi kivételt dobna, biztonságos
-    // tartalék nézetet rajzolunk (fejléc + üzenet + ha lehet, a mai pár), nem hagyjuk üresen a hőst.
     function renderUI() {
-        try {
-            renderUICore();
-        } catch (e) {
-            console.warn("renderUI hiba — tartalék nézet:", e && e.message);
-            try {
-                const hero = document.getElementById('heroContainer');
-                const headerHTML = `<div class="header-pill" onclick="openAdmin()">C MŰSZAK BEOSZTÁS</div>`;
-                let pairLine = '';
-                try {
-                    const tKey = getDateKey(getLogicalToday());
-                    const w = computedSchedule[tKey];
-                    if (w && w[0] && w[0] !== "-" && w[1] && w[1] !== "-") {
-                        pairLine = `<div class="pill-container" style="margin-top:14px;">
-                            <div class="worker-pill"><span class="worker-name">${w[0]}</span></div>
-                            <span class="pair-separator">&amp;</span>
-                            <div class="worker-pill"><span class="worker-name">${w[1]}</span></div>
-                        </div>`;
-                    }
-                } catch (e2) {}
-                hero.innerHTML = `${headerHTML}
-                    <div class="rest-card">
-                        <div class="rest-emoji">♻️</div>
-                        <h2 class="rest-title">Mai beosztás</h2>
-                        <p class="rest-subtext">Az alkalmazás fut, az adatok szinkronizálnak. Ha a lista nem frissül, húzd le az oldalt az újratöltéshez.</p>
-                        ${pairLine}
-                    </div>`;
-            } catch (e3) {
-                console.warn("Tartalék nézet is hibázott:", e3 && e3.message);
-            }
-        }
-    }
-
-    function renderUICore() {
         const hero = document.getElementById('heroContainer');
         const list = document.getElementById('upcomingList');
         const upcomingTitle = document.getElementById('upcomingSectionTitle');
         
+        // Tisztítás
         list.innerHTML = '';
         hero.innerHTML = '';
 
@@ -1206,7 +782,7 @@
             return;
         }
         
-        upcomingTitle.style.display = ''; 
+        upcomingTitle.style.display = ''; // látszik (default)
 
         let realToday = new Date();
         let currentHours = realToday.getHours();
@@ -1219,6 +795,7 @@
         let restSubtext = "";
         let restEmoji = "😴";
 
+        // Pontos 05:59-es átállás — addig még az előző napi műszak számít
         let isDayTime = (currentHours > 5 || (currentHours === 5 && currentMins >= 59)) && currentHours < 18;
 
         if (isDayTime) {
@@ -1280,6 +857,7 @@
         let todayStr = logicalToday.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric', weekday: 'long' });
 
         if (displayStatus === "REST") {
+            // STEP 1: az eredeti rest card MINDIG elsőként megjelenik
             hero.innerHTML = `${headerHTML}
                 <div class="rest-card">
                     <div class="rest-emoji">${restEmoji}</div>
@@ -1287,6 +865,7 @@
                     <p class="rest-subtext">${restSubtext}</p>
                 </div>`;
             
+            // STEP 2: pár-kártya hozzáadása biztonságos try-catch-ben
             let pairDay = null;
             try {
                 let pairDayLabel = '';
@@ -1374,6 +953,7 @@
             return;
         }
 
+        // ACTIVE műszak
         let dateKey = getDateKey(logicalToday);
         let workers = ["-", "-"];
         
@@ -1530,9 +1110,6 @@
         if (!sysSettings.roster) sysSettings.roster = [];
         const year = new Date().getFullYear();
         const yearEnd = new Date(year, 11, 31);
-        const todayKey = getDateKey(getLogicalToday()); 
-        
-        let todayCarriers = sysSettings.roster.filter(n => workerStats[n] && workerStats[n].lastDate === todayKey);
         
         sysSettings.roster.forEach((name, i) => {
             const ws = workerStats[name] || { carries: 0, lastDate: null, joinDate: null };
@@ -1541,10 +1118,9 @@
             const carries = ws.carries || 0;
             const expected = getExpectedCarriesForWorker(name, yearEnd);
             const remaining = Math.max(0, Math.round(expected - carries));
-            const isTodayCarrier = (ws.lastDate === todayKey); 
             
             html += `
-            <div class="admin-list-item" ${isTodayCarrier ? 'style="background: rgba(6, 182, 212, 0.08);"' : ''}>
+            <div class="admin-list-item">
                 <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px;">
                     <div style="display:flex; align-items:center; background: rgba(139, 92, 246, 0.15); border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3);">
                         <button class="btn-action" style="border-radius:0; padding: 4px 8px; font-weight:bold; background: transparent; color: white;" onclick="adjustCarries('${name}', -1)">−</button>
@@ -1560,10 +1136,7 @@
                         </div>
                     </div>
                 </div>
-                <div style="display:flex; gap:5px; align-items:center;">
-                    <button class="btn-action" title="${isTodayCarrier ? 'Ma mégsem ő viszi' : 'Ma ő viszi'}" 
-                        style="${isTodayCarrier ? 'background: var(--accent); color: #000;' : ''} font-size: 1rem; min-width: 36px;"
-                        onclick="toggleCarrierToday('${name}')">📍</button>
+                <div style="display:flex; gap:5px;">
                     <button class="btn-action" title="Fel" onclick="moveWorker(${i}, -1)">▲</button>
                     <button class="btn-action" title="Le" onclick="moveWorker(${i}, 1)">▼</button>
                     <button class="btn-action btn-delete" title="Törlés" onclick="removeWorker(${i})">✖</button>
@@ -1571,17 +1144,6 @@
             </div>`;
         });
         document.getElementById('adminRosterList').innerHTML = html || "<div style='padding:15px; color:var(--text-dim); text-align:center;'>Nincs aktív dolgozó</div>";
-        
-        const summaryEl = document.getElementById('todayCarrierSummary');
-        if (summaryEl) {
-            if (todayCarriers.length === 0) {
-                summaryEl.innerHTML = '';
-            } else {
-                let warnColor = todayCarriers.length === 2 ? 'var(--success)' : 'var(--warning)';
-                let warnText = todayCarriers.length === 2 ? '' : ` ⚠️ (a pár pontosan 2 fő legyen!)`;
-                summaryEl.innerHTML = `<div style="background: rgba(6,182,212,0.08); border: 1px solid rgba(6,182,212,0.2); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; font-size: 0.78rem; color: ${warnColor}; text-align: center;">📍 Ma viszi: <strong>${todayCarriers.join(' & ')}</strong>${warnText}</div>`;
-            }
-        }
     }
     
     function renderAdminTeamSummary() {
@@ -1658,7 +1220,7 @@
         sysSettings.roster.push(name);
         
         if (!workerStats[name]) {
-            db.ref(`workerStats/${fbKey(name)}`).set({
+            db.ref(`workerStats/${name}`).set({
                 carries: 0,
                 lastDate: null,
                 joinDate: todayKey
@@ -1682,47 +1244,32 @@
                 }
                 
                 const todayKey = getDateKey(new Date());
-                const logicalTodayKey = getDateKey(getLogicalToday()); 
+                const updates = {};
                 
+                // PATH-szerű írás: egyenként workerStats node alá, így átmegy
+                // a Firebase security rules-on. A teljes-node csere validációs hibát adhat.
+                sysSettings.roster.forEach(name => {
+                    updates[`workerStats/${name}/carries`] = 0;
+                    updates[`workerStats/${name}/lastDate`] = null;
+                    updates[`workerStats/${name}/joinDate`] = todayKey;
+                });
+                updates['pairHistory'] = null;
+                updates['absences'] = null;
+                
+                // Optimista UI: lokálisan azonnal nullázunk, ne várjunk a felhőre
                 sysSettings.roster.forEach(name => {
                     workerStats[name] = { carries: 0, lastDate: null, joinDate: todayKey };
                 });
                 pairHistory = {};
                 absences = {};
-                recordedDays = { [logicalTodayKey]: true };
                 maybeRender();
-                if (document.getElementById('adminPanel').style.display === 'block') {
-                    renderAdminRoster();
-                    renderAdminTeamSummary();
-                }
                 showToast("✅ Pontok újranullázva mindenkinek!", 'success');
                 
-                const ops = [];
-                sysSettings.roster.forEach(name => {
-                    ops.push(
-                        db.ref('workerStats/' + fbKey(name)).set({
-                            carries: 0,
-                            lastDate: null,
-                            joinDate: todayKey
-                        })
-                    );
-                });
-                ops.push(db.ref('pairHistory').set(null));
-                ops.push(db.ref('absences').set(null));
-                ops.push(db.ref('recordedDays').set({ [logicalTodayKey]: true }));
-                
-                Promise.all(ops).then(() => {
-                    showToast("✅ Felhőbe mentve a nullázás!", 'success');
-                }).catch(err => {
+                db.ref().update(updates).catch(err => {
                     showToast("❌ Firebase hiba: " + err.message, 'error');
                     statsRef.once('value').then(snap => {
-                        _rawWorkerStats = snap.val() || {};
-                        remapFromFirebase();
+                        workerStats = snap.val() || {};
                         maybeRender();
-                        if (document.getElementById('adminPanel').style.display === 'block') {
-                            renderAdminRoster();
-                            renderAdminTeamSummary();
-                        }
                     });
                 });
             },
@@ -1744,6 +1291,5 @@
         });
     };
 </script>
-
-
-</body></html>
+</body>
+</html>
