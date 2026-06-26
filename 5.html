@@ -75,7 +75,7 @@
                 window.stencilData.push({ id: doc.id, ...doc.data() });
             });
             updateLastModifiedDisplay();
-            if(window.isAdmin) { renderUI(); } else { clearPublicSearch(); }
+            if(window.isAdmin) { renderUI(); if (typeof window.autoMergeBarcodes === 'function') window.autoMergeBarcodes(); } else { clearPublicSearch(); }
         }, (error) => {
             const el = document.getElementById('connectionStatusText');
             const dot = document.getElementById('connectionDot');
@@ -108,6 +108,7 @@
                 document.getElementById('publicSearchPanel').style.display = 'none';
                 renderUI();
                 showToast("Sikeres belépés: Admin mód aktív");
+                if (typeof window.autoMergeBarcodes === 'function') window.autoMergeBarcodes();
             } else {
                 window.isAdmin = false;
                 loginBtn.style.display = 'flex'; 
@@ -152,6 +153,17 @@
             } catch (e) { alert("Hiba a mentés során: " + e.message); }
         };
 
+        // Csendes mentés (nincs toast / modal-zárás) — az automatikus vonalkód-összefésüléshez
+        window.saveToFirebaseQuiet = async (dataObj) => {
+            const currentUser = auth.currentUser;
+            const uploadData = {
+                ...dataObj,
+                updatedAt: new Date().toISOString(),
+                updatedBy: currentUser ? currentUser.email : 'Ismeretlen'
+            };
+            await setDoc(doc(db, "stencils", dataObj.maszk), uploadData);
+        };
+
         window.deleteFromFirebase = async (maszkId) => {
             try {
                 await deleteDoc(doc(db, "stencils", maszkId));
@@ -166,7 +178,7 @@
             }
             
             let csvContent = "\uFEFF";
-            csvContent += "Szekrény;Polc;Stencil Szám;Modellnév;Megjegyzés;Utolsó Frissítés\n";
+            csvContent += "Szekrény;Polc;Stencil Szám;Modellnév;Panelszám;Folyamat;Munkaszám;Megjegyzés;Utolsó Frissítés\n";
             
             let sortedData = [...window.stencilData].sort((a,b) => a.szekreny.localeCompare(b.szekreny) || a.polc - b.polc);
             
@@ -175,13 +187,19 @@
                 let polc = row.polc || "";
                 let maszk = row.maszk || "";
                 let modell = row.modell || "";
+                let panelszam = row.panelszam || "";
+                let folyamat = row.folyamat || "";
+                let munkaszam = row.munkaszam || "";
                 let megjegyzes = row.megjegyzes || "";
                 let date = row.updatedAt ? new Date(row.updatedAt).toLocaleString('hu-HU') : "";
                 
                 megjegyzes = megjegyzes.replace(/;/g, ",").replace(/\n/g, " ");
                 modell = modell.replace(/;/g, ",");
+                panelszam = panelszam.replace(/;/g, ",");
+                folyamat = folyamat.replace(/;/g, ",");
+                munkaszam = munkaszam.replace(/;/g, ",");
                 
-                csvContent += `${szekreny};${polc};${maszk};${modell};${megjegyzes};${date}\n`;
+                csvContent += `${szekreny};${polc};${maszk};${modell};${panelszam};${folyamat};${munkaszam};${megjegyzes};${date}\n`;
             });
             
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -597,6 +615,59 @@
             
             .empty-slot { color: #64748b !important; font-style: italic !important; font-weight: normal !important; }
         }
+
+        /* =====================================================================
+           CIMKE NYOMTATÁS PRO  (KÜLÖNÁLLÓ a szekrény-nyomtatástól!)
+           Honeywell PC42t (203 dpi). Fizikailag ZÖLD a címkepapír -> nyomtatáskor
+           a háttér ÁTLÁTSZÓ, csak a FEKETE tartalom (szöveg + Data Matrix) nyomtatódik.
+           ===================================================================== */
+        .btn-label { color: #2dd4bf; border: 1px solid rgba(45,212,191,0.3); background: rgba(45,212,191,0.05); }
+        .btn-label:hover { background: #14b8a6; color: white; transform: translateY(-1px); }
+
+        .btn-merge { background: linear-gradient(135deg, #14b8a6, #0d9488); border: none; box-shadow: 0 4px 15px rgba(20,184,166,0.3); }
+        .btn-merge:hover { box-shadow: 0 6px 20px rgba(20,184,166,0.5); }
+
+        /* Címke modal */
+        .label-size-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 14px; }
+        .label-size-row .form-group { flex: 1; min-width: 90px; }
+        .label-preview-wrap { display: flex; justify-content: center; padding: 10px; background: repeating-conic-gradient(#0d1424 0% 25%, #111a2e 0% 50%) 50% / 16px 16px; border-radius: 10px; border: 1px solid var(--border); }
+
+        /* A tényleges címke kártya — KÉPERNYŐN zöld előnézet, NYOMTATÁSBAN átlátszó */
+        .label-card {
+            background: #aecb52;
+            color: #111111;
+            box-sizing: border-box;
+            padding: 2.6mm 3.4mm;
+            display: flex;
+            flex-direction: column;
+            font-family: Arial, 'Segoe UI', sans-serif;
+            overflow: hidden;
+        }
+        .label-card .lbl-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 3mm; }
+        .label-card .lbl-title { font-weight: 700; font-size: 8.5pt; line-height: 1.15; white-space: pre-line; }
+        .label-card .lbl-maszk-big { font-weight: 800; font-size: 21pt; line-height: 1; text-align: right; }
+        .label-card .lbl-fields { margin-top: 2mm; display: grid; grid-template-columns: auto 1fr; row-gap: 0.5mm; column-gap: 3mm; font-size: 8pt; align-content: start; }
+        .label-card .lbl-fields .k { font-style: italic; white-space: nowrap; }
+        .label-card .lbl-fields .v { font-weight: 600; word-break: break-word; }
+        .label-card .lbl-bottom { margin-top: auto; display: flex; justify-content: space-between; align-items: flex-end; gap: 3mm; padding-top: 1.5mm; }
+        .label-card .lbl-dm { flex-shrink: 0; }
+        .label-card .lbl-dm svg { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+        .label-card .lbl-polc { font-weight: 800; font-size: 15pt; white-space: nowrap; }
+
+        /* Címke NYOMTATÁS — újrahasznosítja a meglévő #printArea gépezetet,
+           de body.label-mode esetén más oldalméret + átlátszó háttér. */
+        @media print {
+            body.label-mode #printArea {
+                padding: 0 !important;
+                background: transparent !important;
+            }
+            body.label-mode .label-card {
+                background: transparent !important;
+                color: #000000 !important;
+                box-shadow: none !important;
+            }
+            body.label-mode .label-card .lbl-dm svg path { fill: #000000 !important; }
+        }
     </style>
 </head>
 <body>
@@ -656,6 +727,7 @@
 
                 <div class="action-buttons">
                     <button class="btn btn-optimize" onclick="openOptimizeIntro()"><i class="fas fa-magic"></i> Optimalizálás</button>
+                    <button class="btn btn-merge" onclick="openMergeModal()"><i class="fas fa-link"></i> Vonalkód Import</button>
                     <button class="btn btn-outline" style="border-color: var(--success); color: var(--success);" onclick="exportToCSV()"><i class="fas fa-file-csv"></i> CSV Export</button>
                     <button class="btn btn-primary" onclick="openModal()"><i class="fas fa-plus"></i> Új Stencil</button>
                     <button class="btn btn-print" onclick="openPrintModal()"><i class="fas fa-print"></i> Nyomtatás</button>
@@ -729,12 +801,34 @@
                 <input type="hidden" id="editOriginalId">
                 <div class="form-group">
                     <label>Stencil / Maszk</label>
-                    <input type="text" id="editId" class="form-control" placeholder="Azonosító (pl. M1059)" autocomplete="off">
+                    <input type="text" id="editId" class="form-control" placeholder="Azonosító (pl. M1059)" autocomplete="off" oninput="autofillBarcodeFields()">
                 </div>
                 <div class="form-group">
                     <label>Modellnév</label>
                     <input type="text" id="editModel" class="form-control" placeholder="Opcionális (pl. Tosca)" autocomplete="off">
                 </div>
+
+                <div style="margin-top:4px; padding-top:10px; border-top:1px dashed #334155; font-size:11px; color:#2dd4bf; text-transform:uppercase; letter-spacing:1px; font-weight:bold;">
+                    <i class="fas fa-tag"></i> Címke adatok (vonalkódhoz)
+                </div>
+                <div class="form-group">
+                    <label>Panelszám</label>
+                    <input type="text" id="editPanel" class="form-control" placeholder="pl. CPPCB00166C" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>Folyamat</label>
+                    <select id="editFolyamat" class="form-control">
+                        <option value="">— Nincs megadva —</option>
+                        <option value="Top">Top</option>
+                        <option value="Bot">Bot</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Munkaszám</label>
+                    <input type="text" id="editMunka" class="form-control" placeholder="pl. CKHU#2028080" autocomplete="off">
+                </div>
+                <div style="padding-bottom:6px; border-bottom:1px dashed #334155;"></div>
+
                 <div class="form-group">
                     <label>Megjegyzés</label>
                     <input type="text" id="editNote" class="form-control" placeholder="Fontos infó, állapot (opcionális)" autocomplete="off">
@@ -754,6 +848,7 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeModal('addModal')">Mégse</button>
+                <button class="btn" style="background:#14b8a6; border:none; color:white;" onclick="printLabelFromEditModal()"><i class="fas fa-tag"></i> Címke</button>
                 <button class="btn btn-primary" onclick="requestSave()"><i class="fas fa-save"></i> Adatok Mentése</button>
             </div>
         </div>
@@ -909,6 +1004,72 @@
         <div class="opt-progress-detail" id="optProgressDetail">Az adatbázis frissítése. Kérlek várj.</div>
         <div class="opt-progress-bar-wrap">
             <div class="opt-progress-bar" id="optProgressBar"></div>
+        </div>
+    </div>
+
+    <!-- ===================== ÚJ: CÍMKE NYOMTATÁS MODAL ===================== -->
+    <div class="modal-overlay" id="labelModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header" style="border-bottom-color: #14b8a6;">
+                <span style="color: #2dd4bf;"><i class="fas fa-tag"></i> Stencil Címke Nyomtatás</span>
+                <button class="modal-close" onclick="closeModal('labelModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="label-size-row">
+                    <div class="form-group">
+                        <label>Címke szélesség (mm)</label>
+                        <input type="number" id="labelW" class="form-control" value="65" min="10" max="120" step="0.5" oninput="refreshLabelPreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>Címke magasság (mm)</label>
+                        <input type="number" id="labelH" class="form-control" value="50" min="10" max="120" step="0.5" oninput="refreshLabelPreview()">
+                    </div>
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px; line-height:1.5;">
+                    <i class="fas fa-info-circle"></i> Méret már beállítva: <strong>65 × 50 mm (fekvő)</strong> — a BarTender címke mérete. A <span style="color:#aecb52;">zöld</span> a fizikai papír színe, nyomtatáskor csak a <strong>fekete</strong> tartalom megy ki. Ha kell, itt finomhangolhatod, és megjegyződik.
+                </div>
+                <div class="label-preview-wrap">
+                    <div id="labelPreviewHost"></div>
+                </div>
+                <div id="labelWarn" style="display:none; margin-top: 12px;" class="opt-warning-banner">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div id="labelWarnText"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('labelModal')">Mégse</button>
+                <button class="btn" style="background:#14b8a6; border:none; color:white;" onclick="doLabelPrint()"><i class="fas fa-print"></i> Nyomtatás (PC42t)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== ÚJ: VONALKÓD ÖSSZEFÉSÜLÉS MODAL ===================== -->
+    <div class="modal-overlay" id="mergeModal">
+        <div class="modal-content opt-modal-wide">
+            <div class="modal-header" style="border-bottom-color: #14b8a6;">
+                <span style="color: #2dd4bf;"><i class="fas fa-link"></i> Vonalkód Adatok Összefésülése</span>
+                <button class="modal-close" onclick="closeModal('mergeModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="opt-intro" style="background: linear-gradient(135deg, rgba(20,184,166,0.08), rgba(13,148,136,0.04)); border-color: rgba(20,184,166,0.2);">
+                    <strong style="color:#2dd4bf;"><i class="fas fa-info-circle"></i> Mit csinál?</strong><br>
+                    A beépített Excel-vonalkód adatbázist (Panelszám / Folyamat / Munkaszám) <strong>összefésüli</strong> a saját stencil adataiddal, a <strong>maszk szám alapján</strong>.
+                    <ul>
+                        <li>🛡️ Csak az <strong>üres</strong> címke-mezőket tölti ki — a meglévő adataidat (szekrény, polc, modell, megjegyzés, már kitöltött vonalkód) <strong>SOHA nem írja felül</strong>.</li>
+                        <li>👁️ Előbb <strong>előnézet</strong>, és csak az "Összefésülés" gombra ír az adatbázisba.</li>
+                        <li>↩️ Mégsével nem történik semmi.</li>
+                    </ul>
+                </div>
+                <div class="opt-preview-stats" id="mergeStats"></div>
+                <div style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">
+                    <i class="fas fa-list-check"></i> Kitöltendő maszkok (<span id="mergeCount">0</span> db):
+                </div>
+                <div class="opt-movement-list" id="mergeList"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('mergeModal')"><i class="fas fa-arrow-left"></i> Mégse</button>
+                <button class="btn" id="mergeApplyBtn" style="background: linear-gradient(135deg, #14b8a6, #0d9488); border:none; color:white;" onclick="confirmApplyMerge()"><i class="fas fa-check"></i> Összefésülés Végrehajtása</button>
+            </div>
         </div>
     </div>
 
@@ -1113,6 +1274,7 @@
                             <td>${item.modell ? `<span class="model-text-table">${item.modell}</span>` : '-'}</td>
                             <td style="text-align: center;">${noteHtml}</td>
                             <td style="text-align: right;">
+                                <button class="btn-icon btn-label" onclick="openLabelModal('${item.maszk}')" title="Címke nyomtatás"><i class="fas fa-tag"></i></button>
                                 <button class="btn-icon btn-edit" onclick="openModal('${item.maszk}')"><i class="fas fa-pencil-alt"></i></button>
                                 <button class="btn-icon btn-delete" onclick="confirmDelete('${item.maszk}')"><i class="fas fa-trash"></i></button>
                             </td>
@@ -1169,6 +1331,9 @@
             document.getElementById('editOriginalId').value = item.maszk;
             document.getElementById('editId').value = item.maszk;
             document.getElementById('editModel').value = item.modell || "";
+            document.getElementById('editPanel').value = item.panelszam || "";
+            document.getElementById('editFolyamat').value = item.folyamat || "";
+            document.getElementById('editMunka').value = item.munkaszam || "";
             document.getElementById('editNote').value = item.megjegyzes || "";
             document.getElementById('editCabinet').value = item.szekreny;
             document.getElementById('editShelf').value = item.polc;
@@ -1177,6 +1342,9 @@
             document.getElementById('editOriginalId').value = '';
             document.getElementById('editId').value = '';
             document.getElementById('editModel').value = '';
+            document.getElementById('editPanel').value = '';
+            document.getElementById('editFolyamat').value = '';
+            document.getElementById('editMunka').value = '';
             document.getElementById('editNote').value = '';
             document.getElementById('editCabinet').value = prefillCabinet;
             document.getElementById('editShelf').value = prefillShelf;
@@ -1203,6 +1371,9 @@
         const originalMaszkId = document.getElementById('editOriginalId').value;
         const maszk = document.getElementById('editId').value.trim().toUpperCase();
         const modell = document.getElementById('editModel').value.trim();
+        const panelszam = document.getElementById('editPanel').value.trim();
+        const folyamat = document.getElementById('editFolyamat').value.trim();
+        const munkaszam = document.getElementById('editMunka').value.trim();
         const megjegyzes = document.getElementById('editNote').value.trim();
         const szekreny = document.getElementById('editCabinet').value;
         const polc = parseInt(document.getElementById('editShelf').value);
@@ -1221,16 +1392,16 @@
                 async () => {
                     await window.deleteFromFirebase(existingOnShelf.maszk);
                     if (originalMaszkId && originalMaszkId !== maszk) await window.deleteFromFirebase(originalMaszkId);
-                    window.saveToFirebase({ maszk, modell, megjegyzes, szekreny, polc });
+                    window.saveToFirebase({ maszk, modell, panelszam, folyamat, munkaszam, megjegyzes, szekreny, polc });
                 }
             );
         } else {
             if (originalMaszkId && originalMaszkId !== maszk) {
                 window.deleteFromFirebase(originalMaszkId).then(() => {
-                    window.saveToFirebase({ maszk, modell, megjegyzes, szekreny, polc });
+                    window.saveToFirebase({ maszk, modell, panelszam, folyamat, munkaszam, megjegyzes, szekreny, polc });
                 });
             } else {
-                window.saveToFirebase({ maszk, modell, megjegyzes, szekreny, polc });
+                window.saveToFirebase({ maszk, modell, panelszam, folyamat, munkaszam, megjegyzes, szekreny, polc });
             }
         }
     }
@@ -1618,6 +1789,9 @@
                     await window.saveToFirebase({
                         maszk: mv.maszk,
                         modell: origItem.modell || '',
+                        panelszam: origItem.panelszam || '',
+                        folyamat: origItem.folyamat || '',
+                        munkaszam: origItem.munkaszam || '',
                         megjegyzes: origItem.megjegyzes || '',
                         szekreny: mv.to.szekreny,
                         polc: mv.to.polc
@@ -1717,6 +1891,342 @@
         }, 300);
     };
 
+</script>
+
+<script>
+/* ===== Data Matrix ECC200 kódoló — datalog/datamatrix-svg (MIT), offline beágyazva ===== */
+/** https://github.com/datalog/datamatrix-svg under MIT license */
+'use strict';function DATAMatrix(r){var e=[],n=0,t=0,f=function(r,n){e[n]=e[n]||[],e[n][r]=1},o=function(r){for(var e=[],n=r.length,t=0;t<n;t++){var f=r.charCodeAt(t),o=t+1<n?r.charCodeAt(t+1):0;f>47&&f<58&&o>47&&o<58?(e.push(10*(f-48)+o+82),t++):f>127?(e.push(235),e.push(f-127&255)):e.push(f+1)}return e},h=function(r,e){var n,t,f=0,h=0,i=r.length,u=[e[0]],a=function(r){h=40*h+r,2==f++&&(u.push(++h>>8),u.push(255&h),f=h=0)};for(n=0;n<i&&(0!=f||n!=i-1);n++){var s=r.charCodeAt(n);for(s>127&&238!=u[0]&&(a(1),a(30),s-=128),t=1;s>e[t];t+=3);var l=e[t+1];if(8==l||9==l&&0==f&&n==i-1)return[];if(l<5&&2==f&&n==i-1)break;l<5&&a(l),a(s-e[t+2])}return 2==f&&238!==u[0]&&a(0),u.push(254),(f>0||n<i)&&(u=u.concat(o(r.substr(n-f)))),u},i=function(r,e){r=unescape(encodeURI(r));var i=o(r),u=i.length,a=h(r,[230,31,0,0,32,9,29,47,1,33,57,9,44,64,1,43,90,9,51,95,1,69,127,2,96,255,1,0]),s=a.length;s>0&&s<u&&(i=a,u=s),(s=(a=h(r,[239,31,0,0,32,9,29,47,1,33,57,9,44,64,1,43,90,2,64,95,1,69,122,9,83,127,2,96,255,1,0])).length)>0&&s<u&&(i=a,u=s),(s=(a=h(r,[238,12,8,0,13,9,13,31,8,0,32,9,29,41,8,0,42,9,41,47,8,0,57,9,44,64,8,0,90,9,51,255,8,0])).length)>0&&s<u&&(i=a,u=s),(s=(a=function(r){for(var e,n=r.length,t=n+1&-4,f=0,h=t>0?[240]:[],i=0;i<t;i++){if(i<t-1){if((e=r.charCodeAt(i))<32||e>94)return[]}else e=31;f=64*f+(63&e),3==(3&i)&&(h.push(f>>16),h.push(f>>8&255),h.push(255&f),f=0)}return t>n?h:h.concat(o(r.substr(0==t?0:t-1)))}(r)).length)>0&&s<u&&(i=a,u=s),(s=(a=function(r){var e=[231],n=r.length;250<n&&e.push(37+(n/250|0)&255),e.push(n%250+149*(e.length+1)%255+1&255);for(var t=0;t<n;t++)e.push(r.charCodeAt(t)+149*(e.length+1)%255+1&255);return e}(r)).length)>0&&s<u&&(i=a,u=s);var l,c,p,v,g,d,w,A,m=1,C=1,b=-1,y=1,M=new Array(70),x=new Array(70),z=new Array(256),E=new Array(255);if(e&&u<50){a=[16,7,28,11,24,14,32,18,32,24,44,28];do{s=(c=a[++b])*(l=6+(12&b))/8}while(s-a[++b]<u);c>25&&(m=2)}else{c=l=6,g=2,a=[5,7,10,12,14,18,20,24,28,36,42,48,56,68,84,112,144,192,224,272,336,408,496,620];do{if(++b==a.length)return[0,0];c>11*g&&(g=4+g&12),s=(c=l+=g)*l>>3}while(s-a[b]<u);c>27&&(C=m=2*(c/54|0)+2),s>255&&(y=2*(s>>9)+2)}for(p=c/m,v=l/C,u<s-(A=a[b])&&(i[u++]=129);u<s-A;)i[u++]=(149*u%253+130)%254;for(A/=y,b=1,g=0;g<255;g++)E[g]=b,z[b]=g,(b+=b)>255&&(b^=301);for(M[A]=0,g=1;g<=A;g++)for(M[b=A-g]=1;b<A;b++)M[b]=M[b+1]^E[(z[M[b]]+g)%255];for(d=0;d<y;d++){for(g=0;g<=A;g++)x[g]=0;for(g=d;g<u;g+=y)for(b=0,j=x[0]^i[g];b<A;b++)x[b]=x[b+1]^(j?E[(z[M[b]]+z[j])%255]:0);for(g=0;g<A;g++)i[u+d+g*y]=x[g]}for(g=0;g<l+2*C;g+=v+2)for(b=0;b<c+2*m;b++)f(b,g+v+1),0==(1&b)&&f(b,g);for(g=0;g<c+2*m;g+=p+2)for(b=0;b<l;b++)f(g,b+2*(b/v|0)+1),1==(1&b)&&f(g+p+1,b+2*(b/v|0));for(A=2,d=0,w=4,y=[0,0,-1,0,-2,0,0,-1,-1,-1,-2,-1,-1,-2,-2,-2],g=0;g<s;w-=A,d+=A){if(w==l-3&&-1==d)a=[c,6-l,c,5-l,c,4-l,c,3-l,c-1,3-l,3,2,2,2,1,2];else if(w==l+1&&1==d&&0==(7&c)&&6==(7&l))a=[c-2,-l,c-3,-l,c-4,-l,c-2,-1-l,c-3,-1-l,c-4,-1-l,c-2,-2,-1,-2];else{if(0==w&&d==c-2&&3&c)continue;if(w<0||d>=c||w>=l||d<0)for(w+=2+(A=-A)/2,d+=2-A/2;w<0||d>=c||w>=l||d<0;)w-=A,d+=A;if(w==l-2&&0==d&&3&c)a=[c-1,3-l,c-1,2-l,c-2,2-l,c-3,2-l,c-4,2-l,0,1,0,0,0,-1];else if(w==l-2&&0==d&&4==(7&c))a=[c-1,5-l,c-1,4-l,c-1,3-l,c-1,2-l,c-2,2-l,0,1,0,0,0,-1];else{if(1==w&&d==c-1&&0==(7&c)&&6==(7&l))continue;a=y}}for(u=i[g++],b=0;u>0;b+=2,u>>=1)if(1&u){var j=d+a[b],k=w+a[b+1];j<0&&(j+=c,k+=4-(c+4&7)),k<0&&(k+=l,j+=4-(l+4&7)),f(j+2*(j/p|0)+1,k+2*(k/v|0)+1)}}for(g=c;3&g;g--)f(g,g);n=c+2*m,t=l+2*C};return function(){function f(r){return/^#[0-9a-f]{3}(?:[0-9a-f]{3})?$/i.test(r)}function o(r,e){for(var n in r=document.createElementNS(g,r),e||{})r.setAttribute(n,e[n]);return r}var h,u,a,s,l,c,p,v=Math.abs,g="http://www.w3.org/2000/svg",d="",w="string"==typeof r?{msg:r}:r||{},A=w.pal||["#000"],m=v(w.dim)||256,C=[1,0,0,1,p=(p=v(w.pad))>-1?p:2,p],b=f(b=A[0])?b:"#000",y=f(y=A[1])?y:0,M=w.vrb?0:1;for(i(w.msg||"",w.rct),l=n+2*p,c=t+2*p,a=t;a--;)for(s=0,u=n;u--;)e[a][u]&&(M?(s++,e[a][u-1]||(d+="M"+u+","+a+"h"+s+"v1h-"+s+"v-1z",s=0)):d+="M"+u+","+a+"h1v1h-1v-1z");return h=o("svg",{viewBox:[0,0,l,c].join(" "),width:m/c*l|0,height:m,fill:b,"shape-rendering":"crispEdges",xmlns:g,version:"1.1"}),y&&h.appendChild(o("path",{fill:y,d:"M0,0v"+c+"h"+l+"V0H0Z"})),h.appendChild(o("path",{transform:"matrix("+C+")",d:d})),h}()}
+
+/* ===== Beépített vonalkód adatbázis: 586 maszk (Excel StencilBarcodeDb összefésülve) ===== */
+window.barcodeMasterDb = {"M0171":{"f":"Top","m":"M17506","p":"17D770-0720"},"M0225":{"f":"Top","m":"599-2690-00","p":"039-2844-20"},"M0227":{"f":"Bot","m":"599-2689-10","p":"039-2843-10"},"M0232":{"f":"Bot","m":"599-2801-00","p":"039-2924-01"},"M0250":{"f":"Bot","m":"599-2885-01","p":"039-2974-00"},"M0251":{"f":"Top","m":"599-2887-00","p":"039-2975-00"},"M0254":{"f":"Bot","m":"599-2886-00","p":"039-2975-00"},"M0263":{"f":"Top","m":"599-2884-00","p":"039-2974-00"},"M0287":{"f":"Top","m":"599-2690-00","p":"039-2844-20"},"M0292":{"f":"Bot","m":"599-2691-02","p":"039-2844-20"},"M0293":{"f":"Bot","m":"599-2803-01","p":"039-2924-01"},"M0295":{"f":"Bot","m":"599-2801-00","p":"039-2924-01"},"M0296":{"f":"Top","m":"599-2800-01","p":"039-2924-01"},"M0297":{"f":"Bot","m":"599-2689-10","p":"039-2843-10"},"M0298":{"f":"Top","m":"599-2688-10","p":"039-2843-10"},"M0310":{"f":"Bot","m":"599-3113-00","p":"039-3125-00"},"M0329":{"f":"Top","m":"599-2690-00","p":"039-2844-20"},"M0330":{"f":"Bot","m":"599-2689-10","p":"039-2843-10"},"M0331":{"f":"Bot","m":"599-2689-10","p":"039-2843-10"},"M0349":{"f":"Top","m":"599-3264-00","p":"039-3250-00"},"M0350":{"f":"Bot","m":"599-3265-00","p":"039-3250-00"},"M0356":{"f":"Top","m":"599-3304-00","p":"039-3279-00"},"M0357":{"f":"Bot","m":"599-3305-00","p":"039-3279-00"},"M0387":{"f":"Top","m":"599-3264-00","p":"039-3250-00"},"M0388":{"f":"Bot","m":"599-3265-00","p":"039-3250-00"},"M0427":{"f":"Top","m":"G29441A7702003","p":"248W900A1A"},"M0432":{"f":"Top","m":"599-2802-00","p":"039-2925-01"},"M0433":{"f":"Bot","m":"599-3113-00","p":"039-3125-00"},"M0435":{"f":"Bot","m":"599-2885-01","p":"039-2974-00"},"M0454":{"f":"Bot","m":"599-2803-02","p":"039-2925-01"},"M0455":{"f":"Top","m":"599-2459-80","p":"039-2689-00"},"M0458":{"f":"Top","m":"G29441011847WA0","p":"248W900A1C"},"M0462":{"f":"Top","m":"G29441A77H8000","p":"248W900A1B"},"M0463":{"f":"Top","m":"599-3112-00","p":"039-3125-00"},"M0465":{"f":"Bot","m":"599-3629-00","p":"039-3474-10"},"M0467":{"f":"Top","m":"599-3628-00","p":"039-3474-10"},"M0470":{"f":"Top","m":"G29441A7702003","p":"248W900A1A"},"M0471":{"f":"Bot","m":"599-2803-02","p":"039-2925-01"},"M0472":{"f":"Top","m":"599-2802-00","p":"039-2925-01"},"M0477":{"f":"Top","m":"599-3112-00","p":"039-3125-00"},"M0478":{"f":"Bot","m":"599-3113-00","p":"039-3125-00"},"M0479":{"f":"Bot","m":"599-3113-00","p":"039-3125-00"},"M0483":{"f":"Top","m":"M53552","p":"75E340-0071"},"M0484":{"f":"Bot","m":"M53553","p":"75E340-0071"},"M0485":{"f":"Bot","m":"M53551","p":"75E340-0121"},"M0488":{"f":"Top","m":"599-3624-00","p":"039-3472-10"},"M0489":{"f":"Bot","m":"599-3625-00","p":"039-3472-10"},"M0490":{"f":"Top","m":"599-2459-80","p":"039-2689-00"},"M0505":{"f":"Top","m":"599-3112-00","p":"039-3125-00"},"M0506":{"f":"Bot","m":"599-3113-00","p":"039-3125-00"},"M0507":{"f":"Top","m":"599-1392-92","p":"039-3883-00"},"M0509":{"f":"Top","m":"599-3112-00","p":"039-3125-00"},"M0510":{"f":"Bot","m":"599-3113-00","p":"039-3125-00"},"M0512":{"f":"Top","m":"599-3624-00","p":"039-3472-10"},"M0513":{"f":"Bot","m":"599-3625-00","p":"039-3472-10"},"M0517":{"f":"Top","m":"M60798","p":"10019-17726"},"M0518":{"f":"Top","m":"M60800","p":"10088-17726A"},"M0519":{"f":"Top","m":"M60799","p":"10188-17726A"},"M0532":{"f":"Top","m":"598-0494-00A","p":"039-3919-00A"},"M0533":{"f":"Top","m":"598-0495-00A","p":"039-3920-00A"},"M0534":{"f":"Bot","m":"598-0496-00A","p":"039-3920-00A"},"M0537":{"f":"Top","m":"598-0374-00","p":"039-3847-00"},"M0538":{"f":"Bot","m":"598-0375-00","p":"039-3847-00"},"M0541":{"f":"Top","m":"LT01809","p":"A1098-022-01"},"M0542":{"f":"Bot","m":"LT01810","p":"A1098-022-01"},"M0543":{"f":"Top","m":"LT01811","p":"A6043-690-02"},"M0544":{"f":"Bot","m":"LT01643","p":"A6043-690-02"},"M0545":{"f":"Top","m":"M56727","p":"10048-17685A"},"M0546":{"f":"Top","m":"M58103","p":"10148-17685A"},"M0547":{"f":"Top","m":"M59417","p":"10058-17687A"},"M0548":{"f":"Top","m":"M59418","p":"10158-17687A"},"M0549":{"f":"Top","m":"M59415","p":"10039-17687B"},"M0550":{"f":"Top","m":"M59416","p":"10139-17687B"},"M0551":{"f":"Top","m":"M59413","p":"20649-17602A"},"M0552":{"f":"Top","m":"M59414","p":"20749-17602A"},"M0556":{"f":"Top","m":"M56729","p":"10019-17687"},"M0557":{"f":"Top","m":"M56728","p":"10049-17685"},"M0563":{"f":"Top","m":"599-3624-00","p":"039-3472-10"},"M0565":{"f":"Top","m":"599-1377-31","p":"039-1751-44"},"M0566":{"f":"Top","m":"599-1859-00","p":"039-1805-02"},"M0567":{"f":"Top","m":"598-0877-00","p":"039-3802-00"},"M0570":{"f":"Top","m":"M53550-1","p":"75E340-0121"},"M0572":{"f":"Top","m":"598-0514-00","p":"039-3938-00"},"M0573":{"f":"Bot","m":"598-0515-00","p":"039-3938-00"},"M0574":{"f":"Bot","m":"598-0494-00","p":"039-3919-01"},"M0575":{"f":"Top","m":"598-0495-00","p":"039-3920-00"},"M0576":{"f":"Top","m":"598-0496-00","p":"039-3919-01"},"M0581":{"f":"Top","m":"TLSA50604","p":"489168-0042"},"M0583":{"f":"Top","m":"TLS50550","p":"039-2047-02"},"M0584":{"f":"Top","m":"TLSA50605","p":"489179-0040"},"M0585":{"f":"Top","m":"TLSA50606","p":"489181-0040"},"M0586":{"f":"Bot","m":"TLSB50605","p":"489179-0040"},"M0587":{"f":"Bot","m":"TLSB50606","p":"489181-0040"},"M0588":{"f":"Top","m":"598-0372-01","p":"039-3838-02"},"M0589":{"f":"Bot","m":"598-0373-01","p":"039-3838-02"},"M0594":{"f":"Top","m":"598086300","p":"039-4136-00"},"M0595":{"f":"Bot","m":"598086400","p":"039-4136-00"},"M0596":{"f":"Bot","m":"TLS50954","p":"039-3897-00"},"M0598":{"f":"Top","m":"TLS50956","p":"039-3746-00"},"M0599":{"f":"Bot","m":"TLS50957","p":"039-3745-00"},"M0600":{"f":"Top","m":"TLS50958","p":"039-3745-00"},"M0601":{"f":"Bot","m":"TLS51010","p":"489168-0042"},"M0602":{"f":"Top","m":"M59413-1","p":"20649-17602A"},"M0603":{"f":"Top","m":"M59414-1","p":"20749-17602A"},"M0607":{"f":"Top","m":"G29441A27J0002","p":"248W9BH00A(--A)"},"M0610":{"f":"Top","m":"12-11-28","p":"039-4289-00"},"M0611":{"f":"Top","m":"12-11-28","p":"039-4290-00"},"M0612":{"f":"Bot","m":"12-11-28","p":"039-4290-00"},"M0613":{"f":"Top","m":"248W600B31","p":"248W900B31(--B)"},"M0614":{"f":"Bot","m":"248W900B311","p":"248W900B31(--B)"},"M0616":{"f":"Bot","m":"TLS51569","p":"039-3759-01"},"M0617":{"f":"Top","m":"TLS51596","p":"039-3759-01"},"M0618":{"f":"Top","m":"TLS51623","p":"2161840-8D"},"M0619":{"f":"Top","m":"TLS51624","p":"2162994-9B"},"M0620":{"f":"Top","m":"TLS51625","p":"2163995-2D"},"M0621":{"f":"Bot","m":"598-0878-00","p":"039-3802-00"},"M0631":{"f":"Top","m":"TLS61088","p":"35550-18015B"},"M0632":{"f":"Top","m":"TLS61296","p":"039-3897-00"},"M0635":{"f":"Bot","m":"TLS51569","p":"039-3759-01"},"M0636":{"f":"Top","m":"TLS51596","p":"039-3759-01"},"M0637":{"f":"Top","m":"LT3967","p":"A1216-567-00"},"M0638":{"f":"Bot","m":"LT3968","p":"A1216-567-00"},"M0639":{"f":"Top","m":"LT3969","p":"A5586-428-00"},"M0640":{"f":"Bot","m":"LT3970","p":"A5586-428-00"},"M0641":{"f":"Top","m":"TLS61806","p":"10119-18013-26A"},"M0642":{"f":"Top","m":"TLS61807","p":"10019-18013-26A"},"M0643":{"f":"Top","m":"TLSA62065","p":"248W93YV6A(---)"},"M0644":{"f":"Bot","m":"TLSB62065","p":"248W93YV6A(---)"},"M0645":{"f":"Top","m":"TLS62460","p":"10089-18149-26A"},"M0646":{"f":"Top","m":"TLS63470","p":"039-3897-00"},"M0650":{"f":"Top","m":"TLS61807","p":"10019-18013-26A"},"M0653":{"f":"Top","m":"TLS50958","p":"039-3745-00"},"M0654":{"f":"Top","m":"LT4839","p":"A6043-690-02"},"M0655":{"f":"Bot","m":"LT4840","p":"A6043-690-02"},"M0657":{"f":"Top","m":"598-1048-00","p":"039-4230-00"},"M0658":{"f":"Bot","m":"598-1050-00","p":"039-4230-00"},"M0659":{"f":"Top","m":"M59413","p":"20649-17602A"},"M0660":{"f":"Top","m":"M59414","p":"20749-17602A"},"M0661":{"f":"Bot","m":"599-3112-00","p":"039-3125-00"},"M0662":{"f":"Top","m":"LT5060","p":"A6043-690-02"},"M0663":{"f":"Bot","m":"LT5061","p":"A6043-690-02"},"M0664":{"f":"Top","m":"TLS61806","p":"10119-18013-26A"},"M0665":{"f":"Top","m":"TLS61807","p":"10019-18013-26A"},"M0666":{"f":"Top","m":"TLSA61089B","p":"248W91KAOC"},"M0667":{"f":"Bot","m":"TLSB61089B","p":"248W91KAOC"},"M0668":{"f":"Bot","m":"TLS51569","p":"039-3759-01"},"M0669":{"f":"Top","m":"TLS51596","p":"039-3759-01"},"M0670":{"f":"Top","m":"TLS67457","p":"039-3897-00"},"M0671":{"f":"Top","m":"598-0801-00","p":"039-4102-00"},"M0672":{"f":"Bot","m":"598-0802-00","p":"039-4102-00"},"M0673":{"f":"Top","m":"TLSA68636","p":"75J427-7020-A9"},"M0674":{"f":"Bot","m":"TLSB68636","p":"75J427-7020-A9"},"M0675":{"f":"Top","m":"TLSA68637","p":"75J517-7020-A9"},"M0676":{"f":"Bot","m":"TLSB68637","p":"75J517-7020-A9"},"M0677":{"f":"Top","m":"LT5650","p":"FPC"},"M0678":{"f":"Top","m":"LT5727","p":"10169-18444"},"M0679":{"f":"Top","m":"LT5728","p":"10069-18444"},"M0680":{"f":"Top","m":"TLS69195","p":"35550-18527"},"M0681":{"f":"Top","m":"TLS69196","p":"10129-18444"},"M0682":{"f":"Top","m":"TLS69198","p":"10082-18444"},"M0683":{"f":"Top","m":"TLS69199","p":"10029-18444"},"M0684":{"f":"Top","m":"TLS69454","p":"039-3897-00"},"M0685":{"f":"Top","m":"M56729","p":"10019-17687"},"M0686":{"f":"Top","m":"598-0801-00","p":"039-4102-00"},"M0687":{"f":"Bot","m":"598-0802-00","p":"039-4102-00"},"M0688":{"f":"Top","m":"598-1048-00","p":"039-4230-00"},"M0689":{"f":"Bot","m":"598-1050-00","p":"039-4230-00"},"M0690":{"f":"Top","m":"598-0294-02","p":"039-3759-01"},"M0691":{"f":"Bot","m":"598-0295-01","p":"039-3759-01"},"M0692":{"f":"Bot","m":"TLS50954","p":"039-3897-00"},"M0693":{"f":"Top","m":"TLS61807","p":"10019-18013-26A"},"M0694":{"f":"Top","m":"TLS61806","p":"10119-18013-26A"},"M0695":{"f":"Top","m":"TLS50958","p":"039-3745-00"},"M0696":{"f":"Bot","m":"TLS50957","p":"039-3745-00"},"M0697":{"f":"Top","m":"M56728","p":"10049-17685"},"M0698":{"f":"Top","m":"TLSA62065","p":"248W93YV6A(---)"},"M0699":{"f":"Bot","m":"TLSB62065","p":"248W93YV6A(---)"},"M0700":{"f":"Top","m":"75E340-0120-TOP","p":"75E340-0121"},"M0701":{"f":"Bot","m":"75E340-0120-BOT","p":"75E340-0121"},"M0702":{"f":"Top","m":"75E340-0070-TOP","p":"75E340-0071"},"M0703":{"f":"Bot","m":"75E340-0070-BOT","p":"75E340-0071"},"M0704":{"f":"Top","m":"LT6114","p":"10169-18444"},"M0705":{"f":"Top","m":"LT6115","p":"10069-18444"},"M0706":{"f":"Top","m":"TLS69454","p":"039-3897-00"},"M0707":{"f":"Top","m":"TLS71241","p":"10082-18444"},"M0708":{"f":"Top","m":"CK # 257710/1","p":"039-4445-02"},"M0709":{"f":"Bot","m":"CK # 257710/2","p":"039-4445-02"},"M0710":{"f":"Top","m":"CK # 257710/3","p":"039-4446-01"},"M0711":{"f":"Bot","m":"CK # 257710/4","p":"039-4446-01"},"M0712":{"f":"Top","m":"CK # 257710/5","p":"039-4569-00"},"M0713":{"f":"Bot","m":"CK # 257710/6","p":"039-4569-00"},"M0714":{"f":"Top","m":"M82951","p":"75E340-0071"},"M0715":{"f":"Top","m":"M82888","p":"75E340-0121"},"M0716":{"f":"Top","m":"TLSA71511","p":"17J189-0220"},"M0717":{"f":"Bot","m":"TLSB71511","p":"17J189-0220"},"M0718":{"f":"Top","m":"TLS71510","p":"17J189-0290"},"M0719":{"f":"Top","m":"TLS71512","p":"17J192-0340"},"M0720":{"f":"Top","m":"TLS70325","p":"35550-18527"},"M0721":{"f":"Top","m":"TLS71963","p":"35550-18527"},"M0722":{"f":"Top","m":"TLS72202","p":"17J189-0291"},"M0723":{"f":"Top","m":"TLS61806","p":"10119-18013-26A"},"M0724":{"f":"Top","m":"TLS61807","p":"10019-18013-26A"},"M0725":{"f":"Top","m":"LT6443","p":"A6043-690-02"},"M0726":{"f":"Bot","m":"LT6444","p":"A6043-690-02"},"M0727":{"f":"Top","m":"M59415","p":"10039-17687A"},"M0728":{"f":"Top","m":"M59416","p":"10139-17687A"},"M0729":{"f":"Top","m":"LT6529","p":"10069-18444"},"M0730":{"f":"Top","m":"LT6530","p":"10169-18444"},"M0731":{"f":"Top","m":"598-1309-00F","p":"039-4398-00F"},"M0732":{"f":"Bot","m":"598-1310-00F","p":"039-4398-00F"},"M0733":{"f":"Bot","m":"598-0295-01","p":"039-3759-01"},"M0734":{"f":"Top","m":"598-0294-02","p":"039-3759-01"},"M0735":{"f":"Bot","m":"598-0295-01","p":"039-3759-01"},"M0736":{"f":"Top","m":"598-0294-02","p":"039-3759-01"},"M0737":{"f":"Top","m":"TLSA74410","p":"17J189-0221"},"M0738":{"f":"Bot","m":"TLSB74410","p":"17J189-0221"},"M0739":{"f":"Top","m":"TLS74449","p":"35550-18527"},"M0740":{"f":"Top","m":"TLS61806","p":"10119-18013-26A"},"M0741":{"f":"Top","m":"TLS61807","p":"10019-18013-26A"},"M0742":{"f":"Top","m":"TLSA62065","p":"248W93YV6A(---)"},"M0743":{"f":"Bot","m":"TLSB62065","p":"248W93YV6A(---)"},"M0744":{"f":"Top","m":"TLS61088","p":"35550-18015B"},"M0745":{"f":"Top","m":"TLS74411","p":"193170-0040"},"M0746":{"f":"Top","m":"TLSA74412","p":"039-4230-00"},"M0747":{"f":"Bot","m":"TLSB74412","p":"039-4230-00"},"M0748":{"f":"Top","m":"TLS62460","p":"10089-18149-26A"},"M0749":{"f":"Bot","m":"598-0802-00","p":"039-4102-00"},"M0750":{"f":"Top","m":"598-0801-00","p":"039-4102-00"},"M0751":{"f":"Bot","m":"598-0295-01","p":"039-3759-01"},"M0752":{"f":"Top","m":"598-0294-02","p":"039-3759-01"},"M0753":{"f":"Top","m":"TLS75302","p":"35550-18527"},"M0754":{"f":"Bot","m":"TLSA69596","p":"039-3759-01"},"M0755":{"f":"Top","m":"TLSB69596","p":"039-3759-01"},"M0756":{"f":"Top","m":"TLS75396","p":"10082-18444"},"M0757":{"f":"Top","m":"LT7071","p":"A6043-690-02"},"M0758":{"f":"Bot","m":"LT7072","p":"A6043-690-02"},"M0759":{"f":"Top","m":"TLS50957","p":"039-3745-00"},"M0760":{"f":"Bot","m":"TLS50958","p":"039-3745-00"},"M0761":{"f":"Top","m":"LT7259","p":"A6043-690-02"},"M0762":{"f":"Bot","m":"LT7260","p":"A6043-690-02"},"M0763":{"f":"Top","m":"TLSA76077","p":"039-4398-00H"},"M0764":{"f":"Bot","m":"TLSB76077","p":"039-4398-00H"},"M0765":{"f":"Top","m":"TLS61806","p":"10119-18013-26A"},"M0766":{"f":"Top","m":"TLS61807","p":"10019-18013-26A"},"M0767":{"f":"Top","m":"TLS76686","p":"039-3745-00"},"M0768":{"f":"Bot","m":"TLS76687","p":"039-3745-00"},"M0769":{"f":"Top","m":"TLSA62065C","p":"248W93YV6A(---)"},"M0770":{"f":"Bot","m":"TLSB62065C","p":"248W93YV6A(---)"},"M0771":{"f":"Top","m":"TLS61806","p":"10119-18013-26A"},"M0772":{"f":"Top","m":"TLS61807","p":"10019-18013-26A"},"M0773":{"f":"Top","m":"TLS77989","p":"039-3745-00"},"M0774":{"f":"Top","m":"M21167","p":"G29441A2750002"},"M0775":{"f":"Top","m":"M20684","p":"G29441A7900003"},"M0776":{"f":"Top","m":"LT8096","p":"A6043-690-02"},"M0777":{"f":"Bot","m":"LT8097","p":"A6043-690-02"},"M0778":{"f":"Top","m":"TLSA61089B","p":"248W91KAOC"},"M0779":{"f":"Bot","m":"TLSB61089B","p":"248W91KAOC"},"M0780":{"f":"Top","m":"TLSA79613","p":"039-3920-00A"},"M0781":{"f":"Bot","m":"TLSB79613","p":"039-3920-00A"},"M0782":{"f":"Top","m":"TLSA79830","p":"039-3920-00"},"M0783":{"f":"Bot","m":"TLSB79830","p":"039-3920-00"},"M0784":{"f":"Bot","m":"M91548","p":"75L229-0080"},"M0785":{"f":"Top","m":"M91549","p":"75L229-0040"},"M0786":{"f":"Top","m":"M91550","p":"75L227-0030"},"M0787":{"f":"Top","m":"M91618","p":"75L229-0080"},"M0788":{"f":"Bot","m":"598-1176-00","p":"039-4267-01"},"M0789":{"f":"Top","m":"598-1175-01","p":"039-4267-01"},"M0790":{"f":"Top","m":"598-1850-00","p":"039-4720-00 / 039-4720-01"},"M0791":{"f":"Bot","m":"598-1851-00","p":"039-4720-00 / 039-4720-01"},"M0792":{"f":"Top","m":"598-0463-01","p":"039-3745-00"},"M0793":{"f":"Bot","m":"598-0464-01","p":"039-3745-00"},"M0794":{"f":"Top","m":"TLS83259","p":"598-1194-00"},"M0795":{"f":"Bot","m":"TLS83260","p":"598-1195-00"},"M0796":{"f":"Top","m":"TLSA83880","p":"75L529-0020"},"M0797":{"f":"Bot","m":"TLSB83880","p":"75L529-0020"},"M0798":{"f":"Top","m":"598-1175-02","p":"039-4267-01"},"M0799":{"f":"Bot","m":"A8745-852-XP-C0","p":"A7904-905-XP-D0"},"M0800":{"f":"Top","m":"A9486-115-XP-C0","p":"A7904-905-XP-D0"},"M0801":{"f":"Top","m":"LT10096","p":"10169-19011"},"M0802":{"f":"Top","m":"LT10097","p":"10069-19011"},"M0803":{"f":"Top","m":"TLS86179","p":"039-4267-01"},"M0804":{"f":"Top","m":"LT10094","p":"10049-19009-A9"},"M0805":{"f":"Top","m":"LT10095","p":"10149-19009-A9"},"M0806":{"f":"Top","m":"TLS61088","p":"35550-18015B"},"M0807":{"f":"Bot","m":"598-0464-01","p":"039-3745-00"},"M0808":{"f":"Top","m":"598-0463-01","p":"039-3745-00"},"M0809":{"f":"Top","m":"TLS62460","p":"10089-18149-26A"},"M0810":{"f":"Bot","m":"75E340-0070-BOT","p":"75E340-0071"},"M0811":{"f":"Top","m":"75E340-0070-Top","p":"75E340-0071"},"M0812":{"f":"Bot","m":"TLS86604","p":"039-4313-01"},"M0813":{"f":"Top","m":"TLS86605","p":"039-4313-01"},"M0814":{"f":"Top","m":"TLSB84737","p":"A7904-905-XP-D0"},"M0815":{"f":"Bot","m":"TLSA84737","p":"A7904-905-XP-D0"},"M0816":{"f":"Bot","m":"TLS86867","p":"039-4313-01"},"M0817":{"f":"Bot","m":"TLS85885","p":"039-4530-00"},"M0818":{"f":"Top","m":"TLS85751","p":"039-4530-00"},"M0819":{"f":"Top","m":"LT10295","p":"10029-19009"},"M0820":{"f":"Top","m":"LT10296","p":"10129-19009"},"M0821":{"f":"Top","m":"TLS88267","p":"039-4289-00"},"M0822":{"f":"Top","m":"LT10904","p":"10169-18444"},"M0823":{"f":"Bot","m":"TLSB88552","p":"039-4951-00"},"M0824":{"f":"Top","m":"TLSA88552","p":"039-4951-00"},"M0825":{"f":"Top","m":"TLS92369","p":"039-4267-01 / 039-4267-02"},"M0826":{"f":"Bot","m":"TLS92368","p":"039-4267-01 / 039-4267-02"},"M0827":{"f":"Top","m":"TLS90672","p":"10019-8F017"},"M0828":{"f":"Top","m":"TLS90671","p":"10119-8F017"},"M0829":{"f":"Top","m":"TLS87898","p":"039-4246-01"},"M0830":{"f":"Bot","m":"TLS87897","p":"039-4246-01"},"M0831":{"f":"Top","m":"TLS89680","p":"193354-0040"},"M0832":{"f":"Top","m":"TLS92846","p":"193338-0022"},"M0833":{"f":"Top","m":"M58103-1","p":"10148-17685A"},"M0834":{"f":"Bot","m":"CKHU # 2002104/1","p":"248W9BV50B(---)"},"M0835":{"f":"Top","m":"CKHU # 2002104/2","p":"248W9BV50B(---)"},"M0836":{"f":"Top","m":"TLS97389","p":"10069-6E003"},"M0837":{"f":"Top","m":"TLS96399","p":"039-4720-01"},"M0838":{"f":"Top","m":"TLS97345","p":"35550-7R016"},"M0839":{"f":"Top","m":"TLS97574","p":"10019-6E003"},"M0840":{"f":"Top","m":"TLS97573","p":"10119-6E003"},"M0841":{"f":"Top","m":"TLS97799","p":"10039-6E003"},"M0842":{"f":"Top","m":"TLS97798","p":"10139-6E003"},"M0843":{"f":"Top","m":"LT13471","p":"10069-18444"},"M0844":{"f":"Top","m":"TLS99769","p":"10119-6E003"},"M0845":{"f":"Top","m":"TLS99770","p":"10019-6E003"},"M0846":{"f":"Top","m":"TLS99775","p":"10139-8A03E"},"M0847":{"f":"Top","m":"TLS99776","p":"10039-8A03E"},"M0848":{"f":"Top","m":"TLS74411A","p":"193170-0040B"},"M0849":{"f":"Top","m":"TLS100009","p":"35550-7R016"},"M0850":{"f":"Top","m":"TLSA76077A","p":"039-4398-00"},"M0851":{"f":"Bot","m":"TLSB76077A","p":"039-4398-00"},"M0852":{"f":"Bot","m":"TLS92368A","p":"039-4267-01 / 039-4267-02"},"M0853":{"f":"Top","m":"TLS92369A","p":"039-4267-01 / 039-4267-02"},"M0854":{"f":"Bot","m":"TLS85885A","p":"039-4530-00"},"M0855":{"f":"Top","m":"TLS85751A","p":"039-4530-00"},"M0856":{"f":"Bot","m":"LT14330","p":"A1216-567-00"},"M0857":{"f":"Top","m":"LT14329","p":"A1216-567-00"},"M0858":{"f":"Bot","m":"CKHU # 2005190/2","p":"039-5038-00E"},"M0859":{"f":"Top","m":"CKHU # 2005190/1","p":"039-5038-00E"},"M0860":{"f":"Top","m":"TLS99775A","p":"10139-8A03E"},"M0861":{"f":"Top","m":"TLS99776A","p":"10039-8A03E"},"M0862":{"f":"Bot","m":"CKHU#2005425/2","p":"039-5039-00D"},"M0863":{"f":"Top","m":"CKHU#2005425/1","p":"039-5039-00D"},"M0864":{"f":"Top","m":"TLS85751B","p":"039-4530-00"},"M0865":{"f":"Top","m":"LT15279","p":"10129-19009"},"M0866":{"f":"Top","m":"LT15278","p":"10029-19009"},"M0867":{"f":"Bot","m":"TLS80492A","p":"039-4720-01"},"M0868":{"f":"Bot","m":"TLS107112","p":"039-4720-01"},"M0869":{"f":"Top","m":"TLS75302A","p":"35550-18527"},"M0870":{"f":"Top","m":"CKHU#2006686/1","p":"039-5038-00"},"M0871":{"f":"Bot","m":"CKHU#2006686/2","p":"039-5038-00"},"M0872":{"f":"Top","m":"CKHU#2006884/1","p":"039-5040-00D"},"M0873":{"f":"Bot","m":"CKHU#2006884/2","p":"039-5040-00D"},"M0874":{"f":"Bot","m":"CKHU#2006958","p":"039-5040-00D"},"M0875":{"f":"Top","m":"CKHU#2007097","p":"33850-8A0AK"},"M0876":{"f":"Bot","m":"TLSB76077B","p":"039-4398-00"},"M0877":{"f":"Top","m":"TLSA76077B","p":"039-4398-00"},"M0878":{"f":"Top","m":"TLS96399A","p":"039-4720-01"},"M0879":{"f":"Top","m":"LT16249","p":"A5586-428-00"},"M0880":{"f":"Bot","m":"LT16250","p":"A5586-428-00"},"M0881":{"f":"Top","m":"TLS110406","p":"35550-18527"},"M0882":{"f":"Top","m":"TLS111417","p":"0553630"},"M0883":{"f":"Top","m":"TLS111634","p":"0553059"},"M0884":{"f":"Top","m":"TLS111635","p":"0553168"},"M0885":{"f":"Top","m":"LT16487","p":"CPPCB00313E_FCE"},"M0886":{"f":"Bot","m":"LT16466","p":"CPPCB00343H_FCE"},"M0887":{"f":"Top","m":"LT16467","p":"CPPCB00343H_FCE"},"M0888":{"f":"Bot","m":"LT16480","p":"CPPCB00356E_FCE"},"M0889":{"f":"Top","m":"LT16481","p":"CPPCB00356E_FCE"},"M0890":{"f":"Bot","m":"LT16471","p":"CPPCB00493E_FCE"},"M0891":{"f":"Top","m":"LT16472","p":"CPPCB00493E_FCE"},"M0892":{"f":"Top","m":"LT16482","p":"CPPCB00603B_FCE"},"M0893":{"f":"Top","m":"LT16488","p":"CPPCB00619A_FCE"},"M0894":{"f":"Bot","m":"LT16490","p":"CPPCB00620D_FCE"},"M0895":{"f":"Top","m":"LT16489","p":"CPPCB00620D_FCE"},"M0896":{"f":"Bot","m":"LT16468","p":"CPPCB00646D_FCE"},"M0897":{"f":"Top","m":"LT16469","p":"CPPCB00646D_FCE"},"M0898":{"f":"Top","m":"CKHU#2008990/1","p":"10139-6E00E"},"M0899":{"f":"Top","m":"CKHU#2008990/2","p":"10039-6E00E"},"M0900":{"f":"Top","m":"TLS113512","p":"0553630"},"M0901":{"f":"Top","m":"TLS113457","p":"0553649"},"M0902":{"f":"Top","m":"TLS113943","p":"10059-8A0EG"},"M0903":{"f":"Top","m":"CKHU#2009291/1","p":"10139-6E00E"},"M0904":{"f":"Top","m":"CKHU#2009291/2","p":"10039-6E00E"},"M0905":{"f":"Top","m":"LT16333","p":"10049-19009"},"M0906":{"f":"Top","m":"LT16334","p":"10149-19009"},"M0907":{"f":"Top","m":"CKHU#2009412","p":"039-5039-00"},"M0908":{"f":"Top","m":"TLS99770A","p":"10019-6E003"},"M0909":{"f":"Bot","m":"TLSB76077C","p":"039-4398-00"},"M0910":{"f":"Bot","m":"TLS85885B","p":"039-4530-00"},"M0911":{"f":"Top","m":"TLS114382","p":"10089-18149-26A"},"M0912":{"f":"Bot","m":"TLS107112A","p":"039-4720-01"},"M0913":{"f":"Top","m":"TLS113512","p":"0553630"},"M0914":{"f":"Bot","m":"TLS114865","p":"039-5130-10"},"M0915":{"f":"Top","m":"TLS114864","p":"039-5130-10"},"M0916":{"f":"Top","m":"TLSB115083","p":"A7904-905-XP-D0"},"M0917":{"f":"Bot","m":"TLSA115083","p":"A7904-905-XP-D0"},"M0918":{"f":"Top","m":"TLS115783","p":"10039-8A03E"},"M0919":{"f":"Top","m":"TLS115782","p":"10139-8A03E"},"M0920":{"f":"Bot","m":"CKHU#2010124/2","p":"039-5038-01"},"M0921":{"f":"Top","m":"CKHU#2010124/1","p":"039-5038-01"},"M0922":{"f":"Top","m":"TLS115728","p":"10089-6E003"},"M0923":{"f":"Top","m":"TLS115729","p":"10189-6E003"},"M0924":{"f":"Bot","m":"CKHU#2010624/2","p":"CPPCB00637H"},"M0925":{"f":"Top","m":"CKHU#2010624/1","p":"CPPCB00637H"},"M0926":{"f":"Bot","m":"CKHU#2010709/1","p":"CPPCB00638H"},"M0927":{"f":"Top","m":"CKHU#2010709/2","p":"CPPCB00638H"},"M0928":{"f":"Bot","m":"CKHU#2010354/2","p":"CPPCB00668E"},"M0929":{"f":"Top","m":"CKHU#2010354/1","p":"CPPCB00668E"},"M0930":{"f":"Bot","m":"CKHU#2010724/2","p":"CPPCB00601F"},"M0931":{"f":"Top","m":"CKHU#2010724/1","p":"CPPCB00601F"},"M0932":{"f":"Bot","m":"CKHU#2010725/1","p":"CPPCB00602F"},"M0933":{"f":"Top","m":"CKHU#2010725/2","p":"CPPCB00602F"},"M0934":{"f":"Bot","m":"CKHU#2011131/2","p":"CH_A4371_551_00"},"M0935":{"f":"Top","m":"CKHU#2011131/1","p":"CH_A4371_551_00"},"M0936":{"f":"Bot","m":"CKHU#2011131/4","p":"CH_A7567_880_00"},"M0937":{"f":"Top","m":"CKHU#2011131/3","p":"CH_A7567_880_00"},"M0938":{"f":"Bot","m":"CKHU#2011131/5","p":"CH_A1585-329-00"},"M0939":{"f":"Top","m":"CKHU#2011131/6","p":"CH_A1585-329-00"},"M0940":{"f":"Top","m":"TLS92846A","p":"193338-0022"},"M0941":{"f":"Top","m":"TLS96399B","p":"039-4720-01"},"M0942":{"f":"Top","m":"TLSA119650S05","p":"039-5141-10"},"M0943":{"f":"Bot","m":"TLSB119650S05","p":"039-5141-10"},"M0944":{"f":"Bot","m":"TLSA119651","p":"A1216-567-00"},"M0945":{"f":"Top","m":"TLSB119651","p":"A1216-567-00"},"M0946":{"f":"Top","m":"TLS120028","p":"039-4267-10"},"M0947":{"f":"Bot","m":"TLS120029","p":"039-4267-10"},"M0948":{"f":"Top","m":"TLS120030","p":"039-4720-10"},"M0949":{"f":"Bot","m":"TLS120031","p":"039-4720-10"},"M0950":{"f":"Top","m":"TLSA76077C","p":"039-4398-00"},"M0951":{"f":"Bot","m":"CKHU#2012591/2","p":"CPPCB00637F"},"M0952":{"f":"Top","m":"CKHU#2012591/1","p":"CPPCB00637F"},"M0953":{"f":"Bot","m":"CKHU#2012596/1","p":"CPPCB00638F"},"M0954":{"f":"Top","m":"CKHU#2012596/2","p":"CPPCB00638F"},"M0955":{"f":"Top","m":"CKHU#2011743","p":"CPPCB00601F"},"M0956":{"f":"Top","m":"CKHU#2011741","p":"CPPCB00638H"},"M0957":{"f":"Top","m":"LT17987","p":"CPPCB00493E_FCE"},"M0958":{"f":"Bot","m":"TLS125018","p":"039-5130-10"},"M0959":{"f":"Top","m":"CKHU#2013831","p":"039-5039-00"},"M0960":{"f":"Top","m":"LT18120","p":"CPPCB00493E_FCE"},"M0961":{"f":"Top","m":"CKHU#2013793","p":"039-5038-01"},"M0962":{"f":"Top","m":"CKHU#2014049","p":"039-5040-00D"},"M0963":{"f":"Top","m":"CKHU#2014160","p":"039-5039-00"},"M0964":{"f":"Bot","m":"TLSB76077D","p":"039-4398-00"},"M0965":{"f":"Bot","m":"CKHU#2014361","p":"CH_A4371_551_00"},"M0966":{"f":"Top","m":"TLS127299","p":""},"M0967":{"f":"Bot","m":"TLS127300","p":""},"M0968":{"f":"Top","m":"TLS127301","p":"039-5413-00"},"M0969":{"f":"Bot","m":"TLS127302","p":"039-5413-00"},"M0970":{"f":"Top","m":"LT18388","p":"CPPCB00493E_FCE"},"M0971":{"f":"Bot","m":"CKHU#2014853/2","p":"CPPCB00673A"},"M0972":{"f":"Top","m":"CKHU#2014853/1","p":"CPPCB00673A"},"M0973":{"f":"Top","m":"LT18463","p":"CPPCB00493E_FCE"},"M0974":{"f":"Top","m":"TLS129071","p":"35550-7R016"},"M0975":{"f":"Top","m":"CKHU#2016304","p":"33850-8A0AK"},"M0976":{"f":"Top","m":"CKHU#2016664","p":"33850-8A0AK"},"M0977":{"f":"Top","m":"TLS120030A","p":"039-4720-10"},"M0978":{"f":"Bot","m":"TLS120031A","p":"039-4720-10"},"M0979":{"f":"Top","m":"CKHU#2016952","p":"CPPCB00637H"},"M0980":{"f":"Top","m":"CKHU#2017095","p":"CPPCB00637F"},"M0981":{"f":"Bot","m":"","p":"CPPCB00072C"},"M0982":{"f":"Top","m":"","p":"CPPCB00072C"},"M0983":{"f":"Bot","m":"CKHU#2018478/1","p":"CPPCB00072C"},"M0984":{"f":"Top","m":"CKHU#2018478/2","p":"CPPCB00072C"},"M0985":{"f":"Bot","m":"CKHU#2018404/1","p":"CPPCB00102B"},"M0986":{"f":"Top","m":"CKHU#2018404/2","p":"CPPCB00102B"},"M0987":{"f":"Top","m":"CKHU#2016460","p":"598-2412-01"},"M0988":{"f":"Top","m":"TLS127301A","p":"039-5413-00"},"M0989":{"f":"Bot","m":"TLS127302A","p":"039-5413-00"},"M0990":{"f":"Top","m":"CKHU#2019340","p":"039-5040-02A"},"M0991":{"f":"Top","m":"TLSA76077D","p":"039-4398-00"},"M0992":{"f":"Top","m":"CKHU#2019664/1","p":"039-5038-01"},"M0993":{"f":"Top","m":"CKHU#2019664/2","p":"039-5038-01"},"M0994":{"f":"Bot","m":"CKHU#2019662/1","p":"039-5038-01"},"M0995":{"f":"Bot","m":"CKHU#2019662/2","p":"039-5038-01"},"M0996":{"f":"Top","m":"TLS139599","p":"553862"},"M0997":{"f":"Top","m":"CKHU#2020328/2","p":"CPPCB00102E"},"M0998":{"f":"Bot","m":"CKHU#2020328/1","p":"CPPCB00102E"},"M0999":{"f":"Top","m":"TLS113457A","p":"0553649"},"M1000":{"f":"Bot","m":"TLS127302B","p":"039-5413-00"},"M1001":{"f":"Top","m":"TLS127301B","p":"039-5413-00"},"M1002":{"f":"Top","m":"CKHU#2020535/2","p":"CH_A1585-329-00"},"M1003":{"f":"Bot","m":"CKHU#2020535/1","p":"CH_A1585-329-00"},"M1004":{"f":"Bot","m":"CKHU#2020690","p":"CPPCB00102E"},"M1005":{"f":"Bot","m":"CKHU#2020335/2","p":"039-5039-02"},"M1006":{"f":"Top","m":"CKHU#2020335/1","p":"039-5039-02"},"M1007":{"f":"Top","m":"CKHU#2021076","p":"CPPCB00102E"},"M1008":{"f":"Bot","m":"CKHU#2021072/1","p":"CPPCB00072D"},"M1009":{"f":"Top","m":"CKHU#2021072/2","p":"CPPCB00072D"},"M1010":{"f":"Bot","m":"CKHU#2021261/2","p":"CPPCB00106D"},"M1011":{"f":"Top","m":"CKHU#2021261/1","p":"CPPCB00106D"},"M1012":{"f":"Bot","m":"CKHU#2021747","p":"CPPCB00102E"},"M1013":{"f":"Top","m":"CKHU#2021954","p":"CPPCB00072E"},"M1014":{"f":"Bot","m":"CKHU#2021838/2","p":"CPPCB00072E"},"M1015":{"f":"Top","m":"CKHU#2021905","p":"33850-8A0AK"},"M1016":{"f":"Top","m":"CKHU#2022067/1","p":"CPPCB00102F"},"M1017":{"f":"Bot","m":"CKHU#2022067/2","p":"CPPCB00102F"},"M1018":{"f":"Top","m":"TLS120030B","p":"039-4720-10"},"M1019":{"f":"Bot","m":"TLS120031B","p":"039-4720-10"},"M1020":{"f":"Bot","m":"TLS127302C","p":"039-5413-00"},"M1021":{"f":"Top","m":"TLS114864A","p":"039-5130-10"},"M1022":{"f":"Top","m":"TLS145656","p":"10188-17726A"},"M1023":{"f":"Top","m":"TLS145657","p":"10048-17685A"},"M1024":{"f":"Top","m":"CKHU#2023145/1","p":"A0063-449-00"},"M1025":{"f":"Bot","m":"CKHU#2023145/2","p":"A0063-449-00"},"M1026":{"f":"Top","m":"TLS127301C","p":"039-5413-00"},"M1027":{"f":"Top","m":"CKHU#2024020/1","p":"039-5038-01"},"M1028":{"f":"Bot","m":"CKHU#2024019/1","p":"039-5038-01"},"M1029":{"f":"Top","m":"CKHU#2024020/2","p":"039-5038-01"},"M1030":{"f":"Bot","m":"CKHU#2024019/2","p":"039-5038-01"},"M1031":{"f":"Top","m":"CKHU#2024353/1","p":"CPPCB00102F"},"M1032":{"f":"Bot","m":"CKHU#2024353/2","p":"CPPCB00102F"},"M1033":{"f":"Top","m":"CKHU#2024579/1","p":"CH_CPPCB00146C"},"M1034":{"f":"Bot","m":"CKHU#2024579/2","p":"CH_CPPCB00146C"},"M1035":{"f":"Top","m":"CKHU#2024579/3","p":"CH_CPPCB00112C"},"M1036":{"f":"Bot","m":"CKHU#2024579/4","p":"CH_CPPCB00112C"},"M1037":{"f":"Top","m":"CKHU#2024846/1","p":"CH_CPPCB00158A"},"M1038":{"f":"Bot","m":"CKHU#2024846/2","p":"CH_CPPCB00158A"},"M1039":{"f":"Top","m":"CKHU#2025082/1","p":"CH_CPPCB00158A"},"M1040":{"f":"Bot","m":"CKHU#2025082/2","p":"CH_CPPCB00158A"},"M1041":{"f":"Top","m":"TLS127301D","p":"039-5413-00"},"M1042":{"f":"Bot","m":"TLS127302D","p":"039-5413-00"},"M1043":{"f":"Top","m":"TLS127301E","p":"039-5413-00"},"M1044":{"f":"Bot","m":"TLS127302E","p":"039-5413-00"},"M1045":{"f":"Top","m":"TLS120030C","p":"039-4720-10"},"M1046":{"f":"Bot","m":"TLS120031C","p":"039-4720-10"},"M1047":{"f":"Top","m":"TLS120030D","p":"039-4720-10"},"M1048":{"f":"Bot","m":"TLS120031D","p":"039-4720-10"},"M1049":{"f":"Top","m":"CKHU#2025175/1","p":"CLA_039_5471_00G"},"M1050":{"f":"Bot","m":"CKHU#2025175/2","p":"CLA_039_5471_00G"},"M1051":{"f":"Top","m":"CKHU#2025168/1","p":"CH_CPPCB00146C"},"M1052":{"f":"Bot","m":"CKHU#2025168/2","p":"CH_CPPCB00146C"},"M1053":{"f":"Top","m":"CKHU#2025168/3","p":"CH_CPPCB00112C"},"M1054":{"f":"Bot","m":"CKHU#2025168/4","p":"CH_CPPCB00112C"},"M1055":{"f":"Top","m":"CKHU#2025166/1","p":"CH_CPPCB00114A"},"M1056":{"f":"Bot","m":"CKHU#2025166/2","p":"CH_CPPCB00114A"},"M1057":{"f":"Top","m":"CKHU#2025166/3","p":"CH_CPPCB00164A"},"M1058":{"f":"Bot","m":"CKHU#2025166/4","p":"CH_CPPCB00164A"},"M1084":{"f":"Bot","m":"CKHU#2027224/2","p":"CPPCB00102H"},"M1085":{"f":"Bot","m":"CKHU#2027740/2","p":"CH_CPPCB00146E"},"M1086":{"f":"Bot","m":"CKHU#2027740/1","p":"CH_CPPCB00112E"},"M1087":{"f":"Bot","m":"CKHU#2027742/2","p":"039-5040-02A"},"M1088":{"f":"Top","m":"CKHU#2027742/1","p":"039-5040-02A"},"M1089":{"f":"Top","m":"CKHU#2027744/1","p":"039-5038-01"},"M1090":{"f":"Top","m":"CKHU#2027744/2","p":"039-5038-01"},"M1091":{"f":"Top","m":"CKHU#2027744/3","p":"039-5038-01"},"M1092":{"f":"Top","m":"TLS158829","p":"039_5413_00"},"M1093":{"f":"Top","m":"TLS158829A","p":"039_5413_00"},"M1094":{"f":"Bot","m":"TLS158830","p":"039_5413_00"},"M1095":{"f":"Bot","m":"TLS158830A","p":"039_5413_00"},"M1096":{"f":"Bot","m":"CKHU#2027746/3","p":"CPPCB00102F"},"M1097":{"f":"Top","m":"CKHU#2027746/1","p":"CPPCB00102F"},"M1098":{"f":"Top","m":"CKHU#2027746/2","p":"CPPCB00102F"},"M1099":{"f":"Top","m":"CKHU#2027729/1","p":"CPPCB00165C"},"M1100":{"f":"Bot","m":"CKHU#2027729/2","p":"CPPCB00165C"},"M1101":{"f":"Bot","m":"CKHU#2027745/1","p":"039-5038-01"},"M1102":{"f":"Bot","m":"CKHU#2027745/2","p":"039-5038-01"},"M1103":{"f":"Bot","m":"CKHU#2027745/3","p":"039-5038-01"},"M1104":{"f":"Top","m":"CKHU#2028080","p":"CPPCB00166C"},"M1105":{"f":"Bot","m":"CKHU#2028199","p":"CPPCB00102F"},"M1106":{"f":"Top","m":"CKHU#2028344","p":"CPPCB00166D"},"M1107":{"f":"Top","m":"Part 402B Right","p":"10039-8A03E"},"M1108":{"f":"Top","m":"Part 402B Left","p":"10139-8A03E"},"M1109":{"f":"Top","m":"CKHU#2028803/1","p":"CH_CPPCB00114B"},"M1110":{"f":"Bot","m":"CKHU#2028803/2","p":"CH_CPPCB00114B"},"M1111":{"f":"Top","m":"CKHU#2028887","p":"CH_CPPCB00164B"},"M1112":{"f":"Bot","m":"CKHU#2028802/2","p":"CH_CPPCB00164B"},"M1113":{"f":"Top","m":"TLS158829B","p":"039-5413-00"},"M1114":{"f":"Bot","m":"TLS158830B","p":"039-5413-00"},"M1115":{"f":"Top","m":"CKHU#2028932/2","p":"CH_CPPCB00112F"},"M1116":{"f":"Bot","m":"CKHU#2028932/1","p":"CH_CPPCB00112F"},"M1117":{"f":"Top","m":"CKHU#2028933/2","p":"CH_CPPCB00146F"},"M1118":{"f":"Bot","m":"CKHU#2028933/1","p":"CH_CPPCB00146F"},"M1119":{"f":"Top","m":"CKHU#2029098/1","p":"CH_CPPCB00114C"},"M1120":{"f":"Bot","m":"CKHU#2029098/2","p":"CH_CPPCB00114C"},"M1121":{"f":"Top","m":"CKHU#2029152/2","p":"CPPCB00164C"},"M1122":{"f":"Bot","m":"CKHU#2029152/1","p":"CPPCB00164C"},"M1123":{"f":"Bot","m":"CKHU#2029152/3","p":"039-5038-01"},"M1124":{"f":"Top","m":"CKHU#2029152/4","p":"039-5038-01"},"M1125":{"f":"Bot","m":"TLS158830C","p":"039-5413-00"},"M1126":{"f":"Top","m":"CKHU#2029179/1","p":"CPPCB00102F"},"M1127":{"f":"Top","m":"CKHU#2029179/2","p":"CPPCB00102F"},"M1128":{"f":"Bot","m":"CKHU#2029345/1","p":"CPPCB00102H"},"M1129":{"f":"Top","m":"CKHU#2029345/2","p":"CPPCB00102H"},"M1130":{"f":"Top","m":"CKHU#2029513/1","p":"CPPCB00102H"},"M1131":{"f":"Top","m":"CKHU#2029513/2","p":"10119-18013-26A"},"M1132":{"f":"Top","m":"TLS158829C","p":"039-5413-00"},"M1133":{"f":"Top","m":"CKHU#2029827","p":"CPPCB00638H"}};
+
+/* =====================================================================
+   CÍMKE NYOMTATÁS + VONALKÓD ÖSSZEFÉSÜLÉS  (ÚJ, KÜLÖNÁLLÓ MODUL)
+   - Data Matrix vonalkód a beépített ECC200 kódolóval (offline, ellenőrzött)
+   - A "szent grál" meglévő logikát NEM módosítja, csak kiegészíti
+   ===================================================================== */
+
+function lblEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Vonalkód tartalom – PONTOSAN az Excel "Vonalkód" formátuma: MASZK=MUNKA=PANEL-FOLYAMAT=
+function buildBarcodeText(maszk, munka, panel, folyamat){
+    return (maszk||'') + '=' + (munka||'') + '=' + (panel||'') + '-' + (folyamat||'') + '=';
+}
+
+function makeDataMatrixSVG(text){
+    try {
+        const node = DATAMatrix({ msg: text, pad: 1, dim: 256 });
+        node.setAttribute('width','100%');
+        node.setAttribute('height','100%');
+        node.setAttribute('preserveAspectRatio','xMidYMid meet');
+        return node.outerHTML;
+    } catch(e){
+        console.error('Data Matrix hiba:', e);
+        return '<div style="font-size:7px;color:#900;">DM hiba</div>';
+    }
+}
+
+// A címke kártya HTML-je – pontosan a fotó elrendezése szerint
+function renderLabelCardHTML(data, wmm, hmm){
+    const maszk = data.maszk||'';
+    const panel = data.panelszam||'';
+    const folyamat = data.folyamat||'';
+    const munka = data.munkaszam||'';
+    const polc = (data.polc===undefined||data.polc===null||String(data.polc).trim()==='')?'-':data.polc;
+    const bc = buildBarcodeText(maszk, munka, panel, folyamat);
+    const dmMM = Math.max(10, Math.min(wmm*0.34, hmm*0.44));
+    const svg = makeDataMatrixSVG(bc);
+    return '<div class="label-card" style="width:'+wmm+'mm; height:'+hmm+'mm;">'
+        + '<div class="lbl-top">'
+        +   '<div class="lbl-title">Stencil\nazonosító:</div>'
+        +   '<div class="lbl-maszk-big">'+lblEsc(maszk)+'</div>'
+        + '</div>'
+        + '<div class="lbl-fields">'
+        +   '<div class="k">Asset szám:</div><div class="v">'+(lblEsc(maszk)||'&nbsp;')+'</div>'
+        +   '<div class="k">Panelszám:</div><div class="v">'+(lblEsc(panel)||'&nbsp;')+'</div>'
+        +   '<div class="k">Folyamat:</div><div class="v">'+(lblEsc(folyamat)||'&nbsp;')+'</div>'
+        +   '<div class="k">Munkaszám:</div><div class="v">'+(lblEsc(munka)||'&nbsp;')+'</div>'
+        + '</div>'
+        + '<div class="lbl-bottom">'
+        +   '<div class="lbl-dm" style="width:'+dmMM+'mm; height:'+dmMM+'mm;">'+svg+'</div>'
+        +   '<div class="lbl-polc">Polc: '+lblEsc(polc)+'</div>'
+        + '</div>'
+        + '</div>';
+}
+
+// Címke méret megjegyzése (localStorage, ha nem elérhető -> memória)
+let labelSizeMem = { w: 65, h: 50 };
+function loadLabelSize(){
+    try { const s = localStorage.getItem('invenpro_label_size'); if(s){ const o=JSON.parse(s); if(o&&o.w&&o.h){ labelSizeMem={w:+o.w,h:+o.h}; } } } catch(e){}
+    return labelSizeMem;
+}
+function saveLabelSize(w,h){
+    labelSizeMem={w:+w,h:+h};
+    try { localStorage.setItem('invenpro_label_size', JSON.stringify(labelSizeMem)); } catch(e){}
+}
+function getLabelW(){ let v=parseFloat(document.getElementById('labelW').value); return (isNaN(v)||v<10)?65:v; }
+function getLabelH(){ let v=parseFloat(document.getElementById('labelH').value); return (isNaN(v)||v<10)?50:v; }
+
+// Címke modal megnyitása az adatbázis sorból
+window.openLabelModal = function(maszkId){
+    const item = window.stencilData.find(d => d.maszk === maszkId);
+    if(!item){ showToast('Nincs ilyen maszk!'); return; }
+    const md = (window.barcodeMasterDb && window.barcodeMasterDb[maszkId]) || {};
+    window.currentLabel = {
+        maszk: item.maszk,
+        panelszam: item.panelszam || md.p || '',
+        folyamat: item.folyamat || md.f || '',
+        munkaszam: item.munkaszam || md.m || '',
+        polc: item.polc
+    };
+    const sz = loadLabelSize();
+    document.getElementById('labelW').value = sz.w;
+    document.getElementById('labelH').value = sz.h;
+    refreshLabelPreview();
+    document.getElementById('labelModal').classList.add('active');
+};
+
+// Címke a szerkesztő modalból (akár mentés előtt is, az aktuális űrlap adatokból)
+window.printLabelFromEditModal = function(){
+    const maszk = document.getElementById('editId').value.trim().toUpperCase();
+    if(!maszk){ showToast('Adj meg egy maszk azonosítót a címkéhez!'); return; }
+    window.currentLabel = {
+        maszk: maszk,
+        panelszam: document.getElementById('editPanel').value.trim(),
+        folyamat: document.getElementById('editFolyamat').value.trim(),
+        munkaszam: document.getElementById('editMunka').value.trim(),
+        polc: document.getElementById('editShelf').value.trim()
+    };
+    const sz = loadLabelSize();
+    document.getElementById('labelW').value = sz.w;
+    document.getElementById('labelH').value = sz.h;
+    refreshLabelPreview();
+    document.getElementById('labelModal').classList.add('active');
+};
+
+window.refreshLabelPreview = function(){
+    if(!window.currentLabel) return;
+    const w = getLabelW(), h = getLabelH();
+    saveLabelSize(w,h);
+    document.getElementById('labelPreviewHost').innerHTML = renderLabelCardHTML(window.currentLabel, w, h);
+    const warn = document.getElementById('labelWarn');
+    const wt = document.getElementById('labelWarnText');
+    const miss = [];
+    if(!window.currentLabel.panelszam) miss.push('Panelszám');
+    if(!window.currentLabel.folyamat) miss.push('Folyamat');
+    if(!window.currentLabel.munkaszam) miss.push('Munkaszám');
+    if(miss.length){
+        wt.innerHTML = 'Hiányzó címke adat: <strong>'+miss.join(', ')+'</strong>. A vonalkód így is generálódik, de érdemes pótolni (Szerkesztés vagy Vonalkód Import).';
+        warn.style.display='flex';
+    } else { warn.style.display='none'; }
+};
+
+// NYOMTATÁS – újrahasznosítja a meglévő #printArea-t, body.label-mode + saját @page méret
+window.doLabelPrint = function(){
+    if(!window.currentLabel) return;
+    const w = getLabelW(), h = getLabelH();
+    saveLabelSize(w,h);
+    const printArea = document.getElementById('printArea');
+    printArea.innerHTML = renderLabelCardHTML(window.currentLabel, w, h);
+
+    let st = document.getElementById('labelPageStyle');
+    if(!st){ st = document.createElement('style'); st.id='labelPageStyle'; document.head.appendChild(st); }
+    st.textContent = '@page { size: '+w+'mm '+h+'mm; margin: 0 !important; }';
+
+    document.body.classList.add('label-mode');
+    closeModal('labelModal');
+
+    const cleanup = function(){
+        document.body.classList.remove('label-mode');
+        const s = document.getElementById('labelPageStyle');
+        if(s && s.parentNode) s.parentNode.removeChild(s);
+        printArea.innerHTML = '';
+        window.onafterprint = null;
+    };
+    window.onafterprint = cleanup;
+    setTimeout(function(){
+        window.print();
+        setTimeout(cleanup, 1500); // tartalék takarítás
+    }, 250);
+};
+
+/* ---------- VONALKÓD ÖSSZEFÉSÜLÉS (csak ÜRES mezőket tölt, semmit nem ír felül) ---------- */
+function computeMergePlan(){
+    const plan = [];
+    (window.stencilData||[]).forEach(item => {
+        const md = window.barcodeMasterDb && window.barcodeMasterDb[item.maszk];
+        if(!md) return;
+        const fills = {};
+        if((!item.panelszam || item.panelszam.trim()==='') && md.p) fills.panelszam = md.p;
+        if((!item.folyamat  || item.folyamat.trim()==='')  && md.f) fills.folyamat  = md.f;
+        if((!item.munkaszam || item.munkaszam.trim()==='') && md.m) fills.munkaszam = md.m;
+        if(Object.keys(fills).length>0){ plan.push({ item, fills }); }
+    });
+    return plan;
+}
+
+window.openMergeModal = function(){
+    if(!window.isAdmin) return;
+    if(!window.stencilData || window.stencilData.length===0){ showToast('Nincs még adat!'); return; }
+    const plan = computeMergePlan();
+    window.currentMergePlan = plan;
+    const matchAny = (window.stencilData||[]).filter(d=>window.barcodeMasterDb && window.barcodeMasterDb[d.maszk]).length;
+    document.getElementById('mergeStats').innerHTML =
+        '<div class="opt-stat-card"><div class="v">'+window.stencilData.length+'</div><div class="l">Saját maszk</div></div>'
+      + '<div class="opt-stat-card stay"><div class="v">'+matchAny+'</div><div class="l">Van vonalkód adat</div></div>'
+      + '<div class="opt-stat-card move"><div class="v">'+plan.length+'</div><div class="l">Kitöltendő</div></div>';
+    document.getElementById('mergeCount').innerText = plan.length;
+    const list = document.getElementById('mergeList');
+    if(plan.length===0){
+        list.innerHTML = '<div style="text-align:center; color:var(--success); padding:15px; font-style:italic;"><i class="fas fa-check-circle"></i> Minden egyező maszknak már megvan a címke adata — nincs mit kitölteni.</div>';
+    } else {
+        list.innerHTML = plan.map(function(p){
+            const parts = [];
+            if(p.fills.panelszam) parts.push('Panel: '+p.fills.panelszam);
+            if(p.fills.folyamat)  parts.push('Folyamat: '+p.fills.folyamat);
+            if(p.fills.munkaszam) parts.push('Munka: '+p.fills.munkaszam);
+            return '<div class="opt-mv-row">'
+                 +   '<span class="opt-mv-mask">'+p.item.maszk+'</span>'
+                 +   '<span class="opt-mv-from" style="margin-right:auto;">'+p.item.szekreny+', '+p.item.polc+'. polc</span>'
+                 +   '<span class="opt-mv-to" style="color:#2dd4bf;">'+parts.join(' · ')+'</span>'
+                 + '</div>';
+        }).join('');
+    }
+    const btn = document.getElementById('mergeApplyBtn');
+    if(plan.length===0){ btn.disabled=true; btn.style.opacity='0.4'; btn.style.cursor='not-allowed'; btn.innerHTML='<i class="fas fa-check"></i> Nincs mit összefésülni'; }
+    else { btn.disabled=false; btn.style.opacity='1'; btn.style.cursor='pointer'; btn.innerHTML='<i class="fas fa-check"></i> Összefésülés ('+plan.length+' db)'; }
+    document.getElementById('mergeModal').classList.add('active');
+};
+
+window.confirmApplyMerge = function(){
+    if(!window.currentMergePlan || window.currentMergePlan.length===0){ showToast('Nincs mit összefésülni!'); return; }
+    const n = window.currentMergePlan.length;
+    customConfirm(
+        '<i class="fas fa-link" style="color:#2dd4bf;"></i> Összefésülés Megerősítése',
+        'Most <strong style="color:#2dd4bf;">'+n+' maszk</strong> ÜRES címke-mezőit töltöd ki a beépített vonalkód adatbázisból.<br><br>'
+      + '<div style="background: rgba(20,184,166,0.1); border:1px solid rgba(20,184,166,0.3); padding:10px; border-radius:6px; margin:10px 0;">'
+      +   '<strong>🛡️ Biztonság:</strong> A szekrény, polc, modell, megjegyzés és a már kitöltött adatok <strong>NEM változnak</strong>.'
+      + '</div>Folytatod?',
+        'Igen, Összefésül',
+        applyMerge
+    );
+};
+
+async function applyMerge(){
+    const overlay = document.getElementById('optProgressOverlay');
+    const bar = document.getElementById('optProgressBar');
+    const txt = document.getElementById('optProgressText');
+    const det = document.getElementById('optProgressDetail');
+    const plan = window.currentMergePlan || [];
+    const total = plan.length;
+    let done=0, errors=0;
+    txt.innerText = 'Vonalkód összefésülés...';
+    det.innerText = 'Az adatbázis frissítése. Kérlek várj.';
+    overlay.classList.add('active');
+    try {
+        for(const p of plan){
+            const it = p.item;
+            txt.innerText = 'Összefésülés... ('+(done+1)+'/'+total+')';
+            det.innerText = it.maszk;
+            bar.style.width = Math.round((done/total)*100)+'%';
+            const rec = {
+                maszk: it.maszk,
+                modell: it.modell || '',
+                panelszam: (it.panelszam && it.panelszam.trim()!=='') ? it.panelszam : (p.fills.panelszam || ''),
+                folyamat:  (it.folyamat  && it.folyamat.trim()!=='')  ? it.folyamat  : (p.fills.folyamat  || ''),
+                munkaszam: (it.munkaszam && it.munkaszam.trim()!=='') ? it.munkaszam : (p.fills.munkaszam || ''),
+                megjegyzes: it.megjegyzes || '',
+                szekreny: it.szekreny,
+                polc: it.polc
+            };
+            try { await window.saveToFirebase(rec); }
+            catch(e){ console.error('Merge hiba:', it.maszk, e); errors++; }
+            done++;
+        }
+        bar.style.width='100%';
+        txt.innerText = 'Összefésülés kész!';
+        det.innerText = errors>0 ? (done-errors)+' sikeres, '+errors+' hiba' : done+' maszk frissítve.';
+        setTimeout(function(){
+            overlay.classList.remove('active');
+            closeModal('mergeModal');
+            showToast(errors>0 ? ('Kész: '+(done-errors)+' sikeres, '+errors+' hiba') : ('Összefésülés kész! '+done+' maszk frissítve.'));
+            window.currentMergePlan = null;
+        }, 1200);
+    } catch(e){
+        overlay.classList.remove('active');
+        alert('Hiba az összefésülés közben: '+e.message);
+    }
+}
+
+// Auto-kitöltés a szerkesztő modalban, ha ismert maszkot írsz be (csak üres mezőket tölt)
+window.autofillBarcodeFields = function(){
+    const maszk = document.getElementById('editId').value.trim().toUpperCase();
+    const md = window.barcodeMasterDb && window.barcodeMasterDb[maszk];
+    if(!md) return;
+    const pe = document.getElementById('editPanel');
+    const fe = document.getElementById('editFolyamat');
+    const me = document.getElementById('editMunka');
+    if((!pe.value || pe.value.trim()==='') && md.p) pe.value = md.p;
+    if((!fe.value || fe.value.trim()==='') && md.f) fe.value = md.f;
+    if((!me.value || me.value.trim()==='') && md.m) me.value = md.m;
+};
+
+/* ============================================================================
+   AUTOMATIKUS ÖSSZEFÉSÜLÉS — admin belépéskor MAGÁTÓL lefut (egyszer/munkamenet).
+   Csak ÜRES címke-mezőket tölt a beépített adatbázisból; SEMMIT nem ír felül.
+   Ezután a Panelszám/Folyamat/Munkaszám FIZIKAILAG a maszkok saját rekordjában
+   van (szerkeszthető/törölhető) — külön Excel többé nem kell.
+   ============================================================================ */
+window._autoMergeDone = false;
+window._autoMergeRunning = false;
+window.autoMergeBarcodes = async function(){
+    if (window._autoMergeRunning || window._autoMergeDone) return;
+    if (!window.isAdmin || !window.barcodeMasterDb) return;
+    if (!window.stencilData || window.stencilData.length === 0) return; // adat még nincs -> majd a snapshot újrahívja
+    const plan = computeMergePlan();
+    if (!plan || plan.length === 0){ window._autoMergeDone = true; return; } // már minden kész
+    window._autoMergeRunning = true;
+
+    const overlay = document.getElementById('optProgressOverlay');
+    const bar = document.getElementById('optProgressBar');
+    const txt = document.getElementById('optProgressText');
+    const det = document.getElementById('optProgressDetail');
+    if (txt) txt.innerText = 'Vonalkód adatok összefésülése...';
+    if (det) det.innerText = 'Címke adatok beírása a maszkok saját rekordjába. Egyszeri művelet.';
+    if (bar) bar.style.width = '0%';
+    if (overlay) overlay.classList.add('active');
+
+    const total = plan.length;
+    let done = 0, errors = 0;
+    const saver = window.saveToFirebaseQuiet || window.saveToFirebase; // csendes mentés, nincs toast-áradat
+    for (const p of plan){
+        const it = p.item;
+        if (det) det.innerText = it.maszk + '  (' + (done+1) + '/' + total + ')';
+        if (bar) bar.style.width = Math.round((done/total)*100) + '%';
+        const rec = {
+            maszk: it.maszk,
+            modell: it.modell || '',
+            panelszam: (it.panelszam && it.panelszam.trim()!=='') ? it.panelszam : (p.fills.panelszam || ''),
+            folyamat:  (it.folyamat  && it.folyamat.trim()!=='')  ? it.folyamat  : (p.fills.folyamat  || ''),
+            munkaszam: (it.munkaszam && it.munkaszam.trim()!=='') ? it.munkaszam : (p.fills.munkaszam || ''),
+            megjegyzes: it.megjegyzes || '',
+            szekreny: it.szekreny,
+            polc: it.polc
+        };
+        try { await saver(rec); } catch(e){ console.error('Auto-merge hiba:', it.maszk, e); errors++; }
+        done++;
+    }
+    if (bar) bar.style.width = '100%';
+    window._autoMergeRunning = false;
+    window._autoMergeDone = true;
+    setTimeout(function(){
+        if (overlay) overlay.classList.remove('active');
+        showToast(errors>0
+            ? ('Vonalkód összefésülve: '+(done-errors)+' maszk, '+errors+' hiba')
+            : ('Vonalkód automatikusan összefésülve: '+done+' maszk'));
+    }, 600);
+};
 </script>
 </body>
 </html>
