@@ -727,7 +727,7 @@
 
                 <div class="action-buttons">
                     <button class="btn btn-optimize" onclick="openOptimizeIntro()"><i class="fas fa-magic"></i> Optimalizálás</button>
-                    <button class="btn btn-merge" onclick="openMergeModal()"><i class="fas fa-link"></i> Vonalkód Import</button>
+                    <button class="btn btn-merge" onclick="openMergeModal()" style="display:none;"><i class="fas fa-link"></i> Vonalkód Import</button>
                     <button class="btn btn-outline" style="border-color: var(--success); color: var(--success);" onclick="exportToCSV()"><i class="fas fa-file-csv"></i> CSV Export</button>
                     <button class="btn btn-primary" onclick="openModal()"><i class="fas fa-plus"></i> Új Stencil</button>
                     <button class="btn btn-print" onclick="openPrintModal()"><i class="fas fa-print"></i> Nyomtatás</button>
@@ -1274,6 +1274,7 @@
                             <td>${item.modell ? `<span class="model-text-table">${item.modell}</span>` : '-'}</td>
                             <td style="text-align: center;">${noteHtml}</td>
                             <td style="text-align: right;">
+                                ${(typeof labelDataIncomplete==='function' && labelDataIncomplete(item)) ? '<i class="fas fa-exclamation-circle" style="color:var(--warning); font-size:14px; margin-right:3px; cursor:help; filter:drop-shadow(0 0 4px rgba(245,158,11,0.6));" title="Hiányzó címke adat (Panelszám / Folyamat / Munkaszám) — a címke ezek nélkül nyomtatódna"></i>' : ''}
                                 <button class="btn-icon btn-label" onclick="openLabelModal('${item.maszk}')" title="Címke nyomtatás"><i class="fas fa-tag"></i></button>
                                 <button class="btn-icon btn-edit" onclick="openModal('${item.maszk}')"><i class="fas fa-pencil-alt"></i></button>
                                 <button class="btn-icon btn-delete" onclick="confirmDelete('${item.maszk}')"><i class="fas fa-trash"></i></button>
@@ -2158,6 +2159,17 @@ async function applyMerge(){
         alert('Hiba az összefésülés közben: '+e.message);
     }
 }
+
+// Hiányos-e a címke adata? (a maszk saját mezője VAGY a beépített DB fallback alapján)
+// Akkor jelez, ha a Panelszám / Folyamat / Munkaszám közül bármelyik még üres.
+window.labelDataIncomplete = function(item){
+    if(!item) return false;
+    const md = (window.barcodeMasterDb && window.barcodeMasterDb[item.maszk]) || {};
+    const panel    = (item.panelszam && item.panelszam.trim()) || md.p || '';
+    const folyamat = (item.folyamat  && item.folyamat.trim())  || md.f || '';
+    const munka    = (item.munkaszam && item.munkaszam.trim()) || md.m || '';
+    return !(panel && folyamat && munka);
+};
 
 // Auto-kitöltés a szerkesztő modalban, ha ismert maszkot írsz be (csak üres mezőket tölt)
 window.autofillBarcodeFields = function(){
