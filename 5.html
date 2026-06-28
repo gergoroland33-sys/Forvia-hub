@@ -360,6 +360,11 @@
         .nav-items { padding: 15px 0; flex-grow: 1; }
         .nav-item { padding: 15px 25px; display: flex; align-items: center; gap: 15px; color: var(--text-muted); cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
         .nav-item:hover, .nav-item.active { background-color: rgba(14, 165, 233, 0.1); color: var(--accent); border-left-color: var(--accent); }
+
+        .sidebar-actions { padding: 15px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--border); margin-top: 8px; }
+        .sidebar-actions .sa-title { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; padding-left: 2px; }
+        .sidebar-actions .btn { width: 100%; justify-content: flex-start; font-size: 12px; padding: 10px 14px; }
+        .sidebar-actions .btn:hover { transform: none; filter: brightness(1.12); }
         
         .sidebar-stats { padding: 25px 20px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.2); }
         .stat-row { margin-bottom: 15px; }
@@ -709,6 +714,16 @@
                 <div id="missingModelWarning" class="nav-item" style="display: none; color: var(--warning); border-left-color: var(--warning); background: rgba(245, 158, 11, 0.05);" onclick="openMissingModelsModal()">
                     <i class="fas fa-exclamation-triangle"></i> <span id="warningText">Hiányok</span>
                 </div>
+
+                <div class="sidebar-actions">
+                    <div class="sa-title">Műveletek</div>
+                    <button class="btn btn-primary" onclick="openModal()"><i class="fas fa-plus"></i> Új Stencil</button>
+                    <button class="btn btn-print" onclick="openPrintModal()"><i class="fas fa-print"></i> Nyomtatás</button>
+                    <button class="btn btn-optimize" onclick="openOptimizeIntro()"><i class="fas fa-magic"></i> Optimalizálás</button>
+                    <button class="btn btn-outline" style="border-color: var(--success); color: var(--success);" onclick="exportToCSV()"><i class="fas fa-file-csv"></i> CSV Export</button>
+                    <button class="btn" style="background:#0d9488; border:none;" onclick="openCsvImport()"><i class="fas fa-file-import"></i> CSV Import</button>
+                    <button class="btn btn-merge" onclick="openMergeModal()" style="display:none;"><i class="fas fa-link"></i> Vonalkód Import</button>
+                </div>
             </div>
             <div class="sidebar-stats">
                 <div class="stat-row"><span>Teljes Férőhely</span><strong id="stat-capacity">0</strong></div>
@@ -726,11 +741,6 @@
                 </form>
 
                 <div class="action-buttons">
-                    <button class="btn btn-optimize" onclick="openOptimizeIntro()"><i class="fas fa-magic"></i> Optimalizálás</button>
-                    <button class="btn btn-merge" onclick="openMergeModal()" style="display:none;"><i class="fas fa-link"></i> Vonalkód Import</button>
-                    <button class="btn btn-outline" style="border-color: var(--success); color: var(--success);" onclick="exportToCSV()"><i class="fas fa-file-csv"></i> CSV Export</button>
-                    <button class="btn btn-primary" onclick="openModal()"><i class="fas fa-plus"></i> Új Stencil</button>
-                    <button class="btn btn-print" onclick="openPrintModal()"><i class="fas fa-print"></i> Nyomtatás</button>
                     <button class="btn" style="background-color: var(--danger); border-color: var(--danger);" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Kilépés</button>
                 </div>
             </div>
@@ -1069,6 +1079,41 @@
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeModal('mergeModal')"><i class="fas fa-arrow-left"></i> Mégse</button>
                 <button class="btn" id="mergeApplyBtn" style="background: linear-gradient(135deg, #14b8a6, #0d9488); border:none; color:white;" onclick="confirmApplyMerge()"><i class="fas fa-check"></i> Összefésülés Végrehajtása</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== ÚJ: CSV IMPORT MODAL ===================== -->
+    <div class="modal-overlay" id="csvImportModal">
+        <div class="modal-content opt-modal-wide">
+            <div class="modal-header" style="border-bottom-color: #0d9488;">
+                <span style="color: #2dd4bf;"><i class="fas fa-file-import"></i> CSV Import — adatok feltöltése</span>
+                <button class="modal-close" onclick="closeModal('csvImportModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="opt-intro" style="background: linear-gradient(135deg, rgba(13,148,136,0.08), rgba(20,184,166,0.04)); border-color: rgba(13,148,136,0.2);">
+                    <strong style="color:#2dd4bf;"><i class="fas fa-info-circle"></i> Hogyan működik? (Export → Módosítás → Import)</strong>
+                    <ul>
+                        <li>📤 Először a <strong>CSV Export</strong>tal letöltöd az adatbázist.</li>
+                        <li>✏️ Excelben/szerkesztőben módosítod (modell, panel, folyamat, munkaszám, megjegyzés, hely…).</li>
+                        <li>📥 Itt visszatöltöd: a <strong>Stencil Szám (maszk)</strong> alapján frissíti vagy hozzáadja a sorokat.</li>
+                        <li>🛡️ Előbb <strong>előnézet</strong>, és csak a gombra ír az adatbázisba. Az import <strong>nem töröl</strong> semmit (törölni a felületen tudsz).</li>
+                        <li>⚠️ Ugyanazt a pontosvesszős (<code>;</code>) formátumot töltsd vissza, amit az Export adott.</li>
+                    </ul>
+                </div>
+                <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display:none" onchange="handleCsvFile(this)">
+                <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                    <button class="btn" style="background:#0d9488; border:none; color:white;" onclick="document.getElementById('csvFileInput').click()"><i class="fas fa-folder-open"></i> CSV fájl választása</button>
+                    <span id="csvFileName" style="color:var(--text-muted); font-size:13px;">Nincs fájl kiválasztva</span>
+                </div>
+                <div class="opt-preview-stats" id="csvStats" style="margin-top:15px; display:none;"></div>
+                <div id="csvWarn" style="display:none; margin-top:10px;" class="opt-warning-banner"><i class="fas fa-exclamation-triangle"></i><div id="csvWarnText"></div></div>
+                <div style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin:12px 0 8px 0; display:none;" id="csvListTitle"><i class="fas fa-list-check"></i> Változások (<span id="csvChangeCount">0</span>):</div>
+                <div class="opt-movement-list" id="csvPreviewList" style="display:none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('csvImportModal')"><i class="fas fa-arrow-left"></i> Mégse</button>
+                <button class="btn" id="csvImportBtn" style="background:#0d9488; border:none; color:white; opacity:0.4; cursor:not-allowed;" disabled onclick="confirmCsvImport()"><i class="fas fa-upload"></i> Import Végrehajtása</button>
             </div>
         </div>
     </div>
@@ -2239,6 +2284,208 @@ window.autoMergeBarcodes = async function(){
             : ('Vonalkód automatikusan összefésülve: '+done+' maszk'));
     }, 600);
 };
+
+/* ============================================================================
+   CSV IMPORT — Export → Módosítás → Import.  (ÚJ, KÜLÖNÁLLÓ MODUL)
+   A CSV Export formátumát olvassa vissza, maszk (Stencil Szám) alapján
+   FRISSÍT vagy HOZZÁAD. NEM töröl. Előbb előnézet, csak gombra ír.
+   ============================================================================ */
+window.currentCsvPlan = null;
+
+window.openCsvImport = function(){
+    if(!window.isAdmin) return;
+    window.currentCsvPlan = null;
+    document.getElementById('csvFileInput').value = '';
+    document.getElementById('csvFileName').innerText = 'Nincs fájl kiválasztva';
+    const stats = document.getElementById('csvStats'); stats.style.display='none'; stats.innerHTML='';
+    document.getElementById('csvWarn').style.display = 'none';
+    document.getElementById('csvListTitle').style.display = 'none';
+    const lst = document.getElementById('csvPreviewList'); lst.style.display='none'; lst.innerHTML='';
+    const btn = document.getElementById('csvImportBtn');
+    btn.disabled = true; btn.style.opacity = '0.4'; btn.style.cursor = 'not-allowed';
+    btn.innerHTML = '<i class="fas fa-upload"></i> Import Végrehajtása';
+    document.getElementById('csvImportModal').classList.add('active');
+};
+
+window.handleCsvFile = function(input){
+    const file = input.files && input.files[0];
+    if(!file) return;
+    document.getElementById('csvFileName').innerText = file.name;
+    const reader = new FileReader();
+    reader.onload = function(e){
+        try { buildCsvPlan(e.target.result); }
+        catch(err){ console.error('CSV feldolgozási hiba:', err); showToast('Hiba a CSV beolvasásakor: '+err.message); }
+    };
+    reader.onerror = function(){ showToast('Nem sikerült beolvasni a fájlt.'); };
+    reader.readAsText(file, 'UTF-8');
+};
+
+function parseCsvImport(text){
+    if(text && text.charCodeAt(0)===0xFEFF) text = text.slice(1); // BOM le
+    const lines = text.split(/\r\n|\n|\r/).filter(function(l){ return l.trim()!==''; });
+    const valid = [], invalid = [];
+    if(lines.length < 2) return { valid:valid, invalid:invalid, noData:true };
+    const seenPos = {};
+    for(let i=1; i<lines.length; i++){
+        const cols = lines[i].split(';');
+        const szekreny  = (cols[0]||'').trim();
+        const polcRaw   = (cols[1]||'').trim();
+        const maszk     = (cols[2]||'').trim().toUpperCase();
+        const modell    = (cols[3]||'').trim();
+        const panelszam = (cols[4]||'').trim();
+        const folyamat  = (cols[5]||'').trim();
+        const munkaszam = (cols[6]||'').trim();
+        const megjegyzes= (cols[7]||'').trim();
+        if(!maszk) continue; // üres maszk (pl. üres polc sor) -> csendben kihagy
+        const polc = parseInt(polcRaw, 10);
+        const cab = window.cabinetsConfig.find(function(c){ return c.name===szekreny; });
+        let reason = '';
+        if(!szekreny || !cab) reason = 'ismeretlen szekrény';
+        else if(isNaN(polc)) reason = 'hibás polc érték';
+        else if(polc < cab.start || polc > cab.end) reason = 'polc tartományon kívül ('+cab.start+'-'+cab.end+')';
+        if(reason){ invalid.push({ maszk:maszk, line:i+1, reason:reason }); continue; }
+        const key = szekreny + '|' + polc;
+        if(seenPos[key] && seenPos[key] !== maszk){
+            invalid.push({ maszk:maszk, line:i+1, reason:'duplikált hely a CSV-ben ('+szekreny+', '+polc+'. polc, már: '+seenPos[key]+')' });
+            continue;
+        }
+        seenPos[key] = maszk;
+        valid.push({ maszk:maszk, szekreny:szekreny, polc:polc, modell:modell, panelszam:panelszam, folyamat:folyamat, munkaszam:munkaszam, megjegyzes:megjegyzes });
+    }
+    return { valid:valid, invalid:invalid };
+}
+
+function csvRowEqualsItem(item, row){
+    return (item.szekreny||'')===row.szekreny
+        && parseInt(item.polc,10)===row.polc
+        && (item.modell||'')===row.modell
+        && (item.panelszam||'')===row.panelszam
+        && (item.folyamat||'')===row.folyamat
+        && (item.munkaszam||'')===row.munkaszam
+        && (item.megjegyzes||'')===row.megjegyzes;
+}
+
+function buildCsvPlan(text){
+    const parsed = parseCsvImport(text);
+    const toWrite = [];
+    let unchanged = 0;
+    parsed.valid.forEach(function(row){
+        const existing = window.stencilData.find(function(d){ return d.maszk===row.maszk; });
+        if(!existing){ toWrite.push({ row:row, type:'új' }); }
+        else if(!csvRowEqualsItem(existing, row)){ toWrite.push({ row:row, type:'módosítás' }); }
+        else { unchanged++; }
+    });
+    const newCount = toWrite.filter(function(t){ return t.type==='új'; }).length;
+    const updCount = toWrite.filter(function(t){ return t.type==='módosítás'; }).length;
+    window.currentCsvPlan = { toWrite:toWrite, invalid:parsed.invalid };
+
+    const stats = document.getElementById('csvStats');
+    stats.style.display = 'grid';
+    stats.innerHTML =
+        '<div class="opt-stat-card stay"><div class="v">'+newCount+'</div><div class="l">Új sor</div></div>'
+      + '<div class="opt-stat-card move"><div class="v">'+updCount+'</div><div class="l">Módosítás</div></div>'
+      + '<div class="opt-stat-card"><div class="v">'+unchanged+'</div><div class="l">Változatlan</div></div>'
+      + '<div class="opt-stat-card percent"><div class="v">'+parsed.invalid.length+'</div><div class="l">Kihagyott (hibás)</div></div>';
+
+    const warn = document.getElementById('csvWarn');
+    if(parsed.invalid.length > 0){
+        const preview = parsed.invalid.slice(0,6).map(function(iv){ return iv.maszk+' ('+iv.line+'. sor): '+iv.reason; }).join('<br>');
+        document.getElementById('csvWarnText').innerHTML = '<strong>'+parsed.invalid.length+' sor kihagyva</strong> (nem íródik be):<br>'+preview+(parsed.invalid.length>6?'<br>…':'');
+        warn.style.display = 'flex';
+    } else { warn.style.display = 'none'; }
+
+    const title = document.getElementById('csvListTitle');
+    const list = document.getElementById('csvPreviewList');
+    document.getElementById('csvChangeCount').innerText = toWrite.length;
+    if(toWrite.length > 0){
+        title.style.display = 'block';
+        list.style.display = 'block';
+        list.innerHTML = toWrite.map(function(t){
+            const r = t.row;
+            const badge = t.type==='új'
+                ? '<span class="opt-mv-to" style="color:var(--success);">ÚJ</span>'
+                : '<span class="opt-mv-to" style="color:var(--warning);">MÓDOSÍTÁS</span>';
+            let detail = r.szekreny+', '+r.polc+'. polc';
+            if(r.modell) detail += ' · '+r.modell;
+            return '<div class="opt-mv-row"><span class="opt-mv-mask">'+r.maszk+'</span><span class="opt-mv-from" style="margin-right:auto;">'+detail+'</span>'+badge+'</div>';
+        }).join('');
+    } else {
+        title.style.display = 'none';
+        list.style.display = 'block';
+        list.innerHTML = '<div style="text-align:center; color:var(--success); padding:15px; font-style:italic;"><i class="fas fa-check-circle"></i> Nincs változás — a CSV megegyezik a jelenlegi adatbázissal'+(parsed.invalid.length?' (a hibás sorokat leszámítva)':'')+'.</div>';
+    }
+
+    const btn = document.getElementById('csvImportBtn');
+    if(toWrite.length > 0){
+        btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
+        btn.innerHTML = '<i class="fas fa-upload"></i> Import Végrehajtása ('+toWrite.length+')';
+    } else {
+        btn.disabled = true; btn.style.opacity = '0.4'; btn.style.cursor = 'not-allowed';
+        btn.innerHTML = '<i class="fas fa-upload"></i> Nincs Mit Importálni';
+    }
+}
+
+window.confirmCsvImport = function(){
+    if(!window.currentCsvPlan || window.currentCsvPlan.toWrite.length===0){ showToast('Nincs mit importálni!'); return; }
+    const n = window.currentCsvPlan.toWrite.length;
+    const newN = window.currentCsvPlan.toWrite.filter(function(t){ return t.type==='új'; }).length;
+    const updN = n - newN;
+    customConfirm(
+        '<i class="fas fa-upload" style="color:#2dd4bf;"></i> CSV Import Megerősítése',
+        'Most <strong style="color:#2dd4bf;">'+n+' sort</strong> írsz az adatbázisba: <strong style="color:var(--success);">'+newN+' új</strong>, <strong style="color:var(--warning);">'+updN+' módosítás</strong>.<br><br>'
+      + '<div style="background: rgba(13,148,136,0.1); border:1px solid rgba(13,148,136,0.3); padding:10px; border-radius:6px; margin:10px 0;">'
+      +   '<strong>ℹ️ Megjegyzés:</strong> Az import a CSV szerinti értékekkel <strong>felülírja</strong> az érintett maszkok mezőit, de <strong>nem töröl</strong> semmit, ami nincs a fájlban.'
+      + '</div>Folytatod?',
+        'Igen, Importálom',
+        applyCsvImport
+    );
+};
+
+async function applyCsvImport(){
+    const overlay = document.getElementById('optProgressOverlay');
+    const bar = document.getElementById('optProgressBar');
+    const txt = document.getElementById('optProgressText');
+    const det = document.getElementById('optProgressDetail');
+    const items = (window.currentCsvPlan && window.currentCsvPlan.toWrite) || [];
+    const total = items.length;
+    let done=0, errors=0;
+    if(txt) txt.innerText = 'CSV import folyamatban...';
+    if(det) det.innerText = 'Adatok írása az adatbázisba. Kérlek várj.';
+    if(bar) bar.style.width = '0%';
+    if(overlay) overlay.classList.add('active');
+    const saver = window.saveToFirebaseQuiet || window.saveToFirebase;
+    try {
+        for(const t of items){
+            const r = t.row;
+            if(det) det.innerText = r.maszk + '  ('+(done+1)+'/'+total+')';
+            if(bar) bar.style.width = Math.round((done/total)*100)+'%';
+            const rec = {
+                maszk: r.maszk,
+                modell: r.modell || '',
+                panelszam: r.panelszam || '',
+                folyamat: r.folyamat || '',
+                munkaszam: r.munkaszam || '',
+                megjegyzes: r.megjegyzes || '',
+                szekreny: r.szekreny,
+                polc: r.polc
+            };
+            try { await saver(rec); } catch(e){ console.error('CSV import hiba:', r.maszk, e); errors++; }
+            done++;
+        }
+        if(bar) bar.style.width = '100%';
+        if(txt) txt.innerText = 'Import kész!';
+        if(det) det.innerText = errors>0 ? (done-errors)+' sikeres, '+errors+' hiba' : done+' sor beírva.';
+        setTimeout(function(){
+            if(overlay) overlay.classList.remove('active');
+            closeModal('csvImportModal');
+            showToast(errors>0 ? ('CSV import kész: '+(done-errors)+' sikeres, '+errors+' hiba') : ('CSV import kész! '+done+' sor frissítve.'));
+            window.currentCsvPlan = null;
+        }, 1000);
+    } catch(e){
+        if(overlay) overlay.classList.remove('active');
+        alert('Hiba a CSV import közben: '+e.message);
+    }
+}
 </script>
 </body>
 </html>
