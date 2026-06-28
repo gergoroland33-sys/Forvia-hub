@@ -1018,15 +1018,15 @@
                 <div class="label-size-row">
                     <div class="form-group">
                         <label>Címke szélesség (mm)</label>
-                        <input type="number" id="labelW" class="form-control" value="65" min="10" max="120" step="0.5" oninput="refreshLabelPreview()">
+                        <input type="number" id="labelW" class="form-control" value="60" min="10" max="120" step="0.5" oninput="refreshLabelPreview()">
                     </div>
                     <div class="form-group">
                         <label>Címke magasság (mm)</label>
-                        <input type="number" id="labelH" class="form-control" value="50" min="10" max="120" step="0.5" oninput="refreshLabelPreview()">
+                        <input type="number" id="labelH" class="form-control" value="55" min="10" max="120" step="0.5" oninput="refreshLabelPreview()">
                     </div>
                 </div>
                 <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px; line-height:1.5;">
-                    <i class="fas fa-info-circle"></i> Méret már beállítva: <strong>65 × 50 mm (fekvő)</strong> — a BarTender címke mérete. A <span style="color:#aecb52;">zöld</span> a fizikai papír színe, nyomtatáskor csak a <strong>fekete</strong> tartalom megy ki. Ha kell, itt finomhangolhatod, és megjegyződik.
+                    <i class="fas fa-info-circle"></i> Méret már beállítva: <strong>60 × 55 mm (fekvő)</strong> — a BarTender címke mérete. A <span style="color:#aecb52;">zöld</span> a fizikai papír színe, nyomtatáskor csak a <strong>fekete</strong> tartalom megy ki. Ha kell, itt finomhangolhatod, és megjegyződik.
                 </div>
                 <div class="label-preview-wrap">
                     <div id="labelPreviewHost"></div>
@@ -1957,17 +1957,17 @@ function renderLabelCardHTML(data, wmm, hmm){
 }
 
 // Címke méret megjegyzése (localStorage, ha nem elérhető -> memória)
-let labelSizeMem = { w: 65, h: 50 };
+let labelSizeMem = { w: 60, h: 55 };
 function loadLabelSize(){
-    try { const s = localStorage.getItem('invenpro_label_size'); if(s){ const o=JSON.parse(s); if(o&&o.w&&o.h){ labelSizeMem={w:+o.w,h:+o.h}; } } } catch(e){}
+    try { const s = localStorage.getItem('invenpro_label_size_v2'); if(s){ const o=JSON.parse(s); if(o&&o.w&&o.h){ labelSizeMem={w:+o.w,h:+o.h}; } } } catch(e){}
     return labelSizeMem;
 }
 function saveLabelSize(w,h){
     labelSizeMem={w:+w,h:+h};
-    try { localStorage.setItem('invenpro_label_size', JSON.stringify(labelSizeMem)); } catch(e){}
+    try { localStorage.setItem('invenpro_label_size_v2', JSON.stringify(labelSizeMem)); } catch(e){}
 }
-function getLabelW(){ let v=parseFloat(document.getElementById('labelW').value); return (isNaN(v)||v<10)?65:v; }
-function getLabelH(){ let v=parseFloat(document.getElementById('labelH').value); return (isNaN(v)||v<10)?50:v; }
+function getLabelW(){ let v=parseFloat(document.getElementById('labelW').value); return (isNaN(v)||v<10)?60:v; }
+function getLabelH(){ let v=parseFloat(document.getElementById('labelH').value); return (isNaN(v)||v<10)?55:v; }
 
 // Címke modal megnyitása az adatbázis sorból
 window.openLabelModal = function(maszkId){
