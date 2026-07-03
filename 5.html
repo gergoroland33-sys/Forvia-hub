@@ -419,7 +419,7 @@
 
         #adminPanel { width: 100%; height: 100%; display: none; }
         
-        .sidebar { width: 240px; background-color: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 50; box-shadow: 4px 0 15px rgba(0,0,0,0.3); }
+        .sidebar { width: 240px; flex-shrink: 0; background-color: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 50; box-shadow: 4px 0 15px rgba(0,0,0,0.3); overflow-y: auto; }
         .logo { padding: 25px 20px; font-size: 22px; font-weight: 800; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; letter-spacing: 1px; }
         .logo i { color: var(--accent); font-size: 24px; }
         .nav-items { padding: 15px 0; flex-grow: 1; }
@@ -431,7 +431,7 @@
         .sidebar-actions .btn { width: 100%; justify-content: flex-start; font-size: 12px; padding: 10px 14px; }
         .sidebar-actions .btn:hover { transform: none; filter: brightness(1.12); }
         
-        .sidebar-stats { padding: 25px 20px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.2); }
+        .sidebar-stats { padding: 25px 20px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.2); flex-shrink: 0; }
         .stat-row { margin-bottom: 15px; }
         .stat-row:last-child { margin-bottom: 0; }
         .stat-row span { display: block; font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
@@ -842,7 +842,7 @@
                     <button class="btn btn-primary" onclick="openJigModal()"><i class="fas fa-plus"></i> Új JIG</button>
                     <button class="btn btn-outline" style="border-color: var(--success); color: var(--success);" onclick="exportJigCSV()"><i class="fas fa-file-csv"></i> CSV Export</button>
                     <button class="btn" style="background:#0d9488; border:none;" onclick="openJigCsvImport()"><i class="fas fa-file-import"></i> CSV Import</button>
-                    <button class="btn" style="background:#b45309; border:none;" onclick="importMissingJigs()"><i class="fas fa-file-excel"></i> Excel Import</button>
+                    <button class="btn" style="background:#b45309; border:none; display:none;" onclick="importMissingJigs()"><i class="fas fa-file-excel"></i> Excel Import</button>
                 </div>
                 <div class="opt-preview-stats" id="jigStatsRow" style="margin-bottom: 15px;"></div>
                 <div class="table-container">
@@ -2793,6 +2793,16 @@ function jigStatuszChip(st){
 }
 
 /* ---------------- JIG TÁBLÁZAT RENDER ---------------- */
+
+// Hiányos-e a JIG adata? Akkor jelez, ha az Asset szám VAGY az FD azonosító
+// teljesen üres — ezek a vonalkód alkotórészei. A szándékos "-" NEM számít hiánynak.
+window.jigDataIncomplete = function(item){
+    if(!item) return false;
+    const asset = (item.asset && String(item.asset).trim()) || '';
+    const fd = (item.fd && String(item.fd).trim()) || '';
+    return !(asset && fd);
+};
+
 window.renderJigUI = function(){
     if(!window.isAdmin) return;
     const tbody = document.getElementById('jigTableBody');
@@ -2825,14 +2835,19 @@ window.renderJigUI = function(){
             ? '<span class="model-text-table">'+lblEsc(models[0])+'</span>'+(models.length>1 ? ' <span class="jig-more" title="'+lblEsc(item.modellek||'')+'">+'+(models.length-1)+'</span>' : '')
             : '-';
         const safeId = jigSafe(item.azonosito);
+        const incomplete = window.jigDataIncomplete(item);
+        const warnIcon = incomplete
+            ? '<i class="fas fa-exclamation-circle" style="color:var(--warning); font-size:14px; margin-left:7px; cursor:help; filter:drop-shadow(0 0 4px rgba(245,158,11,0.7)); vertical-align:middle;" title="Hiányos JIG adat: az Asset szám vagy az FD azonosító üres — a vonalkód így hiányosan generálódna. Kattints a ceruzára a pótláshoz."></i>'
+            : '';
         html += '<tr>'
-            + '<td><strong style="color:white; font-size:15px;">'+lblEsc(item.azonosito)+'</strong></td>'
+            + '<td><strong style="color:white; font-size:15px;">'+lblEsc(item.azonosito)+'</strong>'+warnIcon+'</td>'
             + '<td style="color:var(--text-muted);">'+lblEsc(item.tipus||'-')+'</td>'
             + '<td>'+(item.kategoria ? '<span class="jig-kat">'+lblEsc(item.kategoria)+'</span>' : '-')+'</td>'
             + '<td>'+modelHtml+'</td>'
             + '<td>'+jigStatuszChip(item.statusz)+'</td>'
             + '<td style="color:var(--text-muted); font-size:12px; white-space:nowrap;">'+lblEsc(item.kiadas||'-')+'</td>'
             + '<td style="text-align:right; white-space:nowrap;">'
+            +   (incomplete ? '<i class="fas fa-exclamation-circle" style="color:var(--warning); font-size:14px; margin-right:3px; cursor:help; filter:drop-shadow(0 0 4px rgba(245,158,11,0.6));" title="Hiányos JIG adat (Asset szám / FD azonosító) — a vonalkód ezek nélkül hiányos"></i>' : '')
             +   '<button class="btn-icon btn-label" onclick="openJigLabelModal(\''+safeId+'\')" title="Címke nyomtatás"><i class="fas fa-tag"></i></button>'
             +   '<button class="btn-icon btn-edit" onclick="openJigModal(\''+safeId+'\')"><i class="fas fa-pencil-alt"></i></button>'
             +   '<button class="btn-icon btn-delete" onclick="confirmJigDelete(\''+safeId+'\')"><i class="fas fa-trash"></i></button>'
