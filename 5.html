@@ -110,7 +110,6 @@
                 showToast("Sikeres belépés: Admin mód aktív");
                 if (typeof window.autoMergeBarcodes === 'function') window.autoMergeBarcodes();
                 if (typeof window.renderJigUI === 'function') window.renderJigUI();
-                if (typeof window.autoSeedJigs === 'function') window.autoSeedJigs();
             } else {
                 window.isAdmin = false;
                 loginBtn.style.display = 'flex'; 
@@ -225,17 +224,22 @@
 
         onSnapshot(collection(db, "jigs"), (snapshot) => {
             window.isJigLoaded = true;
+            window.jigLoadError = null;
             window.jigData = [];
             snapshot.forEach((d) => {
                 window.jigData.push({ id: d.id, ...d.data() });
             });
             if (window.isAdmin) {
                 if (typeof window.renderJigUI === 'function') window.renderJigUI();
-                if (typeof window.autoSeedJigs === 'function') window.autoSeedJigs();
             }
         }, (error) => {
-            // Szándékosan NEM nyúl a fő kapcsolat-státuszhoz (a publikus stencil nézet védve marad)
+            // Szándékosan NEM nyúl a fő kapcsolat-státuszhoz (a publikus stencil nézet védve marad).
+            // Ha a "jigs" kollekcióra nincs Firestore szabály, ez itt permission-denied lesz —
+            // eltároljuk, hogy a JIG fül konkrét, érthető üzenetet mutathasson.
+            window.jigLoadError = error;
+            window.isJigLoaded = true;
             console.error("Firebase (jigs) hiba:", error);
+            if (window.isAdmin && typeof window.renderJigUI === 'function') window.renderJigUI();
         });
 
         window.saveJigToFirebase = async (dataObj) => {
@@ -772,7 +776,6 @@
             <div class="nav-items">
                 <div class="nav-item active" onclick="switchTab('map', this)"><i class="fas fa-border-all"></i> Térkép Nézet</div>
                 <div class="nav-item" onclick="switchTab('db', this)"><i class="fas fa-list-ul"></i> Adatbázis</div>
-                <div class="nav-item" onclick="switchTab('jig', this)"><i class="fas fa-toolbox"></i> JIG Adatbázis</div>
                 <div id="missingModelWarning" class="nav-item" style="display: none; color: var(--warning); border-left-color: var(--warning); background: rgba(245, 158, 11, 0.05);" onclick="openMissingModelsModal()">
                     <i class="fas fa-exclamation-triangle"></i> <span id="warningText">Hiányok</span>
                 </div>
@@ -803,6 +806,7 @@
                 </form>
 
                 <div class="action-buttons">
+                    <button id="topJigBtn" class="btn" style="background:linear-gradient(135deg,#b45309,#f59e0b); border:none;" onclick="switchTab('jig', this)"><i class="fas fa-toolbox"></i> JIG Adatbázis</button>
                     <button class="btn" style="background-color: var(--danger); border-color: var(--danger);" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Kilépés</button>
                 </div>
             </div>
@@ -1369,8 +1373,17 @@
     function switchTab(tabId, element) {
         document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.content-area').forEach(c => c.classList.remove('active'));
-        element.classList.add('active');
-        document.getElementById('tab-' + tabId).classList.add('active');
+        // A felső "JIG Adatbázis" gomb nem .nav-item, ezért a .active-t csak
+        // valódi bal oldali menüpontra tesszük — így a gombok kinézete nem torzul.
+        if (element && element.classList && element.classList.contains('nav-item')) {
+            element.classList.add('active');
+        }
+        // A felső JIG gombot külön emeljük ki, ha az a fül aktív.
+        const topJigBtn = document.getElementById('topJigBtn');
+        if (topJigBtn) topJigBtn.style.filter = (tabId === 'jig') ? 'brightness(1.15)' : '';
+        const tabEl = document.getElementById('tab-' + tabId);
+        if (tabEl) tabEl.classList.add('active');
+        if (tabId === 'jig' && typeof window.renderJigUI === 'function') window.renderJigUI();
     }
 
     let currentSearchTerm = "";
@@ -2827,9 +2840,15 @@ window.renderJigUI = function(){
             + '</tr>';
     });
     if(html === ''){
-        html = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted); font-style:italic; padding:25px;">'
-             + (total===0 ? 'Az adatbázis még üres — belépéskor automatikusan betöltődik az Excel (270 JIG), vagy használd az Excel Import gombot.' : 'Nincs a keresésnek megfelelő JIG.')
-             + '</td></tr>';
+        let msg;
+        if(window.jigLoadError){
+            msg = '<span style="color:var(--danger);"><i class="fas fa-shield-alt"></i> Nincs jogosultság a JIG adatokhoz (Firestore szabály hiányzik a <code>jigs</code> kollekcióra). Az Excel Import gomb részletes útmutatót ad.</span>';
+        } else if(total===0){
+            msg = 'Az adatbázis még üres — kattints az <strong style="color:#fbbf24;">Excel Import</strong> gombra a beépített 270 JIG betöltéséhez, vagy a <strong>CSV Import</strong>tal tallózd be a saját fájlodat.';
+        } else {
+            msg = 'Nincs a keresésnek megfelelő JIG.';
+        }
+        html = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted); font-style:italic; padding:25px;">' + msg + '</td></tr>';
     }
     tbody.innerHTML = html;
 };
@@ -3281,37 +3300,59 @@ async function jigSeedList(keys, title, detail){
     if(overlay) overlay.classList.add('active');
     const saver = window.saveJigQuiet || window.saveJigToFirebase;
     const total = keys.length;
-    let done = 0, errors = 0;
+    let done = 0, errors = 0, firstErr = null;
     for(const az of keys){
         if(det) det.innerText = az + '  (' + (done+1) + '/' + total + ')';
         if(bar) bar.style.width = Math.round((done/total)*100) + '%';
-        try { await saver(jigRecFromMaster(az)); } catch(e){ console.error('JIG seed hiba:', az, e); errors++; }
+        try {
+            await saver(jigRecFromMaster(az));
+        } catch(e){
+            console.error('JIG seed hiba:', az, e);
+            if(!firstErr) firstErr = e;
+            errors++;
+            // Ha jogosultsági hiba, felesleges tovább próbálkozni 270-szer.
+            if(e && (e.code === 'permission-denied' || /permission/i.test(e.message||''))) break;
+        }
         done++;
     }
     if(bar) bar.style.width = '100%';
-    if(txt) txt.innerText = 'Kész!';
+    if(txt) txt.innerText = errors>0 ? 'Hiba történt' : 'Kész!';
     setTimeout(function(){
         if(overlay) overlay.classList.remove('active');
-        showToast(errors>0 ? ('JIG Excel import: '+(done-errors)+' sikeres, '+errors+' hiba') : ('JIG Excel import kész: '+done+' db betöltve'));
-    }, 800);
+        if(errors === 0){
+            showToast('JIG Excel import kész: '+done+' db betöltve');
+            return;
+        }
+        // Beszédes hibaüzenet — leggyakrabban a hiányzó Firestore szabály az ok.
+        const isPerm = firstErr && (firstErr.code === 'permission-denied' || /permission/i.test(firstErr.message||''));
+        if(isPerm){
+            jigShowRulesHelp(errors);
+        } else {
+            alert('JIG import: '+(done-errors)+' sikeres, '+errors+' sikertelen.\n\nElső hiba: '+(firstErr ? (firstErr.code||'') + ' ' + (firstErr.message||firstErr) : 'ismeretlen'));
+        }
+    }, 600);
 }
 
-/* Admin belépéskor MAGÁTÓL lefut, de KIZÁRÓLAG ha a "jigs" kollekció még teljesen üres
-   (első használat). Ha már van benne adat, SOHA nem tölt magától — így a törléseid
-   megmaradnak. Utólagos pótlásra az Excel Import gomb való (csak a hiányzókat adja hozzá). */
-window._jigSeedDone = false;
-window._jigSeedRunning = false;
-window.autoSeedJigs = async function(){
-    if(window._jigSeedRunning || window._jigSeedDone) return;
-    if(!window.isAdmin || !window.jigMasterDb) return;
-    if(!window.isJigLoaded) return; // az első snapshotra várunk
-    if(window.jigData.length > 0){ window._jigSeedDone = true; return; }
-    window._jigSeedRunning = true;
-    const keys = Object.keys(window.jigMasterDb);
-    await jigSeedList(keys, 'JIG Excel adatok betöltése...', 'Egyszeri művelet: a beépített Excel (Munka1) beírása a külön "jigs" kollekcióba.');
-    window._jigSeedRunning = false;
-    window._jigSeedDone = true;
-};
+// Konkrét, másolható útmutató, ha a "jigs" kollekcióra nincs írási jog
+function jigShowRulesHelp(errCount){
+    customConfirm(
+        '<i class="fas fa-shield-alt" style="color:var(--danger);"></i> Hiányzó Firestore jogosultság',
+        'A JIG mentés '+(errCount?('mind a '+errCount+' sornál '):'')+'elutasításra került: a Firebase <strong>nem enged írni</strong> a <code>jigs</code> kollekcióba.<br><br>'
+      + '<div style="background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.3); padding:12px; border-radius:6px; margin:10px 0; font-size:13px; line-height:1.6;">'
+      +   '<strong>Megoldás (egyszeri):</strong> Firebase Console → Firestore Database → <strong>Rules</strong>, és a szabályok közé vedd fel a <code>jigs</code> kollekciót is, ugyanúgy, ahogy a <code>stencils</code>-nél van. Például:'
+      +   '<pre style="background:#0b1120; color:#e2e8f0; padding:10px; border-radius:6px; overflow:auto; margin-top:8px; font-size:12px;">match /jigs/{docId} {\n  allow read: if true;\n  allow write: if request.auth != null;\n}</pre>'
+      +   'Ha a szabályod <code>match /{document=**}</code> formájú (mindenre vonatkozik), akkor viszont más az ok — írd meg a pontos hibát.'
+      + '</div>'
+      + 'A Publish után lépj be újra, és indítsd az Excel Importot.',
+        'Értem',
+        function(){}
+    );
+    // A megerősítő ("Értem") gomb itt csak bezár — nincs veszélyes művelet.
+}
+
+/* Automatikus seed KIKAPCSOLVA — a felhasználó maga tölti be az Excelt az
+   "Excel Import" gombbal (csak a hiányzó azonosítókat adja hozzá, semmit nem ír felül). */
+window.autoSeedJigs = function(){ /* szándékosan üres */ };
 
 window.importMissingJigs = function(){
     if(!window.isAdmin || !window.jigMasterDb) return;
@@ -3319,14 +3360,19 @@ window.importMissingJigs = function(){
         return !(window.jigData||[]).some(function(d){ return d.azonosito === az; });
     });
     if(missing.length === 0){ showToast('Minden Excel JIG már az adatbázisban van!'); return; }
+    const total = Object.keys(window.jigMasterDb).length;
+    const isFirst = (window.jigData||[]).length === 0;
     customConfirm(
         '<i class="fas fa-file-excel" style="color:#fbbf24;"></i> Excel Import',
-        'A beépített Excel adatbázisból <strong style="color:#fbbf24;">'+missing.length+' hiányzó JIG</strong> kerül be az adatbázisba.<br><br>'
+        (isFirst
+            ? 'A beépített Excel adatbázis (Munka1) <strong style="color:#fbbf24;">'+total+' JIG</strong> sora kerül be az adatbázisba.'
+            : 'A beépített Excel adatbázisból <strong style="color:#fbbf24;">'+missing.length+' hiányzó JIG</strong> kerül be az adatbázisba.')
+      + '<br><br>'
       + '<div style="background: rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); padding:10px; border-radius:6px; margin:10px 0;">'
       +   '<strong>🛡️ Biztonság:</strong> Csak a HIÁNYZÓ azonosítók kerülnek be — a meglévő JIG-jeidet <strong>nem írja felül</strong> és nem törli.'
       + '</div>Folytatod?',
         'Igen, Importálom',
-        function(){ jigSeedList(missing, 'Excel Import folyamatban...', 'Hiányzó JIG-ek beírása.'); }
+        function(){ jigSeedList(missing, 'Excel Import folyamatban...', 'JIG-ek beírása az adatbázisba.'); }
     );
 };
 </script>
