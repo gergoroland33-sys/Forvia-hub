@@ -109,6 +109,8 @@
                 renderUI();
                 showToast("Sikeres belépés: Admin mód aktív");
                 if (typeof window.autoMergeBarcodes === 'function') window.autoMergeBarcodes();
+                if (typeof window.renderJigUI === 'function') window.renderJigUI();
+                if (typeof window.autoSeedJigs === 'function') window.autoSeedJigs();
             } else {
                 window.isAdmin = false;
                 loginBtn.style.display = 'flex'; 
@@ -212,6 +214,65 @@
             link.click();
             document.body.removeChild(link);
             showToast("CSV Adatbázis exportálva!");
+        };
+
+        /* =====================================================================
+           JIG ADATBÁZIS — ÚJ, KÜLÖNÁLLÓ MODUL (a stencil "szent grál" logikát
+           NEM érinti). Külön Firestore kollekció: "jigs" (doc id = Azonosító).
+           ===================================================================== */
+        window.jigData = [];
+        window.isJigLoaded = false;
+
+        onSnapshot(collection(db, "jigs"), (snapshot) => {
+            window.isJigLoaded = true;
+            window.jigData = [];
+            snapshot.forEach((d) => {
+                window.jigData.push({ id: d.id, ...d.data() });
+            });
+            if (window.isAdmin) {
+                if (typeof window.renderJigUI === 'function') window.renderJigUI();
+                if (typeof window.autoSeedJigs === 'function') window.autoSeedJigs();
+            }
+        }, (error) => {
+            // Szándékosan NEM nyúl a fő kapcsolat-státuszhoz (a publikus stencil nézet védve marad)
+            console.error("Firebase (jigs) hiba:", error);
+        });
+
+        window.saveJigToFirebase = async (dataObj) => {
+            try {
+                const currentUser = auth.currentUser;
+                const uploadData = {
+                    ...dataObj,
+                    updatedAt: new Date().toISOString(),
+                    updatedBy: currentUser ? currentUser.email : 'Ismeretlen'
+                };
+                await setDoc(doc(db, "jigs", dataObj.azonosito), uploadData);
+                closeModal('jigEditModal');
+                showToast("JIG mentve!");
+            } catch (e) { alert("Hiba a JIG mentése során: " + e.message); }
+        };
+
+        // Csendes JIG mentés (nincs toast / modal-zárás) — seed és import műveletekhez
+        window.saveJigQuiet = async (dataObj) => {
+            const currentUser = auth.currentUser;
+            const uploadData = {
+                ...dataObj,
+                updatedAt: new Date().toISOString(),
+                updatedBy: currentUser ? currentUser.email : 'Ismeretlen'
+            };
+            await setDoc(doc(db, "jigs", dataObj.azonosito), uploadData);
+        };
+
+        window.deleteJigFromFirebase = async (jigId) => {
+            try {
+                await deleteDoc(doc(db, "jigs", jigId));
+                showToast("JIG törölve!");
+            } catch (e) { alert("Hiba a JIG törlése során: " + e.message); }
+        };
+
+        // Csendes JIG törlés (azonosító átnevezéshez)
+        window.deleteJigQuiet = async (jigId) => {
+            await deleteDoc(doc(db, "jigs", jigId));
         };
 
     </script>
@@ -711,6 +772,7 @@
             <div class="nav-items">
                 <div class="nav-item active" onclick="switchTab('map', this)"><i class="fas fa-border-all"></i> Térkép Nézet</div>
                 <div class="nav-item" onclick="switchTab('db', this)"><i class="fas fa-list-ul"></i> Adatbázis</div>
+                <div class="nav-item" onclick="switchTab('jig', this)"><i class="fas fa-toolbox"></i> JIG Adatbázis</div>
                 <div id="missingModelWarning" class="nav-item" style="display: none; color: var(--warning); border-left-color: var(--warning); background: rgba(245, 158, 11, 0.05);" onclick="openMissingModelsModal()">
                     <i class="fas fa-exclamation-triangle"></i> <span id="warningText">Hiányok</span>
                 </div>
@@ -763,6 +825,36 @@
                             </tr>
                         </thead>
                         <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tab-jig" class="content-area">
+                <div class="jig-toolbar">
+                    <form class="search-container" onsubmit="return false;" autocomplete="off">
+                        <i class="fas fa-search"></i>
+                        <input type="search" id="jigSearchInput" class="search-input" placeholder="Keresés a JIG adatbázisban..." onkeyup="renderJigUI()" spellcheck="false" name="search_query_jig">
+                    </form>
+                    <button class="btn btn-primary" onclick="openJigModal()"><i class="fas fa-plus"></i> Új JIG</button>
+                    <button class="btn btn-outline" style="border-color: var(--success); color: var(--success);" onclick="exportJigCSV()"><i class="fas fa-file-csv"></i> CSV Export</button>
+                    <button class="btn" style="background:#0d9488; border:none;" onclick="openJigCsvImport()"><i class="fas fa-file-import"></i> CSV Import</button>
+                    <button class="btn" style="background:#b45309; border:none;" onclick="importMissingJigs()"><i class="fas fa-file-excel"></i> Excel Import</button>
+                </div>
+                <div class="opt-preview-stats" id="jigStatsRow" style="margin-bottom: 15px;"></div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Azonosító</th>
+                                <th>Típus</th>
+                                <th>Kategória</th>
+                                <th>Modellek</th>
+                                <th>Státusz</th>
+                                <th>Kiadás</th>
+                                <th style="text-align: right;">Műveletek</th>
+                            </tr>
+                        </thead>
+                        <tbody id="jigTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -1114,6 +1206,147 @@
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeModal('csvImportModal')"><i class="fas fa-arrow-left"></i> Mégse</button>
                 <button class="btn" id="csvImportBtn" style="background:#0d9488; border:none; color:white; opacity:0.4; cursor:not-allowed;" disabled onclick="confirmCsvImport()"><i class="fas fa-upload"></i> Import Végrehajtása</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== ÚJ: JIG SZERKESZTŐ MODAL ===================== -->
+    <div class="modal-overlay" id="jigEditModal">
+        <div class="modal-content">
+            <div class="modal-header" style="border-bottom-color: var(--warning);">
+                <span id="jigModalTitle" style="color:#fbbf24;"><i class="fas fa-toolbox"></i> JIG Regisztráció</span>
+                <button class="modal-close" onclick="closeModal('jigEditModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="jigOriginalId">
+                <div class="form-group">
+                    <label>Sorszám</label>
+                    <input type="text" id="jigSorszam" class="form-control" placeholder="pl. 0243" autocomplete="off" oninput="jigAutoAzonosito()">
+                </div>
+                <div class="form-group">
+                    <label>Típus</label>
+                    <input type="text" id="jigTipus" class="form-control" list="jigTipusList" placeholder="pl. Jig / Template / Plate" autocomplete="off" oninput="jigAutoAzonosito()">
+                    <datalist id="jigTipusList"></datalist>
+                </div>
+                <div class="form-group">
+                    <label>Kategória</label>
+                    <input type="text" id="jigKategoria" class="form-control" list="jigKatList" placeholder="pl. Volvo" autocomplete="off" oninput="jigAutoAzonosito()">
+                    <datalist id="jigKatList"></datalist>
+                </div>
+                <div class="form-group">
+                    <label>Azonosító (automatikus az Excel képlet szerint, átírható)</label>
+                    <input type="text" id="jigAzonosito" class="form-control" placeholder="pl. AM-J-0240-VO" autocomplete="off" oninput="window.jigAzTouched=true; jigUpdateBarcodePreview()">
+                </div>
+
+                <div style="margin-top:4px; padding-top:10px; border-top:1px dashed #334155; font-size:11px; color:#fbbf24; text-transform:uppercase; letter-spacing:1px; font-weight:bold;">
+                    <i class="fas fa-qrcode"></i> Vonalkód adatok
+                </div>
+                <div class="form-group">
+                    <label>Asset szám</label>
+                    <input type="text" id="jigAsset" class="form-control" placeholder="pl. -" autocomplete="off" oninput="jigUpdateBarcodePreview()">
+                </div>
+                <div class="form-group">
+                    <label>FD azonosító</label>
+                    <input type="text" id="jigFd" class="form-control" placeholder="pl. -" autocomplete="off" oninput="jigUpdateBarcodePreview()">
+                </div>
+                <div id="jigBarcodePreview" style="font-size:11px; color:var(--text-muted); background:rgba(0,0,0,0.2); border:1px dashed #334155; border-radius:6px; padding:8px 10px; word-break:break-all;"></div>
+                <div style="padding-bottom:6px; border-bottom:1px dashed #334155;"></div>
+
+                <div class="form-group">
+                    <label>Modellek (soronként egy)</label>
+                    <textarea id="jigModellek" class="form-control" rows="3" placeholder="pl. CHSHWPCB00240X_A9" style="resize:vertical; min-height:60px; font-family:inherit;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Státusz</label>
+                    <select id="jigStatusz" class="form-control" onchange="jigStatuszChanged()">
+                        <option value="Foglalt">Foglalt</option>
+                        <option value="Regisztrált">Regisztrált</option>
+                        <option value="Aktív">Aktív</option>
+                        <option value="Inaktív">Inaktív</option>
+                        <option value="Visszavont">Visszavont</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Kiadás dátuma</label>
+                    <input type="date" id="jigKiadas" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Utolsó állapotváltozás</label>
+                    <input type="date" id="jigValtozas" class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('jigEditModal')">Mégse</button>
+                <button class="btn" style="background:#14b8a6; border:none; color:white;" onclick="printJigLabelFromEdit()"><i class="fas fa-tag"></i> Címke</button>
+                <button class="btn btn-primary" onclick="requestJigSave()"><i class="fas fa-save"></i> Mentés</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== ÚJ: JIG CÍMKE NYOMTATÁS MODAL ===================== -->
+    <div class="modal-overlay" id="jigLabelModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header" style="border-bottom-color: var(--warning);">
+                <span style="color:#fbbf24;"><i class="fas fa-tag"></i> JIG Címke Nyomtatás</span>
+                <button class="modal-close" onclick="closeModal('jigLabelModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="label-size-row">
+                    <div class="form-group">
+                        <label>Címke szélesség (mm)</label>
+                        <input type="number" id="jigLabelW" class="form-control" value="60" min="10" max="120" step="0.5" oninput="refreshJigLabelPreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>Címke magasság (mm)</label>
+                        <input type="number" id="jigLabelH" class="form-control" value="27.5" min="8" max="120" step="0.5" oninput="refreshJigLabelPreview()">
+                    </div>
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px; line-height:1.5;">
+                    <i class="fas fa-info-circle"></i> Alapméret: <strong>60 × 27,5 mm</strong> — a stencil címke fele magasságban, ugyanolyan szélesen. A <span style="color:#f2e33a;">sárga</span> a fizikai papír színe, nyomtatáskor csak a <strong>fekete</strong> tartalom megy ki. A méret megjegyződik.
+                </div>
+                <div class="label-preview-wrap">
+                    <div id="jigLabelPreviewHost"></div>
+                </div>
+                <div id="jigLabelBcText" style="font-size:11px; color:var(--text-muted); margin-top:10px; word-break:break-all;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('jigLabelModal')">Mégse</button>
+                <button class="btn" style="background:#14b8a6; border:none; color:white;" onclick="doJigLabelPrint()"><i class="fas fa-print"></i> Nyomtatás (PC42t)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== ÚJ: JIG CSV IMPORT MODAL ===================== -->
+    <div class="modal-overlay" id="jigCsvImportModal">
+        <div class="modal-content opt-modal-wide">
+            <div class="modal-header" style="border-bottom-color: #b45309;">
+                <span style="color:#fbbf24;"><i class="fas fa-file-import"></i> JIG CSV Import — adatok feltöltése</span>
+                <button class="modal-close" onclick="closeModal('jigCsvImportModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="opt-intro" style="background: linear-gradient(135deg, rgba(180,83,9,0.10), rgba(245,158,11,0.04)); border-color: rgba(245,158,11,0.2);">
+                    <strong style="color:#fbbf24;"><i class="fas fa-info-circle"></i> Hogyan működik? (Export → Módosítás → Import)</strong>
+                    <ul>
+                        <li>📤 Először a <strong>CSV Export</strong>tal letöltöd a JIG adatbázist.</li>
+                        <li>✏️ Excelben módosítod (típus, kategória, asset, FD, modellek, státusz, dátumok…).</li>
+                        <li>📥 Itt visszatöltöd: az <strong>Azonosító</strong> alapján frissíti vagy hozzáadja a sorokat.</li>
+                        <li>🛡️ Előbb <strong>előnézet</strong>, és csak a gombra ír az adatbázisba. Az import <strong>nem töröl</strong> semmit.</li>
+                        <li>⚠️ Ugyanazt a pontosvesszős (<code>;</code>) formátumot töltsd vissza, amit az Export adott. A Vonalkód oszlopot nem kell szerkeszteni — automatikusan számolódik.</li>
+                    </ul>
+                </div>
+                <input type="file" id="jigCsvFileInput" accept=".csv,text/csv" style="display:none" onchange="handleJigCsvFile(this)">
+                <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                    <button class="btn" style="background:#b45309; border:none; color:white;" onclick="document.getElementById('jigCsvFileInput').click()"><i class="fas fa-folder-open"></i> CSV fájl választása</button>
+                    <span id="jigCsvFileName" style="color:var(--text-muted); font-size:13px;">Nincs fájl kiválasztva</span>
+                </div>
+                <div class="opt-preview-stats" id="jigCsvStats" style="margin-top:15px; display:none;"></div>
+                <div id="jigCsvWarn" style="display:none; margin-top:10px;" class="opt-warning-banner"><i class="fas fa-exclamation-triangle"></i><div id="jigCsvWarnText"></div></div>
+                <div style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin:12px 0 8px 0; display:none;" id="jigCsvListTitle"><i class="fas fa-list-check"></i> Változások (<span id="jigCsvChangeCount">0</span>):</div>
+                <div class="opt-movement-list" id="jigCsvPreviewList" style="display:none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('jigCsvImportModal')"><i class="fas fa-arrow-left"></i> Mégse</button>
+                <button class="btn" id="jigCsvImportBtn" style="background:#b45309; border:none; color:white; opacity:0.4; cursor:not-allowed;" disabled onclick="confirmJigCsvImport()"><i class="fas fa-upload"></i> Import Végrehajtása</button>
             </div>
         </div>
     </div>
@@ -2486,6 +2719,616 @@ async function applyCsvImport(){
         alert('Hiba a CSV import közben: '+e.message);
     }
 }
+</script>
+
+<style id="jigStyles">
+/* =====================================================================
+   JIG ADATBÁZIS PRO — kiegészítő stílusok (ÚJ, csak hozzáadás)
+   ===================================================================== */
+.jig-toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 15px; }
+.jig-toolbar .search-container { flex: 1 1 240px; max-width: 450px; }
+.jig-kat { color: #fbbf24; font-size: 11px; font-weight: bold; background: rgba(245,158,11,0.1); padding: 3px 8px; border-radius: 4px; border: 1px solid rgba(245,158,11,0.2); }
+.jig-more { color: var(--text-muted); font-size: 10px; font-weight: bold; background: rgba(148,163,184,0.12); padding: 2px 6px; border-radius: 4px; cursor: help; }
+
+/* JIG címke — KÉPERNYŐN sárga előnézet (a fizikai papír színe), NYOMTATÁSBAN átlátszó.
+   A .label-card osztályt is viseli, így a meglévő body.label-mode print szabályok
+   (átlátszó háttér + fekete szöveg + fekete Data Matrix) automatikusan érvényesek rá. */
+.label-card.jig-label {
+    background: #f2e33a;
+    padding: 1.8mm 3mm;
+    display: flex;
+    flex-direction: column;
+}
+.label-card.jig-label .jig-lbl-id { font-weight: 800; line-height: 1.05; letter-spacing: 0.2mm; white-space: nowrap; padding-left: 4mm; }
+.label-card.jig-label .jig-lbl-dm-row { flex: 1; display: flex; align-items: flex-start; padding-left: 4mm; margin-top: 0.8mm; }
+</style>
+
+<script>
+/* =====================================================================
+   JIG ADATBÁZIS PRO  (ÚJ, KÜLÖNÁLLÓ MODUL — a stencil logikát NEM érinti)
+   - Beépített Excel adatbázis (JigDb.xlsx / Munka1, 270 sor)
+   - Vonalkód AUTOMATIKUS: Azonosító=Asset=FD=  (az Excel képlete szerint)
+   - Azonosító AUTOMATIKUS: AM-{Típus első betűje}-{Sorszám}-{Kategória kód}
+   - Címke: 60 × 27,5 mm (a stencil címke fele magasságban, ugyanolyan szélesen)
+   - Export → Módosítás → Import munkafolyamat, mint a stencileknél
+   ===================================================================== */
+
+/* Kategória -> kód tábla (az Excel Munka1 S:T oszlopából) */
+window.jigKatKod = {"Calsonic Kansei":"CK","Clarion":"CHE","Ford":"FO","Honda":"HO","Koito":"KOI","Mitsuba":"MIT","Nissan":"NI","PSA":"PSA","RD3":"RD3","Renault":"RN","Retail":"RE","Tokai-Rika":"TO","General":"GEN","MG1":"MG1","MG2":"MG2","MG3":"MG3","MG4":"MG4","MG5":"MG5","MG6":"MG6","SGPF":"SGPF","Tuner":"TUN","Entry":"EN","GEN5":"G5","Diamond":"DIA","Volvo":"VO","McLaren":"MCL"};
+window.jigTipusok = ["Jig","Template","Plate","Magazin setting"];
+
+/* Beépített JIG adatbázis az Excelből (Munka1) — 270 sor.
+   Mezők: s=Sorszám t=Típus k=Kategória a=Asset f=FD m=Modellek d=Kiadás v=Változás st=Státusz */
+window.jigMasterDb = {"AM-T-0001-MIT":{"s":"0001","t":"Template","k":"Mitsuba","a":"-","f":"-","m":"A3384-761-02\nA0239-698-01\nA7300-982-00\nA4164-608-00","d":"2013-07-11","v":"2013-07-11","st":"Inakt\u00edv"},"AM-T-0002-HO":{"s":"0002","t":"Template","k":"Honda","a":"-","f":"-","m":"71-5017-A9","d":"2013-07-15","v":"2013-07-15","st":"Akt\u00edv"},"AM-T-0003-TO":{"s":"0003","t":"Template","k":"Tokai-Rika","a":"-","f":"-","m":"489179-7010-A9\n489180-7010-A9\n489181-7010-A9\n489182-7010-A9","d":"2013-07-15","v":"2013-07-15","st":"Akt\u00edv"},"AM-T-0004-KOI":{"s":"0004","t":"Template","k":"Koito","a":"-","f":"-","m":"10199-17687-A9","d":"2013-07-15","v":"2013-07-15","st":"Akt\u00edv"},"AM-T-0005-HO":{"s":"0005","t":"Template","k":"Honda","a":"-","f":"-","m":"70-5017-X9","d":"2013-07-15","v":"2013-07-15","st":"Akt\u00edv"},"AM-T-0006-RN":{"s":"0006","t":"Template","k":"Renault","a":"-","f":"-","m":"77-3067-AQ","d":"2013-07-15","v":"2013-07-15","st":"Akt\u00edv"},"AM-T-0007-KOI":{"s":"0007","t":"Template","k":"Koito","a":"-","f":"-","m":"10009-17726-A9","d":"2013-07-15","v":"2013-07-15","st":"Inakt\u00edv"},"AM-T-0008-KOI":{"s":"0008","t":"Template","k":"Koito","a":"-","f":"-","m":"10029-17685-A9","d":"2013-07-15","v":"2013-07-15","st":"Akt\u00edv"},"AM-T-0009-PSA":{"s":"0009","t":"Template","k":"PSA","a":"-","f":"-","m":"51-3397-B9","d":"2013-07-15","v":"2013-07-15","st":"Akt\u00edv"},"AM-T-0010-NI":{"s":"0010","t":"Template","k":"Nissan","a":"-","f":"-","m":"77-3439-X9","d":"2013-07-15","v":"2013-07-15","st":"Akt\u00edv"},"AM-T-0011-RD3":{"s":"0011","t":"Template","k":"RD3","a":"-","f":"-","m":"75-2859-XQ","d":"2013-07-15","v":"2013-07-15","st":"Akt\u00edv"},"AM-T-0012-PSA":{"s":"0012","t":"Template","k":"PSA","a":"-","f":"-","m":"53-3397-B9","d":"2013-07-15","v":"2013-07-15","st":"Akt\u00edv"},"AM-T-0013-KOI":{"s":"0013","t":"Template","k":"Koito","a":"-","f":"-","m":"10009-17687-A9","d":"2013-07-15","v":"2013-07-15","st":"Inakt\u00edv"},"AM-T-0014-NI":{"s":"0014","t":"Template","k":"Nissan","a":"-","f":"-","m":"33-3011-X9\n33-3013-X9\n33-3016-X9\n33-3021-X9\n33-3028-X9","d":"2013-07-15","v":"2013-07-15","st":"Inakt\u00edv"},"AM-T-0015-TO":{"s":"0015","t":"Template","k":"Tokai-Rika","a":"-","f":"-","m":"4891168-701X-A9\n4891701-701X-A9","d":"2013-07-15","v":"2013-07-15","st":"Akt\u00edv"},"AM-T-0016-TO":{"s":"0016","t":"Template","k":"Tokai-Rika","a":"-","f":"-","m":"7587XX-701X-XX","d":"2013-07-15","v":"2013-07-15","st":"Akt\u00edv"},"AM-T-0017-TO":{"s":"0017","t":"Template","k":"Tokai-Rika","a":"-","f":"-","m":"17F857-7060-A9","d":"2013-07-15","v":"2013-07-15","st":"Akt\u00edv"},"AM-T-0018-MIT":{"s":"0018","t":"Template","k":"Mitsuba","a":"-","f":"-","m":"RK-00543","d":"2013-07-15","v":"2013-07-15","st":"Akt\u00edv"},"AM-T-0019-MIT":{"s":"0019","t":"Template","k":"Mitsuba","a":"-","f":"-","m":"RK-00546","d":"2013-07-15","v":"2013-07-15","st":"Akt\u00edv"},"AM-T-0020-NI":{"s":"0020","t":"Template","k":"Nissan","a":"-","f":"-","m":"75-3439-A9","d":"2013-07-15","v":"2013-07-15","st":"Akt\u00edv"},"AM-T-0021-KOI":{"s":"0021","t":"Template","k":"Koito","a":"-","f":"-","m":"35520-18015-A9","d":"2013-07-16","v":"2013-07-16","st":"Akt\u00edv"},"AM-T-0022-NI":{"s":"0022","t":"Template","k":"Nissan","a":"-","f":"-","m":"77-300X-xx","d":"2013-07-16","v":"2013-07-16","st":"Akt\u00edv"},"AM-T-0023-MIT":{"s":"0023","t":"Template","k":"Mitsuba","a":"-","f":"-","m":"A9495-698-00\nA3384-761-02\nA0239-698-01\nA4164-608-00","d":"2013-07-16","v":"2013-07-16","st":"Akt\u00edv"},"AM-T-0024-TO":{"s":"0024","t":"Template","k":"Tokai-Rika","a":"-","f":"-","m":"75E340-7020A-A9","d":"2013-07-16","v":"2013-07-16","st":"Akt\u00edv"},"AM-T-0025-NI":{"s":"0025","t":"Template","k":"Nissan","a":"-","f":"-","m":"75-300X-XX","d":"2013-07-16","v":"2013-07-16","st":"Akt\u00edv"},"AM-T-0026-KOI":{"s":"0026","t":"Template","k":"Koito","a":"-","f":"-","m":"20X09-17602-A9","d":"2013-07-16","v":"2013-07-16","st":"Akt\u00edv"},"AM-T-0027-RN":{"s":"0027","t":"Template","k":"Renault","a":"-","f":"-","m":"30-1482-A9","d":"2013-07-16","v":"2013-07-16","st":"Akt\u00edv"},"AM-T-0028-NI":{"s":"0028","t":"Template","k":"Nissan","a":"-","f":"-","m":"80-2091-PN","d":"2013-07-16","v":"2013-07-16","st":"Akt\u00edv"},"AM-T-0029-CK":{"s":"0029","t":"Template","k":"Calsonic Kansei","a":"-","f":"-","m":"248W700E51XX\n248W700E52XX\n248W700E53XX\n248W700E54XX\n248W700E55XX\n248W700E56XX\n248W7BH53A--C\n248W7BH53B--C\n248W700E57XX\n248W700E58XX","d":"2013-07-16","v":"2013-07-16","st":"Akt\u00edv"},"AM-T-0030-CK":{"s":"0030","t":"Template","k":"Calsonic Kansei","a":"-","f":"-","m":"248W700T57XX\n248W700T58XX\n248W700T59XX\n248W700T60XX\n248W71KAOC--C\n248W71KBOC---\n248W7BX91A--\n248W7BX95A\n248W73YV2A\n248W7BX90A","d":"2013-07-16","v":"2013-07-16","st":"Akt\u00edv"},"AM-T-0031-PSA":{"s":"0031","t":"Template","k":"PSA","a":"-","f":"-","m":"81-1021-B9","d":"2013-07-16","v":"2013-07-16","st":"Akt\u00edv"},"AM-T-0032-FO":{"s":"0032","t":"Template","k":"Ford","a":"-","f":"-","m":"30-9455-A9","d":"2013-07-16","v":"2013-07-16","st":"Akt\u00edv"},"AM-T-0033-TO":{"s":"0033","t":"Template","k":"Tokai-Rika","a":"-","f":"-","m":"75E341-7020A-A9\n75E340-7040A-A9","d":"2013-07-22","v":"2013-07-22","st":"Akt\u00edv"},"AM-T-0034-HO":{"s":"0034","t":"Template","k":"Honda","a":"-","f":"-","m":"70-5026-A9","d":"2013-07-23","v":"2013-07-23","st":"Akt\u00edv"},"AM-P-0035-GEN":{"s":"0035","t":"Plate","k":"General","a":"-","f":"-","m":"MG6 (AMJ-SP601)","d":"2013-08-01","v":"2013-08-01","st":"Inakt\u00edv"},"AM-P-0036-GEN":{"s":"0036","t":"Plate","k":"General","a":"-","f":"-","m":"MG5 (AMJ-SP501)","d":"2013-08-01","v":"2013-08-01","st":"Inakt\u00edv"},"AM-P-0037-GEN":{"s":"0037","t":"Plate","k":"General","a":"-","f":"-","m":"MG4 (AMJ-SP401)","d":"2013-08-01","v":"2013-08-01","st":"Inakt\u00edv"},"AM-P-0038-GEN":{"s":"0038","t":"Plate","k":"General","a":"-","f":"-","m":"MG3 (AMJ-SP301)","d":"2013-08-01","v":"2013-08-01","st":"Inakt\u00edv"},"AM-P-0039-GEN":{"s":"0039","t":"Plate","k":"General","a":"-","f":"-","m":"MG2 (AMJ-SP201)","d":"2013-08-01","v":"2013-08-01","st":"Inakt\u00edv"},"AM-J-0040-GEN":{"s":"0040","t":"Jig","k":"General","a":"-","f":"-","m":"AMJ-CS601","d":"2013-08-01","v":"2013-08-01","st":"Inakt\u00edv"},"AM-J-0041-GEN":{"s":"0041","t":"Jig","k":"General","a":"-","f":"-","m":"AMJ-CS301","d":"2013-08-01","v":"2013-08-01","st":"Inakt\u00edv"},"AM-J-0042-GEN":{"s":"0042","t":"Jig","k":"General","a":"-","f":"-","m":"AMJ-CS201","d":"2013-08-01","v":"2013-08-01","st":"Inakt\u00edv"},"AM-J-0043-GEN":{"s":"0043","t":"Jig","k":"General","a":"-","f":"-","m":"AMJ-SS001","d":"2013-08-01","v":"2013-08-01","st":"Inakt\u00edv"},"AM-J-0044-MIT":{"s":"0044","t":"Jig","k":"Mitsuba","a":"-","f":"UR-0032-MIT","m":"UR-0032-MIT","d":"2013-08-02","v":"2013-08-02","st":"Akt\u00edv"},"AM-J-0045-MIT":{"s":"0045","t":"Jig","k":"Mitsuba","a":"-","f":"UR-0033-MIT","m":"UR-0033-MIT","d":"2013-08-02","v":"2013-08-02","st":"Akt\u00edv"},"AM-J-0046-MIT":{"s":"0046","t":"Jig","k":"Mitsuba","a":"-","f":"UR-0036-MIT","m":"UR-0036-MIT","d":"2013-08-02","v":"2013-08-02","st":"Akt\u00edv"},"AM-J-0047-MIT":{"s":"0047","t":"Jig","k":"Mitsuba","a":"-","f":"UR-0037-MIT","m":"UR-0037-MIT","d":"2013-08-02","v":"2013-08-02","st":"Akt\u00edv"},"AM-T-0048-TO":{"s":"0048","t":"Template","k":"Tokai-Rika","a":"-","f":"-","m":"17D770-7131-AQ\n17D773-7061-AQ","d":"2013-09-06","v":"2013-09-06","st":"Inakt\u00edv"},"AM-T-0049-TO":{"s":"0049","t":"Template","k":"Tokai-Rika","a":"-","f":"-","m":"17F003-7051-A9\n17F581-7021-A9","d":"2013-09-06","v":"2013-09-06","st":"Akt\u00edv"},"AM-T-0050-TO":{"s":"0050","t":"Template","k":"Tokai-Rika","a":"-","f":"-","m":"17F243-7052-A9\n17F761-7022-A9\n17F524-7021-A9","d":"2013-09-06","v":"2013-09-06","st":"Akt\u00edv"},"AM-T-0051-TO":{"s":"0051","t":"Template","k":"Tokai-Rika","a":"-","f":"-","m":"17F858-7060-A9\n17F858-7061-A9","d":"2013-09-06","v":"2013-09-06","st":"Akt\u00edv"},"AM-T-0052-TO":{"s":"0052","t":"Template","k":"Tokai-Rika","a":"-","f":"-","m":"17F904-7040-A9\n17F953-7040-A9","d":"2013-09-06","v":"2013-09-06","st":"Akt\u00edv"},"AM-T-0053-NI":{"s":"0053","t":"Template","k":"Nissan","a":"-","f":"-","m":"752787CQ\n752865CQ\n752865DQ","d":"2013-09-06","v":"2013-09-06","st":"Inakt\u00edv"},"AM-T-0054-NI":{"s":"0054","t":"Template","k":"Nissan","a":"-","f":"-","m":"772787FR\n772865BQ\n772865CQ","d":"2013-09-06","v":"2013-09-06","st":"Inakt\u00edv"},"AM-T-0055-NI":{"s":"0055","t":"Template","k":"Nissan","a":"-","f":"-","m":"752804FQ\n752805FQ","d":"2013-09-06","v":"2013-09-06","st":"Inakt\u00edv"},"AM-T-0056-NI":{"s":"0056","t":"Template","k":"Nissan","a":"-","f":"-","m":"753125AQ\n753125CQ\n753125DQ","d":"2013-09-09","v":"2013-09-09","st":"Inakt\u00edv"},"AM-T-0057-NI":{"s":"0057","t":"Template","k":"Nissan","a":"-","f":"-","m":"772865FQ","d":"2013-09-09","v":"2013-09-09","st":"Inakt\u00edv"},"AM-J-0058-TO":{"s":"0058","t":"Jig","k":"Tokai-Rika","a":"-","f":"-","m":"17D770-7131-AQ\n17D773-7061-AQ","d":"2013-09-17","v":"2013-09-17","st":"Inakt\u00edv"},"AM-T-0059-KOI":{"s":"0059","t":"Template","k":"Koito","a":"-","f":"-","m":"10009-17726-A9\n10079-18149-A9\n10009-17687-A9","d":"2013-10-08","v":"2013-10-08","st":"Akt\u00edv"},"AM-J-0060-TO":{"s":"0060","t":"Jig","k":"Tokai-Rika","a":"-","f":"-","m":"75E340-7020A-A9","d":"2013-10-11","v":"2013-10-11","st":"Inakt\u00edv"},"AM-J-0061-TO":{"s":"0061","t":"Jig","k":"Tokai-Rika","a":"-","f":"-","m":"75E341-7020A-A9\n75E340-7040A-A9","d":"2013-10-11","v":"2013-10-11","st":"Inakt\u00edv"},"AM-J-0062-NI":{"s":"0062","t":"Jig","k":"Nissan","a":"-","f":"-","m":"33-3041-B9","d":"2014-02-17","v":"2014-02-17","st":"Akt\u00edv"},"AM-J-0063-NI":{"s":"0063","t":"Jig","k":"Nissan","a":"F4449","f":"PN-3439-S0A","m":"77-3439-X9","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-T-0064-NI":{"s":"0064","t":"Template","k":"Nissan","a":"-","f":"-","m":"33-3041-B9","d":"2014-02-17","v":"2014-02-17","st":"Inakt\u00edv"},"AM-J-0065-TO":{"s":"0065","t":"Jig","k":"Tokai-Rika","a":"F4739","f":"UR-0050-TO","m":"","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0066-PSA":{"s":"0066","t":"Jig","k":"PSA","a":"F4715","f":"-","m":"53-3397-B9","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0067-PSA":{"s":"0067","t":"Jig","k":"PSA","a":"F4716","f":"-","m":"81-1021","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0068-MIT":{"s":"0068","t":"Jig","k":"Mitsuba","a":"-","f":"MI-0025-MIT","m":"RK 546","d":"2014-02-28","v":"2014-02-28","st":"Inakt\u00edv"},"AM-J-0069-MIT":{"s":"0069","t":"Jig","k":"Mitsuba","a":"-","f":"-","m":"RK 543","d":"2014-02-28","v":"2014-02-28","st":"Inakt\u00edv"},"AM-J-0070-CK":{"s":"0070","t":"Jig","k":"Calsonic Kansei","a":"F4767","f":"UR-0043-CK","m":"248W91KA0C(--A)","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0071-NI":{"s":"0071","t":"Jig","k":"Nissan","a":"F4570","f":"EN-3001-S0A","m":"33-3021-X9\n33-3028-X9\n33-3045-X9\n33-3046-X9","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0072-FO":{"s":"0072","t":"Jig","k":"Ford","a":"F4413","f":"RU-9544-S0A","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0073-NI":{"s":"0073","t":"Jig","k":"Nissan","a":"F2949","f":"NIS-MA-01","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0074-NI":{"s":"0074","t":"Jig","k":"Nissan","a":"F3107","f":"PN-2959-S0C","m":"75-2959-AQ","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0075-NI":{"s":"0075","t":"Jig","k":"Nissan","a":"F2950","f":"NIS-SW-01","m":"77-2805-XQ","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0076-NI":{"s":"0076","t":"Jig","k":"Nissan","a":"-","f":"-","m":"AMJ-SPMM001\n30-3008-AQ","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0077-TO":{"s":"0077","t":"Jig","k":"Tokai-Rika","a":"-","f":"-","m":"AMJ-SP-TR MG 1&2","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0078-TO":{"s":"0078","t":"Jig","k":"Tokai-Rika","a":"F4713","f":"UR-0033-TO","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0079-TO":{"s":"0079","t":"Jig","k":"Tokai-Rika","a":"F4714","f":"UR-0032-TO","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0080-RN":{"s":"0080","t":"Jig","k":"Renault","a":"F4421","f":"EL-1481-S0D","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0081-RN":{"s":"0081","t":"Jig","k":"Renault","a":"F2871","f":"PL-2818-S0J","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0082-RN":{"s":"0082","t":"Jig","k":"Renault","a":"F2870","f":"PL-2818-S0I","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0083-RN":{"s":"0083","t":"Jig","k":"Renault","a":"F3709","f":"PL-3067-S0D","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0084-RN":{"s":"0084","t":"Jig","k":"Renault","a":"F2865","f":"EL-1255-S0A","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0085-TO":{"s":"0085","t":"Jig","k":"Tokai-Rika","a":"F4738","f":"UR-0051-TO","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0086-HO":{"s":"0086","t":"Jig","k":"Honda","a":"F4323","f":"QY-5017-70Z","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0087-HO":{"s":"0087","t":"Jig","k":"Honda","a":"F4329","f":"QY-5017-Z0W","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0088-HO":{"s":"0088","t":"Jig","k":"Honda","a":"F4692","f":"QY-5026-Z0Z","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0089-MG3":{"s":"0089","t":"Jig","k":"MG3","a":"-","f":"AMJ-SP301","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0090-MG6":{"s":"0090","t":"Jig","k":"MG6","a":"-","f":"AMJ-SP602","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0091-MG5":{"s":"0091","t":"Jig","k":"MG5","a":"-","f":"AMJ-SP501","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0092-MG6":{"s":"0092","t":"Jig","k":"MG6","a":"-","f":"AMJ-SP601","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0093-GEN":{"s":"0093","t":"Jig","k":"General","a":"-","f":"AMJ-SP CK","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0094-MG5":{"s":"0094","t":"Jig","k":"MG5","a":"-","f":"AMJ-SP501","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0095-MG6":{"s":"0095","t":"Jig","k":"MG6","a":"-","f":"AMJ-SP601","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0096-MG6":{"s":"0096","t":"Jig","k":"MG6","a":"-","f":"AMJ-SP603","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0097-MG4":{"s":"0097","t":"Jig","k":"MG4","a":"-","f":"AMJ-SP401","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0098-MG3":{"s":"0098","t":"Jig","k":"MG3","a":"-","f":"AMJ-SP301","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0099-MG3":{"s":"0099","t":"Jig","k":"MG3","a":"-","f":"AMJ-SP303","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0100-MG4":{"s":"0100","t":"Jig","k":"MG4","a":"-","f":"AMJ-SP401","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0101-MG4":{"s":"0101","t":"Jig","k":"MG4","a":"-","f":"AMJ-SP401","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0102-MG4":{"s":"0102","t":"Jig","k":"MG4","a":"-","f":"AMJ-SP403","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0103-MG5":{"s":"0103","t":"Jig","k":"MG5","a":"-","f":"AMJ-SP501","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0104-MG5":{"s":"0104","t":"Jig","k":"MG5","a":"-","f":"AMJ-SP502","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0105-MG5":{"s":"0105","t":"Jig","k":"MG5","a":"-","f":"AMJ-SP501","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0106-MG4":{"s":"0106","t":"Jig","k":"MG4","a":"-","f":"AMJ-SP402","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0107-MG6":{"s":"0107","t":"Jig","k":"MG6","a":"-","f":"AMJ-SP601","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0108-MG3":{"s":"0108","t":"Jig","k":"MG3","a":"-","f":"AMJ-SP301","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0109-MG3":{"s":"0109","t":"Jig","k":"MG3","a":"-","f":"AMJ-SP301","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0110-MG3":{"s":"0110","t":"Jig","k":"MG3","a":"-","f":"AMJ-SP301","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0111-MG1":{"s":"0111","t":"Jig","k":"MG1","a":"-","f":"MG 1&2","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0112-MG1":{"s":"0112","t":"Jig","k":"MG1","a":"-","f":"MG 1&2","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0113-MG1":{"s":"0113","t":"Jig","k":"MG1","a":"-","f":"MG 1&2","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0114-MG1":{"s":"0114","t":"Jig","k":"MG1","a":"-","f":"MG 1&2","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0115-MG1":{"s":"0115","t":"Jig","k":"MG1","a":"-","f":"MG 1&2","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0116-GEN":{"s":"0116","t":"Jig","k":"General","a":"-","f":"-","m":"-","d":"2014-02-28","v":"2014-02-28","st":"Akt\u00edv"},"AM-J-0117-NI":{"s":"0117","t":"Jig","k":"Nissan","a":"F4956","f":"-","m":"33-3084-A9","d":"2014-05-26","v":"2014-05-26","st":"Akt\u00edv"},"AM-J-0118-NI":{"s":"0118","t":"Jig","k":"Nissan","a":"F4942","f":"-","m":"33-3073(74)-C9","d":"2014-05-26","v":"2014-05-26","st":"Akt\u00edv"},"AM-J-0119-NI":{"s":"0119","t":"Jig","k":"Nissan","a":"F5242","f":"-","m":"33-3021-X9\n33-3028-X9\n33-3045-X9\n33-3046-X9","d":"2015-02-06","v":"2015-02-06","st":"Akt\u00edv"},"AM-T-0120-SGPF":{"s":"0120","t":"Template","k":"SGPF","a":"-","f":"-","m":"70-1120-A9","d":"2015-02-13","v":"2015-02-13","st":"Akt\u00edv"},"AM-T-0121-SGPF":{"s":"0121","t":"Template","k":"SGPF","a":"-","f":"-","m":"71-1120-A9","d":"2015-02-13","v":"2015-02-13","st":"Akt\u00edv"},"AM-T-0122-TO":{"s":"0122","t":"Template","k":"Tokai-Rika","a":"-","f":"-","m":"75J517-7020-A9","d":"2015-03-27","v":"2015-03-27","st":"Akt\u00edv"},"AM-T-0123-TO":{"s":"0123","t":"Template","k":"Tokai-Rika","a":"-","f":"-","m":"75J427-7020A-A9","d":"2015-03-30","v":"2015-03-30","st":"Akt\u00edv"},"AM-T-0124-TO":{"s":"0124","t":"Template","k":"Tokai-Rika","a":"-","f":"-","m":"17J189-7041-A9","d":"2015-03-30","v":"2015-03-30","st":"Akt\u00edv"},"AM-T-0125-KOI":{"s":"0125","t":"Template","k":"Koito","a":"-","f":"-","m":"10039-18444-A9\n10139-18444-A9","d":"2015-03-30","v":"2015-03-30","st":"Akt\u00edv"},"AM-T-0126-KOI":{"s":"0126","t":"Template","k":"Koito","a":"-","f":"-","m":"35520-18527-A9\n10081-18444-A9","d":"2015-03-30","v":"2015-03-30","st":"Akt\u00edv"},"AM-T-0127-KOI":{"s":"0127","t":"Template","k":"Koito","a":"-","f":"-","m":"10028-17685-A9\n10128-17685-A9\n10089-17687-A9\n10189-17687-A9","d":"2015-03-30","v":"2015-03-30","st":"Akt\u00edv"},"AM-T-0128-KOI":{"s":"0128","t":"Template","k":"Koito","a":"-","f":"-","m":"10068-17726-A9\n10168-17726-A9","d":"2015-03-30","v":"2015-03-30","st":"Akt\u00edv"},"AM-T-0129-TO":{"s":"0129","t":"Template","k":"Tokai-Rika","a":"-","f":"-","m":"17J192-7080-A9","d":"2015-03-30","v":"2015-03-30","st":"Akt\u00edv"},"AM-T-0130-KOI":{"s":"0130","t":"Template","k":"Koito","a":"-","f":"-","m":"10099-17687-A9\n10199-17687-A9","d":"2015-03-30","v":"2015-03-30","st":"Akt\u00edv"},"AM-T-0131-TO":{"s":"0131","t":"Template","k":"Tokai-Rika","a":"-","f":"-","m":"17J189-703x-A9\n17J191-702x-A9","d":"2015-03-30","v":"2015-03-30","st":"Akt\u00edv"},"AM-T-0132-SGPF":{"s":"0132","t":"Template","k":"SGPF","a":"-","f":"-","m":"76-1120-A9","d":"2015-04-02","v":"2015-04-02","st":"Akt\u00edv"},"AM-T-0133-TUN":{"s":"0133","t":"Template","k":"Tuner","a":"-","f":"-","m":"80-2088-AN","d":"2015-06-26","v":"2015-06-26","st":"Akt\u00edv"},"AM-T-0134-TO":{"s":"0134","t":"Template","k":"Tokai-Rika","a":"-","f":"-","m":"17F243-7052-A9\n17F761-7022-A9\n17F524-7021-A9","d":"2015-06-26","v":"2015-06-26","st":"Akt\u00edv"},"AM-T-0135-RD3":{"s":"0135","t":"Template","k":"RD3","a":"-","f":"-","m":"79-2471-AQ","d":"2015-06-26","v":"2015-06-26","st":"Akt\u00edv"},"AM-T-0136-RD3":{"s":"0136","t":"Template","k":"RD3","a":"-","f":"-","m":"77-2471-xR","d":"2015-06-26","v":"2015-06-26","st":"Akt\u00edv"},"AM-J-0137-PSA":{"s":"0137","t":"Jig","k":"PSA","a":"F5259","f":"RU-9472-S0AC","m":"30-9472-A9\n30-9475-A9","d":"2015-06-29","v":"2015-06-29","st":"Akt\u00edv"},"AM-J-0138-TO":{"s":"0138","t":"Jig","k":"Tokai-Rika","a":"F5252","f":"","m":"75J517-7020-A9","d":"2015-07-29","v":"2015-07-29","st":"Akt\u00edv"},"AM-J-0139-SGPF":{"s":"0139","t":"Jig","k":"SGPF","a":"F5108","f":"QY-1110-Z0X","m":"71-1120-A9","d":"2015-10-09","v":"2015-10-09","st":"Akt\u00edv"},"AM-T-0140-NI":{"s":"0140","t":"Template","k":"Nissan","a":"-","f":"-","m":"33-3345-A9\n33-3345-B9\n33-3358-B9","d":"2016-06-24","v":"2016-06-24","st":"Akt\u00edv"},"AM-T-0141-NI":{"s":"0141","t":"Template","k":"Nissan","a":"-","f":"-","m":"33-3403-A9\n33-3403-B9\n33-3800-B9","d":"2016-07-07","v":"2016-07-07","st":"Akt\u00edv"},"AM-T-0142-G5":{"s":"0142","t":"Template","k":"GEN5","a":"-","f":"-","m":"71-7580-A9","d":"2016-07-07","v":"2016-07-07","st":"Akt\u00edv"},"AM-J-0143-NI":{"s":"0143","t":"Jig","k":"Nissan","a":"F5348","f":"-","m":"33-3073(74)(90)(43)","d":"2016-09-28","v":"2016-09-28","st":"Akt\u00edv"},"AM-J-0144-SGPF":{"s":"0144","t":"Jig","k":"SGPF","a":"F5111","f":"QY-1110-Z0Z","m":"70-1120-A9","d":"2016-09-28","v":"2016-09-28","st":"Akt\u00edv"},"AM-J-0145-G5":{"s":"0145","t":"Jig","k":"GEN5","a":"F5390","f":"QY-7380-SOA","m":"71-7580-A9","d":"2016-09-28","v":"2016-09-28","st":"Akt\u00edv"},"AM-J-0146-SGPF":{"s":"0146","t":"Jig","k":"SGPF","a":"F5112","f":"QY-1010-Z0V","m":"76-1120-A9","d":"2016-09-29","v":"2016-09-29","st":"Akt\u00edv"},"AM-J-0147-MIT":{"s":"0147","t":"Jig","k":"Mitsuba","a":"-","f":"-","m":"A4141-039-00","d":"2017-01-12","v":"2017-01-12","st":"Akt\u00edv"},"AM-T-0148-NI":{"s":"0148","t":"Template","k":"Nissan","a":"-","f":"-","m":"33-3555-A9","d":"2017-05-10","v":"2017-05-10","st":"Akt\u00edv"},"AM-J-0149-TO":{"s":"0149","t":"Jig","k":"Tokai-Rika","a":"-","f":"TOKAI RIKA PROPERTY","m":"75L229-7040-A9","d":"2017-08-31","v":"2017-08-31","st":"Akt\u00edv"},"AM-J-0150-TO":{"s":"0150","t":"Jig","k":"Tokai-Rika","a":"-","f":"TOKAI RIKA PROPERTY","m":"75L529-7020-A9","d":"2017-08-31","v":"2017-08-31","st":"Akt\u00edv"},"AM-J-0151-KOI":{"s":"0151","t":"Jig","k":"Koito","a":"F5515","f":"-","m":"10x19-19009P1x-A9","d":"2017-09-04","v":"2017-09-04","st":"Akt\u00edv"},"AM-J-0152-KOI":{"s":"0152","t":"Jig","k":"Koito","a":"F5516","f":"-","m":"10x19-19009P1x-A9","d":"2017-09-04","v":"2017-09-04","st":"Akt\u00edv"},"AM-J-0153-CK":{"s":"0153","t":"Jig","k":"Calsonic Kansei","a":"-","f":"-","m":"CK F2","d":"2018-04-16","v":"2018-04-16","st":"Akt\u00edv"},"AM-J-0154-NI":{"s":"0154","t":"Jig","k":"Nissan","a":"F5436","f":"EN-3550-SOA","m":"33-3555-A9","d":"2018","v":"2018","st":"Akt\u00edv"},"AM-T-0155-TO":{"s":"0155","t":"Template","k":"Tokai-Rika","a":"-","f":"-","m":"193354-7032-A9","d":"2019-01-02","v":"2019-01-02","st":"Akt\u00edv"},"AM-J-0156-NI":{"s":"0156","t":"Jig","k":"Nissan","a":"F5304","f":"EN-3302-SOA","m":"33-3345-A9\n33-3345-B9\n33-3358-B9","d":"2018","v":"2018","st":"Akt\u00edv"},"AM-J-0157-NI":{"s":"0157","t":"Jig","k":"Nissan","a":"F5347","f":"-","m":"33-3403-A9\n33-3403-B9\n33-3800-B9","d":"2018","v":"2018","st":"Akt\u00edv"},"AM-T-0158-KOI":{"s":"0158","t":"Template","k":"Koito","a":"-","f":"-","m":"1*298A03EA*W*A9","d":"2019.02","v":"2019.02","st":"Inakt\u00edv"},"AM-T-0159-KOI":{"s":"0159","t":"Template","k":"Koito","a":"-","f":"-","m":"10079-6E003-A9","d":"2019.04","v":"2019.04","st":"Akt\u00edv"},"AM-T-0160-KOI":{"s":"0160","t":"Template","k":"Koito","a":"-","f":"-","m":"10x49-6E003-A9","d":"2019.04","v":"2019.04","st":"Akt\u00edv"},"AM-T-0161-PSA":{"s":"0161","t":"Template","k":"PSA","a":"-","f":"-","m":"30-363*-A9","d":"2019.04","v":"2019.04","st":"Akt\u00edv"},"AM-T-0162-KOI":{"s":"0162","t":"Template","k":"Koito","a":"-","f":"-","m":"10*296E00*S*-A9","d":"2019.04","v":"2019.04","st":"Akt\u00edv"},"AM-T-0163-KOI":{"s":"0163","t":"Template","k":"Koito","a":"-","f":"-","m":"1*298A03EA*W*A9","d":"2019.04","v":"2019.04","st":"Akt\u00edv"},"AM-J-0164-NI":{"s":"0164","t":"Jig","k":"Nissan","a":"F5673","f":"-","m":"33-3555-A9\n33-3562-A9","d":"2019.09","v":"2019.09","st":"Akt\u00edv"},"AM-J-0165-PSA":{"s":"0165","t":"Jig","k":"PSA","a":"F5672","f":"-","m":"75-3863-A9\n75-3959-A9","d":"2019.09","v":"2019.09","st":"Inakt\u00edv"},"AM-J-0166-PSA":{"s":"0166","t":"Jig","k":"PSA","a":"F5667","f":"-","m":"77-3959-A9","d":"2019.09","v":"2019.09","st":"Inakt\u00edv"},"AM-T-0167-PSA":{"s":"0167","t":"Template","k":"PSA","a":"-","f":"-","m":"30-3637-A9\n30-3638-A9","d":"2019.09","v":"2019.09","st":"Akt\u00edv"},"AM-T-0168-PSA":{"s":"0168","t":"Template","k":"PSA","a":"-","f":"-","m":"30-3639-A9","d":"2019.09","v":"2019.09","st":"Inakt\u00edv"},"AM-T-0169-PSA":{"s":"0169","t":"Template","k":"PSA","a":"-","f":"-","m":"30-3640-A9","d":"2019.09","v":"2019.09","st":"Akt\u00edv"},"AM-J-0170-PSA":{"s":"0170","t":"Jig","k":"PSA","a":"F5668","f":"-","m":"30-9472-A9\n30-9475-A9","d":"2019.09","v":"2019.09","st":"Akt\u00edv"},"AM-J-0171-KOI":{"s":"0171","t":"Jig","k":"Koito","a":"F5663","f":"-","m":"35520-7R016","d":"2019.09","v":"2019.09","st":"Akt\u00edv"},"AM-J-0172-KOI":{"s":"0172","t":"Jig","k":"Koito","a":"F5664","f":"-","m":"10x09-8F017xNA9","d":"2019.09","v":"2019.09","st":"Akt\u00edv"},"AM-J-0173-KOI":{"s":"0173","t":"Jig","k":"Koito","a":"F5662","f":"-","m":"10x39-19011-A9","d":"2019.09","v":"2019.09","st":"Akt\u00edv"},"AM-J-0174-KOI":{"s":"0174","t":"Jig","k":"Koito","a":"F5661","f":"-","m":"10x49-6E003-A9","d":"2019.09","v":"2019.09","st":"Akt\u00edv"},"AM-J-0175-KOI":{"s":"0175","t":"Jig","k":"Koito","a":"F5666","f":"-","m":"35520-18015-A9","d":"2019.09","v":"2019.09","st":"Akt\u00edv"},"AM-J-0176-KOI":{"s":"0176","t":"Jig","k":"Koito","a":"F5665","f":"-","m":"35520-18915-A9\n35520-18917-A9\n35520-18527-A9","d":"2019.09","v":"2019.09","st":"Akt\u00edv"},"AM-J-0177-MIT":{"s":"0177","t":"Jig","k":"Mitsuba","a":"F5670","f":"-","m":"A4141-039-00","d":"2019.09","v":"2019.09","st":"Inakt\u00edv"},"AM-J-0178-MIT":{"s":"0178","t":"Jig","k":"Mitsuba","a":"F5671","f":"-","m":"A7300-982-00\nA4164-608-00","d":"2019.09","v":"2019.09","st":"Akt\u00edv"},"AM-J-0179-GEN":{"s":"0179","t":"Jig","k":"General","a":"F4857","f":"-","m":"-","d":"2019.09","v":"2019.09","st":"Akt\u00edv"},"AM-J-0180-MIT":{"s":"0180","t":"Jig","k":"Mitsuba","a":"F5669","f":"-","m":"A3384-761-02\nA9495-698-00\nA0239-698-01","d":"2019.09","v":"2019.09","st":"Akt\u00edv"},"AM-J-0181-GEN":{"s":"0181","t":"Jig","k":"General","a":"F4856","f":"-","m":"-","d":"2019.09","v":"2019.09","st":"Akt\u00edv"},"AM-T-0182-PSA":{"s":"0182","t":"Template","k":"PSA","a":"-","f":"-","m":"30-3640-A9","d":"2019.09","v":"2019.09","st":"Akt\u00edv"},"AM-J-0183-NI":{"s":"0183","t":"Jig","k":"Nissan","a":"F5679","f":"-","m":"33-3403-B9\n33-3801-B9","d":"2019-10-01","v":"2019-10-01","st":"Akt\u00edv"},"AM-J-0184-KOI":{"s":"0184","t":"Jig","k":"Koito","a":"-","f":"-","m":"1*298A03EA*W*A9","d":"2019-10-24","v":"2019-10-24","st":"Akt\u00edv"},"AM-J-0185-KOI":{"s":"0185","t":"Jig","k":"Koito","a":"F5602","f":"-","m":"10*296E00*S*-A9","d":"2019-10-24","v":"2019-10-24","st":"Akt\u00edv"},"AM-J-0186-GEN":{"s":"0186","t":"Jig","k":"General","a":"F5547","f":"-","m":"-","d":"2019.09","v":"2019.09","st":"Akt\u00edv"},"AM-J-0187-TO":{"s":"0187","t":"Jig","k":"Tokai-Rika","a":"F5253","f":"","m":"-","d":"2019.09","v":"2019.09","st":"Akt\u00edv"},"AM-J-0188-TO":{"s":"0188","t":"Jig","k":"Tokai-Rika","a":"F5544","f":"-","m":"17J189-7031-A9","d":"2019.09","v":"2019.09","st":"Akt\u00edv"},"AM-J-0189-TO":{"s":"0189","t":"Jig","k":"Tokai-Rika","a":"-","f":"-","m":"17F003-7050-AQ","d":"2019.09","v":"2019.09","st":"Akt\u00edv"},"AM-J-0190-GEN":{"s":"0190","t":"Jig","k":"General","a":"-","f":"-","m":"MG6 (AMJ-SP601)","d":"2019.09","v":"2019.09","st":"Akt\u00edv"},"AM-T-0191-KOI":{"s":"0191","t":"Template","k":"Koito","a":"-","f":"-","m":"10x09-19009-A9","d":"2020.01","v":"2020.01","st":"Akt\u00edv"},"AM-T-0192-KOI":{"s":"0192","t":"Template","k":"Koito","a":"-","f":"-","m":"10x39-19011-A9","d":"2020.01","v":"2020.01","st":"Akt\u00edv"},"AM-T-0193-TO":{"s":"0193","t":"Template","k":"Tokai-Rika","a":"-","f":"-","m":"75L229-7020-A9","d":"2020.01","v":"2020.01","st":"Akt\u00edv"},"AM-T-0194-TO":{"s":"0194","t":"Template","k":"Tokai-Rika","a":"-","f":"-","m":"75L229-7040-A9","d":"2020.01","v":"2020.01","st":"Akt\u00edv"},"AM-T-0195-KOI":{"s":"0195","t":"Template","k":"Koito","a":"-","f":"-","m":"33830-8A0AK-A9","d":"2020-02-01","v":"2020-02-01","st":"Inakt\u00edv"},"AM-T-0196-DIA":{"s":"0196","t":"Template","k":"Diamond","a":"-","f":"-","m":"RB-115-05RHU-A9","d":"2020-02-25","v":"2020-02-25","st":"Akt\u00edv"},"AM-T-0197-DIA":{"s":"0197","t":"Template","k":"Diamond","a":"-","f":"-","m":"RB-115-05RHU-A9","d":"2020-02-25","v":"2020-02-25","st":"Akt\u00edv"},"AM-T-0198-DIA":{"s":"0198","t":"Template","k":"Diamond","a":"-","f":"-","m":"RB-090-05RHU-A9","d":"2020-02-25","v":"2020-02-25","st":"Akt\u00edv"},"AM-T-0199-DIA":{"s":"0199","t":"Template","k":"Diamond","a":"-","f":"-","m":"RB-090-05RHU-A9","d":"2020-02-25","v":"2020-02-25","st":"Akt\u00edv"},"AM-J-0200-KOI":{"s":"0200","t":"Jig","k":"Koito","a":"F5958","f":"-","m":"33830-8A0AK-A9\n33830-8A0EG-A9","d":"2020-03-02","v":"2020-10-09","st":"Akt\u00edv"},"AM-J-0201-PSA":{"s":"0201","t":"Jig","k":"PSA","a":"","f":"","m":"30-3637-A9\n30-3638-A9","d":"2020-03-02","v":"2020-03-02","st":"Akt\u00edv"},"AM-J-0202-PSA":{"s":"0202","t":"Jig","k":"PSA","a":"","f":"","m":"30-3639-A9","d":"2020-03-02","v":"2020-03-02","st":"Akt\u00edv"},"AM-J-0203-PSA":{"s":"0203","t":"Jig","k":"PSA","a":"","f":"","m":"30-3640-A9","d":"2020-03-02","v":"2020-03-02","st":"Akt\u00edv"},"AM-J-0204-VO":{"s":"0204","t":"Jig","k":"Volvo","a":"F5697","f":"-","m":"V00833AW07A9\nV00924EW03BA9\nV00916AW03BA9","d":"2020-03-02","v":"2020-03-02","st":"Akt\u00edv"},"AM-J-0205-VO":{"s":"0205","t":"Jig","k":"Volvo","a":"F5696","f":"-","m":"V00766DW03BA9\nV00768DW03BA9","d":"2020-03-02","v":"2020-03-02","st":"Akt\u00edv"},"AM-J-0206-VO":{"s":"0206","t":"Jig","k":"Volvo","a":"F5694","f":"-","m":"V00546FW02DA9\nV00716EW00A9","d":"2020-03-02","v":"2020-03-02","st":"Akt\u00edv"},"AM-J-0207-VO":{"s":"0207","t":"Jig","k":"Volvo","a":"F5695","f":"-","m":"V00500EW04A9\nV00861AW05A9","d":"2020-03-02","v":"2020-03-02","st":"Akt\u00edv"},"AM-J-0208-VO":{"s":"0208","t":"Jig","k":"Volvo","a":"F5693","f":"-","m":"V00862DW02BA9","d":"2020-03-02","v":"2020-03-02","st":"Akt\u00edv"},"AM-T-0209-DIA":{"s":"0209","t":"Template","k":"Diamond","a":"-","f":"","m":"RB203-**RHU-A9","d":"2020-06-22","v":"2020-06-22","st":"Akt\u00edv"},"AM-J-0210-NI":{"s":"0210","t":"Jig","k":"Nissan","a":"F5956","f":"-","m":"33-3931-A9\n33-3932-B9","d":"2020-07-28","v":"2020-07-28","st":"Akt\u00edv"},"AM-J-0211-KOI":{"s":"0211","t":"Jig","k":"Koito","a":"-","f":"-","m":"10059-6E003-A9\n10159-6E003-A9","d":"","v":"-","st":"Inakt\u00edv"},"AM-T-0212-DIA":{"s":"0212","t":"Template","k":"Diamond","a":"-","f":"-","m":"RZ-095-0xRHU-A9","d":"2020-02-25","v":"2020-02-25","st":"Inakt\u00edv"},"AM-T-0213-DIA":{"s":"0213","t":"Template","k":"Diamond","a":"-","f":"-","m":"RZ-095-0xRHU-A9","d":"2020-02-25","v":"2020-02-25","st":"Inakt\u00edv"},"AM-J-0214-MCL":{"s":"0214","t":"Jig","k":"McLaren","a":"F5964","f":"-","m":"IVI MB","d":"2020-12-04","v":"2020-12-04","st":"Akt\u00edv"},"AM-J-0215-MCL":{"s":"0215","t":"Jig","k":"McLaren","a":"F5965","f":"-","m":"IVI DB","d":"2020-12-04","v":"2020-12-04","st":"Akt\u00edv"},"AM-J-0216-MCL":{"s":"0216","t":"Jig","k":"McLaren","a":"F5966","f":"-","m":"RT EU/US MB","d":"2020-12-04","v":"2020-12-04","st":"Akt\u00edv"},"AM-J-0217-MCL":{"s":"0217","t":"Jig","k":"McLaren","a":"F5967","f":"-","m":"RT US DB","d":"2020-12-04","v":"2020-12-04","st":"Akt\u00edv"},"AM-J-0218-MCL":{"s":"0218","t":"Jig","k":"McLaren","a":"F5968","f":"-","m":"DD","d":"2020-12-04","v":"2020-12-04","st":"Akt\u00edv"},"AM-J-0219-KOI":{"s":"0219","t":"Jig","k":"Koito","a":"","f":"","m":"10049-8A0EG-A9","d":"","v":"","st":"Inakt\u00edv"},"AM-J-0220-RN":{"s":"0220","t":"Jig","k":"Renault","a":"","f":"-","m":"33-3811-A9\n33-3821-A9","d":"","v":"","st":"Inakt\u00edv"},"AM-J-0221-NI":{"s":"0221","t":"Jig","k":"Nissan","a":"","f":"-","m":"33-3359-A9","d":"","v":"","st":"Akt\u00edv"},"AM-J-0222-DIA":{"s":"0222","t":"Jig","k":"Diamond","a":"","f":"-","m":"RB203-**RHU-A9","d":"","v":"","st":"Inakt\u00edv"},"AM-T-0223-KOI":{"s":"0223","t":"Template","k":"Koito","a":"-","f":"-","m":"10x296E00ESx-A9","d":"2021-05-06","v":"2021-05-06","st":"Akt\u00edv"},"AM-T-0224-KOI":{"s":"0224","t":"Template","k":"Koito","a":"-","f":"-","m":"10059-6E003-A9\n10159-6E003-A9","d":"-","v":"-","st":"Akt\u00edv"},"AM-T-0225-RN":{"s":"0225","t":"Template","k":"Renault","a":"-","f":"-","m":"33-3811-A9\n33-3821-A9","d":"2021-09-01","v":"2024-07-10","st":"Inakt\u00edv"},"AM-T-0226-MCL":{"s":"0226","t":"Template","k":"McLaren","a":"-","f":"-","m":"CHSHWPCB00925A_A9","d":"2024-06-12","v":"2024-06-12","st":"Akt\u00edv"},"AM-T-0227-PSA":{"s":"0227","t":"Template","k":"PSA","a":"-","f":"-","m":"CHSHWPCB00140F_A9\nCHSHWPCB00145F_A9\nCHSHWPCB00146F_A9\nCHSHWPCB00147F_A9","d":"2024-06-12","v":"2024-06-12","st":"Inakt\u00edv"},"AM-T-0228-PSA":{"s":"0228","t":"Template","k":"PSA","a":"-","f":"-","m":"CHSHWPCB00116E_A9\nCHSHWPCB00148C_A9\nCHSHWPCB00149C_A9\nCHSHWPCB00151C_A9","d":"2024-06-12","v":"2024-06-12","st":"Inakt\u00edv"},"AM-T-0229-PSA":{"s":"0229","t":"Template","k":"PSA","a":"-","f":"-","m":"CHSHWPCB00211E_A9\nCHSHWPCB00212E_A9","d":"2024-06-12","v":"2024-06-12","st":"Inakt\u00edv"},"AM-T-0230-VO":{"s":"0230","t":"Template","k":"Volvo","a":"-","f":"-","m":"CHSHWPCB00240C_A9\nCHSHWPCB00250C_A9","d":"2024-10-17","v":"2024-10-17","st":"Inakt\u00edv"},"AM-T-0231-VO":{"s":"0231","t":"Template","k":"Volvo","a":"-","f":"-","m":"CHSHWPCB00289C_A9","d":"2024-10-17","v":"2024-10-17","st":"Inakt\u00edv"},"AM-T-0232-RN":{"s":"0232","t":"Template","k":"Renault","a":"-","f":"-","m":"AEA0559AA-A9","d":"2024-12-04","v":"2024-12-04","st":"Akt\u00edv"},"AM-J-0233-PSA":{"s":"0233","t":"Jig","k":"PSA","a":"-","f":"","m":"CHSHWPCB00140F_x9\nCHSHWPCB00145F_x9\nCHSHWPCB00146F_x9\nCHSHWPCB00147F_x9","d":"2025-03-13","v":"2025-03-13","st":"Inakt\u00edv"},"AM-J-0234-PSA":{"s":"0234","t":"Jig","k":"PSA","a":"-","f":"-","m":"CHSHWPCB00116E_x9\nCHSHWPCB00148C_x9\nCHSHWPCB00149C_x9\nCHSHWPCB00151C_x9","d":"2025-03-13","v":"2025-03-13","st":"Akt\u00edv"},"AM-J-0235-PSA":{"s":"0235","t":"Jig","k":"PSA","a":"-","f":"-","m":"CHSHWPCB00211E_x9\nCHSHWPCB00212E_x9","d":"2025-03-13","v":"2025-03-13","st":"Akt\u00edv"},"AM-T-0236-PSA":{"s":"0236","t":"Template","k":"PSA","a":"-","f":"-","m":"CHSHWPCB00430C_x9","d":"2025-09-24","v":"2025-09-24","st":"Inakt\u00edv"},"AM-001-220-F03":{"s":"001","t":"220","k":"F03","a":"-","f":"-","m":"Squeegeee","d":"2026.01.08","v":"","st":"Akt\u00edv"},"AM-002-220-F03":{"s":"002","t":"220","k":"F03","a":"-","f":"-","m":"Squeegeee","d":"2026.01.08","v":"","st":"Akt\u00edv"},"AM-001-220-F04":{"s":"001","t":"220","k":"F04","a":"-","f":"-","m":"Squeegeee","d":"2026.01.08","v":"","st":"Akt\u00edv"},"AM-002-220-F04":{"s":"002","t":"220","k":"F04","a":"-","f":"-","m":"Squeegeee","d":"2026.01.08","v":"","st":"Akt\u00edv"},"AM-001-220-F05":{"s":"001","t":"220","k":"F05","a":"-","f":"-","m":"Squeegeee","d":"2026.01.08","v":"","st":"Akt\u00edv"},"AM-002-220-F05":{"s":"002","t":"220","k":"F05","a":"-","f":"-","m":"Squeegeee","d":"2026.01.08","v":"","st":"Akt\u00edv"},"AM-001-220-F06":{"s":"001","t":"220","k":"F06","a":"-","f":"-","m":"Squeegeee","d":"2026.01.08","v":"","st":"Akt\u00edv"},"AM-002-220-F06":{"s":"002","t":"220","k":"F06","a":"-","f":"-","m":"Squeegeee","d":"2026.01.08","v":"","st":"Akt\u00edv"},"AM-001-300-F08":{"s":"001","t":"300","k":"F08","a":"-","f":"-","m":"Squeegeee","d":"2026.01.08","v":"","st":"Akt\u00edv"},"AM-002-300-F08":{"s":"002","t":"300","k":"F08","a":"-","f":"-","m":"Squeegeee","d":"2026.01.08","v":"","st":"Akt\u00edv"},"AM-003-300-F08":{"s":"003","t":"300","k":"F08","a":"-","f":"-","m":"Squeegeee","d":"2026.01.08","v":"","st":"Akt\u00edv"},"AM-004-300-F08":{"s":"004","t":"300","k":"F08","a":"-","f":"-","m":"Squeegeee","d":"2026.01.08","v":"","st":"Akt\u00edv"},"AM-001-370-F08":{"s":"001","t":"370","k":"F08","a":"-","f":"-","m":"Squeegeee","d":"2026.01.08","v":"","st":"Akt\u00edv"},"AM-002-370-F08":{"s":"002","t":"370","k":"F08","a":"-","f":"-","m":"Squeegeee","d":"2026.01.08","v":"","st":"Akt\u00edv"},"AM-003-370-F08":{"s":"003","t":"370","k":"F08","a":"-","f":"-","m":"Squeegeee","d":"2026.01.08","v":"","st":"Akt\u00edv"},"AM-004-370-F08":{"s":"004","t":"370","k":"F08","a":"-","f":"-","m":"Squeegeee","d":"2026.01.08","v":"","st":"Akt\u00edv"},"AM-001-360-F03":{"s":"001","t":"360","k":"F03","a":"-","f":"-","m":"Squeegeee","d":"2026.01.08","v":"","st":"Akt\u00edv"},"AM-002-360-F03":{"s":"002","t":"360","k":"F03","a":"-","f":"-","m":"Squeegeee","d":"2026.01.08","v":"","st":"Akt\u00edv"},"AM-001-360-F04":{"s":"001","t":"360","k":"F04","a":"-","f":"-","m":"Squeegeee","d":"2026.01.08","v":"","st":"Akt\u00edv"},"AM-002-360-F04":{"s":"002","t":"360","k":"F04","a":"-","f":"-","m":"Squeegeee","d":"2026.01.08","v":"","st":"Akt\u00edv"},"AM-001-360-F05":{"s":"001","t":"360","k":"F05","a":"-","f":"-","m":"Squeegeee","d":"2026.01.08","v":"","st":"Inakt\u00edv"},"AM-002-360-F05":{"s":"002","t":"360","k":"F05","a":"-","f":"-","m":"Squeegeee","d":"2026.01.08","v":"","st":"Inakt\u00edv"},"AM-001-360-F06":{"s":"001","t":"360","k":"F06","a":"-","f":"-","m":"Squeegeee","d":"2026.01.08","v":"","st":"Inakt\u00edv"},"AM-002-360-F06":{"s":"002","t":"360","k":"F06","a":"-","f":"-","m":"Squeegeee","d":"2026.01.08","v":"","st":"Inakt\u00edv"},"AM-T-0237-VO":{"s":"0237","t":"Template","k":"Volvo","a":"-","f":"-","m":"CHSHWPCB00245B_A9\nCHSHWPCB00410B_A9","d":"2026-01-28","v":"2026-01-28","st":"Akt\u00edv"},"AM-T-0238-VO":{"s":"0238","t":"Template","k":"Volvo","a":"-","f":"-","m":"CHSHWPCB00411B_A9","d":"2026-01-28","v":"2026-01-28","st":"Akt\u00edv"},"AM-J-0239-VO":{"s":"0239","t":"Jig","k":"Volvo","a":"-","f":"-","m":"CHSHWPCB00289X_A9","d":"2026-02-09","v":"2026-02-12","st":"Akt\u00edv"},"AM-J-0240-VO":{"s":"0240","t":"Jig","k":"Volvo","a":"-","f":"-","m":"CHSHWPCB00240X_A9\nCHSHWPCB00250X_A9","d":"2026-02-09","v":"2026-02-12","st":"Akt\u00edv"},"AM-J-0241-PSA":{"s":"0241","t":"Jig","k":"PSA","a":"-","f":"-","m":"CHSHWPCB00140x_x9\nCHSHWPCB00145x_x9\nCHSHWPCB00146x_x9\nCHSHWPCB00147x_x9","d":"2026-01-28","v":"","st":"Akt\u00edv"},"AM-J-0242-PSA":{"s":"0242","t":"Jig","k":"PSA","a":"-","f":"-","m":"CHSHWPCB00140x_x9\nCHSHWPCB00145x_x9\nCHSHWPCB00146x_x9\nCHSHWPCB00147x_x9","d":"2026-01-28","v":"","st":"Akt\u00edv"},"AM-003-300-F04":{"s":"003","t":"300","k":"F04","a":"-","f":"-","m":"Squeegeee","d":"2026-01-28","v":"","st":"Akt\u00edv"},"AM-004-300-F04":{"s":"004","t":"300","k":"F04","a":"-","f":"-","m":"Squeegeee","d":"2026-01-28","v":"","st":"Akt\u00edv"},"AM-003-300-F06":{"s":"003","t":"300","k":"F06","a":"-","f":"-","m":"Squeegeee","d":"2026-01-28","v":"","st":"Akt\u00edv"},"AM-004-300-F06":{"s":"004","t":"300","k":"F06","a":"-","f":"-","m":"Squeegeee","d":"2026-01-28","v":"","st":"Akt\u00edv"}};
+
+function jigSafe(s){ return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+
+/* Vonalkód — PONTOSAN az Excel K oszlop képlete: =D&"="&E&"="&F&"=" */
+function jigBuildVonalkod(azonosito, asset, fd){
+    return (azonosito||'') + '=' + (asset||'') + '=' + (fd||'') + '=';
+}
+
+function jigStatuszChip(st){
+    st = st || '';
+    if(!st) return '-';
+    let c='#94a3b8', bg='rgba(148,163,184,0.1)', br='rgba(148,163,184,0.25)';
+    if(st==='Aktív'){ c='var(--success)'; bg='rgba(16,185,129,0.1)'; br='rgba(16,185,129,0.3)'; }
+    else if(st==='Foglalt'){ c='var(--warning)'; bg='rgba(245,158,11,0.1)'; br='rgba(245,158,11,0.3)'; }
+    else if(st==='Regisztrált'){ c='var(--accent)'; bg='rgba(14,165,233,0.1)'; br='rgba(14,165,233,0.3)'; }
+    else if(st==='Visszavont'){ c='var(--danger)'; bg='rgba(239,68,68,0.1)'; br='rgba(239,68,68,0.3)'; }
+    return '<span style="color:'+c+'; background:'+bg+'; border:1px solid '+br+'; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:bold; white-space:nowrap;">'+lblEsc(st)+'</span>';
+}
+
+/* ---------------- JIG TÁBLÁZAT RENDER ---------------- */
+window.renderJigUI = function(){
+    if(!window.isAdmin) return;
+    const tbody = document.getElementById('jigTableBody');
+    if(!tbody) return;
+    const inp = document.getElementById('jigSearchInput');
+    const q = (inp ? inp.value : '').trim().toLowerCase();
+    const data = [...(window.jigData||[])].sort(function(a,b){
+        return (a.azonosito||'').localeCompare(b.azonosito||'', undefined, {numeric:true, sensitivity:'base'});
+    });
+
+    const total = data.length;
+    const aktiv = data.filter(function(d){ return d.statusz==='Aktív'; }).length;
+    const inaktiv = data.filter(function(d){ return d.statusz==='Inaktív'; }).length;
+    const egyeb = total - aktiv - inaktiv;
+    const stats = document.getElementById('jigStatsRow');
+    if(stats){
+        stats.innerHTML =
+            '<div class="opt-stat-card"><div class="v">'+total+'</div><div class="l">Összes JIG</div></div>'
+          + '<div class="opt-stat-card stay"><div class="v">'+aktiv+'</div><div class="l">Aktív</div></div>'
+          + '<div class="opt-stat-card"><div class="v" style="color:#94a3b8;">'+inaktiv+'</div><div class="l">Inaktív</div></div>'
+          + '<div class="opt-stat-card move"><div class="v">'+egyeb+'</div><div class="l">Egyéb státusz</div></div>';
+    }
+
+    let html = '';
+    data.forEach(function(item){
+        const hay = ((item.azonosito||'')+' '+(item.sorszam||'')+' '+(item.tipus||'')+' '+(item.kategoria||'')+' '+(item.modellek||'')+' '+(item.asset||'')+' '+(item.fd||'')+' '+(item.statusz||'')).toLowerCase();
+        if(q && !hay.includes(q)) return;
+        const models = (item.modellek||'').split('\n').map(function(x){ return x.trim(); }).filter(Boolean);
+        const modelHtml = models.length
+            ? '<span class="model-text-table">'+lblEsc(models[0])+'</span>'+(models.length>1 ? ' <span class="jig-more" title="'+lblEsc(item.modellek||'')+'">+'+(models.length-1)+'</span>' : '')
+            : '-';
+        const safeId = jigSafe(item.azonosito);
+        html += '<tr>'
+            + '<td><strong style="color:white; font-size:15px;">'+lblEsc(item.azonosito)+'</strong></td>'
+            + '<td style="color:var(--text-muted);">'+lblEsc(item.tipus||'-')+'</td>'
+            + '<td>'+(item.kategoria ? '<span class="jig-kat">'+lblEsc(item.kategoria)+'</span>' : '-')+'</td>'
+            + '<td>'+modelHtml+'</td>'
+            + '<td>'+jigStatuszChip(item.statusz)+'</td>'
+            + '<td style="color:var(--text-muted); font-size:12px; white-space:nowrap;">'+lblEsc(item.kiadas||'-')+'</td>'
+            + '<td style="text-align:right; white-space:nowrap;">'
+            +   '<button class="btn-icon btn-label" onclick="openJigLabelModal(\''+safeId+'\')" title="Címke nyomtatás"><i class="fas fa-tag"></i></button>'
+            +   '<button class="btn-icon btn-edit" onclick="openJigModal(\''+safeId+'\')"><i class="fas fa-pencil-alt"></i></button>'
+            +   '<button class="btn-icon btn-delete" onclick="confirmJigDelete(\''+safeId+'\')"><i class="fas fa-trash"></i></button>'
+            + '</td>'
+            + '</tr>';
+    });
+    if(html === ''){
+        html = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted); font-style:italic; padding:25px;">'
+             + (total===0 ? 'Az adatbázis még üres — belépéskor automatikusan betöltődik az Excel (270 JIG), vagy használd az Excel Import gombot.' : 'Nincs a keresésnek megfelelő JIG.')
+             + '</td></tr>';
+    }
+    tbody.innerHTML = html;
+};
+
+/* ---------------- ÚJ / SZERKESZTÉS MODAL ---------------- */
+window.jigAzTouched = false;
+
+function jigToday(){ return new Date().toISOString().split('T')[0]; }
+
+function jigNextSorszam(){
+    let mx = 0;
+    (window.jigData||[]).forEach(function(d){ const n = parseInt(d.sorszam, 10); if(!isNaN(n) && n > mx) mx = n; });
+    Object.keys(window.jigMasterDb||{}).forEach(function(k){ const n = parseInt(window.jigMasterDb[k].s, 10); if(!isNaN(n) && n > mx) mx = n; });
+    return ('0000' + String(mx + 1)).slice(-4);
+}
+
+function jigFillDatalists(){
+    const tl = document.getElementById('jigTipusList');
+    const kl = document.getElementById('jigKatList');
+    if(tl){
+        const set = {};
+        window.jigTipusok.forEach(function(t){ set[t] = 1; });
+        (window.jigData||[]).forEach(function(d){ if(d.tipus) set[d.tipus] = 1; });
+        tl.innerHTML = Object.keys(set).sort().map(function(t){ return '<option value="'+lblEsc(t)+'">'; }).join('');
+    }
+    if(kl){
+        const set = {};
+        Object.keys(window.jigKatKod).forEach(function(k){ set[k] = 1; });
+        (window.jigData||[]).forEach(function(d){ if(d.kategoria) set[d.kategoria] = 1; });
+        kl.innerHTML = Object.keys(set).sort().map(function(k){ return '<option value="'+lblEsc(k)+'">'; }).join('');
+    }
+}
+
+window.openJigModal = function(jigId){
+    jigFillDatalists();
+    const title = document.getElementById('jigModalTitle');
+    if(jigId){
+        const item = (window.jigData||[]).find(function(d){ return d.azonosito === jigId; });
+        if(!item){ showToast('Nincs ilyen JIG!'); return; }
+        title.innerHTML = '<i class="fas fa-edit"></i> JIG Módosítása';
+        document.getElementById('jigOriginalId').value = item.azonosito;
+        document.getElementById('jigSorszam').value = item.sorszam || '';
+        document.getElementById('jigTipus').value = item.tipus || '';
+        document.getElementById('jigKategoria').value = item.kategoria || '';
+        document.getElementById('jigAzonosito').value = item.azonosito || '';
+        document.getElementById('jigAsset').value = item.asset || '';
+        document.getElementById('jigFd').value = item.fd || '';
+        document.getElementById('jigModellek').value = item.modellek || '';
+        document.getElementById('jigStatusz').value = item.statusz || 'Aktív';
+        document.getElementById('jigKiadas').value = item.kiadas || '';
+        document.getElementById('jigValtozas').value = item.valtozas || '';
+        window.jigAzTouched = true; // szerkesztésnél NEM írjuk át automatikusan az azonosítót
+    } else {
+        title.innerHTML = '<i class="fas fa-plus"></i> Új JIG Regisztráció';
+        document.getElementById('jigOriginalId').value = '';
+        document.getElementById('jigSorszam').value = jigNextSorszam();
+        document.getElementById('jigTipus').value = 'Jig';
+        document.getElementById('jigKategoria').value = '';
+        document.getElementById('jigAzonosito').value = '';
+        document.getElementById('jigAsset').value = '-';
+        document.getElementById('jigFd').value = '-';
+        document.getElementById('jigModellek').value = '';
+        document.getElementById('jigStatusz').value = 'Aktív';
+        document.getElementById('jigKiadas').value = jigToday();
+        document.getElementById('jigValtozas').value = jigToday();
+        window.jigAzTouched = false;
+        jigAutoAzonosito();
+    }
+    jigUpdateBarcodePreview();
+    document.getElementById('jigEditModal').classList.add('active');
+    setTimeout(function(){ document.getElementById('jigSorszam').focus(); }, 100);
+};
+
+/* Azonosító automatikus képzése — PONTOSAN az Excel D oszlop képlete:
+   ="AM"&"-"&BAL(Típus;1)&"-"&Sorszám&"-"&FKERES(Kategória;S:T;2)  */
+window.jigAutoAzonosito = function(){
+    if(window.jigAzTouched){ jigUpdateBarcodePreview(); return; }
+    const sorszam = document.getElementById('jigSorszam').value.trim();
+    const tipus = document.getElementById('jigTipus').value.trim();
+    const kat = document.getElementById('jigKategoria').value.trim();
+    const kod = window.jigKatKod[kat] || kat.toUpperCase();
+    const tip = tipus ? tipus.charAt(0).toUpperCase() : '';
+    document.getElementById('jigAzonosito').value = 'AM-' + tip + '-' + sorszam + '-' + kod;
+    jigUpdateBarcodePreview();
+};
+
+window.jigUpdateBarcodePreview = function(){
+    const az = document.getElementById('jigAzonosito').value.trim().toUpperCase();
+    const asset = document.getElementById('jigAsset').value.trim();
+    const fd = document.getElementById('jigFd').value.trim();
+    const el = document.getElementById('jigBarcodePreview');
+    if(el) el.innerHTML = '<i class="fas fa-qrcode"></i> Vonalkód (automatikus): <strong style="color:#2dd4bf;">'+lblEsc(jigBuildVonalkod(az, asset, fd))+'</strong>';
+};
+
+window.jigStatuszChanged = function(){
+    const v = document.getElementById('jigValtozas');
+    if(v) v.value = jigToday();
+};
+
+window.requestJigSave = function(){
+    const originalId = document.getElementById('jigOriginalId').value;
+    const azonosito = document.getElementById('jigAzonosito').value.trim().toUpperCase();
+    const sorszam = document.getElementById('jigSorszam').value.trim();
+    const tipus = document.getElementById('jigTipus').value.trim();
+    const kategoria = document.getElementById('jigKategoria').value.trim();
+    const asset = document.getElementById('jigAsset').value.trim();
+    const fd = document.getElementById('jigFd').value.trim();
+    const modellek = document.getElementById('jigModellek').value.replace(/\r\n/g,'\n').replace(/\s+$/,'');
+    const statusz = document.getElementById('jigStatusz').value;
+    const kiadas = document.getElementById('jigKiadas').value;
+    const valtozas = document.getElementById('jigValtozas').value;
+
+    if(!azonosito) return alert('Az Azonosító megadása kötelező!');
+    if(azonosito.indexOf('/') !== -1) return alert('Az Azonosító nem tartalmazhat "/" jelet!');
+    const duplicate = (window.jigData||[]).find(function(d){ return d.azonosito === azonosito && azonosito !== originalId; });
+    if(duplicate) return alert('Ez az Azonosító már létezik az adatbázisban: ' + azonosito);
+
+    const rec = { azonosito: azonosito, sorszam: sorszam, tipus: tipus, kategoria: kategoria, asset: asset, fd: fd, modellek: modellek, kiadas: kiadas, valtozas: valtozas, statusz: statusz };
+    if(originalId && originalId !== azonosito){
+        window.deleteJigQuiet(originalId).then(function(){ window.saveJigToFirebase(rec); });
+    } else {
+        window.saveJigToFirebase(rec);
+    }
+};
+
+window.confirmJigDelete = function(jigId){
+    customConfirm(
+        '<i class="fas fa-trash-alt"></i> JIG Törlése',
+        'Biztosan véglegesen törlöd a következő JIG-et: <strong style="color:var(--danger); font-size:18px;">'+lblEsc(jigId)+'</strong>?',
+        'Törlés Végrehajtása',
+        function(){ window.deleteJigFromFirebase(jigId); }
+    );
+};
+
+/* ---------------- JIG CÍMKE (60 × 27,5 mm — a fotó elrendezése) ---------------- */
+let jigLabelSizeMem = { w: 60, h: 27.5 };
+function loadJigLabelSize(){
+    try { const s = localStorage.getItem('invenpro_jig_label_size_v1'); if(s){ const o = JSON.parse(s); if(o && o.w && o.h){ jigLabelSizeMem = { w:+o.w, h:+o.h }; } } } catch(e){}
+    return jigLabelSizeMem;
+}
+function saveJigLabelSize(w,h){
+    jigLabelSizeMem = { w:+w, h:+h };
+    try { localStorage.setItem('invenpro_jig_label_size_v1', JSON.stringify(jigLabelSizeMem)); } catch(e){}
+}
+function getJigLabelW(){ let v = parseFloat(document.getElementById('jigLabelW').value); return (isNaN(v)||v<10) ? 60 : v; }
+function getJigLabelH(){ let v = parseFloat(document.getElementById('jigLabelH').value); return (isNaN(v)||v<8) ? 27.5 : v; }
+
+/* Felül a nagy, vastag Azonosító, alatta balra a Data Matrix — mint a fotón */
+function renderJigLabelHTML(data, wmm, hmm){
+    const az = data.azonosito || '';
+    const bc = jigBuildVonalkod(az, data.asset||'', data.fd||'');
+    const availW = wmm - 9;
+    const len = Math.max(az.length, 6);
+    const fontMm = Math.min(5.0, availW / (0.62 * len));
+    const fontPt = Math.round((fontMm / 0.3528) * 10) / 10;
+    const dmMM = Math.max(8, Math.min(hmm - fontMm*1.3 - 4.5, wmm*0.45, 18));
+    const svg = makeDataMatrixSVG(bc);
+    return '<div class="label-card jig-label" style="width:'+wmm+'mm; height:'+hmm+'mm;">'
+        + '<div class="jig-lbl-id" style="font-size:'+fontPt+'pt;">'+lblEsc(az)+'</div>'
+        + '<div class="jig-lbl-dm-row"><div class="lbl-dm" style="width:'+dmMM+'mm; height:'+dmMM+'mm;">'+svg+'</div></div>'
+        + '</div>';
+}
+
+window.openJigLabelModal = function(jigId){
+    const item = (window.jigData||[]).find(function(d){ return d.azonosito === jigId; });
+    if(!item){ showToast('Nincs ilyen JIG!'); return; }
+    window.currentJigLabel = { azonosito: item.azonosito, asset: item.asset||'', fd: item.fd||'' };
+    const sz = loadJigLabelSize();
+    document.getElementById('jigLabelW').value = sz.w;
+    document.getElementById('jigLabelH').value = sz.h;
+    refreshJigLabelPreview();
+    document.getElementById('jigLabelModal').classList.add('active');
+};
+
+window.printJigLabelFromEdit = function(){
+    const az = document.getElementById('jigAzonosito').value.trim().toUpperCase();
+    if(!az){ showToast('Adj meg egy Azonosítót a címkéhez!'); return; }
+    window.currentJigLabel = {
+        azonosito: az,
+        asset: document.getElementById('jigAsset').value.trim(),
+        fd: document.getElementById('jigFd').value.trim()
+    };
+    const sz = loadJigLabelSize();
+    document.getElementById('jigLabelW').value = sz.w;
+    document.getElementById('jigLabelH').value = sz.h;
+    refreshJigLabelPreview();
+    document.getElementById('jigLabelModal').classList.add('active');
+};
+
+window.refreshJigLabelPreview = function(){
+    if(!window.currentJigLabel) return;
+    const w = getJigLabelW(), h = getJigLabelH();
+    saveJigLabelSize(w, h);
+    document.getElementById('jigLabelPreviewHost').innerHTML = renderJigLabelHTML(window.currentJigLabel, w, h);
+    const bcEl = document.getElementById('jigLabelBcText');
+    if(bcEl) bcEl.innerHTML = '<i class="fas fa-qrcode"></i> Vonalkód tartalma: <strong style="color:#2dd4bf;">'+lblEsc(jigBuildVonalkod(window.currentJigLabel.azonosito, window.currentJigLabel.asset, window.currentJigLabel.fd))+'</strong>';
+};
+
+/* NYOMTATÁS — ugyanaz a bevált gépezet, mint a stencil címkénél:
+   #printArea + body.label-mode + @page a címke méretével */
+window.doJigLabelPrint = function(){
+    if(!window.currentJigLabel) return;
+    const w = getJigLabelW(), h = getJigLabelH();
+    saveJigLabelSize(w, h);
+    const printArea = document.getElementById('printArea');
+    printArea.innerHTML = renderJigLabelHTML(window.currentJigLabel, w, h);
+
+    let st = document.getElementById('labelPageStyle');
+    if(!st){ st = document.createElement('style'); st.id = 'labelPageStyle'; document.head.appendChild(st); }
+    st.textContent = '@page { size: '+w+'mm '+h+'mm; margin: 0 !important; }';
+
+    document.body.classList.add('label-mode');
+    closeModal('jigLabelModal');
+
+    const cleanup = function(){
+        document.body.classList.remove('label-mode');
+        const s = document.getElementById('labelPageStyle');
+        if(s && s.parentNode) s.parentNode.removeChild(s);
+        printArea.innerHTML = '';
+        window.onafterprint = null;
+    };
+    window.onafterprint = cleanup;
+    setTimeout(function(){
+        window.print();
+        setTimeout(cleanup, 1500); // tartalék takarítás
+    }, 250);
+};
+
+/* ---------------- JIG CSV EXPORT (mint a stencil exportnál) ---------------- */
+window.exportJigCSV = function(){
+    if(!window.jigData || window.jigData.length === 0){ showToast('Nincs exportálható JIG adat!'); return; }
+    let csvContent = '\uFEFF';
+    csvContent += 'Sorszám;Típus;Kategória;Azonosító;Asset szám;FD azonosító;Modellek;Kiadás dátuma;Utolsó állapotváltozás;Státusz;Vonalkód;Utolsó Frissítés\n';
+    const clean = function(x){ return String(x==null?'':x).replace(/;/g, ',').replace(/\r?\n/g, ' | '); };
+    const sorted = [...window.jigData].sort(function(a,b){ return (a.azonosito||'').localeCompare(b.azonosito||'', undefined, {numeric:true}); });
+    sorted.forEach(function(r){
+        const date = r.updatedAt ? new Date(r.updatedAt).toLocaleString('hu-HU') : '';
+        csvContent += [clean(r.sorszam), clean(r.tipus), clean(r.kategoria), clean(r.azonosito), clean(r.asset), clean(r.fd), clean(r.modellek), clean(r.kiadas), clean(r.valtozas), clean(r.statusz), clean(jigBuildVonalkod(r.azonosito, r.asset, r.fd)), date].join(';') + '\n';
+    });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'InvenPro_JIG_Adatbazis_' + new Date().toISOString().split('T')[0] + '.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('JIG CSV exportálva!');
+};
+
+/* ---------------- JIG CSV IMPORT — Export → Módosítás → Import ---------------- */
+window.currentJigCsvPlan = null;
+
+window.openJigCsvImport = function(){
+    if(!window.isAdmin) return;
+    window.currentJigCsvPlan = null;
+    document.getElementById('jigCsvFileInput').value = '';
+    document.getElementById('jigCsvFileName').innerText = 'Nincs fájl kiválasztva';
+    const stats = document.getElementById('jigCsvStats'); stats.style.display = 'none'; stats.innerHTML = '';
+    document.getElementById('jigCsvWarn').style.display = 'none';
+    document.getElementById('jigCsvListTitle').style.display = 'none';
+    const lst = document.getElementById('jigCsvPreviewList'); lst.style.display = 'none'; lst.innerHTML = '';
+    const btn = document.getElementById('jigCsvImportBtn');
+    btn.disabled = true; btn.style.opacity = '0.4'; btn.style.cursor = 'not-allowed';
+    btn.innerHTML = '<i class="fas fa-upload"></i> Import Végrehajtása';
+    document.getElementById('jigCsvImportModal').classList.add('active');
+};
+
+window.handleJigCsvFile = function(input){
+    const file = input.files && input.files[0];
+    if(!file) return;
+    document.getElementById('jigCsvFileName').innerText = file.name;
+    const reader = new FileReader();
+    reader.onload = function(e){
+        try { buildJigCsvPlan(e.target.result); }
+        catch(err){ console.error('JIG CSV feldolgozási hiba:', err); showToast('Hiba a CSV beolvasásakor: ' + err.message); }
+    };
+    reader.onerror = function(){ showToast('Nem sikerült beolvasni a fájlt.'); };
+    reader.readAsText(file, 'UTF-8');
+};
+
+function parseJigCsvImport(text){
+    if(text && text.charCodeAt(0) === 0xFEFF) text = text.slice(1); // BOM le
+    const lines = text.split(/\r\n|\n|\r/).filter(function(l){ return l.trim() !== ''; });
+    const valid = [], invalid = [];
+    if(lines.length < 2) return { valid: valid, invalid: invalid };
+    const seenAz = {};
+    for(let i = 1; i < lines.length; i++){
+        const cols = lines[i].split(';');
+        const sorszam   = (cols[0]||'').trim();
+        const tipus     = (cols[1]||'').trim();
+        const kategoria = (cols[2]||'').trim();
+        const azonosito = (cols[3]||'').trim().toUpperCase();
+        const asset     = (cols[4]||'').trim();
+        const fd        = (cols[5]||'').trim();
+        const modellek  = (cols[6]||'').trim().split(' | ').join('\n');
+        const kiadas    = (cols[7]||'').trim();
+        const valtozas  = (cols[8]||'').trim();
+        const statusz   = (cols[9]||'').trim();
+        if(!azonosito) continue; // üres sor -> csendben kihagy
+        let reason = '';
+        if(azonosito.indexOf('/') !== -1) reason = 'az azonosító "/" jelet tartalmaz';
+        else if(seenAz[azonosito]) reason = 'duplikált azonosító a CSV-ben';
+        if(reason){ invalid.push({ azonosito: azonosito, line: i+1, reason: reason }); continue; }
+        seenAz[azonosito] = 1;
+        valid.push({ azonosito: azonosito, sorszam: sorszam, tipus: tipus, kategoria: kategoria, asset: asset, fd: fd, modellek: modellek, kiadas: kiadas, valtozas: valtozas, statusz: statusz });
+    }
+    return { valid: valid, invalid: invalid };
+}
+
+function jigCsvRowEqualsItem(item, row){
+    return (item.sorszam||'')===row.sorszam
+        && (item.tipus||'')===row.tipus
+        && (item.kategoria||'')===row.kategoria
+        && (item.asset||'')===row.asset
+        && (item.fd||'')===row.fd
+        && (item.modellek||'')===row.modellek
+        && (item.kiadas||'')===row.kiadas
+        && (item.valtozas||'')===row.valtozas
+        && (item.statusz||'')===row.statusz;
+}
+
+function buildJigCsvPlan(text){
+    const parsed = parseJigCsvImport(text);
+    const toWrite = [];
+    let unchanged = 0;
+    parsed.valid.forEach(function(row){
+        const existing = (window.jigData||[]).find(function(d){ return d.azonosito === row.azonosito; });
+        if(!existing){ toWrite.push({ row: row, type: 'új' }); }
+        else if(!jigCsvRowEqualsItem(existing, row)){ toWrite.push({ row: row, type: 'módosítás' }); }
+        else { unchanged++; }
+    });
+    const newCount = toWrite.filter(function(t){ return t.type==='új'; }).length;
+    const updCount = toWrite.filter(function(t){ return t.type==='módosítás'; }).length;
+    window.currentJigCsvPlan = { toWrite: toWrite, invalid: parsed.invalid };
+
+    const stats = document.getElementById('jigCsvStats');
+    stats.style.display = 'grid';
+    stats.innerHTML =
+        '<div class="opt-stat-card stay"><div class="v">'+newCount+'</div><div class="l">Új sor</div></div>'
+      + '<div class="opt-stat-card move"><div class="v">'+updCount+'</div><div class="l">Módosítás</div></div>'
+      + '<div class="opt-stat-card"><div class="v">'+unchanged+'</div><div class="l">Változatlan</div></div>'
+      + '<div class="opt-stat-card percent"><div class="v">'+parsed.invalid.length+'</div><div class="l">Kihagyott (hibás)</div></div>';
+
+    const warn = document.getElementById('jigCsvWarn');
+    if(parsed.invalid.length > 0){
+        const preview = parsed.invalid.slice(0,6).map(function(iv){ return iv.azonosito+' ('+iv.line+'. sor): '+iv.reason; }).join('<br>');
+        document.getElementById('jigCsvWarnText').innerHTML = '<strong>'+parsed.invalid.length+' sor kihagyva</strong> (nem íródik be):<br>'+preview+(parsed.invalid.length>6?'<br>…':'');
+        warn.style.display = 'flex';
+    } else { warn.style.display = 'none'; }
+
+    const title = document.getElementById('jigCsvListTitle');
+    const list = document.getElementById('jigCsvPreviewList');
+    document.getElementById('jigCsvChangeCount').innerText = toWrite.length;
+    if(toWrite.length > 0){
+        title.style.display = 'block';
+        list.style.display = 'block';
+        list.innerHTML = toWrite.map(function(t){
+            const r = t.row;
+            const badge = t.type==='új'
+                ? '<span class="opt-mv-to" style="color:var(--success);">ÚJ</span>'
+                : '<span class="opt-mv-to" style="color:var(--warning);">MÓDOSÍTÁS</span>';
+            let detail = (r.tipus||'-') + (r.kategoria ? ' · ' + r.kategoria : '');
+            return '<div class="opt-mv-row"><span class="opt-mv-mask">'+lblEsc(r.azonosito)+'</span><span class="opt-mv-from" style="margin-right:auto;">'+lblEsc(detail)+'</span>'+badge+'</div>';
+        }).join('');
+    } else {
+        title.style.display = 'none';
+        list.style.display = 'block';
+        list.innerHTML = '<div style="text-align:center; color:var(--success); padding:15px; font-style:italic;"><i class="fas fa-check-circle"></i> Nincs változás — a CSV megegyezik a jelenlegi JIG adatbázissal'+(parsed.invalid.length?' (a hibás sorokat leszámítva)':'')+'.</div>';
+    }
+
+    const btn = document.getElementById('jigCsvImportBtn');
+    if(toWrite.length > 0){
+        btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
+        btn.innerHTML = '<i class="fas fa-upload"></i> Import Végrehajtása ('+toWrite.length+')';
+    } else {
+        btn.disabled = true; btn.style.opacity = '0.4'; btn.style.cursor = 'not-allowed';
+        btn.innerHTML = '<i class="fas fa-upload"></i> Nincs Mit Importálni';
+    }
+}
+
+window.confirmJigCsvImport = function(){
+    if(!window.currentJigCsvPlan || window.currentJigCsvPlan.toWrite.length === 0){ showToast('Nincs mit importálni!'); return; }
+    const n = window.currentJigCsvPlan.toWrite.length;
+    const newN = window.currentJigCsvPlan.toWrite.filter(function(t){ return t.type==='új'; }).length;
+    const updN = n - newN;
+    customConfirm(
+        '<i class="fas fa-upload" style="color:#fbbf24;"></i> JIG CSV Import Megerősítése',
+        'Most <strong style="color:#fbbf24;">'+n+' sort</strong> írsz a JIG adatbázisba: <strong style="color:var(--success);">'+newN+' új</strong>, <strong style="color:var(--warning);">'+updN+' módosítás</strong>.<br><br>'
+      + '<div style="background: rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); padding:10px; border-radius:6px; margin:10px 0;">'
+      +   '<strong>ℹ️ Megjegyzés:</strong> Az import a CSV szerinti értékekkel <strong>felülírja</strong> az érintett JIG-ek mezőit, de <strong>nem töröl</strong> semmit, ami nincs a fájlban. A stencil adatokhoz NEM nyúl.'
+      + '</div>Folytatod?',
+        'Igen, Importálom',
+        applyJigCsvImport
+    );
+};
+
+async function applyJigCsvImport(){
+    const overlay = document.getElementById('optProgressOverlay');
+    const bar = document.getElementById('optProgressBar');
+    const txt = document.getElementById('optProgressText');
+    const det = document.getElementById('optProgressDetail');
+    const items = (window.currentJigCsvPlan && window.currentJigCsvPlan.toWrite) || [];
+    const total = items.length;
+    let done = 0, errors = 0;
+    if(txt) txt.innerText = 'JIG CSV import folyamatban...';
+    if(det) det.innerText = 'Adatok írása az adatbázisba. Kérlek várj.';
+    if(bar) bar.style.width = '0%';
+    if(overlay) overlay.classList.add('active');
+    const saver = window.saveJigQuiet || window.saveJigToFirebase;
+    try {
+        for(const t of items){
+            const r = t.row;
+            if(det) det.innerText = r.azonosito + '  (' + (done+1) + '/' + total + ')';
+            if(bar) bar.style.width = Math.round((done/total)*100) + '%';
+            try { await saver(r); } catch(e){ console.error('JIG CSV import hiba:', r.azonosito, e); errors++; }
+            done++;
+        }
+        if(bar) bar.style.width = '100%';
+        if(txt) txt.innerText = 'Import kész!';
+        if(det) det.innerText = errors>0 ? (done-errors)+' sikeres, '+errors+' hiba' : done+' sor beírva.';
+        setTimeout(function(){
+            if(overlay) overlay.classList.remove('active');
+            closeModal('jigCsvImportModal');
+            showToast(errors>0 ? ('JIG CSV import kész: '+(done-errors)+' sikeres, '+errors+' hiba') : ('JIG CSV import kész! '+done+' sor frissítve.'));
+            window.currentJigCsvPlan = null;
+        }, 1000);
+    } catch(e){
+        if(overlay) overlay.classList.remove('active');
+        alert('Hiba a JIG CSV import közben: ' + e.message);
+    }
+}
+
+/* ---------------- EXCEL SEED — automatikus első feltöltés + kézi pótlás ---------------- */
+function jigRecFromMaster(az){
+    const m = window.jigMasterDb[az] || {};
+    return { azonosito: az, sorszam: m.s||'', tipus: m.t||'', kategoria: m.k||'', asset: m.a||'', fd: m.f||'', modellek: m.m||'', kiadas: m.d||'', valtozas: m.v||'', statusz: m.st||'' };
+}
+
+async function jigSeedList(keys, title, detail){
+    const overlay = document.getElementById('optProgressOverlay');
+    const bar = document.getElementById('optProgressBar');
+    const txt = document.getElementById('optProgressText');
+    const det = document.getElementById('optProgressDetail');
+    if(txt) txt.innerText = title;
+    if(det) det.innerText = detail;
+    if(bar) bar.style.width = '0%';
+    if(overlay) overlay.classList.add('active');
+    const saver = window.saveJigQuiet || window.saveJigToFirebase;
+    const total = keys.length;
+    let done = 0, errors = 0;
+    for(const az of keys){
+        if(det) det.innerText = az + '  (' + (done+1) + '/' + total + ')';
+        if(bar) bar.style.width = Math.round((done/total)*100) + '%';
+        try { await saver(jigRecFromMaster(az)); } catch(e){ console.error('JIG seed hiba:', az, e); errors++; }
+        done++;
+    }
+    if(bar) bar.style.width = '100%';
+    if(txt) txt.innerText = 'Kész!';
+    setTimeout(function(){
+        if(overlay) overlay.classList.remove('active');
+        showToast(errors>0 ? ('JIG Excel import: '+(done-errors)+' sikeres, '+errors+' hiba') : ('JIG Excel import kész: '+done+' db betöltve'));
+    }, 800);
+}
+
+/* Admin belépéskor MAGÁTÓL lefut, de KIZÁRÓLAG ha a "jigs" kollekció még teljesen üres
+   (első használat). Ha már van benne adat, SOHA nem tölt magától — így a törléseid
+   megmaradnak. Utólagos pótlásra az Excel Import gomb való (csak a hiányzókat adja hozzá). */
+window._jigSeedDone = false;
+window._jigSeedRunning = false;
+window.autoSeedJigs = async function(){
+    if(window._jigSeedRunning || window._jigSeedDone) return;
+    if(!window.isAdmin || !window.jigMasterDb) return;
+    if(!window.isJigLoaded) return; // az első snapshotra várunk
+    if(window.jigData.length > 0){ window._jigSeedDone = true; return; }
+    window._jigSeedRunning = true;
+    const keys = Object.keys(window.jigMasterDb);
+    await jigSeedList(keys, 'JIG Excel adatok betöltése...', 'Egyszeri művelet: a beépített Excel (Munka1) beírása a külön "jigs" kollekcióba.');
+    window._jigSeedRunning = false;
+    window._jigSeedDone = true;
+};
+
+window.importMissingJigs = function(){
+    if(!window.isAdmin || !window.jigMasterDb) return;
+    const missing = Object.keys(window.jigMasterDb).filter(function(az){
+        return !(window.jigData||[]).some(function(d){ return d.azonosito === az; });
+    });
+    if(missing.length === 0){ showToast('Minden Excel JIG már az adatbázisban van!'); return; }
+    customConfirm(
+        '<i class="fas fa-file-excel" style="color:#fbbf24;"></i> Excel Import',
+        'A beépített Excel adatbázisból <strong style="color:#fbbf24;">'+missing.length+' hiányzó JIG</strong> kerül be az adatbázisba.<br><br>'
+      + '<div style="background: rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); padding:10px; border-radius:6px; margin:10px 0;">'
+      +   '<strong>🛡️ Biztonság:</strong> Csak a HIÁNYZÓ azonosítók kerülnek be — a meglévő JIG-jeidet <strong>nem írja felül</strong> és nem törli.'
+      + '</div>Folytatod?',
+        'Igen, Importálom',
+        function(){ jigSeedList(missing, 'Excel Import folyamatban...', 'Hiányzó JIG-ek beírása.'); }
+    );
+};
 </script>
 </body>
 </html>
