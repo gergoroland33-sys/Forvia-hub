@@ -79,6 +79,21 @@
         .note-triangle-mob-cal { position: absolute; bottom: 0; right: 0; width: 0; height: 0; border-bottom: 12px solid #eab308; border-left: 12px solid transparent; z-index: 20; border-bottom-right-radius: 6px; }
         .note-triangle-mob-list { position: absolute; bottom: -1px; right: -1px; width: 0; height: 0; border-bottom: 8px solid #eab308; border-left: 8px solid transparent; z-index: 20; border-bottom-right-radius: 4px; }
 
+        /* ÚJ: VILLOGÓ PIROS KERET KERESÉSHEZ */
+        @keyframes blink-red-border {
+            0% { border-color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.8), inset 0 0 10px rgba(239, 68, 68, 0.5); }
+            50% { border-color: transparent; box-shadow: none; }
+            100% { border-color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.8), inset 0 0 10px rgba(239, 68, 68, 0.5); }
+        }
+        .blinking-target {
+            animation: blink-red-border 1s infinite;
+            border: 2px solid #ef4444 !important;
+            border-radius: 4px;
+            background: rgba(239, 68, 68, 0.2) !important;
+            z-index: 60 !important;
+            position: relative;
+        }
+
         /* --- MOBILE APP VIEW STYLES --- */
         #mobile-app-container { display: none; width: 100%; height: 100%; background: #0b0f1a; flex-direction: column; }
         
@@ -127,17 +142,6 @@
         .modal-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .modal-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
         .modal-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
-
-        /* ÚJ VILLOGÓ EFFEKT A KERESÉSHEZ ÉS UGRÁSHOZ */
-        @keyframes yellow-blink {
-            0%, 100% { box-shadow: inset 0 0 0 4px #eab308, inset 0 0 20px rgba(234, 179, 8, 0.6) !important; }
-            50% { box-shadow: none !important; }
-        }
-        .target-blink {
-            animation: yellow-blink 0.8s ease-in-out 4 !important;
-            z-index: 50;
-            position: relative;
-        }
 
         /* --- RESPONSIVE SWITCH --- */
         @media (max-width: 768px) {
@@ -1198,7 +1202,7 @@
                 }
             });
 
-            // Időrendbe rendezés (csökkenő sorrend: legújabb felül)
+            // Időrendbe rendezés CSÖKKENŐ sorrend (új elöl)
             results.sort((a, b) => {
                 const da = new Date(a.dateStr.split('-')[0], a.dateStr.split('-')[1]-1, a.dateStr.split('-')[2]);
                 const db = new Date(b.dateStr.split('-')[0], b.dateStr.split('-')[1]-1, b.dateStr.split('-')[2]);
@@ -1229,7 +1233,7 @@
                     const bgBorder = type === 'note' ? 'border-yellow-500/20 bg-yellow-500/5' : 'border-red-500/20 bg-red-500/5';
 
                     html += `
-                    <div onclick="jumpToCell(${item.empId}, '${item.dateStr}')" class="cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between p-2 rounded-lg border border-slate-700/50 bg-slate-800/40 hover:bg-slate-800 transition-colors gap-2">
+                    <div onclick="jumpToCell(${item.empId}, '${item.dateStr}')" class="cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between p-2 rounded-lg border border-slate-700/50 bg-slate-800/40 hover:bg-slate-700 hover:shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all gap-2">
                         <div class="flex items-center gap-3">
                             <div class="font-black text-blue-400 text-xs bg-slate-900 py-1 px-2 rounded border border-slate-700/80 whitespace-nowrap min-w-[85px] text-center">${niceDate}</div>
                             <div class="font-bold text-slate-200 uppercase tracking-wider text-xs sm:text-sm">${item.empName}</div>
@@ -1256,57 +1260,55 @@
             setTimeout(() => modal.classList.add('hidden'), 150);
         }
 
-        // --- ÚJ FEJLESZTÉS: UGRÁS A CELLÁRA (ASZTALI ÉS MOBIL NÉZETBEN IS) ---
+        // --- ÚJ FEJLESZTÉS: UGRÁS A CELLÁRA ---
         window.jumpToCell = function(empId, dateStr) {
             closeFilterModal();
-            const parts = dateStr.split('-');
-            const y = parseInt(parts[0]);
-            const m = parseInt(parts[1]) - 1;
-            const d = parseInt(parts[2]);
+            setView('matrix'); 
 
-            // Dátum beállítása ha nem abban a hónapban/évben vagyunk
-            if (date.getFullYear() !== y || date.getMonth() !== m) {
-                date = new Date(y, m, 1);
+            const parts = dateStr.split('-');
+            const targetYear = parseInt(parts[0]);
+            const targetMonth = parseInt(parts[1]) - 1; 
+            const targetDay = parseInt(parts[2]);
+
+            // Ha nem a megfelelő hónapon vagy éven állunk, odalapozunk
+            if (date.getFullYear() !== targetYear || date.getMonth() !== targetMonth) {
+                date = new Date(targetYear, targetMonth, 1);
                 render();
-                renderMobileList();
-                if (!document.getElementById('m-detail-view').classList.contains('hidden')) {
-                    renderMobileCalendar();
-                }
             }
 
-            // Mobilos vagy asztali navigáció
-            if (window.innerWidth <= 768) {
-                const empIndex = employees.findIndex(e => e.id == empId);
-                if (empIndex > -1) {
-                    openMobileUser(empIndex);
-                    selectMobileDate(d);
-                    setTimeout(() => {
-                        const mDay = document.getElementById(`m-day-${d}`);
-                        if (mDay) {
-                            mDay.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            mDay.classList.add('target-blink');
-                            setTimeout(() => mDay.classList.remove('target-blink'), 3000);
-                        }
-                    }, 200);
-                }
-            } else {
-                setView('matrix');
-                setTimeout(() => {
-                    const tr = document.querySelector(`tr[data-id="${empId}"]`);
-                    if (tr) {
-                        const td = tr.cells[d + 2]; // Név, Keret, Kivehető = index 0,1,2.
-                        if (td) {
-                            const input = td.querySelector('input');
-                            if (input) {
-                                input.focus();
-                                td.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-                                td.classList.add('target-blink');
-                                setTimeout(() => td.classList.remove('target-blink'), 3000);
+            // Keresés és ugrás kis késleltetéssel (hogy a DOM biztosan befrissüljön)
+            setTimeout(() => {
+                // Töröljük a korábbi villogásokat, ha lennének
+                document.querySelectorAll('.blinking-target').forEach(el => el.classList.remove('blinking-target'));
+
+                const row = document.querySelector(`tr[data-id="${empId}"]`);
+                if (row) {
+                    // Cell index: 0=Név, 1=Keret, 2=Kivehető, 3=Első nap (targetDay+2)
+                    const cell = row.cells[targetDay + 2];
+                    if (cell) {
+                        const input = cell.querySelector('.input-cell');
+                        if(input) {
+                            // Villogó effekt rátétele
+                            input.classList.add('blinking-target');
+                            
+                            // Görgetés
+                            const container = document.querySelector('.table-container');
+                            if(container) {
+                                container.scrollTo({
+                                    left: cell.offsetLeft - 260,
+                                    top: row.offsetTop - (container.clientHeight / 2) + 50,
+                                    behavior: 'smooth'
+                                });
                             }
+                            
+                            // Villogás levétele 5 másodperc után
+                            setTimeout(() => {
+                                input.classList.remove('blinking-target');
+                            }, 5000); 
                         }
                     }
-                }, 200);
-            }
+                }
+            }, 150);
         };
 
         // --- ÚJ FEJLESZTÉS V4: MODERN TOOLTIP (START) ---
@@ -1383,85 +1385,6 @@
             }
         });
         // --- ÚJ FEJLESZTÉS V4: MODERN TOOLTIP (VÉGE) ---
-
-
-        // --- TÁBLÁZAT NYILAKKAL VALÓ NAVIGÁCIÓ (VÉGLEGES JAVÍTÁS) ---
-        window.addEventListener('keydown', function(e) {
-            // Csak akkor avatkozunk be, ha a fókusz egy beviteli mezőn van a táblázatban
-            const activeEl = document.activeElement;
-            if (!activeEl || !activeEl.classList.contains('input-cell')) return;
-
-            const key = e.key;
-            if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) return;
-
-            const td = activeEl.closest('td');
-            const tr = td ? td.closest('tr') : null;
-            const tbody = tr ? tr.closest('tbody') : null;
-
-            if (!td || !tr || !tbody) return;
-
-            // Szövegdoboznál (szöveg belsejében) hagyjuk a natív mozgást, ha nem a szélén van
-            let isAtStart = true;
-            let isAtEnd = true;
-            
-            try {
-                if (activeEl.type === 'text') {
-                    isAtStart = (activeEl.selectionStart === 0);
-                    isAtEnd = (activeEl.selectionEnd === activeEl.value.length);
-                }
-            } catch (err) {}
-
-            // Ha felfelé vagy lefelé lépünk, VAGY a szöveg szélén vagyunk és balra/jobbra megyünk
-            if (key === 'ArrowUp' || key === 'ArrowDown' || 
-               (key === 'ArrowLeft' && isAtStart) || 
-               (key === 'ArrowRight' && isAtEnd)) {
-               
-                e.preventDefault(); // EZ BLOKKOLJA A GÖRGETÉST ÉS A NATIV FUNKCIÓT (pl. szám növelése)
-                
-                let nextInput = null;
-                let cIndex = td.cellIndex;
-                let rIndex = tr.sectionRowIndex;
-
-                if (key === 'ArrowUp') {
-                    if (rIndex > 0) {
-                        let targetTr = tbody.rows[rIndex - 1];
-                        if (targetTr && targetTr.cells[cIndex]) {
-                            nextInput = targetTr.cells[cIndex].querySelector('.input-cell');
-                        }
-                    }
-                } else if (key === 'ArrowDown') {
-                    if (rIndex < tbody.rows.length - 1) {
-                        let targetTr = tbody.rows[rIndex + 1];
-                        if (targetTr && targetTr.cells[cIndex]) {
-                            nextInput = targetTr.cells[cIndex].querySelector('.input-cell');
-                        }
-                    }
-                } else if (key === 'ArrowLeft') {
-                    for (let i = cIndex - 1; i >= 0; i--) {
-                        let targetTd = tr.cells[i];
-                        if (targetTd) {
-                            let input = targetTd.querySelector('.input-cell');
-                            if (input) { nextInput = input; break; }
-                        }
-                    }
-                } else if (key === 'ArrowRight') {
-                    for (let i = cIndex + 1; i < tr.cells.length; i++) {
-                        let targetTd = tr.cells[i];
-                        if (targetTd) {
-                            let input = targetTd.querySelector('.input-cell');
-                            if (input) { nextInput = input; break; }
-                        }
-                    }
-                }
-
-                if (nextInput) {
-                    nextInput.focus();
-                    if (nextInput.type === 'text') {
-                        setTimeout(() => nextInput.select(), 0);
-                    }
-                }
-            }
-        }, { capture: true }); // A capture opció garantálja, hogy azonnal elkapja a böngésző görgetés előtt!
 
 
         // --- AUTOMATIKUS HITELESÍTÉS ÉS INDÍTÁS ---
