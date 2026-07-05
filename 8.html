@@ -1385,86 +1385,83 @@
         // --- ÚJ FEJLESZTÉS V4: MODERN TOOLTIP (VÉGE) ---
 
 
-        // --- TÁBLÁZAT NYILAKKAL VALÓ NAVIGÁCIÓ (JAVÍTOTT) ---
-        document.addEventListener('keydown', function(e) {
-            if (!e.target.classList.contains('input-cell')) return;
+        // --- TÁBLÁZAT NYILAKKAL VALÓ NAVIGÁCIÓ (VÉGLEGES JAVÍTÁS) ---
+        window.addEventListener('keydown', function(e) {
+            // Csak akkor avatkozunk be, ha a fókusz egy beviteli mezőn van a táblázatban
+            const activeEl = document.activeElement;
+            if (!activeEl || !activeEl.classList.contains('input-cell')) return;
+
+            const key = e.key;
+            if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) return;
+
+            const td = activeEl.closest('td');
+            const tr = td ? td.closest('tr') : null;
+            const tbody = tr ? tr.closest('tbody') : null;
+
+            if (!td || !tr || !tbody) return;
+
+            // Szövegdoboznál (szöveg belsejében) hagyjuk a natív mozgást, ha nem a szélén van
+            let isAtStart = true;
+            let isAtEnd = true;
             
-            const allowedKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
-            if (!allowedKeys.includes(e.key)) return;
-
-            const td = e.target.closest('td');
-            const tr = td.closest('tr');
-            if (!td || !tr) return;
-
-            const tbody = tr.closest('tbody');
-            if (!tbody) return;
-
-            const currentCellIndex = td.cellIndex;
-            let nextInput = null;
-
-            // AZONNALI BLOKKOLÁS: Fel és Le nyilak esetén letiltjuk a böngésző görgetését!
-            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                e.preventDefault(); 
-            }
-
             try {
-                if (e.key === 'ArrowUp') {
-                    const prevTr = tbody.rows[tr.sectionRowIndex - 1];
-                    if (prevTr) {
-                        const nextTd = prevTr.cells[currentCellIndex];
-                        if (nextTd) nextInput = nextTd.querySelector('input.input-cell');
-                    }
-                } else if (e.key === 'ArrowDown') {
-                    const nextTr = tbody.rows[tr.sectionRowIndex + 1];
-                    if (nextTr) {
-                        const nextTd = nextTr.cells[currentCellIndex];
-                        if (nextTd) nextInput = nextTd.querySelector('input.input-cell');
-                    }
-                } else if (e.key === 'ArrowLeft') {
-                    let isAtStart = true;
-                    if (e.target.type === 'text') isAtStart = (e.target.selectionStart === 0);
-                    
-                    if (isAtStart) {
-                        e.preventDefault(); // Balra nyílnál is blokkoljuk a görgetést
-                        let idx = currentCellIndex - 1;
-                        while (idx >= 0) {
-                            const prevTd = tr.cells[idx];
-                            if (prevTd) {
-                                nextInput = prevTd.querySelector('input.input-cell');
-                                if (nextInput) break;
-                            }
-                            idx--;
+                if (activeEl.type === 'text') {
+                    isAtStart = (activeEl.selectionStart === 0);
+                    isAtEnd = (activeEl.selectionEnd === activeEl.value.length);
+                }
+            } catch (err) {}
+
+            // Ha felfelé vagy lefelé lépünk, VAGY a szöveg szélén vagyunk és balra/jobbra megyünk
+            if (key === 'ArrowUp' || key === 'ArrowDown' || 
+               (key === 'ArrowLeft' && isAtStart) || 
+               (key === 'ArrowRight' && isAtEnd)) {
+               
+                e.preventDefault(); // EZ BLOKKOLJA A GÖRGETÉST ÉS A NATIV FUNKCIÓT (pl. szám növelése)
+                
+                let nextInput = null;
+                let cIndex = td.cellIndex;
+                let rIndex = tr.sectionRowIndex;
+
+                if (key === 'ArrowUp') {
+                    if (rIndex > 0) {
+                        let targetTr = tbody.rows[rIndex - 1];
+                        if (targetTr && targetTr.cells[cIndex]) {
+                            nextInput = targetTr.cells[cIndex].querySelector('.input-cell');
                         }
                     }
-                } else if (e.key === 'ArrowRight') {
-                    let isAtEnd = true;
-                    if (e.target.type === 'text') isAtEnd = (e.target.selectionEnd === e.target.value.length);
-
-                    if (isAtEnd) {
-                        e.preventDefault(); // Jobbra nyílnál is blokkoljuk a görgetést
-                        let idx = currentCellIndex + 1;
-                        while (idx < tr.cells.length) {
-                            const nextTd = tr.cells[idx];
-                            if (nextTd) {
-                                nextInput = nextTd.querySelector('input.input-cell');
-                                if (nextInput) break;
-                            }
-                            idx++;
+                } else if (key === 'ArrowDown') {
+                    if (rIndex < tbody.rows.length - 1) {
+                        let targetTr = tbody.rows[rIndex + 1];
+                        if (targetTr && targetTr.cells[cIndex]) {
+                            nextInput = targetTr.cells[cIndex].querySelector('.input-cell');
+                        }
+                    }
+                } else if (key === 'ArrowLeft') {
+                    for (let i = cIndex - 1; i >= 0; i--) {
+                        let targetTd = tr.cells[i];
+                        if (targetTd) {
+                            let input = targetTd.querySelector('.input-cell');
+                            if (input) { nextInput = input; break; }
+                        }
+                    }
+                } else if (key === 'ArrowRight') {
+                    for (let i = cIndex + 1; i < tr.cells.length; i++) {
+                        let targetTd = tr.cells[i];
+                        if (targetTd) {
+                            let input = targetTd.querySelector('.input-cell');
+                            if (input) { nextInput = input; break; }
                         }
                     }
                 }
 
                 if (nextInput) {
                     nextInput.focus();
-                    // Biztonságos kijelölés, mert a number type (Keret) hibára futna
                     if (nextInput.type === 'text') {
-                        setTimeout(() => nextInput.select(), 10);
+                        setTimeout(() => nextInput.select(), 0);
                     }
                 }
-            } catch (error) {
-                console.warn("Navigációs hiba elkapva:", error);
             }
-        });
+        }, { capture: true }); // A capture opció garantálja, hogy azonnal elkapja a böngésző görgetés előtt!
 
 
         // --- AUTOMATIKUS HITELESÍTÉS ÉS INDÍTÁS ---
