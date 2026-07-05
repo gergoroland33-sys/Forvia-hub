@@ -128,6 +128,17 @@
         .modal-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
         .modal-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
+        /* ÚJ VILLOGÓ EFFEKT A KERESÉSHEZ ÉS UGRÁSHOZ */
+        @keyframes yellow-blink {
+            0%, 100% { box-shadow: inset 0 0 0 4px #eab308, inset 0 0 20px rgba(234, 179, 8, 0.6) !important; }
+            50% { box-shadow: none !important; }
+        }
+        .target-blink {
+            animation: yellow-blink 0.8s ease-in-out 4 !important;
+            z-index: 50;
+            position: relative;
+        }
+
         /* --- RESPONSIVE SWITCH --- */
         @media (max-width: 768px) {
             .desktop-header, .desktop-main, .desktop-footer { display: none !important; }
@@ -1177,21 +1188,21 @@
                         if(key.startsWith(currentYear + '-')) {
                             if(type === 'note' && key.endsWith('_note')) {
                                 const datePart = key.replace('_note', '');
-                                results.push({ empName: emp.name, dateStr: datePart, detail: val });
+                                results.push({ empId: emp.id, empName: emp.name, dateStr: datePart, detail: val });
                             } else if(type === 'cserenap' && key.endsWith('_cserenap')) {
                                 const datePart = key.replace('_cserenap', '');
-                                results.push({ empName: emp.name, dateStr: datePart, detail: Math.abs(val) + ' óra jóváírás' });
+                                results.push({ empId: emp.id, empName: emp.name, dateStr: datePart, detail: Math.abs(val) + ' óra jóváírás' });
                             }
                         }
                     });
                 }
             });
 
-            // Időrendbe rendezés
+            // Időrendbe rendezés (csökkenő sorrend: legújabb felül)
             results.sort((a, b) => {
                 const da = new Date(a.dateStr.split('-')[0], a.dateStr.split('-')[1]-1, a.dateStr.split('-')[2]);
                 const db = new Date(b.dateStr.split('-')[0], b.dateStr.split('-')[1]-1, b.dateStr.split('-')[2]);
-                return da - db;
+                return db - da;
             });
 
             // HTML Generálás
@@ -1218,7 +1229,7 @@
                     const bgBorder = type === 'note' ? 'border-yellow-500/20 bg-yellow-500/5' : 'border-red-500/20 bg-red-500/5';
 
                     html += `
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between p-2 rounded-lg border border-slate-700/50 bg-slate-800/40 hover:bg-slate-800 transition-colors gap-2">
+                    <div onclick="jumpToCell(${item.empId}, '${item.dateStr}')" class="cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between p-2 rounded-lg border border-slate-700/50 bg-slate-800/40 hover:bg-slate-800 transition-colors gap-2">
                         <div class="flex items-center gap-3">
                             <div class="font-black text-blue-400 text-xs bg-slate-900 py-1 px-2 rounded border border-slate-700/80 whitespace-nowrap min-w-[85px] text-center">${niceDate}</div>
                             <div class="font-bold text-slate-200 uppercase tracking-wider text-xs sm:text-sm">${item.empName}</div>
@@ -1244,6 +1255,59 @@
             modal.firstElementChild.classList.add('scale-95');
             setTimeout(() => modal.classList.add('hidden'), 150);
         }
+
+        // --- ÚJ FEJLESZTÉS: UGRÁS A CELLÁRA (ASZTALI ÉS MOBIL NÉZETBEN IS) ---
+        window.jumpToCell = function(empId, dateStr) {
+            closeFilterModal();
+            const parts = dateStr.split('-');
+            const y = parseInt(parts[0]);
+            const m = parseInt(parts[1]) - 1;
+            const d = parseInt(parts[2]);
+
+            // Dátum beállítása ha nem abban a hónapban/évben vagyunk
+            if (date.getFullYear() !== y || date.getMonth() !== m) {
+                date = new Date(y, m, 1);
+                render();
+                renderMobileList();
+                if (!document.getElementById('m-detail-view').classList.contains('hidden')) {
+                    renderMobileCalendar();
+                }
+            }
+
+            // Mobilos vagy asztali navigáció
+            if (window.innerWidth <= 768) {
+                const empIndex = employees.findIndex(e => e.id == empId);
+                if (empIndex > -1) {
+                    openMobileUser(empIndex);
+                    selectMobileDate(d);
+                    setTimeout(() => {
+                        const mDay = document.getElementById(`m-day-${d}`);
+                        if (mDay) {
+                            mDay.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            mDay.classList.add('target-blink');
+                            setTimeout(() => mDay.classList.remove('target-blink'), 3000);
+                        }
+                    }, 200);
+                }
+            } else {
+                setView('matrix');
+                setTimeout(() => {
+                    const tr = document.querySelector(`tr[data-id="${empId}"]`);
+                    if (tr) {
+                        const td = tr.cells[d + 2]; // Név, Keret, Kivehető = index 0,1,2.
+                        if (td) {
+                            const input = td.querySelector('input');
+                            if (input) {
+                                input.focus();
+                                td.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                                td.classList.add('target-blink');
+                                setTimeout(() => td.classList.remove('target-blink'), 3000);
+                            }
+                        }
+                    }
+                }, 200);
+            }
+        };
 
         // --- ÚJ FEJLESZTÉS V4: MODERN TOOLTIP (START) ---
         
@@ -1319,6 +1383,57 @@
             }
         });
         // --- ÚJ FEJLESZTÉS V4: MODERN TOOLTIP (VÉGE) ---
+
+
+        // --- TÁBLÁZAT NYILAKKAL VALÓ NAVIGÁCIÓ (FEJLESZTÉS) ---
+        document.addEventListener('keydown', function(e) {
+            if (!e.target.classList.contains('input-cell')) return;
+            
+            const allowedKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+            if (!allowedKeys.includes(e.key)) return;
+
+            const td = e.target.closest('td');
+            const tr = td.closest('tr');
+            if (!td || !tr) return;
+
+            const tbody = tr.closest('tbody');
+            if (!tbody) return;
+
+            const currentCellIndex = td.cellIndex;
+            let nextInput = null;
+
+            if (e.key === 'ArrowUp') {
+                const prevTr = tbody.rows[tr.sectionRowIndex - 1];
+                if (prevTr) {
+                    const nextTd = prevTr.cells[currentCellIndex];
+                    if (nextTd) nextInput = nextTd.querySelector('input');
+                }
+            } else if (e.key === 'ArrowDown') {
+                const nextTr = tbody.rows[tr.sectionRowIndex + 1];
+                if (nextTr) {
+                    const nextTd = nextTr.cells[currentCellIndex];
+                    if (nextTd) nextInput = nextTd.querySelector('input');
+                }
+            } else if (e.key === 'ArrowLeft') {
+                // Csak akkor lépjen át a bal cellába, ha a kurzor a szöveg elején van
+                if (e.target.selectionStart === 0) {
+                    const prevTd = tr.cells[currentCellIndex - 1];
+                    if (prevTd) nextInput = prevTd.querySelector('input');
+                }
+            } else if (e.key === 'ArrowRight') {
+                // Csak akkor lépjen át a jobb cellába, ha a kurzor a szöveg végén van
+                if (e.target.selectionEnd === e.target.value.length) {
+                    const nextTd = tr.cells[currentCellIndex + 1];
+                    if (nextTd) nextInput = nextTd.querySelector('input');
+                }
+            }
+
+            if (nextInput) {
+                e.preventDefault();
+                nextInput.focus();
+                nextInput.select();
+            }
+        });
 
 
         // --- AUTOMATIKUS HITELESÍTÉS ÉS INDÍTÁS ---
