@@ -227,6 +227,7 @@
         // ==========================================
         let queue = roster.slice();
         let slotCount = 0;     // a futó körben kiosztott helyek száma (a kör végének jelzésére)
+        let korSzam = 0;       // hányadik teljes kör ment le (a keverés helyének léptetéséhez)
         let prevWorkers = [];  // az előző munkanapra kiosztott nevek
         let prevDate = null;   // az előző munkanap dátuma
 
@@ -282,9 +283,17 @@
                     // vagyis mindig ugyanaz a két ember kerülne párba. Ezért a kör végén
                     // egy hellyel eltoljuk. Senki nem esik ki: a következő körben is
                     // mindenki pontosan egyszer jön, csak más partnerrel.
-                    // Páratlan létszámnál ez az ág nem fut – ott a sor magától eltolódik.
                     if (queue.length % 2 === 0) {
                         queue.push(queue.shift());
+                    }
+                    // 🔀 KEVERÉS: a kör végén két szomszéd helyet cserél a sorban. A csere
+                    // helye körről körre odébb vándorol, ezért hosszú távon mindenki
+                    // ugyanannyi beosztást kap – csak a párok keverednek. Nem véletlen:
+                    // minden telefon ugyanazt a beosztást számolja ki.
+                    korSzam++;
+                    if (queue.length >= 3) {
+                        let p = (korSzam * 3) % (queue.length - 1);
+                        let t = queue[p]; queue[p] = queue[p + 1]; queue[p + 1] = t;
                     }
                 }
 
