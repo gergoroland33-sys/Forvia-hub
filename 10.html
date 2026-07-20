@@ -105,7 +105,7 @@
             </div>
 
             <button class="btn-save" onclick="saveAdminSettings()">Mentés a Felhőbe</button>
-            <button class="btn-close" onclick="document.getElementById('adminPanel').style.display='none'">Mégsem</button>
+            <button class="btn-close" onclick="closeAdmin()">Mégsem</button>
         </div>
     </div>
 
@@ -189,18 +189,41 @@
         return (sysSettings.shift === nap || sysSettings.shift === ej);
     }
 
+    // 🛡️ VÉDELEM: egy név csak EGYSZER szerepelhet a rotációban (üres/szóközös nevek kiesnek)
+    function uniqueNames(arr) {
+        let out = [];
+        (arr || []).forEach(function(nm) {
+            if (typeof nm !== "string") return;
+            let clean = nm.trim();
+            if (clean !== "" && clean !== "-" && out.indexOf(clean) === -1) out.push(clean);
+        });
+        return out;
+    }
+
     function calculateAllSchedules() {
         computedSchedule = {};
         
         // Biztonsági ellenőrzés: Ha senki sincs az aktív listán, leállítjuk a számolást.
         if (!sysSettings || !sysSettings.roster || sysSettings.roster.length === 0) return; 
         
-        let roster = [...sysSettings.roster];
-        let pending = [...(sysSettings.pending || [])];
+        // 🛡️ VÉDELEM: duplikált nevek kiszűrése az aktív névsorból
+        let roster = uniqueNames(sysSettings.roster);
+        // 🛡️ VÉDELEM: a várólistáról kiesik, aki már aktív, vagy aki kétszer került fel
+        let pending = [];
+        (sysSettings.pending || []).forEach(function(p) {
+            if (!p || !p.name) return;
+            let nm = String(p.name).trim();
+            if (nm === "" || roster.indexOf(nm) !== -1) return;
+            if (pending.some(function(x) { return x.name === nm; })) return;
+            pending.push({ name: nm, addedDate: p.addedDate || 0 });
+        });
         let n = roster.length;
+        if (n === 0) return;
         
         let rotIndex = 0;
         let pushed = []; 
+        let prevWorkers = [];  // 🛡️ az előző munkanapra kiosztott nevek
+        let prevDate = null;   // 🛡️ az előző munkanap dátuma
 
         let simDate = parseLocalDate(sysSettings.nameStart);
         simDate.setHours(0,0,0,0);
@@ -213,10 +236,21 @@
             if (isWorkingDay(simDate)) {
                 let dateKey = getDateKey(simDate);
                 let dailyAbsences = absences[dateKey] || {}; 
+
+                // 🛡️ VÉDELEM: aki TEGNAP vitte (közvetlenül előző naptári nap), ma nem jöhet újra.
+                let blockedToday = (prevDate && getDaysDiffUTC(simDate, prevDate) === 1) ? prevWorkers.slice() : [];
+                // ...de ha emiatt nem maradna 2 ember, a tiltás feloldódik (rövid névsor védelme)
+                let freeCount = 0;
+                roster.forEach(function(nm) {
+                    if (!dailyAbsences[nm] && blockedToday.indexOf(nm) === -1) freeCount++;
+                });
+                if (freeCount < 2) blockedToday = [];
+
                 let todayWorkers = [];
                 let todayPushed = [...pushed];
                 pushed = [];
                 let checkedToday = new Set();
+                let spin = 0; // 🛡️ üresjárat-számláló a rotáció beragadása ellen
 
                 while (todayWorkers.length < 2) {
                     if (checkedToday.size >= roster.length + todayPushed.length) {
@@ -237,12 +271,27 @@
 
                     if (checkedToday.has(candidate)) {
                          if (isFromPushed) { todayPushed.shift(); pushed.push(candidate); }
-                         else { advanceRotation(); }
+                         else {
+                            advanceRotation();
+                            spin++;
+                            // 🛡️ VÉDELEM: ha a rotáció körözni kezd (páros létszámnál előfordul),
+                            // soron kívül behívjuk a következő elérhető embert – így nem fagy le a nap.
+                            if (spin > n + 2) {
+                                let fallback = null;
+                                for (let fi = 0; fi < roster.length; fi++) {
+                                    let nm = roster[fi];
+                                    if (!checkedToday.has(nm) && !dailyAbsences[nm] && blockedToday.indexOf(nm) === -1) { fallback = nm; break; }
+                                }
+                                if (fallback) { checkedToday.add(fallback); todayWorkers.push(fallback); }
+                                else { todayWorkers.push("-"); }
+                                spin = 0;
+                            }
+                         }
                          continue;
                     }
                     checkedToday.add(candidate);
 
-                    if (dailyAbsences[candidate]) {
+                    if (dailyAbsences[candidate] || blockedToday.indexOf(candidate) !== -1) {
                         pushed.push(candidate); 
                         if (isFromPushed) todayPushed.shift();
                         else { advanceRotation(); }
@@ -259,22 +308,38 @@
                         if (rotIndex > 0 && rotIndex % n === 0) {
                             // Új dolgozó beillesztése a ciklus végén
                             if (pending.length > 0 && simDate.getTime() >= pending[0].addedDate) {
-                                roster.push(pending[0].name);
-                                n = roster.length;
-                                pending.shift();
+                                let joining = pending.shift();
+                                // 🛡️ VÉDELEM: csak akkor lép be, ha még nincs a névsorban
+                                if (roster.indexOf(joining.name) === -1) {
+                                    roster.push(joining.name);
+                                    n = roster.length;
+                                }
                             }
                             
                             // PRO FIX: Ha páros a létszám, csúsztatunk egyet, 
                             // hogy a következő körben mással kerüljenek párba!
+                            // 🛡️ JAVÍTVA: a rotIndex++ átugrott egy embert (páros létszámnál valaki
+                            // szinte sosem került sorra). Helyette a névsort forgatjuk: a párok
+                            // ugyanúgy váltakoznak, de mindenki megkapja a maga körét.
+                            // Páratlan létszámnál ez az ág nem fut, ott a beosztás változatlan.
                             if (n % 2 === 0) {
-                                rotIndex++; 
+                                roster.push(roster.shift());
                             }
                         }
                     }
                 }
                 
-                pushed = pushed.concat(todayPushed);
+                // 🛡️ VÉDELEM: a csúszó (áttolt) sorban se lehessen ugyanaz kétszer
+                pushed = uniqueNames(pushed.concat(todayPushed));
+
+                // 🛡️ VÉDELEM: ugyanaz a név nem állhat kétszer egy napon
+                if (todayWorkers.length === 2 && todayWorkers[0] === todayWorkers[1] && todayWorkers[0] !== "-") {
+                    todayWorkers[1] = "-";
+                }
+
                 computedSchedule[dateKey] = todayWorkers;
+                prevWorkers = todayWorkers.filter(function(w) { return w !== "-"; });
+                prevDate = new Date(simDate.getTime());
             }
             simDate.setDate(simDate.getDate() + 1);
         }
@@ -399,24 +464,37 @@
     // ==========================================
     // ⚙️ ADMIN FUNKCIÓK (PRO VERZIÓ)
     // ==========================================
+    let adminDraft = null; // 🛡️ munkamásolat: a panel ezen dolgozik, a Mentés írja vissza
+
     window.openAdmin = function() {
         let pin = prompt("Admin hitelesítés (PIN):");
         if (pin !== "1234") { if(pin) alert("Hibás PIN!"); return; }
         
+        adminDraft = JSON.parse(JSON.stringify(sysSettings || {}));
+        if (!adminDraft.roster) adminDraft.roster = [];
+        if (!adminDraft.pending) adminDraft.pending = [];
+
         document.getElementById('adminPanel').style.display = 'block';
-        document.getElementById('setShiftStart').value = sysSettings.shiftStart;
-        document.getElementById('setNameStart').value = sysSettings.nameStart;
-        document.getElementById('setShiftType').value = sysSettings.shift;
+        document.getElementById('setShiftStart').value = adminDraft.shiftStart;
+        document.getElementById('setNameStart').value = adminDraft.nameStart;
+        document.getElementById('setShiftType').value = adminDraft.shift;
         renderAdminRoster();
+    };
+
+    window.closeAdmin = function() {
+        adminDraft = null; // a piszkozat eldobása – a felhőben lévő adat érintetlen marad
+        document.getElementById('adminPanel').style.display = 'none';
     };
 
     function renderAdminRoster() {
         let html = "";
-        if (!sysSettings.roster) sysSettings.roster = [];
-        sysSettings.roster.forEach((name, i) => {
+        if (!adminDraft.roster) adminDraft.roster = [];
+        adminDraft.roster.forEach((name, i) => {
+            // 🛡️ jelezzük, ha ugyanaz a név feljebb már szerepel
+            let dupe = adminDraft.roster.indexOf(name) !== i;
             html += `
             <div class="admin-list-item">
-                <span style="font-weight:bold;">${name}</span>
+                <span style="font-weight:bold;">${name}${dupe ? ' <span style="color:#f87171; font-weight:600; font-size:0.75rem;">• kétszer szerepel</span>' : ''}</span>
                 <div style="display:flex; gap:5px;">
                     <button class="btn-action" title="Fel" onclick="moveWorker(${i}, -1)">▲</button>
                     <button class="btn-action" title="Le" onclick="moveWorker(${i}, 1)">▼</button>
@@ -427,11 +505,13 @@
         document.getElementById('adminRosterList').innerHTML = html || "<div style='padding:15px; color:var(--text-dim); text-align:center;'>Nincs aktív dolgozó</div>";
 
         let pHTML = "";
-        if(sysSettings.pending && sysSettings.pending.length > 0) {
-            sysSettings.pending.forEach((p, i) => { 
+        if(adminDraft.pending && adminDraft.pending.length > 0) {
+            adminDraft.pending.forEach((p, i) => { 
+                // 🛡️ jelezzük, ha a várakozó már az aktív névsorban van
+                let clash = adminDraft.roster.indexOf(p.name) !== -1;
                 pHTML += `
                 <div class="admin-list-item">
-                    <span style="color:var(--accent);">⏳ ${p.name}</span>
+                    <span style="color:var(--accent);">⏳ ${p.name}${clash ? ' <span style="color:#f87171; font-size:0.75rem;">• már aktív, mentéskor kikerül</span>' : ''}</span>
                     <div style="display:flex; gap:5px;">
                         <button class="btn-action" style="background:var(--primary);" title="Azonnali aktiválás" onclick="activatePending(${i})">⚡</button>
                         <button class="btn-action btn-delete" title="Törlés" onclick="removePending(${i})">✖</button>
@@ -446,36 +526,39 @@
 
     window.moveWorker = function(index, direction) {
         if (direction === -1 && index > 0) {
-            let temp = sysSettings.roster[index];
-            sysSettings.roster[index] = sysSettings.roster[index - 1];
-            sysSettings.roster[index - 1] = temp;
-        } else if (direction === 1 && index < sysSettings.roster.length - 1) {
-            let temp = sysSettings.roster[index];
-            sysSettings.roster[index] = sysSettings.roster[index + 1];
-            sysSettings.roster[index + 1] = temp;
+            let temp = adminDraft.roster[index];
+            adminDraft.roster[index] = adminDraft.roster[index - 1];
+            adminDraft.roster[index - 1] = temp;
+        } else if (direction === 1 && index < adminDraft.roster.length - 1) {
+            let temp = adminDraft.roster[index];
+            adminDraft.roster[index] = adminDraft.roster[index + 1];
+            adminDraft.roster[index + 1] = temp;
         }
         renderAdminRoster(); 
     };
 
     window.removeWorker = function(index) {
-        if(confirm(`Biztos törlöd ${sysSettings.roster[index]}-t a fő névsorból?`)) {
-            sysSettings.roster.splice(index, 1);
+        if(confirm(`Biztos törlöd ${adminDraft.roster[index]}-t a fő névsorból?`)) {
+            adminDraft.roster.splice(index, 1);
             renderAdminRoster();
         }
     };
 
     window.removePending = function(index) {
         if(confirm(`Biztos törlöd a várakozólistáról?`)) {
-            sysSettings.pending.splice(index, 1);
+            adminDraft.pending.splice(index, 1);
             renderAdminRoster();
         }
     };
 
     // ÚJ FUNKCIÓ: Várakozó azonnali áthelyezése az aktívak közé
     window.activatePending = function(index) {
-        if (!sysSettings.roster) sysSettings.roster = [];
-        let worker = sysSettings.pending.splice(index, 1)[0];
-        sysSettings.roster.push(worker.name);
+        if (!adminDraft.roster) adminDraft.roster = [];
+        let worker = adminDraft.pending.splice(index, 1)[0];
+        // 🛡️ VÉDELEM: nem kerülhet be másodszor
+        if (worker && adminDraft.roster.indexOf(worker.name) === -1) {
+            adminDraft.roster.push(worker.name);
+        }
         renderAdminRoster();
     };
 
@@ -483,14 +566,24 @@
         let name = document.getElementById('newWorkerName').value.trim();
         if(name === "") return;
         
-        if(!sysSettings.roster) sysSettings.roster = [];
-        if(!sysSettings.pending) sysSettings.pending = [];
+        if(!adminDraft.roster) adminDraft.roster = [];
+        if(!adminDraft.pending) adminDraft.pending = [];
+
+        // 🛡️ VÉDELEM: ugyanaz a név nem vehető fel kétszer
+        if (adminDraft.roster.indexOf(name) !== -1) {
+            alert(name + " már az aktív névsorban van.");
+            return;
+        }
+        if (adminDraft.pending.some(function(p) { return p.name === name; })) {
+            alert(name + " már a várakozók között van.");
+            return;
+        }
 
         // Ha az aktív lista teljesen üres, azonnal oda tesszük, hogy beinduljon a rendszer!
-        if (sysSettings.roster.length === 0) {
-            sysSettings.roster.push(name);
+        if (adminDraft.roster.length === 0) {
+            adminDraft.roster.push(name);
         } else {
-            sysSettings.pending.push({ name: name, addedDate: new Date().getTime() });
+            adminDraft.pending.push({ name: name, addedDate: new Date().getTime() });
         }
         
         document.getElementById('newWorkerName').value = "";
@@ -498,10 +591,25 @@
     };
 
     window.saveAdminSettings = function() {
-        sysSettings.shiftStart = document.getElementById('setShiftStart').value;
-        sysSettings.nameStart = document.getElementById('setNameStart').value;
-        sysSettings.shift = document.getElementById('setShiftType').value;
-        db.ref('settings').set(sysSettings).then(() => {
+        if (!adminDraft) return;
+        adminDraft.shiftStart = document.getElementById('setShiftStart').value;
+        adminDraft.nameStart = document.getElementById('setNameStart').value;
+        adminDraft.shift = document.getElementById('setShiftType').value;
+
+        // 🛡️ TAKARÍTÁS mentés előtt: duplikátumok ki a névsorból és a várólistáról
+        adminDraft.roster = uniqueNames(adminDraft.roster);
+        let cleanPending = [];
+        (adminDraft.pending || []).forEach(function(p) {
+            if (!p || !p.name) return;
+            let nm = String(p.name).trim();
+            if (nm === "" || adminDraft.roster.indexOf(nm) !== -1) return;
+            if (cleanPending.some(function(x) { return x.name === nm; })) return;
+            cleanPending.push({ name: nm, addedDate: p.addedDate || new Date().getTime() });
+        });
+        adminDraft.pending = cleanPending;
+
+        db.ref('settings').set(adminDraft).then(() => {
+            adminDraft = null;
             document.getElementById('adminPanel').style.display = 'none';
         });
     };
