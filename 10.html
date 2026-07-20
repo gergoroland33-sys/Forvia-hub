@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+l<!DOCTYPE html>
+<!-- Szemetkihordas PRO v2.0 - FIFO sor, belepok azonnal a sor vegere, tobbnapos hianyzas, admin elonezet -->
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
@@ -71,16 +72,16 @@
 
     <div id="adminPanel">
         <div class="admin-box">
-            <h2>PRO Vezérlőpult</h2>
+            <h2>PRO Vezérlőpult <span style="font-size:0.7rem; color:var(--text-dim); font-weight:600; letter-spacing:0;">v2.0</span></h2>
             
             <div class="admin-section">
                 <h3>Alapbeállítások</h3>
                 <label style="font-size:0.8rem; color:var(--text-dim);">Műszak Ciklus Kezdete (Fix alap):</label>
-                <input type="date" id="setShiftStart" class="admin-input">
+                <input type="date" id="setShiftStart" class="admin-input" onchange="renderAdminPreview()">
                 <label style="font-size:0.8rem; color:var(--text-dim);">Rotáció Kezdete (Matek indulás):</label>
-                <input type="date" id="setNameStart" class="admin-input">
+                <input type="date" id="setNameStart" class="admin-input" onchange="renderAdminPreview()">
                 <label style="font-size:0.8rem; color:var(--text-dim);">Jelenlegi Műszak:</label>
-                <select id="setShiftType" class="admin-input" style="margin-bottom:0;">
+                <select id="setShiftType" class="admin-input" style="margin-bottom:0;" onchange="renderAdminPreview()">
                     <option value="A">A Műszak</option><option value="B">B Műszak</option>
                     <option value="C">C Műszak</option><option value="D">D Műszak</option>
                 </select>
@@ -89,6 +90,8 @@
             <div class="admin-section">
                 <h3>Aktív Névsor (Sorbarendezés / Törlés)</h3>
                 <div class="admin-list" id="adminRosterList"></div>
+                <button class="btn-action" style="width:100%; margin-top:10px; padding:10px; font-weight:bold;" onclick="applyOrderFromToday()">Sorrend alkalmazása mától</button>
+                <div style="font-size:0.75rem; color:var(--text-dim); margin-top:8px;">A rotáció a mai naptól a fenti sorrendben indul újra: 2 név / munkanap, fentről lefelé.</div>
             </div>
 
             <div class="admin-section">
@@ -97,11 +100,13 @@
                     <input type="text" id="newWorkerName" class="admin-input" style="margin-bottom:0;" placeholder="Új név...">
                     <button onclick="addNewWorker()" style="background:var(--accent); border:none; border-radius:8px; font-weight:bold; padding:0 20px; color:white; font-size:1.2rem;">+</button>
                 </div>
+                <div style="font-size:0.75rem; color:var(--text-dim); margin-top:8px;">Az új név azonnal a sor végére kerül – miután az előtte állók sorra kerültek, ő következik.</div>
             </div>
 
             <div class="admin-section">
-                <h3>Várakozó Dolgozók (Ciklus végén lépnek be)</h3>
-                <div class="admin-list" id="pendingWorkers"></div>
+                <h3>Következő munkanapok (élő előnézet)</h3>
+                <div class="admin-list" id="adminPreview"></div>
+                <div style="font-size:0.75rem; color:var(--text-dim); margin-top:8px;">Minden módosításnál frissül – mentés előtt látod, mi lesz a beosztás.</div>
             </div>
 
             <button class="btn-save" onclick="saveAdminSettings()">Mentés a Felhőbe</button>
@@ -176,8 +181,8 @@
         return Math.floor((utc1 - utc2) / 86400000);
     }
 
-    function isWorkingDay(date) {
-        let startObj = parseLocalDate(sysSettings.shiftStart);
+    function isWorkingDayFor(date, cfg) {
+        let startObj = parseLocalDate(cfg.shiftStart);
         let totalDays = getDaysDiffUTC(date, startObj);
         let cycleIdx = ((totalDays % 12) + 12) % 12;
         
@@ -186,7 +191,28 @@
         else if (cycleIdx <= 5) { nap = "D"; ej = "C"; }
         else if (cycleIdx <= 8) { nap = "A"; ej = "B"; }
         else { nap = "C"; ej = "D"; }
-        return (sysSettings.shift === nap || sysSettings.shift === ej);
+        return (cfg.shift === nap || cfg.shift === ej);
+    }
+    function isWorkingDay(date) { return isWorkingDayFor(date, sysSettings); }
+
+    // Van-e egyaltalan dolgozo (aktiv nevsorban vagy belepokent)?
+    function hasAnyWorker(cfg) {
+        if (!cfg) return false;
+        if (cfg.roster && cfg.roster.length) return true;
+        if (cfg.joins && Object.keys(cfg.joins).length) return true;
+        if (cfg.pending && cfg.pending.length) return true;
+        return false;
+    }
+
+    // A kovetkezo 'count' munkanap datumkulcsa 'startKey'-tol (azt is beleertve)
+    function nextWorkingDayKeys(startKey, count) {
+        let out = [], d = parseLocalDate(startKey); d.setHours(0,0,0,0);
+        let guard = 0;
+        while (out.length < count && guard++ < 400) {
+            if (isWorkingDay(d)) out.push(getDateKey(d));
+            d.setDate(d.getDate() + 1);
+        }
+        return out;
     }
 
     // 🛡️ VÉDELEM: egy név csak EGYSZER szerepelhet a rotációban (üres/szóközös nevek kiesnek)
@@ -200,38 +226,48 @@
         return out;
     }
 
-    function calculateAllSchedules() {
-        computedSchedule = {};
-        
-        // Biztonsági ellenőrzés: Ha senki sincs az aktív listán, leállítjuk a számolást.
-        if (!sysSettings || !sysSettings.roster || sysSettings.roster.length === 0) return; 
-        
-        // 🛡️ VÉDELEM: duplikált nevek kiszűrése az aktív névsorból
-        let roster = uniqueNames(sysSettings.roster);
-        // 🛡️ VÉDELEM: a várólistáról kiesik, aki már aktív, vagy aki kétszer került fel
-        let pending = [];
-        (sysSettings.pending || []).forEach(function(p) {
+    function computeScheduleFor(cfg, absMap) {
+        let schedule = {};
+        if (!cfg || !cfg.nameStart || !cfg.shiftStart) return schedule;
+
+        // Aktív névsor duplikátumok nélkül
+        let baseRoster = uniqueNames(cfg.roster);
+
+        // 🆕 BELÉPŐK: név → belépés dátuma. Aki belép, AZONNAL a sor végére kerül,
+        // nincs várakozó puffer. (A régi "pending" formátumot is átvesszük.)
+        let joins = {};
+        if (cfg.joins) {
+            Object.keys(cfg.joins).forEach(function(nm) {
+                let clean = String(nm).trim();
+                if (clean !== "" && baseRoster.indexOf(clean) === -1) joins[clean] = String(cfg.joins[nm]);
+            });
+        }
+        (cfg.pending || []).forEach(function(p) {
             if (!p || !p.name) return;
-            let nm = String(p.name).trim();
-            if (nm === "" || roster.indexOf(nm) !== -1) return;
-            if (pending.some(function(x) { return x.name === nm; })) return;
-            pending.push({ name: nm, addedDate: p.addedDate || 0 });
+            let clean = String(p.name).trim();
+            if (clean === "" || baseRoster.indexOf(clean) !== -1 || joins[clean]) return;
+            joins[clean] = getDateKey(new Date(p.addedDate || 0));
         });
-        if (roster.length === 0) return;
+        let joinList = Object.keys(joins).map(function(nm) { return { name: nm, date: joins[nm] }; });
+        joinList.sort(function(a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : (a.name < b.name ? -1 : 1); });
+
+        if (baseRoster.length === 0 && joinList.length === 0) return schedule;
 
         // ==========================================
         // 🔄 SORELV (FIFO): aki egyszer vitte, a sor VÉGÉRE kerül.
         // A sor elején az áll, aki a legrégebben volt beosztva. Aki hiányzik, vagy
         // tegnap vitte, az elöl MARAD – tehát legközelebb ő jön. Így senki nem kerül
-        // sorra másodszor, amíg mindenki más le nem ment egyszer.
+        // sorra újra, amíg a listában lévő többiek le nem mentek.
+        // Páros és páratlan létszámmal egyaránt működik.
         // ==========================================
-        let queue = roster.slice();
+        let queue = baseRoster.slice();
         let slotCount = 0;     // a futó körben kiosztott helyek száma (a kör végének jelzésére)
         let korSzam = 0;       // hányadik teljes kör ment le (a keverés helyének léptetéséhez)
         let prevWorkers = [];  // az előző munkanapra kiosztott nevek
         let prevDate = null;   // az előző munkanap dátuma
+        let joinIdx = 0;
 
-        let simDate = parseLocalDate(sysSettings.nameStart);
+        let simDate = parseLocalDate(cfg.nameStart);
         simDate.setHours(0,0,0,0);
         
         let endDate = new Date();
@@ -239,9 +275,18 @@
         endDate.setHours(0,0,0,0);
 
         while (simDate <= endDate) {
-            if (isWorkingDay(simDate)) {
+            if (isWorkingDayFor(simDate, cfg)) {
                 let dateKey = getDateKey(simDate);
-                let dailyAbsences = absences[dateKey] || {}; 
+
+                // 🆕 esedékes belépők a sor VÉGÉRE (a belépés napjától listázhatók,
+                // de csak miután az előttük állók mind sorra kerültek)
+                while (joinIdx < joinList.length && joinList[joinIdx].date <= dateKey) {
+                    if (queue.indexOf(joinList[joinIdx].name) === -1) queue.push(joinList[joinIdx].name);
+                    joinIdx++;
+                }
+                if (queue.length === 0) { simDate.setDate(simDate.getDate() + 1); continue; }
+
+                let dailyAbsences = absMap[dateKey] || {}; 
 
                 // 🛡️ Aki TEGNAP vitte (közvetlenül előző naptári nap), ma nem jöhet újra...
                 let blockedToday = (prevDate && getDaysDiffUTC(simDate, prevDate) === 1) ? prevWorkers.slice() : [];
@@ -272,13 +317,9 @@
                 // Ha tényleg nincs elérhető ember, marad a kötőjel
                 while (todayWorkers.length < 2) todayWorkers.push("-");
 
-                // Kör vége: itt lép be a várakozó dolgozó, a sor végére
+                // Kör vége: mindenki egyszer sorra került
                 if (queue.length > 0 && slotCount >= queue.length) {
                     slotCount -= queue.length;
-                    if (pending.length > 0 && simDate.getTime() >= pending[0].addedDate) {
-                        let joining = pending.shift();
-                        if (queue.indexOf(joining.name) === -1) queue.push(joining.name);
-                    }
                     // 🔀 PÁRVÁLTÁS: páros létszámnál a sor a kör végén pontosan visszaállna,
                     // vagyis mindig ugyanaz a két ember kerülne párba. Ezért a kör végén
                     // egy hellyel eltoljuk. Senki nem esik ki: a következő körben is
@@ -297,12 +338,17 @@
                     }
                 }
 
-                computedSchedule[dateKey] = todayWorkers;
+                schedule[dateKey] = todayWorkers;
                 prevWorkers = todayWorkers.filter(function(w) { return w !== "-"; });
                 prevDate = new Date(simDate.getTime());
             }
             simDate.setDate(simDate.getDate() + 1);
         }
+        return schedule;
+    }
+
+    function calculateAllSchedules() {
+        computedSchedule = sysSettings ? computeScheduleFor(sysSettings, absences) : {};
     }
 
     function getDateKey(date) {
@@ -314,9 +360,16 @@
     // ==========================================
     window.markAbsent = function(dateKey, name) {
         if(!name || name === "Nincs több!" || name === "-") return;
-        if(confirm(`Szeretnéd jelezni, hogy ${name} hiányzik ezen a napon?\n\nA rendszer automatikusan behívja a következőt, ${name} pedig átkerül a következő munkanapra.`)) {
-            db.ref(`absences/${dateKey}/${name}`).set(true);
-        }
+        // 🆕 Több munkanapos hiányzás egy lépésben: 1 = csak ez a nap (régi működés)
+        let v = prompt(`Hány munkanapig hiányzik ${name}?\n\n1 = csak ez a nap. Nagyobb szám = ennyi munkanapon át hiányzik,\na rendszer minden napra a következőt hívja be, ${name} utána folytatja.`, "1");
+        if (v === null) return;
+        let k = parseInt(v, 10);
+        if (isNaN(k) || k < 1) k = 1;
+        if (k > 30) k = 30;
+        let days = nextWorkingDayKeys(dateKey, k);
+        let updates = {};
+        days.forEach(function(dk) { updates[dk + "/" + name] = true; });
+        db.ref('absences').update(updates);
     };
 
     window.undoAbsent = function(dateKey, name) {
@@ -338,7 +391,7 @@
         const headerHTML = `<div class="header-pill" onclick="openAdmin()">${sysSettings.shift} MŰSZAK BEOSZTÁS</div>`;
 
         // Ha üres az aktív lista
-        if (!sysSettings.roster || sysSettings.roster.length === 0) {
+        if (!hasAnyWorker(sysSettings)) {
             hero.innerHTML = `${headerHTML}
                 <div style="text-align: center; margin-top: 50px; opacity: 0.7;">
                     <div style="font-size: 3rem; margin-bottom: 10px;">⚠️</div>
@@ -426,13 +479,22 @@
     // ==========================================
     let adminDraft = null; // 🛡️ munkamásolat: a panel ezen dolgozik, a Mentés írja vissza
 
+    function todayDateKey() { let t = new Date(); t.setHours(0,0,0,0); return getDateKey(t); }
+
     window.openAdmin = function() {
         let pin = prompt("Admin hitelesítés (PIN):");
         if (pin !== "1234") { if(pin) alert("Hibás PIN!"); return; }
         
         adminDraft = JSON.parse(JSON.stringify(sysSettings || {}));
         if (!adminDraft.roster) adminDraft.roster = [];
-        if (!adminDraft.pending) adminDraft.pending = [];
+        if (!adminDraft.joins) adminDraft.joins = {};
+        // 🧳 Örökölt "várakozó" bejegyzések átvétele belépőkké (a régi adat nem vész el)
+        (adminDraft.pending || []).forEach(function(p) {
+            if (p && p.name && adminDraft.roster.indexOf(p.name) === -1 && !adminDraft.joins[p.name]) {
+                adminDraft.joins[p.name] = getDateKey(new Date(p.addedDate || 0));
+            }
+        });
+        delete adminDraft.pending;
 
         document.getElementById('adminPanel').style.display = 'block';
         document.getElementById('setShiftStart').value = adminDraft.shiftStart;
@@ -444,6 +506,32 @@
     window.closeAdmin = function() {
         adminDraft = null; // a piszkozat eldobása – a felhőben lévő adat érintetlen marad
         document.getElementById('adminPanel').style.display = 'none';
+    };
+
+    // A piszkozat + a beviteli mezők aktuális állapota egy konfigban
+    function draftConfig() {
+        let d = JSON.parse(JSON.stringify(adminDraft));
+        d.shiftStart = document.getElementById('setShiftStart').value || d.shiftStart;
+        d.nameStart = document.getElementById('setNameStart').value || d.nameStart;
+        d.shift = document.getElementById('setShiftType').value || d.shift;
+        return d;
+    }
+
+    // 🔎 Élő előnézet: a következő 6 munkanap a piszkozat alapján
+    window.renderAdminPreview = function() {
+        if (!adminDraft) return;
+        let sch = computeScheduleFor(draftConfig(), absences);
+        let keys = Object.keys(sch).sort();
+        let tk = todayDateKey();
+        let html = "", shown = 0;
+        for (let i = 0; i < keys.length && shown < 6; i++) {
+            if (keys[i] < tk) continue;
+            let d = parseLocalDate(keys[i]);
+            let lab = d.toLocaleDateString('hu-HU', { month: 'short', day: 'numeric', weekday: 'short' });
+            html += `<div class="admin-list-item"><span style="color:var(--text-dim);">${lab}</span><span style="font-weight:bold;">${sch[keys[i]].join(" & ")}</span></div>`;
+            shown++;
+        }
+        document.getElementById('adminPreview').innerHTML = html || "<div style='padding:15px; color:var(--text-dim); text-align:center;'>Nincs megjeleníthető munkanap.</div>";
     };
 
     function renderAdminRoster() {
@@ -462,26 +550,28 @@
                 </div>
             </div>`;
         });
-        document.getElementById('adminRosterList').innerHTML = html || "<div style='padding:15px; color:var(--text-dim); text-align:center;'>Nincs aktív dolgozó</div>";
 
-        let pHTML = "";
-        if(adminDraft.pending && adminDraft.pending.length > 0) {
-            adminDraft.pending.forEach((p, i) => { 
-                // 🛡️ jelezzük, ha a várakozó már az aktív névsorban van
-                let clash = adminDraft.roster.indexOf(p.name) !== -1;
-                pHTML += `
-                <div class="admin-list-item">
-                    <span style="color:var(--accent);">⏳ ${p.name}${clash ? ' <span style="color:#f87171; font-size:0.75rem;">• már aktív, mentéskor kikerül</span>' : ''}</span>
-                    <div style="display:flex; gap:5px;">
-                        <button class="btn-action" style="background:var(--primary);" title="Azonnali aktiválás" onclick="activatePending(${i})">⚡</button>
-                        <button class="btn-action btn-delete" title="Törlés" onclick="removePending(${i})">✖</button>
-                    </div>
-                </div>`; 
-            });
-        } else {
-            pHTML = "<div style='padding:15px; color:var(--text-dim); text-align:center; font-size:0.85rem;'>Jelenleg senki sem várakozik.</div>";
-        }
-        document.getElementById('pendingWorkers').innerHTML = pHTML;
+        // 🆕 Belépők ugyanabban a listában, a végén (a helyük fix: a sor vége)
+        let joinNames = Object.keys(adminDraft.joins || {});
+        joinNames.sort(function(a, b) {
+            let da = adminDraft.joins[a], db2 = adminDraft.joins[b];
+            return da < db2 ? -1 : da > db2 ? 1 : (a < b ? -1 : 1);
+        });
+        window._joinOrder = joinNames;
+        joinNames.forEach(function(nm, i) {
+            let d = parseLocalDate(adminDraft.joins[nm]);
+            let lab = d.toLocaleDateString('hu-HU', { month: 'short', day: 'numeric' });
+            html += `
+            <div class="admin-list-item">
+                <span style="color:var(--accent);">⏳ ${nm} <span style="color:var(--text-dim); font-size:0.75rem;">• sor végén, belépett: ${lab}</span></span>
+                <div style="display:flex; gap:5px;">
+                    <button class="btn-action btn-delete" title="Törlés" onclick="removeJoinAt(${i})">✖</button>
+                </div>
+            </div>`;
+        });
+
+        document.getElementById('adminRosterList').innerHTML = html || "<div style='padding:15px; color:var(--text-dim); text-align:center;'>Nincs aktív dolgozó</div>";
+        renderAdminPreview();
     }
 
     window.moveWorker = function(index, direction) {
@@ -504,21 +594,26 @@
         }
     };
 
-    window.removePending = function(index) {
-        if(confirm(`Biztos törlöd a várakozólistáról?`)) {
-            adminDraft.pending.splice(index, 1);
+    window.removeJoinAt = function(i) {
+        let nm = (window._joinOrder || [])[i];
+        if (!nm) return;
+        if (confirm(`Biztos törlöd ${nm}-t?`)) {
+            delete adminDraft.joins[nm];
             renderAdminRoster();
         }
     };
 
-    // ÚJ FUNKCIÓ: Várakozó azonnali áthelyezése az aktívak közé
-    window.activatePending = function(index) {
-        if (!adminDraft.roster) adminDraft.roster = [];
-        let worker = adminDraft.pending.splice(index, 1)[0];
-        // 🛡️ VÉDELEM: nem kerülhet be másodszor
-        if (worker && adminDraft.roster.indexOf(worker.name) === -1) {
-            adminDraft.roster.push(worker.name);
-        }
+    // 📌 A fenti sorrend érvényesítése MÁTÓL: a rotáció újraindul a lista sorrendjében,
+    // 2 név / munkanap, fentről lefelé. A belépők a lista végére olvadnak be.
+    window.applyOrderFromToday = function() {
+        let merged = adminDraft.roster.slice();
+        (window._joinOrder || []).forEach(function(nm) {
+            if (merged.indexOf(nm) === -1) merged.push(nm);
+        });
+        adminDraft.roster = uniqueNames(merged);
+        adminDraft.joins = {};
+        adminDraft.nameStart = todayDateKey();
+        document.getElementById('setNameStart').value = adminDraft.nameStart;
         renderAdminRoster();
     };
 
@@ -527,23 +622,19 @@
         if(name === "") return;
         
         if(!adminDraft.roster) adminDraft.roster = [];
-        if(!adminDraft.pending) adminDraft.pending = [];
+        if(!adminDraft.joins) adminDraft.joins = {};
 
         // 🛡️ VÉDELEM: ugyanaz a név nem vehető fel kétszer
-        if (adminDraft.roster.indexOf(name) !== -1) {
-            alert(name + " már az aktív névsorban van.");
-            return;
-        }
-        if (adminDraft.pending.some(function(p) { return p.name === name; })) {
-            alert(name + " már a várakozók között van.");
+        if (adminDraft.roster.indexOf(name) !== -1 || adminDraft.joins[name]) {
+            alert(name + " már szerepel a névsorban.");
             return;
         }
 
-        // Ha az aktív lista teljesen üres, azonnal oda tesszük, hogy beinduljon a rendszer!
-        if (adminDraft.roster.length === 0) {
+        // Ha a névsor teljesen üres, ő az első – egyébként a sor végére lép be MA
+        if (adminDraft.roster.length === 0 && Object.keys(adminDraft.joins).length === 0) {
             adminDraft.roster.push(name);
         } else {
-            adminDraft.pending.push({ name: name, addedDate: new Date().getTime() });
+            adminDraft.joins[name] = todayDateKey();
         }
         
         document.getElementById('newWorkerName').value = "";
@@ -552,23 +643,24 @@
 
     window.saveAdminSettings = function() {
         if (!adminDraft) return;
-        adminDraft.shiftStart = document.getElementById('setShiftStart').value;
-        adminDraft.nameStart = document.getElementById('setNameStart').value;
-        adminDraft.shift = document.getElementById('setShiftType').value;
+        let cfg = draftConfig();
 
-        // 🛡️ TAKARÍTÁS mentés előtt: duplikátumok ki a névsorból és a várólistáról
-        adminDraft.roster = uniqueNames(adminDraft.roster);
-        let cleanPending = [];
-        (adminDraft.pending || []).forEach(function(p) {
-            if (!p || !p.name) return;
-            let nm = String(p.name).trim();
-            if (nm === "" || adminDraft.roster.indexOf(nm) !== -1) return;
-            if (cleanPending.some(function(x) { return x.name === nm; })) return;
-            cleanPending.push({ name: nm, addedDate: p.addedDate || new Date().getTime() });
+        // 🛡️ TAKARÍTÁS mentés előtt
+        cfg.roster = uniqueNames(cfg.roster);
+        let cleanJoins = {};
+        Object.keys(cfg.joins || {}).forEach(function(nm) {
+            let clean = String(nm).trim();
+            if (clean !== "" && cfg.roster.indexOf(clean) === -1) cleanJoins[clean] = cfg.joins[nm];
         });
-        adminDraft.pending = cleanPending;
 
-        db.ref('settings').set(adminDraft).then(() => {
+        // A teljes settings csomópontot írjuk – az örökölt "pending" ezzel végleg eltűnik
+        db.ref('settings').set({
+            shift: cfg.shift,
+            shiftStart: cfg.shiftStart,
+            nameStart: cfg.nameStart,
+            roster: cfg.roster,
+            joins: Object.keys(cleanJoins).length ? cleanJoins : null
+        }).then(() => {
             adminDraft = null;
             document.getElementById('adminPanel').style.display = 'none';
         });
