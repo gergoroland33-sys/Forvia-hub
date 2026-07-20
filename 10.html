@@ -217,13 +217,18 @@
             if (pending.some(function(x) { return x.name === nm; })) return;
             pending.push({ name: nm, addedDate: p.addedDate || 0 });
         });
-        let n = roster.length;
-        if (n === 0) return;
-        
-        let rotIndex = 0;
-        let pushed = []; 
-        let prevWorkers = [];  // 🛡️ az előző munkanapra kiosztott nevek
-        let prevDate = null;   // 🛡️ az előző munkanap dátuma
+        if (roster.length === 0) return;
+
+        // ==========================================
+        // 🔄 SORELV (FIFO): aki egyszer vitte, a sor VÉGÉRE kerül.
+        // A sor elején az áll, aki a legrégebben volt beosztva. Aki hiányzik, vagy
+        // tegnap vitte, az elöl MARAD – tehát legközelebb ő jön. Így senki nem kerül
+        // sorra másodszor, amíg mindenki más le nem ment egyszer.
+        // ==========================================
+        let queue = roster.slice();
+        let slotCount = 0;     // a futó körben kiosztott helyek száma (a kör végének jelzésére)
+        let prevWorkers = [];  // az előző munkanapra kiosztott nevek
+        let prevDate = null;   // az előző munkanap dátuma
 
         let simDate = parseLocalDate(sysSettings.nameStart);
         simDate.setHours(0,0,0,0);
@@ -237,104 +242,50 @@
                 let dateKey = getDateKey(simDate);
                 let dailyAbsences = absences[dateKey] || {}; 
 
-                // 🛡️ VÉDELEM: aki TEGNAP vitte (közvetlenül előző naptári nap), ma nem jöhet újra.
+                // 🛡️ Aki TEGNAP vitte (közvetlenül előző naptári nap), ma nem jöhet újra...
                 let blockedToday = (prevDate && getDaysDiffUTC(simDate, prevDate) === 1) ? prevWorkers.slice() : [];
                 // ...de ha emiatt nem maradna 2 ember, a tiltás feloldódik (rövid névsor védelme)
                 let freeCount = 0;
-                roster.forEach(function(nm) {
+                queue.forEach(function(nm) {
                     if (!dailyAbsences[nm] && blockedToday.indexOf(nm) === -1) freeCount++;
                 });
                 if (freeCount < 2) blockedToday = [];
 
+                // A sor elejéről haladva az első két elérhető ember jön
                 let todayWorkers = [];
-                let todayPushed = [...pushed];
-                pushed = [];
-                let checkedToday = new Set();
-                let spin = 0; // 🛡️ üresjárat-számláló a rotáció beragadása ellen
-
-                while (todayWorkers.length < 2) {
-                    if (checkedToday.size >= roster.length + todayPushed.length) {
-                        todayWorkers.push("-"); // Kötőjel, ha tényleg nincs több elérhető ember
-                        if(todayWorkers.length === 2) break; 
-                        continue;
-                    }
-
-                    let candidate;
-                    let isFromPushed = false;
-                    
-                    if (todayPushed.length > 0) {
-                        candidate = todayPushed[0];
-                        isFromPushed = true;
-                    } else {
-                        candidate = roster[rotIndex % n];
-                    }
-
-                    if (checkedToday.has(candidate)) {
-                         if (isFromPushed) { todayPushed.shift(); pushed.push(candidate); }
-                         else {
-                            advanceRotation();
-                            spin++;
-                            // 🛡️ VÉDELEM: ha a rotáció körözni kezd (páros létszámnál előfordul),
-                            // soron kívül behívjuk a következő elérhető embert – így nem fagy le a nap.
-                            if (spin > n + 2) {
-                                let fallback = null;
-                                for (let fi = 0; fi < roster.length; fi++) {
-                                    let nm = roster[fi];
-                                    if (!checkedToday.has(nm) && !dailyAbsences[nm] && blockedToday.indexOf(nm) === -1) { fallback = nm; break; }
-                                }
-                                if (fallback) { checkedToday.add(fallback); todayWorkers.push(fallback); }
-                                else { todayWorkers.push("-"); }
-                                spin = 0;
-                            }
-                         }
-                         continue;
-                    }
-                    checkedToday.add(candidate);
-
-                    if (dailyAbsences[candidate] || blockedToday.indexOf(candidate) !== -1) {
-                        pushed.push(candidate); 
-                        if (isFromPushed) todayPushed.shift();
-                        else { advanceRotation(); }
-                    } else {
-                        todayWorkers.push(candidate);
-                        if (isFromPushed) todayPushed.shift();
-                        else { advanceRotation(); }
-                    }
-
-                    // Forgás logikája (Páros létszám fixálva!)
-                    function advanceRotation() {
-                        rotIndex++;
-                        // Ha egy teljes kör lement (mindenki sorra került)
-                        if (rotIndex > 0 && rotIndex % n === 0) {
-                            // Új dolgozó beillesztése a ciklus végén
-                            if (pending.length > 0 && simDate.getTime() >= pending[0].addedDate) {
-                                let joining = pending.shift();
-                                // 🛡️ VÉDELEM: csak akkor lép be, ha még nincs a névsorban
-                                if (roster.indexOf(joining.name) === -1) {
-                                    roster.push(joining.name);
-                                    n = roster.length;
-                                }
-                            }
-                            
-                            // PRO FIX: Ha páros a létszám, csúsztatunk egyet, 
-                            // hogy a következő körben mással kerüljenek párba!
-                            // 🛡️ JAVÍTVA: a rotIndex++ átugrott egy embert (páros létszámnál valaki
-                            // szinte sosem került sorra). Helyette a névsort forgatjuk: a párok
-                            // ugyanúgy váltakoznak, de mindenki megkapja a maga körét.
-                            // Páratlan létszámnál ez az ág nem fut, ott a beosztás változatlan.
-                            if (n % 2 === 0) {
-                                roster.push(roster.shift());
-                            }
-                        }
-                    }
+                for (let i = 0; i < queue.length && todayWorkers.length < 2; i++) {
+                    let nm = queue[i];
+                    if (dailyAbsences[nm]) continue;                  // hiányzik → elöl marad
+                    if (blockedToday.indexOf(nm) !== -1) continue;    // tegnap vitte → elöl marad
+                    todayWorkers.push(nm);
                 }
-                
-                // 🛡️ VÉDELEM: a csúszó (áttolt) sorban se lehessen ugyanaz kétszer
-                pushed = uniqueNames(pushed.concat(todayPushed));
 
-                // 🛡️ VÉDELEM: ugyanaz a név nem állhat kétszer egy napon
-                if (todayWorkers.length === 2 && todayWorkers[0] === todayWorkers[1] && todayWorkers[0] !== "-") {
-                    todayWorkers[1] = "-";
+                // ✅ Aki ma vitte, hátrasorolódik a sor végére
+                todayWorkers.forEach(function(nm) {
+                    let at = queue.indexOf(nm);
+                    if (at !== -1) queue.splice(at, 1);
+                    queue.push(nm);
+                });
+                slotCount += todayWorkers.length;
+
+                // Ha tényleg nincs elérhető ember, marad a kötőjel
+                while (todayWorkers.length < 2) todayWorkers.push("-");
+
+                // Kör vége: itt lép be a várakozó dolgozó, a sor végére
+                if (queue.length > 0 && slotCount >= queue.length) {
+                    slotCount -= queue.length;
+                    if (pending.length > 0 && simDate.getTime() >= pending[0].addedDate) {
+                        let joining = pending.shift();
+                        if (queue.indexOf(joining.name) === -1) queue.push(joining.name);
+                    }
+                    // 🔀 PÁRVÁLTÁS: páros létszámnál a sor a kör végén pontosan visszaállna,
+                    // vagyis mindig ugyanaz a két ember kerülne párba. Ezért a kör végén
+                    // egy hellyel eltoljuk. Senki nem esik ki: a következő körben is
+                    // mindenki pontosan egyszer jön, csak más partnerrel.
+                    // Páratlan létszámnál ez az ág nem fut – ott a sor magától eltolódik.
+                    if (queue.length % 2 === 0) {
+                        queue.push(queue.shift());
+                    }
                 }
 
                 computedSchedule[dateKey] = todayWorkers;
