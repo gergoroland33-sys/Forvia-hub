@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Szemetkihordas PRO v2.0 - FIFO sor, belepok azonnal a sor vegere, tobbnapos hianyzas, admin elonezet -->
+<!-- Szemetkihordas PRO v2.2 - FIFO sor, belepok azonnal a sor vegere, tobbnapos hianyzas, admin elonezet -->
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
@@ -72,7 +72,7 @@
 
     <div id="adminPanel">
         <div class="admin-box">
-            <h2>PRO Vezérlőpult <span style="font-size:0.7rem; color:var(--text-dim); font-weight:600; letter-spacing:0;">v2.0</span></h2>
+            <h2>PRO Vezérlőpult <span style="font-size:0.7rem; color:var(--text-dim); font-weight:600; letter-spacing:0;">v2.2</span></h2>
             
             <div class="admin-section">
                 <h3>Alapbeállítások</h3>
@@ -299,10 +299,11 @@
 
                 // A sor elejéről haladva az első két elérhető ember jön
                 let todayWorkers = [];
+                let varakozok = [];  // 🕒 akiket ma átugrottunk – nekik jár a következő munkanap
                 for (let i = 0; i < queue.length && todayWorkers.length < 2; i++) {
                     let nm = queue[i];
-                    if (dailyAbsences[nm]) continue;                  // hiányzik → elöl marad
-                    if (blockedToday.indexOf(nm) !== -1) continue;    // tegnap vitte → elöl marad
+                    if (dailyAbsences[nm]) { varakozok.push(nm); continue; }                // hiányzik → elöl marad
+                    if (blockedToday.indexOf(nm) !== -1) { varakozok.push(nm); continue; }  // tegnap vitte → elöl marad
                     todayWorkers.push(nm);
                 }
 
@@ -320,20 +321,28 @@
                 // Kör vége: mindenki egyszer sorra került
                 if (queue.length > 0 && slotCount >= queue.length) {
                     slotCount -= queue.length;
+
+                    // 🕒 A ma kimaradtakat (hiányzás / tegnapi tiltás) NEM mozgatjuk:
+                    // nekik meg kell tartaniuk az elsőbbségüket a következő munkanapra.
+                    // A párváltás és a keverés csak a mögöttük lévő szakaszra hat.
+                    let elso = 0;
+                    while (elso < queue.length && varakozok.indexOf(queue[elso]) !== -1) elso++;
+                    let szabad = queue.length - elso;
+
                     // 🔀 PÁRVÁLTÁS: páros létszámnál a sor a kör végén pontosan visszaállna,
                     // vagyis mindig ugyanaz a két ember kerülne párba. Ezért a kör végén
                     // egy hellyel eltoljuk. Senki nem esik ki: a következő körben is
                     // mindenki pontosan egyszer jön, csak más partnerrel.
-                    if (queue.length % 2 === 0) {
-                        queue.push(queue.shift());
+                    if (queue.length % 2 === 0 && szabad >= 1) {
+                        queue.push(queue.splice(elso, 1)[0]);
                     }
                     // 🔀 KEVERÉS: a kör végén két szomszéd helyet cserél a sorban. A csere
                     // helye körről körre odébb vándorol, ezért hosszú távon mindenki
                     // ugyanannyi beosztást kap – csak a párok keverednek. Nem véletlen:
                     // minden telefon ugyanazt a beosztást számolja ki.
                     korSzam++;
-                    if (queue.length >= 3) {
-                        let p = (korSzam * 3) % (queue.length - 1);
+                    if (szabad >= 3) {
+                        let p = elso + ((korSzam * 3) % (szabad - 1));
                         let t = queue[p]; queue[p] = queue[p + 1]; queue[p + 1] = t;
                     }
                 }
@@ -360,16 +369,9 @@
     // ==========================================
     window.markAbsent = function(dateKey, name) {
         if(!name || name === "Nincs több!" || name === "-") return;
-        // 🆕 Több munkanapos hiányzás egy lépésben: 1 = csak ez a nap (régi működés)
-        let v = prompt(`Hány munkanapig hiányzik ${name}?\n\n1 = csak ez a nap. Nagyobb szám = ennyi munkanapon át hiányzik,\na rendszer minden napra a következőt hívja be, ${name} utána folytatja.`, "1");
-        if (v === null) return;
-        let k = parseInt(v, 10);
-        if (isNaN(k) || k < 1) k = 1;
-        if (k > 30) k = 30;
-        let days = nextWorkingDayKeys(dateKey, k);
-        let updates = {};
-        days.forEach(function(dk) { updates[dk + "/" + name] = true; });
-        db.ref('absences').update(updates);
+        if(confirm(`Szeretnéd jelezni, hogy ${name} hiányzik ezen a napon?\n\nA rendszer automatikusan behívja a következőt, ${name} pedig átkerül a következő munkanapra.`)) {
+            db.ref(`absences/${dateKey}/${name}`).set(true);
+        }
     };
 
     window.undoAbsent = function(dateKey, name) {
