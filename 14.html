@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KohYoung Dashboard PRO v21.0 - Mester Elemző</title>
+<title>KohYoung Dashboard PRO v22.0 - Mester Elemző</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script> 
@@ -78,11 +78,18 @@ input[type="file"] { display: none; }
 .dashboard-layout { display: grid; grid-template-columns: 1fr 300px; gap: 25px; margin-bottom: 30px; }
 
 .ranking-panel { background: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; }
-.rank-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+
+/* 🧠 KORREKCIÓ: Táblázatok sorainak egy sorban tartása tördelés nélkül */
+.rank-table, .pro-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.rank-table th, .rank-table td, .pro-table th, .pro-table td {
+    white-space: nowrap; 
+}
+
+.rank-table { margin-top: 10px; font-size: 13px; }
 .rank-table th { text-align: left; color: #64748b; font-size: 11px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; }
 .rank-table td { padding: 12px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold; }
 
-.pro-table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }
+.pro-table { text-align: center; }
 .pro-table th { background: #2c3e50; color: white; padding: 12px; border: 1px solid #1a252f; }
 .pro-table td { padding: 10px; border: 1px solid #eef2f5; font-weight: bold; }
 
@@ -102,7 +109,6 @@ input[type="file"] { display: none; }
 .model-name { font-family: monospace; font-size: 15px; color: #4338ca; }
 .pro-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #e9d5ff; padding-bottom: 15px; margin-bottom: 15px; }
 
-/* ÚJ: Gépsor badge stílus a PDF exportáláshoz (KÖZÉPRE, SZÉLESEN, MAGASAN) */
 .machine-badge-pro {
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
     color: #f8fafc;
@@ -118,12 +124,23 @@ input[type="file"] { display: none; }
     text-shadow: 0 2px 4px rgba(0,0,0,0.5);
     text-transform: uppercase;
 }
+
+/* 🧠 KORREKCIÓ: Segítő szövegek elrejtése a nézetből, csak PDF-ben aktívak */
+.pdf-only-desc { display: none; }
+
+/* 🧠 ÚJ: Fájlformátum jelző badge */
+.format-badge {
+    display: inline-block; margin-left: 10px; padding: 3px 10px; border-radius: 12px;
+    font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.format-badge.txt { background: #dbeafe; color: #1e40af; }
+.format-badge.csv { background: #fef3c7; color: #92400e; }
 </style>
 </head>
 <body>
 
 <div class="top-bar">
-    <h2 style="margin:0; font-size: 20px;">KohYoung Dashboard <span style="color:var(--c-fpy)">PRO 21.0</span></h2>
+    <h2 style="margin:0; font-size: 20px;">KohYoung Dashboard <span style="color:var(--c-fpy)">PRO 22.0</span></h2>
     <button class="btn-success" onclick="exportPDF()">🖨️ PDF EXPORTÁLÁSA</button>
 </div>
 
@@ -133,6 +150,7 @@ input[type="file"] { display: none; }
         <div>
             <label class="file-upload-label">📄 Tallózás<input type="file" id="fileInput" accept=".txt,.csv" onchange="loadFile()"></label>
             <span id="fileNameDisplay" style="margin-left:10px; font-weight:bold; color:var(--c-pass);">Nincs fájl</span>
+            <span id="formatBadge" style="display:none;" class="format-badge"></span>
         </div>
     </div>
     <div class="control-group"><label class="group-title">TÓL</label><input type="date" id="dateStart" onchange="processData()"></div>
@@ -165,7 +183,7 @@ input[type="file"] { display: none; }
         <div class="pro-header">
             <div>
                 <h3 style="margin:0; color:#6d28d9; font-size: 18px;">🧠 Részletes Modellelemző (Események Eloszlása)</h3>
-                <p style="margin:5px 0 0 0; font-size:12px; color:#64748b;">Azon modellek listája csökkenő sorrendben, ahol operátori beavatkozás (Fail/Pass) vagy Gép Riasztás (Warn) történt.</p>
+                <p class="pdf-only-desc" style="margin:5px 0 0 0; font-size:12px; color:#64748b;">Azon modellek listája csökkenő sorrendben, ahol operátori beavatkozás (Fail/Pass) vagy Gép Riasztás (Warn) történt.</p>
             </div>
         </div>
         
@@ -204,7 +222,7 @@ input[type="file"] { display: none; }
                 <thead><tr><th>Műszak</th><th>MENNY.</th><th>FPY %</th></tr></thead>
                 <tbody id="rankBody"></tbody>
             </table>
-            <div id="insightBox" style="margin-top:20px; font-size:12px; color:#64748b; font-style:italic; border-top:1px solid #e2e8f0; padding-top:10px;">
+            <div id="insightBox" class="pdf-only-desc" style="margin-top:20px; font-size:12px; color:#64748b; font-style:italic; border-top:1px solid #e2e8f0; padding-top:10px;">
                 Töltsön be adatot az elemzéshez...
             </div>
         </div>
@@ -224,6 +242,7 @@ input[type="file"] { display: none; }
     </table>
 </div>
 
+<!-- Szoftverfejlesztő: GERGŐ ROLAND -->
 <script>
 Chart.register(ChartDataLabels);
 
@@ -237,6 +256,165 @@ let modelDefectData = {};
 const refDateUTC = Date.UTC(2025, 11, 31); 
 const dayShifts = ['C', 'C', 'C', 'B', 'B', 'B', 'D', 'D', 'D', 'A', 'A', 'A'];
 const nightShifts = ['D', 'D', 'D', 'A', 'A', 'A', 'C', 'C', 'C', 'B', 'B', 'B'];
+
+/* ROBUST CSV HELPER FUNKCIÓK */
+function getFileSeparator(lines) {
+    if (lines.length === 0) return '\t';
+    let firstLine = lines[0];
+    if (firstLine.includes('\t')) return '\t';
+    if (firstLine.includes(';')) return ';';
+    if (firstLine.includes(',')) return ',';
+    return /\s{2,}/; // Fallback
+}
+
+function cleanPartStr(str) {
+    if (!str) return "";
+    return str.trim().replace(/^["']|["']$/g, ''); 
+}
+
+function parseCSVLine(line, sep) {
+    if (sep instanceof RegExp) return line.split(sep).map(cleanPartStr);
+    let result = [];
+    let curVal = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+        let char = line[i];
+        if (char === '"') {
+            inQuotes = !inQuotes; 
+        } else if (char === sep && !inQuotes) {
+            result.push(curVal);
+            curVal = '';
+        } else {
+            curVal += char;
+        }
+    }
+    result.push(curVal);
+    return result.map(cleanPartStr);
+}
+
+/* ============================================================================
+   🧠 ÚJ (v22.0): "PCB LISTA" TÍPUSÚ CSV FORMÁTUM FELISMERÉSE ÉS KONVERTÁLÁSA
+   ----------------------------------------------------------------------------
+   Ez a blokk EGY MÁSIK gépről (pl. "List_of_PCBs...") származó export formátumot
+   kezeli, ami szerkezetében eltér az eredeti ListView TXT formátumtól:
+     - a Dátum és Idő EGY oszlopban van ("Date and Time": "6/1/2026 9:04:19 PM")
+     - a végeredmény oszlop neve "Judge" (nem "RESULT"), értékei: OK / WARN / NG
+       + a "$" jel (pl. "OK$", "WARN$") jelöli az operátori PASS felülbírálást
+     - a termék neve "Model name" oszlopban van (nem "PCBNAME")
+     - nincs egységes "DefectType" szöveges oszlop, helyette dinamikus, gép
+       által exportált hibatípus-oszlopok vannak a végén (pl. "No solder", "Bridge")
+     - nincs "TOPFAIL(%)" oszlop, ezért azt az NG/WN pad arányból számoljuk
+
+   FONTOS: ez a blokk kizárólag ELŐFELDOLGOZÁS. A felismert CSV-t átalakítja a
+   MEGLÉVŐ, változatlanul hagyott belső formátumra (DATE / STARTTIME / RESULT /
+   PCBNAME / DEFECTTYPE / TOPFAIL(%) fejlécekkel, tabulátorral elválasztva),
+   így az eredeti TXT-t feldolgozó logika (autoSetDatesAndProcess, processData,
+   parseDateString, stb.) EGYETLEN SORA sem változott és nem is hívódik meg
+   másképp - onnantól már nem tudja megkülönböztetni, honnan jött az adat.
+   ============================================================================ */
+
+function isPcbListCsvFormat(lines) {
+    for (let i = 0; i < Math.min(lines.length, 6); i++) {
+        if (!lines[i]) continue;
+        let up = lines[i].toUpperCase();
+        if (up.indexOf('JUDGE') > -1 && up.indexOf('MODEL NAME') > -1 && up.indexOf('DATE AND TIME') > -1) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function convertPcbListCsvToInternalFormat(lines) {
+    // 1. Fejléc sor megkeresése (lehet előtte "szemét" sor, pl. "NG cnt")
+    let headerLineIdx = -1;
+    for (let i = 0; i < lines.length; i++) {
+        if (!lines[i]) continue;
+        let up = lines[i].toUpperCase();
+        if (up.indexOf('JUDGE') > -1 && up.indexOf('MODEL NAME') > -1 && up.indexOf('DATE AND TIME') > -1) {
+            headerLineIdx = i;
+            break;
+        }
+    }
+    if (headerLineIdx === -1) return lines; // Biztonsági visszaesés, nem kellene ide jutnia
+
+    let sep = getFileSeparator([lines[headerLineIdx]]);
+    let headerParts = parseCSVLine(lines[headerLineIdx], sep);
+    let idxMap = {};
+    headerParts.forEach(function(h, i) { idxMap[h.toUpperCase()] = i; });
+
+    let dtIdx = idxMap['DATE AND TIME'];
+    let judgeIdx = idxMap['JUDGE'];
+    let modelIdx = idxMap['MODEL NAME'];
+    let padIdx = idxMap['PAD CNT'];
+    let ngPadIdx = idxMap['NG PAD CNT'];
+    let wnPadIdx = idxMap['WN PAD CNT'];
+
+    // Ismert, "fix" oszlopnevek ennél a formátumnál - minden EZEKEN KÍVÜLI,
+    // nem üres oszlop a fejléc végén dinamikus hibatípus-oszlopnak számít
+    // (pl. "No solder", "Bridge" - gépenként eltérhet, ezért nem fix lista).
+    let knownFixed = ['NO','DATE AND TIME','LINE NAME','MODEL NAME','LOT NAME','PCB NO.','ID','JUDGE',
+        'OPERATOR','FM COUNT','PAD CNT','OK PAD CNT','NG PAD CNT','WN PAD CNT','NG TOTAL','VOLUME',
+        'HEIGHT','AREA','HIG S','MDL S','SHIFTX','SHIFTY'];
+
+    let defectCols = [];
+    headerParts.forEach(function(h, i) {
+        let hUp = h.toUpperCase();
+        if (h && knownFixed.indexOf(hUp) === -1) defectCols.push({ name: h, idx: i });
+    });
+
+    let out = [];
+    out.push(['DATE', 'STARTTIME', 'RESULT', 'PCBNAME', 'DEFECTTYPE', 'TOPFAIL(%)'].join('\t'));
+
+    for (let i = headerLineIdx + 1; i < lines.length; i++) {
+        let raw = lines[i];
+        if (!raw || raw.trim() === '') continue;
+
+        let parts = parseCSVLine(raw, sep);
+        if (parts.length <= judgeIdx || (dtIdx > -1 && parts.length <= dtIdx)) continue;
+
+        // "Date and Time" szétbontása külön DATE és TIME mezőkre
+        let dtVal = dtIdx > -1 ? (parts[dtIdx] || '') : '';
+        let dtSplit = dtVal.trim().split(' ');
+        if (dtSplit.length < 2) continue; // Érvénytelen/hiányos sor, kihagyjuk
+        let dateStr = dtSplit[0];
+        let timeStr = dtSplit.slice(1).join(' ');
+
+        // Judge -> RESULT leképezés
+        // A "$" jel az operátori PASS felülbírálást jelöli (pl. "OK$", "WARN$")
+        let judgeRaw = (parts[judgeIdx] || '').trim().toUpperCase();
+        let result = judgeRaw;
+        if (judgeRaw.indexOf('$') > -1) {
+            result = 'PASS';
+        } else if (judgeRaw === 'OK') {
+            result = 'GOOD';
+        } else if (judgeRaw.indexOf('WARN') > -1) {
+            result = 'WARNING';
+        } else if (judgeRaw === 'NG') {
+            result = 'FAIL';
+        }
+
+        let pcbName = (modelIdx > -1 && parts[modelIdx]) ? parts[modelIdx] : 'Ismeretlen';
+
+        // Dinamikus hibatípus-oszlopok összegyűjtése (csak a nem-nulla értékűek)
+        let defParts = [];
+        defectCols.forEach(function(dc) {
+            let v = parseFloat(parts[dc.idx]);
+            if (!isNaN(v) && v > 0) defParts.push(dc.name + ':' + v);
+        });
+        let defectType = defParts.join(' + ');
+
+        // TOPFAIL(%) közelítése, mivel ez a formátum nem exportál explicit %-ot:
+        // (NG pad + WN pad) / összes pad * 100
+        let padCnt = padIdx > -1 ? (parseFloat(parts[padIdx]) || 0) : 0;
+        let ngPad = ngPadIdx > -1 ? (parseFloat(parts[ngPadIdx]) || 0) : 0;
+        let wnPad = wnPadIdx > -1 ? (parseFloat(parts[wnPadIdx]) || 0) : 0;
+        let failPct = padCnt > 0 ? ((ngPad + wnPad) / padCnt) * 100 : 0;
+
+        out.push([dateStr, timeStr, result, pcbName, defectType, failPct.toFixed(2)].join('\t'));
+    }
+
+    return out;
+}
 
 function toggleProAnalysis() {
     let area = document.getElementById('proAnalysisArea');
@@ -256,7 +434,24 @@ function loadFile() {
 
     const reader = new FileReader();
     reader.onload = function(e) {
-        fileLines = e.target.result.split('\n');
+        let rawLines = e.target.result.split('\n');
+
+        // 🧠 ÚJ: formátumfelismerés - ha ez a "PCB lista" típusú CSV (Judge/Model name/
+        // Date and Time oszlopokkal), akkor előfeldolgozzuk, és a TOVÁBBIAKBAN
+        // teljesen ugyanúgy viselkedik a program, mintha az eredeti TXT-t töltöttük volna be.
+        let badge = document.getElementById('formatBadge');
+        if (isPcbListCsvFormat(rawLines)) {
+            fileLines = convertPcbListCsvToInternalFormat(rawLines);
+            badge.innerText = 'CSV formátum (Judge/Model name)';
+            badge.className = 'format-badge csv';
+            badge.style.display = 'inline-block';
+        } else {
+            fileLines = rawLines;
+            badge.innerText = 'TXT formátum (RESULT/PCBNAME)';
+            badge.className = 'format-badge txt';
+            badge.style.display = 'inline-block';
+        }
+
         autoSetDatesAndProcess();
     };
     reader.readAsText(file);
@@ -312,22 +507,34 @@ function parseDateString(dateStr, timeStr) {
 
 function autoSetDatesAndProcess() {
     let minD = null, maxD = null;
+    let sep = getFileSeparator(fileLines);
     let headers = { dateIdx: -1, timeIdx: -1 };
+    
     for(let i=0; i<fileLines.length; i++) {
-        let parts = fileLines[i].trim().split(fileLines[i].includes('\t') ? '\t' : /\s{2,}/);
+        if(fileLines[i].trim() === '') continue;
+        
+        let parts = parseCSVLine(fileLines[i], sep);
+        
         if (headers.dateIdx === -1) {
-            headers.dateIdx = parts.findIndex(p => p.trim().toUpperCase() === 'DATE');
-            headers.timeIdx = parts.findIndex(p => p.trim().toUpperCase() === 'STARTTIME' || p.trim().toUpperCase() === 'TIME');
+            let up = parts.map(x => x.toUpperCase());
+            headers.dateIdx = up.indexOf('DATE');
+            headers.timeIdx = up.indexOf('STARTTIME') === -1 ? up.indexOf('TIME') : up.indexOf('STARTTIME');
             continue;
         }
-        let parsed = parseDateString(parts[headers.dateIdx], parts[headers.timeIdx]);
-        if (parsed) {
-            let logicDate = new Date(parsed.getTime());
-            // Itt volt a hiba: A KohYoung már eleve kezeli a műszakdátumot, így a levonás felesleges és káros volt! Ezt kivettem.
-            if (!minD || logicDate < minD) minD = new Date(logicDate);
-            if (!maxD || logicDate > maxD) maxD = new Date(logicDate);
+        
+        if (headers.dateIdx > -1 && headers.timeIdx > -1 && parts.length > headers.dateIdx) {
+            let parsed = parseDateString(parts[headers.dateIdx], parts[headers.timeIdx]);
+            if (parsed) {
+                // 🧠 KORREKCIÓ: a TÓL/IG mezők automatikus kitöltése a TÉNYLEGES
+                // naptári dátumot használja, NEM az üzemi nap (éjszakai műszak
+                // <6h visszaléptetés) szerintit. Így pl. egy 7/21 00:00-kor kezdődő
+                // adat a mezőkben 7/21-ként jelenik meg, nem csúszik vissza 7/20-ra.
+                if (!minD || parsed < minD) minD = new Date(parsed);
+                if (!maxD || parsed > maxD) maxD = new Date(parsed);
+            }
         }
     }
+    
     if (minD && maxD) {
         let mY = minD.getFullYear(), mM = String(minD.getMonth()+1).padStart(2,'0'), mD = String(minD.getDate()).padStart(2,'0');
         let mxY = maxD.getFullYear(), mxM = String(maxD.getMonth()+1).padStart(2,'0'), mxD = String(maxD.getDate()).padStart(2,'0');
@@ -367,12 +574,16 @@ function processData() {
     dayStats = {}; shiftStats = {}; modelDefectData = {};
     let teamTotals = { 'A': {ok:0, p:0, total:0}, 'B': {ok:0, p:0, total:0}, 'C': {ok:0, p:0, total:0}, 'D': {ok:0, p:0, total:0} };
     
+    let sep = getFileSeparator(fileLines);
     let headers = { dateIdx: -1, timeIdx: -1, resultIdx: -1, modelIdx: -1, defectIdx: -1, pctIdx: -1 };
 
     for (let i = 0; i < fileLines.length; i++) {
-        let parts = fileLines[i].trim().split(fileLines[i].includes('\t') ? '\t' : /\s{2,}/);
+        if (fileLines[i].trim() === '') continue;
+        
+        let parts = parseCSVLine(fileLines[i], sep);
+        
         if (headers.dateIdx === -1) {
-            let up = parts.map(x => x.trim().toUpperCase());
+            let up = parts.map(x => x.toUpperCase());
             headers.dateIdx = up.indexOf('DATE');
             headers.timeIdx = up.indexOf('STARTTIME') === -1 ? up.indexOf('TIME') : up.indexOf('STARTTIME');
             headers.resultIdx = up.indexOf('RESULT');
@@ -382,25 +593,33 @@ function processData() {
             continue;
         }
 
-        if (parts.length > headers.resultIdx) {
+        if (headers.resultIdx > -1 && parts.length > headers.resultIdx) {
             let parsedDate = parseDateString(parts[headers.dateIdx], parts[headers.timeIdx]);
             if (!parsedDate) continue;
-            let res = parts[headers.resultIdx].trim().toUpperCase();
+            let res = parts[headers.resultIdx].toUpperCase();
             
-            let modelName = headers.modelIdx > -1 && parts[headers.modelIdx] ? parts[headers.modelIdx].trim() : "Ismeretlen";
-            let defectType = headers.defectIdx > -1 && parts[headers.defectIdx] ? parts[headers.defectIdx].trim() : "";
+            if (res === '$') res = 'PASS';
             
-            let failPctStr = headers.pctIdx > -1 && parts[headers.pctIdx] ? parts[headers.pctIdx].replace('%','').trim() : "0";
+            let modelName = headers.modelIdx > -1 && parts[headers.modelIdx] ? parts[headers.modelIdx] : "Ismeretlen";
+            let defectType = headers.defectIdx > -1 && parts[headers.defectIdx] ? parts[headers.defectIdx] : "";
+            
+            let failPctStr = headers.pctIdx > -1 && parts[headers.pctIdx] ? parts[headers.pctIdx].replace('%','') : "0";
             let failPct = parseFloat(failPctStr);
             if(isNaN(failPct)) failPct = 0;
 
             let logicDate = new Date(parsedDate.getTime());
-            // Innét is kikerült a mínusz 1 nap levonása az éjfél utáni adatokból, így tökéletesen együtt marad a teljes éjszakai műszak.
+            let originalHour = parsedDate.getHours();
+
+            if (originalHour < 6) {
+                logicDate.setDate(logicDate.getDate() - 1);
+            }
+
             let y = logicDate.getFullYear(), m = String(logicDate.getMonth()+1).padStart(2,'0'), d = String(logicDate.getDate()).padStart(2,'0');
             let ds = `${y}-${m}-${d}`;
 
             if (ds >= dStart && ds <= dEnd) {
-                let info = getShiftInfo(logicDate, (parsedDate.getHours() >= 18 || parsedDate.getHours() < 6));
+                let isNight = (originalHour >= 18 || originalHour < 6);
+                let info = getShiftInfo(logicDate, isNight);
                 
                 if (!dayStats[info.dayKey]) dayStats[info.dayKey] = { good: 0, pass: 0, warning: 0, fail: 0, label: info.dayLabel };
                 if (!shiftStats[info.shiftKey]) shiftStats[info.shiftKey] = { good: 0, pass: 0, warning: 0, fail: 0, date: info.displayDate, shiftName: info.shiftName, team: info.team };
@@ -523,6 +742,7 @@ function updateRanking(teamTotals) {
         rBody.innerHTML += `<tr><td>${r.team} Műszak</td><td>${r.total}</td><td><span class="badge-win">${r.fpy.toFixed(1)}%</span></td></tr>`;
     });
     
+    // Leíró szöveg formázása a PDF feltételek szerint
     document.getElementById('insightBox').innerText = `A vizsgált időszakban a(z) "${sorted[0].team}" Műszak érte el a legmagasabb minőséget.`;
 }
 
@@ -575,10 +795,14 @@ function exportPDF() {
     
     if (machineInput && machineInput.trim() !== "") {
         document.getElementById('machineNameSpan').innerText = machineInput.trim().toUpperCase();
-        badge.style.display = "block"; /* Hogy teljes szélességű középre zárt blokk legyen */
+        badge.style.display = "block"; 
     } else {
         badge.style.display = "none";
     }
+
+    // Segítő szövegek bekapcsolása csak a PDF idejére
+    let descs = document.querySelectorAll('.pdf-only-desc');
+    descs.forEach(el => el.style.display = 'block');
 
     const proArea = document.getElementById('proAnalysisArea');
     const wasVisible = proArea.style.display !== 'none';
@@ -589,6 +813,8 @@ function exportPDF() {
     
     html2pdf().set(opt).from(element).save().then(() => {
         if(wasVisible) proArea.style.display = 'block';
+        // Segítő szövegek eltüntetése a PDF mentés után
+        descs.forEach(el => el.style.display = 'none');
     });
 }
 </script>
