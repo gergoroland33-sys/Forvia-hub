@@ -19,6 +19,8 @@
     --c-fpy: #8b5cf6; 
     --bg-color: #f1f5f9;
     --card-bg: #ffffff;
+    --panel-bg: #f8fafc;
+    --border-color: #e2e8f0;
 }
 
 body {
@@ -43,6 +45,7 @@ button:active, .file-upload-label:active { transform: scale(0.95); filter: brigh
 }
 
 .control-group { display: flex; flex-direction: column; gap: 5px; }
+.controls-divider { width: 1px; align-self: stretch; background: #e2e8f0; margin: 4px 4px; }
 label.group-title { font-weight: bold; font-size: 11px; color: #7f8c8d; text-transform: uppercase; }
 
 input[type="date"], button {
@@ -65,19 +68,19 @@ input[type="file"] { display: none; }
 .file-upload-label { background-color: #34495e; color: white; padding: 10px 15px; border-radius: 6px; font-weight: bold; display: inline-block; }
 
 #reportArea {
-    background-color: white; width: 1100px; margin: 0 auto 50px auto; 
+    background-color: var(--card-bg); width: 1100px; margin: 0 auto 50px auto; 
     padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); box-sizing: border-box;
 }
 
 .kpi-container { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 30px; }
 .kpi-card { 
-    background: #f9fbfd; border: 1px solid #eef2f5; padding: 15px 5px; 
+    background: var(--panel-bg); border: 1px solid var(--border-color); padding: 15px 5px; 
     border-radius: 8px; text-align: center; border-bottom: 4px solid #cbd5e1;
 }
 
 .dashboard-layout { display: grid; grid-template-columns: 1fr 300px; gap: 25px; margin-bottom: 30px; }
 
-.ranking-panel { background: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; }
+.ranking-panel { background: var(--panel-bg); padding: 20px; border-radius: 10px; border: 1px solid var(--border-color); }
 
 /* 🧠 KORREKCIÓ: Táblázatok sorainak egy sorban tartása tördelés nélkül */
 .rank-table, .pro-table { width: 100%; border-collapse: collapse; font-size: 12px; }
@@ -135,13 +138,26 @@ input[type="file"] { display: none; }
 }
 .format-badge.txt { background: #dbeafe; color: #1e40af; }
 .format-badge.csv { background: #fef3c7; color: #92400e; }
+
+/* 🧠 ÚJ: kompakt fejléc CSAK exportáláskor (a weboldali nézetet nem érinti),
+   hogy a jelmagyarázatnak is biztosan legyen helye az 1 oldalas PDF-ben */
+.pdf-compact .machine-badge-pro { padding: 8px 20px; font-size: 16px; margin-bottom: 14px; letter-spacing: 1px; }
+.pdf-compact #reportArea > div:nth-child(2) { padding-bottom: 8px !important; margin-bottom: 14px !important; }
+.pdf-compact #reportArea > div:nth-child(2) h2 { font-size: 17px !important; }
+.pdf-compact #reportArea > div:nth-child(2) p { font-size: 11px !important; margin: 2px 0 !important; }
+.pdf-compact .kpi-container { margin-bottom: 16px !important; }
+.pdf-compact .kpi-card { padding: 10px 5px !important; }
+.pdf-compact #reportArea { padding: 24px !important; }
 </style>
 </head>
 <body>
 
 <div class="top-bar">
     <h2 style="margin:0; font-size: 20px;">KohYoung Dashboard <span style="color:var(--c-fpy)">PRO 22.0</span></h2>
-    <button class="btn-success" onclick="exportPDF()">🖨️ PDF EXPORTÁLÁSA</button>
+    <div style="display:flex; gap:10px;">
+        <button class="btn-success" onclick="exportPDF()">🖨️ PDF EXPORTÁLÁSA</button>
+        <button class="btn-success" style="background-color:#0284c7;" onclick="exportImage()">🖼️ MENTÉS KÉPKÉNT</button>
+    </div>
 </div>
 
 <div class="controls">
@@ -155,8 +171,14 @@ input[type="file"] { display: none; }
     </div>
     <div class="control-group"><label class="group-title">TÓL</label><input type="date" id="dateStart" onchange="processData()"></div>
     <div class="control-group"><label class="group-title">IG</label><input type="date" id="dateEnd" onchange="processData()"></div>
-    
     <button class="btn-primary" onclick="processData()">🚀 FRISSÍTÉS</button>
+
+    <div class="controls-divider"></div>
+
+    <div class="control-group">
+        <label class="group-title">Diagram Dizájn</label>
+        <select id="chartThemeSelect" onchange="changeChartTheme(this.value)" style="padding:10px 15px; border:1px solid #dcdcdc; border-radius:6px; font-size:13px; font-weight:bold; background:white; cursor:pointer;"></select>
+    </div>
     <button class="btn-pro-toggle" onclick="toggleProAnalysis()" id="btnPro">
         <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
         MÉRNÖKI ANALITIKA
@@ -212,7 +234,7 @@ input[type="file"] { display: none; }
     </div>
 
     <div class="dashboard-layout">
-        <div style="height: 400px; background: #fff; padding: 15px; border-radius: 10px; border: 1px solid #eef2f5;">
+        <div style="height: 400px; background: var(--card-bg); padding: 15px; border-radius: 10px; border: 1px solid var(--border-color);">
             <canvas id="myChart"></canvas>
         </div>
         
@@ -228,18 +250,20 @@ input[type="file"] { display: none; }
         </div>
     </div>
 
-    <h3 style="text-transform:uppercase; font-size:16px; border-bottom:2px solid #eee; padding-bottom:10px;">📋 Részletes Műszakos Adatok</h3>
-    <table class="pro-table">
-        <thead>
-            <tr>
-                <th>Dátum</th><th>Napszak</th><th>Műszak</th>
-                <th style="color:var(--c-good)">Good</th><th style="color:var(--c-warning)">Warn</th>
-                <th style="color:var(--c-pass)">Pass</th><th style="color:var(--c-fail)">Fail</th>
-                <th style="background:#e8f4f8; color:#2c3e50;">Végösszeg</th><th>FPY %</th>
-            </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-    </table>
+    <div id="shiftDetailSection">
+        <h3 style="text-transform:uppercase; font-size:16px; border-bottom:2px solid #eee; padding-bottom:10px;">📋 Részletes Műszakos Adatok</h3>
+        <table class="pro-table">
+            <thead>
+                <tr>
+                    <th>Dátum</th><th>Napszak</th><th>Műszak</th>
+                    <th style="color:var(--c-good)">Good</th><th style="color:var(--c-warning)">Warn</th>
+                    <th style="color:var(--c-pass)">Pass</th><th style="color:var(--c-fail)">Fail</th>
+                    <th style="background:#e8f4f8; color:#2c3e50;">Végösszeg</th><th>FPY %</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
 </div>
 
 <!-- Szoftverfejlesztő: GERGŐ ROLAND -->
@@ -256,6 +280,76 @@ let modelDefectData = {};
 const refDateUTC = Date.UTC(2025, 11, 31); 
 const dayShifts = ['C', 'C', 'C', 'B', 'B', 'B', 'D', 'D', 'D', 'A', 'A', 'A'];
 const nightShifts = ['D', 'D', 'D', 'A', 'A', 'A', 'C', 'C', 'C', 'B', 'B', 'B'];
+
+/* ============================================================================
+   🧠 ÚJ: PRÉMIUM DIAGRAM-DIZÁJNOK
+   A választott téma a böngésző localStorage-jában marad meg (ha a gép/böngésző
+   ezt engedélyezi - zárt vállalati környezetben előfordulhat, hogy nem, ilyenkor
+   a program simán csak az aktuális munkamenetben emlékszik rá, hiba nélkül).
+   ============================================================================ */
+const CHART_THEMES = {
+    classic:  {
+        name: '🟣 Klasszikus Lila',
+        good:'#27ae60', warn:'#f39c12', pass:'#4a72b0', fail:'#e74c3c', line:'#8b5cf6', casing:'rgba(30, 27, 75, 0.35)',
+        bg:'#f1f5f9', card:'#ffffff', panel:'#f8fafc', border:'#e2e8f0', text:'#2c3e50'
+    },
+    mono: {
+        name: '⬛ Monokróm Elegáns',
+        good:'#475569', warn:'#94a3b8', pass:'#1e293b', fail:'#dc2626', line:'#0ea5e9', casing:'rgba(15, 23, 42, 0.3)',
+        bg:'#f8fafc', card:'#ffffff', panel:'#f1f5f9', border:'#cbd5e1', text:'#1e293b'
+    }
+};
+let currentTheme = 'classic';
+
+function applyThemeToPage(theme) {
+    let root = document.documentElement.style;
+    root.setProperty('--c-good', theme.good);
+    root.setProperty('--c-warning', theme.warn);
+    root.setProperty('--c-pass', theme.pass);
+    root.setProperty('--c-fail', theme.fail);
+    root.setProperty('--c-fpy', theme.line);
+    root.setProperty('--bg-color', theme.bg);
+    root.setProperty('--card-bg', theme.card);
+    root.setProperty('--panel-bg', theme.panel);
+    root.setProperty('--border-color', theme.border);
+    root.setProperty('--c-total', theme.text);
+}
+
+function loadThemePreference() {
+    try {
+        let saved = localStorage.getItem('kohyoung_chart_theme');
+        if (saved && CHART_THEMES[saved]) currentTheme = saved;
+    } catch (e) { /* localStorage nem elérhető - marad az alapértelmezett téma */ }
+}
+
+function saveThemePreference(theme) {
+    try { localStorage.setItem('kohyoung_chart_theme', theme); } catch (e) { /* nincs gond, csak ebben a munkamenetben marad meg */ }
+}
+
+function populateThemeSelector() {
+    let sel = document.getElementById('chartThemeSelect');
+    if (!sel) return;
+    sel.innerHTML = '';
+    Object.keys(CHART_THEMES).forEach(key => {
+        let opt = document.createElement('option');
+        opt.value = key;
+        opt.innerText = CHART_THEMES[key].name;
+        if (key === currentTheme) opt.selected = true;
+        sel.appendChild(opt);
+    });
+}
+
+function changeChartTheme(theme) {
+    if (!CHART_THEMES[theme]) return;
+    currentTheme = theme;
+    saveThemePreference(theme);
+    applyThemeToPage(CHART_THEMES[theme]);
+    if (Object.keys(dayStats).length > 0) drawChart();
+}
+
+loadThemePreference();
+applyThemeToPage(CHART_THEMES[currentTheme]);
+populateThemeSelector();
 
 /* ROBUST CSV HELPER FUNKCIÓK */
 function getFileSeparator(lines) {
@@ -544,6 +638,16 @@ function autoSetDatesAndProcess() {
     processData();
 }
 
+const HU_MONTHS = ['január','február','március','április','május','június','július','augusztus','szeptember','október','november','december'];
+function formatDateHu(isoDateStr) {
+    if (!isoDateStr) return '';
+    let parts = isoDateStr.split('-');
+    if (parts.length !== 3) return isoDateStr;
+    let y = parts[0], m = parseInt(parts[1], 10), d = parseInt(parts[2], 10);
+    if (isNaN(m) || m < 1 || m > 12) return isoDateStr;
+    return `${y}.${HU_MONTHS[m - 1]}.${d}`;
+}
+
 function getShiftInfo(dateObj, isNight) {
     let targetUTC = Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
     let diffDays = Math.round((targetUTC - refDateUTC) / (1000 * 3600 * 24));
@@ -761,60 +865,197 @@ function drawChart() {
         cFpy.push(base === 0 ? 0 : ((base - s.pass) / base) * 100);
     });
 
+    // Dinamikus Y1 tengely-tartomány, hogy a lila FPY vonal SOHA ne vágódjon le
+    // (se ha 100%-ra fut fel, se ha egy rossz nap miatt 80% alá esik)
+    let minFpyVal = cFpy.length ? Math.min.apply(null, cFpy) : 80;
+    let y1Min = Math.max(0, Math.min(80, Math.floor(minFpyVal / 5) * 5 - 5));
+
+    // Rendezettebb megjelenés: sok nap esetén kisebb pontok/vékonyabb vonal, kevés napnál nagyobb, jól kattintható pontok
+    let numDays = labels.length;
+    let ptRadius = numDays > 20 ? 2 : (numDays > 10 ? 2.8 : 3.5);
+    let ptHoverRadius = ptRadius + 2.5;
+    let lineW = numDays > 20 ? 2.2 : 3;
+
+    let theme = CHART_THEMES[currentTheme] || CHART_THEMES.classic;
+
     myChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: labels,
             datasets: [
-                { label: 'FPY %', data: cFpy, type: 'line', borderColor: '#8b5cf6', yAxisID: 'y1', tension: 0.2, borderWidth: 3 },
-                { label: 'Good', data: cGood, backgroundColor: '#27ae60', stack: 'S' },
-                { label: 'Warn', data: cWarning, backgroundColor: '#f39c12', stack: 'S' },
-                { label: 'Pass', data: cPass, backgroundColor: '#4a72b0', stack: 'S' }
+                { label: 'Good', data: cGood, backgroundColor: theme.good, stack: 'S', borderRadius: 2, borderSkipped: false, borderWidth: { top: 1 }, borderColor: '#fff', order: 3 },
+                { label: 'Warn', data: cWarning, backgroundColor: theme.warn, stack: 'S', borderRadius: 2, borderSkipped: false, borderWidth: { top: 1 }, borderColor: '#fff', order: 3 },
+                { label: 'Pass', data: cPass, backgroundColor: theme.pass, stack: 'S', borderRadius: 2, borderSkipped: false, borderWidth: { top: 1 }, borderColor: '#fff', order: 3 },
+                {
+                    label: '_fpyCasing', data: cFpy, type: 'line', yAxisID: 'y1',
+                    borderColor: theme.casing, borderWidth: lineW + 2.5, fill: false,
+                    pointRadius: 0, tension: 0.3, borderJoinStyle: 'round', borderCapStyle: 'round',
+                    order: 1, clip: 12
+                },
+                {
+                    label: 'FPY %', data: cFpy, type: 'line', yAxisID: 'y1',
+                    borderColor: theme.line, backgroundColor: 'transparent',
+                    borderWidth: lineW, tension: 0.3, fill: false,
+                    pointRadius: ptRadius, pointHoverRadius: ptHoverRadius,
+                    pointBackgroundColor: '#ffffff', pointBorderColor: theme.line, pointBorderWidth: 2,
+                    borderJoinStyle: 'round', borderCapStyle: 'round',
+                    clip: 12, order: 0
+                }
             ]
         },
         options: {
             responsive: true, maintainAspectRatio: false,
-            scales: { y: { stacked: true }, y1: { position: 'right', min: 80, max: 100 } },
-            plugins: { datalabels: { display: false }, legend: { position: 'bottom' } }
+            devicePixelRatio: 3,
+            layout: { padding: { top: 26, right: 5, bottom: 0, left: 5 } },
+            interaction: { mode: 'index', intersect: false },
+            categoryPercentage: 0.72, barPercentage: 0.92,
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 11, weight: '600' }, color: '#334155', autoSkip: true, maxRotation: 0, minRotation: 0, padding: 6 }
+                },
+                y: {
+                    stacked: true, grid: { color: '#f1f5f9' },
+                    ticks: { font: { size: 11 }, color: '#94a3b8' },
+                    title: { display: true, text: 'Darabszám', font: { size: 11, weight: 'bold' }, color: '#64748b' },
+                    grace: '12%'
+                },
+                y1: {
+                    position: 'right', min: y1Min, max: 100,
+                    grid: { drawOnChartArea: false },
+                    ticks: { font: { size: 11, weight: '600' }, color: theme.line, callback: (v) => v + '%' },
+                    title: { display: true, text: 'FPY %', font: { size: 11, weight: 'bold' }, color: theme.line }
+                }
+            },
+            plugins: {
+                datalabels: { display: false },
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true, pointStyle: 'rectRounded', padding: 18, font: { size: 12, weight: '600' }, color: '#334155',
+                        filter: (item) => item.text !== '_fpyCasing'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: '#1e293b', padding: 10, cornerRadius: 8,
+                    titleFont: { size: 12, weight: 'bold' }, bodyFont: { size: 12 },
+                    filter: (item) => item.dataset.label !== '_fpyCasing'
+                }
+            }
         },
         plugins: [{
             id: 'limitLine',
             afterDraw: (chart) => {
                 const {ctx, scales: {y1}} = chart;
+                if (95 < y1.min || 95 > y1.max) return;
                 const yPos = y1.getPixelForValue(95);
-                ctx.save(); ctx.beginPath(); ctx.setLineDash([5, 5]); ctx.moveTo(chart.chartArea.left, yPos);
-                ctx.lineTo(chart.chartArea.right, yPos); ctx.strokeStyle = 'red'; ctx.stroke(); ctx.restore();
+                ctx.save();
+                ctx.beginPath(); ctx.setLineDash([6, 4]);
+                ctx.moveTo(chart.chartArea.left, yPos); ctx.lineTo(chart.chartArea.right, yPos);
+                ctx.lineWidth = 1.5; ctx.strokeStyle = '#e74c3c'; ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.font = 'bold 10px Segoe UI'; ctx.fillStyle = '#e74c3c'; ctx.textAlign = 'right';
+                ctx.fillText('95% cél', chart.chartArea.right - 4, yPos - 5);
+                ctx.restore();
             }
         }]
     });
 }
 
-function exportPDF() {
-    let machineInput = prompt("Kérem, adja meg a gépsor azonosítóját a PDF fejlécéhez (pl. F-05):", "");
+function prepareExportView(machineInput) {
     let badge = document.getElementById('machineBadge');
-    
     if (machineInput && machineInput.trim() !== "") {
         document.getElementById('machineNameSpan').innerText = machineInput.trim().toUpperCase();
-        badge.style.display = "block"; 
+        badge.style.display = "block";
     } else {
         badge.style.display = "none";
     }
 
-    // Segítő szövegek bekapcsolása csak a PDF idejére
+    // Segítő szövegek bekapcsolása csak az export idejére
     let descs = document.querySelectorAll('.pdf-only-desc');
     descs.forEach(el => el.style.display = 'block');
 
     const proArea = document.getElementById('proAnalysisArea');
     const wasVisible = proArea.style.display !== 'none';
-    proArea.style.display = 'none'; 
+    proArea.style.display = 'none';
 
-    const element = document.getElementById('reportArea');
-    const opt = { margin: 10, filename: 'KohYoung_Riport.pdf', html2canvas: { scale: 2, useCORS: true }, jsPDF: { orientation: 'landscape' } };
-    
-    html2pdf().set(opt).from(element).save().then(() => {
-        if(wasVisible) proArea.style.display = 'block';
-        // Segítő szövegek eltüntetése a PDF mentés után
+    // Az exportba csak az "1. oldal" (fejléc + KPI + diagram + rangsor) kerül -
+    // a részletes műszakos táblázat elrejtve marad export idejére, a weboldalon marad látható
+    const reportArea = document.getElementById('reportArea');
+    const shiftSection = document.getElementById('shiftDetailSection');
+    shiftSection.style.display = 'none';
+    reportArea.classList.add('pdf-compact');
+
+    // Fájlnév = megadott gépnév + a kijelölt időszak magyar dátumformátumban
+    // (pl. F08_2026.julius.21-2026.julius.24)
+    let dStartVal = document.getElementById('dateStart').value;
+    let dEndVal = document.getElementById('dateEnd').value;
+    let dateRangeStr = `${formatDateHu(dStartVal)}-${formatDateHu(dEndVal)}`;
+    let machineNamePart = (machineInput && machineInput.trim() !== "") ? machineInput.trim().toUpperCase() : 'KohYoung_Riport';
+    let fileNameSafe = `${machineNamePart}_${dateRangeStr}`
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // ékezetek eltávolítása (június -> junius)
+        .replace(/[^a-zA-Z0-9_.-]/g, '_');
+
+    const restoreView = () => {
+        if (wasVisible) proArea.style.display = 'block';
         descs.forEach(el => el.style.display = 'none');
+        shiftSection.style.display = '';
+        reportArea.classList.remove('pdf-compact');
+    };
+
+    return { reportArea, fileNameSafe, restoreView };
+}
+
+function exportPDF() {
+    let machineInput = prompt("Kérem, adja meg a gépsor azonosítóját a PDF fejlécéhez (pl. F-05):", "");
+    const { reportArea, fileNameSafe, restoreView } = prepareExportView(machineInput);
+
+    const opt = {
+        margin: [8, 4, 8, 10], filename: fileNameSafe + '.pdf',
+        html2canvas: { scale: 3, useCORS: true },
+        jsPDF: { orientation: 'landscape', unit: 'mm', format: 'a4' }
+    };
+
+    // 🧠 A html2pdf beépített lapozója néha felesleges üres oldalt hagy a végén.
+    // Ez a hivatalos, dokumentált megoldás: a kész PDF-ből utólag, a jsPDF saját
+    // API-jával (deletePage) töröljük az 1. oldalon túli összes oldalt mentés előtt.
+    html2pdf().set(opt).from(reportArea).toPdf().get('pdf').then((pdf) => {
+        const totalPages = pdf.internal.getNumberOfPages();
+        for (let i = totalPages; i > 1; i--) {
+            pdf.deletePage(i);
+        }
+    }).save().then(() => {
+        restoreView();
+    }).catch((err) => {
+        console.error('PDF export hiba:', err);
+        restoreView();
+        alert('Hiba történt a PDF exportálása közben. Kérlek próbáld újra.');
+    });
+}
+
+function exportImage() {
+    let machineInput = prompt("Kérem, adja meg a gépsor azonosítóját a képhez (pl. F-05):", "");
+    const { reportArea, fileNameSafe, restoreView } = prepareExportView(machineInput);
+
+    // 🧠 Pontosan ugyanaz a beállítás, mint a jól működő PDF exportnál (jsPDF résszel
+    // együtt is), csak a lánc végén toCanvas()-t hívunk toPdf() helyett
+    const opt = {
+        margin: [8, 4, 8, 10],
+        html2canvas: { scale: 3, useCORS: true },
+        jsPDF: { orientation: 'landscape', unit: 'mm', format: 'a4' }
+    };
+
+    // Ugyanaz az 1 oldalas riport-nézet, csak PNG képként lementve (nem PDF-be csomagolva)
+    html2pdf().set(opt).from(reportArea).toCanvas().get('canvas').then((canvas) => {
+        const link = document.createElement('a');
+        link.download = fileNameSafe + '.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        restoreView();
+    }).catch((err) => {
+        console.error('Kép export hiba:', err);
+        restoreView();
+        alert('Hiba történt a kép exportálása közben. Kérlek próbáld újra.');
     });
 }
 </script>
