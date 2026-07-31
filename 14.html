@@ -64,6 +64,25 @@ input[type="date"], button {
 }
 .btn-pro-toggle:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6); }
 
+/* 🧠 ÚJ: prémium, interaktív stílus a több-fájl-összefűzés gombhoz */
+.file-upload-label-premium {
+    background: linear-gradient(135deg, #7c3aed, #c026d3);
+    color: white; padding: 10px 18px; border-radius: 6px; font-weight: bold;
+    display: inline-flex; align-items: center; gap: 6px;
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
+    position: relative; overflow: hidden;
+}
+.file-upload-label-premium::after {
+    content: ''; position: absolute; top: 0; left: -75%; width: 50%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.35), transparent);
+    transform: skewX(-20deg);
+}
+.file-upload-label-premium:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(124, 58, 237, 0.6);
+}
+.file-upload-label-premium:hover::after { left: 130%; transition: left 0.6s ease; }
+
 input[type="file"] { display: none; }
 .file-upload-label { background-color: #34495e; color: white; padding: 10px 15px; border-radius: 6px; font-weight: bold; display: inline-block; }
 
@@ -169,6 +188,10 @@ input[type="file"] { display: none; }
             <span id="formatBadge" style="display:none;" class="format-badge"></span>
         </div>
     </div>
+    <div class="control-group">
+        <label class="group-title">Több Fájl Összefűzése</label>
+        <label class="file-upload-label-premium">📚 Fájlok Kiválasztása<input type="file" id="multiFileInput" accept=".txt,.csv" multiple onchange="loadMultipleFiles()"></label>
+    </div>
     <div class="control-group"><label class="group-title">TÓL</label><input type="date" id="dateStart" onchange="processData()"></div>
     <div class="control-group"><label class="group-title">IG</label><input type="date" id="dateEnd" onchange="processData()"></div>
     <button class="btn-primary" onclick="processData()">🚀 FRISSÍTÉS</button>
@@ -273,6 +296,7 @@ Chart.register(ChartDataLabels);
 let fileLines = [];
 let dayStats = {}; 
 let shiftStats = {}; 
+let sourceDayStats = {}; // ÚJ: fájlonkénti napi bontás (csak összefűzött, több forrásfájlos betöltésnél töltődik fel)
 let myChart = null;
 
 let modelDefectData = {}; 
@@ -519,6 +543,127 @@ function toggleProAnalysis() {
     }
 }
 
+/* ============================================================================
+   🧠 ÚJ: TÖBB FÁJL ÖSSZEFŰZÉSE (bármilyen keverékben: TXT és/vagy CSV egyszerre)
+   ----------------------------------------------------------------------------
+   Ez a blokk KÜLÖN, önálló funkció - a meglévő egyfájlos betöltést (loadFile,
+   isPcbListCsvFormat, convertPcbListCsvToInternalFormat) NEM módosítja, csak
+   újrahasználja azokat. Minden kiválasztott fájlt a saját formátuma szerint
+   (TXT vagy CSV) a már bevált, egységes belső formátumra alakít, majd az így
+   kapott adatsorokat egyetlen közös fejléc alá fűzi össze - ettől kezdve a
+   program pontosan úgy dolgozza fel, mintha egyetlen (nagy) fájl lenne betöltve.
+   ============================================================================ */
+
+function normalizeAnyFileToRows(lines, sourceLabel) {
+    // Ha felismerhető "PCB lista" CSV formátumként, a meglévő konvertert használjuk
+    if (isPcbListCsvFormat(lines)) {
+        let converted = convertPcbListCsvToInternalFormat(lines);
+        let rows = converted.slice(1); // fejléc nélkül, csak az adatsorok
+        if (sourceLabel) rows = rows.map(r => r + '\t' + sourceLabel);
+        return rows;
+    }
+
+    // Egyébként feltételezzük, hogy a "ListView" TXT család egyik tagja -
+    // de a SAJÁT fejléce alapján olvassuk ki az oszlopsorrendet, hogy akkor
+    // is jól illeszkedjen, ha két TXT export között eltérő az oszlopsorrend.
+    let sep = getFileSeparator(lines);
+    let headerLineIdx = -1;
+    let idx = { dateIdx: -1, timeIdx: -1, resultIdx: -1, modelIdx: -1, defectIdx: -1, pctIdx: -1 };
+
+    for (let i = 0; i < lines.length; i++) {
+        if (!lines[i] || lines[i].trim() === '') continue;
+        let parts = parseCSVLine(lines[i], sep);
+        let up = parts.map(x => x.toUpperCase());
+        if (up.indexOf('DATE') > -1 && up.indexOf('RESULT') > -1) {
+            idx.dateIdx = up.indexOf('DATE');
+            idx.timeIdx = up.indexOf('STARTTIME') === -1 ? up.indexOf('TIME') : up.indexOf('STARTTIME');
+            idx.resultIdx = up.indexOf('RESULT');
+            idx.modelIdx = up.indexOf('PCBNAME');
+            idx.defectIdx = up.indexOf('DEFECTTYPE');
+            idx.pctIdx = up.indexOf('TOPFAIL(%)');
+            headerLineIdx = i;
+            break;
+        }
+    }
+    if (headerLineIdx === -1) return []; // egyik ismert formátumhoz sem illeszkedik - kihagyjuk
+
+    let out = [];
+    for (let i = headerLineIdx + 1; i < lines.length; i++) {
+        if (!lines[i] || lines[i].trim() === '') continue;
+        let parts = parseCSVLine(lines[i], sep);
+        if (parts.length <= idx.resultIdx) continue;
+
+        let dateStr = idx.dateIdx > -1 ? (parts[idx.dateIdx] || '') : '';
+        let timeStr = idx.timeIdx > -1 ? (parts[idx.timeIdx] || '') : '';
+        let resultStr = idx.resultIdx > -1 ? (parts[idx.resultIdx] || '') : '';
+        let modelStr = idx.modelIdx > -1 ? (parts[idx.modelIdx] || '') : '';
+        let defectStr = idx.defectIdx > -1 ? (parts[idx.defectIdx] || '') : '';
+        let pctStr = idx.pctIdx > -1 ? (parts[idx.pctIdx] || '') : '';
+
+        let row = [dateStr, timeStr, resultStr, modelStr, defectStr, pctStr].join('\t');
+        if (sourceLabel) row += '\t' + sourceLabel;
+        out.push(row);
+    }
+    return out;
+}
+
+function loadMultipleFiles() {
+    const fileInput = document.getElementById('multiFileInput');
+    if (!fileInput.files || fileInput.files.length === 0) return;
+    const files = Array.prototype.slice.call(fileInput.files);
+
+    let readPromises = files.map(file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve({ name: file.name, lines: e.target.result.split('\n') });
+        reader.onerror = () => reject(new Error('Nem sikerült beolvasni: ' + file.name));
+        reader.readAsText(file);
+    }));
+
+    Promise.all(readPromises).then((results) => {
+        let combinedRows = [];
+        let okFiles = [], skippedFiles = [];
+
+        results.forEach(r => {
+            // Rövid, olvasható forráscímke (kiterjesztés nélküli fájlnév) - ez jelenik meg
+            // majd a diagramon az összehasonlító vonalak jelmagyarázatában
+            let sourceLabel = r.name.replace(/\.[^/.]+$/, '');
+            let rows = normalizeAnyFileToRows(r.lines, sourceLabel);
+            if (rows.length > 0) {
+                combinedRows = combinedRows.concat(rows);
+                okFiles.push(r.name);
+            } else {
+                skippedFiles.push(r.name);
+            }
+        });
+
+        if (combinedRows.length === 0) {
+            alert('Egyik kiválasztott fájlból sem sikerült adatot beolvasni. Ellenőrizd, hogy TXT vagy CSV formátumúak-e.');
+            return;
+        }
+
+        // Egységes fejléc (a SOURCEFILE extra oszloppal, hogy a diagram fájlonként is
+        // meg tudja jeleníteni az FPY trendet) + az összes fájl összefűzött adatsorai
+        fileLines = [['DATE', 'STARTTIME', 'RESULT', 'PCBNAME', 'DEFECTTYPE', 'TOPFAIL(%)', 'SOURCEFILE'].join('\t')].concat(combinedRows);
+
+        document.getElementById('fileNameDisplay').innerText = `${okFiles.length} fájl összefűzve` + (skippedFiles.length > 0 ? ` (${skippedFiles.length} kihagyva)` : '');
+        document.getElementById('reportFileName').innerText = `Adatfájl: ${okFiles.length} összefűzött fájl`;
+
+        let badge = document.getElementById('formatBadge');
+        badge.innerText = `${okFiles.length} FÁJL ÖSSZEFŰZVE`;
+        badge.className = 'format-badge csv';
+        badge.style.display = 'inline-block';
+
+        if (skippedFiles.length > 0) {
+            alert('A következő fájlokat nem sikerült felismerni/beolvasni, így kimaradtak az összefűzésből:\n' + skippedFiles.join('\n'));
+        }
+
+        autoSetDatesAndProcess();
+    }).catch((err) => {
+        console.error('Összefűzési hiba:', err);
+        alert('Hiba történt a fájlok beolvasása közben. Kérlek próbáld újra.');
+    });
+}
+
 function loadFile() {
     const fileInput = document.getElementById('fileInput');
     if (fileInput.files.length === 0) return;
@@ -675,11 +820,11 @@ function processData() {
     const dStart = document.getElementById('dateStart').value;
     const dEnd = document.getElementById('dateEnd').value;
     
-    dayStats = {}; shiftStats = {}; modelDefectData = {};
+    dayStats = {}; shiftStats = {}; modelDefectData = {}; sourceDayStats = {};
     let teamTotals = { 'A': {ok:0, p:0, total:0}, 'B': {ok:0, p:0, total:0}, 'C': {ok:0, p:0, total:0}, 'D': {ok:0, p:0, total:0} };
     
     let sep = getFileSeparator(fileLines);
-    let headers = { dateIdx: -1, timeIdx: -1, resultIdx: -1, modelIdx: -1, defectIdx: -1, pctIdx: -1 };
+    let headers = { dateIdx: -1, timeIdx: -1, resultIdx: -1, modelIdx: -1, defectIdx: -1, pctIdx: -1, sourceIdx: -1 };
 
     for (let i = 0; i < fileLines.length; i++) {
         if (fileLines[i].trim() === '') continue;
@@ -694,6 +839,7 @@ function processData() {
             headers.modelIdx = up.indexOf('PCBNAME'); 
             headers.defectIdx = up.indexOf('DEFECTTYPE');
             headers.pctIdx = up.indexOf('TOPFAIL(%)');
+            headers.sourceIdx = up.indexOf('SOURCEFILE'); // ÚJ: csak összefűzött, több fájlos betöltésnél van jelen
             continue;
         }
 
@@ -747,6 +893,18 @@ function processData() {
                 }
                 
                 teamTotals[info.team].total++;
+
+                // ÚJ: fájlonkénti napi bontás gyűjtése, HA van SOURCEFILE oszlop (több fájl összefűzésekor)
+                if (headers.sourceIdx > -1 && parts.length > headers.sourceIdx && parts[headers.sourceIdx]) {
+                    let srcName = parts[headers.sourceIdx];
+                    if (!sourceDayStats[srcName]) sourceDayStats[srcName] = {};
+                    if (!sourceDayStats[srcName][info.dayKey]) sourceDayStats[srcName][info.dayKey] = { good: 0, pass: 0, warning: 0, fail: 0, label: info.dayLabel };
+                    let srcDay = sourceDayStats[srcName][info.dayKey];
+                    if (res === 'GOOD') srcDay.good++;
+                    else if (res === 'PASS') srcDay.pass++;
+                    else if (res === 'WARNING') srcDay.warning++;
+                    else srcDay.fail++;
+                }
             }
         }
     }
@@ -855,7 +1013,8 @@ function drawChart() {
     if (myChart) myChart.destroy();
     
     let labels = [], cGood = [], cWarning = [], cPass = [], cFpy = [];
-    Object.keys(dayStats).sort().forEach(k => {
+    let dayKeys = Object.keys(dayStats).sort();
+    dayKeys.forEach(k => {
         let s = dayStats[k];
         let base = s.good + s.warning + s.pass;
         labels.push(s.label);
@@ -864,6 +1023,35 @@ function drawChart() {
         cPass.push(s.pass);
         cFpy.push(base === 0 ? 0 : ((base - s.pass) / base) * 100);
     });
+
+    // 🧠 ÚJ: ha több fájl van összefűzve, minden forrásfájlhoz külön, halványabb,
+    // szaggatott összehasonlító FPY vonalat rajzolunk - így az összesített (fő) vonal
+    // mellett az is látszik, mennyire tér el egymástól az egyes fájlok minősége.
+    let sourceNames = Object.keys(sourceDayStats);
+    let compareDatasets = [];
+    if (sourceNames.length > 1) {
+        const compareColors = ['#f97316', '#0ea5e9', '#22c55e', '#ec4899', '#eab308', '#06b6d4', '#a3e635', '#f43f5e'];
+        sourceNames.forEach((srcName, idx) => {
+            let srcStats = sourceDayStats[srcName];
+            let srcFpySeries = dayKeys.map(k => {
+                let s = srcStats[k];
+                if (!s) return null;
+                let base = s.good + s.warning + s.pass;
+                return base === 0 ? null : ((base - s.pass) / base) * 100;
+            });
+            let color = compareColors[idx % compareColors.length];
+            compareDatasets.push({
+                label: '📁 ' + srcName,
+                data: srcFpySeries,
+                type: 'line', yAxisID: 'y1',
+                borderColor: color, backgroundColor: 'transparent',
+                borderWidth: 1.8, borderDash: [5, 3], tension: 0.3, fill: false,
+                pointRadius: 2, pointHoverRadius: 4.5,
+                pointBackgroundColor: color, pointBorderColor: '#ffffff', pointBorderWidth: 1,
+                spanGaps: false, order: 2, clip: 12
+            });
+        });
+    }
 
     // Dinamikus Y1 tengely-tartomány, hogy a lila FPY vonal SOHA ne vágódjon le
     // (se ha 100%-ra fut fel, se ha egy rossz nap miatt 80% alá esik)
@@ -886,6 +1074,7 @@ function drawChart() {
                 { label: 'Good', data: cGood, backgroundColor: theme.good, stack: 'S', borderRadius: 2, borderSkipped: false, borderWidth: { top: 1 }, borderColor: '#fff', order: 3 },
                 { label: 'Warn', data: cWarning, backgroundColor: theme.warn, stack: 'S', borderRadius: 2, borderSkipped: false, borderWidth: { top: 1 }, borderColor: '#fff', order: 3 },
                 { label: 'Pass', data: cPass, backgroundColor: theme.pass, stack: 'S', borderRadius: 2, borderSkipped: false, borderWidth: { top: 1 }, borderColor: '#fff', order: 3 },
+                ...compareDatasets,
                 {
                     label: '_fpyCasing', data: cFpy, type: 'line', yAxisID: 'y1',
                     borderColor: theme.casing, borderWidth: lineW + 2.5, fill: false,
@@ -893,7 +1082,7 @@ function drawChart() {
                     order: 1, clip: 12
                 },
                 {
-                    label: 'FPY %', data: cFpy, type: 'line', yAxisID: 'y1',
+                    label: sourceNames.length > 1 ? '📊 Összesített FPY %' : 'FPY %', data: cFpy, type: 'line', yAxisID: 'y1',
                     borderColor: theme.line, backgroundColor: 'transparent',
                     borderWidth: lineW, tension: 0.3, fill: false,
                     pointRadius: ptRadius, pointHoverRadius: ptHoverRadius,
