@@ -283,6 +283,19 @@
         .btn-reset { width: 100%; margin-top: 15px; background: var(--success); color: white; padding: 12px; border: none; border-radius: 8px; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 0.9rem;}
         .btn-reset:hover { background: #047857; }
 
+        /* --- FIGYELEM! VILLOGÓ FIGYELMEZTETŐ DOBOZ A HIBA MODALBAN --- */
+        .warning-blink-box {
+            display: flex; align-items: center; gap: 10px;
+            background: #fff1f2; border: 2px solid var(--danger); border-radius: 8px;
+            padding: 10px 14px; margin-bottom: 18px; font-weight: 800; font-size: 0.8rem;
+            color: #991b1b; line-height: 1.3; animation: warningBlink 1.1s infinite;
+        }
+        .warning-blink-dot {
+            width: 10px; height: 10px; border-radius: 50%; background: var(--danger);
+            flex-shrink: 0; box-shadow: 0 0 8px var(--danger);
+        }
+        @keyframes warningBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
         #report-generator-container { position: fixed; left: -10000px; top: 0; width: 1200px; background-color: white; z-index: 9999; font-family: 'Roboto', sans-serif; color: #2c3e50; }
         .rep-header { padding: 30px; background: #0f172a; color: white; display:flex; justify-content: space-between; align-items:center; }
         .rep-title { font-size: 2rem; font-weight: 900; }
@@ -446,7 +459,7 @@
                     <h2 class="dash-title">Irányítópult</h2>
                     <small style="color:var(--text-muted); font-weight:800; text-transform:uppercase;">Nézet: <strong id="statsLineTitle" style="color:var(--accent);">ÖSSZES GÉPSOR</strong></small>
                 </div>
-                <div style="display:flex; align-items:center; gap:15px;">
+                <div style="display:flex; align-items:center; gap:15px; flex-wrap: wrap;">
                     <div class="my-date-filter">
                         Intervallum: 
                         <input type="date" id="filterDateFrom" onchange="loadHistoryData()">
@@ -454,6 +467,12 @@
                         <input type="date" id="filterDateTo" onchange="loadHistoryData()">
                         <button onclick="clearDateFilter()" title="Szűrő törlése">✕</button>
                     </div>
+                    <button class="btn-report" style="background:#059669;" onclick="window.exportAllData()" title="Teljes JSON biztonsági mentés letöltése">
+                        💾 <span>JSON Mentés</span>
+                    </button>
+                    <button class="btn-report" style="background:var(--danger);" onclick="window.confirmClearAllLogs()" title="Összes eseménynapló törlése (az aktív hibákat nem érinti)">
+                        🗑️ <span>Log Törlése</span>
+                    </button>
                     <button class="btn-print" onclick="window.print()">🖨️ Nyomtatás</button>
                 </div>
             </div>
@@ -510,6 +529,11 @@
         <div class="modal-box">
             <h3 id="modalTitle" style="margin-top:0; color:var(--primary-dark); font-weight:900; text-transform:uppercase;">Hiba Bejelentés</h3>
             <p id="modalSubtitle" style="color:var(--text-muted); font-size:0.85rem; font-weight:800; margin-bottom:20px;"></p>
+
+            <div class="warning-blink-box">
+                <span class="warning-blink-dot"></span>
+                <span>Fontos, hogy valós hibaleírást adj meg a pontos javítás érdekében!</span>
+            </div>
             
             <div style="margin-bottom:15px;">
                 <label style="font-size:0.8rem; font-weight:900; color:var(--primary-light); text-transform:uppercase;">Hiba oka:</label>
@@ -1005,6 +1029,74 @@
 
             reportContainer.innerHTML = '';
             btn.innerHTML = originalText;
+        }
+
+        // ============================================================
+        // ÚJ (v3.2): TELJES JSON BIZTONSÁGI MENTÉS
+        // Letölti a smt_errors (aktív hibák) és a smt_logs (teljes napló)
+        // ágak teljes tartalmát egyetlen JSON fájlba, törlés előtt is
+        // bátran használható archiválásra.
+        // ============================================================
+        window.exportAllData = async function() {
+            const btn = event.currentTarget;
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '⏳ <span>Mentés...</span>';
+            try {
+                const errorsSnap = await get(ref(db, 'smt_errors'));
+                const logsSnap = await get(ref(db, 'smt_logs'));
+                const activeUsersSnap = await get(ref(db, 'active_users'));
+
+                const exportObj = {
+                    export_datum: new Date().toISOString(),
+                    smt_errors: errorsSnap.exists() ? errorsSnap.val() : {},
+                    smt_logs: logsSnap.exists() ? logsSnap.val() : {},
+                    active_users_snapshot: activeUsersSnap.exists() ? activeUsersSnap.val() : {}
+                };
+
+                const jsonStr = JSON.stringify(exportObj, null, 2);
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const now = new Date();
+                const fileNameDate = now.toISOString().replace(/[:.]/g, '-').slice(0, 16);
+                const link = document.createElement('a');
+                link.download = `SMT_Backup_${fileNameDate}.json`;
+                link.href = url;
+                link.click();
+                URL.revokeObjectURL(url);
+            } catch(e) {
+                alert("Hiba a JSON mentés során: " + e.message);
+            } finally {
+                btn.innerHTML = originalHtml;
+            }
+        }
+
+        // ============================================================
+        // ÚJ (v3.2): ÖSSZES LOG TÖRLÉSE - MEGERŐSÍTÉSSEL
+        // FONTOS: ez KIZÁRÓLAG a 'smt_logs' ágat (az eseménynaplót) törli.
+        // A 'smt_errors' ág (a monitor oldalon éppen AKTÍV, piros/kikapcsolt
+        // szárak) TELJESEN ÉRINTETLEN marad - azok adatai nem vesznek el
+        // és a monitor nézeten sem változik semmi.
+        // ============================================================
+        window.confirmClearAllLogs = async function() {
+            const sure1 = confirm(
+                "⚠️ FIGYELEM!\n\n" +
+                "Ez véglegesen törli az ÖSSZES gépsor teljes ESEMÉNYNAPLÓJÁT (smt_logs).\n\n" +
+                "A monitor oldalon jelenleg AKTÍV (piros) hibák és azok adatai NEM törlődnek, azokat ez a művelet nem érinti.\n\n" +
+                "Javasolt előtte JSON mentést készíteni (💾 JSON Mentés gomb).\n\n" +
+                "Biztosan folytatod?"
+            );
+            if (!sure1) return;
+
+            const sure2 = confirm("Ez a művelet nem vonható vissza. Tényleg törlöd a teljes eseménynaplót?");
+            if (!sure2) return;
+
+            try {
+                await remove(ref(db, 'smt_logs'));
+                alert("Az eseménynapló törölve. Az aktív hibák (smt_errors) érintetlenek maradtak.");
+                loadHistoryData();
+            } catch(e) {
+                alert("Hiba történt a törlés során: " + e.message);
+            }
         }
 
         window.openModal = function(line, key, mId, side, nId) {
