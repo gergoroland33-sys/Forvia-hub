@@ -62,15 +62,28 @@
         .shift-C.active { background: #f59e0b; border-color: #fbbf24; }
         .shift-D.active { background: #8b5cf6; border-color: #a78bfa; }
         .today-base { position: relative; z-index: 5; font-weight: 900 !important; }
-        .today-A { border-left: 2px solid rgba(239, 68, 68, 0.4) !important; border-right: 2px solid rgba(239, 68, 68, 0.4) !important; }
-        thead th.today-A { color: #ef4444 !important; border-bottom: 2px solid rgba(239, 68, 68, 0.4) !important; background-color: #1e293b !important; }
-        .today-B { border-left: 2px solid rgba(16, 185, 129, 0.4) !important; border-right: 2px solid rgba(16, 185, 129, 0.4) !important; }
-        thead th.today-B { color: #10b981 !important; border-bottom: 2px solid rgba(16, 185, 129, 0.4) !important; background-color: #1e293b !important; }
-        .today-C { border-left: 2px solid rgba(245, 158, 11, 0.4) !important; border-right: 2px solid rgba(245, 158, 11, 0.4) !important; }
-        thead th.today-C { color: #f59e0b !important; border-bottom: 2px solid rgba(245, 158, 11, 0.4) !important; background-color: #1e293b !important; }
-        .today-D { border-left: 2px solid rgba(139, 92, 246, 0.4) !important; border-right: 2px solid rgba(139, 92, 246, 0.4) !important; }
-        thead th.today-D { color: #8b5cf6 !important; border-bottom: 2px solid rgba(139, 92, 246, 0.4) !important; background-color: #1e293b !important; }
+        .today-A:not(.cell-S):not(.cell-BA):not(.cell-IG):not(.cell-TU):not(.cell-KE) { background-color: rgba(239, 68, 68, 0.13) !important; }
+        .today-A { border-left: 3px solid #ef4444 !important; border-right: 3px solid #ef4444 !important; }
+        thead th.today-A { color: #fff !important; border-bottom: 3px solid #ef4444 !important; background-color: rgba(239, 68, 68, 0.35) !important; text-shadow: 0 0 8px rgba(239,68,68,0.9); }
+        .today-B:not(.cell-S):not(.cell-BA):not(.cell-IG):not(.cell-TU):not(.cell-KE) { background-color: rgba(16, 185, 129, 0.13) !important; }
+        .today-B { border-left: 3px solid #10b981 !important; border-right: 3px solid #10b981 !important; }
+        thead th.today-B { color: #fff !important; border-bottom: 3px solid #10b981 !important; background-color: rgba(16, 185, 129, 0.35) !important; text-shadow: 0 0 8px rgba(16,185,129,0.9); }
+        .today-C:not(.cell-S):not(.cell-BA):not(.cell-IG):not(.cell-TU):not(.cell-KE) { background-color: rgba(245, 158, 11, 0.13) !important; }
+        .today-C { border-left: 3px solid #f59e0b !important; border-right: 3px solid #f59e0b !important; }
+        thead th.today-C { color: #fff !important; border-bottom: 3px solid #f59e0b !important; background-color: rgba(245, 158, 11, 0.35) !important; text-shadow: 0 0 8px rgba(245,158,11,0.9); }
+        .today-D:not(.cell-S):not(.cell-BA):not(.cell-IG):not(.cell-TU):not(.cell-KE) { background-color: rgba(139, 92, 246, 0.13) !important; }
+        .today-D { border-left: 3px solid #8b5cf6 !important; border-right: 3px solid #8b5cf6 !important; }
+        thead th.today-D { color: #fff !important; border-bottom: 3px solid #8b5cf6 !important; background-color: rgba(139, 92, 246, 0.35) !important; text-shadow: 0 0 8px rgba(139,92,246,0.9); }
         .sortable-fallback { opacity: 0.8 !important; background: #1e293b !important; border: 1px solid #3b82f6; }
+
+        /* ÚJ: 48 óra alatti/alatt-egyenlő KIVEHETŐ figyelmeztető szín */
+        .rem-warning { background: #5b1414 !important; color: #fca5a5 !important; }
+        .rem-warning-card { color: #f87171 !important; text-shadow: 0 0 10px rgba(239,68,68,0.5); }
+
+        /* ÚJ: TIPPEK GOMB */
+        .tips-btn { background: linear-gradient(to bottom, #1e293b, #0f172a); border: 1px solid #334155; transition: all 0.2s ease; }
+        .tips-btn:hover { border-color: rgba(59, 130, 246, 0.6); box-shadow: 0 0 12px rgba(59, 130, 246, 0.25); }
+        .tips-btn:active { transform: scale(0.94); }
 
         /* UI JELZŐK (Pötty és Háromszög) ÉS KIJELÖLÉSGÁTLÓ */
         .no-select { -webkit-user-select: none; user-select: none; }
@@ -166,9 +179,15 @@
     
     <header class="p-2 no-print shadow-xl flex flex-col gap-2 desktop-header">
         <div class="flex justify-between items-center w-full">
-            <div class="flex flex-col">
-                <span class="text-blue-500 font-black text-xl tracking-tighter leading-none">FORVIA</span>
-                <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Szabadságok SMT</span>
+            <div class="flex items-center gap-3">
+                <div class="flex flex-col">
+                    <span class="text-blue-500 font-black text-xl tracking-tighter leading-none">FORVIA</span>
+                    <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Szabadságok SMT</span>
+                </div>
+                <button onclick="openTipsModal()" title="Súgó / Tippek - Használati útmutató" class="tips-btn flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg shadow-sm text-slate-400 hover:text-blue-400">
+                    <i class="fas fa-lightbulb text-[11px]"></i>
+                    <span class="text-[9px] font-black uppercase tracking-widest">Tippek</span>
+                </button>
             </div>
             <div class="flex items-center bg-slate-900/80 p-1 rounded-lg border border-slate-700/50 shadow-sm">
                 <div class="px-2 border-r border-slate-700/50 mr-1 flex items-center gap-1">
@@ -350,6 +369,81 @@
         </div>
     </div>
 
+    <!-- SÚGÓ / TIPPEK ABLAK -->
+    <div id="tips-modal" class="hidden fixed inset-0 z-[130] flex items-center justify-center bg-black/70 backdrop-blur-sm transition-opacity no-select">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl p-5 shadow-[0_0_40px_rgba(0,0,0,0.8)] w-full max-w-3xl mx-4 transform scale-95 transition-transform flex flex-col max-h-[85vh]">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+                <h3 class="text-white font-black text-xl uppercase tracking-wider flex items-center gap-2">
+                    <i class="fas fa-lightbulb text-blue-400"></i> Súgó &amp; Tippek
+                </h3>
+                <button onclick="closeTipsModal()" class="text-slate-400 hover:text-white transition-colors text-xl bg-slate-800 hover:bg-red-500 w-8 h-8 rounded-lg flex items-center justify-center shadow-lg border border-slate-700 hover:border-red-500"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="overflow-y-auto pr-2 space-y-4 flex-grow modal-scrollbar text-slate-300 text-xs leading-relaxed">
+
+                <div>
+                    <h4 class="text-blue-400 font-black text-sm uppercase mb-1 flex items-center gap-2"><i class="fas fa-users-cog"></i> Műszakváltás</h4>
+                    <p>A jobb felső "Műszak" panelen az <b>A / B / C / D</b> gombokkal válthatsz a négy műszak dolgozói és adatai között. A kiválasztott műszak mindig világítva jelenik meg, és minden nézet (Táblázat, Kártyák, mobil lista) automatikusan az adott műszak adatait mutatja.</p>
+                </div>
+
+                <div>
+                    <h4 class="text-blue-400 font-black text-sm uppercase mb-1 flex items-center gap-2"><i class="fas fa-calendar-alt"></i> Év / Hónap navigáció</h4>
+                    <p>A dupla nyilakkal (<i class="fas fa-angle-double-left"></i>/<i class="fas fa-angle-double-right"></i>) évet, az egyszerű nyilakkal (<i class="fas fa-chevron-left"></i>/<i class="fas fa-chevron-right"></i>) hónapot léptethetsz. A <b>"MA"</b> gomb egy kattintással visszaugrik a mai hónapra és napra.</p>
+                </div>
+
+                <div>
+                    <h4 class="text-blue-400 font-black text-sm uppercase mb-1 flex items-center gap-2"><i class="fas fa-table"></i> Táblázat (Mátrix) nézet</h4>
+                    <p>Minden sor egy dolgozó, minden oszlop egy nap. Kattints egy cellába és írj be egy kódot:</p>
+                    <ul class="list-disc list-inside ml-2 mt-1 space-y-0.5">
+                        <li><b>Szám</b> (pl. 8) → Szabadság órában (zöld)</li>
+                        <li><b>BÁ</b> → Betegállomány (narancs)</li>
+                        <li><b>IG</b> → Igazolatlan (lila)</li>
+                        <li><b>TU</b> → Túlóra (kék)</li>
+                        <li><b>KÉ</b> → Késés (sárgás-barna)</li>
+                    </ul>
+                    <p class="mt-1">A <b>mai nap oszlopa</b> a kijelölt műszak színével keretezve és halványan aláfestve jelenik meg, így könnyen beazonosítható.</p>
+                    <p class="mt-1">A <b>KIVEHETŐ</b> oszlop halványpirossal jelöl minden dolgozót, akinek a maradék kerete <b>48 óra vagy az alatt</b> van – ez figyelmeztetés, hogy fogy a kerete.</p>
+                </div>
+
+                <div>
+                    <h4 class="text-blue-400 font-black text-sm uppercase mb-1 flex items-center gap-2"><i class="fas fa-keyboard"></i> Billentyűzet</h4>
+                    <p>Egy cellában <b>Enter</b>-rel kilépsz belőle. A <b>nyílgombokkal</b> (fel/le/jobbra/balra) közvetlenül a szomszédos cellákra ugorhatsz, így gyorsan, egérhasználat nélkül tudsz gépelni a táblázatban.</p>
+                </div>
+
+                <div>
+                    <h4 class="text-blue-400 font-black text-sm uppercase mb-1 flex items-center gap-2"><i class="fas fa-mouse-pointer"></i> Dupla kattintás</h4>
+                    <p>Ha egy kitöltött cellára <b>duplán kattintasz</b>: <b>TU</b> esetén felugrik a Túlóra Opciók ablak (100% túlóra, vagy 50% túlóra + automatikus 12 órás cserenap jóváírás), bármely más kitöltött cellánál pedig megjegyzést fűzhetsz hozzá. A megjegyzéssel és/vagy cserenappal jelölt napokon egy sárga háromszög, illetve piros pötty jelenik meg, és egérrel a cella fölé állva látható a részletes tooltip.</p>
+                </div>
+
+                <div>
+                    <h4 class="text-blue-400 font-black text-sm uppercase mb-1 flex items-center gap-2"><i class="fas fa-id-card"></i> Kártyák nézet</h4>
+                    <p>A fejléc "Kártya" ikonjával válthatsz a személyenkénti, éves összesítő kártyanézetre: keret, kivehető óraszám, kategóriánkénti bontás (Szabi/Beteg/Igazolatlan/Túlóra/Késés), cserenap jóváírás, és nyomtatható részletes adatlap.</p>
+                </div>
+
+                <div>
+                    <h4 class="text-blue-400 font-black text-sm uppercase mb-1 flex items-center gap-2"><i class="fas fa-filter"></i> Jelölt / Cserenap szűrők</h4>
+                    <p>A <b>Jelölt</b> gomb az adott év összes megjegyzését, a <b>Cserenap</b> gomb az összes cserenap-jóváírást listázza ki időrendben. Egy találatra kattintva a rendszer automatikusan a táblázat nézetbe ugrik, és pár másodpercig pirosan villogtatja az érintett cellát.</p>
+                </div>
+
+                <div>
+                    <h4 class="text-blue-400 font-black text-sm uppercase mb-1 flex items-center gap-2"><i class="fas fa-cogs"></i> Egyéb funkciók</h4>
+                    <ul class="list-disc list-inside ml-2 space-y-0.5">
+                        <li><i class="fas fa-print"></i> <b>Nyomtatás</b> – a teljes műszak éves összesítőjét nyomtatja ki.</li>
+                        <li><i class="fas fa-download"></i> <b>Teljes mentés</b> – mind a 4 műszak adatát egy .json fájlba menti biztonsági mentésként.</li>
+                        <li><i class="fas fa-plus"></i> <b>Új dolgozó</b> – hozzáad egy új sort az aktuális műszakhoz.</li>
+                        <li>A <b>KERET</b> mező soronként szerkeszthető, évenként külön tárolódik (pl. 2026-ra más lehet, mint 2027-re).</li>
+                        <li>A dolgozók sorrendje a névoszlopnál fogva húzva átrendezhető.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-blue-400 font-black text-sm uppercase mb-1 flex items-center gap-2"><i class="fas fa-mobile-alt"></i> Mobil nézet</h4>
+                    <p>Telefonon kártyás listanézet jelenik meg (mai/holnapi/holnaputáni státusszal). Egy dolgozóra koppintva megnyílik a naptáras nézet, ahol napra koppintva vihető be az adat, duplakoppintással pedig ugyanúgy elérhető a Túlóra/Megjegyzés ablak.</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <div id="tu-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity no-select">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-2xl max-w-sm w-full mx-4 transform scale-95 transition-transform">
             <h3 class="text-white font-black text-xl mb-4 text-center uppercase tracking-wider flex items-center justify-center gap-2">
@@ -511,6 +605,9 @@
             } finally {
                 render(); 
                 renderMobileList(); 
+                if(!document.getElementById('v-stats').classList.contains('hidden')) {
+                    buildStatsGrid();
+                }
                 if(!document.getElementById('m-detail-view').classList.contains('hidden') && mSelectedUserIndex > -1) {
                     if (employees[mSelectedUserIndex]) {
                         renderMobileCalendar();
@@ -658,10 +755,12 @@
             document.getElementById('tBody').innerHTML = employees.map(e => {
                 const quota = getEmpQuota(e, currentYear);
                 const used = getYearlyUsed(e, currentYear);
+                const remVal = quota - used;
+                const remWarnCls = remVal <= 48 ? 'rem-warning' : '';
                 
                 let row = `<tr data-id="${e.id}"><td class="name-col"><div class="flex justify-between items-center h-full w-full"><span class="font-black text-[12px] tracking-tight uppercase text-white text-left break-words leading-tight">${e.name}</span><button onclick="delEmp(${e.id})" class="text-red-500/30 hover:text-red-500 transition-colors p-1 flex-shrink-0 ml-1"><i class="fas fa-times-circle"></i></button></div></td>
                 <td class="sticky-quota bg-slate-800 border-r border-slate-700/50"><input type="number" value="${quota}" onchange="updateEmpQuota(${e.id}, ${currentYear}, this.value)" class="input-cell quota-input text-center"></td>
-                <td id="rem-${e.id}" class="sticky-rem bg-slate-800 text-emerald-400 font-black text-[15px] border-r-4 border-slate-900 text-center">${quota - used}</td>`;
+                <td id="rem-${e.id}" class="sticky-rem bg-slate-800 text-emerald-400 font-black text-[15px] border-r-4 border-slate-900 text-center ${remWarnCls}">${remVal}</td>`;
                 
                 for(let d=1; d<=days; d++) {
                     const k = `${currentYear}-${m+1}-${d}`;
@@ -685,7 +784,7 @@
                     if(isTuCserenap) dots += '<div class="tu-dot-desk absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 border border-slate-900 shadow-[0_0_5px_rgba(239,68,68,1)] pointer-events-none z-20"></div>';
                     if(hasNote) dots += '<div class="note-triangle-desk"></div>';
 
-                    row += `<td class="${isWeekend||isHoliday?'weekend':''} ${isHoliday?'holiday-bg':''} ${cls} ${isToday?`today-base today-${currentShift}`:''} ${relativeCls}" ${titleAttr}><input type="text" value="${v}" onfocus="this.select(); highlight(this,${d},true)" onblur="highlight(this,${d},false); update(${e.id},'${k}',this.value,this)" onkeydown="if(event.key==='Enter'){this.blur();}" class="input-cell" inputmode="text">${dots}</td>`;
+                    row += `<td class="${isWeekend||isHoliday?'weekend':''} ${isHoliday?'holiday-bg':''} ${cls} ${isToday?`today-base today-${currentShift}`:''} ${relativeCls}" ${titleAttr}><input type="text" value="${v}" onfocus="this.select(); highlight(this,${d},true)" onblur="highlight(this,${d},false); update(${e.id},'${k}',this.value,this)" onkeydown="handleCellNav(event,this)" class="input-cell" inputmode="text">${dots}</td>`;
                 }
                 return row + "</tr>";
             }).join('');
@@ -760,37 +859,43 @@
             window.print();
         }
 
+        function buildStatsGrid() {
+            const currentYear = date.getFullYear();
+            document.getElementById('stats-grid').innerHTML = employees.map(e => {
+                let totals = { S:0, BA:0, IG:0, TU:0, KE:0 };
+                let cserenapCount = 0;
+                if(e.data) Object.entries(e.data).forEach(([k, val]) => { 
+                    if(k.startsWith(currentYear + '-')) {
+                        if(k.endsWith('_cserenap')) {
+                            cserenapCount += Math.abs(parseFloat(val) || 0);
+                        } else if(!k.endsWith('_note')) {
+                            let n = parseFloat(String(val).replace(',','.')); 
+                            if(!isNaN(n)) totals.S += n; 
+                            else if(val==='BÁ') totals.BA++; 
+                            else if(val==='IG') totals.IG++; 
+                            else if(val==='TU') totals.TU++; 
+                            else if(String(val).startsWith('KÉ')) totals.KE++; 
+                        }
+                    }
+                });
+                const quota = getEmpQuota(e, currentYear);
+                const percent = Math.max(0, Math.min(100, (totals.S / quota) * 100));
+                const remaining = quota - getYearlyUsed(e, currentYear);
+                const remWarnCls = remaining <= 48 ? 'rem-warning-card' : '';
+                
+                let cserenapHtml = cserenapCount > 0 ? `<div class="bg-red-500/20 p-2 rounded-lg border border-red-500/50 flex justify-between items-center col-span-2 mt-1"><span class="text-[10px] text-red-400 font-bold uppercase"><i class="fas fa-gift mr-1"></i> Cserenap Jóváírás</span><span class="font-bold text-red-400">+${cserenapCount} óra</span></div>` : '';
+
+                return `<div class="bg-slate-900/80 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col"><div class="p-6 pb-4 border-b border-slate-800"><h3 class="font-black text-xl text-white uppercase tracking-tighter mb-2">${e.name}</h3><div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden mb-2"><div class="h-full bg-gradient-to-r from-blue-500 to-emerald-400" style="width: ${percent}%"></div></div><div class="flex justify-between items-end"><div class="text-[10px] text-slate-400 font-bold uppercase">Keret: ${quota}</div><div class="text-right"><div class="text-[10px] text-slate-500 font-bold uppercase">Még kivehető</div><div class="text-2xl font-black leading-none ${remWarnCls}">${remaining}</div></div></div></div><div class="p-4 grid grid-cols-2 gap-2 bg-slate-900/50 flex-grow content-start"><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center"><span class="text-[10px] text-slate-400 font-bold">SZABI</span><span class="font-bold text-white">${totals.S}</span></div><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center"><span class="text-[10px] text-orange-400 font-bold">BETEG</span><span class="font-bold text-orange-400">${totals.BA}</span></div><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center"><span class="text-[10px] text-violet-400 font-bold">IGAZOLATLAN</span><span class="font-bold text-violet-400">${totals.IG}</span></div><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center"><span class="text-[10px] text-blue-400 font-bold">TÚLÓRA</span><span class="font-bold text-blue-400">${totals.TU}</span></div><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center col-span-2"><span class="text-[10px] text-amber-500 font-bold">KÉSÉS</span><span class="font-bold text-amber-500">${totals.KE}</span></div>${cserenapHtml}</div><div class="p-4 pt-2"><button onclick="printA4(${e.id})" class="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-black text-[10px] uppercase transition-all tracking-widest text-white shadow-lg"><i class="fas fa-print mr-2"></i> Részletes adatlap</button></div></div>`;
+            }).join('');
+        }
+
         function setView(v) {
             document.getElementById('v-matrix').classList.toggle('hidden', v !== 'matrix');
             document.getElementById('v-stats').classList.toggle('hidden', v !== 'stats');
             document.getElementById('nav-m').className = v === 'matrix' ? "px-3 py-1.5 rounded text-[10px] font-black uppercase bg-blue-600 text-white flex items-center gap-1" : "px-3 py-1.5 rounded text-[10px] font-black uppercase text-slate-400 hover:text-white flex items-center gap-1";
             document.getElementById('nav-s').className = v === 'stats' ? "px-3 py-1.5 rounded text-[10px] font-black uppercase bg-blue-600 text-white flex items-center gap-1 ml-1" : "px-3 py-1.5 rounded text-[10px] font-black uppercase text-slate-400 hover:text-white flex items-center gap-1 ml-1";
             if(v==='stats') {
-                const currentYear = date.getFullYear();
-                document.getElementById('stats-grid').innerHTML = employees.map(e => {
-                    let totals = { S:0, BA:0, IG:0, TU:0, KE:0 };
-                    let cserenapCount = 0;
-                    if(e.data) Object.entries(e.data).forEach(([k, val]) => { 
-                        if(k.startsWith(currentYear + '-')) {
-                            if(k.endsWith('_cserenap')) {
-                                cserenapCount += Math.abs(parseFloat(val) || 0);
-                            } else if(!k.endsWith('_note')) {
-                                let n = parseFloat(String(val).replace(',','.')); 
-                                if(!isNaN(n)) totals.S += n; 
-                                else if(val==='BÁ') totals.BA++; 
-                                else if(val==='IG') totals.IG++; 
-                                else if(val==='TU') totals.TU++; 
-                                else if(String(val).startsWith('KÉ')) totals.KE++; 
-                            }
-                        }
-                    });
-                    const quota = getEmpQuota(e, currentYear);
-                    const percent = Math.max(0, Math.min(100, (totals.S / quota) * 100));
-                    
-                    let cserenapHtml = cserenapCount > 0 ? `<div class="bg-red-500/20 p-2 rounded-lg border border-red-500/50 flex justify-between items-center col-span-2 mt-1"><span class="text-[10px] text-red-400 font-bold uppercase"><i class="fas fa-gift mr-1"></i> Cserenap Jóváírás</span><span class="font-bold text-red-400">+${cserenapCount} óra</span></div>` : '';
-
-                    return `<div class="bg-slate-900/80 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col"><div class="p-6 pb-4 border-b border-slate-800"><h3 class="font-black text-xl text-white uppercase tracking-tighter mb-2">${e.name}</h3><div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden mb-2"><div class="h-full bg-gradient-to-r from-blue-500 to-emerald-400" style="width: ${percent}%"></div></div><div class="flex justify-between items-end"><div class="text-[10px] text-slate-400 font-bold uppercase">Keret: ${quota}</div><div class="text-right"><div class="text-[10px] text-slate-500 font-bold uppercase">Még kivehető</div><div class="text-2xl font-black text-emerald-400 leading-none">${quota - getYearlyUsed(e, currentYear)}</div></div></div></div><div class="p-4 grid grid-cols-2 gap-2 bg-slate-900/50 flex-grow content-start"><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center"><span class="text-[10px] text-slate-400 font-bold">SZABI</span><span class="font-bold text-white">${totals.S}</span></div><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center"><span class="text-[10px] text-orange-400 font-bold">BETEG</span><span class="font-bold text-orange-400">${totals.BA}</span></div><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center"><span class="text-[10px] text-violet-400 font-bold">IGAZOLATLAN</span><span class="font-bold text-violet-400">${totals.IG}</span></div><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center"><span class="text-[10px] text-blue-400 font-bold">TÚLÓRA</span><span class="font-bold text-blue-400">${totals.TU}</span></div><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center col-span-2"><span class="text-[10px] text-amber-500 font-bold">KÉSÉS</span><span class="font-bold text-amber-500">${totals.KE}</span></div>${cserenapHtml}</div><div class="p-4 pt-2"><button onclick="printA4(${e.id})" class="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-black text-[10px] uppercase transition-all tracking-widest text-white shadow-lg"><i class="fas fa-print mr-2"></i> Részletes adatlap</button></div></div>`;
-                }).join('');
+                buildStatsGrid();
             }
         }
 
@@ -854,6 +959,7 @@
 
             listEl.innerHTML = employees.map((e, index) => {
                 let remaining = getEmpQuota(e, currentYear) - getYearlyUsed(e, currentYear);
+                const remWarnCls = remaining <= 48 ? 'text-red-400' : 'text-emerald-400';
                 
                 const getStatusHtml = (key, label) => {
                     const val = (e.data && e.data[key]) ? e.data[key] : "-";
@@ -882,7 +988,7 @@
                     return `<div class="m-status-row"><span class="m-status-label">${label}</span><div class="m-status-pill ${bg} ${relativeCls}" ${titleAttr}>${val}${dots}</div></div>`;
                 };
 
-                return `<div class="m-card" onclick="openMobileUser(${index})"><div class="flex items-center flex-grow overflow-hidden"><div class="m-avatar">${e.name.charAt(0)}</div><div class="min-w-0 pr-2"><div class="font-black text-white text-lg leading-tight uppercase truncate">${e.name}</div><div class="text-[10px] text-emerald-400 font-bold uppercase mt-1">Maradék: ${remaining}</div></div></div><div class="flex flex-col flex-none">${getStatusHtml(k0, "MA")}${getStatusHtml(k1, "HOL")}${getStatusHtml(k2, "KÖV")}</div></div>`;
+                return `<div class="m-card" onclick="openMobileUser(${index})"><div class="flex items-center flex-grow overflow-hidden"><div class="m-avatar">${e.name.charAt(0)}</div><div class="min-w-0 pr-2"><div class="font-black text-white text-lg leading-tight uppercase truncate">${e.name}</div><div class="text-[10px] ${remWarnCls} font-bold uppercase mt-1">Maradék: ${remaining}</div></div></div><div class="flex flex-col flex-none">${getStatusHtml(k0, "MA")}${getStatusHtml(k1, "HOL")}${getStatusHtml(k2, "KÖV")}</div></div>`;
             }).join('');
         }
 
@@ -1386,6 +1492,50 @@
         });
         // --- ÚJ FEJLESZTÉS V4: MODERN TOOLTIP (VÉGE) ---
 
+        // --- ÚJ FEJLESZTÉS: BILLENTYŰZET NAVIGÁCIÓ A MÁTRIXBAN ---
+        function handleCellNav(e, el) {
+            if(e.key === 'Enter') { e.preventDefault(); el.blur(); return; }
+            const navKeys = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'];
+            if(navKeys.indexOf(e.key) === -1) return;
+            e.preventDefault();
+
+            const td = el.closest('td');
+            const tr = el.closest('tr');
+            if(!td || !tr) return;
+
+            let targetTd = null;
+            if(e.key === 'ArrowLeft') {
+                targetTd = td.previousElementSibling;
+            } else if(e.key === 'ArrowRight') {
+                targetTd = td.nextElementSibling;
+            } else if(e.key === 'ArrowUp') {
+                const prevRow = tr.previousElementSibling;
+                if(prevRow) targetTd = prevRow.cells[td.cellIndex];
+            } else if(e.key === 'ArrowDown') {
+                const nextRow = tr.nextElementSibling;
+                if(nextRow) targetTd = nextRow.cells[td.cellIndex];
+            }
+
+            if(targetTd) {
+                const input = targetTd.querySelector('.input-cell');
+                if(input) {
+                    input.focus();
+                    if(input.select) input.select();
+                }
+            }
+        }
+
+        // --- ÚJ FEJLESZTÉS: TIPPEK / SÚGÓ MODAL ---
+        window.openTipsModal = function() {
+            const modal = document.getElementById('tips-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.firstElementChild.classList.remove('scale-95'), 10);
+        }
+        window.closeTipsModal = function() {
+            const modal = document.getElementById('tips-modal');
+            modal.firstElementChild.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 150);
+        }
 
         // --- AUTOMATIKUS HITELESÍTÉS ÉS INDÍTÁS ---
         window.onload = () => {
