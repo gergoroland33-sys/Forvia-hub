@@ -44,6 +44,13 @@ box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 .btn-action:hover { background: #4f46e5; transform: translateY(-1px); }
 
+.btn-tips {
+background: transparent; color: #cbd5e1; border: 1px solid #475569;
+padding: 8px 12px; border-radius: 8px; font-weight: 700;
+cursor: pointer; font-size: 0.8rem; margin-right: 10px;
+}
+.btn-tips:hover { color: white; border-color: #64748b; }
+
 /* --- SZERKESZTŐ (EDITOR) --- */
 #editor-container {
 max-width: 1000px; margin: 90px auto 30px auto; padding: 0 20px;
@@ -58,7 +65,9 @@ margin: 40px 0 20px 0;
 background: #334155; color: white; padding: 8px 20px;
 border-radius: 50px; font-weight: bold; font-size: 1rem;
 border: 1px solid #475569;
+cursor: pointer;
 }
+.date-badge:hover { background: #475569; }
 
 /* A NAGY ELVÁLASZTÁS: Két külön kártya egymás mellett */
 .shifts-wrapper {
@@ -265,8 +274,13 @@ html, body { height: auto; min-height: 100%; overflow: visible; }
 
 <div class="navbar">
 <div class="brand">TÚLÓRA <span>MANAGER</span> A-B-C-D MŰSZAKNAK</div>
+<div>
+<button class="btn-tips" onclick="showTips()">TIPPEK</button>
 <button class="btn-action" onclick="goToPrint()">NYOMTATÁS ELŐNÉZET &#10140;</button>
 </div>
+</div>
+
+<input id="date-override" type="date" aria-label="Kiinduló dátum kiválasztása" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;">
 
 <div id="editor-container">
 </div>
@@ -333,11 +347,11 @@ const days = ['Vasárnap','Hétfő','Kedd','Szerda','Csütörtök','Péntek','Sz
 return `${d.getFullYear()}. ${String(d.getMonth()+1).padStart(2,'0')}. ${String(d.getDate()).padStart(2,'0')}. (${days[d.getDay()]})`;
 }
 
-function init() {
-let d = new Date(); 
+function init(selectedDate) {
+let d = selectedDate ? new Date(`${selectedDate}T12:00:00`) : new Date();
   
 // Szigorú váltás: 05:59-ig még a tegnapi "gyári napon" vagyunk
-if (d.getHours() < 6) {
+if (!selectedDate && d.getHours() < 6) {
 d.setDate(d.getDate() - 1);
 }
 
@@ -350,6 +364,7 @@ const todayShift = getShifts(d);
 // Ha ma az A vagy B dolgozik, akkor a C/D napokat kell behoznunk, egyébként az A/B napokat
 const targetShifts = ['A', 'B'].includes(todayShift.d) ? ['C', 'D'] : ['A', 'B'];
 
+data = [];
 while(data.length < 3) {
 const s = getShifts(d);
 // Ellenőrizzük, hogy a vizsgált nap egyezik-e a keresett célcsoporttal
@@ -369,7 +384,7 @@ let html = '';
 data.forEach((day, i) => {
 html += `
 <div class="date-divider">
-<div class="date-badge">${formatDate(day.date)}</div>
+<div class="date-badge" role="button" tabindex="0" title="Dátum módosítása" onclick="chooseDate()" onkeydown="if(event.key === 'Enter' || event.key === ' ') chooseDate()">${formatDate(day.date)}</div>
 </div>
 
 <div class="shifts-wrapper">
@@ -480,6 +495,21 @@ document.getElementById('print-overlay').style.display = 'none';
 document.querySelector('.navbar').style.display = 'flex';
 document.getElementById('editor-container').style.display = 'block';
 document.getElementById('remark-editor-container').style.display = 'block';
+}
+
+// Dátum felülbírálás: csak szükség esetén módosítja az automatikusan számolt három napot.
+window.chooseDate = function() {
+const input = document.getElementById('date-override');
+if (input.showPicker) input.showPicker();
+else input.click();
+}
+
+document.getElementById('date-override').addEventListener('change', function() {
+if (this.value) init(this.value);
+});
+
+window.showTips = function() {
+alert('Alapból a program automatikusan a mai napból (06:00 előtt a tegnapiból) számolja a szokásos 3 napot.\n\nHa kivételesen más dátumból kell indulni, kattints bármelyik megjelenő dátumra, és válaszd ki a kívánt napot. A 3 nap újraszámolódik; a korábban megadott létszámok ilyenkor törlődnek.');
 }
 
 function renderPrintBox(letter, name, sv, gl, ins, tech, op) {
