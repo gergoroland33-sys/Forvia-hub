@@ -384,7 +384,7 @@ let html = '';
 data.forEach((day, i) => {
 html += `
 <div class="date-divider">
-<div class="date-badge" role="button" tabindex="0" title="Dátum módosítása" onclick="chooseDate()" onkeydown="if(event.key === 'Enter' || event.key === ' ') chooseDate()">${formatDate(day.date)}</div>
+<div class="date-badge" role="button" tabindex="0" title="Dátum módosítása" onclick="chooseDate(this)" onkeydown="if(event.key === 'Enter' || event.key === ' ') chooseDate(this)">${formatDate(day.date)}</div>
 </div>
 
 <div class="shifts-wrapper">
@@ -497,9 +497,21 @@ document.getElementById('editor-container').style.display = 'block';
 document.getElementById('remark-editor-container').style.display = 'block';
 }
 
-// Dátum felülbírálás: csak szükség esetén módosítja az automatikusan számolt három napot.
-window.chooseDate = function() {
+// Dátum felülbírálás: a kattintott badge pozíciójához igazítja a rejtett inputot,
+// hogy a natív dátumválasztó ne random helyen nyíljon meg.
+window.chooseDate = function(el) {
 const input = document.getElementById('date-override');
+const rect = el.getBoundingClientRect();
+
+input.style.position = 'fixed';
+input.style.left = rect.left + 'px';
+input.style.top = (rect.bottom + 8) + 'px';
+input.style.width = rect.width + 'px';
+input.style.height = '30px';
+input.style.opacity = '0';
+input.style.pointerEvents = 'none';
+input.style.zIndex = '9999';
+
 if (input.showPicker) input.showPicker();
 else input.click();
 }
