@@ -295,6 +295,7 @@ function szamol(){
     const isFiatal = document.getElementById("fiatal").checked;
     const oraber174 = alap / 174;
     const oraber180 = alap / 180;
+    const oraberKeret = alap / 168;
     
     const h_m30 = +document.getElementById("m30").value || 0;
     const h_v50 = +document.getElementById("v50").value || 0;
@@ -311,7 +312,7 @@ function szamol(){
     const t_potlek_100 = oraber174 * 1.0 * ossz_t_ora;
     const t_extra_30 = oraber174 * 0.3 * h_ejsz;
     const t_extra_50 = oraber174 * 0.5 * h_vas;
-    const keret_alap = oraber180 * h_keret;
+    const keret_alap = oraberKeret * h_keret;
     const keret_potlek_50 = oraber174 * 0.5 * h_keret;
     const tulora_total = t_alap_resz + t_potlek_100 + t_extra_30 + t_extra_50 + keret_alap + keret_potlek_50;
     
@@ -350,10 +351,10 @@ function szamol(){
         type: 'neutral',
         info: makeInfo(
             'Besorolási Alapbér — Az ALAP, amiből minden más számolódik',
-            'A munkaszerződésedben rögzített havi alapfizetésed bruttó értéke. Minden pótlék és túlóra ennek az értéknek a függvényében számolódik. <strong>A 174-es és 180-as órabér is ebből az értékből származik.</strong>',
+            'A munkaszerződésedben rögzített havi alapfizetésed bruttó értéke. Minden pótlék és túlóra ennek az értéknek a függvényében számolódik. <strong>A 174-es, 180-as és — a keret-elszámolásnál — a 168-as osztó is ebből az értékből származik.</strong>',
             null,
             `Teljes hónapra: <strong>${formatFt(alap)}</strong>`,
-            'A 174-es osztó az átlagos havi munkaórák száma (8 óra × 21,75 munkanap), a 180-as a havibéres elszámoláshoz használt érték. Mt. 136. § (1) bek.',
+            'A 174-es osztó az átlagos havi munkaórák száma (8 óra × 21,75 munkanap), a 180-as a havibéres elszámoláshoz használt érték, a 168-as pedig kifejezetten a negyedéves keret-elszámolás alaprészéhez tartozó osztó. Mt. 136. § (1) bek.',
             makeSteps('Az alapbérből származtatott órabérek', [
                 {
                     title: '174-es órabér (pótlékszámításhoz)',
@@ -369,6 +370,14 @@ function szamol(){
                     lines: [
                         `<span class="num">${formatNum(alap)}</span> Ft (alapbér) ÷ <span class="num">180</span> óra`,
                         `= <span class="result">${formatFt2(oraber180)}</span>/óra`
+                    ]
+                },
+                {
+                    title: '168-as órabér (kizárólag keret-elszámolás alapjához)',
+                    value: formatFt2(oraberKeret),
+                    lines: [
+                        `<span class="num">${formatNum(alap)}</span> Ft (alapbér) ÷ <span class="num">168</span> óra`,
+                        `= <span class="result">${formatFt2(oraberKeret)}</span>/óra`
                     ]
                 }
             ], null)
@@ -568,10 +577,11 @@ function szamol(){
         }
         if (h_keret > 0) {
             tuloraBlocks.push({
-                title: `Keret alap (${h_keret} órára)`,
+                title: `Keret alap (168-as, ${h_keret} órára)`,
                 value: formatFt(keret_alap),
                 lines: [
-                    `<span class="result">${formatFt2(oraber180)}</span> × <span class="num">${h_keret}</span> óra = <span class="result">${formatFt(keret_alap)}</span>`
+                    `<span class="num">${formatNum(alap)}</span> ÷ <span class="num">168</span> = <span class="result">${formatFt2(oraberKeret)}</span>/óra (168-as órabér)`,
+                    `<span class="result">${formatFt2(oraberKeret)}</span> × <span class="num">${h_keret}</span> óra = <span class="result">${formatFt(keret_alap)}</span>`
                 ]
             });
             tuloraSumParts.push(formatFt(keret_alap));
@@ -593,10 +603,10 @@ function szamol(){
             type: 'income',
             info: makeInfo(
                 'Túlóra Áttekintése — Teljes Visszafejtés',
-                'A heti 40 órán felüli munkavégzés ellenértéke. Magyar jogszabály szerint <strong>havibéres dolgozónál</strong> a túlóra <strong>két részből áll</strong>: az "alap" (180-as órabér) és a "pótlék" (174-es órabér × 100%). Plusz extra pótlék jár éjszakai (+30%) és vasárnapi (+50%) túlórára.',
+                'A heti 40 órán felüli munkavégzés ellenértéke. Magyar jogszabály szerint <strong>havibéres dolgozónál</strong> a túlóra <strong>két részből áll</strong>: az "alap" (180-as órabér) és a "pótlék" (174-es órabér × 100%). Plusz extra pótlék jár éjszakai (+30%) és vasárnapi (+50%) túlórára. A negyedéves <strong>keret-elszámolás alaprésze külön, 168-as osztóval</strong> számolódik.',
                 null,
                 null,
-                'A 180-as osztó a havi teljes ledolgozott órák átlaga (havibéres alap), a 174-es az átlagos kötelező munkaóra. Mt. 143. § alapján.',
+                'A 180-as osztó a havi teljes ledolgozott órák átlaga (havibéres alap) a rendes havi túlórához, a 174-es az átlagos kötelező munkaóra a pótlékokhoz. A negyedéves keret-elszámolás alaprésze viszont a 168-as osztóval jár — ez valós bérpapír-adatból lett visszafejtve és megerősítve. Mt. 143. § alapján.',
                 makeSteps('Teljes túlóra-visszafejtés (minden tétel)', tuloraBlocks, {
                     label: 'Túlóra összesítve',
                     formula: tuloraSumParts.join(' + '),
@@ -765,16 +775,16 @@ function szamol(){
                 sub: true,
                 info: makeInfo(
                     'Negyedéves Keret Elszámolás — Részletesen',
-                    'A negyedéves munkaidőkeret-elszámolás végén kifizetett óraidő. Az alap (180-as órabér) és a <strong>+50% pótlék</strong> jár utána (Mt. 156. §).',
-                    `Alap: <strong>alapbér ÷ 180 × keret óra</strong><br>Pótlék: <strong>alapbér ÷ 174 × 50% × keret óra</strong>`,
+                    'A negyedéves munkaidőkeret-elszámolás végén kifizetett óraidő. Az alapja <strong>a rendes túlórától eltérő, 168-as osztóval</strong> számolódik, a pótlék pedig <strong>+50%</strong> (Mt. 156. §).',
+                    `Alap: <strong>alapbér ÷ 168 × keret óra</strong><br>Pótlék: <strong>alapbér ÷ 174 × 50% × keret óra</strong>`,
                     null,
-                    'A 4 havi (november-január, február-április, május-július, augusztus-október) keretek végén kerül elszámolásra.',
+                    'A 4 havi (november-január, február-április, május-július, augusztus-október) keretek végén kerül elszámolásra. A 168-as osztót valós bérpapír-adatból fejtettük vissza (Ft-pontosan egyezett) — ez eltér a rendes havi túlóra 180-as osztójától.',
                     makeSteps('Visszafejtés lépésről lépésre', [{
-                        title: `1. lépés: Keret alap (180-as órabér × óra)`,
+                        title: `1. lépés: Keret alap (168-as órabér × óra)`,
                         value: formatFt(keret_alap),
                         lines: [
-                            `<span class="num">${formatNum(alap)}</span> ÷ <span class="num">180</span> = <span class="result">${formatFt2(oraber180)}</span>/óra`,
-                            `<span class="result">${formatFt2(oraber180)}</span> × <span class="num">${h_keret}</span> óra = <span class="result">${formatFt(keret_alap)}</span>`
+                            `<span class="num">${formatNum(alap)}</span> ÷ <span class="num">168</span> = <span class="result">${formatFt2(oraberKeret)}</span>/óra`,
+                            `<span class="result">${formatFt2(oraberKeret)}</span> × <span class="num">${h_keret}</span> óra = <span class="result">${formatFt(keret_alap)}</span>`
                         ]
                     }, {
                         title: `2. lépés: Keret +50% pótlék`,
@@ -1013,7 +1023,7 @@ function szamol(){
     
     // ÚJ: minden adatot globálba mentünk, hogy a magyarázat modal el tudja érni
     window._calcData = {
-        alap, isFiatal, oraber174, oraber180,
+        alap, isFiatal, oraber174, oraber180, oraberKeret,
         h_m30, h_v50, p_m30, p_v50, ossz_potlek,
         h_sima, h_ejsz, h_vas, h_keret, ossz_t_ora,
         t_alap_resz, t_potlek_100, t_extra_30, t_extra_50,
@@ -1068,20 +1078,21 @@ function buildExplanation(d) {
         <p>De a HR ebből nem közvetlenül számol! Először <strong>órabért</strong> számolnak belőle. És itt jön egy érdekes magyar bérelszámolási furcsaság:</p>
         
         <div class="ex-callout">
-            <div class="ex-callout-title">⚠️ Két különböző órabér van!</div>
-            Ne ijedj meg, csak az átláthatóság miatt csinálták így. Az egyik az <strong>"alap" órabér</strong> (a 174-es), a másik a <strong>"havibéres" órabér</strong> (a 180-as). Minden tételnél vagy az egyiket, vagy a másikat használjuk — mindjárt látni fogod miért.
+            <div class="ex-callout-title">⚠️ Három különböző órabér van!</div>
+            Ne ijedj meg, csak az átláthatóság miatt csinálták így. Az egyik az <strong>"alap" órabér</strong> (a 174-es), a másik a <strong>"havibéres" órabér</strong> (a 180-as), a harmadik pedig a <strong>"keret-elszámolás" órabére</strong> (a 168-as, kizárólag a negyedéves keret alaprészéhez). Mindegyiknél más-más tételnél használjuk — mindjárt látni fogod miért.
         </div>
         
-        <p><strong>Miért 174 és 180?</strong> A 174-es osztó az <strong>átlagos havi munkaóra</strong>: 8 óra × 21,75 munkanap havonta. A 180-as pedig a havibéres elszámolás során használt teljes havi óraszám.</p>
+        <p><strong>Miért 174, 180 és 168?</strong> A 174-es osztó az <strong>átlagos havi munkaóra</strong>: 8 óra × 21,75 munkanap havonta. A 180-as a havibéres elszámolás során használt teljes havi óraszám. A 168-as pedig kifejezetten a negyedéves keret-elszámolás alaprészéhez tartozik.</p>
         
-        <p>Most pedig számoljuk ki a kettőt:</p>
+        <p>Most pedig számoljuk ki mindhármat:</p>
         
         <div class="ex-calc">
             <span class="ec-line">📐 174-es órabér: ${formatNum(d.alap)} ÷ 174 = <span class="ec-result">${formatFt2(d.oraber174)}/óra</span></span>
             <span class="ec-line">📐 180-as órabér: ${formatNum(d.alap)} ÷ 180 = <span class="ec-result">${formatFt2(d.oraber180)}/óra</span></span>
+            <span class="ec-line">📐 168-as órabér: ${formatNum(d.alap)} ÷ 168 = <span class="ec-result">${formatFt2(d.oraberKeret)}/óra</span></span>
         </div>
         
-        <p>Ezt a két számot fogod látni végig minden számításban. Jegyezd meg őket: <em>${formatFt2(d.oraber174)}</em> a 174-es, <em>${formatFt2(d.oraber180)}</em> a 180-as.</p>
+        <p>Ezt a három számot fogod látni végig minden számításban.</p>
         </div>
     </div>`;
     chapters.push(ch1);
@@ -1175,9 +1186,9 @@ function buildExplanation(d) {
         
         if (d.h_keret > 0) {
             ch3 += `<p><strong>Plusz: Negyedéves keret elszámolás</strong></p>
-            <p>Negyedévente egyszer a cég összegzi az addigi órákat és <em>${d.h_keret} óra</em> "keret-túlórát" számolt el. Ez ugyanúgy működik mint a sima túlóra, csak a pótlék itt +50%:</p>
+            <p>Negyedévente egyszer a cég összegzi az addigi órákat és <em>${d.h_keret} óra</em> "keret-túlórát" számolt el. Ez a rendes túlórától eltérően <strong>nem a 180-as, hanem a 168-as osztóval</strong> számolja az alaprészt, a pótlék pedig itt +50%:</p>
             <div class="ex-calc">
-                <span class="ec-line">📐 Keret alap: ${formatFt2(d.oraber180)} × ${d.h_keret}h = <span class="ec-result">${formatFt(d.keret_alap)}</span></span>
+                <span class="ec-line">📐 Keret alap: ${formatFt2(d.oraberKeret)} × ${d.h_keret}h = <span class="ec-result">${formatFt(d.keret_alap)}</span></span>
                 <span class="ec-line">📐 Keret +50%: ${formatFt2(d.oraber174)} × 50% × ${d.h_keret}h = <span class="ec-result">${formatFt(d.keret_potlek_50)}</span></span>
             </div>`;
         }
