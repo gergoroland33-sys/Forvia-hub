@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="hu">
 <head>
@@ -1247,6 +1248,215 @@ function exportImage() {
         alert('Hiba történt a kép exportálása közben. Kérlek próbáld újra.');
     });
 }
+</script>
+<!-- PREMIUM THEME STUDIO — kizárólag hozzáadott diagram- és felületstílusok -->
+<style>
+    /* A prémium téma CSAK a diagram vásznára vonatkozik. */
+    #myChart { transition: filter .42s ease; }
+    body[data-koh-theme="neon"] #myChart { filter: drop-shadow(0 10px 18px rgba(0,217,255,.22)); }
+    body[data-koh-theme="aurora"] #myChart { filter: drop-shadow(0 10px 17px rgba(20,184,166,.18)); }
+    body[data-koh-theme="solar"] #myChart { filter: drop-shadow(0 10px 17px rgba(249,115,22,.20)); }
+    body[data-koh-theme="royal"] #myChart { filter: drop-shadow(0 10px 18px rgba(124,58,237,.22)); }
+    body[data-koh-theme="arctic"] #myChart { filter: drop-shadow(0 10px 16px rgba(14,165,233,.16)); }
+    body[data-koh-theme="carbon"] #myChart { filter: drop-shadow(0 10px 18px rgba(245,158,11,.18)); }
+</style>
+<script>
+(function () {
+    /* A meglévő oldal-paletta rögzítése: a témaváltó nem színezheti át a felületet. */
+    const pagePalette = ['--c-good', '--c-warning', '--c-pass', '--c-fail', '--c-fpy', '--bg-color', '--card-bg', '--panel-bg', '--border-color', '--c-total']
+        .map(function (property) { return [property, getComputedStyle(document.documentElement).getPropertyValue(property)]; });
+
+    function restorePagePalette() {
+        const root = document.documentElement.style;
+        pagePalette.forEach(function (entry) { root.setProperty(entry[0], entry[1]); });
+    }
+
+    const premiumThemes = {
+        neon: {
+            name: '⚡ Neon Pulse', good:'#2df3a3', warn:'#ffd166', pass:'#00d9ff', fail:'#ff4d6d', line:'#fa3cff', casing:'rgba(250,60,255,.25)',
+            bg:'#070816', card:'#10132a', panel:'#0b0e20', border:'#29305d', text:'#edf6ff', muted:'#aab5e9', grid:'rgba(148,163,184,.16)', tooltip:'#080a1a', accentA:'#00d9ff', accentB:'#fa3cff', glow:'rgba(0,217,255,.22)', shadow:'rgba(0,0,0,.38)',
+            visual:{radius:14, border:1.3, category:.68, bar:.80, line:3.8, tension:.46, fill:true, point:4.4, dash:[2,5], gridDash:[4,5], casing:8}
+        },
+        aurora: {
+            name: '🌌 Aurora Glass', good:'#34d399', warn:'#fbbf24', pass:'#38bdf8', fail:'#fb7185', line:'#14b8a6', casing:'rgba(20,184,166,.22)',
+            bg:'#ecfdf5', card:'#ffffff', panel:'#f0fdfa', border:'#b7eadf', text:'#143b35', muted:'#4f7b72', grid:'rgba(20,184,166,.13)', tooltip:'#123b35', accentA:'#14b8a6', accentB:'#60a5fa', glow:'rgba(20,184,166,.19)', shadow:'rgba(15,118,110,.13)',
+            visual:{radius:11, border:1.5, category:.76, bar:.88, line:3.4, tension:.52, fill:true, point:4, dash:[5,4], gridDash:[2,4], casing:7}
+        },
+        solar: {
+            name: '🌅 Solar Ember', good:'#22c55e', warn:'#f59e0b', pass:'#fb7185', fail:'#dc2626', line:'#7c3aed', casing:'rgba(124,58,237,.20)',
+            bg:'#fff7ed', card:'#ffffff', panel:'#fffaf4', border:'#fed7aa', text:'#4a1d14', muted:'#9a5b45', grid:'rgba(249,115,22,.13)', tooltip:'#4a1d14', accentA:'#f97316', accentB:'#ec4899', glow:'rgba(249,115,22,.20)', shadow:'rgba(194,65,12,.14)',
+            visual:{radius:7, border:2, category:.82, bar:.93, line:3.1, tension:.28, fill:false, point:4.6, dash:[8,3], gridDash:[1,4], casing:6.5}
+        },
+        royal: {
+            name: '👑 Royal Atelier', good:'#10b981', warn:'#eab308', pass:'#6366f1', fail:'#ef4444', line:'#a855f7', casing:'rgba(88,28,135,.24)',
+            bg:'#f7f5ff', card:'#ffffff', panel:'#faf9ff', border:'#ddd6fe', text:'#2e1065', muted:'#6d5c9d', grid:'rgba(124,58,237,.12)', tooltip:'#2e1065', accentA:'#7c3aed', accentB:'#d4af37', glow:'rgba(124,58,237,.20)', shadow:'rgba(76,29,149,.15)',
+            visual:{radius:16, border:1.2, category:.64, bar:.76, line:4.2, tension:.48, fill:true, point:4.8, dash:[3,3], gridDash:[5,5], casing:9}
+        },
+        arctic: {
+            name: '❄️ Arctic Glass', good:'#0ea5e9', warn:'#fbbf24', pass:'#64748b', fail:'#e11d48', line:'#0284c7', casing:'rgba(2,132,199,.20)',
+            bg:'#f0f9ff', card:'#ffffff', panel:'#f8fcff', border:'#bae6fd', text:'#0c3852', muted:'#4c7188', grid:'rgba(14,165,233,.13)', tooltip:'#0c3852', accentA:'#0ea5e9', accentB:'#dbeafe', glow:'rgba(14,165,233,.18)', shadow:'rgba(2,132,199,.12)',
+            visual:{radius:18, border:1, category:.70, bar:.74, line:3.2, tension:.58, fill:true, point:4.2, dash:[1,3], gridDash:[3,6], casing:7}
+        },
+        carbon: {
+            name: '🥇 Carbon Gold', good:'#65d6a7', warn:'#fbbf24', pass:'#94a3b8', fail:'#fb7185', line:'#f59e0b', casing:'rgba(245,158,11,.28)',
+            bg:'#111827', card:'#182234', panel:'#131c2b', border:'#344155', text:'#eef2f7', muted:'#a5b4c6', grid:'rgba(226,232,240,.12)', tooltip:'#0b1220', accentA:'#f59e0b', accentB:'#475569', glow:'rgba(245,158,11,.16)', shadow:'rgba(0,0,0,.34)',
+            visual:{radius:3, border:1.6, category:.88, bar:.96, line:3.5, tension:.18, fill:false, point:3.8, dash:[10,4], gridDash:[6,4], casing:7.5}
+        }
+    };
+
+    Object.assign(CHART_THEMES.classic, {
+        muted:'#64748b', grid:'rgba(148,163,184,.18)', tooltip:'#1e293b', accentA:'#6366f1', accentB:'#a855f7', glow:'rgba(99,102,241,.19)', shadow:'rgba(30,41,59,.13)',
+        visual:{radius:8, border:1.2, category:.74, bar:.88, line:3.2, tension:.36, fill:true, point:4, dash:[6,4], gridDash:[4,4], casing:7}
+    });
+    Object.assign(CHART_THEMES.mono, {
+        muted:'#64748b', grid:'rgba(71,85,105,.17)', tooltip:'#111827', accentA:'#334155', accentB:'#94a3b8', glow:'rgba(51,65,85,.16)', shadow:'rgba(15,23,42,.12)',
+        visual:{radius:1, border:1.5, category:.84, bar:.92, line:3, tension:.12, fill:false, point:3.6, dash:[8,4], gridDash:[2,4], casing:6.5}
+    });
+    Object.assign(CHART_THEMES, premiumThemes);
+
+    function alpha(hex, opacity) {
+        if (!hex || hex.charAt(0) !== '#') return hex;
+        let raw = hex.slice(1);
+        if (raw.length === 3) raw = raw.split('').map(function (c) { return c + c; }).join('');
+        const r = parseInt(raw.slice(0,2), 16), g = parseInt(raw.slice(2,4), 16), b = parseInt(raw.slice(4,6), 16);
+        return 'rgba(' + r + ',' + g + ',' + b + ',' + opacity + ')';
+    }
+
+    function gradient(chart, top, bottom) {
+        const area = chart.chartArea;
+        if (!area) return top;
+        const fill = chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
+        fill.addColorStop(0, top);
+        fill.addColorStop(1, bottom || alpha(top, .54));
+        return fill;
+    }
+
+    /* Csak a myChart vásznán rajzol finom tematikus háttér- és fényréteget. */
+    Chart.register({
+        id: 'premiumChartFx',
+        beforeDraw: function (chart) {
+            if (!chart.canvas || chart.canvas.id !== 'myChart' || !chart.chartArea) return;
+            const theme = CHART_THEMES[currentTheme] || CHART_THEMES.classic;
+            const area = chart.chartArea;
+            const ctx = chart.ctx;
+            const glow = ctx.createLinearGradient(area.left, area.top, area.right, area.bottom);
+            glow.addColorStop(0, alpha(theme.accentA, .12));
+            glow.addColorStop(.48, alpha(theme.card, .04));
+            glow.addColorStop(1, alpha(theme.accentB, .10));
+            ctx.save();
+            ctx.fillStyle = glow;
+            ctx.fillRect(area.left, area.top, area.right - area.left, area.bottom - area.top);
+            ctx.strokeStyle = alpha(theme.line, .22);
+            ctx.lineWidth = 1;
+            ctx.strokeRect(area.left + .5, area.top + .5, area.right - area.left - 1, area.bottom - area.top - 1);
+            ctx.restore();
+        },
+        beforeDatasetDraw: function (chart, args) {
+            const dataset = chart.data.datasets[args.index];
+            if (!dataset || (!dataset.stack && dataset.yAxisID !== 'y1')) return;
+            const theme = CHART_THEMES[currentTheme] || CHART_THEMES.classic;
+            chart.ctx.save();
+            chart.ctx.shadowColor = dataset.yAxisID === 'y1' ? alpha(theme.line, .58) : alpha(theme.line, .18);
+            chart.ctx.shadowBlur = dataset.yAxisID === 'y1' ? 13 : 5;
+            chart.ctx.shadowOffsetY = dataset.yAxisID === 'y1' ? 0 : 2;
+            args.meta.$premiumFxSaved = true;
+        },
+        afterDatasetDraw: function (chart, args) {
+            if (args.meta.$premiumFxSaved) {
+                chart.ctx.restore();
+                args.meta.$premiumFxSaved = false;
+            }
+        }
+    });
+
+    function applyPremiumChartTheme() {
+        document.body.setAttribute('data-koh-theme', currentTheme);
+    }
+
+    function applyPremiumChartStyle() {
+        if (!myChart) return;
+        const chart = myChart;
+        const theme = CHART_THEMES[currentTheme] || CHART_THEMES.classic;
+        const v = theme.visual || CHART_THEMES.classic.visual;
+        const stacks = chart.data.datasets.filter(function (d) { return d.stack === 'S'; });
+        stacks.forEach(function (dataset) {
+            const base = dataset.label === 'Good' ? theme.good : (dataset.label === 'Warn' ? theme.warn : theme.pass);
+            dataset.backgroundColor = gradient(chart, alpha(base, .98), alpha(base, .50));
+            dataset.borderColor = alpha(base, .95);
+            dataset.borderWidth = v.border;
+            dataset.borderRadius = v.radius;
+            dataset.borderSkipped = false;
+        });
+        const casing = chart.data.datasets.find(function (d) { return d.label === '_fpyCasing'; });
+        const fpy = chart.data.datasets.find(function (d) { return d.yAxisID === 'y1' && d.label !== '_fpyCasing' && !String(d.label).startsWith('📁'); });
+        if (casing) {
+            casing.borderColor = alpha(theme.line, .22);
+            casing.borderWidth = v.casing;
+            casing.tension = v.tension;
+        }
+        if (fpy) {
+            fpy.borderColor = theme.line;
+            fpy.borderWidth = v.line;
+            fpy.tension = v.tension;
+            fpy.pointRadius = v.point;
+            fpy.pointHoverRadius = v.point + 3;
+            fpy.pointBackgroundColor = theme.card;
+            fpy.pointBorderColor = theme.line;
+            fpy.pointBorderWidth = 2.5;
+            fpy.backgroundColor = alpha(theme.line, .15);
+            fpy.fill = v.fill ? { target: 'origin', above: alpha(theme.line, .14) } : false;
+        }
+        chart.options.categoryPercentage = v.category;
+        chart.options.barPercentage = v.bar;
+        chart.options.animation = {
+            duration: currentTheme === 'neon' || currentTheme === 'royal' ? 820 : 620,
+            easing: currentTheme === 'solar' ? 'easeOutBack' : 'easeOutQuart'
+        };
+        chart.options.scales.x.ticks.color = theme.muted;
+        chart.options.scales.x.grid.display = currentTheme === 'arctic' || currentTheme === 'carbon';
+        chart.options.scales.x.grid.color = alpha(theme.line, .10);
+        chart.options.scales.x.grid.borderDash = currentTheme === 'carbon' ? [2, 5] : [1, 5];
+        chart.options.scales.y.ticks.color = theme.muted;
+        chart.options.scales.y.title.color = theme.muted;
+        chart.options.scales.y.grid.color = theme.grid;
+        chart.options.scales.y.grid.borderDash = v.gridDash;
+        chart.options.scales.y1.ticks.color = theme.line;
+        chart.options.scales.y1.title.color = theme.line;
+        chart.options.plugins.legend.labels.color = theme.text;
+        chart.options.plugins.legend.labels.pointStyle = v.radius > 12 ? 'rectRounded' : 'rect';
+        chart.options.plugins.legend.labels.padding = currentTheme === 'royal' ? 22 : 17;
+        chart.options.plugins.tooltip.backgroundColor = theme.tooltip;
+        chart.options.plugins.tooltip.titleColor = '#ffffff';
+        chart.options.plugins.tooltip.bodyColor = '#e2e8f0';
+        chart.options.plugins.tooltip.cornerRadius = v.radius + 4;
+        chart.options.plugins.tooltip.borderColor = alpha(theme.line, .55);
+        chart.options.plugins.tooltip.borderWidth = 1;
+        chart.update('none');
+    }
+
+    const baseDrawChart = drawChart;
+    drawChart = function () {
+        baseDrawChart();
+        requestAnimationFrame(applyPremiumChartStyle);
+    };
+
+    const baseChangeChartTheme = changeChartTheme;
+    changeChartTheme = function (key) {
+        baseChangeChartTheme(key);
+        restorePagePalette();
+        applyPremiumChartTheme();
+        requestAnimationFrame(applyPremiumChartStyle);
+    };
+
+    try {
+        const saved = localStorage.getItem('kohyoung_chart_theme');
+        if (saved && CHART_THEMES[saved]) currentTheme = saved;
+    } catch (e) { /* A téma az aktuális munkamenetben marad. */ }
+    populateThemeSelector();
+    restorePagePalette();
+    applyPremiumChartTheme();
+    if (Object.keys(dayStats).length > 0) drawChart();
+})();
 </script>
 </body>
 </html>
