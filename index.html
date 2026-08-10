@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="hu">
 <head>
@@ -2047,5 +2048,59 @@
         }
     })();
 </script>
+    <!-- HOME/FRISSÍTÉS DINAMIKUS VEZÉRLŐ: kizárólag hozzáadott funkció -->
+    <style>
+        .refresh-fab.home-fab {
+            background: linear-gradient(135deg, rgba(255, 68, 84, 0.20), rgba(190, 24, 49, 0.42));
+            border: 1px solid rgba(255, 95, 110, 0.82);
+            box-shadow: 0 0 0 3px rgba(255, 55, 72, 0.10), 0 5px 16px rgba(190, 24, 49, 0.38);
+        }
+        .refresh-fab.home-fab:hover {
+            background: linear-gradient(135deg, rgba(255, 91, 105, 0.32), rgba(225, 29, 72, 0.56));
+            box-shadow: 0 0 0 4px rgba(255, 55, 72, 0.14), 0 7px 20px rgba(190, 24, 49, 0.48);
+        }
+        .refresh-fab.home-fab span {
+            color: #ff4d5e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .refresh-fab.home-fab svg {
+            width: 17px;
+            height: 17px;
+            filter: drop-shadow(0 1px 3px rgba(255, 45, 65, 0.56));
+        }
+    </style>
+    <script>
+        (function () {
+            const actionFab = document.querySelector('.refresh-fab');
+            if (!actionFab) return;
+
+            const homeIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1Z"/></svg>';
+
+            function syncActionFab() {
+                const inModule = document.body.classList.contains('module-active');
+                actionFab.classList.toggle('home-fab', inModule);
+                actionFab.querySelector('span').innerHTML = inModule ? homeIcon : '↻';
+                actionFab.setAttribute('aria-label', inModule ? 'Kezdőlap' : 'Frissítés');
+                actionFab.title = inModule ? 'Kezdőlap' : 'Frissítés';
+            }
+
+            actionFab.addEventListener('click', function (event) {
+                if (!document.body.classList.contains('module-active')) return;
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                showHome(actionFab);
+            }, true);
+
+            new MutationObserver(syncActionFab).observe(document.body, {
+                attributes: true,
+                attributeFilter: ['class']
+            });
+
+            syncActionFab();
+        })();
+    </script>
 </body>
 </html>
+
