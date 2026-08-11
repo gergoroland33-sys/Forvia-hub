@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="hu">
 <head>
@@ -406,7 +407,7 @@
 
                 <div>
                     <h4 class="text-blue-400 font-black text-sm uppercase mb-1 flex items-center gap-2"><i class="fas fa-keyboard"></i> Billentyűzet</h4>
-                    <p>Egy cellában <b>Enter</b>-rel kilépsz belőle. A <b>nyílgombokkal</b> (fel/le/jobbra/balra) közvetlenül a szomszédos cellákra ugorhatsz, így gyorsan, egérhasználat nélkül tudsz gépelni a táblázatban.</p>
+                    <p>Egy cellában <b>Enter</b>-rel kilépsz belőle. A cellákat egérrel vagy érintéssel választhatod ki, így a kívánt nap adata közvetlenül szerkeszthető.</p>
                 </div>
 
                 <div>
@@ -421,7 +422,7 @@
 
                 <div>
                     <h4 class="text-blue-400 font-black text-sm uppercase mb-1 flex items-center gap-2"><i class="fas fa-filter"></i> Jelölt / Cserenap szűrők</h4>
-                    <p>A <b>Jelölt</b> gomb az adott év összes megjegyzését, a <b>Cserenap</b> gomb az összes cserenap-jóváírást listázza ki időrendben. Egy találatra kattintva a rendszer automatikusan a táblázat nézetbe ugrik, és pár másodpercig pirosan villogtatja az érintett cellát.</p>
+                    <p>A <b>Jelölt</b> gomb az adott év összes megjegyzését, a <b>Cserenap</b> gomb az összes cserenap-jóváírást listázza ki időrendben. Egy találatra kattintva a rendszer automatikusan a táblázat nézetbe ugrik, az érintett cellát erős, piros pulzálással és <b>KIVÁLASZTVA</b> jelzéssel kiemeli. A jelölés addig látható, amíg másik helyre nem kattintasz.</p>
                 </div>
 
                 <div>
@@ -1556,6 +1557,225 @@
                 document.getElementById('sync').classList.replace('bg-emerald-500/10', 'bg-red-500/10');
             });
         };
+    </script>
+    <!-- CÉLCELLA KIJELÖLÉS ÉS BIZTOS NYÍLBILLENTYŰ-NAVIGÁCIÓ — kizárólag hozzáadott fejlesztés -->
+    <style>
+        @keyframes staffpro-target-beacon {
+            0%, 100% {
+                outline-color: #ff172b;
+                box-shadow: 0 0 0 3px rgba(255, 23, 43, 0.96), 0 0 20px 7px rgba(255, 23, 43, 0.72), inset 0 0 18px rgba(255, 23, 43, 0.48);
+                background-color: rgba(127, 5, 17, 0.78) !important;
+            }
+            50% {
+                outline-color: #ffd3d7;
+                box-shadow: 0 0 0 5px rgba(255, 23, 43, 1), 0 0 34px 12px rgba(255, 23, 43, 0.94), inset 0 0 24px rgba(255, 23, 43, 0.72);
+                background-color: rgba(220, 18, 38, 0.94) !important;
+            }
+        }
+        .staffpro-persistent-target {
+            position: relative !important;
+            z-index: 90 !important;
+            isolation: isolate;
+            outline: 3px solid #ff172b !important;
+            outline-offset: -3px;
+            animation: staffpro-target-beacon 0.85s ease-in-out infinite !important;
+        }
+        .staffpro-persistent-target::after {
+            content: 'KIVÁLASZTVA';
+            position: absolute;
+            top: -21px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            padding: 3px 7px;
+            border: 1px solid #ffd3d7;
+            border-radius: 999px;
+            background: #e30619;
+            color: #fff;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.65);
+            font: 900 8px/1 Arial, sans-serif;
+            letter-spacing: .08em;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .staffpro-persistent-target .input-cell {
+            color: #fff !important;
+            font-weight: 900 !important;
+            caret-color: #fff;
+        }
+    </style>
+    <script>
+        (function () {
+            let persistentTarget = null;
+
+            function clearPersistentTarget() {
+                if (!persistentTarget) return;
+                persistentTarget.cell.classList.remove('staffpro-persistent-target');
+                persistentTarget.input.classList.remove('staffpro-persistent-target');
+                persistentTarget = null;
+            }
+
+            function keepCellVisible(input) {
+                const cell = input.closest('td');
+                const row = input.closest('tr');
+                const container = document.querySelector('.table-container');
+                if (!cell || !row || !container) return;
+
+                const cellLeft = cell.offsetLeft;
+                const cellRight = cellLeft + cell.offsetWidth;
+                const visibleLeft = container.scrollLeft + 148;
+                const visibleRight = container.scrollLeft + container.clientWidth;
+                const rowTop = row.offsetTop;
+                const rowBottom = rowTop + row.offsetHeight;
+
+                let nextLeft = container.scrollLeft;
+                let nextTop = container.scrollTop;
+                if (cellLeft < visibleLeft) nextLeft = Math.max(0, cellLeft - 168);
+                if (cellRight > visibleRight) nextLeft = Math.max(0, cellRight - container.clientWidth + 24);
+                if (rowTop < container.scrollTop + 42) nextTop = Math.max(0, rowTop - 60);
+                if (rowBottom > container.scrollTop + container.clientHeight) nextTop = Math.max(0, rowBottom - container.clientHeight + 38);
+                container.scrollTo({ left: nextLeft, top: nextTop, behavior: 'smooth' });
+            }
+
+            function focusCell(input) {
+                if (!input) return;
+                input.focus({ preventScroll: true });
+                if (input.select) input.select();
+                keepCellVisible(input);
+            }
+
+            function activatePersistentTarget(empId, dateStr, retry) {
+                const day = parseInt(dateStr.split('-')[2], 10);
+                const row = document.querySelector('tr[data-id="' + empId + '"]');
+                const cell = row && row.cells[day + 2];
+                const input = cell && cell.querySelector('.input-cell');
+                if (!input && retry < 14) {
+                    setTimeout(function () { activatePersistentTarget(empId, dateStr, retry + 1); }, 80);
+                    return;
+                }
+                if (!input) return;
+                clearPersistentTarget();
+                cell.classList.add('staffpro-persistent-target');
+                persistentTarget = { cell: cell, input: input };
+                focusCell(input);
+            }
+
+            const originalJumpToCell = window.jumpToCell;
+            if (typeof originalJumpToCell === 'function') {
+                window.jumpToCell = function (empId, dateStr) {
+                    originalJumpToCell(empId, dateStr);
+                    setTimeout(function () { activatePersistentTarget(empId, dateStr, 0); }, 190);
+                };
+            }
+
+            document.addEventListener('pointerdown', function (event) {
+                if (persistentTarget && !persistentTarget.cell.contains(event.target)) clearPersistentTarget();
+            }, true);
+
+            document.addEventListener('keydown', function (event) {
+                const input = event.target;
+                if (!input || !input.classList || !input.classList.contains('input-cell')) return;
+                if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+
+                event.preventDefault();
+                event.stopImmediatePropagation();
+
+                const cell = input.closest('td');
+                const row = input.closest('tr');
+                if (!cell || !row) return;
+                let targetCell = null;
+                if (event.key === 'ArrowLeft') targetCell = cell.previousElementSibling;
+                if (event.key === 'ArrowRight') targetCell = cell.nextElementSibling;
+                if (event.key === 'ArrowUp' && row.previousElementSibling) targetCell = row.previousElementSibling.cells[cell.cellIndex];
+                if (event.key === 'ArrowDown' && row.nextElementSibling) targetCell = row.nextElementSibling.cells[cell.cellIndex];
+
+                const targetInput = targetCell && targetCell.querySelector('.input-cell');
+                if (targetInput) focusCell(targetInput);
+            }, true);
+        })();
+    </script>
+    <!-- NYÍLBILLENTYŰ-NAVIGÁCIÓ V2 — window-szintű elsőbbség a görgetés teljes letiltásához -->
+    <script>
+        (function () {
+            let lastMatrixInput = null;
+            const arrowKeys = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
+
+            function isDayInput(element) {
+                return !!(element && element.classList && element.classList.contains('input-cell') && !element.classList.contains('quota-input'));
+            }
+
+            function rememberMatrixInput(element) {
+                if (isDayInput(element)) lastMatrixInput = element;
+            }
+
+            function revealAndFocus(input) {
+                if (!input) return;
+                lastMatrixInput = input;
+                try {
+                    input.focus({ preventScroll: true });
+                } catch (error) {
+                    input.focus();
+                }
+                if (input.select) input.select();
+
+                const cell = input.closest('td');
+                const row = input.closest('tr');
+                const container = document.querySelector('.table-container');
+                if (!cell || !row || !container) return;
+
+                const leftEdge = container.scrollLeft + 150;
+                const rightEdge = container.scrollLeft + container.clientWidth;
+                let left = container.scrollLeft;
+                let top = container.scrollTop;
+                if (cell.offsetLeft < leftEdge) left = Math.max(0, cell.offsetLeft - 170);
+                if (cell.offsetLeft + cell.offsetWidth > rightEdge) left = Math.max(0, cell.offsetLeft + cell.offsetWidth - container.clientWidth + 24);
+                if (row.offsetTop < container.scrollTop + 42) top = Math.max(0, row.offsetTop - 60);
+                if (row.offsetTop + row.offsetHeight > container.scrollTop + container.clientHeight) top = Math.max(0, row.offsetTop + row.offsetHeight - container.clientHeight + 38);
+                container.scrollTo({ left: left, top: top, behavior: 'smooth' });
+            }
+
+            function nextInput(current, key) {
+                const cell = current.closest('td');
+                const row = current.closest('tr');
+                const table = current.closest('#mainTable');
+                if (!cell || !row || !table) return null;
+
+                if (key === 'ArrowLeft') return cell.previousElementSibling && cell.previousElementSibling.querySelector('.input-cell:not(.quota-input)');
+                if (key === 'ArrowRight') return cell.nextElementSibling && cell.nextElementSibling.querySelector('.input-cell:not(.quota-input)');
+
+                const rows = Array.from(table.tBodies[0].rows).filter(function (candidate) {
+                    return candidate.querySelector('.input-cell:not(.quota-input)');
+                });
+                const rowIndex = rows.indexOf(row);
+                const nextRow = key === 'ArrowUp' ? rows[rowIndex - 1] : rows[rowIndex + 1];
+                return nextRow && nextRow.cells[cell.cellIndex] && nextRow.cells[cell.cellIndex].querySelector('.input-cell:not(.quota-input)');
+            }
+
+            window.addEventListener('focusin', function (event) {
+                rememberMatrixInput(event.target);
+            }, true);
+
+            window.addEventListener('pointerdown', function (event) {
+                const input = event.target && event.target.closest ? event.target.closest('.input-cell') : null;
+                rememberMatrixInput(input);
+            }, true);
+
+            window.addEventListener('keydown', function (event) {
+                if (!arrowKeys.has(event.key)) return;
+
+                const directInput = event.target && event.target.closest ? event.target.closest('.input-cell') : null;
+                const activeElement = document.activeElement;
+                const typingElsewhere = activeElement && activeElement.matches && activeElement.matches('input:not(.input-cell), textarea, [contenteditable="true"]');
+                if (typingElsewhere) return;
+                const activeInput = isDayInput(directInput) ? directInput : (isDayInput(document.activeElement) ? document.activeElement : lastMatrixInput);
+                if (!isDayInput(activeInput) || !activeInput.isConnected) return;
+
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                const destination = nextInput(activeInput, event.key);
+                if (destination) revealAndFocus(destination);
+            }, true);
+        })();
     </script>
 </body>
 </html>
