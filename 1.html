@@ -576,6 +576,41 @@ input.suggestions-active {
     /* Checkbox: Világosabb keret */
     .checkbox { width: 14px; height: 14px; border: 1px solid #64748b; border-radius: 3px; margin: 0 auto; background: white !important; }
 }
+/* --- 2026 PRÉMIUM IGÉNYKALKULÁCIÓ – KIEGÉSZÍTÉS --- */
+#modelModal .modal-content { max-width: 640px; }
+.quantity-dialog { max-width:380px; padding:20px; box-sizing:border-box; }
+.quantity-dialog-label { display:block; margin:3px 0 10px; color:#cbd5e1; font-size:.9rem; line-height:1.45; }
+.quantity-dialog input { text-align:left; padding:12px 15px; font-family:inherit; }
+.quantity-dialog .demand-btn { width:100%; margin-top:14px; }
+.demand-toolbar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 15px; border-bottom:1px solid var(--border); background:rgba(15,23,42,.52); }
+.demand-hint { color:#94a3b8; font-size:.72rem; line-height:1.35; }
+.demand-summary { display:none; margin:0 15px 4px; padding:12px 14px; border:1px solid rgba(59,130,246,.35); border-radius:10px; background:linear-gradient(120deg,rgba(37,99,235,.18),rgba(16,185,129,.13)); }
+.demand-summary.visible { display:block; }
+.demand-summary-title { color:#bfdbfe; font-weight:800; font-size:.78rem; letter-spacing:.06em; text-transform:uppercase; }
+.demand-summary-value { margin-top:3px; color:#fff; font-family:monospace; font-size:1rem; font-weight:800; }
+.demand-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.demand-btn { appearance:none; border:1px solid rgba(255,255,255,.12); border-radius:8px; padding:8px 10px; cursor:pointer; color:#fff; font-weight:800; font-size:.72rem; letter-spacing:.02em; box-shadow:0 3px 0 rgba(0,0,0,.25),0 7px 15px rgba(0,0,0,.18); transition:transform .15s ease,filter .15s ease; }
+.demand-btn:hover { filter:brightness(1.12); transform:translateY(-1px); }
+.demand-btn:active { transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.25); }
+.demand-btn.primary { background:linear-gradient(135deg,#2563eb,#4f46e5); }
+.demand-btn.print { background:linear-gradient(135deg,#059669,#10b981); }
+.demand-btn.compact { padding:7px 9px; font-size:.68rem; }
+.m-card.calculable { cursor:pointer; transition:border-color .16s ease,transform .16s ease,background .16s ease; }
+.m-card.calculable:hover { border-color:rgba(96,165,250,.65); background:#172554; transform:translateY(-1px); }
+.m-card .m-demand { display:none; margin-top:3px; font-size:.72rem; color:#86efac; font-weight:800; }
+.m-card.has-demand .m-demand { display:block; }
+@media print {
+  #printArea.demand-print .demand-print-sheet { display:block; color:#0f172a; }
+  #printArea.demand-print .demand-print-sheet * { color:#0f172a !important; }
+  #printArea.demand-print .demand-print-head { display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid #2563eb; padding-bottom:5mm; margin-bottom:4mm; }
+  #printArea.demand-print h1 { margin:0; font-size:18pt; color:#1d4ed8 !important; }
+  #printArea.demand-print .demand-print-meta { font-size:9pt; text-align:right; }
+  #printArea.demand-print .demand-print-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:3mm; }
+  #printArea.demand-print .demand-print-item { border:1px solid #bfdbfe; border-left:4px solid #2563eb; background:#eff6ff !important; border-radius:3mm; padding:3mm 4mm; break-inside:avoid; }
+  #printArea.demand-print .demand-print-code { font-family:monospace !important; font-size:10pt; font-weight:800; }
+  #printArea.demand-print .demand-print-count { margin-top:1mm; color:#047857 !important; font-size:13pt; font-weight:900; }
+}
+@media screen and (max-width: 1024px) { .demand-toolbar { align-items:flex-start; flex-direction:column; } .demand-actions { width:100%; } .demand-btn { flex:1; } }
 </style>
 </head>
 <body>
@@ -1245,6 +1280,133 @@ function backspaceKey() {
     inp.classList.remove('search-ready');
     triggerSearch();
 }
+
+/* --- IGÉNYKALKULÁCIÓ: az eredeti kereső és setup funkciók érintetlenek maradnak. --- */
+let activeDemandModel = '';
+let activeDemandParts = [];
+let activeDemandQuantity = 0;
+
+function demandNumber(value) {
+    const parsed = Number(String(value || '0').replace(',', '.').replace(/[^0-9.\-]/g, ''));
+    return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function escapeDemandHtml(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[char]);
+}
+
+function getDemandParts(modelName) {
+    const grouped = new Map();
+    ultetes.filter(r => r[2] && r[2].toUpperCase() === modelName.toUpperCase()).forEach(r => {
+        const code = (r[0] || '').toUpperCase().trim();
+        if (!code) return;
+        const current = grouped.get(code) || { code, perPanel: 0, sides: new Set() };
+        current.perPanel += demandNumber(r[3]);
+        if (r[1]) current.sides.add(String(r[1]).toUpperCase());
+        grouped.set(code, current);
+    });
+    return Array.from(grouped.values()).sort((a, b) => a.code.localeCompare(b.code, 'hu'));
+}
+
+function ensureDemandToolbar() {
+    const list = document.getElementById('modalList');
+    if (!document.getElementById('demandToolbar')) {
+        list.insertAdjacentHTML('beforebegin', `
+          <div class="demand-toolbar" id="demandToolbar">
+            <div class="demand-hint">A cikkszámok ABC sorrendben vannak. Kattints egy cikkszámra az egyedi igényhez.</div>
+            <div class="demand-actions">
+              <button class="demand-btn primary compact" id="demandAllBtn" type="button">TELJES LISTA</button>
+              <button class="demand-btn print compact" id="demandPrintBtn" type="button" style="display:none">A4 NYOMTATÁS</button>
+            </div>
+          </div>
+          <div class="demand-summary" id="demandSummary"></div>`);
+    }
+    document.getElementById('demandAllBtn').onclick = () => askDemandQuantity('all');
+    document.getElementById('demandPrintBtn').onclick = printDemandSheet;
+}
+
+function askDemandQuantity(targetCode) {
+    const isAll = targetCode === 'all';
+    const subject = isAll ? `a(z) ${activeDemandModel} teljes cikkszám-listájához` : `a(z) ${targetCode} cikkszámhoz`;
+    let dialog = document.getElementById('demandQuantityModal');
+    if (!dialog) {
+        dialog = document.createElement('div');
+        dialog.id = 'demandQuantityModal';
+        dialog.className = 'modal-overlay';
+        dialog.innerHTML = `<div class="modal-content quantity-dialog"><div class="modal-header" style="margin:-20px -20px 16px"><div class="modal-title-wrap"><span class="modal-title">GYÁRTÁSI MENNYISÉG</span><span class="modal-subtitle">alkatrészigény kalkuláció</span></div><div class="modal-close">✕</div></div><label class="quantity-dialog-label"></label><input id="demandQuantityInput" type="number" min="1" step="1" inputmode="numeric"><button class="demand-btn primary" type="button">IGÉNY KALKULÁLÁSA</button></div>`;
+        document.body.appendChild(dialog);
+        dialog.addEventListener('click', event => { if (event.target === dialog || event.target.classList.contains('modal-close')) dialog.style.display = 'none'; });
+    }
+    dialog.querySelector('.quantity-dialog-label').textContent = `Mennyi panelt szeretnél gyártani ${subject}?`;
+    const input = dialog.querySelector('#demandQuantityInput');
+    input.value = activeDemandQuantity || 1;
+    dialog.querySelector('.demand-btn').onclick = () => {
+        const quantity = Math.floor(demandNumber(input.value));
+        if (!quantity || quantity < 1) { input.focus(); return; }
+        activeDemandQuantity = quantity;
+        dialog.style.display = 'none';
+        renderDemandCalculation(targetCode);
+    };
+    dialog.style.display = 'flex';
+    setTimeout(() => { input.focus(); input.select(); }, 20);
+}
+
+function renderDemandCalculation(targetCode) {
+    const allMode = targetCode === 'all';
+    document.querySelectorAll('#modalList .m-card').forEach(card => card.classList.remove('has-demand'));
+    const parts = allMode ? activeDemandParts : activeDemandParts.filter(part => part.code === targetCode);
+    parts.forEach(part => {
+        const card = Array.from(document.querySelectorAll('#modalList .m-card')).find(item => item.dataset.demandCode === part.code);
+        if (card) {
+            card.classList.add('has-demand');
+            card.querySelector('.m-demand').textContent = `${(part.perPanel * activeDemandQuantity).toLocaleString('hu-HU')} DB igény / ${activeDemandQuantity.toLocaleString('hu-HU')} panel`;
+        }
+    });
+    const total = parts.reduce((sum, part) => sum + (part.perPanel * activeDemandQuantity), 0);
+    const summary = document.getElementById('demandSummary');
+    summary.classList.add('visible');
+    summary.innerHTML = `<div class="demand-summary-title">${allMode ? 'Teljes alkatrészigény' : 'Cikkszám igénye'}</div><div class="demand-summary-value">${activeDemandQuantity.toLocaleString('hu-HU')} panel · ${parts.length} cikkszám · ${total.toLocaleString('hu-HU')} DB összesen</div>`;
+    document.getElementById('demandPrintBtn').style.display = allMode ? 'inline-block' : 'none';
+}
+
+function printDemandSheet() {
+    if (!activeDemandQuantity) { askDemandQuantity('all'); return; }
+    const items = activeDemandParts.map(part => `
+      <div class="demand-print-item"><div class="demand-print-code">${escapeDemandHtml(part.code)}</div><div class="demand-print-count">${(part.perPanel * activeDemandQuantity).toLocaleString('hu-HU')} DB</div><div>Beültetés / panel: ${part.perPanel.toLocaleString('hu-HU')} DB</div></div>`).join('');
+    document.getElementById('printArea').className = 'demand-print';
+    document.getElementById('printArea').innerHTML = `<div class="demand-print-sheet"><div class="demand-print-head"><div><h1>ALKATRÉSZIGÉNY</h1><div>Modell: <strong>${escapeDemandHtml(activeDemandModel)}</strong></div></div><div class="demand-print-meta"><strong>${activeDemandQuantity.toLocaleString('hu-HU')} panel gyártásához</strong><br>${new Date().toLocaleDateString('hu-HU')}</div></div><div class="demand-print-grid">${items}</div></div>`;
+    window.print();
+}
+
+window.openModelModal = function(modelName) {
+    if (typeof provideFeedback === 'function') provideFeedback();
+    activeDemandModel = modelName;
+    activeDemandParts = getDemandParts(modelName);
+    activeDemandQuantity = 0;
+    const modal = document.getElementById('modelModal');
+    modal.classList.add('model-demand-modal');
+    document.getElementById('modalModelName').innerText = modelName;
+    ensureDemandToolbar();
+    const summary = document.getElementById('demandSummary');
+    summary.classList.remove('visible'); summary.innerHTML = '';
+    document.getElementById('demandPrintBtn').style.display = 'none';
+    const list = document.getElementById('modalList');
+    list.innerHTML = '';
+    activeDemandParts.forEach(part => {
+        const card = document.createElement('div');
+        card.className = 'm-card calculable';
+        card.dataset.demandCode = part.code;
+        const sides = Array.from(part.sides).sort().join(' + ') || 'N/A';
+        card.innerHTML = `<div class="m-card-left"><span class="m-cikk"></span><span class="m-oldal unknown"></span><span class="m-demand"></span></div><div class="m-db"></div>`;
+        card.querySelector('.m-cikk').textContent = part.code;
+        card.querySelector('.m-oldal').textContent = sides;
+        card.querySelector('.m-db').innerHTML = `${part.perPanel.toLocaleString('hu-HU')}<span> DB / PANEL</span>`;
+        card.onclick = () => askDemandQuantity(part.code);
+        list.appendChild(card);
+    });
+    if (!activeDemandParts.length) list.innerHTML = '<div style="text-align:center; color:#94a3b8; margin-top:20px;">Nincs elérhető adat.</div>';
+    modal.style.display = 'flex';
+};
 
 function triggerSearch() {
     const inp = document.getElementById('keres');
