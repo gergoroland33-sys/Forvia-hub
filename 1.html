@@ -629,6 +629,25 @@ input.suggestions-active {
 .bank-position-row .d-label { color:#fbbf24; font-weight:800; }
 .bank-position-row .d-value { color:#fef3c7; background:rgba(217,119,6,.15); border:1px solid rgba(251,191,36,.24); border-radius:5px; padding:2px 7px; font-family:monospace; font-weight:800; }
 @media screen and (max-width:1024px) { .tips-btn { margin-left:8px; padding:4px 8px; font-size:.62rem; } .bank-machine-row .d-value,.bank-position-row .d-value { padding:1px 5px; } }
+/* --- KOMPAKT A4 ALKATRÉSZIGÉNY NYOMTATÁS – LEVÁGÁSMENTES FINOMHANGOLÁS --- */
+@media print {
+  @page { size:A4 portrait; margin:6mm; }
+  #printArea.demand-print { width:100% !important; max-width:100% !important; overflow:visible !important; }
+  #printArea.demand-print .demand-print-sheet { width:100%; max-width:100%; box-sizing:border-box; }
+  #printArea.demand-print .demand-print-head { align-items:center; padding-bottom:3.2mm; margin-bottom:3mm; }
+  #printArea.demand-print h1 { font-size:15pt; line-height:1.05; }
+  #printArea.demand-print .demand-print-meta { font-size:8pt; line-height:1.35; }
+  #printArea.demand-print .demand-print-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:2.2mm; align-items:stretch; }
+  #printArea.demand-print .demand-print-item { min-width:0; box-sizing:border-box; border-left-width:3px; border-radius:2.2mm; padding:2.1mm 2.3mm; text-align:center; overflow:hidden; break-inside:avoid; page-break-inside:avoid; }
+  #printArea.demand-print .demand-print-code { font-size:8.5pt; line-height:1.12; overflow-wrap:anywhere; word-break:break-word; }
+  #printArea.demand-print .demand-print-count { margin-top:.8mm; font-size:10.5pt; line-height:1.1; white-space:nowrap; }
+  #printArea.demand-print .demand-print-item div:last-child { margin-top:.6mm; font-size:7pt; line-height:1.1; white-space:nowrap; }
+  #printArea.demand-print.demand-print-dense .demand-print-grid { gap:1.6mm; }
+  #printArea.demand-print.demand-print-dense .demand-print-item { padding:1.55mm 1.8mm; }
+  #printArea.demand-print.demand-print-dense .demand-print-code { font-size:7.5pt; }
+  #printArea.demand-print.demand-print-dense .demand-print-count { font-size:9.5pt; }
+  #printArea.demand-print.demand-print-dense .demand-print-item div:last-child { font-size:6.4pt; }
+}
 </style>
 </head>
 <body>
@@ -1391,7 +1410,7 @@ function printDemandSheet() {
     if (!activeDemandQuantity) { askDemandQuantity('all'); return; }
     const items = activeDemandParts.map(part => `
       <div class="demand-print-item"><div class="demand-print-code">${escapeDemandHtml(part.code)}</div><div class="demand-print-count">${(part.perPanel * activeDemandQuantity).toLocaleString('hu-HU')} DB</div><div>Beültetés / panel: ${part.perPanel.toLocaleString('hu-HU')} DB</div></div>`).join('');
-    document.getElementById('printArea').className = 'demand-print';
+    document.getElementById('printArea').className = `demand-print ${activeDemandParts.length > 42 ? 'demand-print-dense' : ''}`;
     document.getElementById('printArea').innerHTML = `<div class="demand-print-sheet"><div class="demand-print-head"><div><h1>ALKATRÉSZIGÉNY</h1><div>Modell: <strong>${escapeDemandHtml(activeDemandModel)}</strong></div></div><div class="demand-print-meta"><strong>${activeDemandQuantity.toLocaleString('hu-HU')} panel gyártásához</strong><br>${new Date().toLocaleDateString('hu-HU')}</div></div><div class="demand-print-grid">${items}</div></div>`;
     window.print();
 }
