@@ -1556,17 +1556,18 @@ const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/153774798557912276
         lastEvent = { key: eventKey, at: now };
 
         const payload = {
-            username: 'Forvia Hub figyelő',
+            username: 'Forvia Terminal napló',
             embeds: [{
-                title: `📌 ${cleanText(action, 80)}`,
-                color: 0x2563eb,
+                title: '🔔 FORVIA TERMINÁL – ÚJ MŰVELET',
+                description: `**Mi történt?** ${cleanText(action, 80)}\n**Mivel?** ${cleanText(detail, 180) || 'Nincs további adat'}`,
+                color: 0x10b981,
                 fields: [
-                    { name: 'Részlet', value: cleanText(detail, 180) || '—', inline: false },
-                    { name: 'Időpont', value: new Date().toLocaleString('hu-HU'), inline: false },
-                    { name: 'Eszköz', value: `${getDevice()} / ${getBrowser()}`, inline: true },
-                    { name: 'Munkamenet', value: `#${getSessionId()}`, inline: true }
+                    { name: 'Mikor?', value: new Date().toLocaleString('hu-HU'), inline: false },
+                    { name: 'Eszköz', value: getDevice(), inline: true },
+                    { name: 'Böngésző', value: getBrowser(), inline: true },
+                    { name: 'Névtelen munkamenet', value: `#${getSessionId()}`, inline: false }
                 ],
-                footer: { text: 'Forvia Terminal eseménynapló' }
+                footer: { text: 'Forvia Terminal • automatikus eseményértesítés' }
             }]
         };
 
