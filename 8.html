@@ -420,6 +420,11 @@
                 </div>
 
                 <div>
+                    <h4 class="text-blue-400 font-black text-sm uppercase mb-1 flex items-center gap-2"><i class="fas fa-print"></i> Összes személyes adatlap nyomtatása</h4>
+                    <p>A kártyák nézet tetején lévő <b>"Összes adatlap nyomtatása"</b> gomb először egy névlistát nyit meg. Itt kijelölheted a kívánt dolgozókat, majd az adatlapjaik egyetlen nyomtatási feladatban, külön oldalakon készülnek el.</p>
+                </div>
+
+                <div>
                     <h4 class="text-blue-400 font-black text-sm uppercase mb-1 flex items-center gap-2"><i class="fas fa-filter"></i> Jelölt / Cserenap szűrők</h4>
                     <p>A <b>Jelölt</b> gomb az adott év összes megjegyzését, a <b>Cserenap</b> gomb az összes cserenap-jóváírást listázza ki időrendben. Egy találatra kattintva a rendszer automatikusan a táblázat nézetbe ugrik, az érintett cellát erős, piros pulzálással és <b>KIVÁLASZTVA</b> jelzéssel kiemeli. A jelölés addig látható, amíg másik helyre nem kattintasz.</p>
                 </div>
@@ -853,7 +858,7 @@
             return totals;
         }
 
-        function printA4(id) {
+        function printA4(id, shouldPrint = true) {
             const currentYear = date.getFullYear();
             const emp = employees.find(x => x.id == id);
             if(!emp) { alert('A dolgozó adatai nem találhatók.'); return; }
@@ -938,7 +943,51 @@
                 const detailCell = badge.parentElement && badge.parentElement.nextElementSibling;
                 if(detailCell) { detailCell.style.color = categoryColour; detailCell.style.fontWeight = '900'; }
             });
+            if(shouldPrint) window.print();
+            return personalPrintArea.innerHTML;
+        }
+
+        function printAllPersonalA4(selectedIds = null) {
+            const selectedEmployees = Array.isArray(selectedIds) ? employees.filter(emp => selectedIds.includes(String(emp.id))) : employees;
+            if(selectedEmployees.length === 0) { alert('Nincs kiválasztott dolgozó a nyomtatáshoz!'); return; }
+            const printArea = document.getElementById('print-area');
+            const pages = selectedEmployees.map((emp, index) => {
+                const pageContent = printA4(emp.id, false);
+                const pageBreak = index < selectedEmployees.length - 1 ? 'break-after:page; page-break-after:always;' : '';
+                return `<div style="display:block; ${pageBreak}">${pageContent}</div>`;
+            });
+            printArea.innerHTML = pages.join('');
             window.print();
+        }
+
+        function openBulkPrintSelector() {
+            if(employees.length === 0) { alert('Nincs dolgozó a kiválasztott műszakban a nyomtatáshoz!'); return; }
+            document.getElementById('bulk-print-selector')?.remove();
+            const modal = document.createElement('div');
+            modal.id = 'bulk-print-selector';
+            modal.setAttribute('role', 'dialog');
+            modal.setAttribute('aria-modal', 'true');
+            modal.style.cssText = 'position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:18px; background:rgba(2,6,23,.78); backdrop-filter:blur(5px);';
+            const options = employees.map((emp, index) => `<label style="display:flex; align-items:center; gap:10px; min-width:0; padding:11px 12px; border:1px solid #334155; border-radius:10px; background:#0f172a; color:#e2e8f0; cursor:pointer; transition:.18s;" onmouseenter="this.style.borderColor='#60a5fa';this.style.background='#172554'" onmouseleave="this.style.borderColor='#334155';this.style.background='#0f172a'"><input class="bulk-print-employee" type="checkbox" value="${escapePrintHtml(String(emp.id))}" checked style="width:16px; height:16px; flex:none; accent-color:#2563eb;"><span style="min-width:0; overflow-wrap:anywhere; font-size:12px; font-weight:800; text-transform:uppercase;">${escapePrintHtml(emp.name)}</span><span style="margin-left:auto; color:#64748b; font-size:10px; font-weight:700;">${String(index + 1).padStart(2, '0')}</span></label>`).join('');
+            modal.innerHTML = `<div style="width:min(680px,100%); max-height:min(82vh,760px); display:flex; flex-direction:column; overflow:hidden; border:1px solid #334155; border-radius:18px; background:#111827; box-shadow:0 24px 70px rgba(0,0,0,.52); color:#f8fafc;"><div style="display:flex; align-items:flex-start; justify-content:space-between; gap:14px; padding:20px 20px 14px; border-bottom:1px solid #334155;"><div><div style="font-size:10px; font-weight:900; letter-spacing:1.4px; color:#60a5fa; text-transform:uppercase;">Személyes adatlapok</div><div style="margin-top:4px; font-size:19px; font-weight:900;">Nyomtatási lista</div><div style="margin-top:5px; color:#94a3b8; font-size:12px;">Jelöld ki, mely dolgozók adatlapjai kerüljenek a nyomtatási feladatba.</div></div><button type="button" data-action="close" aria-label="Bezárás" style="width:34px; height:34px; flex:none; border:1px solid #475569; border-radius:9px; background:#1e293b; color:#cbd5e1; font-size:18px; cursor:pointer;">×</button></div><div style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:12px 20px; border-bottom:1px solid #334155; background:#0f172a;"><div style="display:flex; gap:7px;"><button type="button" data-action="all" style="border:1px solid #3b82f6; border-radius:7px; padding:6px 9px; background:#172554; color:#bfdbfe; font-size:10px; font-weight:900; text-transform:uppercase; cursor:pointer;">Mind kijelölése</button><button type="button" data-action="none" style="border:1px solid #475569; border-radius:7px; padding:6px 9px; background:#1e293b; color:#cbd5e1; font-size:10px; font-weight:900; text-transform:uppercase; cursor:pointer;">Kijelölés törlése</button></div><div data-role="count" style="color:#93c5fd; font-size:11px; font-weight:900;"></div></div><div style="overflow-y:auto; padding:14px 20px; background:#111827;"><div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:8px;">${options}</div></div><div style="display:flex; justify-content:flex-end; gap:9px; padding:14px 20px; border-top:1px solid #334155; background:#0f172a;"><button type="button" data-action="close" style="border:1px solid #475569; border-radius:9px; padding:10px 14px; background:#1e293b; color:#cbd5e1; font-size:11px; font-weight:900; text-transform:uppercase; cursor:pointer;">Mégse</button><button type="button" data-action="print" style="border:1px solid #60a5fa; border-radius:9px; padding:10px 16px; background:#2563eb; color:white; font-size:11px; font-weight:900; text-transform:uppercase; box-shadow:0 7px 18px rgba(37,99,235,.3); cursor:pointer;"><i class="fas fa-print"></i> Kijelöltek nyomtatása</button></div></div>`;
+            const checkboxes = () => [...modal.querySelectorAll('.bulk-print-employee')];
+            const updateCount = () => {
+                const count = checkboxes().filter(box => box.checked).length;
+                modal.querySelector('[data-role="count"]').textContent = `${count} / ${employees.length} dolgozó kijelölve`;
+            };
+            modal.querySelectorAll('.bulk-print-employee').forEach(box => box.addEventListener('change', updateCount));
+            modal.querySelectorAll('[data-action="close"]').forEach(button => button.addEventListener('click', () => modal.remove()));
+            modal.querySelector('[data-action="all"]').addEventListener('click', () => { checkboxes().forEach(box => box.checked = true); updateCount(); });
+            modal.querySelector('[data-action="none"]').addEventListener('click', () => { checkboxes().forEach(box => box.checked = false); updateCount(); });
+            modal.querySelector('[data-action="print"]').addEventListener('click', () => {
+                const selectedIds = checkboxes().filter(box => box.checked).map(box => box.value);
+                if(selectedIds.length === 0) { alert('Válassz ki legalább egy dolgozót!'); return; }
+                modal.remove();
+                printAllPersonalA4(selectedIds);
+            });
+            modal.addEventListener('click', event => { if(event.target === modal) modal.remove(); });
+            document.body.appendChild(modal);
+            updateCount();
         }
 
         function printShiftDetailedLegacy() {
@@ -1149,7 +1198,8 @@
 
         function buildStatsGrid() {
             const currentYear = date.getFullYear();
-            document.getElementById('stats-grid').innerHTML = employees.map(e => {
+            const bulkPrintControl = employees.length ? `<div style="grid-column:1 / -1;" class="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-slate-700 bg-slate-900/80 px-5 py-4 shadow-xl"><div class="text-center sm:text-left"><div class="text-[10px] font-black uppercase tracking-[.18em] text-slate-400"><i class="fas fa-id-card mr-1 text-blue-400"></i> Személyes adatlapok</div><div class="mt-1 text-xs font-bold text-slate-200">Válaszd ki, mely dolgozók részletes adatlapját szeretnéd kinyomtatni.</div></div><button onclick="openBulkPrintSelector()" class="shrink-0 rounded-xl border border-blue-400/40 bg-blue-600 px-5 py-3 text-[10px] font-black uppercase tracking-widest text-white shadow-lg transition-all hover:bg-blue-500"><i class="fas fa-print mr-2"></i> Összes adatlap nyomtatása</button></div>` : '';
+            document.getElementById('stats-grid').innerHTML = bulkPrintControl + employees.map(e => {
                 let totals = { S:0, BA:0, IG:0, TU:0, KE:0 };
                 let cserenapCount = 0;
                 if(e.data) Object.entries(e.data).forEach(([k, val]) => { 
