@@ -1547,6 +1547,17 @@ const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/153774798557912276
         return String(value || '').replace(/[\r\n`@]/g, ' ').trim().slice(0, limit);
     }
 
+    function notificationTitle(action) {
+        if (action === 'Teljes cikkszám keresése') return '🔎 TELJES CIKKSZÁM KERESÉSE';
+        if (action === 'Cikkszám kiválasztása a modellben') return '🧩 CIKKSZÁM KIVÁLASZTVA';
+        return '📋 TELJES ALKATRÉSZLISTA MEGNYITÁSA';
+    }
+
+    function notificationDescription(action, detail) {
+        const label = action === 'Teljes cikkszám keresése' ? 'Keresett cikkszám' : (action === 'Cikkszám kiválasztása a modellben' ? 'Kiválasztott cikkszám' : 'Kiválasztott modell');
+        return `**${label}:**\n\`${cleanText(detail, 180) || 'Nincs adat'}\``;
+    }
+
     function discordLog(action, detail = '') {
         if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes('IDE_ILLESZD')) return;
         if (!canSend()) return;
@@ -1558,8 +1569,8 @@ const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/153774798557912276
         const payload = {
             username: 'Forvia Terminal napló',
             embeds: [{
-                title: '🔔 FORVIA TERMINÁL – ÚJ MŰVELET',
-                description: `**Mi történt?** ${cleanText(action, 80)}\n**Mivel?** ${cleanText(detail, 180) || 'Nincs további adat'}`,
+                title: notificationTitle(action),
+                description: notificationDescription(action, detail),
                 color: 0x10b981,
                 fields: [
                     { name: 'Mikor?', value: new Date().toLocaleString('hu-HU'), inline: false },
@@ -1581,16 +1592,18 @@ const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/153774798557912276
     }
 
     window.forviaDiscordLog = discordLog;
-    setTimeout(() => discordLog('Oldal megnyitása', 'Forvia Terminal elindítva'), 400);
+    // Szándékosan nincs oldalmegnyitási értesítés.
 
     const resultArea = document.getElementById('eredmeny');
     let lastSearch = '';
     if (resultArea) {
         new MutationObserver(() => {
             const query = (document.getElementById('keres')?.value || '').trim().toUpperCase();
-            if (query.length >= 2 && query !== lastSearch) {
+            if (query.length >= 2 && typeof idSet !== 'undefined' && idSet.has(query) && query !== lastSearch) {
                 lastSearch = query;
-                discordLog('Cikkszám keresés', query);
+                discordLog('Teljes cikkszám keresése', query);
+            } else if (query !== lastSearch) {
+                lastSearch = '';
             }
         }).observe(resultArea, { childList: true });
     }
@@ -1606,24 +1619,18 @@ const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/153774798557912276
         window[name] = wrapped;
     }
 
-    wrapFunction('selectSuggest', 'Keresési javaslat kiválasztása', args => args[0]);
-    wrapFunction('clearSearch', 'Keresés törlése');
-    wrapFunction('setBeultetesSzuro', 'Beültetés szűrő használata', args => args[0]);
-    wrapFunction('openModelModal', 'Modell megnyitása', args => args[0]);
-    wrapFunction('closeModelModal', 'Modelllista bezárása');
-    wrapFunction('openSetupModal', 'Setup Sheet megnyitása');
-    wrapFunction('closeSetupModal', 'Setup Sheet bezárása');
-    wrapFunction('generateSetupSheet', 'Setup Sheet nyomtatás indítása');
-    wrapFunction('printDemandSheet', 'Teljes alkatrészlista A4 nyomtatása');
-    wrapFunction('askDemandQuantity', 'Alkatrészigény kalkuláció indítása', args => args[0] === 'all' ? 'Teljes lista' : args[0]);
+    const originalDemandQuantity = window.askDemandQuantity;
+    if (typeof originalDemandQuantity === 'function') {
+        window.askDemandQuantity = function(targetCode, ...otherArgs) {
+            if (targetCode !== 'all') discordLog('Cikkszám kiválasztása a modellben', targetCode);
+            return originalDemandQuantity.call(this, targetCode, ...otherArgs);
+        };
+    }
 
     document.addEventListener('click', event => {
-        const button = event.target.closest('.tips-btn, #tipsButton, .f-btn, #demandAllBtn, #demandPrintBtn, .tips-close-btn');
+        const button = event.target.closest('#demandAllBtn');
         if (!button) return;
-        if (button.matches('.f-btn')) discordLog('Beültetés szűrő használata', button.textContent.trim());
-        else if (button.matches('#demandAllBtn')) discordLog('Teljes alkatrészlista kalkuláció');
-        else if (button.matches('#demandPrintBtn')) discordLog('Teljes alkatrészlista A4 nyomtatása');
-        else if (button.matches('.tips-btn, #tipsButton')) discordLog('Tippek megnyitása');
+        discordLog('Teljes alkatrészlista megnyitása', typeof activeDemandModel !== 'undefined' ? activeDemandModel : 'Ismeretlen modell');
     });
 })();
 </script>
