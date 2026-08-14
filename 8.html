@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="hu">
 <head>
@@ -801,62 +800,350 @@
             }, 100);
         }
 
+        // Nyomtatási segédek: kizárólag a meglévő adatok olvasására szolgálnak.
+        function escapePrintHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;' })[ch]);
+        }
+
+        function formatPrintDate(year, month, day) {
+            return `${year}. ${monthNames[month - 1]} ${String(day).padStart(2, '0')}. (${dayNamesShort[new Date(year, month - 1, day).getDay()]})`;
+        }
+
+        function getPrintEvents(emp, year) {
+            if(!emp || !emp.data) return [];
+            const entries = [];
+            Object.entries(emp.data).forEach(([key, rawValue]) => {
+                const match = key.match(new RegExp(`^${year}-(\\d{1,2})-(\\d{1,2})$`));
+                if(!match) return;
+                const month = Number(match[1]), day = Number(match[2]);
+                const value = String(rawValue);
+                const numericValue = parseFloat(value.replace(',', '.'));
+                let label = '', badge = '', colour = '#334155';
+                if(!isNaN(numericValue)) { label = `${numericValue} óra szabadság`; badge = 'SZABI'; colour = '#047857'; }
+                else if(value === 'BÁ') { label = 'Betegállomány'; badge = 'BÁ'; colour = '#ea580c'; }
+                else if(value === 'IG') { label = 'Igazolatlan'; badge = 'IG'; colour = '#7c3aed'; }
+                else if(value === 'TU') { label = 'Túlóra'; badge = 'TU'; colour = '#2563eb'; }
+                else if(value.startsWith('KÉ')) { label = value; badge = 'KÉ'; colour = '#d97706'; }
+                else return;
+
+                const exchangeRaw = emp.data[key + '_cserenap'];
+                const exchangeHours = exchangeRaw !== undefined && exchangeRaw !== null && exchangeRaw !== ''
+                    ? Math.abs(parseFloat(exchangeRaw) || 0) : 0;
+                const exchange = exchangeHours ? `${exchangeHours} óra cserenap-jóváírás` : '';
+                const note = emp.data[key + '_note'] ? String(emp.data[key + '_note']) : '';
+                entries.push({ key, month, day, value, label, badge, colour, exchange, exchangeHours, note });
+            });
+            return entries.sort((a, b) => a.month - b.month || a.day - b.day);
+        }
+
+        function getPrintTotals(emp, year) {
+            const totals = { S:0, BA:0, IG:0, TU:0, KE:0, cserenap:0 };
+            if(!emp || !emp.data) return totals;
+            Object.entries(emp.data).forEach(([key, rawValue]) => {
+                if(!key.startsWith(year + '-')) return;
+                if(key.endsWith('_cserenap')) { const n = parseFloat(rawValue); totals.S += n || 0; totals.cserenap += Math.abs(n || 0); return; }
+                if(key.endsWith('_note')) return;
+                const value = String(rawValue), n = parseFloat(value.replace(',', '.'));
+                if(!isNaN(n)) totals.S += n;
+                else if(value === 'BÁ') totals.BA++;
+                else if(value === 'IG') totals.IG++;
+                else if(value === 'TU') totals.TU++;
+                else if(value.startsWith('KÉ')) totals.KE++;
+            });
+            return totals;
+        }
+
         function printA4(id) {
             const currentYear = date.getFullYear();
             const emp = employees.find(x => x.id == id);
-            let s = { S:0, BA:0, IG:0, TU:0, KE:0 }; const mData = Array(12).fill(0).map(() => ({S:0, BA:0, IG:0, TU:0, KE:0}));
-            
-            if(emp.data) Object.entries(emp.data).forEach(([key, v]) => {
-                if(key.startsWith(currentYear + '-')) {
-                    if(key.endsWith('_cserenap')) {
-                        s.S += parseFloat(v);
-                        const m = parseInt(key.split('-')[1]) - 1; mData[m].S += parseFloat(v);
-                    } else if(!key.endsWith('_note')) {
-                        const m = parseInt(key.split('-')[1]) - 1; const n = parseFloat(String(v).replace(',','.'));
-                        if(!isNaN(n)) { s.S += n; mData[m].S += n; } 
-                        else if(v==='BÁ') { s.BA++; mData[m].BA++; } 
-                        else if(v==='IG') { s.IG++; mData[m].IG++; } 
-                        else if(v==='TU') { s.TU++; mData[m].TU++; } 
-                        else if(String(v).startsWith('KÉ')) { s.KE++; mData[m].KE++; }
-                    }
-                }
+            if(!emp) { alert('A dolgozó adatai nem találhatók.'); return; }
+
+            const totals = getPrintTotals(emp, currentYear);
+            const quota = getEmpQuota(emp, currentYear);
+            const remaining = quota - totals.S;
+            const monthRows = Array.from({ length:12 }, (_, index) => {
+                const monthEvents = getPrintEvents(emp, currentYear).filter(event => event.month === index + 1);
+                const month = { S:0, BA:0, IG:0, TU:0, KE:0 };
+                monthEvents.forEach(event => {
+                    const n = parseFloat(event.value.replace(',', '.'));
+                    if(!isNaN(n)) month.S += n;
+                    else if(event.value === 'BÁ') month.BA++;
+                    else if(event.value === 'IG') month.IG++;
+                    else if(event.value === 'TU') month.TU++;
+                    else if(event.value.startsWith('KÉ')) month.KE++;
+                    if(event.exchangeHours) month.S -= event.exchangeHours;
+                });
+                return `<tr><td style="padding:2px 4px; text-align:left;">${monthNames[index]}</td><td>${month.S || '–'}</td><td>${month.BA || '–'}</td><td>${month.IG || '–'}</td><td>${month.TU || '–'}</td><td>${month.KE || '–'}</td></tr>`;
+            }).join('');
+
+            const events = getPrintEvents(emp, currentYear);
+            const printEventTable = items => items.length ? items.map(event => {
+                const supplementary = [event.exchange, event.note ? `Megjegyzés: ${event.note}` : ''].filter(Boolean).map(escapePrintHtml).join('<br>');
+                return `<tr><td style="padding:3px 4px; white-space:nowrap; color:#475569;">${formatPrintDate(currentYear, event.month, event.day)}</td><td style="padding:3px 4px;"><span style="display:inline-block; min-width:32px; text-align:center; border-radius:8px; padding:2px 4px; font-size:8px; font-weight:900; color:white; background:${event.colour};">${event.badge}</span></td><td style="padding:3px 4px; font-weight:700; color:#1e293b;">${escapePrintHtml(event.label)}${supplementary ? `<div style="margin-top:2px; color:#64748b; font-size:8px; font-weight:400; line-height:1.25;">${supplementary}</div>` : ''}</td></tr>`;
+            }).join('') : '<tr><td colspan="3" style="padding:8px; color:#94a3b8; text-align:center;">Nincs rögzített esemény</td></tr>';
+            const splitAt = Math.ceil(events.length / 2);
+            const leftEvents = events.slice(0, splitAt), rightEvents = events.slice(splitAt);
+            const generatedAt = new Date().toLocaleString('hu-HU');
+
+            document.getElementById('print-area').innerHTML = `<div style="color:#172033; background:white; font-family:Arial, sans-serif; padding:9mm 10mm; box-sizing:border-box; font-size:9px; line-height:1.2;"><div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #2563eb; padding-bottom:7px; margin-bottom:7px;"><div><div style="font-size:22px; font-weight:900; letter-spacing:-.8px; color:#2563eb;">FORVIA</div><div style="font-size:10px; font-weight:700; letter-spacing:1.2px; color:#64748b;">STAFF PRO · RÉSZLETES ÉVES ADATLAP</div></div><div style="text-align:right; color:#475569; font-size:8px;"><b>${currentYear}. ÉV · ${currentShift} MŰSZAK</b><br>Nyomtatva: ${generatedAt}</div></div><div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:7px;"><div><div style="font-size:18px; font-weight:900; color:#0f172a; text-transform:uppercase;">${escapePrintHtml(emp.name)}</div><div style="font-size:8px; color:#64748b; margin-top:2px;">Személyes éves jelenléti, távolléti és keretkimutatás</div></div><div style="font-size:8px; color:#64748b; text-align:right;">Adatlap az aktuálisan kiválasztott év teljes adatkészletéből</div></div><div style="display:grid; grid-template-columns:repeat(4,1fr); gap:5px; margin-bottom:8px;"><div style="border:1px solid #bfdbfe; border-top:3px solid #2563eb; border-radius:5px; padding:5px;"><div style="font-size:7px; color:#64748b; font-weight:700; text-transform:uppercase;">Éves keret</div><div style="font-size:15px; font-weight:900; color:#1d4ed8;">${quota}<span style="font-size:8px;"> óra</span></div></div><div style="border:1px solid #bbf7d0; border-top:3px solid #059669; border-radius:5px; padding:5px;"><div style="font-size:7px; color:#64748b; font-weight:700; text-transform:uppercase;">Felhasznált keret</div><div style="font-size:15px; font-weight:900; color:#047857;">${totals.S}<span style="font-size:8px;"> óra</span></div></div><div style="border:1px solid ${remaining < 0 ? '#fecaca' : '#bbf7d0'}; border-top:3px solid ${remaining < 0 ? '#dc2626' : '#16a34a'}; border-radius:5px; padding:5px;"><div style="font-size:7px; color:#64748b; font-weight:700; text-transform:uppercase;">Maradék keret</div><div style="font-size:15px; font-weight:900; color:${remaining < 0 ? '#b91c1c' : '#15803d'};">${remaining}<span style="font-size:8px;"> óra</span></div></div><div style="border:1px solid #e9d5ff; border-top:3px solid #7c3aed; border-radius:5px; padding:5px;"><div style="font-size:7px; color:#64748b; font-weight:700; text-transform:uppercase;">Cserenap-jóváírás</div><div style="font-size:15px; font-weight:900; color:#6d28d9;">${totals.cserenap}<span style="font-size:8px;"> óra</span></div></div></div><div style="display:grid; grid-template-columns:39% 61%; gap:7px; align-items:start;"><section><div style="font-size:9px; font-weight:900; color:#1e3a8a; margin:0 0 4px; text-transform:uppercase;">Havi összesítő</div><table style="width:100%; border-collapse:collapse; font-size:7px; text-align:center; border:1px solid #cbd5e1;"><thead><tr style="background:#eaf2ff; color:#1e3a8a;"><th style="padding:3px 4px; text-align:left;">Hónap</th><th>Szabi</th><th>BÁ</th><th>IG</th><th>TU</th><th>KÉ</th></tr></thead><tbody>${monthRows}</tbody><tfoot><tr style="background:#f1f5f9; font-weight:900;"><td style="padding:3px 4px; text-align:left;">Összesen</td><td>${totals.S}</td><td>${totals.BA}</td><td>${totals.IG}</td><td>${totals.TU}</td><td>${totals.KE}</td></tr></tfoot></table><div style="margin-top:5px; padding:4px; background:#f8fafc; border-left:2px solid #2563eb; color:#475569; font-size:7px; line-height:1.35;"><b>Jelmagyarázat:</b> Szabi = órában rögzített szabadság. BÁ / IG / TU / KÉ = rögzített napok darabszáma. A cserenap a keret felhasználását csökkentő jóváírás.</div></section><section><div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px;"><div style="font-size:9px; font-weight:900; color:#1e3a8a; text-transform:uppercase;">Dátumos eseménynapló</div><div style="font-size:7px; color:#64748b;">${events.length} rögzített esemény</div></div><div style="display:grid; grid-template-columns:1fr 1fr; gap:5px;"><table style="width:100%; border-collapse:collapse; font-size:7px; border:1px solid #cbd5e1;"><thead><tr style="background:#f1f5f9; color:#475569;"><th style="padding:3px 4px; text-align:left;">Dátum</th><th>Tip.</th><th style="text-align:left;">Részlet</th></tr></thead><tbody>${printEventTable(leftEvents)}</tbody></table><table style="width:100%; border-collapse:collapse; font-size:7px; border:1px solid #cbd5e1;"><thead><tr style="background:#f1f5f9; color:#475569;"><th style="padding:3px 4px; text-align:left;">Dátum</th><th>Tip.</th><th style="text-align:left;">Részlet</th></tr></thead><tbody>${printEventTable(rightEvents)}</tbody></table></div></section></div><div style="margin-top:7px; padding-top:4px; border-top:1px solid #cbd5e1; display:flex; justify-content:space-between; color:#94a3b8; font-size:7px;"><span>FORVIA Staff Pro SMT · ${currentYear} · ${currentShift} műszak</span><span>Automatikusan generált, olvasható éves adatlap</span></div></div>`;
+            const personalPrintArea = document.getElementById('print-area');
+            personalPrintArea.style.textAlign = 'center';
+            personalPrintArea.style.setProperty('print-color-adjust', 'exact', 'important');
+            personalPrintArea.style.setProperty('-webkit-print-color-adjust', 'exact', 'important');
+            personalPrintArea.querySelectorAll('[style*="text-align:left"], [style*="text-align:right"]').forEach(el => el.style.textAlign = 'center');
+            personalPrintArea.querySelectorAll('[style*="justify-content:space-between"]').forEach(el => el.style.justifyContent = 'center');
+            const personalPrintStyle = document.createElement('style');
+            personalPrintStyle.textContent = '@media print { #print-area, #print-area * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }';
+            personalPrintArea.prepend(personalPrintStyle);
+            const densityScale = events.length <= 12 ? 1.28 : events.length <= 28 ? 1.16 : events.length <= 52 ? 1.07 : 1;
+            const personalPage = personalPrintArea.querySelector('div');
+            if(personalPage) personalPage.style.padding = events.length <= 28 ? '6mm 7mm' : '8mm 9mm';
+            // Kizárólag az adatlap nyomtatási arculata: erősebb betűk és az alkalmazás kategóriaszínei.
+            personalPrintArea.querySelectorAll('th, td').forEach(cell => {
+                cell.style.fontWeight = '700';
+                cell.style.borderColor = '#94a3b8';
             });
-            let rows = mData.map((m, i) => `<tr><td>${monthNames[i]}</td><td>${m.S}</td><td>${m.BA}</td><td>${m.IG}</td><td>${m.TU}</td><td>${m.KE}</td></tr>`).join('');
-            document.getElementById('print-area').innerHTML = `<div style="color:black; background:white; font-family:sans-serif; padding:40px;"><h1 style="margin:0; color:#3b82f6;">FORVIA - ${currentYear}</h1><h2 style="border-bottom:2px solid #3b82f6; padding-bottom:10px;">ADATLAP: ${emp.name}</h2><div style="display:flex; margin:20px 0; font-size:18px;"><p>Éves keret: <b>${getEmpQuota(emp, currentYear)} óra</b></p><p style="margin-left:40px">Kivett: <b>${s.S} óra</b></p><p style="margin-left:40px">Maradék: <b style="color:green">${getEmpQuota(emp, currentYear) - s.S} óra</b></p></div><table style="width:100%; border-collapse:collapse; margin-top:20px;"><thead><tr style="background:#f1f5f9;"><th>HÓNAP</th><th>SZABADSÁG</th><th>BÁ</th><th>IG</th><th>TU</th><th>KÉ</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+            personalPrintArea.querySelectorAll('table').forEach(table => {
+                table.style.boxShadow = '0 1px 0 rgba(15,23,42,.14)';
+                table.style.fontSize = `${Math.round(7 * densityScale * 10) / 10}px`;
+            });
+            const monthlyTable = personalPrintArea.querySelector('table');
+            const printCategoryColours = [
+                { column:1, colour:'#059669', background:'#ecfdf5' },
+                { column:2, colour:'#ea580c', background:'#fff7ed' },
+                { column:3, colour:'#7c3aed', background:'#f5f3ff' },
+                { column:4, colour:'#2563eb', background:'#eff6ff' },
+                { column:5, colour:'#d97706', background:'#fffbeb' }
+            ];
+            if(monthlyTable) {
+                monthlyTable.querySelectorAll('tr').forEach(row => {
+                    printCategoryColours.forEach(theme => {
+                        const cell = row.children[theme.column];
+                        if(cell) {
+                            cell.style.color = theme.colour;
+                            cell.style.backgroundColor = theme.background;
+                            cell.style.borderTop = `2px solid ${theme.colour}`;
+                            cell.style.borderBottom = `2px solid ${theme.colour}`;
+                            cell.style.fontWeight = '900';
+                        }
+                    });
+                });
+            }
+            personalPrintArea.querySelectorAll('span[style*="min-width:32px"]').forEach(badge => {
+                const categoryColour = badge.style.backgroundColor || badge.style.background;
+                badge.style.background = '#ffffff';
+                badge.style.color = categoryColour;
+                badge.style.border = `2px solid ${categoryColour}`;
+                badge.style.fontSize = `${Math.round(8 * densityScale * 10) / 10}px`;
+                const detailCell = badge.parentElement && badge.parentElement.nextElementSibling;
+                if(detailCell) { detailCell.style.color = categoryColour; detailCell.style.fontWeight = '900'; }
+            });
             window.print();
         }
 
-        function printShiftSummary() {
+        function printShiftDetailedLegacy() {
             if(employees.length === 0) { alert("Nincs dolgozó a kiválasztott műszakban a nyomtatáshoz!"); return; }
 
             const today = new Date();
             const currentYear = date.getFullYear();
             const todayFormatted = `${today.getFullYear()}. ${monthNames[today.getMonth()]} ${today.getDate()}.`;
-
-            let rows = employees.map(emp => {
-                let sS_Total = 0, sBA = 0, sIG = 0, sTU = 0, sKE = 0;
-                if(emp.data) {
-                    Object.entries(emp.data).forEach(([key, v]) => {
-                        if(key.startsWith(currentYear + '-')) {
-                            if(key.endsWith('_cserenap')) sS_Total += parseFloat(v);
-                            else if(!key.endsWith('_note')) {
-                                const n = parseFloat(String(v).replace(',','.'));
-                                if(!isNaN(n)) { sS_Total += n; } 
-                                else if(v === 'BÁ') { sBA++; } 
-                                else if(v === 'IG') { sIG++; } 
-                                else if(v === 'TU') { sTU++; } 
-                                else if(String(v).startsWith('KÉ')) { sKE++; }
-                            }
-                        }
-                    });
-                }
+            const shiftTotals = { quota:0, used:0, remaining:0, BA:0, IG:0, TU:0, KE:0, cserenap:0, events:0 };
+            const rows = employees.map((emp, index) => {
+                const totals = getPrintTotals(emp, currentYear);
+                const events = getPrintEvents(emp, currentYear);
                 const quota = getEmpQuota(emp, currentYear);
-                const rem = quota - sS_Total;
-                const remColor = rem < 0 ? '#ef4444' : '#059669'; 
-                return `<tr><td style="text-align:left; font-weight:bold; padding:4px 8px; border:1px solid #cbd5e1;">${emp.name}</td><td style="padding:4px 8px; border:1px solid #cbd5e1;">${quota} óra</td><td style="padding:4px 8px; border:1px solid #cbd5e1; font-weight:bold; color:#059669;">${sS_Total} óra</td><td style="padding:4px 8px; border:1px solid #cbd5e1; color:${remColor}; font-weight:bold;">${rem} óra</td><td style="padding:4px 8px; border:1px solid #cbd5e1;">${sBA}</td><td style="padding:4px 8px; border:1px solid #cbd5e1;">${sIG}</td><td style="padding:4px 8px; border:1px solid #cbd5e1;">${sTU}</td><td style="padding:4px 8px; border:1px solid #cbd5e1;">${sKE}</td></tr>`;
+                const remaining = quota - totals.S;
+                shiftTotals.quota += quota; shiftTotals.used += totals.S; shiftTotals.remaining += remaining;
+                shiftTotals.BA += totals.BA; shiftTotals.IG += totals.IG; shiftTotals.TU += totals.TU; shiftTotals.KE += totals.KE; shiftTotals.cserenap += totals.cserenap; shiftTotals.events += events.length;
+                const dates = events.length ? events.map(event => {
+                    const detail = `${String(event.month).padStart(2, '0')}.${String(event.day).padStart(2, '0')}. ${event.badge}${event.badge === 'SZABI' ? ` ${event.value}ó` : ''}${event.exchange ? ' · csere' : ''}`;
+                    return `<span style="display:inline-block; margin:1px 2px 1px 0; padding:1px 3px; border-radius:3px; border:1px solid ${event.colour}55; color:${event.colour}; background:${event.colour}0d; white-space:nowrap;">${detail}</span>`;
+                }).join('') : '<span style="color:#94a3b8;">Nincs rögzített esemény</span>';
+                const remColour = remaining < 0 ? '#dc2626' : remaining <= 48 ? '#d97706' : '#047857';
+                return `<tr style="background:${index % 2 ? '#f8fafc' : 'white'}; page-break-inside:avoid;"><td style="padding:5px 6px; border:1px solid #cbd5e1; font-weight:900; text-align:left; color:#0f172a; white-space:nowrap;">${escapePrintHtml(emp.name)}</td><td style="padding:5px 4px; border:1px solid #cbd5e1; text-align:center;">${quota}ó</td><td style="padding:5px 4px; border:1px solid #cbd5e1; text-align:center; font-weight:900; color:#047857;">${totals.S}ó</td><td style="padding:5px 4px; border:1px solid #cbd5e1; text-align:center; font-weight:900; color:${remColour};">${remaining}ó</td><td style="padding:5px 4px; border:1px solid #cbd5e1; text-align:center; color:#6d28d9;">${totals.cserenap ? `+${totals.cserenap}ó` : '–'}</td><td style="padding:5px 4px; border:1px solid #cbd5e1; text-align:center;"><span style="color:#c2410c; font-weight:900;">BÁ ${totals.BA}</span> <span style="color:#6d28d9; font-weight:900;">IG ${totals.IG}</span><br><span style="color:#1d4ed8; font-weight:900;">TU ${totals.TU}</span> <span style="color:#b45309; font-weight:900;">KÉ ${totals.KE}</span></td><td style="padding:4px 5px; border:1px solid #cbd5e1; text-align:left; line-height:1.25;">${dates}</td></tr>`;
             }).join('');
 
-            document.getElementById('print-area').innerHTML = `<div style="color:black; background:white; font-family:sans-serif; padding:15px 30px; box-sizing:border-box;"><div style="display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid #3b82f6; padding-bottom:10px; margin-bottom:15px;"><div><h1 style="margin:0; color:#3b82f6; font-size:24px; font-weight:900;">FORVIA - ${currentYear}</h1><h2 style="margin:5px 0 0 0; color:#1e293b; font-size:16px; text-transform:uppercase;">Műszak Összesítő: <b>"${currentShift}" MŰSZAK</b></h2></div><div style="text-align:right; font-size:12px; color:#475569;"><p style="margin:0;">Lekérdezés ideje: <b>${todayFormatted} (Teljes éves adat)</b></p></div></div><table style="width:100%; border-collapse:collapse; text-align:center; font-size:12px;"><thead><tr style="background:#f1f5f9;"><th style="padding:6px 8px; text-align:left; border:1px solid #cbd5e1; color:#334155;">NÉV</th><th style="padding:6px 8px; border:1px solid #cbd5e1; color:#334155;">ÉVES<br>KERET</th><th style="padding:6px 8px; border:1px solid #cbd5e1; color:#059669;">SZABADSÁG<br>(Kivett + Tervezett)</th><th style="padding:6px 8px; border:1px solid #cbd5e1; color:#334155;">MARADÉK</th><th style="padding:6px 8px; border:1px solid #cbd5e1; color:#ea580c;">BÁ</th><th style="padding:6px 8px; border:1px solid #cbd5e1; color:#7c3aed;">IG</th><th style="padding:6px 8px; border:1px solid #cbd5e1; color:#2563eb;">TU</th><th style="padding:6px 8px; border:1px solid #cbd5e1; color:#d97706;">KÉ</th></tr></thead><tbody>${rows}</tbody></table><div style="margin-top:15px; font-size:10px; color:#94a3b8; text-align:center; border-top:1px solid #e2e8f0; padding-top:8px;">Automatikusan generálva: ${new Date().toLocaleString('hu-HU')} | Rendszer: Forvia Staff Pro SMT</div></div>`;
+            document.getElementById('print-area').innerHTML = `<div style="color:#172033; background:white; font-family:Arial, sans-serif; padding:8mm 9mm; box-sizing:border-box; font-size:8px; line-height:1.2;"><div style="display:flex; justify-content:space-between; align-items:flex-end; border-bottom:3px solid #4f46e5; padding-bottom:7px; margin-bottom:7px;"><div><div style="font-size:22px; font-weight:900; color:#4f46e5; letter-spacing:-.8px;">FORVIA</div><div style="font-size:10px; font-weight:700; letter-spacing:1px; color:#64748b;">STAFF PRO · RÉSZLETES MŰSZAKJELENTÉS</div><div style="font-size:15px; font-weight:900; color:#0f172a; margin-top:3px;">${currentYear}. ÉV · ${currentShift} MŰSZAK</div></div><div style="text-align:right; color:#475569; font-size:8px;"><b>Teljes éves adatkészlet</b><br>Lekérdezés: ${todayFormatted}<br>Nyomtatva: ${new Date().toLocaleString('hu-HU')}</div></div><div style="display:grid; grid-template-columns:repeat(5,1fr); gap:4px; margin-bottom:7px;"><div style="padding:4px; border:1px solid #bfdbfe; border-top:3px solid #2563eb; border-radius:4px;"><div style="font-size:6px; color:#64748b; font-weight:700; text-transform:uppercase;">Dolgozó</div><b style="font-size:13px; color:#1d4ed8;">${employees.length} fő</b></div><div style="padding:4px; border:1px solid #bfdbfe; border-top:3px solid #2563eb; border-radius:4px;"><div style="font-size:6px; color:#64748b; font-weight:700; text-transform:uppercase;">Összes keret</div><b style="font-size:13px; color:#1d4ed8;">${shiftTotals.quota}ó</b></div><div style="padding:4px; border:1px solid #bbf7d0; border-top:3px solid #059669; border-radius:4px;"><div style="font-size:6px; color:#64748b; font-weight:700; text-transform:uppercase;">Felhasznált</div><b style="font-size:13px; color:#047857;">${shiftTotals.used}ó</b></div><div style="padding:4px; border:1px solid ${shiftTotals.remaining < 0 ? '#fecaca' : '#bbf7d0'}; border-top:3px solid ${shiftTotals.remaining < 0 ? '#dc2626' : '#16a34a'}; border-radius:4px;"><div style="font-size:6px; color:#64748b; font-weight:700; text-transform:uppercase;">Maradék</div><b style="font-size:13px; color:${shiftTotals.remaining < 0 ? '#b91c1c' : '#15803d'};">${shiftTotals.remaining}ó</b></div><div style="padding:4px; border:1px solid #e9d5ff; border-top:3px solid #7c3aed; border-radius:4px;"><div style="font-size:6px; color:#64748b; font-weight:700; text-transform:uppercase;">Rögzített esemény</div><b style="font-size:13px; color:#6d28d9;">${shiftTotals.events} db</b></div></div><table style="width:100%; border-collapse:collapse; font-size:7px; table-layout:fixed;"><thead style="display:table-header-group;"><tr style="background:#eef2ff; color:#312e81;"><th style="width:14%; padding:5px 6px; border:1px solid #c7d2fe; text-align:left;">NÉV</th><th style="width:7%; padding:5px 3px; border:1px solid #c7d2fe;">KERET</th><th style="width:8%; padding:5px 3px; border:1px solid #c7d2fe; color:#047857;">FELHASZN.</th><th style="width:8%; padding:5px 3px; border:1px solid #c7d2fe;">MARADÉK</th><th style="width:8%; padding:5px 3px; border:1px solid #c7d2fe; color:#6d28d9;">CSERENAP</th><th style="width:11%; padding:5px 3px; border:1px solid #c7d2fe;">KATEGÓRIÁK</th><th style="width:44%; padding:5px 5px; border:1px solid #c7d2fe; text-align:left;">DÁTUMOS ESEMÉNYEK · SZABI / BÁ / IG / TU / KÉ</th></tr></thead><tbody>${rows}</tbody><tfoot><tr style="background:#eef2ff; font-weight:900; color:#312e81;"><td style="padding:5px 6px; border:1px solid #c7d2fe; text-align:left;">MŰSZAK ÖSSZESEN</td><td style="padding:5px 3px; border:1px solid #c7d2fe; text-align:center;">${shiftTotals.quota}ó</td><td style="padding:5px 3px; border:1px solid #c7d2fe; text-align:center; color:#047857;">${shiftTotals.used}ó</td><td style="padding:5px 3px; border:1px solid #c7d2fe; text-align:center;">${shiftTotals.remaining}ó</td><td style="padding:5px 3px; border:1px solid #c7d2fe; text-align:center; color:#6d28d9;">+${shiftTotals.cserenap}ó</td><td style="padding:5px 3px; border:1px solid #c7d2fe; text-align:center;"><span style="color:#c2410c;">BÁ ${shiftTotals.BA}</span> · <span style="color:#6d28d9;">IG ${shiftTotals.IG}</span><br><span style="color:#1d4ed8;">TU ${shiftTotals.TU}</span> · <span style="color:#b45309;">KÉ ${shiftTotals.KE}</span></td><td style="padding:5px; border:1px solid #c7d2fe; text-align:left;">${shiftTotals.events} dátumos esemény · A dátumoknál a „csere” jelölés cserenap-jóváírást jelent.</td></tr></tfoot></table><div style="margin-top:6px; padding-top:4px; border-top:1px solid #cbd5e1; display:flex; justify-content:space-between; color:#94a3b8; font-size:7px;"><span>FORVIA Staff Pro SMT · ${currentYear} · ${currentShift} műszak</span><span>Színes, részletes éves műszakjelentés · A szükséges folytató oldalak is egyoldalas nyomtatásra készülnek.</span></div></div>`;
+            window.print();
+        }
+
+        // Az eredeti, gyors műszak-összesítő külön megmarad.
+        function printShiftSummary() {
+            if(employees.length === 0) { alert('Nincs dolgozó a kiválasztott műszakban a nyomtatáshoz!'); return; }
+            const today = new Date();
+            const currentYear = date.getFullYear();
+            const todayFormatted = `${today.getFullYear()}. ${monthNames[today.getMonth()]} ${today.getDate()}.`;
+            const rows = employees.map(emp => {
+                const totals = getPrintTotals(emp, currentYear);
+                const quota = getEmpQuota(emp, currentYear);
+                const remaining = quota - totals.S;
+                const remColor = remaining < 0 ? '#ef4444' : '#059669';
+                return `<tr><td style="text-align:center; text-transform:uppercase; font-weight:bold; padding:4px 8px; border:1px solid #cbd5e1;">${escapePrintHtml(String(emp.name).toLocaleUpperCase('hu-HU'))}</td><td style="padding:4px 8px; border:1px solid #cbd5e1;">${quota} óra</td><td style="padding:4px 8px; border:1px solid #cbd5e1; font-weight:bold; color:#059669;">${totals.S} óra</td><td style="padding:4px 8px; border:1px solid #cbd5e1; color:${remColor}; font-weight:bold;">${remaining} óra</td><td style="padding:4px 8px; border:1px solid #cbd5e1;">${totals.BA}</td><td style="padding:4px 8px; border:1px solid #cbd5e1;">${totals.IG}</td><td style="padding:4px 8px; border:1px solid #cbd5e1;">${totals.TU}</td><td style="padding:4px 8px; border:1px solid #cbd5e1;">${totals.KE}</td></tr>`;
+            }).join('');
+            document.getElementById('print-area').innerHTML = `<div style="color:black; background:white; font-family:sans-serif; padding:15px 30px; box-sizing:border-box; text-align:center;"><div style="border-bottom:2px solid #3b82f6; padding-bottom:10px; margin-bottom:15px;"><h1 style="margin:0; color:#3b82f6; font-size:24px; font-weight:900;">FORVIA - ${currentYear}</h1><h2 style="margin:5px 0; color:#1e293b; font-size:16px; text-transform:uppercase;">Műszak Összesítő: <b>"${currentShift}" MŰSZAK</b></h2><p style="margin:0; font-size:12px; color:#475569;">Lekérdezés ideje: <b>${todayFormatted} (Teljes éves adat)</b></p></div><table style="width:100%; border-collapse:collapse; text-align:center; font-size:12px;"><thead><tr style="background:#f1f5f9;"><th style="padding:6px 8px; border:1px solid #cbd5e1; color:#334155;">NÉV</th><th style="padding:6px 8px; border:1px solid #cbd5e1; color:#334155;">ÉVES<br>KERET</th><th style="padding:6px 8px; border:1px solid #cbd5e1; color:#059669;">SZABADSÁG<br>(Kivett + Tervezett)</th><th style="padding:6px 8px; border:1px solid #cbd5e1; color:#334155;">MARADÉK</th><th style="padding:6px 8px; border:1px solid #cbd5e1; color:#ea580c;">BÁ</th><th style="padding:6px 8px; border:1px solid #cbd5e1; color:#7c3aed;">IG</th><th style="padding:6px 8px; border:1px solid #cbd5e1; color:#2563eb;">TU</th><th style="padding:6px 8px; border:1px solid #cbd5e1; color:#d97706;">KÉ</th></tr></thead><tbody>${rows}</tbody></table><div style="margin-top:15px; font-size:10px; color:#94a3b8; border-top:1px solid #e2e8f0; padding-top:8px;">Automatikusan generálva: ${new Date().toLocaleString('hu-HU')} | Rendszer: Forvia Staff Pro SMT</div></div>`;
+            window.print();
+        }
+
+        // Prémium, dátumos műszakjelentés: minden dolgozó önálló, áttekinthető blokkban szerepel.
+        function printShiftDetailedCardsLegacy() {
+            if(employees.length === 0) { alert('Nincs dolgozó a kiválasztott műszakban a nyomtatáshoz!'); return; }
+            const currentYear = date.getFullYear();
+            const generatedAt = new Date().toLocaleString('hu-HU');
+            const shiftTotals = { quota:0, used:0, remaining:0, cserenap:0, events:0 };
+            const employeeCards = employees.map((emp, index) => {
+                const totals = getPrintTotals(emp, currentYear);
+                const quota = getEmpQuota(emp, currentYear);
+                const remaining = quota - totals.S;
+                const events = getPrintEvents(emp, currentYear);
+                shiftTotals.quota += quota; shiftTotals.used += totals.S; shiftTotals.remaining += remaining; shiftTotals.cserenap += totals.cserenap; shiftTotals.events += events.length;
+                const eventCards = events.length ? events.map(event => {
+                    const supplement = [event.exchange, event.note ? `Megjegyzés: ${event.note}` : ''].filter(Boolean).map(escapePrintHtml).join('<br>');
+                    return `<div style="border:1px solid ${event.colour}55; border-top:3px solid ${event.colour}; border-radius:6px; padding:4px; min-width:0; background:#fff; text-align:center;"><div style="font-size:7px; color:#64748b; font-weight:700;">${formatPrintDate(currentYear, event.month, event.day)}</div><div style="margin:3px 0;"><span style="display:inline-block; border-radius:10px; padding:2px 7px; font-size:8px; font-weight:900; color:white; background:${event.colour};">${event.badge}</span></div><div style="font-size:8px; font-weight:900; color:#1e293b;">${escapePrintHtml(event.label)}</div>${supplement ? `<div style="margin-top:3px; font-size:7px; color:#64748b; line-height:1.25; overflow-wrap:anywhere;">${supplement}</div>` : ''}</div>`;
+                }).join('') : '<div style="grid-column:1/-1; padding:7px; border:1px dashed #cbd5e1; border-radius:6px; color:#94a3b8; font-size:8px;">Nincs rögzített dátumos esemény</div>';
+                const remColour = remaining < 0 ? '#dc2626' : remaining <= 48 ? '#d97706' : '#047857';
+                return `<section style="margin:0 0 7px; border:1px solid #dbeafe; border-radius:8px; overflow:hidden; page-break-inside:avoid; text-align:center;"><div style="background:linear-gradient(90deg,#eff6ff,#f8fafc); border-bottom:1px solid #dbeafe; padding:5px;"><div style="font-size:7px; color:#64748b; font-weight:900; letter-spacing:1px;">${String(index + 1).padStart(2, '0')} · DOLGOZÓI RÉSZLET</div><div style="margin-top:1px; color:#0f172a; font-size:13px; font-weight:900; text-transform:uppercase;">${escapePrintHtml(String(emp.name).toLocaleUpperCase('hu-HU'))}</div></div><div style="display:grid; grid-template-columns:repeat(5,1fr); gap:0; border-bottom:1px solid #dbeafe;"><div style="padding:4px; border-right:1px solid #dbeafe;"><div style="font-size:6px; color:#64748b; font-weight:700; text-transform:uppercase;">Éves keret</div><b style="font-size:11px; color:#1d4ed8;">${quota} óra</b></div><div style="padding:4px; border-right:1px solid #dbeafe;"><div style="font-size:6px; color:#64748b; font-weight:700; text-transform:uppercase;">Felhasznált</div><b style="font-size:11px; color:#047857;">${totals.S} óra</b></div><div style="padding:4px; border-right:1px solid #dbeafe;"><div style="font-size:6px; color:#64748b; font-weight:700; text-transform:uppercase;">Maradék</div><b style="font-size:11px; color:${remColour};">${remaining} óra</b></div><div style="padding:4px; border-right:1px solid #dbeafe;"><div style="font-size:6px; color:#64748b; font-weight:700; text-transform:uppercase;">Cserenap</div><b style="font-size:11px; color:#6d28d9;">${totals.cserenap ? `+${totals.cserenap}` : '–'} óra</b></div><div style="padding:4px;"><div style="font-size:6px; color:#64748b; font-weight:700; text-transform:uppercase;">Kategóriák</div><b style="font-size:8px;"><span style="color:#c2410c;">BÁ ${totals.BA}</span> · <span style="color:#6d28d9;">IG ${totals.IG}</span> · <span style="color:#1d4ed8;">TU ${totals.TU}</span> · <span style="color:#b45309;">KÉ ${totals.KE}</span></b></div></div><div style="padding:5px; background:#fcfdff;"><div style="font-size:7px; font-weight:900; color:#1e3a8a; letter-spacing:.7px; margin-bottom:4px;">DÁTUMOS ESEMÉNYEK</div><div style="display:grid; grid-template-columns:repeat(3,1fr); gap:4px; align-items:stretch;">${eventCards}</div></div></section>`;
+            }).join('');
+            document.getElementById('print-area').innerHTML = `<div style="color:#172033; background:white; font-family:Arial,sans-serif; padding:8mm 9mm; box-sizing:border-box; font-size:8px; text-align:center;"><div style="border-bottom:3px solid #06b6d4; padding-bottom:6px; margin-bottom:6px;"><div style="font-size:20px; letter-spacing:-.6px; font-weight:900; color:#0e7490;">FORVIA</div><div style="font-size:9px; font-weight:900; letter-spacing:1.2px; color:#475569;">STAFF PRO · PRÉMIUM RÉSZLETES MŰSZAKJELENTÉS</div><div style="margin-top:3px; font-size:12px; font-weight:900; color:#0f172a;">${currentYear}. ÉV · ${currentShift} MŰSZAK</div><div style="margin-top:2px; font-size:7px; color:#64748b;">Teljes éves adatkészlet · Nyomtatva: ${generatedAt}</div></div><div style="display:grid; grid-template-columns:repeat(5,1fr); gap:4px; margin-bottom:6px;"><div style="border:1px solid #bae6fd; border-top:3px solid #0284c7; border-radius:5px; padding:4px;"><div style="font-size:6px; color:#64748b; font-weight:700;">DOLGOZÓ</div><b style="font-size:12px; color:#0369a1;">${employees.length} fő</b></div><div style="border:1px solid #bae6fd; border-top:3px solid #0284c7; border-radius:5px; padding:4px;"><div style="font-size:6px; color:#64748b; font-weight:700;">ÖSSZES KERET</div><b style="font-size:12px; color:#0369a1;">${shiftTotals.quota} óra</b></div><div style="border:1px solid #bbf7d0; border-top:3px solid #059669; border-radius:5px; padding:4px;"><div style="font-size:6px; color:#64748b; font-weight:700;">FELHASZNÁLT</div><b style="font-size:12px; color:#047857;">${shiftTotals.used} óra</b></div><div style="border:1px solid #bbf7d0; border-top:3px solid #16a34a; border-radius:5px; padding:4px;"><div style="font-size:6px; color:#64748b; font-weight:700;">MARADÉK</div><b style="font-size:12px; color:#15803d;">${shiftTotals.remaining} óra</b></div><div style="border:1px solid #e9d5ff; border-top:3px solid #7c3aed; border-radius:5px; padding:4px;"><div style="font-size:6px; color:#64748b; font-weight:700;">DÁTUMOS ESEMÉNY</div><b style="font-size:12px; color:#6d28d9;">${shiftTotals.events} db</b></div></div>${employeeCards}<div style="border-top:1px solid #cbd5e1; padding-top:4px; color:#94a3b8; font-size:7px;">FORVIA Staff Pro SMT · ${currentYear} · ${currentShift} műszak · Egyoldalas nyomtatásra optimalizálva</div></div>`;
+            window.print();
+        }
+
+        // A PRO gomb műszakszintű, sűrű A4-jelentése. A tartalom csak szükség esetén törik új oldalra.
+        function printShiftDetailedTableLegacy() {
+            if(employees.length === 0) { alert('Nincs dolgozó a kiválasztott műszakban a nyomtatáshoz!'); return; }
+            const currentYear = date.getFullYear();
+            const reportTotals = { quota:0, used:0, remaining:0, cserenap:0, BA:0, IG:0, TU:0, KE:0, events:0 };
+            const rows = employees.map((emp, index) => {
+                const totals = getPrintTotals(emp, currentYear);
+                const quota = getEmpQuota(emp, currentYear);
+                const remaining = quota - totals.S;
+                const events = getPrintEvents(emp, currentYear);
+                reportTotals.quota += quota; reportTotals.used += totals.S; reportTotals.remaining += remaining; reportTotals.cserenap += totals.cserenap;
+                reportTotals.BA += totals.BA; reportTotals.IG += totals.IG; reportTotals.TU += totals.TU; reportTotals.KE += totals.KE; reportTotals.events += events.length;
+                const eventDetails = events.length ? events.map(event => {
+                    const additions = [event.exchange, event.note ? `Megjegyzés: ${event.note}` : ''].filter(Boolean).map(escapePrintHtml).join(' · ');
+                    return `<span style="display:inline-block; vertical-align:top; margin:1px; max-width:100%; border:1px solid ${event.colour}44; border-left:3px solid ${event.colour}; border-radius:4px; padding:2px 4px; background:#fff; line-height:1.35;"><b style="color:#334155;">${formatPrintDate(currentYear, event.month, event.day)}</b> <span style="display:inline-block; border-radius:7px; padding:1px 4px; font-size:6px; font-weight:900; color:white; background:${event.colour};">${event.badge}</span> <span style="font-weight:700; color:#1e293b;">${escapePrintHtml(event.label)}</span>${additions ? `<br><span style="font-size:6px; color:#64748b;">${additions}</span>` : ''}</span>`;
+                }).join('') : '<span style="color:#94a3b8;">Nincs rögzített dátumos esemény</span>';
+                const remainingColor = remaining < 0 ? '#dc2626' : remaining <= 48 ? '#d97706' : '#047857';
+                return `<tr style="background:${index % 2 ? '#f8fafc' : '#fff'};"><td style="padding:5px 4px; border:1px solid #dbe4ef; text-align:center; font-weight:900; color:#0f172a; text-transform:uppercase;">${escapePrintHtml(String(emp.name).toLocaleUpperCase('hu-HU'))}</td><td style="padding:5px 3px; border:1px solid #dbe4ef; text-align:center; color:#1d4ed8; font-weight:900;">${quota}<small style="font-weight:700;"> óra</small></td><td style="padding:5px 3px; border:1px solid #dbe4ef; text-align:center; color:#047857; font-weight:900;">${totals.S}<small style="font-weight:700;"> óra</small></td><td style="padding:5px 3px; border:1px solid #dbe4ef; text-align:center; color:${remainingColor}; font-weight:900;">${remaining}<small style="font-weight:700;"> óra</small></td><td style="padding:4px 2px; border:1px solid #dbe4ef; text-align:center; line-height:1.45;"><span style="color:#c2410c; font-weight:900;">BÁ ${totals.BA}</span> · <span style="color:#6d28d9; font-weight:900;">IG ${totals.IG}</span><br><span style="color:#1d4ed8; font-weight:900;">TU ${totals.TU}</span> · <span style="color:#b45309; font-weight:900;">KÉ ${totals.KE}</span>${totals.cserenap ? `<br><span style="color:#7c3aed; font-weight:900;">+${totals.cserenap} óra csere</span>` : ''}</td><td style="padding:4px 3px; border:1px solid #dbe4ef; text-align:center; line-height:1.3;">${eventDetails}</td></tr>`;
+            }).join('');
+            document.getElementById('print-area').innerHTML = `<div style="color:#172033; background:#fff; font-family:Arial,sans-serif; padding:8mm 9mm; box-sizing:border-box; font-size:7px; text-align:center;"><div style="border-bottom:3px solid #0891b2; padding-bottom:5px; margin-bottom:5px;"><div style="font-size:20px; color:#0e7490; letter-spacing:-.6px; font-weight:900;">FORVIA</div><div style="font-size:9px; color:#334155; font-weight:900; letter-spacing:1.1px;">STAFF PRO · PRÉMIUM MŰSZAKJELENTÉS</div><div style="margin-top:2px; font-size:12px; font-weight:900; color:#0f172a;">${currentYear}. ÉV · ${currentShift} MŰSZAK · TELJES ÉVES ADAT</div><div style="margin-top:2px; font-size:7px; color:#64748b;">Dolgozónkénti keret- és eseményáttekintés · Nyomtatva: ${new Date().toLocaleString('hu-HU')}</div></div><div style="display:grid; grid-template-columns:repeat(6,1fr); gap:3px; margin-bottom:5px;"><div style="padding:3px; border:1px solid #bae6fd; border-top:3px solid #0284c7; border-radius:4px;"><div style="font-size:6px; color:#64748b; font-weight:700;">DOLGOZÓ</div><b style="font-size:11px; color:#0369a1;">${employees.length} fő</b></div><div style="padding:3px; border:1px solid #bae6fd; border-top:3px solid #0284c7; border-radius:4px;"><div style="font-size:6px; color:#64748b; font-weight:700;">ÖSSZES KERET</div><b style="font-size:11px; color:#0369a1;">${reportTotals.quota} óra</b></div><div style="padding:3px; border:1px solid #bbf7d0; border-top:3px solid #059669; border-radius:4px;"><div style="font-size:6px; color:#64748b; font-weight:700;">FELHASZNÁLT</div><b style="font-size:11px; color:#047857;">${reportTotals.used} óra</b></div><div style="padding:3px; border:1px solid #dcfce7; border-top:3px solid #16a34a; border-radius:4px;"><div style="font-size:6px; color:#64748b; font-weight:700;">MARADÉK</div><b style="font-size:11px; color:#15803d;">${reportTotals.remaining} óra</b></div><div style="padding:3px; border:1px solid #e9d5ff; border-top:3px solid #7c3aed; border-radius:4px;"><div style="font-size:6px; color:#64748b; font-weight:700;">CSERENAP</div><b style="font-size:11px; color:#6d28d9;">+${reportTotals.cserenap} óra</b></div><div style="padding:3px; border:1px solid #fef3c7; border-top:3px solid #d97706; border-radius:4px;"><div style="font-size:6px; color:#64748b; font-weight:700;">ESEMÉNY</div><b style="font-size:11px; color:#b45309;">${reportTotals.events} db</b></div></div><div style="margin:0 0 4px; padding:3px 5px; border-radius:4px; background:#f1f5f9; color:#475569; font-size:6px;"><b>Jelmagyarázat:</b> Szabi = órában rögzített szabadság · BÁ = betegállomány · IG = igazolatlan · TU = túlóra · KÉ = késés · A „csere” jelölés cserenap-jóváírást jelent.</div><table style="width:100%; border-collapse:collapse; table-layout:fixed; font-size:7px;"><thead style="display:table-header-group;"><tr style="background:linear-gradient(90deg,#e0f2fe,#eff6ff); color:#0f3b53;"><th style="width:14%; padding:5px 3px; border:1px solid #bae6fd; text-align:center;">DOLGOZÓ</th><th style="width:7%; padding:5px 2px; border:1px solid #bae6fd;">KERET</th><th style="width:8%; padding:5px 2px; border:1px solid #bae6fd; color:#047857;">FELHASZNÁLT</th><th style="width:8%; padding:5px 2px; border:1px solid #bae6fd;">MARADÉK</th><th style="width:13%; padding:5px 2px; border:1px solid #bae6fd;">KATEGÓRIÁK</th><th style="width:50%; padding:5px 3px; border:1px solid #bae6fd; text-align:center;">DÁTUMOS ESEMÉNYRÉSZLETEK</th></tr></thead><tbody>${rows}</tbody><tfoot><tr style="background:#ecfeff; color:#164e63; font-weight:900;"><td style="padding:5px 3px; border:1px solid #bae6fd;">MŰSZAK ÖSSZESEN</td><td style="padding:5px 2px; border:1px solid #bae6fd;">${reportTotals.quota} óra</td><td style="padding:5px 2px; border:1px solid #bae6fd; color:#047857;">${reportTotals.used} óra</td><td style="padding:5px 2px; border:1px solid #bae6fd;">${reportTotals.remaining} óra</td><td style="padding:5px 2px; border:1px solid #bae6fd;"><span style="color:#c2410c;">BÁ ${reportTotals.BA}</span> · <span style="color:#6d28d9;">IG ${reportTotals.IG}</span><br><span style="color:#1d4ed8;">TU ${reportTotals.TU}</span> · <span style="color:#b45309;">KÉ ${reportTotals.KE}</span></td><td style="padding:5px 3px; border:1px solid #bae6fd;">${reportTotals.events} dátumos esemény · +${reportTotals.cserenap} óra cserenap-jóváírás</td></tr></tfoot></table><div style="margin-top:5px; padding-top:3px; border-top:1px solid #cbd5e1; color:#94a3b8; font-size:6px;">FORVIA Staff Pro SMT · ${currentYear} · ${currentShift} műszak · A jelentés elsődlegesen egy A4 oldalra tömörít, és csak szükség esetén folytatódik új oldalra.</div></div>`;
+            window.print();
+        }
+
+        // PRO: kártyás, nyomtatható műszakjelentés teljes megnevezésekkel.
+        function printShiftDetailedCardsVerboseLegacy() {
+            if(employees.length === 0) { alert('Nincs dolgozó a kiválasztott műszakban a nyomtatáshoz!'); return; }
+            const currentYear = date.getFullYear();
+            const summary = { quota:0, used:0, remaining:0, cserenap:0, events:0 };
+            const cards = employees.map((emp, index) => {
+                const totals = getPrintTotals(emp, currentYear);
+                const quota = getEmpQuota(emp, currentYear);
+                const remaining = quota - totals.S;
+                const events = getPrintEvents(emp, currentYear);
+                summary.quota += quota; summary.used += totals.S; summary.remaining += remaining; summary.cserenap += totals.cserenap; summary.events += events.length;
+                const eventCards = events.length ? events.map(event => {
+                    const rawNumeric = parseFloat(event.value.replace(',', '.'));
+                    const fullName = !isNaN(rawNumeric) ? `Szabadság: ${rawNumeric} óra` : event.value === 'BÁ' ? 'Betegállomány' : event.value === 'IG' ? 'Igazolatlan távollét' : event.value === 'TU' ? 'Túlóra' : event.value.startsWith('KÉ') ? 'Késés' : escapePrintHtml(event.label);
+                    const additionalInfo = [event.exchange ? `Cserenap-jóváírás: +${Math.abs(parseFloat(event.exchange) || 0)} óra` : '', event.note ? `Megjegyzés: ${event.note}` : ''].filter(Boolean).map(escapePrintHtml).join('<br>');
+                    return `<div style="box-sizing:border-box; min-width:0; break-inside:avoid; page-break-inside:avoid; border:1px solid ${event.colour}55; border-top:3px solid ${event.colour}; border-radius:7px; padding:5px; background:#fff; text-align:center; overflow-wrap:anywhere; word-break:break-word;"><div style="font-size:7px; font-weight:900; color:#475569;">${formatPrintDate(currentYear, event.month, event.day)}</div><div style="margin-top:3px; font-size:9px; font-weight:900; color:${event.colour};">${fullName}</div>${additionalInfo ? `<div style="margin-top:3px; font-size:7px; line-height:1.35; color:#64748b;">${additionalInfo}</div>` : ''}</div>`;
+                }).join('') : '<div style="grid-column:1/-1; padding:7px; border:1px dashed #cbd5e1; border-radius:7px; color:#94a3b8; font-size:8px; text-align:center;">Nincs rögzített dátumos esemény ebben az évben.</div>';
+                const remainingColour = remaining < 0 ? '#dc2626' : remaining <= 48 ? '#d97706' : '#047857';
+                return `<section style="box-sizing:border-box; width:100%; min-width:0; margin:0; border:1px solid #cbd5e1; border-radius:10px; background:#fff; break-inside:avoid; page-break-inside:avoid; overflow:visible; text-align:center;"><div style="padding:7px 6px; background:linear-gradient(135deg,#ecfeff,#eff6ff); border-bottom:1px solid #cbd5e1; border-radius:10px 10px 0 0;"><div style="font-size:7px; font-weight:900; letter-spacing:1px; color:#64748b;">${String(index + 1).padStart(2, '0')} · DOLGOZÓI ÉVES ADATLAP</div><div style="margin-top:2px; font-size:14px; font-weight:900; text-transform:uppercase; color:#0f172a; overflow-wrap:anywhere; word-break:break-word;">${escapePrintHtml(String(emp.name).toLocaleUpperCase('hu-HU'))}</div></div><div style="display:grid; grid-template-columns:repeat(4,1fr); border-bottom:1px solid #dbeafe;"><div style="padding:5px 2px; border-right:1px solid #dbeafe;"><div style="font-size:6px; font-weight:700; color:#64748b; text-transform:uppercase;">Éves keret</div><div style="font-size:11px; font-weight:900; color:#1d4ed8;">${quota} óra</div></div><div style="padding:5px 2px; border-right:1px solid #dbeafe;"><div style="font-size:6px; font-weight:700; color:#64748b; text-transform:uppercase;">Felhasznált keret</div><div style="font-size:11px; font-weight:900; color:#047857;">${totals.S} óra</div></div><div style="padding:5px 2px; border-right:1px solid #dbeafe;"><div style="font-size:6px; font-weight:700; color:#64748b; text-transform:uppercase;">Maradék keret</div><div style="font-size:11px; font-weight:900; color:${remainingColour};">${remaining} óra</div></div><div style="padding:5px 2px;"><div style="font-size:6px; font-weight:700; color:#64748b; text-transform:uppercase;">Cserenap-jóváírás</div><div style="font-size:11px; font-weight:900; color:#6d28d9;">${totals.cserenap ? `+${totals.cserenap}` : '0'} óra</div></div></div><div style="padding:5px; border-bottom:1px solid #dbeafe; background:#fafcff;"><div style="font-size:7px; color:#475569; font-weight:900; margin-bottom:4px;">ÉVES KATEGÓRIAÖSSZESÍTŐ</div><div style="display:grid; grid-template-columns:repeat(4,1fr); gap:3px;"><div style="padding:3px; border:1px solid #fed7aa; border-radius:5px;"><div style="font-size:6px; color:#9a3412; font-weight:700;">BETEGÁLLOMÁNY</div><b style="font-size:9px; color:#c2410c;">${totals.BA} nap</b></div><div style="padding:3px; border:1px solid #ddd6fe; border-radius:5px;"><div style="font-size:6px; color:#5b21b6; font-weight:700;">IGAZOLATLAN TÁVOLLÉT</div><b style="font-size:9px; color:#6d28d9;">${totals.IG} nap</b></div><div style="padding:3px; border:1px solid #bfdbfe; border-radius:5px;"><div style="font-size:6px; color:#1e40af; font-weight:700;">TÚLÓRA</div><b style="font-size:9px; color:#1d4ed8;">${totals.TU} nap</b></div><div style="padding:3px; border:1px solid #fde68a; border-radius:5px;"><div style="font-size:6px; color:#92400e; font-weight:700;">KÉSÉS</div><b style="font-size:9px; color:#b45309;">${totals.KE} nap</b></div></div></div><div style="padding:6px; background:#fff;"><div style="font-size:8px; font-weight:900; letter-spacing:.7px; color:#0f3b53; margin-bottom:4px;">DÁTUMOS ESEMÉNYRÉSZLETEK</div><div style="display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; align-items:start;">${eventCards}</div></div></section>`;
+            }).join('');
+            document.getElementById('print-area').innerHTML = `<div style="color:#172033; background:#fff; font-family:Arial,sans-serif; padding:8mm 9mm; box-sizing:border-box; font-size:8px; text-align:center; overflow:visible;"><div style="border-bottom:3px solid #0891b2; padding-bottom:6px; margin-bottom:6px;"><div style="font-size:21px; line-height:1; font-weight:900; color:#0e7490; letter-spacing:-.7px;">FORVIA</div><div style="margin-top:3px; font-size:10px; font-weight:900; letter-spacing:1.2px; color:#334155;">STAFF PRO · PRÉMIUM KÁRTYÁS MŰSZAKJELENTÉS</div><div style="margin-top:3px; font-size:13px; font-weight:900; color:#0f172a;">${currentYear}. ÉV · ${currentShift} MŰSZAK</div><div style="margin-top:2px; color:#64748b; font-size:7px;">Teljes éves, dátumos áttekintés · Nyomtatva: ${new Date().toLocaleString('hu-HU')}</div></div><div style="display:grid; grid-template-columns:repeat(5,1fr); gap:4px; margin-bottom:6px;"><div style="padding:4px; border:1px solid #bae6fd; border-top:3px solid #0284c7; border-radius:5px;"><div style="font-size:6px; color:#64748b; font-weight:700;">DOLGOZÓ</div><b style="font-size:11px; color:#0369a1;">${employees.length} fő</b></div><div style="padding:4px; border:1px solid #bae6fd; border-top:3px solid #0284c7; border-radius:5px;"><div style="font-size:6px; color:#64748b; font-weight:700;">ÖSSZES KERET</div><b style="font-size:11px; color:#0369a1;">${summary.quota} óra</b></div><div style="padding:4px; border:1px solid #bbf7d0; border-top:3px solid #059669; border-radius:5px;"><div style="font-size:6px; color:#64748b; font-weight:700;">FELHASZNÁLT</div><b style="font-size:11px; color:#047857;">${summary.used} óra</b></div><div style="padding:4px; border:1px solid #dcfce7; border-top:3px solid #16a34a; border-radius:5px;"><div style="font-size:6px; color:#64748b; font-weight:700;">MARADÉK</div><b style="font-size:11px; color:#15803d;">${summary.remaining} óra</b></div><div style="padding:4px; border:1px solid #e9d5ff; border-top:3px solid #7c3aed; border-radius:5px;"><div style="font-size:6px; color:#64748b; font-weight:700;">DÁTUMOS ESEMÉNY</div><b style="font-size:11px; color:#6d28d9;">${summary.events} db</b></div></div><div style="display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; align-items:start; width:100%; box-sizing:border-box; overflow:visible;">${cards}</div><div style="margin-top:6px; padding-top:4px; border-top:1px solid #cbd5e1; color:#94a3b8; font-size:7px;">FORVIA Staff Pro SMT · ${currentYear} · ${currentShift} műszak · A kártyák sosem törnek ketté oldaltöréskor; több adat esetén új oldalra kerülnek.</div></div>`;
+            window.print();
+        }
+
+        // PRO: tömör, dátumtartományokat összevonó éves műszakjelentés.
+        function printShiftDetailedCompactLegacy() {
+            if(employees.length === 0) { alert('Nincs dolgozó a kiválasztott műszakban a nyomtatáshoz!'); return; }
+            const currentYear = date.getFullYear();
+            const dayStamp = event => Date.UTC(currentYear, event.month - 1, event.day);
+            const typeName = event => {
+                const hours = parseFloat(event.value.replace(',', '.'));
+                if(!isNaN(hours)) return `Szabadság · ${hours} óra / nap`;
+                if(event.value === 'BÁ') return 'Betegállomány';
+                if(event.value === 'IG') return 'Igazolatlan távollét';
+                if(event.value === 'TU') return 'Túlóra';
+                if(event.value.startsWith('KÉ')) return 'Késés';
+                return escapePrintHtml(event.label);
+            };
+            const compactDate = event => `${currentYear}.${String(event.month).padStart(2, '0')}.${String(event.day).padStart(2, '0')}`;
+            const groupedEvents = events => {
+                const groups = [];
+                events.forEach(event => {
+                    const previous = groups[groups.length - 1];
+                    const canJoin = previous && previous.last.value === event.value && !previous.last.note && !event.note && !previous.last.exchange && !event.exchange && dayStamp(event) - dayStamp(previous.last) === 86400000;
+                    if(canJoin) { previous.last = event; previous.days++; }
+                    else groups.push({ first:event, last:event, days:1 });
+                });
+                return groups;
+            };
+            const cards = employees.map((emp, index) => {
+                const totals = getPrintTotals(emp, currentYear);
+                const events = getPrintEvents(emp, currentYear);
+                const groups = groupedEvents(events);
+                const entries = groups.length ? groups.map(group => {
+                    const event = group.first;
+                    const period = group.days === 1 ? compactDate(event) : `${compactDate(event)}–${compactDate(group.last)}`;
+                    const duration = group.days === 1 ? '1 nap' : `${group.days} nap`;
+                    const extras = group.days === 1 ? [event.exchange ? `Cserenap-jóváírás: +${Math.abs(parseFloat(event.exchange) || 0)} óra` : '', event.note ? `Megjegyzés: ${event.note}` : ''].filter(Boolean).map(escapePrintHtml).join('<br>') : '';
+                    return `<div style="box-sizing:border-box; min-width:0; border-left:3px solid ${event.colour}; padding:3px 4px; background:#fff; text-align:center; overflow-wrap:anywhere; word-break:break-word;"><div style="font-size:7px; font-weight:900; color:#475569;">${period} <span style="color:#94a3b8;">·</span> ${duration}</div><div style="margin-top:1px; font-size:8px; font-weight:900; color:${event.colour};">${typeName(event)}</div>${extras ? `<div style="margin-top:2px; font-size:6.5px; color:#64748b; line-height:1.25;">${extras}</div>` : ''}</div>`;
+                }).join('') : '<div style="padding:5px; color:#94a3b8; font-size:7px; text-align:center;">Nincs rögzített dátumos esemény.</div>';
+                const quota = getEmpQuota(emp, currentYear), remaining = quota - totals.S;
+                const remainingColour = remaining < 0 ? '#dc2626' : remaining <= 48 ? '#d97706' : '#047857';
+                return `<section style="box-sizing:border-box; min-width:0; width:100%; margin:0; border:1px solid #cbd5e1; border-radius:7px; background:#fff; break-inside:avoid; page-break-inside:avoid; overflow:visible; text-align:center;"><div style="padding:4px; background:linear-gradient(135deg,#ecfeff,#eff6ff); border-bottom:1px solid #dbeafe; border-radius:7px 7px 0 0;"><div style="font-size:6px; font-weight:900; letter-spacing:.7px; color:#64748b;">${String(index + 1).padStart(2, '0')} · DOLGOZÓI ÉVES ÖSSZESÍTŐ</div><div style="margin-top:1px; font-size:10px; font-weight:900; color:#0f172a; text-transform:uppercase; overflow-wrap:anywhere; word-break:break-word;">${escapePrintHtml(String(emp.name).toLocaleUpperCase('hu-HU'))}</div></div><div style="padding:3px; border-bottom:1px solid #dbeafe; background:#fafcff; font-size:6.5px; line-height:1.35;"><span style="font-weight:900; color:#1d4ed8;">Éves keret: ${quota} óra</span> · <span style="font-weight:900; color:#047857;">Felhasznált: ${totals.S} óra</span><br><span style="font-weight:900; color:${remainingColour};">Maradék: ${remaining} óra</span>${totals.cserenap ? ` · <span style="font-weight:900; color:#6d28d9;">Cserenap-jóváírás: +${totals.cserenap} óra</span>` : ''}</div><div style="padding:3px; border-bottom:1px solid #dbeafe; font-size:6px; line-height:1.35; color:#475569;"><b style="color:#c2410c;">Betegállomány: ${totals.BA} nap</b> · <b style="color:#6d28d9;">Igazolatlan távollét: ${totals.IG} nap</b><br><b style="color:#1d4ed8;">Túlóra: ${totals.TU} nap</b> · <b style="color:#b45309;">Késés: ${totals.KE} nap</b></div><div style="padding:4px; background:#fff;"><div style="margin-bottom:2px; font-size:6.5px; font-weight:900; letter-spacing:.5px; color:#0f3b53;">DÁTUMOS ESEMÉNYEK · ${events.length} RÖGZÍTÉS / ${groups.length} TARTOMÁNY</div><div style="display:grid; grid-template-columns:1fr; gap:2px;">${entries}</div></div></section>`;
+            }).join('');
+            document.getElementById('print-area').innerHTML = `<div style="color:#172033; background:#fff; font-family:Arial,sans-serif; padding:7mm 8mm; box-sizing:border-box; font-size:7px; text-align:center; overflow:visible;"><div style="border-bottom:3px solid #0891b2; padding-bottom:4px; margin-bottom:4px;"><div style="font-size:18px; line-height:1; font-weight:900; color:#0e7490; letter-spacing:-.6px;">FORVIA</div><div style="margin-top:2px; font-size:8px; font-weight:900; letter-spacing:1px; color:#334155;">STAFF PRO · KÁRTYÁS MŰSZAKJELENTÉS</div><div style="margin-top:2px; font-size:11px; font-weight:900; color:#0f172a;">${currentYear}. ÉV · ${currentShift} MŰSZAK · DÁTUMTARTOMÁNYOKKAL TÖMÖRÍTVE</div></div><div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; align-items:start; width:100%; box-sizing:border-box; overflow:visible;">${cards}</div><div style="margin-top:4px; padding-top:3px; border-top:1px solid #cbd5e1; color:#94a3b8; font-size:6px;">FORVIA Staff Pro SMT · A folyamatos, azonos típusú napok egy dátumtartományban szerepelnek. A rendszer egy A4-es lapra tömörít, és csak szükség esetén folytatja új oldalon.</div></div>`;
+            window.print();
+        }
+
+        // PRO: nyomtatásbarát, adaptív kártyarács. Nem használ nyomtatáskor instabil CSS Grid oldaltörést.
+        function printShiftDetailed() {
+            if(employees.length === 0) { alert('Nincs dolgozó a kiválasztott műszakban a nyomtatáshoz!'); return; }
+            const currentYear = date.getFullYear();
+            const dayStamp = event => Date.UTC(currentYear, event.month - 1, event.day);
+            const compactDate = event => `${currentYear}.${String(event.month).padStart(2, '0')}.${String(event.day).padStart(2, '0')}`;
+            const fullTypeName = event => {
+                const hours = parseFloat(event.value.replace(',', '.'));
+                if(!isNaN(hours)) return `Szabadság · ${hours} óra / nap`;
+                if(event.value === 'BÁ') return 'Betegállomány';
+                if(event.value === 'IG') return 'Igazolatlan távollét';
+                if(event.value === 'TU') return 'Túlóra';
+                if(event.value.startsWith('KÉ')) return 'Késés';
+                return escapePrintHtml(event.label);
+            };
+            const makeGroups = events => {
+                const result = [];
+                events.forEach(event => {
+                    const previous = result[result.length - 1];
+                    const joinable = previous && previous.last.value === event.value && !previous.last.note && !event.note && !previous.last.exchange && !event.exchange && dayStamp(event) - dayStamp(previous.last) === 86400000;
+                    if(joinable) { previous.last = event; previous.days++; }
+                    else result.push({ first:event, last:event, days:1 });
+                });
+                return result;
+            };
+            const prepared = employees.map(emp => {
+                const events = getPrintEvents(emp, currentYear);
+                return { emp, totals:getPrintTotals(emp, currentYear), events, groups:makeGroups(events) };
+            });
+            const rangeCount = prepared.reduce((sum, person) => sum + person.groups.length, 0);
+            const columns = employees.length >= 7 || rangeCount >= 34 ? 3 : 2;
+            const cardWidth = columns === 3 ? 'calc(33.333% - 4px)' : 'calc(50% - 4px)';
+            const cardFont = columns === 3 ? '6.5px' : '7px';
+            const cards = prepared.map(({ emp, totals, events, groups }, index) => {
+                const quota = getEmpQuota(emp, currentYear), remaining = quota - totals.S;
+                const remainingColour = remaining < 0 ? '#dc2626' : remaining <= 48 ? '#d97706' : '#047857';
+                const entries = groups.length ? groups.map(group => {
+                    const event = group.first;
+                    const range = group.days === 1 ? compactDate(event) : `${compactDate(event)}–${compactDate(group.last)}`;
+                    const dayCount = group.days === 1 ? '1 nap' : `${group.days} nap`;
+                    const extra = group.days === 1 ? [event.exchange ? `Cserenap-jóváírás: +${Math.abs(parseFloat(event.exchange) || 0)} óra` : '', event.note ? `Megjegyzés: ${event.note}` : ''].filter(Boolean).map(escapePrintHtml).join('<br>') : '';
+                    return `<div style="box-sizing:border-box; width:100%; border:1px solid ${event.colour}66; border-left:4px solid ${event.colour}; border-radius:4px; padding:3px; background:#fff; text-align:center; overflow-wrap:anywhere; word-break:break-word;"><div style="font-size:6.5px; font-weight:900; color:#475569;">${range} · ${dayCount}</div><div style="margin-top:1px; font-size:7.5px; font-weight:900; color:${event.colour};">${fullTypeName(event)}</div>${extra ? `<div style="margin-top:2px; font-size:6px; color:#64748b; line-height:1.25;">${extra}</div>` : ''}</div>`;
+                }).join('') : '<div style="box-sizing:border-box; padding:5px; border:1px dashed #cbd5e1; border-radius:4px; color:#94a3b8; font-size:6.5px; text-align:center;">Nincs rögzített dátumos esemény.</div>';
+                return `<section style="display:inline-block; vertical-align:top; box-sizing:border-box; width:${cardWidth}; margin:2px; font-size:${cardFont}; border:1.5px solid #94a3b8; border-radius:7px; background:#fff; break-inside:avoid; page-break-inside:avoid; overflow:visible; text-align:center;"><div style="padding:4px 3px; border-bottom:1px solid #cbd5e1; background:linear-gradient(135deg,#ecfeff,#eff6ff); border-radius:6px 6px 0 0;"><div style="font-size:6px; font-weight:900; letter-spacing:.7px; color:#64748b;">${String(index + 1).padStart(2, '0')} · DOLGOZÓI ÉVES ÖSSZESÍTŐ</div><div style="margin-top:1px; font-size:10px; font-weight:900; color:#0f172a; text-transform:uppercase; overflow-wrap:anywhere; word-break:break-word;">${escapePrintHtml(String(emp.name).toLocaleUpperCase('hu-HU'))}</div></div><div style="padding:3px; border-bottom:1px solid #dbeafe; background:#fafcff; font-size:6px; line-height:1.35;"><b style="color:#1d4ed8;">Éves keret: ${quota} óra</b> · <b style="color:#047857;">Felhasznált: ${totals.S} óra</b><br><b style="color:${remainingColour};">Maradék: ${remaining} óra</b>${totals.cserenap ? ` · <b style="color:#6d28d9;">Cserenap-jóváírás: +${totals.cserenap} óra</b>` : ''}</div><div style="padding:3px; border-bottom:1px solid #dbeafe; font-size:5.8px; line-height:1.35; color:#475569;"><b style="color:#c2410c;">Betegállomány: ${totals.BA} nap</b> · <b style="color:#6d28d9;">Igazolatlan távollét: ${totals.IG} nap</b><br><b style="color:#1d4ed8;">Túlóra: ${totals.TU} nap</b> · <b style="color:#b45309;">Késés: ${totals.KE} nap</b></div><div style="padding:3px; background:#fff;"><div style="margin-bottom:2px; padding-bottom:2px; border-bottom:1px solid #e2e8f0; font-size:6px; font-weight:900; letter-spacing:.4px; color:#0f3b53;">DÁTUMOS ESEMÉNYEK · ${events.length} RÖGZÍTÉS / ${groups.length} TARTOMÁNY</div><div style="display:flex; flex-direction:column; gap:2px;">${entries}</div></div></section>`;
+            }).join('');
+            document.getElementById('print-area').innerHTML = `<div style="color:#172033; background:#fff; font-family:Arial,sans-serif; padding:7mm 8mm; box-sizing:border-box; font-size:7px; text-align:center; overflow:visible;"><div style="border-bottom:3px solid #0891b2; padding-bottom:4px; margin-bottom:3px;"><div style="font-size:18px; line-height:1; font-weight:900; color:#0e7490; letter-spacing:-.6px;">FORVIA</div><div style="margin-top:2px; font-size:8px; font-weight:900; letter-spacing:1px; color:#334155;">STAFF PRO · KÁRTYÁS MŰSZAKJELENTÉS</div><div style="margin-top:2px; font-size:11px; font-weight:900; color:#0f172a;">${currentYear}. ÉV · ${currentShift} MŰSZAK · DÁTUMTARTOMÁNYOKKAL TÖMÖRÍTVE</div></div><div style="width:100%; box-sizing:border-box; font-size:0; overflow:visible;">${cards}</div><div style="margin-top:3px; padding-top:3px; border-top:1px solid #cbd5e1; color:#94a3b8; font-size:6px;">Adaptív elrendezés: ${columns} oszlop · A kártyák és a dátumos események teljes szegéllyel, levágás nélkül jelennek meg.</div></div>`;
             window.print();
         }
 
