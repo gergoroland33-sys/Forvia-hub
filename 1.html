@@ -1499,6 +1499,132 @@ function triggerSearch() {
     const event = new Event('input', { bubbles: true, cancelable: true });
     inp.dispatchEvent(event);
 }
+/* ============================================================
+   DISCORD ÉRTESÍTŐ KIEGÉSZÍTÉS – AZ EREDETI KÓDHOZ HOZZÁADVA
+   IDE ILLESZD BE A SAJÁT, FRISS DISCORD WEBHOOK URL-ED:
+   ============================================================ */
+const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1537747985579122769/QsLQTSATrcPm5bO_J86ucgSEHGlukXwivPac2S_uDuTfz4GMC4eBTNFNuSo8Zdemu5Wh";
+
+(() => {
+    const MAX_EVENTS_PER_10_MINUTES = 30;
+    const DEDUPE_WINDOW_MS = 1200;
+    const SESSION_STORAGE_KEY = 'forviaDiscordSessionId';
+    let lastEvent = { key: '', at: 0 };
+
+    function getSessionId() {
+        let id = localStorage.getItem(SESSION_STORAGE_KEY);
+        if (!id) {
+            id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+            localStorage.setItem(SESSION_STORAGE_KEY, id);
+        }
+        return id.slice(0, 16);
+    }
+
+    function getDevice() {
+        return /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'Mobil' : 'PC';
+    }
+
+    function getBrowser() {
+        const ua = navigator.userAgent;
+        if (/Edg\//.test(ua)) return 'Edge';
+        if (/Firefox\//.test(ua)) return 'Firefox';
+        if (/Chrome\//.test(ua)) return 'Chrome';
+        if (/Safari\//.test(ua)) return 'Safari';
+        return 'Ismeretlen';
+    }
+
+    function canSend() {
+        const key = 'forviaDiscordEventLimit';
+        const now = Date.now();
+        const events = JSON.parse(sessionStorage.getItem(key) || '[]').filter(item => now - item < 600000);
+        if (events.length >= MAX_EVENTS_PER_10_MINUTES) return false;
+        events.push(now);
+        sessionStorage.setItem(key, JSON.stringify(events));
+        return true;
+    }
+
+    function cleanText(value, limit) {
+        return String(value || '').replace(/[\r\n`@]/g, ' ').trim().slice(0, limit);
+    }
+
+    function discordLog(action, detail = '') {
+        if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes('IDE_ILLESZD')) return;
+        if (!canSend()) return;
+        const now = Date.now();
+        const eventKey = `${action}|${detail}`;
+        if (lastEvent.key === eventKey && now - lastEvent.at < DEDUPE_WINDOW_MS) return;
+        lastEvent = { key: eventKey, at: now };
+
+        const payload = {
+            username: 'Forvia Hub figyelő',
+            embeds: [{
+                title: `📌 ${cleanText(action, 80)}`,
+                color: 0x2563eb,
+                fields: [
+                    { name: 'Részlet', value: cleanText(detail, 180) || '—', inline: false },
+                    { name: 'Időpont', value: new Date().toLocaleString('hu-HU'), inline: false },
+                    { name: 'Eszköz', value: `${getDevice()} / ${getBrowser()}`, inline: true },
+                    { name: 'Munkamenet', value: `#${getSessionId()}`, inline: true }
+                ],
+                footer: { text: 'Forvia Terminal eseménynapló' }
+            }]
+        };
+
+        fetch(DISCORD_WEBHOOK_URL, {
+            method: 'POST',
+            mode: 'cors',
+            keepalive: true,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).catch(() => {});
+    }
+
+    window.forviaDiscordLog = discordLog;
+    setTimeout(() => discordLog('Oldal megnyitása', 'Forvia Terminal elindítva'), 400);
+
+    const resultArea = document.getElementById('eredmeny');
+    let lastSearch = '';
+    if (resultArea) {
+        new MutationObserver(() => {
+            const query = (document.getElementById('keres')?.value || '').trim().toUpperCase();
+            if (query.length >= 2 && query !== lastSearch) {
+                lastSearch = query;
+                discordLog('Cikkszám keresés', query);
+            }
+        }).observe(resultArea, { childList: true });
+    }
+
+    function wrapFunction(name, action, makeDetail) {
+        const original = window[name];
+        if (typeof original !== 'function' || original.__discordLogged) return;
+        const wrapped = function(...args) {
+            discordLog(action, typeof makeDetail === 'function' ? makeDetail(args) : (makeDetail || ''));
+            return original.apply(this, args);
+        };
+        wrapped.__discordLogged = true;
+        window[name] = wrapped;
+    }
+
+    wrapFunction('selectSuggest', 'Keresési javaslat kiválasztása', args => args[0]);
+    wrapFunction('clearSearch', 'Keresés törlése');
+    wrapFunction('setBeultetesSzuro', 'Beültetés szűrő használata', args => args[0]);
+    wrapFunction('openModelModal', 'Modell megnyitása', args => args[0]);
+    wrapFunction('closeModelModal', 'Modelllista bezárása');
+    wrapFunction('openSetupModal', 'Setup Sheet megnyitása');
+    wrapFunction('closeSetupModal', 'Setup Sheet bezárása');
+    wrapFunction('generateSetupSheet', 'Setup Sheet nyomtatás indítása');
+    wrapFunction('printDemandSheet', 'Teljes alkatrészlista A4 nyomtatása');
+    wrapFunction('askDemandQuantity', 'Alkatrészigény kalkuláció indítása', args => args[0] === 'all' ? 'Teljes lista' : args[0]);
+
+    document.addEventListener('click', event => {
+        const button = event.target.closest('.tips-btn, #tipsButton, .f-btn, #demandAllBtn, #demandPrintBtn, .tips-close-btn');
+        if (!button) return;
+        if (button.matches('.f-btn')) discordLog('Beültetés szűrő használata', button.textContent.trim());
+        else if (button.matches('#demandAllBtn')) discordLog('Teljes alkatrészlista kalkuláció');
+        else if (button.matches('#demandPrintBtn')) discordLog('Teljes alkatrészlista A4 nyomtatása');
+        else if (button.matches('.tips-btn, #tipsButton')) discordLog('Tippek megnyitása');
+    });
+})();
 </script>
 </body>
 </html>
