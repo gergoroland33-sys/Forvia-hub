@@ -77,8 +77,14 @@
         .sortable-fallback { opacity: 0.8 !important; background: #1e293b !important; border: 1px solid #3b82f6; }
 
         /* ÚJ: 48 óra alatti/alatt-egyenlő KIVEHETŐ figyelmeztető szín */
-        .rem-warning { background: #5b1414 !important; color: #fca5a5 !important; }
-        .rem-warning-card { color: #f87171 !important; text-shadow: 0 0 10px rgba(239,68,68,0.5); }
+        @keyframes remaining-critical-pulse {
+            0%, 100% { box-shadow: inset 0 0 0 1px rgba(254, 202, 202, .18), 0 0 0 0 rgba(239, 68, 68, .32), 0 0 8px rgba(239, 68, 68, .24); }
+            50% { box-shadow: inset 0 0 0 1px rgba(254, 202, 202, .55), 0 0 0 5px rgba(239, 68, 68, 0), 0 0 19px rgba(239, 68, 68, .72); }
+        }
+        .rem-warning { background: #5b1414 !important; color: #fca5a5 !important; animation: remaining-critical-pulse 1.65s ease-in-out infinite; }
+        .rem-warning-card { display: inline-block; padding: 2px 6px; border-radius: 7px; background: rgba(127, 29, 29, .3); color: #f87171 !important; text-shadow: 0 0 10px rgba(239,68,68,.5); animation: remaining-critical-pulse 1.65s ease-in-out infinite; }
+        .rem-warning-mobile { display: inline-block; padding: 1px 5px; border-radius: 5px; background: rgba(127, 29, 29, .3); animation: remaining-critical-pulse 1.65s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) { .rem-warning, .rem-warning-card, .rem-warning-mobile { animation: none; } }
 
         /* ÚJ: TIPPEK GOMB */
         .tips-btn { background: linear-gradient(to bottom, #1e293b, #0f172a); border: 1px solid #334155; transition: all 0.2s ease; }
@@ -219,9 +225,8 @@
             <button onclick="jumpToToday()" class="bg-slate-800 hover:bg-slate-700 text-blue-400 hover:text-white border border-blue-500/30 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase shadow-lg whitespace-nowrap flex items-center gap-1 transition-all">
                 <i class="fas fa-calendar-day text-blue-500"></i> <span class="hidden md:inline">MA</span>
             </button>
-            <div class="flex bg-slate-900/80 p-0.5 rounded-lg border border-slate-700/50 ml-auto">
-                <button onclick="setView('matrix')" id="nav-m" class="px-3 py-1.5 rounded text-[10px] font-black uppercase flex items-center gap-1"><i class="fas fa-table"></i></button>
-                <button onclick="setView('stats')" id="nav-s" class="px-3 py-1.5 rounded text-[10px] font-black uppercase ml-1 flex items-center gap-1"><i class="fas fa-id-card"></i></button>
+            <div class="ml-auto rounded-xl border border-blue-300/35 bg-slate-950/70 p-1 shadow-lg shadow-blue-950/30">
+                <button onclick="toggleView()" id="view-toggle" type="button" class="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500 px-4 py-2 text-[10px] font-black uppercase tracking-[.1em] text-white shadow-md shadow-blue-950/40 transition-all hover:from-blue-600 hover:via-blue-500 hover:to-cyan-400 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-300" aria-label="Személyes adatlap megnyitása"><i class="fas fa-id-card text-[12px]"></i><span>Személyes adatlap</span><i class="fas fa-chevron-right text-[9px] opacity-85"></i></button>
             </div>
             <div class="flex gap-1">
                 <!-- ÚJ, SZOLIDABB FUNKCIÓ GOMBOK -->
@@ -898,11 +903,65 @@
             personalPrintArea.querySelectorAll('[style*="text-align:left"], [style*="text-align:right"]').forEach(el => el.style.textAlign = 'center');
             personalPrintArea.querySelectorAll('[style*="justify-content:space-between"]').forEach(el => el.style.justifyContent = 'center');
             const personalPrintStyle = document.createElement('style');
-            personalPrintStyle.textContent = '@media print { #print-area, #print-area * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }';
+            personalPrintStyle.textContent = '@media print { @page { size: A4 portrait; margin: 0; } #print-area, #print-area * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } #print-area { width: 210mm !important; min-height: 297mm !important; overflow: visible !important; } #print-area .personal-a4-sheet { width: 194mm !important; min-height: 281mm !important; box-sizing: border-box !important; overflow: visible !important; transform-origin: top center !important; page-break-inside: avoid !important; break-inside: avoid !important; } #print-area .personal-a4-sheet table, #print-area .personal-a4-sheet tr { page-break-inside: avoid !important; break-inside: avoid !important; } }';
             personalPrintArea.prepend(personalPrintStyle);
-            const densityScale = events.length <= 12 ? 1.28 : events.length <= 28 ? 1.16 : events.length <= 52 ? 1.07 : 1;
+            const personalPremiumStyle = document.createElement('style');
+            personalPremiumStyle.textContent = `@media print {
+                #print-area .personal-a4-sheet .print-month-card { border:0 !important; border-collapse:separate !important; border-spacing:0 2px !important; box-shadow:none !important; }
+                #print-area .personal-a4-sheet .print-month-card th { background:#1e3a8a !important; color:#fff !important; border:0 !important; padding:4px !important; }
+                #print-area .personal-a4-sheet .print-month-card td { border-top:1px solid #cbd5e1 !important; border-bottom:1px solid #cbd5e1 !important; }
+                #print-area .personal-a4-sheet .print-month-card tr td:first-child { border-left:3px solid #2563eb !important; border-radius:4px 0 0 4px; }
+                #print-area .personal-a4-sheet .print-month-card tr td:last-child { border-right:1px solid #cbd5e1 !important; border-radius:0 4px 4px 0; }
+                #print-area .personal-a4-sheet .print-event-card { border:0 !important; border-collapse:separate !important; border-spacing:0 3px !important; box-shadow:none !important; }
+                #print-area .personal-a4-sheet .print-event-card th { background:#eff6ff !important; color:#1e3a8a !important; border:0 !important; padding:4px !important; letter-spacing:.15px; }
+                #print-area .personal-a4-sheet .print-event-card td { background:#fff !important; border-top:1px solid #cbd5e1 !important; border-bottom:1px solid #cbd5e1 !important; padding:4px !important; }
+                #print-area .personal-a4-sheet .print-event-card tr.print-event-row td:first-child { border-left:3px solid var(--event-accent, #2563eb) !important; border-radius:5px 0 0 5px; }
+                #print-area .personal-a4-sheet .print-event-card tr.print-event-row td:last-child { border-right:1px solid #cbd5e1 !important; border-radius:0 5px 5px 0; }
+                #print-area .personal-a4-sheet .print-stat-card { box-shadow:0 1px 3px rgba(15,23,42,.12) !important; }
+            }`;
+            personalPrintArea.prepend(personalPremiumStyle);
+            // Az oldalméret nem pusztán az események számától függ: a hosszabb megjegyzések is helyet igényelnek.
+            const textLoad = events.reduce((total, event) => total + (event.note ? Math.max(1, Math.ceil(event.note.length / 62)) : 0) + (event.exchange ? 1 : 0), 0);
+            const pageLoad = events.length + textLoad;
+            // Kevés adatnál nagyobb betű és tágasabb elrendezés tölti ki az oldalt; sok adatnál csak a teljes lap aránya tömörül.
+            const densityScale = pageLoad <= 10 ? 1.10 : pageLoad <= 26 ? 1.05 : pageLoad <= 36 ? 1.02 : 1;
+            const pageZoom = pageLoad <= 10 ? 1.11 : pageLoad <= 26 ? 1.055 : pageLoad <= 36 ? 1.02 : pageLoad <= 52 ? 0.96 : pageLoad <= 74 ? 0.90 : pageLoad <= 96 ? 0.84 : 0.78;
             const personalPage = personalPrintArea.querySelector('div');
-            if(personalPage) personalPage.style.padding = events.length <= 28 ? '6mm 7mm' : '8mm 9mm';
+            if(personalPage) {
+                personalPage.classList.add('personal-a4-sheet');
+                personalPage.style.padding = pageLoad <= 18 ? '5mm 6mm' : pageLoad <= 52 ? '6mm 7mm' : '7mm 8mm';
+                personalPage.style.margin = '0 auto';
+                personalPage.style.overflow = 'visible';
+                personalPage.style.zoom = String(pageZoom);
+                // A nagyítás mellett is mindig az álló A4 biztonságos, nyomtatható területére illeszkedik.
+                personalPage.style.setProperty('width', `${(200 / pageZoom).toFixed(2)}mm`, 'important');
+                personalPage.style.setProperty('max-width', `${(200 / pageZoom).toFixed(2)}mm`, 'important');
+                personalPage.style.setProperty('min-height', `${(281 / pageZoom).toFixed(2)}mm`, 'important');
+                // A felső információs blokk a nyomtatott oldalon mindig tisztán, középre rendezve jelenik meg.
+                const printBrandHeader = personalPage.children[0];
+                const printIdentityHeader = personalPage.children[1];
+                if(printBrandHeader) {
+                    printBrandHeader.style.flexDirection = 'column';
+                    printBrandHeader.style.alignItems = 'center';
+                    printBrandHeader.style.justifyContent = 'center';
+                    printBrandHeader.style.textAlign = 'center';
+                    printBrandHeader.style.gap = '2px';
+                    if(printBrandHeader.children[1]) printBrandHeader.children[1].style.textAlign = 'center';
+                }
+                if(printIdentityHeader) {
+                    printIdentityHeader.style.flexDirection = 'column';
+                    printIdentityHeader.style.alignItems = 'center';
+                    printIdentityHeader.style.justifyContent = 'center';
+                    printIdentityHeader.style.textAlign = 'center';
+                    printIdentityHeader.style.gap = '2px';
+                    if(printIdentityHeader.children[1]) printIdentityHeader.children[1].style.textAlign = 'center';
+                }
+                const printEventHeading = Array.from(personalPage.querySelectorAll('div')).find(div => div.textContent.trim().startsWith('Dátumos eseménynapló'));
+                if(printEventHeading && printEventHeading.parentElement) {
+                    printEventHeading.parentElement.style.justifyContent = 'center';
+                    printEventHeading.parentElement.style.gap = '6px';
+                }
+            }
             // Kizárólag az adatlap nyomtatási arculata: erősebb betűk és az alkalmazás kategóriaszínei.
             personalPrintArea.querySelectorAll('th, td').forEach(cell => {
                 cell.style.fontWeight = '700';
@@ -921,6 +980,7 @@
                 { column:5, colour:'#d97706', background:'#fffbeb' }
             ];
             if(monthlyTable) {
+                monthlyTable.classList.add('print-month-card');
                 monthlyTable.querySelectorAll('tr').forEach(row => {
                     printCategoryColours.forEach(theme => {
                         const cell = row.children[theme.column];
@@ -942,6 +1002,20 @@
                 badge.style.fontSize = `${Math.round(8 * densityScale * 10) / 10}px`;
                 const detailCell = badge.parentElement && badge.parentElement.nextElementSibling;
                 if(detailCell) { detailCell.style.color = categoryColour; detailCell.style.fontWeight = '900'; }
+            });
+            Array.from(personalPrintArea.querySelectorAll('table')).filter(table => table !== monthlyTable).forEach(table => {
+                table.classList.add('print-event-card');
+                table.querySelectorAll('tbody tr').forEach(row => {
+                    const badge = row.querySelector('span[style*="min-width:32px"]');
+                    if(!badge) return;
+                    row.classList.add('print-event-row');
+                    row.style.setProperty('--event-accent', badge.style.color || '#2563eb');
+                });
+            });
+            const printStatGrid = Array.from(personalPage ? personalPage.children : []).find(child => child.style.display === 'grid' && child.style.gridTemplateColumns.includes('repeat(4'));
+            if(printStatGrid) printStatGrid.querySelectorAll(':scope > div').forEach(card => card.classList.add('print-stat-card'));
+            personalPrintArea.querySelectorAll('th').forEach(header => {
+                if(header.textContent.trim() === 'Tip.') header.textContent = 'Típus';
             });
             if(shouldPrint) window.print();
             return personalPrintArea.innerHTML;
@@ -1230,11 +1304,22 @@
         function setView(v) {
             document.getElementById('v-matrix').classList.toggle('hidden', v !== 'matrix');
             document.getElementById('v-stats').classList.toggle('hidden', v !== 'stats');
-            document.getElementById('nav-m').className = v === 'matrix' ? "px-3 py-1.5 rounded text-[10px] font-black uppercase bg-blue-600 text-white flex items-center gap-1" : "px-3 py-1.5 rounded text-[10px] font-black uppercase text-slate-400 hover:text-white flex items-center gap-1";
-            document.getElementById('nav-s').className = v === 'stats' ? "px-3 py-1.5 rounded text-[10px] font-black uppercase bg-blue-600 text-white flex items-center gap-1 ml-1" : "px-3 py-1.5 rounded text-[10px] font-black uppercase text-slate-400 hover:text-white flex items-center gap-1 ml-1";
+            const viewToggle = document.getElementById('view-toggle');
+            if(viewToggle) {
+                const isStats = v === 'stats';
+                viewToggle.setAttribute('aria-label', isStats ? 'Vissza a táblázathoz' : 'Személyes adatlap megnyitása');
+                viewToggle.innerHTML = isStats
+                    ? '<i class="fas fa-arrow-left text-[12px]"></i><span>Vissza a táblázathoz</span><i class="fas fa-table text-[11px] opacity-85"></i>'
+                    : '<i class="fas fa-id-card text-[12px]"></i><span>Személyes adatlap</span><i class="fas fa-chevron-right text-[9px] opacity-85"></i>';
+            }
             if(v==='stats') {
                 buildStatsGrid();
             }
+        }
+
+        function toggleView() {
+            const isStatsVisible = !document.getElementById('v-stats').classList.contains('hidden');
+            setView(isStatsVisible ? 'matrix' : 'stats');
         }
 
         function changeMonth(v) { 
@@ -1297,7 +1382,7 @@
 
             listEl.innerHTML = employees.map((e, index) => {
                 let remaining = getEmpQuota(e, currentYear) - getYearlyUsed(e, currentYear);
-                const remWarnCls = remaining <= 48 ? 'text-red-400' : 'text-emerald-400';
+                const remWarnCls = remaining <= 48 ? 'text-red-400 rem-warning-mobile' : 'text-emerald-400';
                 
                 const getStatusHtml = (key, label) => {
                     const val = (e.data && e.data[key]) ? e.data[key] : "-";
