@@ -706,6 +706,20 @@ input.suggestions-active {
 .models-modal-content .comparison-part small { font-size:.68rem; line-height:1.35; }
 .models-context { margin:-2px 0 11px; color:#ddd6fe; font-family:monospace; font-size:.78rem; line-height:1.45; }
 @media screen and (max-width:1024px) { .input-group.models-button-ready #keres { padding-right:108px; } .input-group.models-button-ready .clear-btn { right:96px; } .input-group.models-button-ready .models-btn { right:4px; padding:6px 8px; border-radius:8px; font-size:.56rem; } .models-filter-row { align-items:flex-start; flex-direction:column; } .models-filter-note { text-align:left; } .models-modal-content .model-option { font-size:.78rem; } .models-modal-content .comparison-part strong { font-size:.76rem; } }
+/* --- TELJES MODELL-ÖSSZEHASONLÍTÓ NÉZET ÉS SZŰRŐK --- */
+.models-modal-content { width:calc(100vw - 28px); max-width:1320px; max-height:94vh; }
+.models-workspace { grid-template-columns:minmax(350px,1fr) minmax(0,2.2fr); min-height:calc(94vh - 188px); }
+.models-list-panel,.models-results-panel { max-height:calc(94vh - 220px); }
+.model-option { align-items:flex-start; }
+.model-option > span:first-child { flex:1; white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.32; }
+.model-option-state { padding-top:1px; white-space:nowrap; }
+.models-filter-row { align-items:flex-start; flex-direction:column; }
+.models-filter-controls { display:flex; flex-wrap:wrap; gap:12px 17px; width:100%; }
+.models-filter-label { font-size:.9rem; }
+.models-filter-note { width:100%; text-align:left; }
+.input-group.models-button-ready .models-btn { border-left:2px solid rgba(233,213,255,.92); outline:1px solid rgba(76,29,149,.62); outline-offset:2px; }
+.input-group.models-button-ready .models-btn::before { content:''; position:absolute; left:-7px; top:20%; width:1px; height:60%; background:rgba(196,181,253,.72); box-shadow:0 0 7px rgba(196,181,253,.65); }
+@media screen and (max-width:1024px) { .models-modal-content { width:calc(100vw - 12px); max-height:97vh; } .models-workspace { grid-template-columns:1fr; min-height:0; } .models-list-panel,.models-results-panel { max-height:39vh; } .models-filter-controls { gap:9px; } .models-filter-label { font-size:.78rem; } .model-option > span:first-child { font-size:.78rem; } .model-option-state { font-size:.6rem; } .input-group.models-button-ready .models-btn::before { left:-4px; } }
 </style>
 </head>
 <body>
@@ -1577,7 +1591,7 @@ function createModelsExplorer() {
     const dialog = document.createElement('div');
     dialog.id = 'modelsExplorerModal';
     dialog.className = 'modal-overlay';
-    dialog.innerHTML = `<div class="modal-content models-modal-content"><div class="modal-header"><div class="modal-title-wrap"><span class="modal-title">MODELLEK</span><span class="modal-subtitle">Modellkereső és cikkszám-összehasonlító</span></div><div class="modal-close" aria-label="Bezárás">✕</div></div><div class="models-search-box"><input id="modelsExplorerSearch" type="text" placeholder="Modellnév keresése..." autocomplete="off"><span class="models-count" id="modelsExplorerCount"></span></div><div class="models-selection" id="modelsExplorerSelection"></div><div class="models-workspace"><div class="models-list-panel"><div class="models-list-title">VÁLASZTHATÓ MODELLEK</div><div id="modelsExplorerList"></div></div><div class="models-results-panel" id="modelsExplorerResults"><div class="models-filter-row" id="modelsDifferenceFilter"><label class="models-filter-label"><input id="modelsDifferenceCheckbox" type="checkbox"><span>Cikkszám eltérések a modellekben</span></label><span class="models-filter-note">Jelöld be az eltérő vagy hiányzó tételek megjelenítéséhez.</span></div><div id="modelsExplorerResultsContent"></div></div></div></div>`;
+    dialog.innerHTML = `<div class="modal-content models-modal-content"><div class="modal-header"><div class="modal-title-wrap"><span class="modal-title">MODELLEK</span><span class="modal-subtitle">Modellkereső és cikkszám-összehasonlító</span></div><div class="modal-close" aria-label="Bezárás">✕</div></div><div class="models-search-box"><input id="modelsExplorerSearch" type="text" placeholder="Modellnév keresése..." autocomplete="off"><span class="models-count" id="modelsExplorerCount"></span></div><div class="models-selection" id="modelsExplorerSelection"></div><div class="models-workspace"><div class="models-list-panel"><div class="models-list-title">VÁLASZTHATÓ MODELLEK</div><div id="modelsExplorerList"></div></div><div class="models-results-panel" id="modelsExplorerResults"><div class="models-filter-row" id="modelsDifferenceFilter"><div class="models-filter-controls"><label class="models-filter-label"><input id="modelsCommonCheckbox" type="checkbox" checked><span>Közös cikkszámok</span></label><label class="models-filter-label"><input id="modelsDifferenceCheckbox" type="checkbox"><span>Cikkszám eltérések a modellekben</span></label><label class="models-filter-label"><input id="modelsQuantityCheckbox" type="checkbox"><span>Darabszám eltérések</span></label></div><span class="models-filter-note">A kijelölt listák jelennek meg az összehasonlításban.</span></div><div id="modelsExplorerResultsContent"></div></div></div></div>`;
     document.body.appendChild(dialog);
 
     const getModels = () => Array.from(new Set(ultetes.map(row => (row[2] || '').trim().toUpperCase()).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'hu'));
@@ -1585,7 +1599,9 @@ function createModelsExplorer() {
     const list = dialog.querySelector('#modelsExplorerList');
     const result = dialog.querySelector('#modelsExplorerResultsContent');
     const differenceFilter = dialog.querySelector('#modelsDifferenceFilter');
+    const commonCheckbox = dialog.querySelector('#modelsCommonCheckbox');
     const differenceCheckbox = dialog.querySelector('#modelsDifferenceCheckbox');
+    const quantityCheckbox = dialog.querySelector('#modelsQuantityCheckbox');
     const search = dialog.querySelector('#modelsExplorerSearch');
     const count = dialog.querySelector('#modelsExplorerCount');
 
@@ -1622,8 +1638,10 @@ function createModelsExplorer() {
         const presentText = part => part.present.map(item => `${item.model}: ${item.perPanel} DB`).join(' • ');
         const missingText = part => models.filter(model => !part.present.some(item => item.model === model)).join(', ');
         const selectedModelsLabel = models.map(model => escapeModelCompareHtml(model)).join(' • ');
-        const differencesMarkup = differenceCheckbox.checked ? `<div class="comparison-section"><div class="comparison-section-title">ELTÉRŐ CIKKSZÁMOK – NEM MINDEN MODELLBEN SZEREPELNEK</div><div class="comparison-parts">${differences.map(part => partCard(part, 'comparison-difference', `Benne: ${presentText(part)} | Hiányzik: ${missingText(part)}`)).join('') || '<span style="color:#94a3b8;">Nincs eltérő cikkszám.</span>'}</div></div><div class="comparison-section"><div class="comparison-section-title">DARABSZÁM-ELTÉRÉSEK A KÖZÖS CIKKSZÁMOKNÁL</div><div class="comparison-parts">${quantityDifferences.map(part => partCard(part, 'comparison-quantity', presentText(part))).join('') || '<span style="color:#94a3b8;">A közös cikkszámok darabszámai megegyeznek.</span>'}</div></div>` : '';
-        result.innerHTML = `<div class="comparison-head"><div class="comparison-title">${models.length} MODELL ÖSSZEHASONLÍTÁSA</div><span class="comparison-badge">${common.length} KÖZÖS / ${differences.length} ELTÉRŐ</span></div><div class="models-context"><strong>Összehasonlított modellek:</strong> ${selectedModelsLabel}</div><div class="comparison-section"><div class="comparison-section-title">KÖZÖS CIKKSZÁMOK – MINDEN KIVÁLASZTOTT MODELLBEN</div><div class="comparison-parts">${common.map(part => partCard(part, '', presentText(part))).join('') || '<span style="color:#94a3b8;">Nincs minden modellben közös cikkszám.</span>'}</div></div>${differencesMarkup}`;
+        const commonMarkup = commonCheckbox.checked ? `<div class="comparison-section"><div class="comparison-section-title">KÖZÖS CIKKSZÁMOK – MINDEN KIVÁLASZTOTT MODELLBEN</div><div class="comparison-parts">${common.map(part => partCard(part, '', presentText(part))).join('') || '<span style="color:#94a3b8;">Nincs minden modellben közös cikkszám.</span>'}</div></div>` : '';
+        const differencesMarkup = differenceCheckbox.checked ? `<div class="comparison-section"><div class="comparison-section-title">ELTÉRŐ CIKKSZÁMOK – NEM MINDEN MODELLBEN SZEREPELNEK</div><div class="comparison-parts">${differences.map(part => partCard(part, 'comparison-difference', `Benne: ${presentText(part)} | Hiányzik: ${missingText(part)}`)).join('') || '<span style="color:#94a3b8;">Nincs eltérő cikkszám.</span>'}</div></div>` : '';
+        const quantityMarkup = quantityCheckbox.checked ? `<div class="comparison-section"><div class="comparison-section-title">DARABSZÁM-ELTÉRÉSEK A KÖZÖS CIKKSZÁMOKNÁL</div><div class="comparison-parts">${quantityDifferences.map(part => partCard(part, 'comparison-quantity', presentText(part))).join('') || '<span style="color:#94a3b8;">A közös cikkszámok darabszámai megegyeznek.</span>'}</div></div>` : '';
+        result.innerHTML = `<div class="comparison-head"><div class="comparison-title">${models.length} MODELL ÖSSZEHASONLÍTÁSA</div><span class="comparison-badge">${common.length} KÖZÖS / ${differences.length} ELTÉRŐ</span></div><div class="models-context"><strong>Összehasonlított modellek:</strong> ${selectedModelsLabel}</div>${commonMarkup}${differencesMarkup}${quantityMarkup}`;
     }
 
     function renderList() {
@@ -1636,7 +1654,9 @@ function createModelsExplorer() {
 
     function renderAll() { renderSelection(); renderList(); renderResults(); }
     search.addEventListener('input', renderList);
+    commonCheckbox.addEventListener('change', renderResults);
     differenceCheckbox.addEventListener('change', renderResults);
+    quantityCheckbox.addEventListener('change', renderResults);
     button.onclick = () => { if (typeof provideFeedback === 'function') provideFeedback(); search.value = ''; renderAll(); dialog.style.display = 'flex'; setTimeout(() => search.focus(), 20); };
     dialog.addEventListener('click', event => { if (event.target === dialog || event.target.classList.contains('modal-close')) dialog.style.display = 'none'; });
 
