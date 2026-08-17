@@ -455,6 +455,7 @@
                         <li><i class="fas fa-print"></i> <b>Nyomtatás</b> – a teljes műszak éves összesítőjét nyomtatja ki.</li>
                         <li><i class="fas fa-download"></i> <b>Teljes mentés</b> – mind a 4 műszak adatát egy .json fájlba menti biztonsági mentésként.</li>
                         <li><i class="fas fa-plus"></i> <b>Új dolgozó</b> – hozzáad egy új sort az aktuális műszakhoz.</li>
+                        <li><i class="fas fa-pencil-alt"></i> <b>Névszerkesztés</b> – a névmező, illetve a személyes kártya jobb felső ceruza ikonjára kattintva, megerősítés után módosítható a dolgozó neve.</li>
                         <li>A <b>KERET</b> mező soronként szerkeszthető, évenként külön tárolódik (pl. 2026-ra más lehet, mint 2027-re).</li>
                         <li>A dolgozók sorrendje a névoszlopnál fogva húzva átrendezhető; a név melletti <b>×</b> a dolgozó törlésére szolgál.</li>
                     </ul>
@@ -785,7 +786,7 @@
                 const remVal = quota - used;
                 const remWarnCls = remVal <= 48 ? 'rem-warning' : '';
                 
-                let row = `<tr data-id="${e.id}"><td class="name-col"><div class="flex justify-between items-center h-full w-full"><span class="font-black text-[12px] tracking-tight uppercase text-white text-left break-words leading-tight">${e.name}</span><button onclick="delEmp(${e.id})" class="text-red-500/30 hover:text-red-500 transition-colors p-1 flex-shrink-0 ml-1"><i class="fas fa-times-circle"></i></button></div></td>
+                let row = `<tr data-id="${e.id}"><td class="name-col"><div class="relative flex items-center h-full w-full"><span class="font-black text-[12px] tracking-tight uppercase text-white text-left break-words leading-tight pr-6">${e.name}</span><button type="button" onclick="event.stopPropagation(); editEmpName(${e.id})" onpointerdown="event.stopPropagation()" title="Név szerkesztése" class="absolute top-0.5 right-0 text-slate-500 hover:text-blue-300 transition-colors p-1"><i class="fas fa-pencil-alt text-[9px]"></i></button><button onclick="event.stopPropagation(); delEmp(${e.id})" onpointerdown="event.stopPropagation()" title="Dolgozó törlése" class="absolute bottom-0.5 right-0 text-red-500/30 hover:text-red-500 transition-colors p-1"><i class="fas fa-times-circle text-[9px]"></i></button></div></td>
                 <td class="sticky-quota bg-slate-800 border-r border-slate-700/50"><input type="number" value="${quota}" onchange="updateEmpQuota(${e.id}, ${currentYear}, this.value)" class="input-cell quota-input text-center"></td>
                 <td id="rem-${e.id}" class="sticky-rem bg-slate-800 text-emerald-400 font-black text-[15px] border-r-4 border-slate-900 text-center ${remWarnCls}">${remVal}</td>`;
                 
@@ -1316,6 +1317,23 @@
 
                 return `<div class="bg-slate-900/80 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col"><div class="p-6 pb-4 border-b border-slate-800"><h3 class="font-black text-xl text-white uppercase tracking-tighter mb-2">${e.name}</h3><div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden mb-2"><div class="h-full bg-gradient-to-r from-blue-500 to-emerald-400" style="width: ${percent}%"></div></div><div class="flex justify-between items-end"><div class="text-[10px] text-slate-400 font-bold uppercase">Keret: ${quota}</div><div class="text-right"><div class="text-[10px] text-slate-500 font-bold uppercase">Még kivehető</div><div class="text-2xl font-black leading-none ${remWarnCls}">${remaining}</div></div></div></div><div class="p-4 grid grid-cols-2 gap-2 bg-slate-900/50 flex-grow content-start"><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center"><span class="text-[10px] text-slate-400 font-bold">SZABI</span><span class="font-bold text-white">${totals.S}</span></div><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center"><span class="text-[10px] text-orange-400 font-bold">BETEG</span><span class="font-bold text-orange-400">${totals.BA}</span></div><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center"><span class="text-[10px] text-violet-400 font-bold">IGAZOLATLAN</span><span class="font-bold text-violet-400">${totals.IG}</span></div><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center"><span class="text-[10px] text-blue-400 font-bold">TÚLÓRA</span><span class="font-bold text-blue-400">${totals.TU}</span></div><div class="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex justify-between items-center col-span-2"><span class="text-[10px] text-amber-500 font-bold">KÉSÉS</span><span class="font-bold text-amber-500">${totals.KE}</span></div>${cserenapHtml}</div><div class="p-4 pt-2"><button onclick="printA4(${e.id})" class="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-black text-[10px] uppercase transition-all tracking-widest text-white shadow-lg"><i class="fas fa-print mr-2"></i> Részletes adatlap</button></div></div>`;
             }).join('');
+            const statsGrid = document.getElementById('stats-grid');
+            const cardOffset = employees.length ? 1 : 0;
+            Array.from(statsGrid.children).slice(cardOffset).forEach((card, index) => {
+                const emp = employees[index];
+                const cardHeader = card.firstElementChild;
+                if(!emp || !cardHeader) return;
+                cardHeader.classList.add('relative');
+                const heading = cardHeader.querySelector('h3');
+                if(heading) heading.classList.add('pr-8');
+                const editButton = document.createElement('button');
+                editButton.type = 'button';
+                editButton.title = 'Név szerkesztése';
+                editButton.className = 'absolute right-4 top-4 rounded-lg border border-slate-700 bg-slate-800/90 p-2 text-slate-400 shadow-sm transition-colors hover:border-blue-400/60 hover:text-blue-300';
+                editButton.innerHTML = '<i class="fas fa-pencil-alt text-[11px]"></i>';
+                editButton.addEventListener('click', event => { event.stopPropagation(); editEmpName(emp.id); });
+                cardHeader.appendChild(editButton);
+            });
         }
 
         function setView(v) {
@@ -1364,6 +1382,20 @@
         }
         
         function addEmp() { const n = prompt("Név:"); if(n) { employees.push({id:Date.now(), name:n, yearlyQuota:160, data:{}}); save(); render(); renderMobileList(); } }
+        window.editEmpName = function(id) {
+            const emp = employees.find(x => x.id == id);
+            if(!emp || !confirm(`Biztosan módosítod ${emp.name} nevét?`)) return;
+            const nextName = prompt('Dolgozó új neve:', emp.name);
+            if(nextName === null) return;
+            const cleanedName = nextName.trim().replace(/\s+/g, ' ');
+            if(!cleanedName) { alert('A név nem lehet üres.'); return; }
+            if(cleanedName === emp.name) return;
+            emp.name = cleanedName;
+            save();
+            render();
+            renderMobileList();
+            if(!document.getElementById('v-stats').classList.contains('hidden')) buildStatsGrid();
+        };
         function delEmp(id) { if(confirm("Biztos törlöd?")) { employees = employees.filter(x => x.id != id); save(); render(); renderMobileList(); } }
         
         document.addEventListener('focusin', function(e) {
