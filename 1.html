@@ -648,6 +648,18 @@ input.suggestions-active {
   #printArea.demand-print.demand-print-dense .demand-print-count { font-size:9.5pt; }
   #printArea.demand-print.demand-print-dense .demand-print-item div:last-child { font-size:6.4pt; }
 }
+/* --- MODELLNÉV KERESÉS – PRÉMIUM FŐOLDALI CIKKSZÁM-LISTA --- */
+.header-model-search { background:linear-gradient(90deg,rgba(88,28,135,.64),transparent); border-left-color:#a855f7; color:#e9d5ff; }
+.model-result-card { grid-column:1 / -1; background:linear-gradient(135deg,rgba(88,28,135,.22),rgba(30,41,59,.92)); border:1px solid rgba(192,132,252,.28); border-top-color:rgba(233,213,255,.26); border-radius:var(--radius); padding:15px; box-shadow:0 7px 17px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.05); }
+.model-result-top { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,.09); }
+.model-result-name { color:#f5f3ff; font-family:monospace; font-size:1.05rem; font-weight:900; letter-spacing:.025em; }
+.model-result-count { flex-shrink:0; color:#e9d5ff; background:rgba(168,85,247,.19); border:1px solid rgba(216,180,254,.26); border-radius:999px; padding:4px 9px; font-size:.68rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em; }
+.model-part-grid { display:flex; flex-wrap:wrap; gap:7px; padding-top:12px; }
+.model-part-chip { display:flex; flex-direction:column; align-items:center; gap:2px; min-width:108px; max-width:100%; padding:7px 10px; background:rgba(15,23,42,.7); border:1px solid rgba(216,180,254,.16); border-radius:7px; color:#f5f3ff; font-family:monospace; line-height:1.15; }
+.model-part-chip strong { font-size:.84rem; overflow-wrap:anywhere; text-align:center; }
+.model-part-chip small { color:#c4b5fd; font-family:inherit; font-size:.62rem; font-weight:800; }
+.model-search-more { width:100%; margin-top:10px; color:#c4b5fd; font-size:.75rem; text-align:center; }
+@media screen and (max-width:1024px) { .model-result-card { width:100%; box-sizing:border-box; padding:10px; } .model-result-top { align-items:flex-start; } .model-result-name { font-size:.85rem; word-break:break-word; } .model-result-count { font-size:.58rem; } .model-part-grid { gap:5px; padding-top:9px; } .model-part-chip { min-width:86px; padding:5px 6px; } .model-part-chip strong { font-size:.68rem; } .model-part-chip small { font-size:.52rem; } }
 </style>
 </head>
 <body>
@@ -825,6 +837,7 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
     
     const inp=document.getElementById('keres');
     const clearBtn = document.getElementById('clearBtn');
+    inp.placeholder = 'Cikkszám vagy modell keresése...';
     
     function checkDeviceMode() {
         const isMobile = window.innerWidth < 1024;
@@ -950,13 +963,40 @@ function renderHistory(){
     ).join('');
 }
 
+/* Modellnév alapján a teljes cikkszám-lista közvetlenül a főoldalon jelenik meg. */
+function escapeModelSearchHtml(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[character]);
+}
+
+function renderModelSearchResults(query) {
+    const matches = new Map();
+    ultetes.forEach(row => {
+        const model = (row[2] || '').trim();
+        if (model && model.toUpperCase().includes(query)) matches.set(model.toUpperCase(), model.toUpperCase());
+    });
+    const models = Array.from(matches.values()).sort((a, b) => a.localeCompare(b, 'hu'));
+    if (!models.length) return '';
+
+    let html = `<div class="section-header header-model-search">MODELL TALÁLATOK <span style="opacity:.7; font-size:.7rem; font-weight:700;">${models.length} MODELL</span></div>`;
+    models.slice(0, 12).forEach(model => {
+        const parts = getDemandParts(model);
+        html += `<div class="model-result-card"><div class="model-result-top"><span class="model-result-name">${escapeModelSearchHtml(model)}</span><span class="model-result-count">${parts.length} cikkszám</span></div><div class="model-part-grid">`;
+        parts.forEach(part => {
+            html += `<div class="model-part-chip"><strong>${escapeModelSearchHtml(part.code)}</strong><small>${part.perPanel.toLocaleString('hu-HU')} DB / PANEL</small></div>`;
+        });
+        html += `</div></div>`;
+    });
+    if (models.length > 12) html += `<div class="model-search-more">További ${models.length - 12} modell is megfelel a keresésnek – pontosítsd a modellnevet.</div>`;
+    return html;
+}
+
 function keres(k){
     const e=document.getElementById('eredmeny');
     const idle = document.getElementById('idleState');
     if(idle) idle.style.display = 'none'; 
     
     if(k.length<2)return;
-    let h='';
+    let h = renderModelSearchResults(k);
     
     let bT_raw = bank.filter(r=>r[2]&&r[2].toUpperCase().includes(k));
     
