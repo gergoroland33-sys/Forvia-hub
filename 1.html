@@ -648,18 +648,38 @@ input.suggestions-active {
   #printArea.demand-print.demand-print-dense .demand-print-count { font-size:9.5pt; }
   #printArea.demand-print.demand-print-dense .demand-print-item div:last-child { font-size:6.4pt; }
 }
-/* --- MODELLNÉV KERESÉS – PRÉMIUM FŐOLDALI CIKKSZÁM-LISTA --- */
-.header-model-search { background:linear-gradient(90deg,rgba(88,28,135,.64),transparent); border-left-color:#a855f7; color:#e9d5ff; }
-.model-result-card { grid-column:1 / -1; background:linear-gradient(135deg,rgba(88,28,135,.22),rgba(30,41,59,.92)); border:1px solid rgba(192,132,252,.28); border-top-color:rgba(233,213,255,.26); border-radius:var(--radius); padding:15px; box-shadow:0 7px 17px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.05); }
-.model-result-top { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,.09); }
-.model-result-name { color:#f5f3ff; font-family:monospace; font-size:1.05rem; font-weight:900; letter-spacing:.025em; }
-.model-result-count { flex-shrink:0; color:#e9d5ff; background:rgba(168,85,247,.19); border:1px solid rgba(216,180,254,.26); border-radius:999px; padding:4px 9px; font-size:.68rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em; }
-.model-part-grid { display:flex; flex-wrap:wrap; gap:7px; padding-top:12px; }
-.model-part-chip { display:flex; flex-direction:column; align-items:center; gap:2px; min-width:108px; max-width:100%; padding:7px 10px; background:rgba(15,23,42,.7); border:1px solid rgba(216,180,254,.16); border-radius:7px; color:#f5f3ff; font-family:monospace; line-height:1.15; }
-.model-part-chip strong { font-size:.84rem; overflow-wrap:anywhere; text-align:center; }
-.model-part-chip small { color:#c4b5fd; font-family:inherit; font-size:.62rem; font-weight:800; }
-.model-search-more { width:100%; margin-top:10px; color:#c4b5fd; font-size:.75rem; text-align:center; }
-@media screen and (max-width:1024px) { .model-result-card { width:100%; box-sizing:border-box; padding:10px; } .model-result-top { align-items:flex-start; } .model-result-name { font-size:.85rem; word-break:break-word; } .model-result-count { font-size:.58rem; } .model-part-grid { gap:5px; padding-top:9px; } .model-part-chip { min-width:86px; padding:5px 6px; } .model-part-chip strong { font-size:.68rem; } .model-part-chip small { font-size:.52rem; } }
+/* --- MODELLEK: ÖNÁLLÓ KERESŐ ÉS ÖSSZEHASONLÍTÓ --- */
+.models-btn { margin-left:8px; appearance:none; background:linear-gradient(135deg,rgba(76,29,149,.24),rgba(30,41,59,.48)); color:#e9d5ff; border:1px solid rgba(192,132,252,.7); border-radius:7px; padding:5px 10px; font-family:monospace; font-size:.7rem; font-weight:800; letter-spacing:.07em; cursor:pointer; transition:all .18s ease; box-shadow:inset 0 1px rgba(255,255,255,.08),0 3px 12px rgba(88,28,135,.16); }
+.models-btn:hover { background:rgba(126,34,206,.28); color:#fff; border-color:#e9d5ff; transform:translateY(-1px); box-shadow:0 6px 16px rgba(126,34,206,.22); }
+.models-modal-content { max-width:820px; max-height:88vh; }
+.models-search-box { display:flex; gap:8px; align-items:center; padding:12px 15px; border-bottom:1px solid var(--border); background:rgba(15,23,42,.5); }
+.models-search-box input { text-align:left; padding:10px 14px; font-family:inherit; font-size:.9rem; }
+.models-count { flex-shrink:0; color:#c4b5fd; font-size:.72rem; font-weight:800; }
+.models-selection { display:flex; flex-wrap:wrap; gap:7px; padding:10px 15px; border-bottom:1px solid var(--border); min-height:22px; }
+.model-selected-chip { display:flex; align-items:center; gap:6px; background:rgba(126,34,206,.24); border:1px solid rgba(216,180,254,.34); border-radius:999px; padding:5px 8px 5px 10px; color:#f5f3ff; font-family:monospace; font-size:.72rem; font-weight:800; }
+.model-selected-remove { border:0; border-radius:50%; width:18px; height:18px; padding:0; background:rgba(255,255,255,.12); color:white; cursor:pointer; font-size:.8rem; line-height:1; }
+.models-workspace { display:grid; grid-template-columns:minmax(210px,.8fr) minmax(0,1.8fr); min-height:360px; }
+.models-list-panel { border-right:1px solid var(--border); padding:12px; overflow-y:auto; max-height:52vh; }
+.models-list-title { color:#94a3b8; font-size:.66rem; letter-spacing:.08em; font-weight:800; margin:0 0 8px; }
+.model-option { display:flex; align-items:center; justify-content:space-between; gap:7px; width:100%; box-sizing:border-box; margin-bottom:5px; padding:9px 10px; border:1px solid rgba(255,255,255,.06); border-radius:7px; background:rgba(15,23,42,.54); color:#e2e8f0; cursor:pointer; text-align:left; font-family:monospace; font-size:.77rem; transition:.16s; }
+.model-option:hover,.model-option.selected { background:rgba(126,34,206,.24); border-color:rgba(216,180,254,.36); color:white; }
+.model-option-state { color:#c4b5fd; font-size:.7rem; }
+.models-results-panel { padding:14px; overflow-y:auto; max-height:52vh; }
+.models-placeholder { color:#94a3b8; text-align:center; padding:70px 15px; line-height:1.55; }
+.comparison-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
+.comparison-title { color:white; font-size:.88rem; font-weight:900; letter-spacing:.03em; }
+.comparison-badge { color:#ddd6fe; background:rgba(126,34,206,.2); border:1px solid rgba(216,180,254,.28); border-radius:999px; padding:4px 8px; font-size:.64rem; font-weight:800; white-space:nowrap; }
+.comparison-section { margin-top:13px; }
+.comparison-section-title { color:#c4b5fd; font-size:.67rem; font-weight:900; letter-spacing:.08em; margin-bottom:7px; }
+.comparison-parts { display:flex; flex-wrap:wrap; gap:6px; }
+.comparison-part { min-width:104px; border:1px solid rgba(255,255,255,.08); border-radius:7px; padding:7px 8px; background:rgba(15,23,42,.58); color:#fff; font-family:monospace; }
+.comparison-part strong { display:block; font-size:.78rem; overflow-wrap:anywhere; }
+.comparison-part small { display:block; margin-top:3px; color:#a5b4fc; font-size:.58rem; line-height:1.25; }
+.comparison-difference { width:100%; box-sizing:border-box; border-left:3px solid #f59e0b; background:rgba(120,53,15,.15); }
+.comparison-difference small { color:#fde68a; }
+.comparison-quantity { width:100%; box-sizing:border-box; border-left:3px solid #38bdf8; background:rgba(3,105,161,.13); }
+.comparison-quantity small { color:#bae6fd; }
+@media screen and (max-width:1024px) { .models-btn { padding:4px 8px; font-size:.62rem; } .models-modal-content { max-height:92vh; } .models-search-box { padding:9px 10px; } .models-workspace { grid-template-columns:1fr; } .models-list-panel { border-right:0; border-bottom:1px solid var(--border); max-height:190px; } .models-results-panel { max-height:40vh; } .model-option { font-size:.7rem; padding:8px; } }
 </style>
 </head>
 <body>
@@ -837,7 +857,6 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
     
     const inp=document.getElementById('keres');
     const clearBtn = document.getElementById('clearBtn');
-    inp.placeholder = 'Cikkszám vagy modell keresése...';
     
     function checkDeviceMode() {
         const isMobile = window.innerWidth < 1024;
@@ -963,40 +982,13 @@ function renderHistory(){
     ).join('');
 }
 
-/* Modellnév alapján a teljes cikkszám-lista közvetlenül a főoldalon jelenik meg. */
-function escapeModelSearchHtml(value) {
-    return String(value == null ? '' : value).replace(/[&<>"']/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[character]);
-}
-
-function renderModelSearchResults(query) {
-    const matches = new Map();
-    ultetes.forEach(row => {
-        const model = (row[2] || '').trim();
-        if (model && model.toUpperCase().includes(query)) matches.set(model.toUpperCase(), model.toUpperCase());
-    });
-    const models = Array.from(matches.values()).sort((a, b) => a.localeCompare(b, 'hu'));
-    if (!models.length) return '';
-
-    let html = `<div class="section-header header-model-search">MODELL TALÁLATOK <span style="opacity:.7; font-size:.7rem; font-weight:700;">${models.length} MODELL</span></div>`;
-    models.slice(0, 12).forEach(model => {
-        const parts = getDemandParts(model);
-        html += `<div class="model-result-card"><div class="model-result-top"><span class="model-result-name">${escapeModelSearchHtml(model)}</span><span class="model-result-count">${parts.length} cikkszám</span></div><div class="model-part-grid">`;
-        parts.forEach(part => {
-            html += `<div class="model-part-chip"><strong>${escapeModelSearchHtml(part.code)}</strong><small>${part.perPanel.toLocaleString('hu-HU')} DB / PANEL</small></div>`;
-        });
-        html += `</div></div>`;
-    });
-    if (models.length > 12) html += `<div class="model-search-more">További ${models.length - 12} modell is megfelel a keresésnek – pontosítsd a modellnevet.</div>`;
-    return html;
-}
-
 function keres(k){
     const e=document.getElementById('eredmeny');
     const idle = document.getElementById('idleState');
     if(idle) idle.style.display = 'none'; 
     
     if(k.length<2)return;
-    let h = renderModelSearchResults(k);
+    let h='';
     
     let bT_raw = bank.filter(r=>r[2]&&r[2].toUpperCase().includes(k));
     
@@ -1533,6 +1525,93 @@ window.openModelModal = function(modelName) {
     if (!activeDemandParts.length) list.innerHTML = '<div style="text-align:center; color:#94a3b8; margin-top:20px;">Nincs elérhető adat.</div>';
     modal.style.display = 'flex';
 };
+
+/* --- ÖNÁLLÓ MODELLKERESŐ ÉS MODELL-ÖSSZEHASONLÍTÓ KIEGÉSZÍTÉS --- */
+function escapeModelCompareHtml(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[character]);
+}
+
+function createModelsExplorer() {
+    const cluster = document.querySelector('.top-left-cluster');
+    if (!cluster || document.getElementById('modelsExplorerButton')) return;
+    const selectedModels = new Set();
+    const button = document.createElement('button');
+    button.id = 'modelsExplorerButton';
+    button.className = 'models-btn';
+    button.type = 'button';
+    button.textContent = 'MODELLEK';
+    cluster.appendChild(button);
+
+    const dialog = document.createElement('div');
+    dialog.id = 'modelsExplorerModal';
+    dialog.className = 'modal-overlay';
+    dialog.innerHTML = `<div class="modal-content models-modal-content"><div class="modal-header"><div class="modal-title-wrap"><span class="modal-title">MODELLEK</span><span class="modal-subtitle">Modellkereső és cikkszám-összehasonlító</span></div><div class="modal-close" aria-label="Bezárás">✕</div></div><div class="models-search-box"><input id="modelsExplorerSearch" type="text" placeholder="Modellnév keresése..." autocomplete="off"><span class="models-count" id="modelsExplorerCount"></span></div><div class="models-selection" id="modelsExplorerSelection"></div><div class="models-workspace"><div class="models-list-panel"><div class="models-list-title">VÁLASZTHATÓ MODELLEK</div><div id="modelsExplorerList"></div></div><div class="models-results-panel" id="modelsExplorerResults"></div></div></div>`;
+    document.body.appendChild(dialog);
+
+    const getModels = () => Array.from(new Set(ultetes.map(row => (row[2] || '').trim().toUpperCase()).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'hu'));
+    const selection = dialog.querySelector('#modelsExplorerSelection');
+    const list = dialog.querySelector('#modelsExplorerList');
+    const result = dialog.querySelector('#modelsExplorerResults');
+    const search = dialog.querySelector('#modelsExplorerSearch');
+    const count = dialog.querySelector('#modelsExplorerCount');
+
+    function renderSelection() {
+        if (!selectedModels.size) { selection.innerHTML = '<span style="color:#94a3b8; font-size:.74rem;">Válassz egy modellt a cikkszám-listához, vagy legalább kettőt az összehasonlításhoz.</span>'; return; }
+        selection.innerHTML = Array.from(selectedModels).map(model => `<span class="model-selected-chip">${escapeModelCompareHtml(model)}<button class="model-selected-remove" data-remove-model="${escapeModelCompareHtml(model)}" type="button">✕</button></span>`).join('');
+        selection.querySelectorAll('[data-remove-model]').forEach(remove => remove.onclick = () => { selectedModels.delete(remove.dataset.removeModel); renderAll(); });
+    }
+
+    function partCard(part, className = '', detail = '') {
+        return `<div class="comparison-part ${className}"><strong>${escapeModelCompareHtml(part.code || part)}</strong><small>${escapeModelCompareHtml(detail || `${part.perPanel.toLocaleString('hu-HU')} DB / PANEL`)}</small></div>`;
+    }
+
+    function renderResults() {
+        const models = Array.from(selectedModels);
+        if (!models.length) { result.innerHTML = '<div class="models-placeholder">Válassz egy modellt a teljes cikkszám-listához.<br><br>Válassz legalább <strong>2 modellt</strong>, hogy azonnal lásd a közös cikkszámokat és az eltéréseket.</div>'; return; }
+        const modelParts = models.map(model => ({ model, parts: getDemandParts(model) }));
+        if (models.length === 1) {
+            const current = modelParts[0];
+            result.innerHTML = `<div class="comparison-head"><div class="comparison-title">${escapeModelCompareHtml(current.model)}</div><span class="comparison-badge">${current.parts.length} CIKKSZÁM</span></div><div class="comparison-section"><div class="comparison-section-title">A MODELL TELJES CIKKSZÁM-LISTÁJA</div><div class="comparison-parts">${current.parts.map(part => partCard(part)).join('') || '<span style="color:#94a3b8;">Nincs elérhető beültetési adat.</span>'}</div></div>`;
+            return;
+        }
+        const partMap = new Map();
+        modelParts.forEach(({ model, parts }) => parts.forEach(part => {
+            const row = partMap.get(part.code) || { code: part.code, present: [] };
+            row.present.push({ model, perPanel: part.perPanel });
+            partMap.set(part.code, row);
+        }));
+        const allParts = Array.from(partMap.values()).sort((a, b) => a.code.localeCompare(b.code, 'hu'));
+        const common = allParts.filter(part => part.present.length === models.length);
+        const differences = allParts.filter(part => part.present.length !== models.length);
+        const quantityDifferences = common.filter(part => new Set(part.present.map(item => item.perPanel)).size > 1);
+        const presentText = part => part.present.map(item => `${item.model}: ${item.perPanel} DB`).join(' • ');
+        const missingText = part => models.filter(model => !part.present.some(item => item.model === model)).join(', ');
+        result.innerHTML = `<div class="comparison-head"><div class="comparison-title">${models.length} MODELL ÖSSZEHASONLÍTÁSA</div><span class="comparison-badge">${common.length} KÖZÖS / ${differences.length} ELTÉRŐ</span></div><div class="comparison-section"><div class="comparison-section-title">KÖZÖS CIKKSZÁMOK – MINDEN KIVÁLASZTOTT MODELLBEN</div><div class="comparison-parts">${common.map(part => partCard(part, '', presentText(part))).join('') || '<span style="color:#94a3b8;">Nincs minden modellben közös cikkszám.</span>'}</div></div><div class="comparison-section"><div class="comparison-section-title">ELTÉRŐ CIKKSZÁMOK – NEM MINDEN MODELLBEN SZEREPELNEK</div><div class="comparison-parts">${differences.map(part => partCard(part, 'comparison-difference', `Benne: ${presentText(part)} | Hiányzik: ${missingText(part)}`)).join('') || '<span style="color:#94a3b8;">Nincs eltérő cikkszám.</span>'}</div></div><div class="comparison-section"><div class="comparison-section-title">DARABSZÁM-ELTÉRÉSEK A KÖZÖS CIKKSZÁMOKNÁL</div><div class="comparison-parts">${quantityDifferences.map(part => partCard(part, 'comparison-quantity', presentText(part))).join('') || '<span style="color:#94a3b8;">A közös cikkszámok darabszámai megegyeznek.</span>'}</div></div>`;
+    }
+
+    function renderList() {
+        const term = search.value.trim().toUpperCase();
+        const models = getModels().filter(model => model.includes(term));
+        count.textContent = `${models.length} MODELL`;
+        list.innerHTML = models.map(model => `<button class="model-option ${selectedModels.has(model) ? 'selected' : ''}" type="button" data-model="${escapeModelCompareHtml(model)}"><span>${escapeModelCompareHtml(model)}</span><span class="model-option-state">${selectedModels.has(model) ? '✓ KIVÁLASZTVA' : '+ HOZZÁADÁS'}</span></button>`).join('') || '<div style="color:#94a3b8; padding:15px 4px; font-size:.75rem;">Nincs megfelelő modell.</div>';
+        list.querySelectorAll('[data-model]').forEach(option => option.onclick = () => { const model = option.dataset.model; selectedModels.has(model) ? selectedModels.delete(model) : selectedModels.add(model); renderAll(); });
+    }
+
+    function renderAll() { renderSelection(); renderList(); renderResults(); }
+    search.addEventListener('input', renderList);
+    button.onclick = () => { if (typeof provideFeedback === 'function') provideFeedback(); search.value = ''; renderAll(); dialog.style.display = 'flex'; setTimeout(() => search.focus(), 20); };
+    dialog.addEventListener('click', event => { if (event.target === dialog || event.target.classList.contains('modal-close')) dialog.style.display = 'none'; });
+
+    const tipsList = document.querySelector('#tipsModal .tips-list');
+    if (tipsList) {
+        const tip = document.createElement('div');
+        tip.className = 'tip-item is-new';
+        tip.innerHTML = '<span class="new-badge">NEW!</span><strong>Modellek összehasonlítása</strong> – a felső <strong>MODELLEK</strong> gombbal válassz ki egy modellt a cikkszám-listájához, vagy legalább kettőt a közös és eltérő cikkszámok összevetéséhez.';
+        tipsList.insertBefore(tip, tipsList.lastElementChild);
+    }
+}
+
+createModelsExplorer();
 
 function triggerSearch() {
     const inp = document.getElementById('keres');
