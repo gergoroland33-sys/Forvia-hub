@@ -736,6 +736,11 @@ input.suggestions-active {
 .difference-model-value { color:#e2e8f0; white-space:nowrap; }
 .difference-model-status.missing .difference-model-value { color:#fda4af; }
 @media screen and (max-width:1024px) { .comparison-model-key { font-size:.58rem; } .comparison-difference { padding:8px; } .difference-model-status { font-size:.58rem; padding:4px 5px; } }
+/* --- A PIROS KIZÁRÓLAG A HIÁNYZÓ ÁLLAPOT JELÖLÉSE --- */
+.difference-model-status.missing { position:relative; overflow:hidden; border:1px solid #fb7185; background:linear-gradient(135deg,rgba(159,18,57,.48),rgba(76,5,25,.33)); color:#fff1f2; box-shadow:inset 0 0 0 1px rgba(255,255,255,.06); }
+.difference-model-status.missing::after { content:''; position:absolute; inset:0; opacity:.22; pointer-events:none; background:repeating-linear-gradient(-45deg,transparent 0 5px,rgba(255,255,255,.3) 5px 6px); }
+.difference-model-status.missing > * { position:relative; z-index:1; }
+.difference-model-status.missing .difference-model-value { color:#fecdd3; font-weight:900; letter-spacing:.04em; }
 </style>
 </head>
 <body>
@@ -1632,7 +1637,7 @@ function createModelsExplorer() {
     }
 
     function modelAccent(index) {
-        return ['#38bdf8', '#fb7185', '#34d399', '#f59e0b', '#a78bfa', '#f97316'][index % 6];
+        return ['#38bdf8', '#a78bfa', '#34d399', '#fbbf24', '#22d3ee', '#818cf8'][index % 6];
     }
 
     function modelLegend(models) {
