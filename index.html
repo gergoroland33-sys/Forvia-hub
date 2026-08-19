@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="hu">
 <head>
@@ -44,6 +43,54 @@
             height: calc(100% - 55px);
             display: none; 
             background: #0f172a;
+        }
+
+        /* Tétlenség utáni kapcsolat-helyreállítás: kizárólag hozzáadott UI */
+        .reconnect-notice {
+            position: fixed;
+            left: 50%;
+            bottom: calc(72px + env(safe-area-inset-bottom));
+            z-index: 10050;
+            width: min(540px, calc(100vw - 28px));
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 13px 14px 13px 16px;
+            border: 1px solid rgba(96, 165, 250, 0.48);
+            border-radius: 15px;
+            background: rgba(15, 23, 42, 0.97);
+            box-shadow: 0 14px 42px rgba(0, 0, 0, 0.38);
+            color: #e2e8f0;
+            transform: translate(-50%, 16px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .2s ease, transform .2s ease;
+        }
+        .reconnect-notice.visible {
+            transform: translate(-50%, 0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .reconnect-notice-copy { min-width: 0; }
+        .reconnect-notice-title { display: block; font-size: .84rem; font-weight: 800; color: #bfdbfe; }
+        .reconnect-notice-text { display: block; margin-top: 3px; font-size: .74rem; line-height: 1.35; color: #cbd5e1; }
+        .reconnect-notice button {
+            flex: 0 0 auto;
+            border: 0;
+            border-radius: 10px;
+            padding: 10px 12px;
+            background: #2563eb;
+            color: white;
+            font: inherit;
+            font-size: .74rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+        .reconnect-notice button:disabled { opacity: .7; cursor: wait; }
+        @media (max-width: 480px) {
+            .reconnect-notice { align-items: flex-start; }
+            .reconnect-notice button { padding: 9px 10px; }
         }
 
         /* --- Görgethetőség beállítása laptopra --- */
@@ -926,6 +973,15 @@
 
 <iframe id="content-frame" name="appFrame"></iframe>
 
+<!-- Tétlenség után csak az aktuális modult lehet innen biztonságosan újracsatlakoztatni. -->
+<div id="reconnectNotice" class="reconnect-notice" role="status" aria-live="polite" aria-hidden="true">
+    <div class="reconnect-notice-copy">
+        <span class="reconnect-notice-title">Kapcsolat ellenőrzése javasolt</span>
+        <span id="reconnectNoticeText" class="reconnect-notice-text">A modul hosszabb tétlenség alatt elveszíthette a kapcsolatot.</span>
+    </div>
+    <button id="reconnectNoticeButton" type="button" onclick="reconnectActiveModule()">Újracsatlakozás</button>
+</div>
+
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <h2>
@@ -1699,7 +1755,122 @@
     function closeHolidayList() {
         document.getElementById('holidayModal').classList.remove('open');
     }
-    
+
+    /* ================================================================
+       TÉTLENSÉG UTÁNI KAPCSOLAT-HELYREÁLLÍTÁS
+       - A modulok frissítési időbélyege változatlan marad.
+       - A Hub nem tölt újra automatikusan egy nyitott űrlapot, mert az
+         elveszíthetné a még el nem mentett adatot.
+       - Hosszú szünet vagy hálózat-visszatérés után egyetlen, célzott
+         „Újracsatlakozás” gomb jelenik meg az éppen nyitott modulhoz.
+       ================================================================ */
+    const HUB_RECONNECT_IDLE_MS = 5 * 60 * 1000;
+    const hubRecovery = {
+        activeUrl: null,
+        activeAutoStart: false,
+        hiddenAt: null,
+        lastFocusAt: Date.now(),
+        wasOffline: false,
+        reconnecting: false,
+        noticeTimer: null
+    };
+
+    function getReconnectNotice() {
+        return document.getElementById('reconnectNotice');
+    }
+
+    function hideReconnectNotice() {
+        const notice = getReconnectNotice();
+        if (!notice) return;
+        notice.classList.remove('visible');
+        notice.setAttribute('aria-hidden', 'true');
+    }
+
+    function showReconnectNotice(message) {
+        if (!hubRecovery.activeUrl || !document.body.classList.contains('module-active')) return;
+        const notice = getReconnectNotice();
+        const text = document.getElementById('reconnectNoticeText');
+        const button = document.getElementById('reconnectNoticeButton');
+        if (!notice || !text || !button) return;
+
+        clearTimeout(hubRecovery.noticeTimer);
+        hubRecovery.reconnecting = false;
+        text.textContent = message || 'A modul hosszabb tétlenség alatt elveszíthette a kapcsolatot.';
+        button.disabled = !navigator.onLine;
+        button.textContent = navigator.onLine ? 'Újracsatlakozás' : 'Nincs hálózat';
+        notice.classList.add('visible');
+        notice.setAttribute('aria-hidden', 'false');
+    }
+
+    function offerReconnectAfterResume(reason) {
+        if (!hubRecovery.activeUrl || !document.body.classList.contains('module-active')) return;
+        clearTimeout(hubRecovery.noticeTimer);
+        hubRecovery.noticeTimer = setTimeout(() => {
+            showReconnectNotice(
+                navigator.onLine
+                    ? 'A kapcsolat hosszabb tétlenség alatt megszakadhatott. Mentetlen adat esetén előbb ments, utána csatlakoztasd újra a modult.'
+                    : 'Jelenleg nincs internetkapcsolat. A hálózat visszatérésekor újra próbálhatod.'
+            );
+        }, reason === 'online' ? 700 : 1100);
+    }
+
+    window.reconnectActiveModule = function() {
+        if (!hubRecovery.activeUrl || hubRecovery.reconnecting || !navigator.onLine) return;
+
+        const frame = document.getElementById('content-frame');
+        const notice = getReconnectNotice();
+        const text = document.getElementById('reconnectNoticeText');
+        const button = document.getElementById('reconnectNoticeButton');
+        if (!frame || !notice || !text || !button) return;
+
+        hubRecovery.reconnecting = true;
+        button.disabled = true;
+        button.textContent = 'Kapcsolódás...';
+        text.textContent = 'A modul friss, legújabb példánya töltődik be.';
+
+        frame.addEventListener('load', function onRecoveredModuleLoad() {
+            hubRecovery.reconnecting = false;
+            hideReconnectNotice();
+        }, { once: true });
+
+        // Ugyanaz a cache-frissítési elv, mint a normál modulmegnyitásnál.
+        frame.src = hubRecovery.activeUrl + '?v=' + new Date().getTime()
+            + (hubRecovery.activeAutoStart ? '&autostart=true' : '')
+            + '&reconnect=1';
+    };
+
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'hidden') {
+            hubRecovery.hiddenAt = Date.now();
+            return;
+        }
+
+        const hiddenFor = hubRecovery.hiddenAt ? Date.now() - hubRecovery.hiddenAt : 0;
+        hubRecovery.hiddenAt = null;
+        hubRecovery.lastFocusAt = Date.now();
+        if (hiddenFor >= HUB_RECONNECT_IDLE_MS) offerReconnectAfterResume('visibility');
+    });
+
+    window.addEventListener('focus', function() {
+        const awayFor = Date.now() - hubRecovery.lastFocusAt;
+        hubRecovery.lastFocusAt = Date.now();
+        if (awayFor >= HUB_RECONNECT_IDLE_MS) offerReconnectAfterResume('focus');
+    });
+
+    window.addEventListener('offline', function() {
+        hubRecovery.wasOffline = true;
+    });
+
+    window.addEventListener('online', function() {
+        if (!hubRecovery.wasOffline) return;
+        hubRecovery.wasOffline = false;
+        offerReconnectAfterResume('online');
+    });
+
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) offerReconnectAfterResume('pageshow');
+    });
+
     const moduleNames = {
         '1.html': '🔍 Alkatrész Kereső',
         '12.html': '📟 Model/Pcb kereső',
@@ -1741,6 +1912,10 @@
     function loadModule(url, autoStart = false, caller = null) {
         if(navigator.vibrate) navigator.vibrate(15);
         if(caller) caller.blur();
+        hubRecovery.activeUrl = url;
+        hubRecovery.activeAutoStart = autoStart;
+        hubRecovery.hiddenAt = null;
+        hideReconnectNotice();
         totalActivity++;
         localStorage.setItem('fv_total_activity', totalActivity);
 
@@ -1770,6 +1945,10 @@
     function showHome(caller = null) {
         if(navigator.vibrate) navigator.vibrate(15);
         if(caller) caller.blur();
+        hubRecovery.activeUrl = null;
+        hubRecovery.activeAutoStart = false;
+        hubRecovery.reconnecting = false;
+        hideReconnectNotice();
         
         document.body.classList.remove('search-mode-active');
         document.body.classList.remove('module-active');
@@ -2103,4 +2282,3 @@
     </script>
 </body>
 </html>
-
