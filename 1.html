@@ -824,6 +824,47 @@ input.suggestions-active {
   #printArea.matrix-print .matrix-status.no b { color:#e11d48 !important; }
   #printArea.matrix-print .matrix-status b { font-size:9.5pt !important; line-height:.7; }
 }
+/* --- NYOMTATÁSI FEJLÉC: BIZTONSÁGOS BELSŐ MARGÓ ÉS KÖZÉPRE IGAZÍTÁS --- */
+@media print {
+  /* A belső ráhagyás a nyomtatók nem nyomtatható széleit is kivédi. */
+  #printArea.matrix-print {
+    width:calc(100% - 12mm) !important;
+    max-width:calc(100% - 12mm) !important;
+    margin:0 auto !important;
+    padding:0 !important;
+    overflow:visible !important;
+  }
+  #printArea.matrix-print .matrix-print-sheet {
+    width:100% !important;
+    max-width:100% !important;
+    margin:0 auto !important;
+    box-sizing:border-box !important;
+  }
+  #printArea.matrix-print .matrix-print-head {
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) minmax(0,3fr) minmax(0,1fr) !important;
+    align-items:center !important;
+    column-gap:3mm !important;
+    text-align:center !important;
+  }
+  #printArea.matrix-print .matrix-print-head > div:first-child {
+    grid-column:2 !important;
+    min-width:0 !important;
+    text-align:center !important;
+  }
+  #printArea.matrix-print .matrix-print-title {
+    max-width:100% !important;
+    overflow-wrap:anywhere !important;
+    line-height:1.08 !important;
+  }
+  #printArea.matrix-print .matrix-print-head > .matrix-print-meta {
+    grid-column:3 !important;
+    justify-self:end !important;
+    min-width:0 !important;
+    text-align:right !important;
+    white-space:normal !important;
+  }
+}
 </style>
 </head>
 <body>
