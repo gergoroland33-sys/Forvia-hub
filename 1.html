@@ -741,6 +741,54 @@ input.suggestions-active {
 .difference-model-status.missing::after { content:''; position:absolute; inset:0; opacity:.22; pointer-events:none; background:repeating-linear-gradient(-45deg,transparent 0 5px,rgba(255,255,255,.3) 5px 6px); }
 .difference-model-status.missing > * { position:relative; z-index:1; }
 .difference-model-status.missing .difference-model-value { color:#fecdd3; font-weight:900; letter-spacing:.04em; }
+/* --- PRÉMIUM MODELL-MÁTRIX ÉS A4 NYOMTATÁS --- */
+.models-matrix-tools { display:none; gap:9px; align-items:center; margin-bottom:12px; padding:9px; border:1px solid rgba(56,189,248,.24); border-radius:10px; background:linear-gradient(100deg,rgba(3,105,161,.16),rgba(15,23,42,.52)); }
+.models-matrix-tools.visible { display:flex; }
+.models-matrix-tools input { flex:1; min-width:0; text-align:left; padding:9px 11px; font-family:monospace; font-size:.86rem; border-radius:7px; }
+.matrix-print-btn { appearance:none; flex:0 0 auto; padding:9px 10px; border:1px solid rgba(110,231,183,.6); border-radius:7px; background:linear-gradient(145deg,#059669,#047857); color:white; font-size:.7rem; font-weight:900; letter-spacing:.04em; cursor:pointer; box-shadow:0 3px 0 #064e3b,0 7px 14px rgba(5,150,105,.25); transition:.16s; }
+.matrix-print-btn:hover { transform:translateY(-1px); filter:brightness(1.12); }
+.matrix-print-btn:active { transform:translateY(2px); box-shadow:0 1px 0 #064e3b; }
+.matrix-summary { margin:-2px 0 9px; color:#bae6fd; font-size:.72rem; font-weight:800; }
+.matrix-shell { overflow:auto; max-width:100%; border:1px solid rgba(148,163,184,.18); border-radius:10px; background:#0b1220; box-shadow:inset 0 1px rgba(255,255,255,.04),0 8px 18px rgba(0,0,0,.2); }
+.model-matrix { width:100%; min-width:max-content; border-collapse:separate; border-spacing:0; font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+.model-matrix th,.model-matrix td { padding:9px 10px; border-right:1px solid rgba(148,163,184,.12); border-bottom:1px solid rgba(148,163,184,.12); text-align:center; }
+.model-matrix thead th { position:sticky; top:0; z-index:3; background:#172033; color:#f8fafc; font-family:monospace; font-size:.72rem; font-weight:900; letter-spacing:.02em; box-shadow:0 2px 7px rgba(0,0,0,.2); }
+.model-matrix .matrix-code-head,.model-matrix .matrix-code { position:sticky; left:0; z-index:2; min-width:142px; text-align:left; background:#111a2b; box-shadow:2px 0 8px rgba(0,0,0,.18); }
+.model-matrix .matrix-code-head { z-index:4; color:#bae6fd; }
+.model-matrix .matrix-code { color:#f8fafc; font-family:monospace; font-size:.82rem; font-weight:900; }
+.model-matrix tbody tr { transition:background .16s ease; }
+.model-matrix tbody tr:hover { background:rgba(56,189,248,.075); }
+.model-matrix tbody tr:hover .matrix-code { background:#15233b; }
+.model-matrix th:last-child,.model-matrix td:last-child { border-right:0; }
+.model-matrix tbody tr:last-child td { border-bottom:0; }
+.matrix-model-head { min-width:110px; color:var(--model-color) !important; }
+.matrix-model-head::before { content:''; display:inline-block; width:7px; height:7px; margin-right:5px; border-radius:50%; background:var(--model-color); box-shadow:0 0 7px var(--model-color); }
+.matrix-status { display:inline-flex; align-items:center; justify-content:center; gap:4px; min-width:48px; padding:4px 6px; border-radius:6px; font-family:monospace; font-size:.67rem; font-weight:900; animation:matrixPop .28s ease both; }
+.matrix-status.yes { color:#d1fae5; border:1px solid rgba(52,211,153,.42); background:linear-gradient(135deg,rgba(6,95,70,.62),rgba(6,78,59,.36)); }
+.matrix-status.yes b { color:#6ee7b7; font-size:.9rem; }
+.matrix-status.no { color:#ffe4e6; border:1px solid rgba(251,113,133,.5); background:repeating-linear-gradient(-45deg,rgba(159,18,57,.47) 0 5px,rgba(76,5,25,.48) 5px 10px); }
+.matrix-status.no b { color:#fda4af; font-size:.9rem; }
+@keyframes matrixPop { from { opacity:0; transform:scale(.88); } to { opacity:1; transform:scale(1); } }
+@media screen and (max-width:1024px) { .models-matrix-tools { align-items:stretch; flex-wrap:wrap; } .models-matrix-tools input { width:100%; flex-basis:100%; } .matrix-print-btn { flex:1; } .model-matrix th,.model-matrix td { padding:7px 8px; } .model-matrix .matrix-code-head,.model-matrix .matrix-code { min-width:118px; } .model-matrix .matrix-code { font-size:.72rem; } .matrix-model-head { min-width:88px; font-size:.6rem !important; } .matrix-status { min-width:40px; padding:3px 4px; font-size:.58rem; } }
+@media print {
+  @page { size:A4 portrait; margin:6mm; }
+  #printArea.matrix-print { display:block !important; width:100% !important; max-width:100% !important; background:white !important; --matrix-print-zoom:1; }
+  #printArea.matrix-print .matrix-print-sheet { width:100%; box-sizing:border-box; zoom:var(--matrix-print-zoom); color:#0f172a !important; font-family:Arial,sans-serif !important; }
+  #printArea.matrix-print .matrix-print-head { display:flex; justify-content:space-between; align-items:flex-end; gap:10px; margin-bottom:4mm; padding-bottom:3mm; border-bottom:2px solid #0ea5e9; }
+  #printArea.matrix-print .matrix-print-title { color:#0369a1 !important; font-size:14pt; font-weight:900; }
+  #printArea.matrix-print .matrix-print-meta { text-align:right; font-size:7.5pt; line-height:1.35; }
+  #printArea.matrix-print .model-matrix { width:100%; min-width:0; border-collapse:collapse; table-layout:fixed; }
+  #printArea.matrix-print .model-matrix th,#printArea.matrix-print .model-matrix td { padding:1.35mm 1mm; border:1px solid #cbd5e1; color:#0f172a !important; font-size:6.4pt; text-align:center; }
+  #printArea.matrix-print .model-matrix thead th { position:static; background:#e0f2fe !important; color:#0c4a6e !important; box-shadow:none; }
+  #printArea.matrix-print .model-matrix .matrix-code-head,#printArea.matrix-print .model-matrix .matrix-code { position:static; min-width:0; background:#f8fafc !important; text-align:left; box-shadow:none; font-family:monospace !important; font-weight:900; }
+  #printArea.matrix-print .matrix-model-head { color:#0c4a6e !important; }
+  #printArea.matrix-print .matrix-model-head::before { display:none; }
+  #printArea.matrix-print .matrix-status { min-width:0; padding:0; border:0; background:transparent !important; animation:none; font-size:7pt; }
+  #printArea.matrix-print .matrix-status.yes,#printArea.matrix-print .matrix-status.yes b { color:#047857 !important; }
+  #printArea.matrix-print .matrix-status.no,#printArea.matrix-print .matrix-status.no b { color:#be123c !important; }
+  #printArea.matrix-print .matrix-status b { font-size:9pt; }
+  #printArea.matrix-print .matrix-shell { overflow:visible; border:0; border-radius:0; box-shadow:none; }
+}
 </style>
 </head>
 <body>
@@ -1612,7 +1660,7 @@ function createModelsExplorer() {
     const dialog = document.createElement('div');
     dialog.id = 'modelsExplorerModal';
     dialog.className = 'modal-overlay';
-    dialog.innerHTML = `<div class="modal-content models-modal-content"><div class="modal-header"><div class="modal-title-wrap"><span class="modal-title">MODELLEK</span><span class="modal-subtitle">Modellkereső és cikkszám-összehasonlító</span></div><div class="modal-close" aria-label="Bezárás">✕</div></div><div class="models-search-box"><input id="modelsExplorerSearch" type="text" placeholder="Modellnév keresése..." autocomplete="off"><span class="models-count" id="modelsExplorerCount"></span></div><div class="models-selection" id="modelsExplorerSelection"></div><div class="models-workspace"><div class="models-list-panel"><div class="models-list-title">VÁLASZTHATÓ MODELLEK</div><div id="modelsExplorerList"></div></div><div class="models-results-panel" id="modelsExplorerResults"><div class="models-filter-row" id="modelsDifferenceFilter"><div class="models-filter-controls"><label class="models-filter-label"><input id="modelsCommonCheckbox" type="checkbox" checked><span>Közös cikkszámok</span></label><label class="models-filter-label"><input id="modelsDifferenceCheckbox" type="checkbox"><span>Cikkszám eltérések a modellekben</span></label><label class="models-filter-label"><input id="modelsQuantityCheckbox" type="checkbox"><span>Darabszám eltérések</span></label></div><span class="models-filter-note">A kijelölt listák jelennek meg az összehasonlításban.</span></div><div id="modelsExplorerResultsContent"></div></div></div></div>`;
+    dialog.innerHTML = `<div class="modal-content models-modal-content"><div class="modal-header"><div class="modal-title-wrap"><span class="modal-title">MODELLEK</span><span class="modal-subtitle">Modellkereső és cikkszám-összehasonlító</span></div><div class="modal-close" aria-label="Bezárás">✕</div></div><div class="models-search-box"><input id="modelsExplorerSearch" type="text" placeholder="Modellnév keresése..." autocomplete="off"><span class="models-count" id="modelsExplorerCount"></span></div><div class="models-selection" id="modelsExplorerSelection"></div><div class="models-workspace"><div class="models-list-panel"><div class="models-list-title">VÁLASZTHATÓ MODELLEK</div><div id="modelsExplorerList"></div></div><div class="models-results-panel" id="modelsExplorerResults"><div class="models-filter-row" id="modelsDifferenceFilter"><div class="models-filter-controls"><label class="models-filter-label"><input id="modelsCommonCheckbox" type="checkbox" checked><span>Közös cikkszámok</span></label><label class="models-filter-label"><input id="modelsDifferenceCheckbox" type="checkbox"><span>Cikkszám eltérések a modellekben</span></label><label class="models-filter-label"><input id="modelsQuantityCheckbox" type="checkbox"><span>Darabszám eltérések</span></label></div><span class="models-filter-note">A kijelölt listák jelennek meg az összehasonlításban.</span></div><div class="models-matrix-tools" id="modelsMatrixTools"><input id="modelsPartsFilter" type="text" placeholder="Cikkszám gyors szűrése..." autocomplete="off"><button id="modelsMatrixPrint" class="matrix-print-btn" type="button">A4 NYOMTATÁS</button></div><div id="modelsExplorerResultsContent"></div></div></div></div>`;
     document.body.appendChild(dialog);
 
     const getModels = () => Array.from(new Set(ultetes.map(row => (row[2] || '').trim().toUpperCase()).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'hu'));
@@ -1623,8 +1671,12 @@ function createModelsExplorer() {
     const commonCheckbox = dialog.querySelector('#modelsCommonCheckbox');
     const differenceCheckbox = dialog.querySelector('#modelsDifferenceCheckbox');
     const quantityCheckbox = dialog.querySelector('#modelsQuantityCheckbox');
+    const matrixTools = dialog.querySelector('#modelsMatrixTools');
+    const partsFilter = dialog.querySelector('#modelsPartsFilter');
+    const matrixPrintButton = dialog.querySelector('#modelsMatrixPrint');
     const search = dialog.querySelector('#modelsExplorerSearch');
     const count = dialog.querySelector('#modelsExplorerCount');
+    let lastMatrixData = null;
 
     function renderSelection() {
         if (!selectedModels.size) { selection.innerHTML = '<span style="color:#94a3b8; font-size:.74rem;">Válassz egy modellt a cikkszám-listához, vagy legalább kettőt az összehasonlításhoz.</span>'; return; }
@@ -1654,12 +1706,43 @@ function createModelsExplorer() {
         return `<div class="comparison-part comparison-difference"><strong>${escapeModelCompareHtml(part.code)}</strong><div class="difference-model-grid">${statuses}</div></div>`;
     }
 
+    function visibleMatrixRows(common, differences, quantityDifferences) {
+        const rows = new Map();
+        if (commonCheckbox.checked) common.forEach(part => rows.set(part.code, part));
+        if (differenceCheckbox.checked) differences.forEach(part => rows.set(part.code, part));
+        if (quantityCheckbox.checked) quantityDifferences.forEach(part => rows.set(part.code, part));
+        const term = partsFilter.value.trim().toUpperCase();
+        return Array.from(rows.values()).filter(part => !term || part.code.includes(term)).sort((a, b) => a.code.localeCompare(b.code, 'hu'));
+    }
+
+    function matrixTable(models, rows) {
+        const header = models.map((model, index) => `<th class="matrix-model-head" style="--model-color:${modelAccent(index)}">${escapeModelCompareHtml(model)}</th>`).join('');
+        const body = rows.map((part, rowIndex) => `<tr><td class="matrix-code">${escapeModelCompareHtml(part.code)}</td>${models.map(model => {
+            const entry = part.present.find(item => item.model === model);
+            return entry ? `<td><span class="matrix-status yes" style="animation-delay:${Math.min(rowIndex * 15, 240)}ms"><b>✓</b>${entry.perPanel.toLocaleString('hu-HU')} DB</span></td>` : `<td><span class="matrix-status no" style="animation-delay:${Math.min(rowIndex * 15, 240)}ms"><b>×</b>NINCS</span></td>`;
+        }).join('')}</tr>`).join('');
+        return `<div class="matrix-shell"><table class="model-matrix"><thead><tr><th class="matrix-code-head">CIKKSZÁM</th>${header}</tr></thead><tbody>${body || `<tr><td class="matrix-code" colspan="${models.length + 1}">Nincs találat a jelenlegi szűrőkkel.</td></tr>`}</tbody></table></div>`;
+    }
+
+    function printCurrentMatrix() {
+        if (!lastMatrixData || !lastMatrixData.rows.length) return;
+        const { models, rows } = lastMatrixData;
+        const scale = Math.max(0.44, Math.min(1, 48 / Math.max(rows.length, 1)));
+        const area = document.getElementById('printArea');
+        area.className = 'matrix-print';
+        area.style.setProperty('--matrix-print-zoom', scale.toFixed(2));
+        area.innerHTML = `<div class="matrix-print-sheet"><div class="matrix-print-head"><div><div class="matrix-print-title">MODELL-ÖSSZEHASONLÍTÓ MÁTRIX</div><div>${models.map(escapeModelCompareHtml).join(' • ')}</div></div><div class="matrix-print-meta">${rows.length} cikkszám<br>${new Date().toLocaleString('hu-HU')}</div></div>${matrixTable(models, rows)}</div>`;
+        setTimeout(() => window.print(), 100);
+    }
+
     function renderResults() {
         const models = Array.from(selectedModels);
         differenceFilter.classList.toggle('visible', models.length >= 2);
-        if (!models.length) { result.innerHTML = '<div class="models-placeholder">Válassz egy modellt a teljes cikkszám-listához.<br><br>Válassz legalább <strong>2 modellt</strong>, hogy azonnal lásd a közös cikkszámokat és az eltéréseket.</div>'; return; }
+        matrixTools.classList.toggle('visible', models.length >= 2);
+        if (!models.length) { lastMatrixData = null; result.innerHTML = '<div class="models-placeholder">Válassz egy modellt a teljes cikkszám-listához.<br><br>Válassz legalább <strong>2 modellt</strong>, hogy azonnal lásd a közös cikkszámokat és az eltéréseket.</div>'; return; }
         const modelParts = models.map(model => ({ model, parts: getDemandParts(model) }));
         if (models.length === 1) {
+            lastMatrixData = null;
             const current = modelParts[0];
             result.innerHTML = `<div class="comparison-head"><div class="comparison-title">${escapeModelCompareHtml(current.model)}</div><span class="comparison-badge">${current.parts.length} CIKKSZÁM</span></div><div class="models-context"><strong>A listában szereplő modell:</strong> ${escapeModelCompareHtml(current.model)}</div><div class="comparison-section"><div class="comparison-section-title">A MODELL TELJES CIKKSZÁM-LISTÁJA</div><div class="comparison-parts">${current.parts.map(part => partCard(part)).join('') || '<span style="color:#94a3b8;">Nincs elérhető beültetési adat.</span>'}</div></div>`;
             return;
@@ -1674,13 +1757,10 @@ function createModelsExplorer() {
         const common = allParts.filter(part => part.present.length === models.length);
         const differences = allParts.filter(part => part.present.length !== models.length);
         const quantityDifferences = common.filter(part => new Set(part.present.map(item => item.perPanel)).size > 1);
-        const presentText = part => part.present.map(item => `${item.model}: ${item.perPanel} DB`).join(' • ');
-        const missingText = part => models.filter(model => !part.present.some(item => item.model === model)).join(', ');
         const selectedModelsLabel = models.map(model => escapeModelCompareHtml(model)).join(' • ');
-        const commonMarkup = commonCheckbox.checked ? `<div class="comparison-section"><div class="comparison-section-title">KÖZÖS CIKKSZÁMOK – MINDEN KIVÁLASZTOTT MODELLBEN</div><div class="comparison-parts">${common.map(part => partCard(part, '', presentText(part))).join('') || '<span style="color:#94a3b8;">Nincs minden modellben közös cikkszám.</span>'}</div></div>` : '';
-        const differencesMarkup = differenceCheckbox.checked ? `<div class="comparison-section"><div class="comparison-section-title">ELTÉRŐ CIKKSZÁMOK – MODELLENKÉNTI JELÖLÉSSEL</div><div class="comparison-parts">${differences.map(part => differencePartCard(part, models)).join('') || '<span style="color:#94a3b8;">Nincs eltérő cikkszám.</span>'}</div></div>` : '';
-        const quantityMarkup = quantityCheckbox.checked ? `<div class="comparison-section"><div class="comparison-section-title">DARABSZÁM-ELTÉRÉSEK A KÖZÖS CIKKSZÁMOKNÁL</div><div class="comparison-parts">${quantityDifferences.map(part => partCard(part, 'comparison-quantity', presentText(part))).join('') || '<span style="color:#94a3b8;">A közös cikkszámok darabszámai megegyeznek.</span>'}</div></div>` : '';
-        result.innerHTML = `<div class="comparison-head"><div class="comparison-title">${models.length} MODELL ÖSSZEHASONLÍTÁSA</div><span class="comparison-badge">${common.length} KÖZÖS / ${differences.length} ELTÉRŐ</span></div><div class="models-context"><strong>Összehasonlított modellek:</strong> ${selectedModelsLabel}</div>${modelLegend(models)}${commonMarkup}${differencesMarkup}${quantityMarkup}`;
+        const matrixRows = visibleMatrixRows(common, differences, quantityDifferences);
+        lastMatrixData = { models, rows: matrixRows };
+        result.innerHTML = `<div class="comparison-head"><div class="comparison-title">${models.length} MODELL ÖSSZEHASONLÍTÁSA</div><span class="comparison-badge">${common.length} KÖZÖS / ${differences.length} ELTÉRŐ</span></div><div class="models-context"><strong>Összehasonlított modellek:</strong> ${selectedModelsLabel}</div>${modelLegend(models)}<div class="matrix-summary">${matrixRows.length} cikkszám látható a jelenlegi szűrőkkel.</div>${matrixTable(models, matrixRows)}`;
     }
 
     function renderList() {
@@ -1696,6 +1776,8 @@ function createModelsExplorer() {
     commonCheckbox.addEventListener('change', renderResults);
     differenceCheckbox.addEventListener('change', renderResults);
     quantityCheckbox.addEventListener('change', renderResults);
+    partsFilter.addEventListener('input', renderResults);
+    matrixPrintButton.addEventListener('click', printCurrentMatrix);
     button.onclick = () => { if (typeof provideFeedback === 'function') provideFeedback(); search.value = ''; renderAll(); dialog.style.display = 'flex'; setTimeout(() => search.focus(), 20); };
     dialog.addEventListener('click', event => { if (event.target === dialog || event.target.classList.contains('modal-close')) dialog.style.display = 'none'; });
 
