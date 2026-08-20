@@ -427,13 +427,12 @@
         .ticker-wrap.ticker-style-glass { background: linear-gradient(100deg, rgba(15,23,42,.88), var(--ticker-bg), rgba(15,23,42,.88)); }
         .ticker-wrap.ticker-style-neon { background: linear-gradient(100deg, var(--ticker-bg), var(--ticker-accent), var(--ticker-bg)); box-shadow: 0 0 18px var(--ticker-accent); }
         .ticker-wrap.ticker-style-stripe { background: repeating-linear-gradient(-45deg, var(--ticker-bg) 0 13px, var(--ticker-accent) 13px 26px); }
+        .ticker-wrap.ticker-style-rgb { background: linear-gradient(110deg, #ef4444, #f59e0b, #22c55e, #06b6d4, #6366f1, #d946ef, #ef4444); background-size: 320% 100%; animation: tickerRgb 16s linear infinite; }
         .ticker-move {
             display: inline-block; height: 43px; line-height: 43px; white-space: nowrap;
             padding-left: 100%; padding-right: 100%; box-sizing: content-box;
             animation: ticker var(--ticker-speed) linear infinite;
         }
-        .ticker-wrap.ticker-style-static .ticker-move { width: 100%; padding: 0; text-align: center; animation: none; }
-        .ticker-wrap.ticker-style-pulse .ticker-move { width: 100%; padding: 0; text-align: center; animation: tickerPulse 2.8s ease-in-out infinite; }
         .ticker-item {
             display: inline-block; padding: 0 2rem; color: var(--ticker-text);
             font-size: var(--ticker-font-size, .78rem); font-weight: var(--ticker-font-weight, 800);
@@ -444,7 +443,7 @@
             0% { transform: translate3d(0, 0, 0); }
             100% { transform: translate3d(-100%, 0, 0); }
         }
-        @keyframes tickerPulse { 0%,100% { opacity: .72; transform: scale(.995); } 50% { opacity: 1; transform: scale(1); } }
+        @keyframes tickerRgb { from { background-position: 0% 50%; } to { background-position: 320% 50%; } }
         .ticker-admin-handle {
             position: fixed; top: env(safe-area-inset-top); right: 10px; z-index: 1001;
             display: none; padding: 5px 9px; border: 1px solid rgba(148,163,184,.25);
@@ -504,7 +503,7 @@
             #home-screen { padding-top: calc(58px + env(safe-area-inset-top)); }
             .ticker-admin-card { padding: 18px; border-radius: 18px; }
             .ticker-admin-grid { grid-template-columns: 1fr; gap: 0; }
-            .ticker-item { font-size: .67rem; letter-spacing: .06em; }
+            .ticker-item { font-size: var(--ticker-font-size, .67rem); letter-spacing: .06em; }
         }
         @media (prefers-reduced-motion: reduce) {
             .ticker-move { animation: none !important; width: 100%; padding: 0; text-align: center; }
@@ -1111,8 +1110,7 @@
                         <option value="glass">Üveg / Glass</option>
                         <option value="neon">Neon fény</option>
                         <option value="stripe">Csíkos</option>
-                        <option value="static">Statikus középen</option>
-                        <option value="pulse">Finoman pulzáló</option>
+                        <option value="rgb">Automatikus RGB</option>
                     </select>
                 </div>
             </div>
@@ -1120,6 +1118,7 @@
                 <div class="ticker-admin-field">
                     <label for="tickerSpeedInput">Sebesség</label>
                     <select id="tickerSpeedInput">
+                        <option value="auto">Automatikus (szöveghosszhoz igazítva)</option>
                         <option value="12">Nagyon gyors</option>
                         <option value="20">Gyors</option>
                         <option value="30">Normál</option>
@@ -2532,13 +2531,13 @@
             text: 'Adatbázisok frissítése: 2026. augusztus 12. Jelenleg a rendelkezésre álló adatok alapján a Hub naprakész.',
             icon: '⚠️',
             style: 'solid',
-            speed: 30,
+            speed: 'auto',
             fontSize: '.78rem',
             backgroundColor: '#0F172A',
             textColor: '#FDE68A',
             accentColor: '#3B82F6'
         };
-        const tickerStyles = ['solid', 'gradient', 'glass', 'neon', 'stripe', 'static', 'pulse'];
+        const tickerStyles = ['solid', 'gradient', 'glass', 'neon', 'stripe', 'rgb'];
         const tickerSpeeds = [12, 20, 30, 45, 60, 90];
         const tickerFontSizes = ['.68rem', '.78rem', '.92rem', '1.06rem'];
         let tickerCurrent = { ...tickerFallback };
@@ -2559,7 +2558,7 @@
                 icon,
                 showIcon: raw.showIcon !== false && Boolean(icon),
                 style: tickerStyles.includes(raw.style) ? raw.style : tickerFallback.style,
-                speed: tickerSpeeds.includes(Number(raw.speed)) ? Number(raw.speed) : tickerFallback.speed,
+                speed: raw.speed === 'auto' || tickerSpeeds.includes(Number(raw.speed)) ? (raw.speed === 'auto' ? 'auto' : Number(raw.speed)) : tickerFallback.speed,
                 fontSize: tickerFontSizes.includes(raw.fontSize) ? raw.fontSize : tickerFallback.fontSize,
                 backgroundColor: normalHex(raw.backgroundColor, tickerFallback.backgroundColor),
                 textColor: normalHex(raw.textColor, tickerFallback.textColor),
@@ -2580,11 +2579,21 @@
             ticker.style.setProperty('--ticker-bg', tickerCurrent.backgroundColor);
             ticker.style.setProperty('--ticker-text', tickerCurrent.textColor);
             ticker.style.setProperty('--ticker-accent', tickerCurrent.accentColor);
-            ticker.style.setProperty('--ticker-speed', `${tickerCurrent.speed}s`);
             ticker.style.setProperty('--ticker-font-size', tickerCurrent.fontSize);
             text.textContent = `${tickerCurrent.showIcon && tickerCurrent.icon ? `${tickerCurrent.icon} ` : ''}${tickerCurrent.text}`;
+            applyTickerSpeed();
             handle.classList.toggle('visible', !tickerCurrent.enabled);
             ticker.setAttribute('aria-label', tickerCurrent.enabled ? `Élő hírfolyam: ${text.textContent}` : 'A hírfolyam ki van kapcsolva. Admin megnyitása: 3 másodperces nyomvatartás.');
+        }
+
+        function applyTickerSpeed() {
+            const ticker = tickerEl('newsTicker');
+            const move = tickerEl('newsTickerMove');
+            if (!ticker || !move) return;
+            const duration = tickerCurrent.speed === 'auto'
+                ? Math.max(18, Math.min(90, Math.round(move.scrollWidth / 82)))
+                : tickerCurrent.speed;
+            ticker.style.setProperty('--ticker-speed', `${duration}s`);
         }
 
         function setTickerStatus(id, text = '', type = '') {
@@ -2622,7 +2631,7 @@
                 icon: tickerEl('tickerIconInput').value,
                 showIcon: tickerEl('tickerShowIconInput').checked,
                 style: tickerEl('tickerStyleInput').value,
-                speed: Number(tickerEl('tickerSpeedInput').value),
+                speed: tickerEl('tickerSpeedInput').value,
                 fontSize: tickerEl('tickerFontSizeInput').value,
                 backgroundColor: tickerEl('tickerBackgroundHex').value,
                 textColor: tickerEl('tickerTextHex').value,
@@ -2749,6 +2758,15 @@
                 window.closeTickerAdminEditor();
             }
         });
+
+        let tickerResizeFrame = null;
+        window.addEventListener('resize', () => {
+            if (tickerCurrent.speed !== 'auto' || tickerResizeFrame) return;
+            tickerResizeFrame = requestAnimationFrame(() => {
+                tickerResizeFrame = null;
+                applyTickerSpeed();
+            });
+        }, { passive: true });
 
         async function initTickerAdmin() {
             attachTickerHoldTarget(tickerEl('newsTicker'));
