@@ -446,7 +446,8 @@
         .ticker-wrap.ticker-style-carbon { background: linear-gradient(135deg, rgba(255,255,255,.07) 25%, transparent 25%) 0 0 / 9px 9px, linear-gradient(110deg, #111827, var(--ticker-bg), #020617); border-bottom-color: var(--ticker-accent); box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 7px 22px rgba(0,0,0,.30); }
         .ticker-move {
             display: inline-block; height: 43px; line-height: 43px; white-space: nowrap;
-            padding-left: 100%; padding-right: 100%; box-sizing: content-box;
+            /* A szöveg bal oldali kilépése után a következő kör azonnal jobbról indul. */
+            padding-left: 100%; padding-right: 0; box-sizing: content-box;
             animation: ticker var(--ticker-speed) linear infinite;
         }
         .ticker-item {
@@ -2562,6 +2563,7 @@
         };
         const tickerStyles = ['solid', 'gradient', 'glass', 'neon', 'aurora', 'royal', 'carbon'];
         const tickerSpeeds = [12, 20, 30, 45, 60, 90];
+        const tickerPixelsPerSecond = { auto: 82, 12: 145, 20: 112, 30: 82, 45: 62, 60: 48, 90: 34 };
         const tickerFontSizes = ['.68rem', '.78rem', '.92rem', '1.06rem'];
         let tickerCurrent = { ...tickerFallback };
         let tickerAuth = null;
@@ -2613,10 +2615,13 @@
             const ticker = tickerEl('newsTicker');
             const move = tickerEl('newsTickerMove');
             if (!ticker || !move) return;
-            const duration = tickerCurrent.speed === 'auto'
-                ? Math.max(18, Math.min(90, Math.round(move.scrollWidth / 82)))
-                : tickerCurrent.speed;
+            const pixelsPerSecond = tickerPixelsPerSecond[tickerCurrent.speed] || tickerPixelsPerSecond.auto;
+            const duration = Math.max(4, Math.min(150, Math.round((move.scrollWidth / pixelsPerSecond) * 10) / 10));
             ticker.style.setProperty('--ticker-speed', `${duration}s`);
+            /* A sebességválasztás előnézetben is azonnal, láthatóan érvényesüljön. */
+            move.style.animation = 'none';
+            void move.offsetWidth;
+            move.style.animation = '';
         }
 
         function setTickerStatus(id, text = '', type = '') {
