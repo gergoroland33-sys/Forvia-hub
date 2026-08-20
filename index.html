@@ -152,6 +152,21 @@
 
         .share-icon-svg { width: 20px; height: 20px; fill: currentColor; }
 
+        .active-users-card {
+            position: absolute; top: 5px; left: 5px;
+            min-width: 40px; height: 40px; padding: 0 10px;
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            border: 1px solid rgba(134, 239, 172, .20); border-radius: 20px;
+            color: #bbf7d0; background: rgba(15, 23, 42, .54);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 8px 22px rgba(0,0,0,.16);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            pointer-events: none; user-select: none;
+        }
+        .active-users-icon { width: 16px; height: 16px; fill: currentColor; }
+        .active-users-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 10px rgba(74,222,128,.85); }
+        .active-users-count { min-width: 8px; color: #f8fafc; font-size: .78rem; font-weight: 900; font-variant-numeric: tabular-nums; }
+        .active-users-card.is-unavailable { opacity: .48; }
+
         .welcome-title {
             font-size: 2.2rem; font-weight: 800; margin: 0;
             color: white; letter-spacing: -1px; margin-bottom: 5px;
@@ -426,8 +441,9 @@
         .ticker-wrap.ticker-style-gradient { background: linear-gradient(100deg, var(--ticker-bg), var(--ticker-accent), var(--ticker-bg)); }
         .ticker-wrap.ticker-style-glass { background: linear-gradient(100deg, rgba(15,23,42,.88), var(--ticker-bg), rgba(15,23,42,.88)); }
         .ticker-wrap.ticker-style-neon { background: linear-gradient(100deg, var(--ticker-bg), var(--ticker-accent), var(--ticker-bg)); box-shadow: 0 0 18px var(--ticker-accent); }
-        .ticker-wrap.ticker-style-stripe { background: repeating-linear-gradient(-45deg, var(--ticker-bg) 0 13px, var(--ticker-accent) 13px 26px); }
-        .ticker-wrap.ticker-style-rgb { background: linear-gradient(110deg, #ef4444, #f59e0b, #22c55e, #06b6d4, #6366f1, #d946ef, #ef4444); background-size: 320% 100%; animation: tickerRgb 16s linear infinite; }
+        .ticker-wrap.ticker-style-aurora { background: linear-gradient(110deg, var(--ticker-bg) 0%, #0e7490 28%, var(--ticker-accent) 50%, #6d28d9 73%, var(--ticker-bg) 100%); background-size: 260% 100%; box-shadow: 0 7px 25px rgba(14,116,144,.25); animation: tickerAurora 16s ease-in-out infinite alternate; }
+        .ticker-wrap.ticker-style-royal { background: linear-gradient(105deg, rgba(255,255,255,.08), transparent 24%, rgba(255,255,255,.03) 52%, transparent 78%), linear-gradient(110deg, #111827, var(--ticker-bg), #312e81, var(--ticker-bg)); border-bottom-color: #c4b5fd; box-shadow: 0 7px 25px rgba(99,102,241,.24); }
+        .ticker-wrap.ticker-style-carbon { background: linear-gradient(135deg, rgba(255,255,255,.07) 25%, transparent 25%) 0 0 / 9px 9px, linear-gradient(110deg, #111827, var(--ticker-bg), #020617); border-bottom-color: var(--ticker-accent); box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 7px 22px rgba(0,0,0,.30); }
         .ticker-move {
             display: inline-block; height: 43px; line-height: 43px; white-space: nowrap;
             padding-left: 100%; padding-right: 100%; box-sizing: content-box;
@@ -443,22 +459,20 @@
             0% { transform: translate3d(0, 0, 0); }
             100% { transform: translate3d(-100%, 0, 0); }
         }
-        @keyframes tickerRgb { from { background-position: 0% 50%; } to { background-position: 320% 50%; } }
+        @keyframes tickerAurora { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
         .ticker-admin-handle {
-            position: fixed; top: env(safe-area-inset-top); right: 10px; z-index: 1001;
-            display: none; padding: 5px 9px; border: 1px solid rgba(148,163,184,.25);
-            border-radius: 0 0 9px 9px; background: rgba(15,23,42,.92); color: #94a3b8;
-            font-size: .51rem; font-weight: 800; letter-spacing: .1em; cursor: default;
-            -webkit-user-select: none; user-select: none;
+            position: fixed; top: env(safe-area-inset-top); right: 0; z-index: 1001;
+            display: none; width: 88px; height: 43px; padding: 0; border: 0;
+            background: transparent; opacity: 0; cursor: default;
         }
         .ticker-admin-handle.visible { display: block; }
 
-        /* A közelgő események kártyájának kizárólag napszakfüggő RGB-fénye. */
+        /* A közelgő események kártyáján csak a keret vált teljes RGB-színekre. */
         .calendar-box.electric-blue.dynamic-rgb {
+            border-color: rgb(var(--calendar-rgb, 96,165,250));
             border-left-color: rgb(var(--calendar-rgb, 96,165,250));
-            background: linear-gradient(145deg, rgba(var(--calendar-rgb,96,165,250),.22), rgba(15,23,42,.42));
-            box-shadow: 0 4px 22px rgba(var(--calendar-rgb,96,165,250),.20), inset 0 0 30px rgba(var(--calendar-rgb,96,165,250),.07);
-            transition: border-color 1.8s ease, background 1.8s ease, box-shadow 1.8s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,.25);
+            transition: border-color 5s linear, box-shadow .35s ease;
         }
 
         /* Csak a hírfolyam admin felületének stílusai. */
@@ -492,7 +506,7 @@
         .ticker-admin-color input[type="text"] { text-transform: uppercase; }
         .ticker-admin-switch { display: flex; align-items: center; gap: 9px; padding: 10px 11px; border: 1px solid rgba(148,163,184,.20); border-radius: 10px; color: #e2e8f0; font-size: .75rem; }
         .ticker-admin-switch input { width: 17px; height: 17px; accent-color: #3b82f6; }
-        .ticker-admin-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 9px; margin-top: 18px; }
+        .ticker-admin-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 9px; margin-top: 18px; }
         .ticker-admin-btn { border: 0; border-radius: 10px; padding: 10px 13px; color: #fff; background: rgba(148,163,184,.17); font: inherit; font-size: .73rem; font-weight: 800; cursor: pointer; }
         .ticker-admin-btn.primary { background: linear-gradient(135deg, #2563eb, #60a5fa); box-shadow: 0 7px 18px rgba(37,99,235,.25); }
         .ticker-admin-btn.danger { color: #fda4af; }
@@ -507,6 +521,7 @@
         }
         @media (prefers-reduced-motion: reduce) {
             .ticker-move { animation: none !important; width: 100%; padding: 0; text-align: center; }
+            .ticker-wrap.ticker-style-aurora { animation: none; }
             .calendar-box.electric-blue.dynamic-rgb { transition: none; }
         }
 
@@ -1013,6 +1028,11 @@
 
 <div id="home-screen">
     <div id="main-card" class="glass-card">
+        <div id="activeUsersCard" class="active-users-card" role="status" aria-live="polite" aria-label="Aktív felhasználók betöltése">
+            <svg class="active-users-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            <span class="active-users-dot" aria-hidden="true"></span>
+            <span id="activeUsersCount" class="active-users-count">–</span>
+        </div>
         <div class="share-card-btn" onclick="shareApp(this)" title="App megosztása">
             <svg class="share-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
@@ -1066,7 +1086,7 @@
             <div id="newsTickerText" class="ticker-item">⚠️ Adatbázisok frissítése: 2026. augusztus 12. Jelenleg a rendelkezésre álló adatok alapján a Hub naprakész.</div>
         </div>
     </div>
-    <div id="tickerAdminHandle" class="ticker-admin-handle" title="Hírfolyam admin: tartsa lenyomva 3 másodpercig">HÍRFOLYAM KI · ADMIN</div>
+    <div id="tickerAdminHandle" class="ticker-admin-handle" role="button" aria-label="Rejtett hírfolyam admin. Tartsa lenyomva 3 másodpercig."></div>
 
     <div id="tickerAdminLogin" class="ticker-admin-backdrop" role="dialog" aria-modal="true" aria-labelledby="tickerAdminLoginTitle">
         <div class="ticker-admin-card">
@@ -1109,8 +1129,9 @@
                         <option value="gradient">Színátmenet</option>
                         <option value="glass">Üveg / Glass</option>
                         <option value="neon">Neon fény</option>
-                        <option value="stripe">Csíkos</option>
-                        <option value="rgb">Automatikus RGB</option>
+                        <option value="aurora">Aurora Flow</option>
+                        <option value="royal">Royal Luxe</option>
+                        <option value="carbon">Carbon Executive</option>
                     </select>
                 </div>
             </div>
@@ -1590,7 +1611,9 @@
         else if (minute < 1260) hue = 202 + ((minute - 1020) / 240) * 43; // esti kék → lila
         else hue = 245;                                      // késő esti ibolya-kék
 
-        const [r, g, b] = hslToRgb(hue, 78, 64);
+        // A másodpercek is beleszámítanak, ezért a teljes RGB-kör óránként, folyamatosan úszik át.
+        hue = ((now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600) / 24) * 360;
+        const [r, g, b] = hslToRgb(hue, 86, 62);
         box.classList.add('dynamic-rgb');
         box.style.setProperty('--calendar-rgb', `${r}, ${g}, ${b}`);
     }
@@ -2513,8 +2536,8 @@
     <!-- Firebase Realtime Database hírfolyam + hitelesített admin vezérlőpult. -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-        import { getAuth, browserSessionPersistence, setPersistence, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, onValue, set, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getAuth, browserSessionPersistence, setPersistence, signInWithEmailAndPassword, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const tickerFirebaseConfig = {
             apiKey: "AIzaSyDHJvHsezaDyBhwo0Q9eQm5HGnqi0fl-HE",
@@ -2537,7 +2560,7 @@
             textColor: '#FDE68A',
             accentColor: '#3B82F6'
         };
-        const tickerStyles = ['solid', 'gradient', 'glass', 'neon', 'stripe', 'rgb'];
+        const tickerStyles = ['solid', 'gradient', 'glass', 'neon', 'aurora', 'royal', 'carbon'];
         const tickerSpeeds = [12, 20, 30, 45, 60, 90];
         const tickerFontSizes = ['.68rem', '.78rem', '.92rem', '1.06rem'];
         let tickerCurrent = { ...tickerFallback };
@@ -2768,6 +2791,57 @@
             });
         }, { passive: true });
 
+        function renderActiveUsers(data) {
+            const card = tickerEl('activeUsersCard');
+            const count = tickerEl('activeUsersCount');
+            if (!card || !count) return;
+            const activeUsers = data && typeof data === 'object'
+                ? Object.values(data).filter(sessions => sessions && typeof sessions === 'object' && Object.keys(sessions).length > 0).length
+                : 0;
+            count.textContent = String(activeUsers);
+            card.classList.remove('is-unavailable');
+            card.setAttribute('aria-label', `Aktív felhasználók: ${activeUsers}`);
+        }
+
+        function createPresenceSessionId() {
+            return window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        }
+
+        async function initActiveUsers() {
+            const card = tickerEl('activeUsersCard');
+            const count = tickerEl('activeUsersCount');
+            if (!card || !count) return;
+            try {
+                const presenceApp = initializeApp(tickerFirebaseConfig, 'forviaHubPresence');
+                const presenceDb = getDatabase(presenceApp);
+                const presenceAuth = getAuth(presenceApp);
+                await setPersistence(presenceAuth, browserSessionPersistence);
+                await signInAnonymously(presenceAuth);
+                const uid = presenceAuth.currentUser?.uid;
+                if (!uid) throw new Error('Nincs anonim jelenléti azonosító.');
+
+                const presenceRoot = ref(presenceDb, 'hub/presence');
+                const presenceRef = ref(presenceDb, `hub/presence/${uid}/${createPresenceSessionId()}`);
+                onValue(presenceRoot, snapshot => renderActiveUsers(snapshot.val()), error => {
+                    console.error('Aktív felhasználók olvasási hiba:', error);
+                    card.classList.add('is-unavailable');
+                });
+                onValue(ref(presenceDb, '.info/connected'), async snapshot => {
+                    if (!snapshot.val()) return;
+                    try {
+                        await onDisconnect(presenceRef).remove();
+                        await set(presenceRef, { connectedAt: serverTimestamp() });
+                    } catch (error) {
+                        console.error('Aktív felhasználók jelenléti hiba:', error);
+                        card.classList.add('is-unavailable');
+                    }
+                });
+            } catch (error) {
+                console.error('Aktív felhasználók indítási hiba:', error);
+                card.classList.add('is-unavailable');
+            }
+        }
+
         async function initTickerAdmin() {
             attachTickerHoldTarget(tickerEl('newsTicker'));
             attachTickerHoldTarget(tickerEl('tickerAdminHandle'));
@@ -2795,6 +2869,7 @@
         }
 
         initTickerAdmin();
+        initActiveUsers();
     </script>
 </body>
 </html>
