@@ -413,6 +413,8 @@
             -webkit-user-select: none; user-select: none;
         }
         .ticker-wrap.is-hidden { opacity: 0; transform: translateY(-110%); pointer-events: none; }
+        /* Induláskor nem mutatunk elavult alapértelmezett színt: az első Firebase-adatig rejtve marad. */
+        .ticker-wrap.is-loading { visibility: hidden; pointer-events: none; }
         .ticker-wrap.is-holding { box-shadow: 0 0 0 2px var(--ticker-accent), 0 7px 28px rgba(59,130,246,.30); }
         .ticker-wrap.is-holding::after {
             content: 'ADMIN MÓD NYITÁSA…';
@@ -1060,7 +1062,7 @@
     </div>
 
     <!-- Firebase által vezérelt hírfolyam. Admin: 3 mp nyomvatartás. -->
-    <div id="newsTicker" class="ticker-wrap ticker-style-solid" role="status" aria-live="polite" aria-label="Élő hírfolyam. Admin megnyitása: tartsa lenyomva 3 másodpercig.">
+    <div id="newsTicker" class="ticker-wrap ticker-style-solid is-loading" role="status" aria-live="polite" aria-label="Élő hírfolyam. Admin megnyitása: tartsa lenyomva 3 másodpercig.">
         <div id="newsTickerMove" class="ticker-move">
             <div id="newsTickerText" class="ticker-item">⚠️ Adatbázisok frissítése: 2026. augusztus 12. Jelenleg a rendelkezésre álló adatok alapján a Hub naprakész.</div>
         </div>
@@ -1099,6 +1101,7 @@
                 <div class="ticker-admin-field">
                     <label for="tickerIconInput">Ikon / előtag</label>
                     <input id="tickerIconInput" maxlength="8" placeholder="⚠️" />
+                    <label class="ticker-admin-switch"><input id="tickerShowIconInput" type="checkbox" checked /> Ikon megjelenítése</label>
                 </div>
                 <div class="ticker-admin-field">
                     <label for="tickerStyleInput">Stílus</label>
@@ -2549,10 +2552,12 @@
 
         function normalizeTicker(data) {
             const raw = data && typeof data === 'object' ? data : {};
+            const icon = typeof raw.icon === 'string' ? raw.icon.trim().slice(0, 8) : tickerFallback.icon;
             return {
                 enabled: raw.enabled !== false,
                 text: typeof raw.text === 'string' && raw.text.trim() ? raw.text.trim().slice(0, 400) : tickerFallback.text,
-                icon: typeof raw.icon === 'string' ? raw.icon.trim().slice(0, 8) : tickerFallback.icon,
+                icon,
+                showIcon: raw.showIcon !== false && Boolean(icon),
                 style: tickerStyles.includes(raw.style) ? raw.style : tickerFallback.style,
                 speed: tickerSpeeds.includes(Number(raw.speed)) ? Number(raw.speed) : tickerFallback.speed,
                 fontSize: tickerFontSizes.includes(raw.fontSize) ? raw.fontSize : tickerFallback.fontSize,
@@ -2577,7 +2582,7 @@
             ticker.style.setProperty('--ticker-accent', tickerCurrent.accentColor);
             ticker.style.setProperty('--ticker-speed', `${tickerCurrent.speed}s`);
             ticker.style.setProperty('--ticker-font-size', tickerCurrent.fontSize);
-            text.textContent = `${tickerCurrent.icon ? `${tickerCurrent.icon} ` : ''}${tickerCurrent.text}`;
+            text.textContent = `${tickerCurrent.showIcon && tickerCurrent.icon ? `${tickerCurrent.icon} ` : ''}${tickerCurrent.text}`;
             handle.classList.toggle('visible', !tickerCurrent.enabled);
             ticker.setAttribute('aria-label', tickerCurrent.enabled ? `Élő hírfolyam: ${text.textContent}` : 'A hírfolyam ki van kapcsolva. Admin megnyitása: 3 másodperces nyomvatartás.');
         }
@@ -2615,6 +2620,7 @@
                 enabled: tickerEl('tickerEnabledInput').checked,
                 text: tickerEl('tickerTextInput').value,
                 icon: tickerEl('tickerIconInput').value,
+                showIcon: tickerEl('tickerShowIconInput').checked,
                 style: tickerEl('tickerStyleInput').value,
                 speed: Number(tickerEl('tickerSpeedInput').value),
                 fontSize: tickerEl('tickerFontSizeInput').value,
@@ -2627,6 +2633,7 @@
         function prefillTickerEditor() {
             tickerEl('tickerTextInput').value = tickerCurrent.text;
             tickerEl('tickerIconInput').value = tickerCurrent.icon;
+            tickerEl('tickerShowIconInput').checked = tickerCurrent.showIcon;
             tickerEl('tickerStyleInput').value = tickerCurrent.style;
             tickerEl('tickerSpeedInput').value = String(tickerCurrent.speed);
             tickerEl('tickerFontSizeInput').value = tickerCurrent.fontSize;
@@ -2744,13 +2751,12 @@
         });
 
         async function initTickerAdmin() {
-            renderTicker(tickerFallback);
             attachTickerHoldTarget(tickerEl('newsTicker'));
             attachTickerHoldTarget(tickerEl('tickerAdminHandle'));
             bindColorPair('tickerBackgroundColor', 'tickerBackgroundHex');
             bindColorPair('tickerTextColor', 'tickerTextHex');
             bindColorPair('tickerAccentColor', 'tickerAccentHex');
-            ['tickerTextInput', 'tickerIconInput', 'tickerStyleInput', 'tickerSpeedInput', 'tickerFontSizeInput', 'tickerEnabledInput'].forEach(id => {
+            ['tickerTextInput', 'tickerIconInput', 'tickerShowIconInput', 'tickerStyleInput', 'tickerSpeedInput', 'tickerFontSizeInput', 'tickerEnabledInput'].forEach(id => {
                 tickerEl(id)?.addEventListener('input', previewTickerFromEditor);
                 tickerEl(id)?.addEventListener('change', previewTickerFromEditor);
             });
