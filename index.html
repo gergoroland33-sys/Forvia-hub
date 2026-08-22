@@ -353,6 +353,9 @@
             font-size: 1rem; line-height: 1.6; color: #cbd5e1; margin-bottom: 30px;
         }
         .instruction-highlight { color: var(--accent); font-weight: 600; }
+        .active-shift-status { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0 .38rem; min-height: 1.6em; font-size: clamp(.78rem, 2.8vw, 1rem); }
+        .active-shift-label, .active-shift-end { color: var(--text-dim); }
+        .active-shift-code { color: #fff; font-weight: 800; letter-spacing: .04em; }
 
         .device-info {
             font-size: 0.8rem; color: #64748b;
@@ -1072,10 +1075,10 @@
             <div id="cal-name" class="cal-event-name">Betöltés...</div>
         </div>
 
-        <p class="instruction-text">
-            Használd a jobb oldalon lévő <span class="instruction-highlight">menügombot</span>
-
-            a használat megkezdéséhez.
+        <p id="activeShiftStatus" class="instruction-text active-shift-status" aria-live="polite">
+            <span class="active-shift-label">Aktuális dolgozó műszak:</span>
+            <span id="activeShiftCode" class="active-shift-code">–</span>
+            <span id="activeShiftEnd" class="active-shift-end">• Betöltés…</span>
         </p>
 
         <div class="device-info">
@@ -1622,6 +1625,20 @@
         box.style.setProperty('--calendar-rgb', `${r}, ${g}, ${b}`);
     }
 
+    function updateActiveShiftStatus(now) {
+        const status = document.getElementById('activeShiftStatus');
+        const code = document.getElementById('activeShiftCode');
+        const end = document.getElementById('activeShiftEnd');
+        if (!status || !code || !end) return;
+
+        const isDayShift = now.getHours() >= 6 && now.getHours() < 18;
+        const shifts = getShiftForDate(now);
+        code.textContent = `"${isDayShift ? shifts.day : shifts.night}"`;
+        end.textContent = isDayShift ? '• 18:00-ig' : '• 06:00-ig';
+        status.classList.toggle('is-day', isDayShift);
+        status.classList.toggle('is-night', !isDayShift);
+    }
+
     function updateInfo() {
         const now = new Date();
         
@@ -1646,6 +1663,7 @@
 
         updateCalendarWidget();
         updateCalendarRgbTone(now);
+        updateActiveShiftStatus(now);
     }
 
     /* ================================================================
@@ -1880,6 +1898,22 @@
 
     updateInfo();
     setInterval(updateInfo, 1000); 
+
+    function scheduleExactShiftStatusUpdate() {
+        const now = new Date();
+        const nextChange = new Date(now);
+        if (now.getHours() < 6) nextChange.setHours(6, 0, 0, 0);
+        else if (now.getHours() < 18) nextChange.setHours(18, 0, 0, 0);
+        else {
+            nextChange.setDate(nextChange.getDate() + 1);
+            nextChange.setHours(6, 0, 0, 0);
+        }
+        setTimeout(() => {
+            updateActiveShiftStatus(new Date());
+            scheduleExactShiftStatusUpdate();
+        }, Math.max(0, nextChange.getTime() - Date.now()) + 25);
+    }
+    scheduleExactShiftStatusUpdate();
 
     function animateAndReload(btn) {
         if(navigator.vibrate) navigator.vibrate(20);
