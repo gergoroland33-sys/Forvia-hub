@@ -1256,7 +1256,7 @@ function keres(k){
                         <div class="data-row row-main"><span class="d-label">Cikkszám</span><span class="d-value">${r[0]}</span></div>
                         <div class="data-row"><span class="d-label">Modell</span><span class="d-value">${r[2]}</span></div>
                         <div class="data-row"><span class="d-label">Oldal</span><span class="d-value">${r[1]}</span></div>
-                        <div class="data-row"><span class="d-label">Db / panel</span><span class="d-value">${r[3]}</span></div>
+                        <div class="data-row"><span class="d-label">Db</span><span class="d-value">${r[3]}</span></div>
                     </div>
                 </div>`;
             });
@@ -1317,7 +1317,7 @@ window.openModelModal = function(modelName) {
                 <span class="m-cikk">${r[0]}</span>
                 <span class="m-oldal ${oClass}">${oldal || 'N/A'}</span>
             </div>
-            <div class="m-db">${demandNumber(r[3]).toLocaleString('hu-HU')}<span> DB / PANEL</span></div>
+            <div class="m-db">${r[3]}<span> DB</span></div>
         </div>`;
     });
     
@@ -1545,10 +1545,6 @@ function demandNumber(value) {
     return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function formatPanelQuantity(value) {
-    return `${demandNumber(value).toLocaleString('hu-HU')} DB / PANEL`;
-}
-
 function escapeDemandHtml(value) {
     return String(value == null ? '' : value).replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[char]);
 }
@@ -1765,7 +1761,7 @@ function createModelsExplorer() {
     }
 
     function partCard(part, className = '', detail = '') {
-        return `<div class="comparison-part ${className}"><strong>${escapeModelCompareHtml(part.code || part)}</strong><small>${escapeModelCompareHtml(detail || formatPanelQuantity(part.perPanel))}</small></div>`;
+        return `<div class="comparison-part ${className}"><strong>${escapeModelCompareHtml(part.code || part)}</strong><small>${escapeModelCompareHtml(detail || `${part.perPanel.toLocaleString('hu-HU')} DB / PANEL`)}</small></div>`;
     }
 
     function modelAccent(index) {
@@ -1780,7 +1776,7 @@ function createModelsExplorer() {
         const statuses = models.map((model, index) => {
             const entry = part.present.find(item => item.model === model);
             const color = modelAccent(index);
-            if (entry) return `<span class="difference-model-status present" style="--model-color:${color}"><span class="difference-model-name">${escapeModelCompareHtml(model)}</span><span class="difference-model-value">${formatPanelQuantity(entry.perPanel)}</span></span>`;
+            if (entry) return `<span class="difference-model-status present" style="--model-color:${color}"><span class="difference-model-name">${escapeModelCompareHtml(model)}</span><span class="difference-model-value">${entry.perPanel.toLocaleString('hu-HU')} DB</span></span>`;
             return `<span class="difference-model-status missing" style="--model-color:${color}"><span class="difference-model-name">${escapeModelCompareHtml(model)}</span><span class="difference-model-value">NINCS</span></span>`;
         }).join('');
         return `<div class="comparison-part comparison-difference"><strong>${escapeModelCompareHtml(part.code)}</strong><div class="difference-model-grid">${statuses}</div></div>`;
@@ -1799,7 +1795,7 @@ function createModelsExplorer() {
         const header = models.map((model, index) => `<th class="matrix-model-head" style="--model-color:${modelAccent(index)}">${escapeModelCompareHtml(model)}</th>`).join('');
         const body = rows.map((part, rowIndex) => `<tr><td class="matrix-code">${escapeModelCompareHtml(part.code)}</td>${models.map(model => {
             const entry = part.present.find(item => item.model === model);
-            return entry ? `<td><span class="matrix-status yes" style="animation-delay:${Math.min(rowIndex * 15, 240)}ms"><b>✓</b>${formatPanelQuantity(entry.perPanel)}</span></td>` : `<td><span class="matrix-status no" style="animation-delay:${Math.min(rowIndex * 15, 240)}ms"><b>×</b>NINCS</span></td>`;
+            return entry ? `<td><span class="matrix-status yes" style="animation-delay:${Math.min(rowIndex * 15, 240)}ms"><b>✓</b>${entry.perPanel.toLocaleString('hu-HU')} DB</span></td>` : `<td><span class="matrix-status no" style="animation-delay:${Math.min(rowIndex * 15, 240)}ms"><b>×</b>NINCS</span></td>`;
         }).join('')}</tr>`).join('');
         return `<div class="matrix-shell"><table class="model-matrix"><thead><tr><th class="matrix-code-head">CIKKSZÁM</th>${header}</tr></thead><tbody>${body || `<tr><td class="matrix-code" colspan="${models.length + 1}">Nincs találat a jelenlegi szűrőkkel.</td></tr>`}</tbody></table></div>`;
     }
