@@ -168,6 +168,7 @@
         .active-users-icon { width: 16px; height: 16px; fill: currentColor; }
         .active-users-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 10px rgba(74,222,128,.85); }
         .active-users-count { min-width: 8px; color: #f8fafc; font-size: .78rem; font-weight: 900; font-variant-numeric: tabular-nums; }
+        .active-users-count.is-staff-pro-active { color: #f87171; text-shadow: 0 0 10px rgba(248,113,113,.38); }
         .active-users-card.is-unavailable { opacity: .48; }
 
         .welcome-title {
@@ -2205,6 +2206,8 @@
         hubRecovery.activeUrl = url;
         hubRecovery.activeAutoStart = autoStart;
         hubRecovery.hiddenAt = null;
+        window.activePresenceModuleRequest = url === '8.html' ? 'staff-pro' : 'other';
+        window.setActivePresenceModule?.(window.activePresenceModuleRequest);
         hideReconnectNotice();
         totalActivity++;
         localStorage.setItem('fv_total_activity', totalActivity);
@@ -2238,6 +2241,8 @@
         hubRecovery.activeUrl = null;
         hubRecovery.activeAutoStart = false;
         hubRecovery.reconnecting = false;
+        window.activePresenceModuleRequest = 'home';
+        window.setActivePresenceModule?.(window.activePresenceModuleRequest);
         hideReconnectNotice();
         
         document.body.classList.remove('search-mode-active');
@@ -2606,6 +2611,7 @@
         let tickerAuth = null;
         let tickerDb = null;
         let tickerHoldTimer = null;
+        let activePresenceModule = window.activePresenceModuleRequest === 'staff-pro' ? 'staff-pro' : 'home';
 
         const tickerEl = id => document.getElementById(id);
         const isHexColor = value => /^#[0-9A-F]{6}$/i.test(String(value || '').trim());
@@ -2840,7 +2846,11 @@
             const activeUsers = data && typeof data === 'object'
                 ? Object.values(data).filter(sessions => sessions && typeof sessions === 'object' && Object.keys(sessions).length > 0).length
                 : 0;
+            const isStaffProOpen = data && typeof data === 'object' && Object.values(data).some(sessions =>
+                sessions && typeof sessions === 'object' && Object.values(sessions).some(session => session?.module === 'staff-pro')
+            );
             count.textContent = String(activeUsers);
+            count.classList.toggle('is-staff-pro-active', isStaffProOpen);
             card.classList.remove('is-unavailable');
             card.setAttribute('aria-label', `Aktív felhasználók: ${activeUsers}`);
         }
@@ -2864,6 +2874,18 @@
 
                 const presenceRoot = ref(presenceDb, 'hub/presence');
                 const presenceRef = ref(presenceDb, `hub/presence/${uid}/${createPresenceSessionId()}`);
+                window.setActivePresenceModule = async function(module) {
+                    activePresenceModule = module === 'staff-pro' ? 'staff-pro' : 'other';
+                    window.activePresenceModuleRequest = activePresenceModule;
+                    if (!presenceRef) return;
+                    try {
+                        await set(presenceRef, { connectedAt: serverTimestamp(), module: activePresenceModule });
+                    } catch (error) {
+                        console.error('Aktív felhasználók modulállapot hiba:', error);
+                    }
+                };
+                /* Ha a modul az anonim Firebase-belépés közben nyílt meg, az aktuális állapotot most biztosan kiírjuk. */
+                await window.setActivePresenceModule(window.activePresenceModuleRequest || activePresenceModule);
                 onValue(presenceRoot, snapshot => renderActiveUsers(snapshot.val()), error => {
                     console.error('Aktív felhasználók olvasási hiba:', error);
                     card.classList.add('is-unavailable');
@@ -2872,7 +2894,7 @@
                     if (!snapshot.val()) return;
                     try {
                         await onDisconnect(presenceRef).remove();
-                        await set(presenceRef, { connectedAt: serverTimestamp() });
+                        await set(presenceRef, { connectedAt: serverTimestamp(), module: activePresenceModule });
                     } catch (error) {
                         console.error('Aktív felhasználók jelenléti hiba:', error);
                         card.classList.add('is-unavailable');
