@@ -865,8 +865,6 @@ input.suggestions-active {
     white-space:normal !important;
   }
 }
-/* A billentyűzet gyors érintésre készül: nincs késleltetett duplakopp vagy kijelölés. */
-#kbContainer .k-btn { touch-action:manipulation; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; }
 </style>
 </head>
 <body>
@@ -1088,7 +1086,7 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
         if(window.innerWidth >= 1024) updateSuggest(v);
         
         clearTimeout(keresIdozito); 
-        keresIdozito=setTimeout(()=>keres(v),120);
+        keresIdozito=setTimeout(()=>keres(v),350);
     });
 
     inp.addEventListener('blur', function() {
@@ -1258,7 +1256,7 @@ function keres(k){
                         <div class="data-row row-main"><span class="d-label">Cikkszám</span><span class="d-value">${r[0]}</span></div>
                         <div class="data-row"><span class="d-label">Modell</span><span class="d-value">${r[2]}</span></div>
                         <div class="data-row"><span class="d-label">Oldal</span><span class="d-value">${r[1]}</span></div>
-                        <div class="data-row"><span class="d-label">Db</span><span class="d-value">${r[3]}</span></div>
+                        <div class="data-row"><span class="d-label">Db / panel</span><span class="d-value">${r[3]}</span></div>
                     </div>
                 </div>`;
             });
@@ -1319,7 +1317,7 @@ window.openModelModal = function(modelName) {
                 <span class="m-cikk">${r[0]}</span>
                 <span class="m-oldal ${oClass}">${oldal || 'N/A'}</span>
             </div>
-            <div class="m-db">${r[3]}<span> DB</span></div>
+            <div class="m-db">${demandNumber(r[3]).toLocaleString('hu-HU')}<span> DB / PANEL</span></div>
         </div>`;
     });
     
@@ -1484,7 +1482,6 @@ function generateAlphaKeys() {
         const d = document.createElement('div');
         d.className = 'k-btn num'; 
         d.textContent = char;
-        d.dataset.fastKey = char;
         d.style.fontSize = "1.1rem"; 
         d.onclick = (e) => { e.preventDefault(); typeKey(char); }; 
         container.appendChild(d);
@@ -1492,20 +1489,17 @@ function generateAlphaKeys() {
     
     const del = document.createElement('div');
     del.className = 'k-btn red'; del.textContent = '⌫';
-    del.dataset.fastCommand = 'backspace';
     del.onclick = backspaceKey;
     container.appendChild(del);
 
     const ent = document.createElement('div');
     ent.className = 'k-btn accent'; ent.textContent = '⏎';
-    ent.dataset.fastCommand = 'enter';
     ent.onclick = enterKey;
     container.appendChild(ent);
 
     const toNum = document.createElement('div');
     toNum.className = 'k-btn abc-switch'; 
     toNum.textContent = '123 / SZÁMOK';
-    toNum.dataset.fastCommand = 'toggle';
     toNum.style.gridColumn = 'span 10';
     toNum.onclick = toggleKbMode;
     container.appendChild(toNum); 
@@ -1549,6 +1543,10 @@ let activeDemandQuantity = 0;
 function demandNumber(value) {
     const parsed = Number(String(value || '0').replace(',', '.').replace(/[^0-9.\-]/g, ''));
     return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function formatPanelQuantity(value) {
+    return `${demandNumber(value).toLocaleString('hu-HU')} DB / PANEL`;
 }
 
 function escapeDemandHtml(value) {
@@ -1767,7 +1765,7 @@ function createModelsExplorer() {
     }
 
     function partCard(part, className = '', detail = '') {
-        return `<div class="comparison-part ${className}"><strong>${escapeModelCompareHtml(part.code || part)}</strong><small>${escapeModelCompareHtml(detail || `${part.perPanel.toLocaleString('hu-HU')} DB / PANEL`)}</small></div>`;
+        return `<div class="comparison-part ${className}"><strong>${escapeModelCompareHtml(part.code || part)}</strong><small>${escapeModelCompareHtml(detail || formatPanelQuantity(part.perPanel))}</small></div>`;
     }
 
     function modelAccent(index) {
@@ -1782,7 +1780,7 @@ function createModelsExplorer() {
         const statuses = models.map((model, index) => {
             const entry = part.present.find(item => item.model === model);
             const color = modelAccent(index);
-            if (entry) return `<span class="difference-model-status present" style="--model-color:${color}"><span class="difference-model-name">${escapeModelCompareHtml(model)}</span><span class="difference-model-value">${entry.perPanel.toLocaleString('hu-HU')} DB</span></span>`;
+            if (entry) return `<span class="difference-model-status present" style="--model-color:${color}"><span class="difference-model-name">${escapeModelCompareHtml(model)}</span><span class="difference-model-value">${formatPanelQuantity(entry.perPanel)}</span></span>`;
             return `<span class="difference-model-status missing" style="--model-color:${color}"><span class="difference-model-name">${escapeModelCompareHtml(model)}</span><span class="difference-model-value">NINCS</span></span>`;
         }).join('');
         return `<div class="comparison-part comparison-difference"><strong>${escapeModelCompareHtml(part.code)}</strong><div class="difference-model-grid">${statuses}</div></div>`;
@@ -1801,7 +1799,7 @@ function createModelsExplorer() {
         const header = models.map((model, index) => `<th class="matrix-model-head" style="--model-color:${modelAccent(index)}">${escapeModelCompareHtml(model)}</th>`).join('');
         const body = rows.map((part, rowIndex) => `<tr><td class="matrix-code">${escapeModelCompareHtml(part.code)}</td>${models.map(model => {
             const entry = part.present.find(item => item.model === model);
-            return entry ? `<td><span class="matrix-status yes" style="animation-delay:${Math.min(rowIndex * 15, 240)}ms"><b>✓</b>${entry.perPanel.toLocaleString('hu-HU')} DB</span></td>` : `<td><span class="matrix-status no" style="animation-delay:${Math.min(rowIndex * 15, 240)}ms"><b>×</b>NINCS</span></td>`;
+            return entry ? `<td><span class="matrix-status yes" style="animation-delay:${Math.min(rowIndex * 15, 240)}ms"><b>✓</b>${formatPanelQuantity(entry.perPanel)}</span></td>` : `<td><span class="matrix-status no" style="animation-delay:${Math.min(rowIndex * 15, 240)}ms"><b>×</b>NINCS</span></td>`;
         }).join('')}</tr>`).join('');
         return `<div class="matrix-shell"><table class="model-matrix"><thead><tr><th class="matrix-code-head">CIKKSZÁM</th>${header}</tr></thead><tbody>${body || `<tr><td class="matrix-code" colspan="${models.length + 1}">Nincs találat a jelenlegi szűrőkkel.</td></tr>`}</tbody></table></div>`;
     }
@@ -1879,45 +1877,6 @@ function triggerSearch() {
     const event = new Event('input', { bubbles: true, cancelable: true });
     inp.dispatchEvent(event);
 }
-
-/* --- GYORS MOBIL GÉPELÉS: Android és iPhone érintésbiztos kezelése --- */
-(function enableFastMobileKeys() {
-    const keyboard = document.getElementById('kbContainer');
-    if (!keyboard) return;
-
-    let lastFastTouch = 0;
-    const runKey = (button) => {
-        const action = button.getAttribute('onclick') || '';
-        const typed = action.match(/typeKey\('([^']*)'\)/);
-        if (typed) return typeKey(typed[1]);
-        if (action.includes('backspaceKey')) return backspaceKey();
-        if (action.includes('clearSearch')) return clearSearch();
-        if (action.includes('toggleKbMode')) return toggleKbMode();
-        if (action.includes('enterKey')) return enterKey();
-
-        /* A dinamikusan létrehozott ABC-gombokhoz. */
-        if (button.dataset.fastKey) return typeKey(button.dataset.fastKey);
-        if (button.dataset.fastCommand === 'backspace') return backspaceKey();
-        if (button.dataset.fastCommand === 'enter') return enterKey();
-        if (button.dataset.fastCommand === 'toggle') return toggleKbMode();
-    };
-
-    keyboard.addEventListener('pointerdown', (event) => {
-        const button = event.target.closest('.k-btn');
-        if (!button) return;
-        event.preventDefault();
-        lastFastTouch = Date.now();
-        runKey(button);
-    }, { passive: false });
-
-    /* A pointerdown után érkező click ne írja be még egyszer a karaktert. */
-    keyboard.addEventListener('click', (event) => {
-        if (Date.now() - lastFastTouch < 800) {
-            event.preventDefault();
-            event.stopImmediatePropagation();
-        }
-    }, true);
-})();
 </script>
 </body>
 </html>
