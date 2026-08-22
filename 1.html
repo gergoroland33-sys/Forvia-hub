@@ -1035,7 +1035,7 @@ function calculateStats() {
 }
 
 Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.text())]).then(([bT,uT])=>{
-    bank=feldolgoz(bT); ultetes=feldolgoz(uT);
+    bank=feldolgoz(bT); ultetes=deduplicatePlacementRows(feldolgoz(uT));
     bank.forEach(r=>r[2]&&idSet.add(r[2].toUpperCase()));
     ultetes.forEach(r=>r[0]&&idSet.add(r[0].toUpperCase()));
     uniqueIdsArr=Array.from(idSet);
@@ -1119,6 +1119,23 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
 });
 
 function feldolgoz(t){return t.split('\n').map(s=>s.replace(/"/g,'').trim()).filter(s=>s).slice(1).map(s=>s.split(';').map(e=>e.trim()));}
+
+// Egy beültetés több gépsoron is szerepelhet a nyers CSV-ben. Ez ugyanaz az
+// egy panelenkénti adat, ezért a gépsor mezőt nem vesszük a kulcsba.
+// A cikkszám, oldal és modell együtt egyedi beültetést jelent; a CSV első sora
+// a forrásérték, ezért ugyanazon kombinációt sem gépsor, sem ismételt mennyiség
+// nem sokszorozhat meg.
+function deduplicatePlacementRows(rows) {
+    const seen = new Set();
+    return rows.filter(row => {
+        const key = [row[0], row[1], row[2]]
+            .map(value => String(value || '').trim().toUpperCase())
+            .join('|');
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+}
 
 function updateSuggest(v){
     const b=document.getElementById('suggest'); 
