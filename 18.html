@@ -280,6 +280,19 @@ function detectDataRows(xml){
   return set;
 }
 
+// Csak a nyomtatási fejlécben látszik: a munkalap celláit és elrendezését nem érinti.
+function addPrintBrand(xml){
+  const mark='&R&8Forvia-hub';
+  if (/<headerFooter\b/.test(xml)){
+    if (/<oddHeader\b/.test(xml)){
+      return xml.replace(/<oddHeader([^>]*)>([\s\S]*?)<\/oddHeader>/, (all,attrs,body) =>
+        body.includes('Forvia-hub') ? all : '<oddHeader'+attrs+'>'+body+mark+'</oddHeader>');
+    }
+    return xml.replace(/(<headerFooter\b[^>]*>)/, '$1<oddHeader>'+mark+'</oddHeader>');
+  }
+  return xml.replace(/(<pageSetup\b[^>]*\/>)/, '$1<headerFooter><oddHeader>'+mark+'</oddHeader></headerFooter>');
+}
+
 function fixSheetXml(xml, scale, dataRows, dataH, emptyH, row2H, maxRow, columnSplit){
   xml = xml.replace(/<pageSetup[^>]*\/>/, function(tag){ const m = tag.match(/r:id="([^"]+)"/);
     return '<pageSetup paperSize="8" scale="'+scale+'" orientation="portrait"'+(m?' r:id="'+m[1]+'"':'')+'/>'; });
@@ -292,6 +305,7 @@ function fixSheetXml(xml, scale, dataRows, dataH, emptyH, row2H, maxRow, columnS
     if (/<pageMargins\b/.test(xml)) xml=xml.replace(/(<pageMargins\b[^>]*\/>)/, '$1'+setup);
     else xml=xml.replace('</worksheet>', setup+'</worksheet>');
   }
+  xml = addPrintBrand(xml);
   xml = xml.replace(/(<pageSetUpPr\b[^>]*?)\s*fitToPage="(?:1|true)"/g, '$1');
   xml = xml.replace(/<pageMargins([^>]*)\/>/, function(m, attrs){
     const top = (attrs.match(/top="([^"]*)"/)    || [])[1] || '1.5748';
