@@ -1072,7 +1072,7 @@ function calculateStats() {
 }
 
 Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.text())]).then(([bT,uT])=>{
-    bank=feldolgoz(bT); ultetes=feldolgoz(uT);
+    bank=feldolgoz(bT); ultetes=deduplicatePlacementRows(feldolgoz(uT));
     bank.forEach(r=>r[2]&&idSet.add(r[2].toUpperCase()));
     ultetes.forEach(r=>r[0]&&idSet.add(r[0].toUpperCase()));
     uniqueIdsArr=Array.from(idSet);
@@ -1156,6 +1156,23 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
 });
 
 function feldolgoz(t){return t.split('\n').map(s=>s.replace(/"/g,'').trim()).filter(s=>s).slice(1).map(s=>s.split(';').map(e=>e.trim()));}
+
+// Egy beültetés több gépsoron is szerepelhet a nyers CSV-ben. Ez ugyanaz az
+// egy panelenkénti adat, ezért a gépsor mezőt nem vesszük a kulcsba.
+// A cikkszám, oldal és modell együtt egyedi beültetést jelent; a CSV első sora
+// a forrásérték, ezért ugyanazon kombinációt sem gépsor, sem ismételt mennyiség
+// nem sokszorozhat meg.
+function deduplicatePlacementRows(rows) {
+    const seen = new Set();
+    return rows.filter(row => {
+        const key = [row[0], row[1], row[2]]
+            .map(value => String(value || '').trim().toUpperCase())
+            .join('|');
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+}
 
 function updateSuggest(v){
     const b=document.getElementById('suggest'); 
@@ -1590,9 +1607,16 @@ function escapeDemandHtml(value) {
     return String(value == null ? '' : value).replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[char]);
 }
 
+// A teljes lista és a modell-összehasonlítás is közvetlenül a nyers ultetes.csv
+// modellhez tartozó soraiból indul ki. A csoportosítás csak a kijelzéshez történik.
+function getRawPlacementRowsForModel(modelName) {
+    const normalizedModel = String(modelName || '').trim().toUpperCase();
+    return ultetes.filter(row => String(row[2] || '').trim().toUpperCase() === normalizedModel);
+}
+
 function getDemandParts(modelName) {
     const grouped = new Map();
-    ultetes.filter(r => r[2] && r[2].toUpperCase() === modelName.toUpperCase()).forEach(r => {
+    getRawPlacementRowsForModel(modelName).forEach(r => {
         const code = (r[0] || '').toUpperCase().trim();
         if (!code) return;
         const current = grouped.get(code) || { code, perPanel: 0, sides: new Set() };
