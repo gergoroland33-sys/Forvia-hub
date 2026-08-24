@@ -282,7 +282,8 @@ function detectDataRows(xml){
 
 // Csak a nyomtatási fejlécben látszik: a munkalap celláit és elrendezését nem érinti.
 function addPrintBrand(xml){
-  const mark='&R&8Forvia-hub';
+  // XML-ben az & jelet kódolni kell; Excel megnyitáskor ebből &R&8 lesz.
+  const mark='&amp;R&amp;8Forvia-hub';
   if (/<headerFooter\b/.test(xml)){
     if (/<oddHeader\b/.test(xml)){
       return xml.replace(/<oddHeader([^>]*)>([\s\S]*?)<\/oddHeader>/, (all,attrs,body) =>
