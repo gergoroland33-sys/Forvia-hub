@@ -902,6 +902,36 @@ input.suggestions-active {
   #printArea.matrix-print .matrix-status { font-size:7.7pt !important; padding:.75mm 1.15mm !important; }
   #printArea.matrix-print .matrix-status b { font-size:10.5pt !important; }
 }
+
+/* --- MÁTRIX GÖRGETÉS ÉS NAGYOBB A4 BETŰMÉRET --- */
+.models-modal-content .models-results-panel {
+  min-width:0 !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+  scrollbar-color:#60a5fa rgba(15,23,42,.8);
+}
+.models-modal-content .models-results-panel::-webkit-scrollbar { width:11px; }
+.models-modal-content .models-results-panel::-webkit-scrollbar-thumb { background:linear-gradient(#60a5fa,#2563eb); border:2px solid #0f172a; border-radius:999px; }
+.models-results-panel .matrix-shell {
+  overflow-x:scroll !important;
+  overflow-y:auto !important;
+  max-height:58vh;
+  cursor:grab;
+  scrollbar-gutter:stable both-edges;
+}
+.models-results-panel .matrix-shell:active { cursor:grabbing; }
+.models-results-panel .matrix-shell::-webkit-scrollbar { height:12px; width:11px; }
+.models-results-panel .matrix-shell::-webkit-scrollbar-track { background:#0b1220; border-radius:999px; }
+.models-results-panel .matrix-shell::-webkit-scrollbar-thumb { min-width:54px; background:linear-gradient(90deg,#38bdf8,#2563eb); border:2px solid #0b1220; border-radius:999px; }
+@media print {
+  #printArea.matrix-print .model-matrix th { font-size:9.2pt !important; line-height:1.2 !important; padding:1.9mm 1.25mm !important; }
+  #printArea.matrix-print .model-matrix td { font-size:9.2pt !important; line-height:1.16 !important; padding:1.7mm 1.25mm !important; }
+  #printArea.matrix-print .model-matrix .matrix-code { font-size:9.8pt !important; font-weight:900 !important; }
+  #printArea.matrix-print .matrix-status { font-size:8.6pt !important; padding:.85mm 1.25mm !important; }
+  #printArea.matrix-print .matrix-status b { font-size:11.5pt !important; }
+}
 </style>
 </head>
 <body>
@@ -1868,7 +1898,7 @@ function createModelsExplorer() {
     function printCurrentMatrix() {
         if (!lastMatrixData || !lastMatrixData.rows.length) return;
         const { models, rows } = lastMatrixData;
-        const scale = Math.max(0.74, Math.min(1, 74 / Math.max(rows.length, 1)));
+        const scale = Math.max(0.84, Math.min(1, 88 / Math.max(rows.length, 1)));
         const area = document.getElementById('printArea');
         area.className = 'matrix-print';
         area.style.setProperty('--matrix-print-zoom', scale.toFixed(2));
