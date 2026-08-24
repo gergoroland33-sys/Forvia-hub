@@ -221,11 +221,11 @@ function process(file){
       }
       if (toFix.length === 0) throw new Error('Nincs nyomtatási beállítású munkalap.');
 
-      // MAGASSÁGI méretarány. A 1015 pt szándékosan tartalmaz tartalékot: Excel/nyomtató
-      // eltérő fejléc-kezelése miatt ez akadályozza meg a nem kívánt harmadik oldalt.
+      // MAGASSÁGI méretarány. A 1045 pt a régi, bizonyítottan jól működő AM-sablon
+      // kalibrációja; ennél a mintánál ez adja vissza a korábbi 39%-os méretarányt.
       const headerPt = row1H + ROW2_H;
       const totalPt = headerPt + dataCount*DATA_H + emptyCount*EMPTY_H;
-      const heightScale = Math.max(20, Math.min(60, Math.floor(1015 / totalPt * 100)));
+      const heightScale = Math.max(20, Math.min(60, Math.round(1045 / totalPt * 100)));
       // A VÉGSŐ méretarány a magasság és a szélesség közül a KISEBB -> mindkét irányban 2 oldal.
       const autoScale = Math.min(heightScale, wCap);
       // Kézi értékkel csak kisebb méretet engedünk: nagyobbal újabb oldal keletkezhetne.
