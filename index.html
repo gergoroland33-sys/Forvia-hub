@@ -357,6 +357,20 @@
         .active-shift-status { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0 .38rem; min-height: 1.6em; font-size: clamp(.78rem, 2.8vw, 1rem); }
         .active-shift-label, .active-shift-end { color: var(--text-dim); }
         .active-shift-code { color: #fff; font-weight: 800; letter-spacing: .04em; }
+        .active-shift-letter {
+            display: inline-block;
+            color: #ef4444;
+            animation: activeShiftLetterAttention 2s linear infinite;
+            will-change: transform;
+        }
+        @keyframes activeShiftLetterAttention {
+            0%, 80%, 100% { transform: translate3d(0, 0, 0); }
+            83% { transform: translate3d(-1.4px, 0, 0) rotate(-1.5deg); }
+            86% { transform: translate3d(1.4px, 0, 0) rotate(1.5deg); }
+            89% { transform: translate3d(-1px, .4px, 0) rotate(-1deg); }
+            92% { transform: translate3d(1px, -.4px, 0) rotate(1deg); }
+            95% { transform: translate3d(-.5px, 0, 0); }
+        }
 
         .device-info {
             font-size: 0.8rem; color: #64748b;
@@ -1633,8 +1647,16 @@
         if (!status || !code || !end) return;
 
         const isDayShift = now.getHours() >= 6 && now.getHours() < 18;
-        const shifts = getShiftForDate(now);
-        code.textContent = `"${isDayShift ? shifts.day : shifts.night}"`;
+        // Az éjszakás műszak az előző napon 18:00-kor kezdődik és csak 06:00-kor ér véget.
+        // Emiatt 00:00–05:59 között még az előző naptári nap éjszakás műszakát mutatjuk.
+        const shiftDate = new Date(now);
+        if (now.getHours() < 6) shiftDate.setDate(shiftDate.getDate() - 1);
+        const shifts = getShiftForDate(shiftDate);
+        const activeCode = isDayShift ? shifts.day : shifts.night;
+        if (code.dataset.shiftCode !== activeCode) {
+            code.dataset.shiftCode = activeCode;
+            code.innerHTML = `<span class="active-shift-quote">"</span><span class="active-shift-letter">${activeCode}</span><span class="active-shift-quote">"</span>`;
+        }
         end.textContent = isDayShift ? '• 18:00-ig' : '• 06:00-ig';
         status.classList.toggle('is-day', isDayShift);
         status.classList.toggle('is-night', !isDayShift);
