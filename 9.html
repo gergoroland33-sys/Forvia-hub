@@ -100,6 +100,38 @@ input[type=text] {
 .scan-btn:active { transform: scale(0.92); }
 .scan-btn svg { width: 28px; height: 28px; fill: white; }
 
+/* --- KÉZI USB-SZKENNER (CSAK ASZTALI / LAPTOP NÉZETBEN) --- */
+.manual-scanner-control { display: none; }
+@media (min-width: 900px) and (hover: hover) and (pointer: fine) {
+    .manual-scanner-control {
+        width: min(100%, 500px); display: flex; align-items: center; justify-content: space-between; gap: 14px;
+        margin: -4px 0 18px; padding: 10px 13px 10px 15px; border: 1px solid rgba(148,163,184,.18);
+        border-radius: 15px; background: rgba(15,23,42,.55); box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+    }
+    .manual-scanner-title { display: block; color: #e2e8f0; font-size: .76rem; font-weight: 800; letter-spacing: .04em; }
+    .manual-scanner-help { display: block; margin-top: 3px; color: var(--text-muted); font-size: .63rem; }
+    .manual-scanner-state { color: #64748b; font-size: .62rem; font-weight: 900; letter-spacing: .07em; }
+    .manual-scanner-switch { position: relative; display: inline-flex; flex: 0 0 auto; align-items: center; cursor: pointer; }
+    .manual-scanner-switch input { position: absolute; inline-size: 1px; block-size: 1px; opacity: 0; }
+    .manual-scanner-slider { width: 48px; height: 27px; border: 1px solid rgba(148,163,184,.28); border-radius: 999px; background: #334155; box-shadow: inset 0 1px 3px rgba(0,0,0,.35); transition: background .2s ease, border-color .2s ease, box-shadow .2s ease; }
+    .manual-scanner-slider::after { content: ''; display: block; width: 21px; height: 21px; margin: 2px; border-radius: 50%; background: #e2e8f0; box-shadow: 0 2px 5px rgba(0,0,0,.35); transition: transform .2s cubic-bezier(.34,1.56,.64,1), background .2s ease; }
+    .manual-scanner-switch input:focus-visible + .manual-scanner-slider { outline: 3px solid rgba(96,165,250,.35); outline-offset: 3px; }
+    .manual-scanner-switch input:checked + .manual-scanner-slider { border-color: #34d399; background: #059669; box-shadow: 0 0 16px rgba(16,185,129,.32), inset 0 1px 3px rgba(0,0,0,.2); }
+    .manual-scanner-switch input:checked + .manual-scanner-slider::after { transform: translateX(21px); background: #fff; }
+
+    body.manual-scanner-mode .header,
+    body.manual-scanner-mode .load-msg,
+    body.manual-scanner-mode .filter-wrapper,
+    body.manual-scanner-mode .footer-history { display: none !important; }
+    body.manual-scanner-mode .main-content { padding: 82px 30px 30px; align-items: stretch; overflow-y: auto; }
+    body.manual-scanner-mode .input-wrapper { position: fixed; top: 0; left: -9999px; width: 1px; height: 1px; margin: 0; opacity: 0; overflow: hidden; pointer-events: none; }
+    body.manual-scanner-mode #resultsWrapper { width: min(100%, 1120px); max-width: none; margin: auto; padding-bottom: 0; }
+    body.manual-scanner-mode .manual-scanner-control { position: fixed; top: 16px; right: 24px; z-index: 200; width: min(420px, calc(100vw - 48px)); margin: 0; background: rgba(15,23,42,.94); backdrop-filter: blur(12px); box-shadow: 0 10px 30px rgba(0,0,0,.3); }
+    body.manual-scanner-mode .manual-scanner-state { color: #6ee7b7; }
+    body.manual-scanner-mode .result-card { margin-bottom: 18px; }
+    body.manual-scanner-mode .no-result { min-height: calc(100dvh - 130px); display: grid; place-items: center; margin: 0; }
+}
+
 /* --- ÚJ: MODELL SZŰRŐ GOMB (DROPDOWN) --- */
 .filter-wrapper { width: 100%; max-width: 500px; display: flex; justify-content: center; margin-bottom: 20px; flex-shrink: 0; }
 #modelFilter { 
@@ -107,9 +139,11 @@ input[type=text] {
     border-radius: 30px; color: var(--text-muted); font-size: 0.85rem; font-weight: 700; 
     outline: none; cursor: pointer; text-align: center; text-transform: uppercase;
     box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: all 0.3s ease;
-    max-width: 100%;
+    max-width: 100%; color-scheme: dark;
 }
 #modelFilter:focus { border-color: var(--accent); }
+#modelFilter option { background: #0f172a; color: #f8fafc; font-weight: 700; }
+#modelFilter option:checked { background: #2563eb; color: #fff; }
 /* Aktív (világító) állapot, ha szűrés van érvényben */
 #modelFilter.active-filter { 
     background: linear-gradient(145deg, #3b82f6, #2563eb); color: white; border-color: #3b82f6; 
@@ -118,14 +152,16 @@ input[type=text] {
 
 /* --- EREDMÉNYEK --- */
 #resultsWrapper { width: 100%; max-width: 500px; padding-bottom: 20px; }
-.result-card { background: #1e293b; border: 1px solid var(--glass-border); border-radius: 20px; overflow: hidden; margin-bottom: 15px; animation: popIn 0.3s ease-out; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+.result-card { position: relative; background: linear-gradient(145deg, rgba(30,41,59,.98), rgba(15,23,42,.98)); border: 1px solid rgba(148,163,184,.2); border-radius: 20px; overflow: hidden; margin-bottom: 15px; animation: popIn 0.3s ease-out; box-shadow: 0 12px 30px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.05); transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
+.result-card::before { content: ''; display: block; height: 3px; background: linear-gradient(90deg, #2563eb, #60a5fa 55%, #22d3ee); }
+.result-card:hover { transform: translateY(-2px); border-color: rgba(96,165,250,.55); box-shadow: 0 16px 35px rgba(0,0,0,.35), 0 0 0 1px rgba(59,130,246,.12); }
 @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-.res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--glass-border); }
-.res-cell { background: #1e293b; padding: 15px 10px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-.res-full { grid-column: span 2; border-bottom: 1px solid var(--glass-border); }
-.res-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; letter-spacing: 1px; }
-.res-value { font-size: 1.1rem; font-weight: 800; color: white; word-break: break-all; line-height: 1.2; }
-.res-highlight { color: #fbbf24; font-size: 1.4rem; } 
+.res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: rgba(148,163,184,.13); }
+.res-cell { background: linear-gradient(145deg, rgba(30,41,59,.88), rgba(15,23,42,.78)); padding: 15px 10px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+.res-full { grid-column: span 2; border-bottom: 1px solid rgba(148,163,184,.13); background: linear-gradient(135deg, rgba(37,99,235,.2), rgba(30,41,59,.9)); }
+.res-label { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 1.1px; font-weight: 700; }
+.res-value { font-size: 1.1rem; font-weight: 800; color: #f8fafc; word-break: break-all; line-height: 1.25; }
+.res-highlight { color: #fbbf24; font-size: 1.4rem; text-shadow: 0 2px 10px rgba(251,191,36,.2); } 
 .res-ok { color: var(--ok-color); }
 .no-result { font-size: 1.5rem; font-weight: bold; color: var(--err-color); text-align: center; margin-top: 20px; }
 .load-msg { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px; }
@@ -301,6 +337,18 @@ body.scanning-mode .scan-controls-container { display: flex; }
         </select>
     </div>
 
+    <div id="manualScannerControl" class="manual-scanner-control">
+        <div>
+            <span class="manual-scanner-title">Kézi szkenner</span>
+            <span class="manual-scanner-help">USB olvasóhoz · Enter után automatikus keresés</span>
+        </div>
+        <span id="manualScannerState" class="manual-scanner-state">KIKAPCSOLVA</span>
+        <label class="manual-scanner-switch" title="Kézi USB-szkenner mód be- vagy kikapcsolása">
+            <input id="manualScannerToggle" type="checkbox" role="switch" aria-label="Kézi szkenner mód" />
+            <span class="manual-scanner-slider" aria-hidden="true"></span>
+        </label>
+    </div>
+
     <div id="resultsWrapper"></div>
 </div>
 
@@ -332,11 +380,43 @@ const mainContent = document.querySelector('.main-content');
 const boxSizeSlider = document.getElementById('boxSizeSlider');
 const sliderValueDisplay = document.getElementById('sliderValueDisplay');
 const modelFilter = document.getElementById('modelFilter'); // ÚJ: Szűrő változó
+const manualScannerToggle = document.getElementById('manualScannerToggle');
+const manualScannerState = document.getElementById('manualScannerState');
+const manualScannerDesktopQuery = window.matchMedia('(min-width: 900px) and (hover: hover) and (pointer: fine)');
 
 let html5QrCode = null;
 let isCameraRunning = false;
 let bankDB = [];
 let cleanupInterval = null;
+let manualScannerEnabled = false;
+
+function focusManualScannerInput() {
+    if (!manualScannerEnabled || document.body.classList.contains('scanning-mode')) return;
+    requestAnimationFrame(() => {
+        if (manualScannerEnabled && !document.body.classList.contains('scanning-mode')) input.focus({ preventScroll: true });
+    });
+}
+
+function setManualScannerMode(enabled) {
+    const nextState = Boolean(enabled) && manualScannerDesktopQuery.matches;
+    manualScannerEnabled = nextState;
+    document.body.classList.toggle('manual-scanner-mode', nextState);
+    if (manualScannerToggle) manualScannerToggle.checked = nextState;
+    if (manualScannerState) manualScannerState.textContent = nextState ? 'AKTÍV · FÓKUSZBAN' : 'KIKAPCSOLVA';
+    if (nextState) {
+        input.value = '';
+        focusManualScannerInput();
+    }
+}
+
+manualScannerToggle?.addEventListener('change', () => setManualScannerMode(manualScannerToggle.checked));
+input.addEventListener('blur', () => {
+    if (manualScannerEnabled) setTimeout(focusManualScannerInput, 0);
+});
+window.addEventListener('focus', focusManualScannerInput);
+manualScannerDesktopQuery.addEventListener?.('change', event => {
+    if (!event.matches && manualScannerEnabled) setManualScannerMode(false);
+});
 
 // --- SLIDER LOGIKA ---
 const savedSize = localStorage.getItem('scanBoxSize');
@@ -450,8 +530,14 @@ input.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         const code = input.value.trim().toUpperCase();
         if (code) search(code);
-        input.value = code; // Megtartjuk a beírt szöveget, hogy ha szűrőt váltunk, lefusson újra
-        input.blur();
+        if (manualScannerEnabled) {
+            e.preventDefault();
+            input.value = '';
+            focusManualScannerInput();
+        } else {
+            input.value = code; // Megtartjuk a beírt szöveget, hogy ha szűrőt váltunk, lefusson újra
+            input.blur();
+        }
     }
 });
 
