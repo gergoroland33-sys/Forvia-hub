@@ -535,10 +535,41 @@
         .ticker-admin-status { min-height: 18px; margin-top: 10px; color: #94a3b8; font-size: .7rem; }
         .ticker-admin-status.error { color: #fda4af; }
         .ticker-admin-status.success { color: #86efac; }
+        .ticker-admin-btn.analytics { background: linear-gradient(135deg, #7c3aed, #a855f7); box-shadow: 0 7px 18px rgba(124,58,237,.24); }
+        .hub-analytics-card { width: min(100%, 820px); }
+        .hub-analytics-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+        .hub-analytics-range { display: flex; align-items: center; gap: 8px; color: #cbd5e1; font-size: .72rem; font-weight: 800; }
+        .hub-analytics-range select { border: 1px solid rgba(148,163,184,.26); border-radius: 9px; padding: 8px 10px; color: #f8fafc; background: rgba(2,6,23,.55); font: inherit; }
+        .hub-analytics-live { display: flex; align-items: center; gap: 7px; color: #86efac; font-size: .69rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+        .hub-analytics-live::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 4px rgba(52,211,153,.12); }
+        .hub-analytics-summary { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 9px; margin-bottom: 12px; }
+        .hub-analytics-kpi { padding: 12px 10px; border: 1px solid rgba(148,163,184,.16); border-radius: 13px; background: linear-gradient(145deg, rgba(30,41,59,.82), rgba(15,23,42,.7)); }
+        .hub-analytics-kpi b { display: block; color: #f8fafc; font-size: 1.12rem; line-height: 1.2; }
+        .hub-analytics-kpi span { display: block; margin-top: 4px; color: #94a3b8; font-size: .58rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+        .hub-analytics-section { margin-top: 12px; padding: 12px; border: 1px solid rgba(148,163,184,.15); border-radius: 14px; background: rgba(2,6,23,.3); }
+        .hub-analytics-section-title { margin: 0 0 10px; color: #e2e8f0; font-size: .68rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+        .hub-analytics-live-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px,1fr)); gap: 8px; }
+        .hub-analytics-live-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 10px; background: rgba(30,41,59,.64); color: #cbd5e1; font-size: .72rem; }
+        .hub-analytics-live-item strong { color: #f8fafc; font-size: .9rem; }
+        .hub-analytics-table-wrap { overflow-x: auto; }
+        .hub-analytics-table { width: 100%; min-width: 590px; border-collapse: collapse; font-size: .72rem; }
+        .hub-analytics-table th { padding: 8px; color: #94a3b8; text-align: left; font-size: .58rem; letter-spacing: .07em; text-transform: uppercase; border-bottom: 1px solid rgba(148,163,184,.16); }
+        .hub-analytics-table td { padding: 10px 8px; color: #dbeafe; border-bottom: 1px solid rgba(148,163,184,.09); vertical-align: middle; }
+        .hub-analytics-table tr:last-child td { border-bottom: 0; }
+        .hub-analytics-module { color: #f8fafc; font-weight: 800; }
+        .hub-analytics-devices { color: #c4b5fd; font-weight: 800; }
+        .hub-analytics-empty { padding: 22px 10px; color: #94a3b8; text-align: center; font-size: .75rem; line-height: 1.5; }
+        .hub-analytics-recent { display: grid; gap: 7px; }
+        .hub-analytics-recent-item { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; align-items: center; padding: 9px 10px; border-radius: 10px; background: rgba(30,41,59,.48); }
+        .hub-analytics-recent-item strong { display: block; color: #f8fafc; font-size: .73rem; }
+        .hub-analytics-recent-item span { display: block; margin-top: 2px; color: #94a3b8; font-size: .63rem; }
+        .hub-analytics-badge { padding: 4px 7px; border-radius: 999px; color: #bbf7d0; background: rgba(34,197,94,.13); font-size: .59rem; font-weight: 900; white-space: nowrap; }
+        .hub-analytics-badge.closed { color: #cbd5e1; background: rgba(148,163,184,.12); }
         @media (max-width: 520px) {
             #home-screen { padding-top: calc(58px + env(safe-area-inset-top)); }
             .ticker-admin-card { padding: 18px; border-radius: 18px; }
             .ticker-admin-grid { grid-template-columns: 1fr; gap: 0; }
+            .hub-analytics-summary { grid-template-columns: 1fr 1fr; }
             .ticker-item { font-size: var(--ticker-font-size, .67rem); letter-spacing: .06em; }
         }
         @media (prefers-reduced-motion: reduce) {
@@ -1201,8 +1232,34 @@
             <div id="tickerAdminEditorStatus" class="ticker-admin-status"></div>
             <div class="ticker-admin-actions">
                 <button class="ticker-admin-btn danger" type="button" onclick="signOutTickerAdmin()">Kilépés</button>
+                <button class="ticker-admin-btn analytics" type="button" onclick="openHubAnalytics()">📊 Statisztika</button>
                 <button class="ticker-admin-btn" type="button" onclick="closeTickerAdminEditor()">Bezárás</button>
                 <button class="ticker-admin-btn primary" type="button" onclick="saveTickerSettings()">Mentés</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="hubAnalyticsModal" class="ticker-admin-backdrop" role="dialog" aria-modal="true" aria-labelledby="hubAnalyticsTitle">
+        <div class="ticker-admin-card hub-analytics-card">
+            <h2 id="hubAnalyticsTitle" class="ticker-admin-title">Hub használati statisztika</h2>
+            <p class="ticker-admin-subtitle">Élő modulnézet és anonim használati összesítés. A statisztika csak modul-, időtartam- és eszközkategória-adatot kezel.</p>
+            <div class="hub-analytics-toolbar">
+                <label class="hub-analytics-range" for="hubAnalyticsRange">Időszak
+                    <select id="hubAnalyticsRange">
+                        <option value="1">Utolsó 24 óra</option>
+                        <option value="7" selected>Utolsó 7 nap</option>
+                        <option value="30">Utolsó 30 nap</option>
+                        <option value="0">Minden elérhető adat</option>
+                    </select>
+                </label>
+                <span class="hub-analytics-live">Élő frissítés</span>
+            </div>
+            <div id="hubAnalyticsContent" aria-live="polite">
+                <div class="hub-analytics-empty">Statisztika betöltése…</div>
+            </div>
+            <div id="hubAnalyticsStatus" class="ticker-admin-status"></div>
+            <div class="ticker-admin-actions">
+                <button class="ticker-admin-btn" type="button" onclick="closeHubAnalytics()">Bezárás</button>
             </div>
         </div>
     </div>
@@ -2228,8 +2285,9 @@
         hubRecovery.activeUrl = url;
         hubRecovery.activeAutoStart = autoStart;
         hubRecovery.hiddenAt = null;
-        window.activePresenceModuleRequest = url === '8.html' ? 'staff-pro' : 'other';
+        window.activePresenceModuleRequest = url === '8.html' ? 'staff-pro' : url;
         window.setActivePresenceModule?.(window.activePresenceModuleRequest);
+        window.trackHubModuleView?.(url);
         hideReconnectNotice();
         totalActivity++;
         localStorage.setItem('fv_total_activity', totalActivity);
@@ -2265,6 +2323,7 @@
         hubRecovery.reconnecting = false;
         window.activePresenceModuleRequest = 'home';
         window.setActivePresenceModule?.(window.activePresenceModuleRequest);
+        window.trackHubModuleView?.('home');
         hideReconnectNotice();
         
         document.body.classList.remove('search-mode-active');
@@ -2601,7 +2660,7 @@
     <!-- Firebase Realtime Database hírfolyam + hitelesített admin vezérlőpult. -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue, set, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, set, update, push, query, orderByChild, startAt, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         import { getAuth, browserSessionPersistence, setPersistence, signInWithEmailAndPassword, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const tickerFirebaseConfig = {
@@ -2634,6 +2693,25 @@
         let tickerDb = null;
         let tickerHoldTimer = null;
         let activePresenceModule = window.activePresenceModuleRequest === 'staff-pro' ? 'staff-pro' : 'home';
+        let latestPresenceData = null;
+        let analyticsDb = null;
+        let analyticsUid = null;
+        let analyticsSessionId = null;
+        let analyticsCurrentView = null;
+        let analyticsHeartbeatTimer = null;
+        let analyticsUnsubscribe = null;
+        let analyticsRecords = [];
+
+        const analyticsModuleNames = {
+            home: 'Kezdőlap',
+            '1.html': 'Alkatrész kereső', '2.html': 'Bérkalkulátor', '3.html': 'Műszaknaptár',
+            '4.html': 'Napi jelentés segédlet', '5.html': 'Maszk kereső', '6.html': 'Adatgeneráló',
+            '7.html': 'Hiba analízis', '8.html': 'Szabadságok', '9.html': 'Barcode Scan',
+            '10.html': 'Szemétkihordás terv', '11.html': 'Szárak állapota', '12.html': 'TSDB.Pro',
+            '13.html': 'CAD elemző', '14.html': 'SPI Dashboard', '15.html': 'DataMátrix generáló',
+            '16.html': 'Túlóra segéd', '17.html': 'A4-es nyomtatás', '18.html': 'Terv igazítás PRO',
+            '19.html': 'Alkatrész adatbázis', 'staff-pro': 'Szabadságok'
+        };
 
         const tickerEl = id => document.getElementById(id);
         const isHexColor = value => /^#[0-9A-F]{6}$/i.test(String(value || '').trim());
@@ -2837,6 +2915,7 @@
 
         window.signOutTickerAdmin = async function() {
             try {
+                window.closeHubAnalytics();
                 await signOut(tickerAuth);
                 window.closeTickerAdminEditor();
             } catch (error) {
@@ -2861,10 +2940,206 @@
             });
         }, { passive: true });
 
+        function normalizeAnalyticsModule(module) {
+            const value = String(module || 'home').trim();
+            return analyticsModuleNames[value] ? value : 'home';
+        }
+
+        function analyticsModuleLabel(module) {
+            return analyticsModuleNames[normalizeAnalyticsModule(module)] || 'Ismeretlen modul';
+        }
+
+        function getAnalyticsDeviceClass() {
+            const shortestSide = Math.min(window.screen?.width || window.innerWidth, window.screen?.height || window.innerHeight);
+            if (shortestSide < 600) return 'Telefon';
+            if (shortestSide < 900) return 'Tablet';
+            return 'Asztali';
+        }
+
+        function formatAnalyticsDuration(seconds) {
+            const safeSeconds = Math.max(0, Math.round(Number(seconds) || 0));
+            const minutes = Math.floor(safeSeconds / 60);
+            const hours = Math.floor(minutes / 60);
+            if (hours) return `${hours} ó ${minutes % 60} p`;
+            return `${minutes} p`;
+        }
+
+        function escapeAnalyticsHtml(value) {
+            return String(value == null ? '' : value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+        }
+
+        function getAnalyticsDuration(record, now = Date.now()) {
+            const storedDuration = Math.max(0, Number(record?.durationSeconds) || 0);
+            if (!record?.active || !Number(record.openedAt)) return storedDuration;
+            const lastSeen = Number(record.lastSeenAt) || now;
+            const safeEnd = Math.min(now, lastSeen + 90000);
+            return Math.max(storedDuration, Math.max(0, Math.round((safeEnd - Number(record.openedAt)) / 1000)));
+        }
+
+        async function refreshAnalyticsCurrentView() {
+            const view = analyticsCurrentView;
+            if (!view?.ref) return;
+            const durationSeconds = Math.max(0, Math.round((Date.now() - view.openedAt) / 1000));
+            try {
+                await update(view.ref, { lastSeenAt: serverTimestamp(), durationSeconds, active: true });
+            } catch (error) {
+                console.error('Hub statisztika frissítési hiba:', error);
+            }
+        }
+
+        async function closeAnalyticsCurrentView(reason = 'module-change') {
+            const view = analyticsCurrentView;
+            if (!view?.ref) return;
+            analyticsCurrentView = null;
+            const closedAt = Date.now();
+            const durationSeconds = Math.max(0, Math.round((closedAt - view.openedAt) / 1000));
+            try {
+                await update(view.ref, { lastSeenAt: serverTimestamp(), closedAt, durationSeconds, active: false, closeReason: reason });
+            } catch (error) {
+                console.error('Hub statisztika lezárási hiba:', error);
+            }
+        }
+
+        function beginAnalyticsView(module) {
+            const normalizedModule = normalizeAnalyticsModule(module);
+            window.hubAnalyticsModuleRequest = normalizedModule;
+            if (!analyticsDb || !analyticsUid || !analyticsSessionId) return;
+            if (analyticsCurrentView?.module === normalizedModule) return;
+            void closeAnalyticsCurrentView('module-change');
+
+            const openedAt = Date.now();
+            const viewRef = push(ref(analyticsDb, 'hub/analytics/views'));
+            analyticsCurrentView = { ref: viewRef, module: normalizedModule, openedAt };
+            set(viewRef, {
+                uid: analyticsUid,
+                sessionId: analyticsSessionId,
+                module: normalizedModule,
+                moduleLabel: analyticsModuleLabel(normalizedModule),
+                device: getAnalyticsDeviceClass(),
+                openedAt,
+                openedAtServer: serverTimestamp(),
+                lastSeenAt: serverTimestamp(),
+                durationSeconds: 0,
+                active: true
+            }).catch(error => console.error('Hub statisztika indítási hiba:', error));
+        }
+
+        function getLiveModuleCounts() {
+            const counts = new Map();
+            if (!latestPresenceData || typeof latestPresenceData !== 'object') return counts;
+            Object.values(latestPresenceData).forEach(sessions => {
+                if (!sessions || typeof sessions !== 'object') return;
+                Object.values(sessions).forEach(session => {
+                    if (!session || typeof session !== 'object') return;
+                    const module = normalizeAnalyticsModule(session.module);
+                    counts.set(module, (counts.get(module) || 0) + 1);
+                });
+            });
+            return counts;
+        }
+
+        function renderHubAnalytics() {
+            const modal = tickerEl('hubAnalyticsModal');
+            const content = tickerEl('hubAnalyticsContent');
+            if (!modal?.classList.contains('open') || !content) return;
+
+            const liveCounts = getLiveModuleCounts();
+            const rows = new Map();
+            let totalDuration = 0;
+            const allSessions = new Set();
+            analyticsRecords.forEach(record => {
+                const module = normalizeAnalyticsModule(record.module);
+                const row = rows.get(module) || { module, opens: 0, duration: 0, sessions: new Set(), devices: new Set() };
+                row.opens++;
+                row.duration += getAnalyticsDuration(record);
+                if (record.sessionId) row.sessions.add(record.sessionId);
+                if (record.device) row.devices.add(record.device);
+                rows.set(module, row);
+                totalDuration += getAnalyticsDuration(record);
+                if (record.sessionId) allSessions.add(record.sessionId);
+            });
+
+            const liveItems = Array.from(liveCounts.entries()).sort((a, b) => b[1] - a[1]);
+            const moduleRows = Array.from(rows.values()).sort((a, b) => b.opens - a.opens || b.duration - a.duration);
+            const recentRecords = [...analyticsRecords].sort((a, b) => Number(b.openedAt) - Number(a.openedAt)).slice(0, 8);
+            const liveHtml = liveItems.length
+                ? liveItems.map(([module, count]) => `<div class="hub-analytics-live-item"><span>${escapeAnalyticsHtml(analyticsModuleLabel(module))}</span><strong>${count}</strong></div>`).join('')
+                : '<div class="hub-analytics-empty">Jelenleg nincs követhető aktív modul.</div>';
+            const tableHtml = moduleRows.length
+                ? moduleRows.map(row => `<tr><td class="hub-analytics-module">${escapeAnalyticsHtml(analyticsModuleLabel(row.module))}</td><td>${liveCounts.get(row.module) || 0}</td><td>${row.opens}</td><td class="hub-analytics-devices">${row.sessions.size}</td><td>${formatAnalyticsDuration(row.duration)}</td><td>${escapeAnalyticsHtml(Array.from(row.devices).join(' · ') || '–')}</td></tr>`).join('')
+                : '<tr><td colspan="6" class="hub-analytics-empty">Még nincs tárolt használati adat a kiválasztott időszakból.</td></tr>';
+            const recentHtml = recentRecords.length
+                ? recentRecords.map(record => {
+                    const isActive = record.active === true;
+                    const opened = Number(record.openedAt) ? new Date(Number(record.openedAt)).toLocaleString('hu-HU', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '–';
+                    return `<div class="hub-analytics-recent-item"><div><strong>${escapeAnalyticsHtml(analyticsModuleLabel(record.module))}</strong><span>${escapeAnalyticsHtml(record.device || 'Ismeretlen eszköz')} · ${opened} · ${formatAnalyticsDuration(getAnalyticsDuration(record))}</span></div><span class="hub-analytics-badge${isActive ? '' : ' closed'}">${isActive ? 'AKTÍV' : 'LEZÁRT'}</span></div>`;
+                }).join('')
+                : '<div class="hub-analytics-empty">A részletes lista az első megnyitások után jelenik meg.</div>';
+
+            content.innerHTML = `
+                <div class="hub-analytics-summary">
+                    <div class="hub-analytics-kpi"><b>${Array.from(liveCounts.values()).reduce((sum, value) => sum + value, 0)}</b><span>Aktív modulnézet</span></div>
+                    <div class="hub-analytics-kpi"><b>${analyticsRecords.length}</b><span>Megnyitás</span></div>
+                    <div class="hub-analytics-kpi"><b>${allSessions.size}</b><span>Eszköz-munkamenet</span></div>
+                    <div class="hub-analytics-kpi"><b>${formatAnalyticsDuration(totalDuration)}</b><span>Összes idő</span></div>
+                </div>
+                <section class="hub-analytics-section"><h3 class="hub-analytics-section-title">Éppen megnyitott modulok</h3><div class="hub-analytics-live-grid">${liveHtml}</div></section>
+                <section class="hub-analytics-section"><h3 class="hub-analytics-section-title">Modulonkénti összesítés</h3><div class="hub-analytics-table-wrap"><table class="hub-analytics-table"><thead><tr><th>Modul</th><th>Élő</th><th>Megnyitás</th><th>Eszköz</th><th>Idő</th><th>Típus</th></tr></thead><tbody>${tableHtml}</tbody></table></div></section>
+                <section class="hub-analytics-section"><h3 class="hub-analytics-section-title">Legutóbbi modulhasználat</h3><div class="hub-analytics-recent">${recentHtml}</div></section>`;
+        }
+
+        function subscribeHubAnalytics() {
+            if (!tickerAuth?.currentUser || !tickerDb) return;
+            analyticsUnsubscribe?.();
+            const rangeDays = Number(tickerEl('hubAnalyticsRange')?.value || 7);
+            const viewsRef = ref(tickerDb, 'hub/analytics/views');
+            const source = rangeDays > 0
+                ? query(viewsRef, orderByChild('openedAt'), startAt(Date.now() - rangeDays * 86400000))
+                : viewsRef;
+            setTickerStatus('hubAnalyticsStatus', 'Élő statisztika betöltése…');
+            analyticsUnsubscribe = onValue(source, snapshot => {
+                analyticsRecords = Object.values(snapshot.val() || {}).filter(value => value && typeof value === 'object');
+                setTickerStatus('hubAnalyticsStatus', analyticsRecords.length ? `${analyticsRecords.length} megnyitás a kiválasztott időszakban.` : 'Még nincs tárolt adat a kiválasztott időszakban.', analyticsRecords.length ? 'success' : '');
+                renderHubAnalytics();
+            }, error => {
+                console.error('Hub statisztika olvasási hiba:', error);
+                setTickerStatus('hubAnalyticsStatus', 'A statisztika nem olvasható. Ellenőrizd a Firebase analytics szabályt.', 'error');
+            });
+        }
+
+        window.openHubAnalytics = function() {
+            if (!tickerAuth?.currentUser) {
+                setTickerStatus('tickerAdminEditorStatus', 'A statisztikához be kell lépned.', 'error');
+                return;
+            }
+            closeTickerModal('tickerAdminEditor');
+            openTickerModal('hubAnalyticsModal');
+            subscribeHubAnalytics();
+            renderHubAnalytics();
+        };
+
+        window.closeHubAnalytics = function() {
+            analyticsUnsubscribe?.();
+            analyticsUnsubscribe = null;
+            closeTickerModal('hubAnalyticsModal');
+            setTickerStatus('hubAnalyticsStatus');
+        };
+
+        window.trackHubModuleView = function(module) {
+            beginAnalyticsView(module);
+        };
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') void closeAnalyticsCurrentView('background');
+            else beginAnalyticsView(window.hubAnalyticsModuleRequest || window.activePresenceModuleRequest || 'home');
+        });
+        window.addEventListener('pagehide', () => { void closeAnalyticsCurrentView('pagehide'); });
+
         function renderActiveUsers(data) {
             const card = tickerEl('activeUsersCard');
             const count = tickerEl('activeUsersCount');
             if (!card || !count) return;
+            latestPresenceData = data && typeof data === 'object' ? data : null;
             const activeUsers = data && typeof data === 'object'
                 ? Object.values(data).filter(sessions => sessions && typeof sessions === 'object' && Object.keys(sessions).length > 0).length
                 : 0;
@@ -2875,6 +3150,7 @@
             count.classList.toggle('is-staff-pro-active', isStaffProOpen);
             card.classList.remove('is-unavailable');
             card.setAttribute('aria-label', `Aktív felhasználók: ${activeUsers}`);
+            renderHubAnalytics();
         }
 
         function createPresenceSessionId() {
@@ -2895,19 +3171,26 @@
                 if (!uid) throw new Error('Nincs anonim jelenléti azonosító.');
 
                 const presenceRoot = ref(presenceDb, 'hub/presence');
-                const presenceRef = ref(presenceDb, `hub/presence/${uid}/${createPresenceSessionId()}`);
+                const presenceSessionId = createPresenceSessionId();
+                const presenceRef = ref(presenceDb, `hub/presence/${uid}/${presenceSessionId}`);
+                analyticsDb = presenceDb;
+                analyticsUid = uid;
+                analyticsSessionId = presenceSessionId;
                 window.setActivePresenceModule = async function(module) {
-                    activePresenceModule = module === 'staff-pro' ? 'staff-pro' : 'other';
+                    activePresenceModule = normalizeAnalyticsModule(module);
                     window.activePresenceModuleRequest = activePresenceModule;
                     if (!presenceRef) return;
                     try {
-                        await set(presenceRef, { connectedAt: serverTimestamp(), module: activePresenceModule });
+                        await set(presenceRef, { connectedAt: serverTimestamp(), module: activePresenceModule, device: getAnalyticsDeviceClass() });
                     } catch (error) {
                         console.error('Aktív felhasználók modulállapot hiba:', error);
                     }
                 };
                 /* Ha a modul az anonim Firebase-belépés közben nyílt meg, az aktuális állapotot most biztosan kiírjuk. */
                 await window.setActivePresenceModule(window.activePresenceModuleRequest || activePresenceModule);
+                beginAnalyticsView(window.hubAnalyticsModuleRequest || window.activePresenceModuleRequest || activePresenceModule);
+                clearInterval(analyticsHeartbeatTimer);
+                analyticsHeartbeatTimer = setInterval(() => { void refreshAnalyticsCurrentView(); }, 45000);
                 onValue(presenceRoot, snapshot => renderActiveUsers(snapshot.val()), error => {
                     console.error('Aktív felhasználók olvasási hiba:', error);
                     card.classList.add('is-unavailable');
@@ -2916,7 +3199,7 @@
                     if (!snapshot.val()) return;
                     try {
                         await onDisconnect(presenceRef).remove();
-                        await set(presenceRef, { connectedAt: serverTimestamp(), module: activePresenceModule });
+                        await set(presenceRef, { connectedAt: serverTimestamp(), module: activePresenceModule, device: getAnalyticsDeviceClass() });
                     } catch (error) {
                         console.error('Aktív felhasználók jelenléti hiba:', error);
                         card.classList.add('is-unavailable');
@@ -2934,6 +3217,7 @@
             bindColorPair('tickerBackgroundColor', 'tickerBackgroundHex');
             bindColorPair('tickerTextColor', 'tickerTextHex');
             bindColorPair('tickerAccentColor', 'tickerAccentHex');
+            tickerEl('hubAnalyticsRange')?.addEventListener('change', subscribeHubAnalytics);
             ['tickerTextInput', 'tickerIconInput', 'tickerShowIconInput', 'tickerStyleInput', 'tickerSpeedInput', 'tickerFontSizeInput', 'tickerEnabledInput'].forEach(id => {
                 tickerEl(id)?.addEventListener('input', previewTickerFromEditor);
                 tickerEl(id)?.addEventListener('change', previewTickerFromEditor);
