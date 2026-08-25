@@ -2707,6 +2707,10 @@
         let analyticsSubscribedDayStart = null;
         let analyticsModalRefreshTimer = null;
         let analyticsDayBoundaryTimer = null;
+        let analyticsSoundMonitoring = false;
+        let analyticsPresenceSnapshot = null;
+        let analyticsPresenceDataInitialized = false;
+        let analyticsAlertAudioContext = null;
 
         const analyticsModuleNames = {
             home: 'Kezdőlap',
@@ -3081,6 +3085,74 @@
             return counts;
         }
 
+        function getAnalyticsPresenceSnapshot(data = latestPresenceData) {
+            const sessions = new Map();
+            if (!data || typeof data !== 'object') return sessions;
+            Object.entries(data).forEach(([uid, userSessions]) => {
+                if (!userSessions || typeof userSessions !== 'object') return;
+                Object.entries(userSessions).forEach(([sessionId, session]) => {
+                    if (!session || typeof session !== 'object') return;
+                    sessions.set(`${uid}/${sessionId}`, normalizeAnalyticsModule(session.module));
+                });
+            });
+            return sessions;
+        }
+
+        function getAnalyticsAlertAudioContext() {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextClass) return null;
+            if (!analyticsAlertAudioContext) analyticsAlertAudioContext = new AudioContextClass();
+            if (analyticsAlertAudioContext.state === 'suspended') void analyticsAlertAudioContext.resume().catch(() => {});
+            return analyticsAlertAudioContext;
+        }
+
+        function playAnalyticsAlert(type) {
+            if (!analyticsSoundMonitoring) return;
+            const context = getAnalyticsAlertAudioContext();
+            if (!context || context.state === 'closed') return;
+            const now = context.currentTime;
+            const tones = type === 'open'
+                ? [{ frequency: 880, offset: 0 }, { frequency: 1320, offset: .11 }]
+                : [{ frequency: 440, offset: 0 }, { frequency: 294, offset: .12 }];
+            tones.forEach(tone => {
+                const oscillator = context.createOscillator();
+                const gain = context.createGain();
+                const start = now + tone.offset;
+                oscillator.type = type === 'open' ? 'triangle' : 'square';
+                oscillator.frequency.setValueAtTime(tone.frequency, start);
+                gain.gain.setValueAtTime(.0001, start);
+                gain.gain.exponentialRampToValueAtTime(.28, start + .012);
+                gain.gain.exponentialRampToValueAtTime(.0001, start + .13);
+                oscillator.connect(gain).connect(context.destination);
+                oscillator.start(start);
+                oscillator.stop(start + .15);
+            });
+        }
+
+        function notifyAnalyticsPresenceChange() {
+            if (!analyticsSoundMonitoring) return;
+            const current = getAnalyticsPresenceSnapshot();
+            if (!analyticsPresenceSnapshot) {
+                analyticsPresenceSnapshot = current;
+                return;
+            }
+            let opened = 0;
+            let closed = 0;
+            current.forEach((module, sessionKey) => {
+                const previousModule = analyticsPresenceSnapshot.get(sessionKey);
+                if (!previousModule || previousModule !== module) opened++;
+            });
+            analyticsPresenceSnapshot.forEach((_, sessionKey) => {
+                if (!current.has(sessionKey)) closed++;
+            });
+            analyticsPresenceSnapshot = current;
+            if (opened) playAnalyticsAlert('open');
+            if (closed) {
+                if (opened) setTimeout(() => playAnalyticsAlert('close'), 300);
+                else playAnalyticsAlert('close');
+            }
+        }
+
         function renderHubAnalytics() {
             const modal = tickerEl('hubAnalyticsModal');
             const content = tickerEl('hubAnalyticsContent');
@@ -3192,6 +3264,9 @@
             }
             closeTickerModal('tickerAdminEditor');
             openTickerModal('hubAnalyticsModal');
+            analyticsSoundMonitoring = true;
+            analyticsPresenceSnapshot = analyticsPresenceDataInitialized ? getAnalyticsPresenceSnapshot() : null;
+            getAnalyticsAlertAudioContext();
             subscribeHubAnalytics();
             startHubAnalyticsModalRefresh();
             renderHubAnalytics();
@@ -3203,6 +3278,8 @@
             analyticsSubscribedDayStart = null;
             clearInterval(analyticsModalRefreshTimer);
             analyticsModalRefreshTimer = null;
+            analyticsSoundMonitoring = false;
+            analyticsPresenceSnapshot = null;
             closeTickerModal('hubAnalyticsModal');
             setTickerStatus('hubAnalyticsStatus');
         };
@@ -3222,6 +3299,8 @@
             const count = tickerEl('activeUsersCount');
             if (!card || !count) return;
             latestPresenceData = data && typeof data === 'object' ? data : null;
+            analyticsPresenceDataInitialized = true;
+            notifyAnalyticsPresenceChange();
             const activeUsers = data && typeof data === 'object'
                 ? Object.values(data).filter(sessions => sessions && typeof sessions === 'object' && Object.keys(sessions).length > 0).length
                 : 0;
