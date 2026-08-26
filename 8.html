@@ -88,6 +88,26 @@
         .today-D:not(.cell-S):not(.cell-BA):not(.cell-IG):not(.cell-TU):not(.cell-KE) { background-color: rgba(139, 92, 246, 0.13) !important; }
         .today-D { border-left: 3px solid #8b5cf6 !important; border-right: 3px solid #8b5cf6 !important; }
         thead th.today-D { color: #fff !important; border-bottom: 3px solid #8b5cf6 !important; background-color: rgba(139, 92, 246, 0.35) !important; text-shadow: 0 0 8px rgba(139,92,246,0.9); }
+
+        /* Műszakciklus-jelölés: a 3 nappalos / 3 pihenő / 3 éjszakás ritmus a táblázat saját naposzlopaiban. */
+        .matrix-table thead th.shift-cycle-day:not(.today-base) { background: #1e293b !important; box-shadow: inset 0 -1px 0 rgba(52,211,153,.78), 0 1px 0 #2d3748; }
+        .matrix-table thead th.shift-cycle-night:not(.today-base) { background: #1e293b !important; box-shadow: inset 0 -1px 0 rgba(129,140,248,.8), 0 1px 0 #2d3748; }
+        .matrix-table thead th.shift-cycle-rest:not(.today-base) { background: #1e293b !important; box-shadow: inset 0 -1px 0 rgba(148,163,184,.68), 0 1px 0 #2d3748; }
+        .matrix-table thead th.shift-cycle-day:not(.today-base):not(.holiday-text) { color: #d1fae5 !important; }
+        .matrix-table thead th.shift-cycle-night:not(.today-base):not(.holiday-text) { color: #e0e7ff !important; }
+        .matrix-table thead th.shift-cycle-rest:not(.today-base):not(.holiday-text) { color: #cbd5e1 !important; }
+        .matrix-table thead th.shift-cycle-day, .matrix-table thead th.shift-cycle-night, .matrix-table thead th.shift-cycle-rest { padding: 11px 0 1px !important; }
+        .shift-cycle-chip { position: absolute; top: 0; left: 0; right: 0; height: 10px; display: flex; align-items: center; justify-content: center; font-size: 8px; line-height: 1; font-weight: 900; letter-spacing: .08em; background: #202c3d; border-bottom: 1px solid #3a4657; }
+        .shift-cycle-day .shift-cycle-chip { color: #6ee7b7; border-bottom-color: #3d7567; }
+        .shift-cycle-night .shift-cycle-chip { color: #a5b4fc; border-bottom-color: #59628e; }
+        .shift-cycle-rest .shift-cycle-chip { color: #cbd5e1; border-bottom-color: #66717e; }
+        .matrix-table td.shift-cycle-day:not(.today-base):not(.matrix-active-cell), .matrix-table td.shift-cycle-night:not(.today-base):not(.matrix-active-cell), .matrix-table td.shift-cycle-rest:not(.today-base):not(.matrix-active-cell) { position: relative; background-image: none !important; box-shadow: none; }
+        .shift-cycle-cell-label { position: absolute; left: 50%; top: 50%; z-index: 0; pointer-events: none; transform: translate(-50%, -50%); font-size: 9px; line-height: 1; font-weight: 900; letter-spacing: .02em; opacity: .34; text-shadow: none; }
+        .matrix-table td .input-cell { position: relative; z-index: 1; }
+        .shift-cycle-day .shift-cycle-cell-label { color: #34d399; }
+        .shift-cycle-night .shift-cycle-cell-label { color: #818cf8; }
+        .shift-cycle-rest .shift-cycle-cell-label { color: #cbd5e1; }
+        .cell-S .shift-cycle-cell-label, .cell-BA .shift-cycle-cell-label, .cell-IG .shift-cycle-cell-label, .cell-TU .shift-cycle-cell-label, .cell-KE .shift-cycle-cell-label { color: rgba(255,255,255,.72); opacity: .5; }
         .sortable-fallback { opacity: 0.8 !important; background: #1e293b !important; border: 1px solid #3b82f6; }
 
         /* ÚJ: 48 óra alatti/alatt-egyenlő KIVEHETŐ figyelmeztető szín */
@@ -539,6 +559,24 @@
         let employees = [];
         const monthNames = ["Január", "Február", "Március", "Április", "Május", "Június", "Július", "Augusztus", "Szeptember", "Október", "November", "December"];
         const dayNamesShort = ["V", "H", "K", "Sze", "Cs", "P", "Szo"];
+        const shiftCycleAnchorDate = new Date(Date.UTC(2026, 0, 9));
+
+        // A 3.html műszaknaptárával azonos, 12 napos ciklus. Csak a táblázat vizuális jelöléséhez használjuk.
+        function getShiftCyclePhase(dateObj, shiftId) {
+            const utcDate = new Date(Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()));
+            const diffDays = Math.floor((utcDate - shiftCycleAnchorDate) / 86400000);
+            const cycleDay = ((diffDays % 12) + 12) % 12;
+            let schedule;
+
+            if (cycleDay <= 2) schedule = { day: 'A', night: 'B' };
+            else if (cycleDay <= 5) schedule = { day: 'C', night: 'D' };
+            else if (cycleDay <= 8) schedule = { day: 'B', night: 'A' };
+            else schedule = { day: 'D', night: 'C' };
+
+            if (schedule.day === shiftId) return { className: 'shift-cycle-day', shortLabel: 'N', label: 'Nappalos' };
+            if (schedule.night === shiftId) return { className: 'shift-cycle-night', shortLabel: 'É', label: 'Éjszakás' };
+            return { className: 'shift-cycle-rest', shortLabel: 'P', label: 'Pihenőnap' };
+        }
 
         let mSelectedUserIndex = -1;
         let mSelectedDate = null;
@@ -775,8 +813,10 @@
             for(let d=1; d<=days; d++) {
                 const isHoliday = holidays.includes(`${m+1}-${d}`);
                 const isToday = isCurrentMonth && d === currentDay;
-                const dayOfWeek = new Date(currentYear, m, d).getDay();
-                h += `<th id="${isToday?'today-header':''}" class="${isHoliday?'holiday-text':''} ${isToday?`today-base today-${currentShift}`:''} leading-tight">${d}<br><span class="text-[9px] font-normal text-slate-500">${dayNamesShort[dayOfWeek]}</span></th>`;
+                const currentDate = new Date(currentYear, m, d);
+                const dayOfWeek = currentDate.getDay();
+                const cyclePhase = getShiftCyclePhase(currentDate, currentShift);
+                h += `<th id="${isToday?'today-header':''}" class="${isHoliday?'holiday-text':''} ${isToday?`today-base today-${currentShift}`:''} ${cyclePhase.className} leading-tight" title="${currentShift} műszak · ${cyclePhase.label}">${d}<br><span class="text-[9px] font-normal text-slate-500">${dayNamesShort[dayOfWeek]}</span><span class="shift-cycle-chip" aria-label="${cyclePhase.label}">${cyclePhase.shortLabel}</span></th>`;
             }
             document.getElementById('tHead').innerHTML = h + "</tr>";
 
@@ -793,9 +833,11 @@
                 for(let d=1; d<=days; d++) {
                     const k = `${currentYear}-${m+1}-${d}`;
                     const v = (e.data && e.data[k]) ? e.data[k] : "";
-                    const isWeekend = [0,6].includes(new Date(currentYear,m,d).getDay());
+                    const currentDate = new Date(currentYear, m, d);
+                    const isWeekend = [0,6].includes(currentDate.getDay());
                     const isHoliday = holidays.includes(`${m+1}-${d}`);
                     const isToday = isCurrentMonth && d === currentDay;
+                    const cyclePhase = getShiftCyclePhase(currentDate, currentShift);
                     
                     const isTuCserenap = (v === 'TU' && e.data && e.data[k + '_cserenap']);
                     const hasNote = (e.data && e.data[k + '_note']);
@@ -807,12 +849,14 @@
 
                     const cls = (v && !isNaN(parseFloat(v.replace(',','.')))) ? 'cell-S' : (v==='BÁ'?'cell-BA':v==='IG'?'cell-IG':v==='TU'?'cell-TU':v.startsWith('KÉ')?'cell-KE':'');
                     const relativeCls = (isTuCserenap || hasNote) ? 'relative' : '';
+                    // A kitöltött cellák értéke az elsődleges; a műszakbetű csak az üres napokon segíti a gyors áttekintést.
+                    const cycleMarker = v === '' ? `<span class="shift-cycle-cell-label" aria-hidden="true">${cyclePhase.shortLabel}</span>` : '';
 
                     let dots = '';
                     if(isTuCserenap) dots += '<div class="tu-dot-desk absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 border border-slate-900 shadow-[0_0_5px_rgba(239,68,68,1)] pointer-events-none z-20"></div>';
                     if(hasNote) dots += '<div class="note-triangle-desk"></div>';
 
-                    row += `<td class="${isWeekend||isHoliday?'weekend':''} ${isHoliday?'holiday-bg':''} ${cls} ${isToday?`today-base today-${currentShift}`:''} ${relativeCls}" ${titleAttr}><input type="text" value="${v}" onfocus="this.select(); highlight(this,${d},true)" onblur="highlight(this,${d},false); update(${e.id},'${k}',this.value,this)" onkeydown="handleCellNav(event,this)" class="input-cell" inputmode="text">${dots}</td>`;
+                    row += `<td class="${isWeekend||isHoliday?'weekend':''} ${isHoliday?'holiday-bg':''} ${cls} ${isToday?`today-base today-${currentShift}`:''} ${cyclePhase.className} ${relativeCls}" ${titleAttr}>${cycleMarker}<input type="text" value="${v}" onfocus="this.select(); highlight(this,${d},true)" onblur="highlight(this,${d},false); update(${e.id},'${k}',this.value,this)" onkeydown="handleCellNav(event,this)" class="input-cell" inputmode="text">${dots}</td>`;
                 }
                 return row + "</tr>";
             }).join('');
