@@ -2012,10 +2012,39 @@
         letter.animate(activeShiftMotionPatterns[motionIndex], { duration: 780, easing: 'ease-in-out', fill: 'none' });
     }
 
+    // A másodpercenkénti teljes kezdőlap-újraépítés helyett célzott, takarékos frissítések.
+    // A műszakváltást továbbra is a lentebb lévő pontos 06:00 / 18:00 időzítő kezeli.
+    let homeInfoRefreshTimer = null;
+    let calendarRgbRefreshTimer = null;
+
+    function scheduleHomeInfoRefresh() {
+        clearTimeout(homeInfoRefreshTimer);
+        const delay = 60000 - (Date.now() % 60000) + 30;
+        homeInfoRefreshTimer = setTimeout(() => {
+            updateInfo();
+            scheduleHomeInfoRefresh();
+        }, delay);
+    }
+
+    function scheduleCalendarRgbRefresh() {
+        clearTimeout(calendarRgbRefreshTimer);
+        const interval = 15000;
+        const delay = interval - (Date.now() % interval) + 20;
+        calendarRgbRefreshTimer = setTimeout(() => {
+            updateCalendarRgbTone(new Date());
+            scheduleCalendarRgbRefresh();
+        }, delay);
+    }
+
     updateInfo();
     playActiveShiftLetterMotion();
     setInterval(playActiveShiftLetterMotion, 2000);
-    setInterval(updateInfo, 1000); 
+    scheduleHomeInfoRefresh();
+    scheduleCalendarRgbRefresh();
+
+    window.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') updateInfo();
+    });
 
     function scheduleExactShiftStatusUpdate() {
         const now = new Date();
