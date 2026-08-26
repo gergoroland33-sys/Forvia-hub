@@ -108,6 +108,16 @@
         .shift-cycle-night .shift-cycle-cell-label { color: #818cf8; }
         .shift-cycle-rest .shift-cycle-cell-label { color: #cbd5e1; }
         .cell-S .shift-cycle-cell-label, .cell-BA .shift-cycle-cell-label, .cell-IG .shift-cycle-cell-label, .cell-TU .shift-cycle-cell-label, .cell-KE .shift-cycle-cell-label { color: rgba(255,255,255,.72); opacity: .5; }
+        /* Asztali, opcionális műszakjelölés: a kapcsoló kizárólag a N/É/P vizuális réteget rejti el. */
+        .shift-visibility-control { display: flex; align-items: center; gap: 7px; padding: 5px 7px 5px 9px; border: 1px solid rgba(71,85,105,.8); border-radius: 10px; background: rgba(15,23,42,.72); color: #94a3b8; font-size: 9px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; transition: border-color .18s ease, background .18s ease, color .18s ease; }
+        .shift-visibility-control:hover { border-color: rgba(96,165,250,.72); background: rgba(30,41,59,.92); color: #dbeafe; }
+        .shift-visibility-switch { position: relative; width: 30px; height: 17px; flex: none; border: 1px solid #475569; border-radius: 999px; background: #1e293b; box-shadow: inset 0 1px 2px rgba(2,6,23,.5); transition: background .2s ease, border-color .2s ease; }
+        .shift-visibility-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 11px; height: 11px; border-radius: 50%; background: #cbd5e1; box-shadow: 0 1px 3px rgba(2,6,23,.75); transition: transform .2s ease, background .2s ease; }
+        .shift-visibility-control.is-on { border-color: rgba(52,211,153,.46); color: #a7f3d0; }
+        .shift-visibility-control.is-on .shift-visibility-switch { border-color: #10b981; background: #059669; }
+        .shift-visibility-control.is-on .shift-visibility-switch::after { transform: translateX(13px); background: #f8fafc; }
+        body.matrix-shift-cycle-hidden .shift-cycle-chip, body.matrix-shift-cycle-hidden .shift-cycle-cell-label { display: none !important; }
+        body.matrix-shift-cycle-hidden .matrix-table thead th.shift-cycle-day:not(.today-base), body.matrix-shift-cycle-hidden .matrix-table thead th.shift-cycle-night:not(.today-base), body.matrix-shift-cycle-hidden .matrix-table thead th.shift-cycle-rest:not(.today-base) { padding: 2px 0 !important; color: #94a3b8 !important; background: #1e293b !important; box-shadow: 0 1px 0 #2d3748 !important; }
         .sortable-fallback { opacity: 0.8 !important; background: #1e293b !important; border: 1px solid #3b82f6; }
 
         /* ÚJ: 48 óra alatti/alatt-egyenlő KIVEHETŐ figyelmeztető szín */
@@ -172,13 +182,12 @@
         .m-card:active { transform: scale(.985); border-color: #475569; background: #243147; }
         .m-avatar { width: 42px; height: 42px; border-radius: 13px; background: linear-gradient(135deg, #1d4ed8, #0ea5e9); display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; margin-right: 12px; flex-shrink: 0; box-shadow: 0 6px 13px rgba(37,99,235,.24); }
         
-        .m-detail-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; padding: 9px 12px; background: #101827; border-bottom: 1px solid #263348; box-shadow: inset 0 1px 0 rgba(255,255,255,.025); }
+        .m-detail-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; padding: 9px 12px; background: #101827; border-bottom: 1px solid #263348; box-shadow: inset 0 1px 0 rgba(255,255,255,.025); }
         .m-summary-tile { min-width: 0; padding: 8px 7px; border: 1px solid rgba(71,85,105,.58); border-radius: 10px; background: linear-gradient(145deg, rgba(30,41,59,.9), rgba(15,23,42,.92)); text-align: center; }
         .m-summary-tile span { display: block; color: #64748b; font-size: 8px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
         .m-summary-tile strong { display: block; margin-top: 3px; overflow: hidden; color: #f8fafc; font-size: 14px; font-weight: 900; line-height: 1.05; text-overflow: ellipsis; white-space: nowrap; }
         .m-summary-tile.remaining strong { color: #34d399; }
         .m-summary-tile.remaining.is-critical strong { color: #f87171; }
-        .m-summary-tile.shift strong { color: #93c5fd; }
         .m-calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 9px; }
         .m-day { aspect-ratio: 1; min-height: 42px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; background: linear-gradient(145deg, #1e293b, #182235); color: #cbd5e1; border: 1px solid #334155; box-shadow: inset 0 1px 0 rgba(255,255,255,.035); position: relative; transition: transform .14s ease, border-color .14s ease, background .14s ease; }
         .m-day:active { transform: scale(.92); }
@@ -213,20 +222,18 @@
         .m-roster-remaining b { font-size: 13px; line-height: 1; }
         .m-roster-remaining.is-critical { color: #f87171; }
         .m-week-strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-top: 6px; }
-        .m-week-day { position: relative; min-width: 0; min-height: 32px; padding: 3px 1px 2px; overflow: hidden; border: 1px solid rgba(71,85,105,.68); border-radius: 8px; background: rgba(15,23,42,.72); text-align: center; }
+        .m-week-day { position: relative; min-width: 0; min-height: 31px; padding: 4px 1px; overflow: hidden; border: 1px solid rgba(71,85,105,.68); border-radius: 8px; background: rgba(15,23,42,.72); text-align: center; }
         .m-week-day.today { border-color: #60a5fa; background: linear-gradient(145deg, rgba(30,64,175,.52), rgba(15,23,42,.88)); box-shadow: inset 0 1px 0 rgba(191,219,254,.18), 0 3px 8px rgba(30,64,175,.22); }
         .m-week-date { display: block; color: #64748b; font-size: 7px; font-weight: 900; line-height: 1; letter-spacing: 0; }
         .m-week-day.today .m-week-date { color: #bfdbfe; }
-        .m-week-phase { display: block; margin-top: 2px; color: #94a3b8; font-size: 8px; font-weight: 900; line-height: 1; }
-        .m-week-day.phase-day .m-week-phase { color: #34d399; }
-        .m-week-day.phase-night .m-week-phase { color: #818cf8; }
-        .m-week-day.phase-rest .m-week-phase { color: #94a3b8; }
-        .m-week-value { display: block; min-height: 8px; margin-top: 2px; overflow: hidden; color: #475569; font-size: 8px; font-weight: 900; line-height: 1; text-overflow: ellipsis; white-space: nowrap; }
-        .m-week-value.has-sabi { color: #6ee7b7; }
-        .m-week-value.has-ba { color: #fb923c; }
-        .m-week-value.has-tu { color: #60a5fa; }
-        .m-week-value.has-ig { color: #c4b5fd; }
-        .m-week-value.has-ke { color: #fbbf24; }
+        .m-week-value { display: block; min-height: 0; margin-top: 3px; overflow: hidden; color: #64748b; font-size: 8px; font-weight: 900; line-height: 1; text-overflow: ellipsis; white-space: nowrap; }
+        .m-week-value:empty { display: none; }
+        .m-week-value.has-sabi, .m-week-value.has-ba, .m-week-value.has-tu, .m-week-value.has-ig, .m-week-value.has-ke { width: max-content; max-width: calc(100% - 2px); margin-inline: auto; padding: 2px 3px; border: 1px solid transparent; border-radius: 4px; box-shadow: inset 0 1px 0 rgba(255,255,255,.13); }
+        .m-week-value.has-sabi { color: #d1fae5; background: rgba(5,150,105,.34); border-color: rgba(52,211,153,.35); }
+        .m-week-value.has-ba { color: #ffedd5; background: rgba(234,88,12,.34); border-color: rgba(251,146,60,.35); }
+        .m-week-value.has-tu { color: #dbeafe; background: rgba(37,99,235,.38); border-color: rgba(96,165,250,.4); }
+        .m-week-value.has-ig { color: #ede9fe; background: rgba(124,58,237,.35); border-color: rgba(196,181,253,.36); }
+        .m-week-value.has-ke { color: #fef3c7; background: rgba(180,83,9,.35); border-color: rgba(251,191,36,.36); }
 
         @media (max-width: 380px) {
             .m-detail-summary { padding-inline: 8px; gap: 5px; }
@@ -308,8 +315,11 @@
             <button onclick="jumpToToday()" class="header-action-btn header-action-today px-3 py-1.5 text-[10px] font-black uppercase tracking-[.1em] whitespace-nowrap flex items-center gap-1.5">
                 <i class="fas fa-calendar-day text-[11px]"></i> <span class="hidden md:inline">MA</span>
             </button>
-            <div class="ml-auto rounded-xl border border-blue-300/35 bg-slate-950/70 p-1 shadow-lg shadow-blue-950/30">
-                <button onclick="toggleView()" id="view-toggle" type="button" class="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500 px-4 py-2 text-[10px] font-black uppercase tracking-[.1em] text-white shadow-md shadow-blue-950/40 transition-all hover:from-blue-600 hover:via-blue-500 hover:to-cyan-400 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-300" aria-label="Személyes adatlap megnyitása"><i class="fas fa-id-card text-[12px]"></i><span>Személyes adatlap</span><i class="fas fa-chevron-right text-[9px] opacity-85"></i></button>
+            <div class="ml-auto flex items-center gap-2">
+                <button onclick="toggleMatrixShiftCycles()" id="matrix-shift-visibility" type="button" class="shift-visibility-control" aria-pressed="true" aria-label="Műszakjelölések megjelenítése" title="Műszakjelölések ki- és bekapcsolása"><span class="hidden lg:inline">Műszakok</span><span class="shift-visibility-switch" aria-hidden="true"></span></button>
+                <div class="rounded-xl border border-blue-300/35 bg-slate-950/70 p-1 shadow-lg shadow-blue-950/30">
+                    <button onclick="toggleView()" id="view-toggle" type="button" class="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500 px-4 py-2 text-[10px] font-black uppercase tracking-[.1em] text-white shadow-md shadow-blue-950/40 transition-all hover:from-blue-600 hover:via-blue-500 hover:to-cyan-400 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-300" aria-label="Személyes adatlap megnyitása"><i class="fas fa-id-card text-[12px]"></i><span>Személyes adatlap</span><i class="fas fa-chevron-right text-[9px] opacity-85"></i></button>
+                </div>
             </div>
             <div class="flex gap-1">
                 <!-- ÚJ, SZOLIDABB FUNKCIÓ GOMBOK -->
@@ -388,8 +398,7 @@
                 </div>
             </div>
 
-            <div id="m-emp-list" class="flex-grow overflow-y-auto p-4 pb-20 space-y-3">
-                </div>
+            <div id="m-emp-list" class="flex-grow overflow-y-auto p-4 pb-20 space-y-3"><div class="flex flex-col items-center justify-center pt-20"><i class="fas fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i><span class="text-slate-400 font-bold text-sm uppercase tracking-widest">Adatok betöltése...</span></div></div>
         </div>
 
         <div id="m-detail-view" class="hidden absolute inset-0 bg-[#0b0f1a] z-50 flex flex-col h-full">
@@ -405,7 +414,6 @@
             <div class="m-detail-summary" aria-label="Dolgozói összegzés">
                 <div class="m-summary-tile"><span>Keret</span><strong id="m-summary-quota">–</strong></div>
                 <div class="m-summary-tile remaining"><span>Kivehető</span><strong id="m-summary-remaining">–</strong></div>
-                <div class="m-summary-tile shift"><span>Műszak</span><strong id="m-summary-shift">–</strong></div>
             </div>
 
             <div class="flex-grow overflow-y-auto p-2" id="m-cal-scroll-container">
@@ -609,6 +617,7 @@
 
         // --- GLOBÁLIS VÁLTOZÓK ---
         let currentShift = localStorage.getItem('fv_shift_final') || 'A';
+        let matrixShiftCyclesVisible = localStorage.getItem('fv_matrix_shift_cycles') !== 'off';
         // A dátum most már nem betonfixen 2026, hanem dinamikus (alapból az aktuális évet és hónapot veszi fel)
         let date = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
         let employees = [];
@@ -631,6 +640,22 @@
             if (schedule.day === shiftId) return { className: 'shift-cycle-day', shortLabel: 'N', label: 'Nappalos' };
             if (schedule.night === shiftId) return { className: 'shift-cycle-night', shortLabel: 'É', label: 'Éjszakás' };
             return { className: 'shift-cycle-rest', shortLabel: 'P', label: 'Pihenőnap' };
+        }
+
+        function updateMatrixShiftCycleVisibility() {
+            document.body.classList.toggle('matrix-shift-cycle-hidden', !matrixShiftCyclesVisible);
+            const control = document.getElementById('matrix-shift-visibility');
+            if (!control) return;
+            control.classList.toggle('is-on', matrixShiftCyclesVisible);
+            control.setAttribute('aria-pressed', String(matrixShiftCyclesVisible));
+            control.setAttribute('aria-label', matrixShiftCyclesVisible ? 'Műszakjelölések elrejtése' : 'Műszakjelölések megjelenítése');
+            control.title = matrixShiftCyclesVisible ? 'Műszakjelölések elrejtése' : 'Műszakjelölések megjelenítése';
+        }
+
+        function toggleMatrixShiftCycles() {
+            matrixShiftCyclesVisible = !matrixShiftCyclesVisible;
+            localStorage.setItem('fv_matrix_shift_cycles', matrixShiftCyclesVisible ? 'on' : 'off');
+            updateMatrixShiftCycleVisibility();
         }
 
         let mSelectedUserIndex = -1;
@@ -711,14 +736,16 @@
                 mBtn.classList.remove('bg-slate-800', 'text-slate-400');
                 mBtn.classList.add('bg-blue-600', 'text-white', 'border-blue-500');
             }
-            await load();
+            return await load();
         }
 
         async function load() {
+            let loadedSuccessfully = false;
             try {
                 const snapshot = await db.ref(`shift_${currentShift}`).once('value');
                 const data = snapshot.val();
                 employees = Array.isArray(data) ? data.filter(e => e != null) : [];
+                loadedSuccessfully = true;
             } catch(e) { 
                 console.error("Betöltési hiba:", e); employees = []; 
             } finally {
@@ -744,6 +771,7 @@
                 }
                 initSortable();
             }
+            return loadedSuccessfully;
         }
 
         async function save() {
@@ -1565,8 +1593,6 @@
                     day.setDate(today.getDate() + offset);
                     const key = `${day.getFullYear()}-${day.getMonth()+1}-${day.getDate()}`;
                     const value = (e.data && e.data[key]) ? e.data[key] : "";
-                    const phase = getShiftCyclePhase(day, currentShift);
-                    const phaseName = phase.className.replace('shift-cycle-', '');
                     const isToday = offset === 0;
                     let valueClass = '';
                     if (value) {
@@ -1576,8 +1602,7 @@
                         else if (value === 'IG') valueClass = 'has-ig';
                         else if (value.startsWith('KÉ')) valueClass = 'has-ke';
                     }
-                    const shownValue = value || '·';
-                    return `<div class="m-week-day phase-${phaseName} ${isToday ? 'today' : ''}" aria-label="${mobileWeekdayNames[day.getDay()]} ${day.getDate()}. · ${phase.label}${value ? ` · ${value}` : ''}"><span class="m-week-date">${mobileWeekdayNames[day.getDay()]} ${day.getDate()}</span><span class="m-week-phase">${phase.shortLabel}</span><span class="m-week-value ${valueClass}">${shownValue}</span></div>`;
+                    return `<div class="m-week-day ${isToday ? 'today' : ''}" aria-label="${mobileWeekdayNames[day.getDay()]} ${day.getDate()}.${value ? ` · ${value}` : ''}"><span class="m-week-date">${mobileWeekdayNames[day.getDay()]} ${day.getDate()}</span><span class="m-week-value ${valueClass}">${value}</span></div>`;
                 }).join('');
 
                 return `<div class="m-card m-roster-card" onclick="openMobileUser(${index})"><div class="m-roster-head"><div class="m-roster-name">${e.name}</div><div class="m-roster-remaining ${remaining <= 48 ? 'is-critical' : ''}"><span>Kivehető</span><b>${remaining}</b></div></div><div class="m-week-strip">${weekTimeline}</div></div>`;
@@ -1590,13 +1615,11 @@
             const remaining = quota - getYearlyUsed(emp, currentYear);
             const quotaEl = document.getElementById('m-summary-quota');
             const remainingEl = document.getElementById('m-summary-remaining');
-            const shiftEl = document.getElementById('m-summary-shift');
             if (quotaEl) quotaEl.innerText = quota;
             if (remainingEl) {
                 remainingEl.innerText = remaining;
                 remainingEl.parentElement.classList.toggle('is-critical', remaining <= 48);
             }
-            if (shiftEl) shiftEl.innerText = currentShift;
         }
 
         function openMobileUser(index) {
@@ -1669,7 +1692,6 @@
                 const k = `${currentYear}-${m+1}-${d}`;
                 const val = (emp.data && emp.data[k]) ? emp.data[k] : "";
                 const currentDate = new Date(currentYear, m, d);
-                const cyclePhase = getShiftCyclePhase(currentDate, currentShift);
                 const isToday = isCurrentMonth && d === today.getDate();
                 const isHoliday = holidays.includes(`${m+1}-${d}`);
                 
@@ -1686,7 +1708,6 @@
                 }
 
                 let classes = "m-day";
-                classes += ` m-cycle-${cyclePhase.className.replace('shift-cycle-', '')}`;
                 if(isToday) classes += " today";
                 if(val) classes += " has-data";
                 if(isHoliday) classes += " holiday-text holiday-bg"; 
@@ -1700,7 +1721,7 @@
                 if(isTuCserenap) extraDots += '<div class="tu-dot-mob-cal absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,1)] z-20"></div>';
                 if(hasNote) extraDots += '<div class="note-triangle-mob-cal"></div>';
                 
-                html += `<div class="${classes}" id="m-day-${d}" onclick="selectMobileDate(${d})" ${titleAttr}><span class="m-day-cycle" aria-hidden="true">${cyclePhase.shortLabel}</span><span class="m-day-number">${d}</span><div class="m-dot ${dotColor}"></div>${extraDots}</div>`;
+                html += `<div class="${classes}" id="m-day-${d}" onclick="selectMobileDate(${d})" ${titleAttr}><span class="m-day-number">${d}</span><div class="m-dot ${dotColor}"></div>${extraDots}</div>`;
             }
             grid.innerHTML = html;
         }
@@ -2150,24 +2171,60 @@
         }
 
         // --- AUTOMATIKUS HITELESÍTÉS ÉS INDÍTÁS ---
-        window.onload = () => {
-            auth.signInWithEmailAndPassword("staff@forvia.hu", "smtforvia2026").then(async () => {
+        let initialDataLoadInProgress = false;
+        let initialDataLoadCompleted = false;
+
+        function showInitialMobileLoader() {
+            const list = document.getElementById('m-emp-list');
+            if (list && !initialDataLoadCompleted) {
+                list.innerHTML = `<div class="flex flex-col items-center justify-center pt-20"><i class="fas fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i><span class="text-slate-400 font-bold text-sm uppercase tracking-widest">Adatok betöltése...</span></div>`;
+            }
+        }
+
+        async function startInitialDataLoad(attempt = 0) {
+            if (initialDataLoadInProgress || initialDataLoadCompleted) return;
+            initialDataLoadInProgress = true;
+            showInitialMobileLoader();
+            try {
+                if (!auth.currentUser) {
+                    await auth.signInWithEmailAndPassword("staff@forvia.hu", "smtforvia2026");
+                }
                 console.log("Firebase Auth: Biztonságos bejelentkezés sikeres!");
-                
-                await changeShift(currentShift);
-                
+                const loaded = await changeShift(currentShift);
+                if (!loaded) throw new Error('Az adatok első betöltése nem sikerült.');
+                initialDataLoadCompleted = true;
                 setTimeout(() => {
-                    const el = document.getElementById('today-header'); 
+                    const el = document.getElementById('today-header');
                     const container = document.querySelector('.table-container');
                     if(el && container) container.scrollTo({ left: el.offsetLeft - 260, behavior: 'smooth' });
                 }, 500);
-            }).catch(error => {
-                console.error("Firebase Auth hiba:", error);
-                document.getElementById('sync').innerText = "AUTH HIBA!";
-                document.getElementById('sync').classList.replace('text-emerald-500', 'text-red-500');
-                document.getElementById('sync').classList.replace('bg-emerald-500/10', 'bg-red-500/10');
-            });
-        };
+            } catch(error) {
+                console.error("Firebase Auth / első betöltési hiba:", error);
+                if (attempt < 2) {
+                    setTimeout(() => {
+                        initialDataLoadInProgress = false;
+                        startInitialDataLoad(attempt + 1);
+                    }, 1400 * (attempt + 1));
+                    return;
+                }
+                const sync = document.getElementById('sync');
+                if (sync) {
+                    sync.innerText = "BETÖLTÉSI HIBA";
+                    sync.classList.replace('text-emerald-500', 'text-red-500');
+                    sync.classList.replace('bg-emerald-500/10', 'bg-red-500/10');
+                }
+            } finally {
+                if (attempt >= 2 || initialDataLoadCompleted) initialDataLoadInProgress = false;
+            }
+        }
+
+        window.addEventListener('load', () => {
+            updateMatrixShiftCycleVisibility();
+            startInitialDataLoad();
+        });
+        window.addEventListener('pageshow', () => {
+            if (!initialDataLoadCompleted && !initialDataLoadInProgress) startInitialDataLoad();
+        });
     </script>
     <!-- CÉLCELLA KIJELÖLÉS ÉS BIZTOS NYÍLBILLENTYŰ-NAVIGÁCIÓ — kizárólag hozzáadott fejlesztés -->
     <style>
