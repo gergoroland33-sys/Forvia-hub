@@ -204,11 +204,39 @@
         .m-status-row { display: flex; align-items: center; justify-content: flex-end; gap: 6px; margin-bottom: 2px; }
         .m-status-label { font-size: 9px; color: #64748b; font-weight: 700; width: 20px; text-align: right; }
 
+        /* Mobilos műszak-idővonal: a névkártya teljes szélességét a következő 7 nap kapja. */
+        .m-roster-card { display: block; padding: 8px 10px; margin-bottom: 7px; }
+        .m-roster-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
+        .m-roster-name { min-width: 0; overflow: hidden; color: #f8fafc; font-size: 13px; font-weight: 900; line-height: 1.1; letter-spacing: -.015em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+        .m-roster-remaining { display: flex; align-items: baseline; gap: 4px; flex: none; color: #34d399; white-space: nowrap; }
+        .m-roster-remaining span { color: #64748b; font-size: 7px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+        .m-roster-remaining b { font-size: 13px; line-height: 1; }
+        .m-roster-remaining.is-critical { color: #f87171; }
+        .m-week-strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-top: 6px; }
+        .m-week-day { position: relative; min-width: 0; min-height: 32px; padding: 3px 1px 2px; overflow: hidden; border: 1px solid rgba(71,85,105,.68); border-radius: 8px; background: rgba(15,23,42,.72); text-align: center; }
+        .m-week-day.today { border-color: #60a5fa; background: linear-gradient(145deg, rgba(30,64,175,.52), rgba(15,23,42,.88)); box-shadow: inset 0 1px 0 rgba(191,219,254,.18), 0 3px 8px rgba(30,64,175,.22); }
+        .m-week-date { display: block; color: #64748b; font-size: 7px; font-weight: 900; line-height: 1; letter-spacing: 0; }
+        .m-week-day.today .m-week-date { color: #bfdbfe; }
+        .m-week-phase { display: block; margin-top: 2px; color: #94a3b8; font-size: 8px; font-weight: 900; line-height: 1; }
+        .m-week-day.phase-day .m-week-phase { color: #34d399; }
+        .m-week-day.phase-night .m-week-phase { color: #818cf8; }
+        .m-week-day.phase-rest .m-week-phase { color: #94a3b8; }
+        .m-week-value { display: block; min-height: 8px; margin-top: 2px; overflow: hidden; color: #475569; font-size: 8px; font-weight: 900; line-height: 1; text-overflow: ellipsis; white-space: nowrap; }
+        .m-week-value.has-sabi { color: #6ee7b7; }
+        .m-week-value.has-ba { color: #fb923c; }
+        .m-week-value.has-tu { color: #60a5fa; }
+        .m-week-value.has-ig { color: #c4b5fd; }
+        .m-week-value.has-ke { color: #fbbf24; }
+
         @media (max-width: 380px) {
             .m-detail-summary { padding-inline: 8px; gap: 5px; }
             .m-summary-tile { padding-inline: 4px; }
             .m-summary-tile strong { font-size: 12px; }
             .m-day { min-height: 38px; font-size: 12px; }
+            .m-roster-card { padding-inline: 8px; }
+            .m-roster-name { font-size: 12px; }
+            .m-week-strip { gap: 3px; }
+            .m-week-day { min-height: 30px; }
         }
 
         /* MODAL CUSTOM SCROLLBAR ELEGANCIA */
@@ -1499,6 +1527,7 @@
             const k1 = `${d1.getFullYear()}-${d1.getMonth()+1}-${d1.getDate()}`;
             const k2 = `${d2.getFullYear()}-${d2.getMonth()+1}-${d2.getDate()}`;
             const keys = [k0, k1, k2];
+            const mobileWeekdayNames = ["VAS", "HÉT", "KED", "SZE", "CSÜ", "PÉN", "SZO"];
 
             listEl.innerHTML = employees.map((e, index) => {
                 let remaining = getEmpQuota(e, currentYear) - getYearlyUsed(e, currentYear);
@@ -1531,7 +1560,27 @@
                     return `<div class="m-status-row"><span class="m-status-label">${label}</span><div class="m-status-pill ${bg} ${relativeCls}" ${titleAttr}>${val}${dots}</div></div>`;
                 };
 
-                return `<div class="m-card" onclick="openMobileUser(${index})"><div class="flex items-center flex-grow overflow-hidden"><div class="m-avatar">${e.name.charAt(0)}</div><div class="min-w-0 pr-2"><div class="font-black text-white text-lg leading-tight uppercase truncate">${e.name}</div><div class="text-[10px] ${remWarnCls} font-bold uppercase mt-1">Maradék: ${remaining}</div></div></div><div class="flex flex-col flex-none">${getStatusHtml(k0, "MA")}${getStatusHtml(k1, "HOL")}${getStatusHtml(k2, "KÖV")}</div></div>`;
+                const weekTimeline = Array.from({ length: 7 }, (_, offset) => {
+                    const day = new Date(today);
+                    day.setDate(today.getDate() + offset);
+                    const key = `${day.getFullYear()}-${day.getMonth()+1}-${day.getDate()}`;
+                    const value = (e.data && e.data[key]) ? e.data[key] : "";
+                    const phase = getShiftCyclePhase(day, currentShift);
+                    const phaseName = phase.className.replace('shift-cycle-', '');
+                    const isToday = offset === 0;
+                    let valueClass = '';
+                    if (value) {
+                        if (!isNaN(parseFloat(value.replace(',','.')))) valueClass = 'has-sabi';
+                        else if (value === 'BÁ') valueClass = 'has-ba';
+                        else if (value === 'TU') valueClass = 'has-tu';
+                        else if (value === 'IG') valueClass = 'has-ig';
+                        else if (value.startsWith('KÉ')) valueClass = 'has-ke';
+                    }
+                    const shownValue = value || '·';
+                    return `<div class="m-week-day phase-${phaseName} ${isToday ? 'today' : ''}" aria-label="${mobileWeekdayNames[day.getDay()]} ${day.getDate()}. · ${phase.label}${value ? ` · ${value}` : ''}"><span class="m-week-date">${mobileWeekdayNames[day.getDay()]} ${day.getDate()}</span><span class="m-week-phase">${phase.shortLabel}</span><span class="m-week-value ${valueClass}">${shownValue}</span></div>`;
+                }).join('');
+
+                return `<div class="m-card m-roster-card" onclick="openMobileUser(${index})"><div class="m-roster-head"><div class="m-roster-name">${e.name}</div><div class="m-roster-remaining ${remaining <= 48 ? 'is-critical' : ''}"><span>Kivehető</span><b>${remaining}</b></div></div><div class="m-week-strip">${weekTimeline}</div></div>`;
             }).join('');
         }
 
