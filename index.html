@@ -1175,7 +1175,7 @@
             <p class="ticker-admin-subtitle">A mentés minden megnyitott Hubnál azonnal megjelenik. A színek 16 millió árnyalatban, külön háttérre, betűre és kiemelésre állíthatók.</p>
             <div class="ticker-admin-actions is-top">
                 <button class="ticker-admin-btn danger" type="button" onclick="signOutTickerAdmin()">Kilépés</button>
-                <button class="ticker-admin-btn analytics" type="button" onclick="openHubAnalytics()">📊 Statisztika</button>
+                <button class="ticker-admin-btn analytics" type="button" onclick="openHubAnalytics()">👁 Élő figyelés</button>
                 <button class="ticker-admin-btn" type="button" onclick="closeTickerAdminEditor()">Bezárás</button>
                 <button class="ticker-admin-btn primary" type="button" onclick="saveTickerSettings()">Mentés</button>
             </div>
@@ -1249,17 +1249,17 @@
 
     <div id="hubAnalyticsModal" class="ticker-admin-backdrop" role="dialog" aria-modal="true" aria-labelledby="hubAnalyticsTitle">
         <div class="ticker-admin-card hub-analytics-card">
-            <h2 id="hubAnalyticsTitle" class="ticker-admin-title">Hub használati statisztika</h2>
-            <p class="ticker-admin-subtitle">Élő állapot és az aktuális naptári nap pontos, anonim összegzése.</p>
+            <h2 id="hubAnalyticsTitle" class="ticker-admin-title">Hub élő figyelés</h2>
+            <p class="ticker-admin-subtitle">Csak a jelenleg nyitott modulok élő állapota látható. Nem készül használati előzmény vagy napi statisztika.</p>
             <div class="ticker-admin-actions is-top">
                 <button class="ticker-admin-btn" type="button" onclick="closeHubAnalytics()">Bezárás</button>
             </div>
             <div class="hub-analytics-toolbar">
-                <span id="hubAnalyticsDay" class="hub-analytics-day">Mai összegzés: <b>0:00–most</b></span>
+                <span id="hubAnalyticsDay" class="hub-analytics-day">Jelenleg: <b>élő állapot</b></span>
                 <span class="hub-analytics-live">Élő frissítés</span>
             </div>
             <div id="hubAnalyticsContent" aria-live="polite">
-                <div class="hub-analytics-empty">Statisztika betöltése…</div>
+                <div class="hub-analytics-empty">Élő állapot betöltése…</div>
             </div>
             <div id="hubAnalyticsStatus" class="ticker-admin-status"></div>
         </div>
@@ -2354,7 +2354,6 @@
         hubRecovery.hiddenAt = null;
         window.activePresenceModuleRequest = url === '8.html' ? 'staff-pro' : url;
         window.setActivePresenceModule?.(window.activePresenceModuleRequest);
-        window.trackHubModuleView?.(url);
         hideReconnectNotice();
         totalActivity++;
         localStorage.setItem('fv_total_activity', totalActivity);
@@ -2390,7 +2389,6 @@
         hubRecovery.reconnecting = false;
         window.activePresenceModuleRequest = 'home';
         window.setActivePresenceModule?.(window.activePresenceModuleRequest);
-        window.trackHubModuleView?.('home');
         hideReconnectNotice();
         
         document.body.classList.remove('search-mode-active');
@@ -3071,70 +3069,20 @@
         }
 
         async function refreshAnalyticsCurrentView() {
-            const view = analyticsCurrentView;
-            if (!view?.ref) return;
-            if (getAnalyticsDayStart(view.openedAt) !== getAnalyticsDayStart()) {
-                const module = view.module;
-                await closeAnalyticsCurrentView('day-boundary');
-                beginAnalyticsView(module);
-                return;
-            }
-            const durationSeconds = Math.max(0, Math.round((Date.now() - view.openedAt) / 1000));
-            try {
-                await update(view.ref, { lastSeenAt: serverTimestamp(), durationSeconds, active: true });
-            } catch (error) {
-                console.error('Hub statisztika frissítési hiba:', error);
-            }
+            /* Az élő figyeléshez nincs időalapú statisztikai írás. */
         }
 
         async function closeAnalyticsCurrentView(reason = 'module-change') {
-            const view = analyticsCurrentView;
-            if (!view?.ref) return;
             analyticsCurrentView = null;
-            const closedAt = Date.now();
-            const durationSeconds = Math.max(0, Math.round((closedAt - view.openedAt) / 1000));
-            try {
-                await update(view.ref, { lastSeenAt: serverTimestamp(), closedAt, durationSeconds, active: false, closeReason: reason });
-            } catch (error) {
-                console.error('Hub statisztika lezárási hiba:', error);
-            }
         }
 
         function beginAnalyticsView(module) {
             const normalizedModule = normalizeAnalyticsModule(module);
             window.hubAnalyticsModuleRequest = normalizedModule;
-            if (!analyticsDb || !analyticsUid || !analyticsSessionId) return;
-            if (analyticsCurrentView?.module === normalizedModule) return;
-            void closeAnalyticsCurrentView('module-change');
-
-            const openedAt = Date.now();
-            const viewRef = push(ref(analyticsDb, 'hub/analytics/views'));
-            analyticsCurrentView = { ref: viewRef, module: normalizedModule, openedAt };
-            set(viewRef, {
-                uid: analyticsUid,
-                sessionId: analyticsSessionId,
-                module: normalizedModule,
-                moduleLabel: analyticsModuleLabel(normalizedModule),
-                device: getAnalyticsDeviceClass(),
-                openedAt,
-                openedAtServer: serverTimestamp(),
-                lastSeenAt: serverTimestamp(),
-                durationSeconds: 0,
-                active: true
-            }).catch(error => console.error('Hub statisztika indítási hiba:', error));
         }
 
         function scheduleAnalyticsDayBoundary() {
             clearTimeout(analyticsDayBoundaryTimer);
-            const nextMidnight = new Date();
-            nextMidnight.setHours(24, 0, 0, 25);
-            analyticsDayBoundaryTimer = setTimeout(() => {
-                const module = analyticsCurrentView?.module;
-                if (module && document.visibilityState !== 'hidden') {
-                    void closeAnalyticsCurrentView('day-boundary').then(() => beginAnalyticsView(module));
-                }
-                scheduleAnalyticsDayBoundary();
-            }, Math.max(1000, nextMidnight.getTime() - Date.now()));
         }
 
         function getLiveModuleCounts() {
@@ -3234,6 +3182,23 @@
             const content = tickerEl('hubAnalyticsContent');
             if (!modal?.classList.contains('open') || !content) return;
 
+            const presenceLiveCounts = getLiveModuleCounts();
+            const presenceLiveItems = Array.from(presenceLiveCounts.entries()).sort((a, b) => b[1] - a[1]);
+            const totalLive = presenceLiveItems.reduce((total, [, count]) => total + count, 0);
+            const livePresenceHtml = presenceLiveItems.length
+                ? presenceLiveItems.map(([module, count]) => `<div class="hub-analytics-live-item"><div class="hub-analytics-live-top"><strong>${escapeAnalyticsHtml(analyticsModuleLabel(module))}</strong><span class="hub-analytics-live-count">${count} most nyitva</span></div><span class="hub-analytics-live-meta">Élő jelenléti adat</span></div>`).join('')
+                : '<div class="hub-analytics-empty">Jelenleg nincs nyitott, követhető modul.</div>';
+            const liveDayLabel = tickerEl('hubAnalyticsDay');
+            if (liveDayLabel) liveDayLabel.innerHTML = `Jelenleg: <b>${totalLive} aktív megnyitás</b>`;
+            content.innerHTML = `
+                <div class="hub-analytics-summary">
+                    <div class="hub-analytics-kpi"><b>${totalLive}</b><span>Most nyitva</span></div>
+                    <div class="hub-analytics-kpi"><b>${presenceLiveItems.length}</b><span>Aktív modul</span></div>
+                    <div class="hub-analytics-kpi"><b>ÉLŐ</b><span>Előzmények nélkül</span></div>
+                </div>
+                <section class="hub-analytics-section"><h3 class="hub-analytics-section-title">Éppen megnyitott modulok</h3><div class="hub-analytics-live-grid">${livePresenceHtml}</div></section>`;
+            return;
+
             const dayStart = getAnalyticsDayStart();
             const dayRecords = analyticsRecords.filter(record => Number(record?.openedAt) >= dayStart);
             const dayLabel = tickerEl('hubAnalyticsDay');
@@ -3311,36 +3276,20 @@
         }
 
         function subscribeHubAnalytics() {
-            if (!tickerAuth?.currentUser || !tickerDb) return;
             analyticsUnsubscribe?.();
-            const dayStart = getAnalyticsDayStart();
-            if (analyticsSubscribedDayStart !== dayStart) analyticsRecentLimit = 30;
-            analyticsSubscribedDayStart = dayStart;
-            const viewsRef = ref(tickerDb, 'hub/analytics/views');
-            const source = query(viewsRef, orderByChild('openedAt'), startAt(dayStart));
-            setTickerStatus('hubAnalyticsStatus', 'Élő statisztika betöltése…');
-            analyticsUnsubscribe = onValue(source, snapshot => {
-                analyticsRecords = Object.values(snapshot.val() || {}).filter(value => value && typeof value === 'object');
-                const todayCount = analyticsRecords.filter(record => Number(record?.openedAt) >= getAnalyticsDayStart()).length;
-                setTickerStatus('hubAnalyticsStatus', todayCount ? `${todayCount} mai megnyitás · élő frissítés aktív.` : 'Ma még nincs tárolt megnyitás.', todayCount ? 'success' : '');
-                scheduleHubAnalyticsRender();
-            }, error => {
-                console.error('Hub statisztika olvasási hiba:', error);
-                setTickerStatus('hubAnalyticsStatus', 'A statisztika nem olvasható. Ellenőrizd a Firebase analytics szabályt.', 'error');
-            });
+            analyticsUnsubscribe = null;
+            analyticsRecords = [];
+            setTickerStatus('hubAnalyticsStatus', 'Élő jelenléti figyelés aktív.', 'success');
+            scheduleHubAnalyticsRender();
         }
 
         function startHubAnalyticsModalRefresh() {
             clearInterval(analyticsModalRefreshTimer);
-            analyticsModalRefreshTimer = setInterval(() => {
-                if (analyticsSubscribedDayStart !== getAnalyticsDayStart()) subscribeHubAnalytics();
-                else scheduleHubAnalyticsRender();
-            }, 30000);
+            analyticsModalRefreshTimer = null;
         }
 
         window.showMoreHubAnalytics = function() {
-            analyticsRecentLimit += 30;
-            renderHubAnalytics();
+            /* Élő figyelésnél nincs visszamenőleges lista. */
         };
 
         window.openHubAnalytics = function() {
@@ -3370,16 +3319,6 @@
             closeTickerModal('hubAnalyticsModal');
             setTickerStatus('hubAnalyticsStatus');
         };
-
-        window.trackHubModuleView = function(module) {
-            beginAnalyticsView(module);
-        };
-
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'hidden') void closeAnalyticsCurrentView('background');
-            else beginAnalyticsView(window.hubAnalyticsModuleRequest || window.activePresenceModuleRequest || 'home');
-        });
-        window.addEventListener('pagehide', () => { void closeAnalyticsCurrentView('pagehide'); });
 
         function renderActiveUsers(data) {
             const card = tickerEl('activeUsersCard');
@@ -3421,9 +3360,6 @@
                 const presenceRoot = ref(presenceDb, 'hub/presence');
                 const presenceSessionId = createPresenceSessionId();
                 const presenceRef = ref(presenceDb, `hub/presence/${uid}/${presenceSessionId}`);
-                analyticsDb = presenceDb;
-                analyticsUid = uid;
-                analyticsSessionId = presenceSessionId;
                 window.setActivePresenceModule = async function(module) {
                     activePresenceModule = normalizeAnalyticsModule(module);
                     window.activePresenceModuleRequest = activePresenceModule;
@@ -3436,10 +3372,8 @@
                 };
                 /* Ha a modul az anonim Firebase-belépés közben nyílt meg, az aktuális állapotot most biztosan kiírjuk. */
                 await window.setActivePresenceModule(window.activePresenceModuleRequest || activePresenceModule);
-                beginAnalyticsView(window.hubAnalyticsModuleRequest || window.activePresenceModuleRequest || activePresenceModule);
-                scheduleAnalyticsDayBoundary();
                 clearInterval(analyticsHeartbeatTimer);
-                analyticsHeartbeatTimer = setInterval(() => { void refreshAnalyticsCurrentView(); }, 45000);
+                analyticsHeartbeatTimer = null;
                 onValue(presenceRoot, snapshot => renderActiveUsers(snapshot.val()), error => {
                     console.error('Aktív felhasználók olvasási hiba:', error);
                     card.classList.add('is-unavailable');
