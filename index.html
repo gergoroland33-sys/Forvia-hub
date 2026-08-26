@@ -359,14 +359,22 @@
         .active-shift-code { color: #fff; font-weight: 800; letter-spacing: .04em; }
         .active-shift-letter {
             display: inline-block;
-            color: var(--success);
+            position: relative;
+            isolation: isolate;
+            color: #a78bfa;
+            background: linear-gradient(118deg, #60a5fa 0%, #a78bfa 45%, #f9a8d4 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
             font-size: 1.55em;
             font-weight: 900;
             line-height: 1;
             letter-spacing: .015em;
             transform-origin: center;
             will-change: transform;
+            filter: none;
         }
+        .active-shift-drip { position: absolute; top: .73em; left: 50%; z-index: 2; width: .16em; height: .42em; border-radius: 999px; background: linear-gradient(180deg, #db2777, #6d28d9 58%, #2563eb); opacity: 0; pointer-events: none; transform: translate3d(-50%, 0, 0); will-change: transform, opacity; }
 
         .device-info {
             font-size: 0.8rem; color: #64748b;
@@ -2002,13 +2010,66 @@
     ];
     let activeShiftLastMotion = -1;
 
+    function playActiveShiftMelting(letter) {
+        if (!letter) return;
+        letter.querySelectorAll('.active-shift-drip').forEach(effect => effect.remove());
+        [-.28, 0, .28].forEach((offset, index) => {
+            const drip = document.createElement('span');
+            drip.className = 'active-shift-drip';
+            drip.style.marginLeft = `${offset}em`;
+            letter.appendChild(drip);
+            drip.animate([
+                { opacity: 0, transform: 'translate3d(-50%,0,0) scale(.55,.4)' },
+                { offset: .16, opacity: .95, transform: 'translate3d(-50%,4px,0) scale(1,1)' },
+                { opacity: 0, transform: `translate3d(-50%,${46 + index * 14}px,0) scale(.42,1.8)` }
+            ], { duration: 1050 + index * 90, delay: index * 70, easing: 'cubic-bezier(.2,.7,.35,1)', fill: 'both' });
+            setTimeout(() => drip.remove(), 1280 + index * 120);
+        });
+    }
+
     function playActiveShiftLetterMotion() {
         const letter = document.querySelector('#activeShiftCode .active-shift-letter');
         if (!letter || typeof letter.animate !== 'function') return;
-        let motionIndex = Math.floor(Math.random() * activeShiftMotionPatterns.length);
-        while (motionIndex === activeShiftLastMotion) motionIndex = Math.floor(Math.random() * activeShiftMotionPatterns.length);
+        const spinMotionIndex = activeShiftMotionPatterns.length;
+        const fallMotionIndex = activeShiftMotionPatterns.length + 1;
+        const meltMotionIndex = activeShiftMotionPatterns.length + 2;
+        let motionIndex = Math.floor(Math.random() * (activeShiftMotionPatterns.length + 3));
+        while (motionIndex === activeShiftLastMotion) motionIndex = Math.floor(Math.random() * (activeShiftMotionPatterns.length + 3));
         activeShiftLastMotion = motionIndex;
         letter.getAnimations().forEach(animation => animation.cancel());
+        if (motionIndex === spinMotionIndex) {
+            letter.animate([
+                { transform: 'perspective(260px) rotateY(0deg) rotateZ(0deg) scale(1)' },
+                { offset: .2, transform: 'perspective(260px) rotateY(150deg) rotateZ(90deg) scaleX(.2) scaleY(1.04)' },
+                { offset: .48, transform: 'perspective(260px) rotateY(350deg) rotateZ(205deg) scaleX(1) scaleY(.98)' },
+                { offset: .76, transform: 'perspective(260px) rotateY(570deg) rotateZ(330deg) scaleX(.3) scaleY(1.03)' },
+                { transform: 'perspective(260px) rotateY(720deg) rotateZ(420deg) scale(1)' }
+            ], { duration: 1260, easing: 'cubic-bezier(.22,.78,.28,1)', fill: 'none' });
+            return;
+        }
+        if (motionIndex === fallMotionIndex) {
+            letter.animate([
+                { opacity: 1, transform: 'translate3d(0,0,0) rotate(0) scale(1)' },
+                { offset: .11, opacity: 1, transform: 'translate3d(4px,-6px,0) rotate(18deg) scale(1.04)' },
+                { offset: .29, opacity: 1, transform: 'translate3d(-10px,16vh,0) rotate(-118deg) scale(.98)' },
+                { offset: .43, opacity: 0, transform: 'translate3d(16px,92vh,0) rotate(650deg) scale(.78)' },
+                { offset: .47, opacity: 0, transform: 'translate3d(-12px,-96vh,0) rotate(-420deg) scale(.78)' },
+                { offset: .7, opacity: 1, transform: 'translate3d(8px,-19vh,0) rotate(-104deg) scale(.96)' },
+                { offset: .88, opacity: 1, transform: 'translate3d(-3px,4px,0) rotate(10deg) scale(1.03)' },
+                { opacity: 1, transform: 'translate3d(0,0,0) rotate(0) scale(1)' }
+            ], { duration: 2280, easing: 'cubic-bezier(.28,.04,.7,.46)', fill: 'none' });
+            return;
+        }
+        if (motionIndex === meltMotionIndex) {
+            playActiveShiftMelting(letter);
+            letter.animate([
+                { opacity: 1, transform: 'translate3d(0,0,0) scale(1,1)' },
+                { offset: .26, opacity: 1, transform: 'translate3d(0,4px,0) scale(1.18,.78)' },
+                { offset: .62, opacity: .8, transform: 'translate3d(0,18px,0) scale(1.48,.25)' },
+                { opacity: 0, transform: 'translate3d(0,74px,0) scale(.36,.08)' }
+            ], { duration: 1120, easing: 'cubic-bezier(.18,.72,.32,1)', fill: 'none' });
+            return;
+        }
         letter.animate(activeShiftMotionPatterns[motionIndex], { duration: 780, easing: 'ease-in-out', fill: 'none' });
     }
 
