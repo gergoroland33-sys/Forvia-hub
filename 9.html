@@ -412,18 +412,20 @@ let isCameraRunning = false;
 let bankDB = [];
 let cleanupInterval = null;
 let manualScannerEnabled = false;
+let manualScannerModelPickerOpen = false;
 const defaultBarcodePlaceholder = input.placeholder;
 
 function focusManualScannerInput() {
-    if (!manualScannerEnabled || document.body.classList.contains('scanning-mode')) return;
+    if (!manualScannerEnabled || manualScannerModelPickerOpen || document.activeElement === modelFilter || document.body.classList.contains('scanning-mode')) return;
     requestAnimationFrame(() => {
-        if (manualScannerEnabled && !document.body.classList.contains('scanning-mode')) input.focus({ preventScroll: true });
+        if (manualScannerEnabled && !manualScannerModelPickerOpen && document.activeElement !== modelFilter && !document.body.classList.contains('scanning-mode')) input.focus({ preventScroll: true });
     });
 }
 
 function setManualScannerMode(enabled) {
     const nextState = Boolean(enabled) && manualScannerDesktopQuery.matches;
     manualScannerEnabled = nextState;
+    manualScannerModelPickerOpen = false;
     document.body.classList.toggle('manual-scanner-mode', nextState);
     document.body.classList.remove('manual-scanner-has-result');
     if (manualScannerToggle) manualScannerToggle.checked = nextState;
@@ -438,6 +440,20 @@ function setManualScannerMode(enabled) {
 manualScannerToggle?.addEventListener('change', () => setManualScannerMode(manualScannerToggle.checked));
 input.addEventListener('blur', () => {
     if (manualScannerEnabled) setTimeout(focusManualScannerInput, 0);
+});
+modelFilter.addEventListener('pointerdown', () => {
+    if (manualScannerEnabled) manualScannerModelPickerOpen = true;
+});
+modelFilter.addEventListener('focus', () => {
+    if (manualScannerEnabled) manualScannerModelPickerOpen = true;
+});
+modelFilter.addEventListener('blur', () => {
+    if (manualScannerEnabled) {
+        setTimeout(() => {
+            manualScannerModelPickerOpen = false;
+            focusManualScannerInput();
+        }, 0);
+    }
 });
 window.addEventListener('focus', focusManualScannerInput);
 manualScannerDesktopQuery.addEventListener?.('change', event => {
@@ -519,6 +535,12 @@ modelFilter.addEventListener('change', () => {
     // Ha van beírva/beolvasva adat, azonnal újrakeres a szűrővel
     if (input.value.trim().length > 2) {
         search(input.value.trim().toUpperCase());
+    }
+    if (manualScannerEnabled) {
+        setTimeout(() => {
+            manualScannerModelPickerOpen = false;
+            focusManualScannerInput();
+        }, 0);
     }
 });
 
