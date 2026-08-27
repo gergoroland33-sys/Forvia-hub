@@ -601,6 +601,16 @@
             .action-buttons .btn { padding: 8px 12px; font-size: 12px; }
         }
 
+        .print-cabinet-picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+        .print-cabinet-choice { display: flex; align-items: center; gap: 9px; min-height: 41px; padding: 9px 10px; border: 1px solid rgba(148,163,184,0.25); border-radius: 7px; color: var(--text-muted); background: rgba(15,23,42,0.52); cursor: pointer; font-size: 12px; font-weight: 700; transition: 0.18s; }
+        .print-cabinet-choice:hover { border-color: rgba(14,165,233,0.6); color: white; background: rgba(14,165,233,0.08); }
+        .print-cabinet-choice input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+        .print-cabinet-choice:has(input:checked) { color: white; border-color: rgba(14,165,233,0.72); background: rgba(14,165,233,0.13); box-shadow: inset 0 0 0 1px rgba(14,165,233,0.14); }
+        .print-selection-actions { display: flex; gap: 8px; margin-top: 10px; }
+        .print-selection-actions button { background: transparent; border: 1px solid rgba(148,163,184,0.35); border-radius: 5px; color: var(--text-muted); padding: 6px 9px; cursor: pointer; font-size: 11px; font-weight: 800; transition: 0.18s; }
+        .print-selection-actions button:hover { color: white; border-color: var(--accent); background: rgba(14,165,233,0.08); }
+        @media (max-width: 440px) { .print-cabinet-picker { grid-template-columns: 1fr; } }
+
         #printArea { display: none; }
         
         @media print {
@@ -710,7 +720,7 @@
             .print-sheet-title { color: #0f172a !important; font-size: 18pt !important; line-height: 1 !important; font-weight: 900 !important; letter-spacing: 0.8pt !important; text-transform: uppercase !important; }
             .print-sheet-subtitle { color: #475569 !important; font-size: 8pt !important; line-height: 1.2 !important; font-weight: 700 !important; text-align: right !important; text-transform: uppercase !important; letter-spacing: 0.5pt !important; }
             .print-slot-grid { display: grid !important; grid-template-columns: 1fr !important; align-content: start !important; }
-            .print-slot-card { display: flex !important; align-items: center !important; justify-content: flex-start !important; gap: 5mm !important; box-sizing: border-box !important; color: #111827 !important; border: 0.25mm solid #cbd5e1 !important; border-left: 1.25mm solid #0f172a !important; border-radius: 1.8mm !important; background: #f8fafc !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .print-slot-card { display: flex !important; align-items: center !important; justify-content: center !important; gap: 5mm !important; box-sizing: border-box !important; color: #111827 !important; text-align: center !important; border: 0.25mm solid #cbd5e1 !important; border-left: 1.25mm solid #0f172a !important; border-radius: 1.8mm !important; background: #f8fafc !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             .print-slot-card.is-filled { background: #ffffff !important; border-left-color: #0f766e !important; }
             .print-slot-card.is-empty { background: #f1f5f9 !important; border-left-color: #94a3b8 !important; }
             .print-shelf-badge { display: inline-flex !important; align-items: baseline !important; gap: 1.3mm !important; flex: 0 0 auto !important; min-width: 25mm !important; color: #0f172a !important; font-weight: 900 !important; white-space: nowrap !important; }
@@ -1024,13 +1034,19 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label>Nyomtatási tartalom</label>
-                    <select id="printCabinetSelect" class="form-control">
-                        <option value="ALL">Mind a 6 szekrény – külön A4-oldalakra</option>
-                        <option value="Szekrény 1" selected>Szekrény 1</option><option value="Szekrény 2">Szekrény 2</option>
-                        <option value="Szekrény 3">Szekrény 3</option><option value="Szekrény 4">Szekrény 4</option>
-                        <option value="Szekrény 5">Szekrény 5</option><option value="Szekrény 6">Szekrény 6</option>
-                    </select>
+                    <label>Válaszd ki a nyomtatandó szekrényeket</label>
+                    <div class="print-cabinet-picker" id="printCabinetPicker">
+                        <label class="print-cabinet-choice"><input type="checkbox" name="printCabinet" value="Szekrény 1" checked> Szekrény 1</label>
+                        <label class="print-cabinet-choice"><input type="checkbox" name="printCabinet" value="Szekrény 2"> Szekrény 2</label>
+                        <label class="print-cabinet-choice"><input type="checkbox" name="printCabinet" value="Szekrény 3"> Szekrény 3</label>
+                        <label class="print-cabinet-choice"><input type="checkbox" name="printCabinet" value="Szekrény 4"> Szekrény 4</label>
+                        <label class="print-cabinet-choice"><input type="checkbox" name="printCabinet" value="Szekrény 5"> Szekrény 5</label>
+                        <label class="print-cabinet-choice"><input type="checkbox" name="printCabinet" value="Szekrény 6"> Szekrény 6</label>
+                    </div>
+                    <div class="print-selection-actions">
+                        <button type="button" onclick="setPrintCabinetSelection(true)"><i class="fas fa-check-double"></i> Összes kijelölése</button>
+                        <button type="button" onclick="setPrintCabinetSelection(false)"><i class="fas fa-eraser"></i> Kijelölés törlése</button>
+                    </div>
                 </div>
                 <div style="display:flex; gap:10px; align-items:flex-start; padding:11px 12px; border-radius:8px; border:1px solid rgba(14,165,233,0.22); background:rgba(14,165,233,0.07); color:var(--text-muted); font-size:12px; line-height:1.5;">
                     <i class="fas fa-file-lines" style="color:var(--accent); margin-top:2px;"></i>
@@ -1781,13 +1797,17 @@
         return `<section class="print-sheet ${densityClass}"><header class="print-sheet-head"><div class="print-sheet-title">${printEscape(config.name)}</div><div class="print-sheet-subtitle">${filledCount} / ${slotCount} feltöltve<br>Stencil nyilvántartás</div></header><div class="print-slot-grid">${slotsHtml}</div></section>`;
     }
 
+    window.setPrintCabinetSelection = function(shouldSelect) {
+        document.querySelectorAll('input[name="printCabinet"]').forEach(input => {
+            input.checked = shouldSelect;
+        });
+    };
+
     function executePrint() {
-        const selectedValue = document.getElementById('printCabinetSelect').value;
-        const selectedCabinets = selectedValue === 'ALL'
-            ? window.cabinetsConfig
-            : window.cabinetsConfig.filter(config => config.name === selectedValue);
+        const selectedNames = new Set(Array.from(document.querySelectorAll('input[name="printCabinet"]:checked')).map(input => input.value));
+        const selectedCabinets = window.cabinetsConfig.filter(config => selectedNames.has(config.name));
         if (selectedCabinets.length === 0) {
-            showToast('Nem található a kiválasztott szekrény.');
+            showToast('Válassz ki legalább egy szekrényt a nyomtatáshoz.');
             return;
         }
 
