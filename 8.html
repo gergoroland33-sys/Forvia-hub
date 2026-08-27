@@ -244,6 +244,8 @@
         .m-week-day.has-ig { border-color: #c084fc; box-shadow: inset 0 0 0 1px rgba(124,58,237,.18), 0 3px 10px rgba(124,58,237,.13); }
         .m-week-day.has-ke { border-color: #fbbf24; box-shadow: inset 0 0 0 1px rgba(180,83,9,.18), 0 3px 10px rgba(180,83,9,.13); }
         .m-week-day.today { border-color: #f05252; box-shadow: inset 0 1px 0 rgba(254,202,202,.22), 0 0 0 1px rgba(239,68,68,.16), 0 4px 10px rgba(127,29,29,.25); }
+        .m-today-jump { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 28px; padding: 5px 12px; border: 1px solid rgba(248,113,113,.48); border-radius: 999px; background: linear-gradient(135deg, rgba(127,29,29,.38), rgba(30,41,59,.82)); color: #fecaca; font-size: 9px; font-weight: 900; letter-spacing: .09em; text-transform: uppercase; box-shadow: inset 0 1px 0 rgba(254,202,202,.09), 0 3px 9px rgba(127,29,29,.17); transition: transform .16s ease, border-color .16s ease, background .16s ease; }
+        .m-today-jump:active { transform: scale(.94); border-color: #f87171; background: rgba(127,29,29,.65); }
         .m-quick-day-context { margin: 12px; padding: 11px 13px; border: 1px solid rgba(71,85,105,.72); border-radius: 12px; background: linear-gradient(145deg, rgba(30,41,59,.88), rgba(15,23,42,.94)); box-shadow: inset 0 1px 0 rgba(255,255,255,.045); }
         .m-quick-day-context span { display: block; color: #64748b; font-size: 9px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
         .m-quick-day-context strong { display: block; margin-top: 4px; color: #f8fafc; font-size: 15px; font-weight: 900; }
@@ -415,6 +417,9 @@
                         <span id="m-monthDisp" class="font-black text-lg uppercase text-white"></span>
                         <button onclick="changeMobileMonth(1)" class="p-3 text-blue-400"><i class="fas fa-chevron-right"></i></button>
                     </div>
+                </div>
+                <div class="flex justify-center -mt-1">
+                    <button onclick="jumpMobileToToday()" class="m-today-jump" title="Ugrás a mai naphoz"><i class="fas fa-crosshairs"></i> Mai nap</button>
                 </div>
             </div>
 
@@ -645,7 +650,7 @@
         let matrixShiftCyclesVisible = localStorage.getItem('fv_matrix_shift_cycles') !== 'off';
         // A dátum most már nem betonfixen 2026, hanem dinamikus (alapból az aktuális évet és hónapot veszi fel)
         let date = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-        let mobileWeekAnchor = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+        let mobileWeekAnchor = (() => { const today = new Date(); today.setDate(today.getDate() - 3); return today; })();
         let employees = [];
         const monthNames = ["Január", "Február", "Március", "Április", "Május", "Június", "Július", "Augusztus", "Szeptember", "Október", "November", "December"];
         const dayNamesShort = ["V", "H", "K", "Sze", "Cs", "P", "Szo"];
@@ -1550,9 +1555,17 @@
 
         function shiftMobileWeek(direction) {
             const next = new Date(mobileWeekAnchor);
-            next.setDate(next.getDate() + (direction * 7));
+            next.setDate(next.getDate() + direction);
             mobileWeekAnchor = next;
             date = new Date(next.getFullYear(), next.getMonth(), 1);
+            renderMobileList();
+        }
+
+        function jumpMobileToToday() {
+            const today = new Date();
+            today.setDate(today.getDate() - 3);
+            mobileWeekAnchor = today;
+            date = new Date(today.getFullYear(), today.getMonth(), 1);
             renderMobileList();
         }
         
@@ -1663,7 +1676,7 @@
                     return `<div class="m-week-day ${valueClass} ${isToday ? 'today' : ''}" role="button" tabindex="0" onclick="openMobileDayEditor(${index}, '${key}', event)" onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openMobileDayEditor(${index}, '${key}', event); }" aria-label="${mobileWeekdayNames[day.getDay()]} ${day.getDate()}.${value ? ` · ${value}` : ''}${markerLabel}">${markers}<span class="m-week-date">${mobileWeekdayNames[day.getDay()]} ${day.getDate()}</span><span class="m-week-value ${valueClass}">${value}</span></div>`;
                 }).join('');
 
-                return `<div class="m-card m-roster-card" onclick="openMobileUser(${index}, ${weekStart.getDate()})"><div class="m-roster-head"><div class="m-roster-name">${e.name}</div><div class="m-roster-remaining ${remaining <= 48 ? 'is-critical' : ''}"><span>Kivehető</span><b>${remaining}</b></div></div><div class="m-week-meta"><strong>${weekPeriod}</strong><span><i class="fas fa-arrows-alt-h" aria-hidden="true"></i> Húzd</span></div><div class="m-week-strip">${weekTimeline}</div></div>`;
+                return `<div class="m-card m-roster-card" onclick="openMobileUser(${index}, ${weekStart.getDate()})"><div class="m-roster-head"><div class="m-roster-name">${e.name}</div><div class="m-roster-remaining ${remaining <= 48 ? 'is-critical' : ''}"><span>Kivehető</span><b>${remaining}</b></div></div><div class="m-week-meta"><strong>${weekPeriod}</strong><span><i class="fas fa-arrows-alt-h" aria-hidden="true"></i> Naponta húzható</span></div><div class="m-week-strip">${weekTimeline}</div></div>`;
             }).join('');
         }
 
@@ -1688,6 +1701,7 @@
             const [year, month, day] = dateKey.split('-').map(Number);
             if (!year || !month || !day) return;
             mobileWeekAnchor = new Date(year, month - 1, day);
+            mobileWeekAnchor.setDate(mobileWeekAnchor.getDate() - 3);
             date = new Date(year, month - 1, 1);
             openMobileUser(index, day);
         }
@@ -1879,7 +1893,7 @@
             }, 500);
         });
 
-        // A névkártyákon vízszintesen húzva egy teljes hetet lehet lépni előre vagy hátra.
+        // A névkártyákon vízszintesen húzva a napok folyamatosan, napi léptetéssel járhatók be.
         let mobileWeekSwipeStart = null;
         const mobileEmployeeList = document.getElementById('m-emp-list');
         mobileEmployeeList.addEventListener('touchstart', function(event) {
@@ -1896,7 +1910,8 @@
             const deltaY = touch.clientY - mobileWeekSwipeStart.y;
             mobileWeekSwipeStart = null;
             if (Math.abs(deltaX) < 48 || Math.abs(deltaX) <= Math.abs(deltaY) * 1.25) return;
-            shiftMobileWeek(deltaX < 0 ? 1 : -1);
+            const daySteps = Math.max(1, Math.round(Math.abs(deltaX) / 84));
+            shiftMobileWeek(deltaX < 0 ? daySteps : -daySteps);
         }, { passive: true });
 
         // --- DUPLA KATTINTÁS (MODAL) LOGIKA ---
