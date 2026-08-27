@@ -224,13 +224,16 @@
         .m-week-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; color: #94a3b8; font-size: 8px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
         .m-week-meta strong { overflow: hidden; color: #cbd5e1; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
         .m-week-meta span { display: inline-flex; align-items: center; gap: 4px; flex: none; color: #64748b; }
-        .m-week-viewport { margin-top: 6px; overflow: hidden; border-radius: 10px; touch-action: pan-y; }
-        .m-week-strip { display: flex; gap: 6px; margin: 0; transform: translate3d(calc(-14.285714% - .857142px), 0, 0); will-change: transform; }
-        .m-week-day { position: relative; flex: 0 0 calc((100% - 36px) / 7); min-width: 0; min-height: 55px; padding: 7px 2px; overflow: hidden; border: 1px solid rgba(71,85,105,.68); border-radius: 10px; background: rgba(15,23,42,.72); text-align: center; cursor: pointer; touch-action: manipulation; transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease; }
+        .m-week-viewport { margin-top: 6px; overflow-x: auto; overflow-y: hidden; border-radius: 10px; scroll-snap-type: x proximity; scroll-behavior: smooth; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: pan-x pan-y; }
+        .m-week-viewport::-webkit-scrollbar { display: none; }
+        .m-week-strip { display: flex; gap: 6px; width: max-content; margin: 0; }
+        .m-week-day { position: relative; flex: 0 0 clamp(41px, 12vw, 49px); min-width: 0; min-height: 55px; padding: 7px 2px; overflow: hidden; border: 1px solid rgba(71,85,105,.68); border-radius: 10px; background: rgba(15,23,42,.72); text-align: center; scroll-snap-align: center; scroll-snap-stop: normal; cursor: pointer; touch-action: manipulation; transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease; }
         .m-week-day:active { transform: scale(.94); }
         .m-week-day.today { border: 2px solid #f05252; background: linear-gradient(145deg, rgba(127,29,29,.43), rgba(15,23,42,.9)); box-shadow: inset 0 1px 0 rgba(254,202,202,.22), 0 0 0 1px rgba(239,68,68,.16), 0 4px 10px rgba(127,29,29,.25); }
         .m-week-date { display: block; color: #94a3b8; font-size: 9px; font-weight: 900; line-height: 1; letter-spacing: 0; }
+        .m-week-date small { display: block; margin-bottom: 2px; color: #64748b; font-size: 7px; font-weight: 900; letter-spacing: .04em; line-height: 1; }
         .m-week-day.today .m-week-date { color: #fecaca; }
+        .m-week-day.today .m-week-date small { color: #fca5a5; }
         .m-week-value { display: block; min-height: 0; margin-top: 7px; overflow: hidden; color: #64748b; font-size: 12px; font-weight: 900; line-height: 1; text-overflow: ellipsis; white-space: nowrap; }
         .m-week-value:empty { display: none; }
         .m-week-value.has-sabi, .m-week-value.has-ba, .m-week-value.has-tu, .m-week-value.has-ig, .m-week-value.has-ke { width: max-content; max-width: calc(100% - 2px); margin-inline: auto; padding: 4px 5px; border: 1px solid transparent; border-radius: 6px; box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 2px 5px rgba(2,6,23,.25); }
@@ -261,8 +264,8 @@
             .m-roster-card { padding: 11px 9px; }
             .m-roster-name { font-size: 13px; }
             .m-week-meta { margin-top: 8px; }
-            .m-week-strip { gap: 4px; transform: translate3d(calc(-14.285714% - .571428px), 0, 0); }
-            .m-week-day { flex-basis: calc((100% - 24px) / 7); }
+            .m-week-strip { gap: 4px; }
+            .m-week-day { flex-basis: clamp(38px, 12vw, 44px); }
             .m-week-day { min-height: 49px; padding-top: 6px; }
             .m-week-cserenap-dot { top: 3px; right: 3px; }
             .m-week-note-triangle { top: 3px; left: 3px; }
@@ -652,7 +655,7 @@
         let matrixShiftCyclesVisible = localStorage.getItem('fv_matrix_shift_cycles') !== 'off';
         // A dátum most már nem betonfixen 2026, hanem dinamikus (alapból az aktuális évet és hónapot veszi fel)
         let date = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-        let mobileWeekAnchor = (() => { const today = new Date(); today.setDate(today.getDate() - 3); return today; })();
+        let mobileWeekAnchor = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
         let employees = [];
         const monthNames = ["Január", "Február", "Március", "Április", "Május", "Június", "Július", "Augusztus", "Szeptember", "Október", "November", "December"];
         const dayNamesShort = ["V", "H", "K", "Sze", "Cs", "P", "Szo"];
@@ -1565,7 +1568,6 @@
 
         function jumpMobileToToday() {
             const today = new Date();
-            today.setDate(today.getDate() - 3);
             mobileWeekAnchor = today;
             date = new Date(today.getFullYear(), today.getMonth(), 1);
             renderMobileList();
@@ -1619,12 +1621,13 @@
             const k2 = `${d2.getFullYear()}-${d2.getMonth()+1}-${d2.getDate()}`;
             const keys = [k0, k1, k2];
             const mobileWeekdayNames = ["VAS", "HÉT", "KED", "SZE", "CSÜ", "PÉN", "SZO"];
+            const mobileMonthNames = ["JAN", "FEB", "MÁR", "ÁPR", "MÁJ", "JÚN", "JÚL", "AUG", "SZE", "OKT", "NOV", "DEC"];
+            const timelineFocus = new Date(mobileWeekAnchor);
             const weekStart = new Date(mobileWeekAnchor);
+            weekStart.setDate(weekStart.getDate() - 30);
             const weekEnd = new Date(mobileWeekAnchor);
-            weekEnd.setDate(weekEnd.getDate() + 6);
-            const weekPeriod = weekStart.getFullYear() === weekEnd.getFullYear() && weekStart.getMonth() === weekEnd.getMonth()
-                ? `${monthNames[weekStart.getMonth()]} ${weekStart.getFullYear()} · ${weekStart.getDate()}–${weekEnd.getDate()}.`
-                : `${monthNames[weekStart.getMonth()]} ${weekStart.getDate()}. – ${monthNames[weekEnd.getMonth()]} ${weekEnd.getDate()}. ${weekEnd.getFullYear()}`;
+            weekEnd.setDate(weekEnd.getDate() + 30);
+            const weekPeriod = `${monthNames[timelineFocus.getMonth()]} ${timelineFocus.getFullYear()} · ${timelineFocus.getDate()}.`;
 
             listEl.innerHTML = employees.map((e, index) => {
                 let remaining = getEmpQuota(e, currentYear) - getYearlyUsed(e, currentYear);
@@ -1657,15 +1660,15 @@
                     return `<div class="m-status-row"><span class="m-status-label">${label}</span><div class="m-status-pill ${bg} ${relativeCls}" ${titleAttr}>${val}${dots}</div></div>`;
                 };
 
-                const weekTimeline = Array.from({ length: 9 }, (_, timelineIndex) => {
-                    const offset = timelineIndex - 1;
+                const weekTimeline = Array.from({ length: 61 }, (_, timelineIndex) => {
                     const day = new Date(weekStart);
-                    day.setDate(weekStart.getDate() + offset);
+                    day.setDate(weekStart.getDate() + timelineIndex);
                     const key = `${day.getFullYear()}-${day.getMonth()+1}-${day.getDate()}`;
                     const value = (e.data && e.data[key]) ? e.data[key] : "";
                     const isTuCserenap = value === 'TU' && e.data && e.data[key + '_cserenap'];
                     const hasNote = e.data && e.data[key + '_note'];
                     const isToday = day.getFullYear() === today.getFullYear() && day.getMonth() === today.getMonth() && day.getDate() === today.getDate();
+                    const isTimelineFocus = day.getFullYear() === timelineFocus.getFullYear() && day.getMonth() === timelineFocus.getMonth() && day.getDate() === timelineFocus.getDate();
                     let valueClass = '';
                     if (value) {
                         if (!isNaN(parseFloat(value.replace(',','.')))) valueClass = 'has-sabi';
@@ -1676,11 +1679,12 @@
                     }
                     const markerLabel = `${isTuCserenap ? ' · Cserenap' : ''}${hasNote ? ' · Megjegyzés' : ''}`;
                     const markers = `${isTuCserenap ? '<span class="m-week-cserenap-dot" aria-hidden="true"></span>' : ''}${hasNote ? '<span class="m-week-note-triangle" aria-hidden="true"></span>' : ''}`;
-                    return `<div class="m-week-day ${valueClass} ${isToday ? 'today' : ''}" role="button" tabindex="0" onclick="openMobileDayEditor(${index}, '${key}', event)" onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openMobileDayEditor(${index}, '${key}', event); }" aria-label="${mobileWeekdayNames[day.getDay()]} ${day.getDate()}.${value ? ` · ${value}` : ''}${markerLabel}">${markers}<span class="m-week-date">${mobileWeekdayNames[day.getDay()]} ${day.getDate()}</span><span class="m-week-value ${valueClass}">${value}</span></div>`;
+                    return `<div class="m-week-day ${valueClass} ${isToday ? 'today' : ''}" ${isTimelineFocus ? 'data-mobile-timeline-focus="true"' : ''} role="button" tabindex="0" onclick="openMobileDayEditor(${index}, '${key}', event)" onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openMobileDayEditor(${index}, '${key}', event); }" aria-label="${mobileWeekdayNames[day.getDay()]} ${day.getDate()}.${value ? ` · ${value}` : ''}${markerLabel}">${markers}<span class="m-week-date"><small>${mobileMonthNames[day.getMonth()]}</small>${mobileWeekdayNames[day.getDay()]} ${day.getDate()}</span><span class="m-week-value ${valueClass}">${value}</span></div>`;
                 }).join('');
 
-                return `<div class="m-card m-roster-card" onclick="openMobileUser(${index}, ${weekStart.getDate()})"><div class="m-roster-head"><div class="m-roster-name">${e.name}</div><div class="m-roster-remaining ${remaining <= 48 ? 'is-critical' : ''}"><span>Kivehető</span><b>${remaining}</b></div></div><div class="m-week-meta"><strong>${weekPeriod}</strong><span><i class="fas fa-arrows-alt-h" aria-hidden="true"></i> Húzd</span></div><div class="m-week-viewport"><div class="m-week-strip">${weekTimeline}</div></div></div>`;
+                return `<div class="m-card m-roster-card" onclick="openMobileUser(${index}, ${timelineFocus.getDate()})"><div class="m-roster-head"><div class="m-roster-name">${e.name}</div><div class="m-roster-remaining ${remaining <= 48 ? 'is-critical' : ''}"><span>Kivehető</span><b>${remaining}</b></div></div><div class="m-week-meta"><strong>${weekPeriod}</strong><span><i class="fas fa-arrows-alt-h" aria-hidden="true"></i> Húzd</span></div><div class="m-week-viewport"><div class="m-week-strip">${weekTimeline}</div></div></div>`;
             }).join('');
+            requestAnimationFrame(centerMobileTimelinesOnFocus);
         }
 
         function updateMobileDetailSummary(emp, currentYear) {
@@ -1896,67 +1900,17 @@
             }, 500);
         });
 
-        // A névkártyák idővonala az ujj mozgását követi, majd elengedéskor pontosan napra pattan.
-        let mobileWeekSwipeStart = null;
-        const mobileEmployeeList = document.getElementById('m-emp-list');
-
-        function getMobileWeekSlotWidth() {
-            const track = document.querySelector('.m-week-strip');
-            const day = track && track.querySelector('.m-week-day');
-            if (!track || !day) return 0;
-            const style = getComputedStyle(track);
-            return day.getBoundingClientRect().width + parseFloat(style.columnGap || style.gap || 0);
-        }
-
-        function moveMobileWeekTracks(offset, animate) {
-            document.querySelectorAll('.m-week-strip').forEach(track => {
-                track.style.transition = animate ? 'transform 210ms cubic-bezier(.22,.8,.25,1)' : 'none';
-                track.style.transform = `translate3d(${offset}px, 0, 0)`;
+        // Minden névkártya saját, natív vízszintes görgetőt kap: a telefon kezeli a lendületet és a finom lassulást.
+        function centerMobileTimelinesOnFocus() {
+            document.querySelectorAll('.m-week-viewport').forEach(viewport => {
+                const focusedDay = viewport.querySelector('[data-mobile-timeline-focus="true"]');
+                if (!focusedDay) return;
+                const targetLeft = Math.max(0, focusedDay.offsetLeft - ((viewport.clientWidth - focusedDay.offsetWidth) / 2));
+                viewport.style.scrollBehavior = 'auto';
+                viewport.scrollLeft = targetLeft;
+                requestAnimationFrame(() => viewport.style.removeProperty('scroll-behavior'));
             });
         }
-
-        function restoreMobileWeekTracks(animate) {
-            const slotWidth = getMobileWeekSlotWidth();
-            if (slotWidth) moveMobileWeekTracks(-slotWidth, animate);
-        }
-
-        mobileEmployeeList.addEventListener('touchstart', function(event) {
-            const touch = event.changedTouches[0];
-            const slotWidth = getMobileWeekSlotWidth();
-            mobileWeekSwipeStart = slotWidth ? { x: touch.clientX, y: touch.clientY, slotWidth, dragging: false } : null;
-            if (mobileWeekSwipeStart) restoreMobileWeekTracks(false);
-        }, { passive: true });
-        mobileEmployeeList.addEventListener('touchmove', function(event) {
-            if (!mobileWeekSwipeStart) return;
-            const touch = event.changedTouches[0];
-            const deltaX = touch.clientX - mobileWeekSwipeStart.x;
-            const deltaY = touch.clientY - mobileWeekSwipeStart.y;
-            if (Math.abs(deltaX) < 7 || Math.abs(deltaX) <= Math.abs(deltaY) * 1.08) return;
-            mobileWeekSwipeStart.dragging = true;
-            event.preventDefault();
-            const limitedDelta = Math.max(-mobileWeekSwipeStart.slotWidth, Math.min(mobileWeekSwipeStart.slotWidth, deltaX));
-            moveMobileWeekTracks(-mobileWeekSwipeStart.slotWidth + limitedDelta, false);
-        }, { passive: false });
-        mobileEmployeeList.addEventListener('touchcancel', function() {
-            const wasDragging = mobileWeekSwipeStart && mobileWeekSwipeStart.dragging;
-            mobileWeekSwipeStart = null;
-            if (wasDragging) restoreMobileWeekTracks(true);
-        }, { passive: true });
-        mobileEmployeeList.addEventListener('touchend', function(event) {
-            if (!mobileWeekSwipeStart) return;
-            const touch = event.changedTouches[0];
-            const deltaX = touch.clientX - mobileWeekSwipeStart.x;
-            const deltaY = touch.clientY - mobileWeekSwipeStart.y;
-            const { slotWidth, dragging } = mobileWeekSwipeStart;
-            mobileWeekSwipeStart = null;
-            if (!dragging || Math.abs(deltaX) <= Math.abs(deltaY) * 1.08 || Math.abs(deltaX) < Math.min(42, slotWidth * .3)) {
-                moveMobileWeekTracks(-slotWidth, true);
-                return;
-            }
-            const direction = deltaX < 0 ? 1 : -1;
-            moveMobileWeekTracks(direction > 0 ? -slotWidth * 2 : 0, true);
-            window.setTimeout(() => shiftMobileWeek(direction), 220);
-        }, { passive: true });
 
         // --- DUPLA KATTINTÁS (MODAL) LOGIKA ---
 
