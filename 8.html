@@ -658,6 +658,9 @@
         let date = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
         let mobileWeekAnchor = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
         let employees = [];
+        function isMobileLayout() {
+            return window.matchMedia('(max-width: 768px)').matches;
+        }
         const monthNames = ["Január", "Február", "Március", "Április", "Május", "Június", "Július", "Augusztus", "Szeptember", "Október", "November", "December"];
         const dayNamesShort = ["V", "H", "K", "Sze", "Cs", "P", "Szo"];
         const shiftCycleAnchorDate = new Date(Date.UTC(2026, 0, 9));
@@ -756,7 +759,9 @@
         // --- ALAP FUNKCIÓK ---
 
         async function changeShift(s) {
-            document.getElementById('m-emp-list').innerHTML = `<div class="flex flex-col items-center justify-center pt-20"><i class="fas fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i><span class="text-slate-400 font-bold text-sm uppercase tracking-widest">Adatok betöltése...</span></div>`;
+            if (isMobileLayout()) {
+                document.getElementById('m-emp-list').innerHTML = `<div class="flex flex-col items-center justify-center pt-20"><i class="fas fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i><span class="text-slate-400 font-bold text-sm uppercase tracking-widest">Adatok betöltése...</span></div>`;
+            }
             employees = []; 
             render(); 
             currentShift = s; localStorage.setItem('fv_shift_final', s);
@@ -786,27 +791,30 @@
             } catch(e) { 
                 console.error("Betöltési hiba:", e); employees = []; 
             } finally {
-                render(); 
-                renderMobileList(); 
-                if(!document.getElementById('v-stats').classList.contains('hidden')) {
-                    buildStatsGrid();
-                }
-                if(!document.getElementById('m-detail-view').classList.contains('hidden') && mSelectedUserIndex > -1) {
-                    if (employees[mSelectedUserIndex]) {
-                        renderMobileCalendar();
-                        if(mSelectedDate) {
-                            const k = `${date.getFullYear()}-${date.getMonth()+1}-${mSelectedDate}`;
-                            const emp = employees[mSelectedUserIndex];
-                            const val = (emp && emp.data && emp.data[k]) ? emp.data[k] : "";
-                            const input = document.getElementById('m-input');
-                            if(input && document.activeElement !== input) { 
-                                input.value = val;
-                                document.getElementById('m-status-text').innerText = val ? "MENTVE (Frissítve)" : "ÜRES";
+                if (isMobileLayout()) {
+                    renderMobileList();
+                    if(!document.getElementById('m-detail-view').classList.contains('hidden') && mSelectedUserIndex > -1) {
+                        if (employees[mSelectedUserIndex]) {
+                            renderMobileCalendar();
+                            if(mSelectedDate) {
+                                const k = `${date.getFullYear()}-${date.getMonth()+1}-${mSelectedDate}`;
+                                const emp = employees[mSelectedUserIndex];
+                                const val = (emp && emp.data && emp.data[k]) ? emp.data[k] : "";
+                                const input = document.getElementById('m-input');
+                                if(input && document.activeElement !== input) { 
+                                    input.value = val;
+                                    document.getElementById('m-status-text').innerText = val ? "MENTVE (Frissítve)" : "ÜRES";
+                                }
                             }
-                        }
-                    } else closeMobileDetail();
+                        } else closeMobileDetail();
+                    }
+                } else {
+                    render();
+                    if(!document.getElementById('v-stats').classList.contains('hidden')) {
+                        buildStatsGrid();
+                    }
+                    initSortable();
                 }
-                initSortable();
             }
             return loadedSuccessfully;
         }
@@ -867,6 +875,7 @@
         }
 
         function initSortable() {
+            if (isMobileLayout()) return;
             var el = document.getElementById('tBody');
             if(el) {
                 Sortable.create(el, {
@@ -917,6 +926,7 @@
 
         // Tökéletesített Renderelés (Dinamikus Évekkel és Pöttyökkel EGYBEÉPÍTVE)
         function render() {
+            if (isMobileLayout()) return;
             const currentYear = date.getFullYear();
             const m = date.getMonth(); 
             const days = new Date(currentYear, m+1, 0).getDate();
@@ -1602,6 +1612,7 @@
         });
 
         function renderMobileList() {
+            if (!isMobileLayout()) return;
             const currentYear = date.getFullYear();
             const m = date.getMonth();
             document.getElementById('m-monthDisp').innerText = monthNames[m];
@@ -2418,7 +2429,7 @@
 
         function showInitialMobileLoader() {
             const list = document.getElementById('m-emp-list');
-            if (list && !initialDataLoadCompleted) {
+            if (isMobileLayout() && list && !initialDataLoadCompleted) {
                 list.innerHTML = `<div class="flex flex-col items-center justify-center pt-20"><i class="fas fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i><span class="text-slate-400 font-bold text-sm uppercase tracking-widest">Adatok betöltése...</span></div>`;
             }
         }
@@ -2435,11 +2446,13 @@
                 const loaded = await changeShift(currentShift);
                 if (!loaded) throw new Error('Az adatok első betöltése nem sikerült.');
                 initialDataLoadCompleted = true;
-                setTimeout(() => {
-                    const el = document.getElementById('today-header');
-                    const container = document.querySelector('.table-container');
-                    if(el && container) container.scrollTo({ left: el.offsetLeft - 260, behavior: 'smooth' });
-                }, 500);
+                if (!isMobileLayout()) {
+                    setTimeout(() => {
+                        const el = document.getElementById('today-header');
+                        const container = document.querySelector('.table-container');
+                        if(el && container) container.scrollTo({ left: el.offsetLeft - 260, behavior: 'smooth' });
+                    }, 500);
+                }
             } catch(error) {
                 console.error("Firebase Auth / első betöltési hiba:", error);
                 if (attempt < 2) {
@@ -2467,6 +2480,26 @@
         window.addEventListener('pageshow', () => {
             if (!initialDataLoadCompleted && !initialDataLoadInProgress) startInitialDataLoad();
         });
+
+        // Nézetváltáskor csak az éppen látható felület készül el újra; Firebase-adatlekérés nem indul újra.
+        const layoutMediaQuery = window.matchMedia('(max-width: 768px)');
+        function refreshLayoutForViewportChange() {
+            if (isMobileLayout()) {
+                renderMobileList();
+                if (!document.getElementById('m-detail-view').classList.contains('hidden') && mSelectedUserIndex > -1) {
+                    renderMobileCalendar();
+                }
+                return;
+            }
+            render();
+            if (!document.getElementById('v-stats').classList.contains('hidden')) buildStatsGrid();
+            initSortable();
+        }
+        if (layoutMediaQuery.addEventListener) {
+            layoutMediaQuery.addEventListener('change', refreshLayoutForViewportChange);
+        } else {
+            layoutMediaQuery.addListener(refreshLayoutForViewportChange);
+        }
     </script>
     <!-- CÉLCELLA KIJELÖLÉS ÉS BIZTOS NYÍLBILLENTYŰ-NAVIGÁCIÓ — kizárólag hozzáadott fejlesztés -->
     <style>
