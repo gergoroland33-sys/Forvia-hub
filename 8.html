@@ -224,8 +224,9 @@
         .m-week-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; color: #94a3b8; font-size: 8px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
         .m-week-meta strong { overflow: hidden; color: #cbd5e1; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
         .m-week-meta span { display: inline-flex; align-items: center; gap: 4px; flex: none; color: #64748b; }
-        .m-week-strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; margin-top: 6px; }
-        .m-week-day { position: relative; min-width: 0; min-height: 55px; padding: 7px 2px; overflow: hidden; border: 1px solid rgba(71,85,105,.68); border-radius: 10px; background: rgba(15,23,42,.72); text-align: center; cursor: pointer; touch-action: manipulation; transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease; }
+        .m-week-viewport { margin-top: 6px; overflow: hidden; border-radius: 10px; touch-action: pan-y; }
+        .m-week-strip { display: flex; gap: 6px; margin: 0; transform: translate3d(calc(-14.285714% - .857142px), 0, 0); will-change: transform; }
+        .m-week-day { position: relative; flex: 0 0 calc((100% - 36px) / 7); min-width: 0; min-height: 55px; padding: 7px 2px; overflow: hidden; border: 1px solid rgba(71,85,105,.68); border-radius: 10px; background: rgba(15,23,42,.72); text-align: center; cursor: pointer; touch-action: manipulation; transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease; }
         .m-week-day:active { transform: scale(.94); }
         .m-week-day.today { border: 2px solid #f05252; background: linear-gradient(145deg, rgba(127,29,29,.43), rgba(15,23,42,.9)); box-shadow: inset 0 1px 0 rgba(254,202,202,.22), 0 0 0 1px rgba(239,68,68,.16), 0 4px 10px rgba(127,29,29,.25); }
         .m-week-date { display: block; color: #94a3b8; font-size: 9px; font-weight: 900; line-height: 1; letter-spacing: 0; }
@@ -260,7 +261,8 @@
             .m-roster-card { padding: 11px 9px; }
             .m-roster-name { font-size: 13px; }
             .m-week-meta { margin-top: 8px; }
-            .m-week-strip { gap: 4px; }
+            .m-week-strip { gap: 4px; transform: translate3d(calc(-14.285714% - .571428px), 0, 0); }
+            .m-week-day { flex-basis: calc((100% - 24px) / 7); }
             .m-week-day { min-height: 49px; padding-top: 6px; }
             .m-week-cserenap-dot { top: 3px; right: 3px; }
             .m-week-note-triangle { top: 3px; left: 3px; }
@@ -1655,7 +1657,8 @@
                     return `<div class="m-status-row"><span class="m-status-label">${label}</span><div class="m-status-pill ${bg} ${relativeCls}" ${titleAttr}>${val}${dots}</div></div>`;
                 };
 
-                const weekTimeline = Array.from({ length: 7 }, (_, offset) => {
+                const weekTimeline = Array.from({ length: 9 }, (_, timelineIndex) => {
+                    const offset = timelineIndex - 1;
                     const day = new Date(weekStart);
                     day.setDate(weekStart.getDate() + offset);
                     const key = `${day.getFullYear()}-${day.getMonth()+1}-${day.getDate()}`;
@@ -1676,7 +1679,7 @@
                     return `<div class="m-week-day ${valueClass} ${isToday ? 'today' : ''}" role="button" tabindex="0" onclick="openMobileDayEditor(${index}, '${key}', event)" onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openMobileDayEditor(${index}, '${key}', event); }" aria-label="${mobileWeekdayNames[day.getDay()]} ${day.getDate()}.${value ? ` · ${value}` : ''}${markerLabel}">${markers}<span class="m-week-date">${mobileWeekdayNames[day.getDay()]} ${day.getDate()}</span><span class="m-week-value ${valueClass}">${value}</span></div>`;
                 }).join('');
 
-                return `<div class="m-card m-roster-card" onclick="openMobileUser(${index}, ${weekStart.getDate()})"><div class="m-roster-head"><div class="m-roster-name">${e.name}</div><div class="m-roster-remaining ${remaining <= 48 ? 'is-critical' : ''}"><span>Kivehető</span><b>${remaining}</b></div></div><div class="m-week-meta"><strong>${weekPeriod}</strong><span><i class="fas fa-arrows-alt-h" aria-hidden="true"></i> Naponta húzható</span></div><div class="m-week-strip">${weekTimeline}</div></div>`;
+                return `<div class="m-card m-roster-card" onclick="openMobileUser(${index}, ${weekStart.getDate()})"><div class="m-roster-head"><div class="m-roster-name">${e.name}</div><div class="m-roster-remaining ${remaining <= 48 ? 'is-critical' : ''}"><span>Kivehető</span><b>${remaining}</b></div></div><div class="m-week-meta"><strong>${weekPeriod}</strong><span><i class="fas fa-arrows-alt-h" aria-hidden="true"></i> Húzd</span></div><div class="m-week-viewport"><div class="m-week-strip">${weekTimeline}</div></div></div>`;
             }).join('');
         }
 
@@ -1893,25 +1896,66 @@
             }, 500);
         });
 
-        // A névkártyákon vízszintesen húzva a napok folyamatosan, napi léptetéssel járhatók be.
+        // A névkártyák idővonala az ujj mozgását követi, majd elengedéskor pontosan napra pattan.
         let mobileWeekSwipeStart = null;
         const mobileEmployeeList = document.getElementById('m-emp-list');
+
+        function getMobileWeekSlotWidth() {
+            const track = document.querySelector('.m-week-strip');
+            const day = track && track.querySelector('.m-week-day');
+            if (!track || !day) return 0;
+            const style = getComputedStyle(track);
+            return day.getBoundingClientRect().width + parseFloat(style.columnGap || style.gap || 0);
+        }
+
+        function moveMobileWeekTracks(offset, animate) {
+            document.querySelectorAll('.m-week-strip').forEach(track => {
+                track.style.transition = animate ? 'transform 210ms cubic-bezier(.22,.8,.25,1)' : 'none';
+                track.style.transform = `translate3d(${offset}px, 0, 0)`;
+            });
+        }
+
+        function restoreMobileWeekTracks(animate) {
+            const slotWidth = getMobileWeekSlotWidth();
+            if (slotWidth) moveMobileWeekTracks(-slotWidth, animate);
+        }
+
         mobileEmployeeList.addEventListener('touchstart', function(event) {
             const touch = event.changedTouches[0];
-            mobileWeekSwipeStart = { x: touch.clientX, y: touch.clientY };
+            const slotWidth = getMobileWeekSlotWidth();
+            mobileWeekSwipeStart = slotWidth ? { x: touch.clientX, y: touch.clientY, slotWidth, dragging: false } : null;
+            if (mobileWeekSwipeStart) restoreMobileWeekTracks(false);
         }, { passive: true });
+        mobileEmployeeList.addEventListener('touchmove', function(event) {
+            if (!mobileWeekSwipeStart) return;
+            const touch = event.changedTouches[0];
+            const deltaX = touch.clientX - mobileWeekSwipeStart.x;
+            const deltaY = touch.clientY - mobileWeekSwipeStart.y;
+            if (Math.abs(deltaX) < 7 || Math.abs(deltaX) <= Math.abs(deltaY) * 1.08) return;
+            mobileWeekSwipeStart.dragging = true;
+            event.preventDefault();
+            const limitedDelta = Math.max(-mobileWeekSwipeStart.slotWidth, Math.min(mobileWeekSwipeStart.slotWidth, deltaX));
+            moveMobileWeekTracks(-mobileWeekSwipeStart.slotWidth + limitedDelta, false);
+        }, { passive: false });
         mobileEmployeeList.addEventListener('touchcancel', function() {
+            const wasDragging = mobileWeekSwipeStart && mobileWeekSwipeStart.dragging;
             mobileWeekSwipeStart = null;
+            if (wasDragging) restoreMobileWeekTracks(true);
         }, { passive: true });
         mobileEmployeeList.addEventListener('touchend', function(event) {
             if (!mobileWeekSwipeStart) return;
             const touch = event.changedTouches[0];
             const deltaX = touch.clientX - mobileWeekSwipeStart.x;
             const deltaY = touch.clientY - mobileWeekSwipeStart.y;
+            const { slotWidth, dragging } = mobileWeekSwipeStart;
             mobileWeekSwipeStart = null;
-            if (Math.abs(deltaX) < 48 || Math.abs(deltaX) <= Math.abs(deltaY) * 1.25) return;
-            const daySteps = Math.max(1, Math.round(Math.abs(deltaX) / 84));
-            shiftMobileWeek(deltaX < 0 ? daySteps : -daySteps);
+            if (!dragging || Math.abs(deltaX) <= Math.abs(deltaY) * 1.08 || Math.abs(deltaX) < Math.min(42, slotWidth * .3)) {
+                moveMobileWeekTracks(-slotWidth, true);
+                return;
+            }
+            const direction = deltaX < 0 ? 1 : -1;
+            moveMobileWeekTracks(direction > 0 ? -slotWidth * 2 : 0, true);
+            window.setTimeout(() => shiftMobileWeek(direction), 220);
         }, { passive: true });
 
         // --- DUPLA KATTINTÁS (MODAL) LOGIKA ---
