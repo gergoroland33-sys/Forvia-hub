@@ -224,9 +224,9 @@
         .m-week-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; color: #94a3b8; font-size: 8px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
         .m-week-meta strong { overflow: hidden; color: #cbd5e1; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
         .m-week-meta span { display: inline-flex; align-items: center; gap: 4px; flex: none; color: #64748b; }
-        .m-week-viewport { width: 100%; margin-top: 6px; overflow-x: scroll; overflow-y: hidden; border-radius: 10px; scroll-snap-type: x proximity; scroll-behavior: smooth; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: none; cursor: grab; }
+        .m-week-viewport { width: 100%; margin-top: 6px; overflow-x: scroll; overflow-y: hidden; border-radius: 10px; scroll-snap-type: none; scroll-behavior: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: none; cursor: grab; }
         .m-week-viewport::-webkit-scrollbar { display: none; }
-        .m-week-viewport.is-dragging { scroll-snap-type: none; scroll-behavior: auto; cursor: grabbing; }
+        .m-week-viewport.is-dragging, .m-week-viewport.is-settling { scroll-snap-type: none; scroll-behavior: auto; cursor: grabbing; }
         .m-week-strip { display: flex; gap: 6px; width: max-content; min-width: max-content; margin: 0; }
         .m-week-day { position: relative; flex: 0 0 clamp(41px, 12vw, 49px); min-width: 0; min-height: 55px; padding: 7px 2px; overflow: hidden; border: 1px solid rgba(71,85,105,.68); border-radius: 10px; background: rgba(15,23,42,.72); text-align: center; scroll-snap-align: center; scroll-snap-stop: normal; cursor: pointer; touch-action: manipulation; transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease; }
         .m-week-day:active { transform: scale(.94); }
@@ -1917,58 +1917,100 @@
             });
         }
 
-        // Egy névkártya idővonala önállóan, függőleges elmozdulás nélkül húzható; gyors mozdulatnál lendületet is kap.
+        // Precíz, kártyánként önálló mobil-idővonal: pointer capture, lendület és automatikus napra igazítás.
         let mobileTimelineDrag = null;
-        let mobileTimelineMomentumFrame = null;
+        let mobileTimelineMotionFrame = null;
         const mobileEmployeeList = document.getElementById('m-emp-list');
 
-        function stopMobileTimelineMomentum() {
-            if (mobileTimelineMomentumFrame) cancelAnimationFrame(mobileTimelineMomentumFrame);
-            mobileTimelineMomentumFrame = null;
+        function stopMobileTimelineMotion() {
+            if (mobileTimelineMotionFrame) cancelAnimationFrame(mobileTimelineMotionFrame);
+            mobileTimelineMotionFrame = null;
+            document.querySelectorAll('.m-week-viewport.is-settling').forEach(item => item.classList.remove('is-settling'));
+        }
+
+        function getMobileTimelineSnapTarget(viewport) {
+            const targetCenter = viewport.scrollLeft + (viewport.clientWidth / 2);
+            let closest = null;
+            let closestDistance = Infinity;
+            viewport.querySelectorAll('.m-week-day').forEach(day => {
+                const center = day.offsetLeft + (day.offsetWidth / 2);
+                const distance = Math.abs(center - targetCenter);
+                if (distance < closestDistance) { closest = day; closestDistance = distance; }
+            });
+            return closest ? Math.max(0, closest.offsetLeft - ((viewport.clientWidth - closest.offsetWidth) / 2)) : viewport.scrollLeft;
+        }
+
+        function settleMobileTimeline(viewport) {
+            const from = viewport.scrollLeft;
+            const to = getMobileTimelineSnapTarget(viewport);
+            const distance = to - from;
+            if (Math.abs(distance) < .5) {
+                viewport.classList.remove('is-dragging', 'is-settling');
+                return;
+            }
+            viewport.classList.remove('is-dragging');
+            viewport.classList.add('is-settling');
+            const startedAt = performance.now();
+            const duration = 190;
+            const animate = (now) => {
+                const progress = Math.min(1, (now - startedAt) / duration);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                viewport.scrollLeft = from + (distance * eased);
+                if (progress < 1) {
+                    mobileTimelineMotionFrame = requestAnimationFrame(animate);
+                } else {
+                    viewport.classList.remove('is-settling');
+                    mobileTimelineMotionFrame = null;
+                }
+            };
+            mobileTimelineMotionFrame = requestAnimationFrame(animate);
         }
 
         function startMobileTimelineMomentum(viewport, initialVelocity) {
-            let velocity = Math.max(-2.7, Math.min(2.7, initialVelocity));
+            let velocity = Math.max(-3.1, Math.min(3.1, initialVelocity));
             let lastFrameTime = performance.now();
+            viewport.classList.add('is-settling');
             const glide = (now) => {
                 const elapsed = Math.min(32, Math.max(1, now - lastFrameTime));
                 lastFrameTime = now;
                 const before = viewport.scrollLeft;
                 viewport.scrollLeft += velocity * elapsed;
                 const reachedEdge = Math.abs(viewport.scrollLeft - before) < .2;
-                velocity *= Math.pow(.94, elapsed / 16);
-                if (Math.abs(velocity) < .035 || reachedEdge) {
-                    viewport.classList.remove('is-dragging');
-                    mobileTimelineMomentumFrame = null;
+                velocity *= Math.exp(-elapsed / 235);
+                if (Math.abs(velocity) < .025 || reachedEdge) {
+                    mobileTimelineMotionFrame = null;
+                    settleMobileTimeline(viewport);
                     return;
                 }
-                mobileTimelineMomentumFrame = requestAnimationFrame(glide);
+                mobileTimelineMotionFrame = requestAnimationFrame(glide);
             };
-            mobileTimelineMomentumFrame = requestAnimationFrame(glide);
+            mobileTimelineMotionFrame = requestAnimationFrame(glide);
         }
 
-        mobileEmployeeList.addEventListener('touchstart', function(event) {
+        mobileEmployeeList.addEventListener('pointerdown', function(event) {
+            if (!event.isPrimary) return;
             const viewport = event.target.closest && event.target.closest('.m-week-viewport');
             if (!viewport) return;
-            stopMobileTimelineMomentum();
+            stopMobileTimelineMotion();
             document.querySelectorAll('.m-week-viewport.is-dragging').forEach(item => item.classList.remove('is-dragging'));
-            const touch = event.changedTouches[0];
-            mobileTimelineDrag = { viewport, startX: touch.clientX, startY: touch.clientY, startScrollLeft: viewport.scrollLeft, desiredScrollLeft: viewport.scrollLeft, lastScrollLeft: viewport.scrollLeft, lastTime: performance.now(), velocity: 0, dragged: false, frame: null };
+            mobileTimelineDrag = { viewport, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, startScrollLeft: viewport.scrollLeft, desiredScrollLeft: viewport.scrollLeft, lastScrollLeft: viewport.scrollLeft, lastTime: performance.now(), samples: [], dragged: false, frame: null };
         }, { passive: true });
 
-        mobileEmployeeList.addEventListener('touchmove', function(event) {
-            if (!mobileTimelineDrag) return;
-            const touch = event.changedTouches[0];
-            const deltaX = touch.clientX - mobileTimelineDrag.startX;
-            const deltaY = touch.clientY - mobileTimelineDrag.startY;
-            if (!mobileTimelineDrag.dragged && Math.hypot(deltaX, deltaY) < 5) return;
+        mobileEmployeeList.addEventListener('pointermove', function(event) {
+            if (!mobileTimelineDrag || event.pointerId !== mobileTimelineDrag.pointerId) return;
+            const deltaX = event.clientX - mobileTimelineDrag.startX;
+            const deltaY = event.clientY - mobileTimelineDrag.startY;
+            if (!mobileTimelineDrag.dragged && Math.hypot(deltaX, deltaY) < 4) return;
+            if (!mobileTimelineDrag.dragged && mobileTimelineDrag.viewport.setPointerCapture) mobileTimelineDrag.viewport.setPointerCapture(event.pointerId);
             mobileTimelineDrag.dragged = true;
             mobileTimelineDrag.viewport.classList.add('is-dragging');
             event.preventDefault();
             const nextScrollLeft = mobileTimelineDrag.startScrollLeft - deltaX;
             const now = performance.now();
             const elapsed = Math.max(1, now - mobileTimelineDrag.lastTime);
-            mobileTimelineDrag.velocity = (nextScrollLeft - mobileTimelineDrag.lastScrollLeft) / elapsed;
+            const velocity = (nextScrollLeft - mobileTimelineDrag.lastScrollLeft) / elapsed;
+            mobileTimelineDrag.samples.push(velocity);
+            if (mobileTimelineDrag.samples.length > 5) mobileTimelineDrag.samples.shift();
             mobileTimelineDrag.lastScrollLeft = nextScrollLeft;
             mobileTimelineDrag.lastTime = now;
             mobileTimelineDrag.desiredScrollLeft = nextScrollLeft;
@@ -1981,27 +2023,24 @@
             }
         }, { passive: false });
 
-        mobileEmployeeList.addEventListener('touchend', function() {
-            if (!mobileTimelineDrag) return;
-            const { viewport, velocity, desiredScrollLeft, dragged, frame } = mobileTimelineDrag;
+        function finishMobileTimelinePointer(event) {
+            if (!mobileTimelineDrag || event.pointerId !== mobileTimelineDrag.pointerId) return;
+            const { viewport, desiredScrollLeft, dragged, frame, samples } = mobileTimelineDrag;
             if (frame) cancelAnimationFrame(frame);
             viewport.scrollLeft = desiredScrollLeft;
+            if (viewport.hasPointerCapture && viewport.hasPointerCapture(event.pointerId)) viewport.releasePointerCapture(event.pointerId);
             mobileTimelineDrag = null;
             if (!dragged) return;
-            if (Math.abs(velocity) < .035) {
-                viewport.classList.remove('is-dragging');
+            const velocity = samples.length ? samples.reduce((sum, value) => sum + value, 0) / samples.length : 0;
+            if (Math.abs(velocity) < .025) {
+                settleMobileTimeline(viewport);
                 return;
             }
             startMobileTimelineMomentum(viewport, velocity);
-        }, { passive: true });
+        }
 
-        mobileEmployeeList.addEventListener('touchcancel', function() {
-            if (!mobileTimelineDrag) return;
-            const { viewport, frame } = mobileTimelineDrag;
-            if (frame) cancelAnimationFrame(frame);
-            mobileTimelineDrag = null;
-            viewport.classList.remove('is-dragging');
-        }, { passive: true });
+        mobileEmployeeList.addEventListener('pointerup', finishMobileTimelinePointer, { passive: true });
+        mobileEmployeeList.addEventListener('pointercancel', finishMobileTimelinePointer, { passive: true });
 
         // --- DUPLA KATTINTÁS (MODAL) LOGIKA ---
 
