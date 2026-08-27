@@ -224,9 +224,9 @@
         .m-week-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; color: #94a3b8; font-size: 8px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
         .m-week-meta strong { overflow: hidden; color: #cbd5e1; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
         .m-week-meta span { display: inline-flex; align-items: center; gap: 4px; flex: none; color: #64748b; }
-        .m-week-viewport { margin-top: 6px; overflow-x: auto; overflow-y: hidden; border-radius: 10px; scroll-snap-type: x proximity; scroll-behavior: smooth; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: pan-x pan-y; }
+        .m-week-viewport { width: 100%; margin-top: 6px; overflow-x: scroll; overflow-y: hidden; border-radius: 10px; scroll-snap-type: x proximity; scroll-behavior: smooth; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: pan-x pan-y; }
         .m-week-viewport::-webkit-scrollbar { display: none; }
-        .m-week-strip { display: flex; gap: 6px; width: max-content; margin: 0; }
+        .m-week-strip { display: flex; gap: 6px; width: max-content; min-width: max-content; margin: 0; }
         .m-week-day { position: relative; flex: 0 0 clamp(41px, 12vw, 49px); min-width: 0; min-height: 55px; padding: 7px 2px; overflow: hidden; border: 1px solid rgba(71,85,105,.68); border-radius: 10px; background: rgba(15,23,42,.72); text-align: center; scroll-snap-align: center; scroll-snap-stop: normal; cursor: pointer; touch-action: manipulation; transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease; }
         .m-week-day:active { transform: scale(.94); }
         .m-week-day.today { border: 2px solid #f05252; background: linear-gradient(145deg, rgba(127,29,29,.43), rgba(15,23,42,.9)); box-shadow: inset 0 1px 0 rgba(254,202,202,.22), 0 0 0 1px rgba(239,68,68,.16), 0 4px 10px rgba(127,29,29,.25); }
@@ -1684,7 +1684,10 @@
 
                 return `<div class="m-card m-roster-card" onclick="openMobileUser(${index}, ${timelineFocus.getDate()})"><div class="m-roster-head"><div class="m-roster-name">${e.name}</div><div class="m-roster-remaining ${remaining <= 48 ? 'is-critical' : ''}"><span>Kivehető</span><b>${remaining}</b></div></div><div class="m-week-meta"><strong>${weekPeriod}</strong><span><i class="fas fa-arrows-alt-h" aria-hidden="true"></i> Húzd</span></div><div class="m-week-viewport"><div class="m-week-strip">${weekTimeline}</div></div></div>`;
             }).join('');
-            requestAnimationFrame(centerMobileTimelinesOnFocus);
+            requestAnimationFrame(() => {
+                centerMobileTimelinesOnFocus();
+                window.setTimeout(centerMobileTimelinesOnFocus, 80);
+            });
         }
 
         function updateMobileDetailSummary(emp, currentYear) {
@@ -1905,7 +1908,9 @@
             document.querySelectorAll('.m-week-viewport').forEach(viewport => {
                 const focusedDay = viewport.querySelector('[data-mobile-timeline-focus="true"]');
                 if (!focusedDay) return;
-                const targetLeft = Math.max(0, focusedDay.offsetLeft - ((viewport.clientWidth - focusedDay.offsetWidth) / 2));
+                const viewportRect = viewport.getBoundingClientRect();
+                const focusedRect = focusedDay.getBoundingClientRect();
+                const targetLeft = Math.max(0, viewport.scrollLeft + focusedRect.left - viewportRect.left - ((viewport.clientWidth - focusedDay.offsetWidth) / 2));
                 viewport.style.scrollBehavior = 'auto';
                 viewport.scrollLeft = targetLeft;
                 requestAnimationFrame(() => viewport.style.removeProperty('scroll-behavior'));
