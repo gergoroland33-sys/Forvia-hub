@@ -1712,7 +1712,6 @@
             const [year, month, day] = dateKey.split('-').map(Number);
             if (!year || !month || !day) return;
             mobileWeekAnchor = new Date(year, month - 1, day);
-            mobileWeekAnchor.setDate(mobileWeekAnchor.getDate() - 3);
             date = new Date(year, month - 1, 1);
             openMobileUser(index, day);
         }
@@ -1930,11 +1929,14 @@
 
         function startMobileTimelineMomentum(viewport, initialVelocity) {
             let velocity = Math.max(-2.7, Math.min(2.7, initialVelocity));
-            const glide = () => {
+            let lastFrameTime = performance.now();
+            const glide = (now) => {
+                const elapsed = Math.min(32, Math.max(1, now - lastFrameTime));
+                lastFrameTime = now;
                 const before = viewport.scrollLeft;
-                viewport.scrollLeft += velocity * 16;
+                viewport.scrollLeft += velocity * elapsed;
                 const reachedEdge = Math.abs(viewport.scrollLeft - before) < .2;
-                velocity *= .925;
+                velocity *= Math.pow(.94, elapsed / 16);
                 if (Math.abs(velocity) < .035 || reachedEdge) {
                     viewport.classList.remove('is-dragging');
                     mobileTimelineMomentumFrame = null;
@@ -1951,7 +1953,7 @@
             stopMobileTimelineMomentum();
             document.querySelectorAll('.m-week-viewport.is-dragging').forEach(item => item.classList.remove('is-dragging'));
             const touch = event.changedTouches[0];
-            mobileTimelineDrag = { viewport, startX: touch.clientX, startY: touch.clientY, startScrollLeft: viewport.scrollLeft, lastScrollLeft: viewport.scrollLeft, lastTime: performance.now(), velocity: 0, dragged: false };
+            mobileTimelineDrag = { viewport, startX: touch.clientX, startY: touch.clientY, startScrollLeft: viewport.scrollLeft, desiredScrollLeft: viewport.scrollLeft, lastScrollLeft: viewport.scrollLeft, lastTime: performance.now(), velocity: 0, dragged: false, frame: null };
         }, { passive: true });
 
         mobileEmployeeList.addEventListener('touchmove', function(event) {
@@ -1964,17 +1966,26 @@
             mobileTimelineDrag.viewport.classList.add('is-dragging');
             event.preventDefault();
             const nextScrollLeft = mobileTimelineDrag.startScrollLeft - deltaX;
-            mobileTimelineDrag.viewport.scrollLeft = nextScrollLeft;
             const now = performance.now();
             const elapsed = Math.max(1, now - mobileTimelineDrag.lastTime);
-            mobileTimelineDrag.velocity = (mobileTimelineDrag.viewport.scrollLeft - mobileTimelineDrag.lastScrollLeft) / elapsed;
-            mobileTimelineDrag.lastScrollLeft = mobileTimelineDrag.viewport.scrollLeft;
+            mobileTimelineDrag.velocity = (nextScrollLeft - mobileTimelineDrag.lastScrollLeft) / elapsed;
+            mobileTimelineDrag.lastScrollLeft = nextScrollLeft;
             mobileTimelineDrag.lastTime = now;
+            mobileTimelineDrag.desiredScrollLeft = nextScrollLeft;
+            if (!mobileTimelineDrag.frame) {
+                mobileTimelineDrag.frame = requestAnimationFrame(() => {
+                    if (!mobileTimelineDrag) return;
+                    mobileTimelineDrag.viewport.scrollLeft = mobileTimelineDrag.desiredScrollLeft;
+                    mobileTimelineDrag.frame = null;
+                });
+            }
         }, { passive: false });
 
         mobileEmployeeList.addEventListener('touchend', function() {
             if (!mobileTimelineDrag) return;
-            const { viewport, velocity, dragged } = mobileTimelineDrag;
+            const { viewport, velocity, desiredScrollLeft, dragged, frame } = mobileTimelineDrag;
+            if (frame) cancelAnimationFrame(frame);
+            viewport.scrollLeft = desiredScrollLeft;
             mobileTimelineDrag = null;
             if (!dragged) return;
             if (Math.abs(velocity) < .035) {
@@ -1986,7 +1997,8 @@
 
         mobileEmployeeList.addEventListener('touchcancel', function() {
             if (!mobileTimelineDrag) return;
-            const { viewport } = mobileTimelineDrag;
+            const { viewport, frame } = mobileTimelineDrag;
+            if (frame) cancelAnimationFrame(frame);
             mobileTimelineDrag = null;
             viewport.classList.remove('is-dragging');
         }, { passive: true });
@@ -2185,12 +2197,23 @@
         // --- ÚJ FEJLESZTÉS: UGRÁS A CELLÁRA ---
         window.jumpToCell = function(empId, dateStr) {
             closeFilterModal();
-            setView('matrix'); 
 
             const parts = dateStr.split('-');
             const targetYear = parseInt(parts[0]);
             const targetMonth = parseInt(parts[1]) - 1; 
             const targetDay = parseInt(parts[2]);
+
+            if (window.matchMedia('(max-width: 768px)').matches) {
+                const mobileEmployeeIndex = employees.findIndex(emp => String(emp.id) === String(empId));
+                if (mobileEmployeeIndex < 0) return;
+                date = new Date(targetYear, targetMonth, 1);
+                mobileWeekAnchor = new Date(targetYear, targetMonth, targetDay);
+                renderMobileList();
+                requestAnimationFrame(() => openMobileUser(mobileEmployeeIndex, targetDay));
+                return;
+            }
+
+            setView('matrix'); 
 
             // Ha nem a megfelelő hónapon vagy éven állunk, odalapozunk
             if (date.getFullYear() !== targetYear || date.getMonth() !== targetMonth) {
@@ -2515,6 +2538,7 @@
             if (typeof originalJumpToCell === 'function') {
                 window.jumpToCell = function (empId, dateStr) {
                     originalJumpToCell(empId, dateStr);
+                    if (window.matchMedia('(max-width: 768px)').matches) return;
                     setTimeout(function () { activatePersistentTarget(empId, dateStr, 0); }, 190);
                 };
             }
