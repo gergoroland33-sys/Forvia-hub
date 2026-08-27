@@ -221,7 +221,7 @@
         .m-roster-remaining span { color: #64748b; font-size: 8px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
         .m-roster-remaining b { font-size: 15px; line-height: 1; }
         .m-roster-remaining.is-critical { color: #f87171; }
-        .m-week-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; color: #94a3b8; font-size: 8px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+        .m-week-meta { display: flex; align-items: center; justify-content: flex-start; gap: 8px; margin-top: 10px; color: #94a3b8; font-size: 8px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
         .m-week-meta strong { overflow: hidden; color: #cbd5e1; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
         .m-week-meta span { display: inline-flex; align-items: center; gap: 4px; flex: none; color: #64748b; }
         .m-week-viewport { width: 100%; margin-top: 6px; overflow-x: scroll; overflow-y: hidden; border-radius: 10px; scroll-snap-type: none; scroll-behavior: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: none; cursor: grab; }
@@ -1622,13 +1622,11 @@
             const k2 = `${d2.getFullYear()}-${d2.getMonth()+1}-${d2.getDate()}`;
             const keys = [k0, k1, k2];
             const mobileWeekdayNames = ["VAS", "HÉT", "KED", "SZE", "CSÜ", "PÉN", "SZO"];
-            const mobileMonthNames = ["JAN", "FEB", "MÁR", "ÁPR", "MÁJ", "JÚN", "JÚL", "AUG", "SZE", "OKT", "NOV", "DEC"];
-            const timelineFocus = new Date(mobileWeekAnchor);
-            const weekStart = new Date(mobileWeekAnchor);
-            weekStart.setDate(weekStart.getDate() - 30);
-            const weekEnd = new Date(mobileWeekAnchor);
-            weekEnd.setDate(weekEnd.getDate() + 30);
-            const weekPeriod = `${monthNames[timelineFocus.getMonth()]} ${timelineFocus.getFullYear()} · ${timelineFocus.getDate()}.`;
+            const daysInTimelineMonth = new Date(currentYear, m + 1, 0).getDate();
+            const anchorIsInTimelineMonth = mobileWeekAnchor.getFullYear() === currentYear && mobileWeekAnchor.getMonth() === m;
+            const focusDay = anchorIsInTimelineMonth ? Math.min(daysInTimelineMonth, Math.max(1, mobileWeekAnchor.getDate())) : 1;
+            const timelineFocus = new Date(currentYear, m, focusDay);
+            const weekPeriod = monthNames[m];
 
             listEl.innerHTML = employees.map((e, index) => {
                 let remaining = getEmpQuota(e, currentYear) - getYearlyUsed(e, currentYear);
@@ -1661,9 +1659,8 @@
                     return `<div class="m-status-row"><span class="m-status-label">${label}</span><div class="m-status-pill ${bg} ${relativeCls}" ${titleAttr}>${val}${dots}</div></div>`;
                 };
 
-                const weekTimeline = Array.from({ length: 61 }, (_, timelineIndex) => {
-                    const day = new Date(weekStart);
-                    day.setDate(weekStart.getDate() + timelineIndex);
+                const weekTimeline = Array.from({ length: daysInTimelineMonth }, (_, timelineIndex) => {
+                    const day = new Date(currentYear, m, timelineIndex + 1);
                     const key = `${day.getFullYear()}-${day.getMonth()+1}-${day.getDate()}`;
                     const value = (e.data && e.data[key]) ? e.data[key] : "";
                     const isTuCserenap = value === 'TU' && e.data && e.data[key + '_cserenap'];
@@ -1680,10 +1677,10 @@
                     }
                     const markerLabel = `${isTuCserenap ? ' · Cserenap' : ''}${hasNote ? ' · Megjegyzés' : ''}`;
                     const markers = `${isTuCserenap ? '<span class="m-week-cserenap-dot" aria-hidden="true"></span>' : ''}${hasNote ? '<span class="m-week-note-triangle" aria-hidden="true"></span>' : ''}`;
-                    return `<div class="m-week-day ${valueClass} ${isToday ? 'today' : ''}" ${isTimelineFocus ? 'data-mobile-timeline-focus="true"' : ''} role="button" tabindex="0" onclick="openMobileDayEditor(${index}, '${key}', event)" onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openMobileDayEditor(${index}, '${key}', event); }" aria-label="${mobileWeekdayNames[day.getDay()]} ${day.getDate()}.${value ? ` · ${value}` : ''}${markerLabel}">${markers}<span class="m-week-date"><small>${mobileMonthNames[day.getMonth()]}</small>${mobileWeekdayNames[day.getDay()]} ${day.getDate()}</span><span class="m-week-value ${valueClass}">${value}</span></div>`;
+                    return `<div class="m-week-day ${valueClass} ${isToday ? 'today' : ''}" ${isTimelineFocus ? 'data-mobile-timeline-focus="true"' : ''} role="button" tabindex="0" onclick="openMobileDayEditor(${index}, '${key}', event)" onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openMobileDayEditor(${index}, '${key}', event); }" aria-label="${mobileWeekdayNames[day.getDay()]} ${day.getDate()}.${value ? ` · ${value}` : ''}${markerLabel}">${markers}<span class="m-week-date">${mobileWeekdayNames[day.getDay()]} ${day.getDate()}</span><span class="m-week-value ${valueClass}">${value}</span></div>`;
                 }).join('');
 
-                return `<div class="m-card m-roster-card" onclick="openMobileUser(${index}, ${timelineFocus.getDate()})"><div class="m-roster-head"><div class="m-roster-name">${e.name}</div><div class="m-roster-remaining ${remaining <= 48 ? 'is-critical' : ''}"><span>Kivehető</span><b>${remaining}</b></div></div><div class="m-week-meta"><strong>${weekPeriod}</strong><span><i class="fas fa-arrows-alt-h" aria-hidden="true"></i> Húzd</span></div><div class="m-week-viewport"><div class="m-week-strip">${weekTimeline}</div></div></div>`;
+                return `<div class="m-card m-roster-card" onclick="openMobileUser(${index}, ${timelineFocus.getDate()})"><div class="m-roster-head"><div class="m-roster-name">${e.name}</div><div class="m-roster-remaining ${remaining <= 48 ? 'is-critical' : ''}"><span>Kivehető</span><b>${remaining}</b></div></div><div class="m-week-meta"><strong>${weekPeriod}</strong></div><div class="m-week-viewport"><div class="m-week-strip">${weekTimeline}</div></div></div>`;
             }).join('');
             requestAnimationFrame(() => {
                 centerMobileTimelinesOnFocus();
@@ -1951,7 +1948,7 @@
             viewport.classList.remove('is-dragging');
             viewport.classList.add('is-settling');
             const startedAt = performance.now();
-            const duration = 190;
+            const duration = 210;
             const animate = (now) => {
                 const progress = Math.min(1, (now - startedAt) / duration);
                 const eased = 1 - Math.pow(1 - progress, 3);
@@ -1967,7 +1964,7 @@
         }
 
         function startMobileTimelineMomentum(viewport, initialVelocity) {
-            let velocity = Math.max(-3.1, Math.min(3.1, initialVelocity));
+            let velocity = Math.max(-3.25, Math.min(3.25, initialVelocity));
             let lastFrameTime = performance.now();
             viewport.classList.add('is-settling');
             const glide = (now) => {
@@ -1976,7 +1973,7 @@
                 const before = viewport.scrollLeft;
                 viewport.scrollLeft += velocity * elapsed;
                 const reachedEdge = Math.abs(viewport.scrollLeft - before) < .2;
-                velocity *= Math.exp(-elapsed / 235);
+                velocity *= Math.exp(-elapsed / 255);
                 if (Math.abs(velocity) < .025 || reachedEdge) {
                     mobileTimelineMotionFrame = null;
                     settleMobileTimeline(viewport);
