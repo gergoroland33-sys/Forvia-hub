@@ -487,6 +487,31 @@
         .btn-delete { color: var(--danger); border: 1px solid rgba(239,68,68,0.3); background: rgba(239,68,68,0.05); }
         .btn-delete:hover { background: var(--danger); color: white; transform: translateY(-1px); }
 
+        /* ADATBÁZIS NÉZET PRO — külön szekrénykártyák és fejlécből szűrhető oszlopok */
+        .db-cabinets { display: grid; gap: 18px; }
+        .db-cabinet-card { background: linear-gradient(145deg, rgba(30,41,59,0.96), rgba(15,23,42,0.98)); border: 1px solid #334155; border-radius: 12px; overflow: hidden; box-shadow: 0 14px 30px rgba(0,0,0,0.18); }
+        .db-cabinet-head { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 15px 18px; border-bottom: 1px solid rgba(148,163,184,0.18); background: linear-gradient(90deg, rgba(14,165,233,0.10), transparent 52%); }
+        .db-cabinet-title { display: flex; align-items: center; gap: 10px; color: white; font-size: 15px; font-weight: 800; letter-spacing: 0.7px; text-transform: uppercase; }
+        .db-cabinet-title i { color: var(--accent); }
+        .db-cabinet-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; font-size: 11px; color: var(--text-muted); }
+        .db-cabinet-count { color: var(--success); font-weight: 800; background: rgba(16,185,129,0.10); border: 1px solid rgba(16,185,129,0.25); border-radius: 999px; padding: 4px 9px; }
+        .db-filter-status { color: var(--accent); font-weight: 700; }
+        .db-filter-row th { position: static; padding: 8px 10px; background: #0b1220; border-bottom-color: #1e293b; }
+        .db-filter-input { width: 100%; min-width: 78px; box-sizing: border-box; background: rgba(15,23,42,0.96); color: #e2e8f0; border: 1px solid #334155; border-radius: 5px; padding: 7px 8px; outline: none; font-size: 11px; font-weight: 600; text-transform: none; transition: border-color 0.18s, box-shadow 0.18s, background-color 0.18s; }
+        .db-filter-input::placeholder { color: #64748b; }
+        .db-filter-input:focus { border-color: var(--accent); background: #111c30; box-shadow: 0 0 0 3px rgba(14,165,233,0.12); }
+        .db-filter-note { color: var(--text-muted); font-size: 11px; padding: 11px 18px 0; line-height: 1.45; }
+        .db-filter-note i { color: var(--accent); margin-right: 5px; }
+        .db-no-match { text-align: center; color: var(--text-muted); font-style: italic; padding: 23px !important; }
+        .stencil-missing-list { display: flex; flex-direction: column; gap: 10px; }
+        .stencil-missing-item { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 13px 14px; border: 1px solid rgba(245,158,11,0.22); border-left: 4px solid var(--warning); border-radius: 8px; background: linear-gradient(90deg, rgba(245,158,11,0.10), rgba(255,255,255,0.015)); }
+        .stencil-missing-id { color: white; font-size: 14px; font-weight: 800; }
+        .stencil-missing-fields { margin-top: 4px; color: #fbbf24; font-size: 11px; line-height: 1.45; }
+        .stencil-missing-location { color: var(--text-muted); font-size: 11px; margin-top: 4px; }
+        .stencil-missing-open { flex-shrink: 0; background: rgba(14,165,233,0.12); color: var(--accent); border: 1px solid rgba(14,165,233,0.32); padding: 8px 10px; border-radius: 6px; cursor: pointer; font-weight: 800; font-size: 11px; transition: 0.18s; }
+        .stencil-missing-open:hover { background: var(--accent); color: white; transform: translateY(-1px); }
+        @media (max-width: 700px) { .db-cabinet-head { align-items: flex-start; flex-direction: column; } .db-cabinet-meta { justify-content: flex-start; } .stencil-missing-item { align-items: flex-start; flex-direction: column; } .stencil-missing-open { width: 100%; justify-content: center; display: flex; } }
+
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.2s; }
         .modal-overlay.active { display: flex; opacity: 1; }
         
@@ -806,6 +831,7 @@
                 </form>
 
                 <div class="action-buttons">
+                    <button id="topStencilMissingBtn" class="btn" style="background:linear-gradient(135deg,#92400e,#d97706); border:none;" onclick="openStencilMissingModal()"><i class="fas fa-triangle-exclamation"></i> Stencil hiányosságok <span id="topStencilMissingCount" style="display:none; margin-left:2px; min-width:18px; text-align:center; background:rgba(15,23,42,0.30); border-radius:999px; padding:1px 5px;"></span></button>
                     <button id="topJigBtn" class="btn" style="background:linear-gradient(135deg,#b45309,#f59e0b); border:none;" onclick="switchTab('jig', this)"><i class="fas fa-toolbox"></i> JIG Adatbázis</button>
                     <button class="btn" style="background-color: var(--danger); border-color: var(--danger);" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Kilépés</button>
                 </div>
@@ -816,21 +842,8 @@
             </div>
 
             <div id="tab-db" class="content-area">
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Szekrény</th>
-                                <th>Polc</th>
-                                <th>Stencil Szám</th>
-                                <th>Modell</th>
-                                <th style="text-align: center;">Megjegyzés</th>
-                                <th style="text-align: right;">Műveletek</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody"></tbody>
-                    </table>
-                </div>
+                <div class="db-filter-note"><i class="fas fa-filter"></i> Minden szekrény külön kártyán jelenik meg. Az oszlopfejlécek alatti mezők bármelyik szekrénykártyában használhatók, és egyszerre szűrik az egész adatbázisnézetet.</div>
+                <div id="databaseCabinetCards" class="db-cabinets"></div>
             </div>
 
             <div id="tab-jig" class="content-area">
@@ -1008,6 +1021,22 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeModal('missingModelsModal')">Bezárás</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="stencilMissingModal">
+        <div class="modal-content" style="max-width: 680px;">
+            <div class="modal-header" style="border-bottom-color: var(--warning);">
+                <span style="color: var(--warning);"><i class="fas fa-triangle-exclamation"></i> Stencil hiányosságok</span>
+                <button class="modal-close" onclick="closeModal('stencilMissingModal')">&times;</button>
+            </div>
+            <div class="modal-body" style="max-height: 62vh; overflow-y: auto;">
+                <div id="stencilMissingSummary" style="font-size:12px; color:var(--text-muted); margin-bottom:12px;"></div>
+                <div id="stencilMissingList" class="stencil-missing-list"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('stencilMissingModal')">Bezárás</button>
             </div>
         </div>
     </div>
@@ -1383,6 +1412,7 @@
         if (topJigBtn) topJigBtn.style.filter = (tabId === 'jig') ? 'brightness(1.15)' : '';
         const tabEl = document.getElementById('tab-' + tabId);
         if (tabEl) tabEl.classList.add('active');
+        if (tabId === 'db') renderDatabaseCabinetCards();
         if (tabId === 'jig' && typeof window.renderJigUI === 'function') window.renderJigUI();
     }
 
@@ -1483,6 +1513,170 @@
         }
     });
 
+    // ADATBÁZIS NÉZET: kizárólag megjelenítési/szűrési segédek, adatot nem módosítanak.
+    window.dbColumnFilters = window.dbColumnFilters || { szekreny: '', polc: '', maszk: '', modell: '', megjegyzes: '' };
+
+    function dbEscape(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function dbSearchText(value) {
+        return String(value == null ? '' : value).trim().toLocaleLowerCase('hu-HU');
+    }
+
+    function getStencilMissingFields(item) {
+        const requiredFields = [
+            ['modell', 'Modellnév'],
+            ['panelszam', 'Panelszám'],
+            ['folyamat', 'Folyamat'],
+            ['munkaszam', 'Munkaszám']
+        ];
+        return requiredFields.filter(([key]) => !String(item && item[key] != null ? item[key] : '').trim()).map(([, label]) => label);
+    }
+
+    function getIncompleteStencils() {
+        return (window.stencilData || []).filter(item => getStencilMissingFields(item).length > 0);
+    }
+
+    function updateStencilMissingButton() {
+        const countEl = document.getElementById('topStencilMissingCount');
+        if (!countEl) return;
+        const count = getIncompleteStencils().length;
+        countEl.innerText = count;
+        countEl.style.display = count > 0 ? 'inline-block' : 'none';
+    }
+
+    window.setDatabaseFilter = function(column, value) {
+        if (!Object.prototype.hasOwnProperty.call(window.dbColumnFilters, column)) return;
+        window.dbColumnFilters[column] = value;
+        renderDatabaseCabinetCards();
+    };
+
+    function dbFilterInput(column, placeholder) {
+        return `<input class="db-filter-input" type="search" value="${dbEscape(window.dbColumnFilters[column] || '')}" placeholder="${dbEscape(placeholder)}" oninput="setDatabaseFilter('${column}', this.value)" onclick="event.stopPropagation()">`;
+    }
+
+    function databaseRowMatches(item, cabinetName, shelf, globalQuery) {
+        const filters = window.dbColumnFilters;
+        const values = {
+            szekreny: cabinetName,
+            polc: shelf,
+            maszk: item ? item.maszk : '',
+            modell: item ? item.modell : '',
+            megjegyzes: item ? item.megjegyzes : ''
+        };
+        const matchesColumnFilters = Object.keys(filters).every(key => {
+            const filterValue = dbSearchText(filters[key]);
+            return !filterValue || dbSearchText(values[key]).includes(filterValue);
+        });
+        if (!matchesColumnFilters) return false;
+        if (!globalQuery) return true;
+        const allValues = [cabinetName, shelf, values.maszk, values.modell, values.megjegyzes, item ? item.panelszam : '', item ? item.folyamat : '', item ? item.munkaszam : ''].join(' ');
+        return dbSearchText(allValues).includes(globalQuery);
+    }
+
+    window.openDatabaseStencil = function(maszkId) { openModal(maszkId); };
+    window.openDatabaseStencilLabel = function(maszkId) { openLabelModal(maszkId); };
+    window.deleteDatabaseStencil = function(maszkId) { confirmDelete(maszkId); };
+    window.openDatabaseEmptySlot = function(cabinetName, shelf) { openModal(null, cabinetName, Number(shelf)); };
+
+    function renderDatabaseCabinetCards() {
+        const cardsContainer = document.getElementById('databaseCabinetCards');
+        if (!cardsContainer) return;
+        const searchInput = document.getElementById('adminSearchInput');
+        const globalQuery = dbSearchText(searchInput ? searchInput.value : '');
+        const data = window.stencilData || [];
+
+        cardsContainer.innerHTML = window.cabinetsConfig.map(cab => {
+            const cabinetItems = data.filter(item => item.szekreny === cab.name);
+            const rows = [];
+            for (let shelf = cab.start; shelf <= cab.end; shelf++) {
+                const item = data.find(entry => entry.szekreny === cab.name && parseInt(entry.polc) === shelf);
+                if (!databaseRowMatches(item, cab.name, shelf, globalQuery)) continue;
+
+                if (item) {
+                    const missingFields = getStencilMissingFields(item);
+                    const noteHtml = item.megjegyzes
+                        ? `<i class="fas fa-exclamation-circle" style="color:var(--warning); font-size:16px; cursor:help; filter:drop-shadow(0 0 5px rgba(245, 158, 11, 0.4));" title="${dbEscape(item.megjegyzes)}"></i>`
+                        : '-';
+                    const incompleteIcon = missingFields.length
+                        ? `<i class="fas fa-triangle-exclamation" style="color:var(--warning); font-size:14px; margin-right:3px; cursor:help; filter:drop-shadow(0 0 4px rgba(245,158,11,0.6));" title="Hiányzó adat: ${dbEscape(missingFields.join(', '))}"></i>`
+                        : '';
+                    rows.push(`
+                        <tr>
+                            <td><strong style="color:var(--success);">${dbEscape(item.polc)}.</strong></td>
+                            <td><strong style="color:white; font-size:15px;">${dbEscape(item.maszk)}</strong></td>
+                            <td>${item.modell ? `<span class="model-text-table">${dbEscape(item.modell)}</span>` : '-'}</td>
+                            <td style="text-align:center;">${noteHtml}</td>
+                            <td style="text-align:right; white-space:nowrap;">${incompleteIcon}<button class="btn-icon btn-label" data-stencil-id="${dbEscape(item.maszk)}" onclick="openDatabaseStencilLabel(this.dataset.stencilId)" title="Címke nyomtatás"><i class="fas fa-tag"></i></button><button class="btn-icon btn-edit" data-stencil-id="${dbEscape(item.maszk)}" onclick="openDatabaseStencil(this.dataset.stencilId)" title="Szerkesztés"><i class="fas fa-pencil-alt"></i></button><button class="btn-icon btn-delete" data-stencil-id="${dbEscape(item.maszk)}" onclick="deleteDatabaseStencil(this.dataset.stencilId)" title="Törlés"><i class="fas fa-trash"></i></button></td>
+                        </tr>`);
+                } else {
+                    rows.push(`
+                        <tr>
+                            <td style="color:var(--text-muted);">${shelf}.</td>
+                            <td class="status-empty">Üres polc</td>
+                            <td>-</td>
+                            <td style="text-align:center;">-</td>
+                            <td style="text-align:right;"><button class="btn-icon btn-add-inline" data-cabinet-name="${dbEscape(cab.name)}" data-shelf="${shelf}" onclick="openDatabaseEmptySlot(this.dataset.cabinetName, this.dataset.shelf)" title="Hozzáadás ide"><i class="fas fa-plus"></i> Hozzáadás</button></td>
+                        </tr>`);
+                }
+            }
+
+            const totalSlots = cab.end - cab.start + 1;
+            const visibleText = rows.length === totalSlots && !globalQuery && !Object.values(window.dbColumnFilters).some(Boolean)
+                ? 'teljes nézet'
+                : `${rows.length} találat`;
+            return `
+                <section class="db-cabinet-card">
+                    <div class="db-cabinet-head">
+                        <div class="db-cabinet-title"><i class="fas fa-warehouse"></i> ${dbEscape(cab.name)}</div>
+                        <div class="db-cabinet-meta">
+                            <span class="db-cabinet-count">${cabinetItems.length} / ${totalSlots} feltöltve</span>
+                            <span class="db-filter-status">${visibleText}</span>
+                            <span style="width:145px;">${dbFilterInput('szekreny', 'Szekrény szűrése')}</span>
+                        </div>
+                    </div>
+                    <div class="table-container" style="border:0; border-radius:0; box-shadow:none;">
+                        <table>
+                            <thead>
+                                <tr><th>Polc</th><th>Stencil szám</th><th>Modell</th><th style="text-align:center;">Megjegyzés</th><th style="text-align:right;">Műveletek</th></tr>
+                                <tr class="db-filter-row"><th>${dbFilterInput('polc', 'Polc')}</th><th>${dbFilterInput('maszk', 'Stencil')}</th><th>${dbFilterInput('modell', 'Modell')}</th><th>${dbFilterInput('megjegyzes', 'Megjegyzés')}</th><th></th></tr>
+                            </thead>
+                            <tbody>${rows.length ? rows.join('') : '<tr><td colspan="5" class="db-no-match"><i class="fas fa-filter"></i> Nincs a szűrésnek megfelelő polc ebben a szekrényben.</td></tr>'}</tbody>
+                        </table>
+                    </div>
+                </section>`;
+        }).join('');
+    }
+
+    window.openStencilMissingModal = function() {
+        const missing = getIncompleteStencils();
+        const summary = document.getElementById('stencilMissingSummary');
+        const list = document.getElementById('stencilMissingList');
+        if (!summary || !list) return;
+
+        summary.innerHTML = missing.length
+            ? `<i class="fas fa-circle-info" style="color:var(--warning);"></i> ${missing.length} maszk kötelező adatainál találtam hiányt. A <strong>Megnyitás</strong> közvetlenül a meglévő szerkesztőablakba visz.`
+            : '<i class="fas fa-circle-check" style="color:var(--success);"></i> Minden stencil kötelező adata ki van töltve.';
+        list.innerHTML = missing.length
+            ? missing.map(item => {
+                const fields = getStencilMissingFields(item);
+                return `<div class="stencil-missing-item"><div><div class="stencil-missing-id">${dbEscape(item.maszk || 'Azonosító nélküli stencil')}</div><div class="stencil-missing-fields"><i class="fas fa-triangle-exclamation"></i> Hiányzik: ${dbEscape(fields.join(', '))}</div><div class="stencil-missing-location"><i class="fas fa-location-dot"></i> ${dbEscape(item.szekreny || 'Nincs szekrény')} · ${dbEscape(item.polc || '-')} . polc</div></div><button class="stencil-missing-open" data-stencil-id="${dbEscape(item.maszk)}" onclick="openStencilMissingItem(this.dataset.stencilId)"><i class="fas fa-pen-to-square"></i> Megnyitás</button></div>`;
+            }).join('')
+            : '<div style="text-align:center; color:var(--success); padding:22px;"><i class="fas fa-circle-check" style="font-size:24px; display:block; margin-bottom:8px;"></i> Nincs pótolandó stenciladat.</div>';
+        document.getElementById('stencilMissingModal').classList.add('active');
+    };
+
+    window.openStencilMissingItem = function(maszkId) {
+        closeModal('stencilMissingModal');
+        openModal(maszkId);
+    };
+
     function renderUI() {
         if (!window.isAdmin) return; 
         
@@ -1496,6 +1690,7 @@
                 warningEl.style.display = 'none';
             }
         }
+        updateStencilMissingButton();
         
         const query = document.getElementById('adminSearchInput').value.toLowerCase();
         
@@ -1543,49 +1738,7 @@
             }
         });
 
-        const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '';
-        
-        window.cabinetsConfig.forEach(cab => {
-            for (let i = cab.start; i <= cab.end; i++) {
-                const item = window.stencilData.find(d => d.szekreny === cab.name && parseInt(d.polc) === i);
-                const matchSearch = !query || (item && (item.maszk.toLowerCase().includes(query) || (item.modell && item.modell.toLowerCase().includes(query)))) || cab.name.toLowerCase().includes(query) || i.toString().includes(query);
-                if (!matchSearch) continue;
-
-                if (item) {
-                    let noteHtml = item.megjegyzes 
-                        ? `<i class="fas fa-exclamation-circle" style="color: var(--warning); font-size: 16px; cursor: help; filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.4));" title="${item.megjegyzes}"></i>` 
-                        : '-';
-
-                    tbody.innerHTML += `
-                        <tr>
-                            <td style="color:var(--text-muted); font-size:12px;">${item.szekreny}</td>
-                            <td><strong style="color:var(--success);">${item.polc}.</strong></td>
-                            <td><strong style="color:white; font-size:15px;">${item.maszk}</strong></td>
-                            <td>${item.modell ? `<span class="model-text-table">${item.modell}</span>` : '-'}</td>
-                            <td style="text-align: center;">${noteHtml}</td>
-                            <td style="text-align: right;">
-                                ${(typeof labelDataIncomplete==='function' && labelDataIncomplete(item)) ? '<i class="fas fa-exclamation-circle" style="color:var(--warning); font-size:14px; margin-right:3px; cursor:help; filter:drop-shadow(0 0 4px rgba(245,158,11,0.6));" title="Hiányzó címke adat (Panelszám / Folyamat / Munkaszám) — a címke ezek nélkül nyomtatódna"></i>' : ''}
-                                <button class="btn-icon btn-label" onclick="openLabelModal('${item.maszk}')" title="Címke nyomtatás"><i class="fas fa-tag"></i></button>
-                                <button class="btn-icon btn-edit" onclick="openModal('${item.maszk}')"><i class="fas fa-pencil-alt"></i></button>
-                                <button class="btn-icon btn-delete" onclick="confirmDelete('${item.maszk}')"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>`;
-                } else {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td style="color:var(--text-muted); font-size:12px;">${cab.name}</td>
-                            <td style="color:var(--text-muted);">${i}.</td>
-                            <td class="status-empty">Üres polc</td>
-                            <td>-</td>
-                            <td style="text-align: center;">-</td>
-                            <td style="text-align: right;">
-                                <button class="btn-icon btn-add-inline" onclick="openModal(null, '${cab.name}', ${i})" title="Hozzáadás ide"><i class="fas fa-plus"></i> Hozzáadás</button>
-                            </td>
-                        </tr>`;
-                }
-            }
-        });
+        renderDatabaseCabinetCards();
     }
 
     window.openMissingModelsModal = () => {
