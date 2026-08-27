@@ -224,11 +224,11 @@
         .m-week-meta { display: flex; align-items: center; justify-content: flex-start; gap: 8px; margin-top: 10px; color: #94a3b8; font-size: 8px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
         .m-week-meta strong { overflow: hidden; color: #cbd5e1; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
         .m-week-meta span { display: inline-flex; align-items: center; gap: 4px; flex: none; color: #64748b; }
-        .m-week-viewport { width: 100%; margin-top: 6px; overflow-x: auto; overflow-y: hidden; border-radius: 10px; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: pan-x; cursor: grab; }
+        .m-week-viewport { width: 100%; margin-top: 6px; overflow-x: auto; overflow-y: hidden; border-radius: 10px; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: auto; cursor: grab; }
         .m-week-viewport::-webkit-scrollbar { display: none; }
         .m-week-viewport:active { cursor: grabbing; }
         .m-week-strip { display: flex; gap: 6px; width: max-content; min-width: max-content; margin: 0; }
-        .m-week-day { position: relative; flex: 0 0 clamp(41px, 12vw, 49px); min-width: 0; min-height: 55px; padding: 7px 2px; overflow: hidden; border: 1px solid rgba(71,85,105,.68); border-radius: 10px; background: rgba(15,23,42,.72); text-align: center; scroll-snap-align: center; scroll-snap-stop: normal; cursor: pointer; touch-action: pan-x; transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease; }
+        .m-week-day { position: relative; flex: 0 0 clamp(41px, 12vw, 49px); min-width: 0; min-height: 55px; padding: 7px 2px; overflow: hidden; border: 1px solid rgba(71,85,105,.68); border-radius: 10px; background: rgba(15,23,42,.72); text-align: center; scroll-snap-align: center; scroll-snap-stop: normal; cursor: pointer; touch-action: auto; transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease; }
         .m-week-day:active { transform: scale(.94); }
         .m-week-day.today { border: 2px solid #f05252; background: linear-gradient(145deg, rgba(127,29,29,.43), rgba(15,23,42,.9)); box-shadow: inset 0 1px 0 rgba(254,202,202,.22), 0 0 0 1px rgba(239,68,68,.16), 0 4px 10px rgba(127,29,29,.25); }
         .m-week-date { display: block; color: #94a3b8; font-size: 9px; font-weight: 900; line-height: 1; letter-spacing: 0; }
@@ -1924,6 +1924,51 @@
                 requestAnimationFrame(() => viewport.style.removeProperty('scroll-behavior'));
             });
         }
+
+        // A napcsík maga natívan gördül. Ez a kis őr csak azt akadályozza meg,
+        // hogy egy valódi húzás végén a névkártya vagy a nap véletlenül megnyíljon.
+        let mobileTimelineGesture = null;
+        const mobileEmployeeList = document.getElementById('m-emp-list');
+
+        function clearMobileTimelineGesture() {
+            if (!mobileTimelineGesture) return;
+            const { viewport, dragged } = mobileTimelineGesture;
+            mobileTimelineGesture = null;
+            if (dragged && viewport) {
+                viewport.dataset.mobileTimelineDragged = 'true';
+                window.setTimeout(() => { delete viewport.dataset.mobileTimelineDragged; }, 0);
+            }
+        }
+
+        mobileEmployeeList.addEventListener('pointerdown', function(event) {
+            if (!event.isPrimary) return;
+            const viewport = event.target.closest && event.target.closest('.m-week-viewport');
+            if (!viewport) return;
+            mobileTimelineGesture = {
+                viewport,
+                pointerId: event.pointerId,
+                startX: event.clientX,
+                startY: event.clientY,
+                dragged: false
+            };
+        }, { passive: true });
+
+        mobileEmployeeList.addEventListener('pointermove', function(event) {
+            if (!mobileTimelineGesture || event.pointerId !== mobileTimelineGesture.pointerId) return;
+            const movedX = Math.abs(event.clientX - mobileTimelineGesture.startX);
+            const movedY = Math.abs(event.clientY - mobileTimelineGesture.startY);
+            if (movedX > 7 && movedX > movedY) mobileTimelineGesture.dragged = true;
+        }, { passive: true });
+
+        mobileEmployeeList.addEventListener('click', function(event) {
+            const viewport = event.target.closest && event.target.closest('.m-week-viewport');
+            if (!viewport || viewport.dataset.mobileTimelineDragged !== 'true') return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+        }, true);
+
+        window.addEventListener('pointerup', clearMobileTimelineGesture, { passive: true });
+        window.addEventListener('pointercancel', clearMobileTimelineGesture, { passive: true });
 
         // Minden névkártya saját, natív telefonos idővonalat használ.
         // A böngésző kezeli a lendületet, az automatikus napra-igazítást pedig a CSS scroll-snap végzi.
