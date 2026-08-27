@@ -216,7 +216,9 @@
         /* Mobilos műszak-idővonal: a névkártya teljes szélességét a következő 7 nap kapja. */
         .m-roster-card { display: block; padding: 13px 14px; margin-bottom: 10px; }
         .m-roster-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
-        .m-roster-name { min-width: 0; overflow: hidden; color: #f8fafc; font-size: 15px; font-weight: 900; line-height: 1.1; letter-spacing: -.015em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+        .m-roster-name { display: flex; align-items: center; gap: 7px; min-width: 0; overflow: hidden; color: #f8fafc; font-size: 15px; font-weight: 900; line-height: 1.1; letter-spacing: -.015em; text-transform: uppercase; white-space: nowrap; }
+        .m-roster-name-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+        .m-roster-open-hint { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 21px; height: 21px; border: 1px solid rgba(96,165,250,.42); border-radius: 7px; background: rgba(30,58,138,.26); color: #93c5fd; font-size: 10px; box-shadow: inset 0 1px 0 rgba(191,219,254,.12); }
         .m-roster-remaining { display: flex; align-items: baseline; gap: 4px; flex: none; color: #34d399; white-space: nowrap; }
         .m-roster-remaining span { color: #64748b; font-size: 8px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
         .m-roster-remaining b { font-size: 15px; line-height: 1; }
@@ -224,12 +226,9 @@
         .m-week-meta { display: flex; align-items: center; justify-content: flex-start; gap: 8px; margin-top: 10px; color: #94a3b8; font-size: 8px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
         .m-week-meta strong { overflow: hidden; color: #cbd5e1; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
         .m-week-meta span { display: inline-flex; align-items: center; gap: 4px; flex: none; color: #64748b; }
-        .m-week-viewport { width: 100%; margin-top: 6px; overflow-x: auto; overflow-y: hidden; border-radius: 10px; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: auto; cursor: grab; }
-        .m-week-viewport::-webkit-scrollbar { display: none; }
-        .m-week-viewport:active { cursor: grabbing; }
-        .m-week-strip { display: flex; gap: 6px; width: max-content; min-width: max-content; margin: 0; }
-        .m-week-day { position: relative; flex: 0 0 clamp(41px, 12vw, 49px); min-width: 0; min-height: 55px; padding: 7px 2px; overflow: hidden; border: 1px solid rgba(71,85,105,.68); border-radius: 10px; background: rgba(15,23,42,.72); text-align: center; scroll-snap-align: center; scroll-snap-stop: normal; cursor: pointer; touch-action: auto; transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease; }
-        .m-week-day:active { transform: scale(.94); }
+        .m-week-viewport { width: 100%; margin-top: 6px; overflow: hidden; border-radius: 10px; pointer-events: none; touch-action: manipulation; }
+        .m-week-strip { display: flex; gap: 5px; width: 100%; min-width: 0; margin: 0; }
+        .m-week-day { position: relative; flex: 1 1 0; min-width: 0; min-height: 55px; padding: 7px 2px; overflow: hidden; border: 1px solid rgba(71,85,105,.68); border-radius: 10px; background: rgba(15,23,42,.72); text-align: center; pointer-events: none; transition: border-color .16s ease, box-shadow .16s ease, background .16s ease; }
         .m-week-day.today { border: 2px solid #f05252; background: linear-gradient(145deg, rgba(127,29,29,.43), rgba(15,23,42,.9)); box-shadow: inset 0 1px 0 rgba(254,202,202,.22), 0 0 0 1px rgba(239,68,68,.16), 0 4px 10px rgba(127,29,29,.25); }
         .m-week-date { display: block; color: #94a3b8; font-size: 9px; font-weight: 900; line-height: 1; letter-spacing: 0; }
         .m-week-date small { display: block; margin-bottom: 2px; color: #64748b; font-size: 7px; font-weight: 900; letter-spacing: .04em; line-height: 1; }
@@ -266,7 +265,7 @@
             .m-roster-name { font-size: 13px; }
             .m-week-meta { margin-top: 8px; }
             .m-week-strip { gap: 4px; }
-            .m-week-day { flex-basis: clamp(38px, 12vw, 44px); }
+            .m-week-day { flex-basis: 0; }
             .m-week-day { min-height: 49px; padding-top: 6px; }
             .m-week-cserenap-dot { top: 3px; right: 3px; }
             .m-week-note-triangle { top: 3px; left: 3px; }
@@ -452,7 +451,7 @@
                 <strong id="m-quick-day-label">Kiválasztott nap</strong>
             </div>
 
-            <div class="hidden flex-grow overflow-y-auto p-2" id="m-cal-scroll-container">
+            <div class="flex-grow overflow-y-auto p-2" id="m-cal-scroll-container">
                 <div class="flex items-center justify-between bg-slate-900/50 rounded-lg p-1 border border-slate-800/50 mb-2 mt-2">
                     <button onclick="changeMonth(-1)" class="p-2 text-blue-400 w-12"><i class="fas fa-chevron-left"></i></button>
                     <span id="m-detail-monthDisp" class="font-black text-sm uppercase text-white"></span>
@@ -1637,7 +1636,9 @@
             const anchorIsInTimelineMonth = mobileWeekAnchor.getFullYear() === currentYear && mobileWeekAnchor.getMonth() === m;
             const focusDay = anchorIsInTimelineMonth ? Math.min(daysInTimelineMonth, Math.max(1, mobileWeekAnchor.getDate())) : 1;
             const timelineFocus = new Date(currentYear, m, focusDay);
-            const weekPeriod = monthNames[m];
+            const weekStart = new Date(timelineFocus);
+            weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
+            const weekPeriod = monthNames[timelineFocus.getMonth()];
 
             listEl.innerHTML = employees.map((e, index) => {
                 let remaining = getEmpQuota(e, currentYear) - getYearlyUsed(e, currentYear);
@@ -1670,14 +1671,14 @@
                     return `<div class="m-status-row"><span class="m-status-label">${label}</span><div class="m-status-pill ${bg} ${relativeCls}" ${titleAttr}>${val}${dots}</div></div>`;
                 };
 
-                const weekTimeline = Array.from({ length: daysInTimelineMonth }, (_, timelineIndex) => {
-                    const day = new Date(currentYear, m, timelineIndex + 1);
+                const weekTimeline = Array.from({ length: 7 }, (_, timelineIndex) => {
+                    const day = new Date(weekStart);
+                    day.setDate(weekStart.getDate() + timelineIndex);
                     const key = `${day.getFullYear()}-${day.getMonth()+1}-${day.getDate()}`;
                     const value = (e.data && e.data[key]) ? e.data[key] : "";
                     const isTuCserenap = value === 'TU' && e.data && e.data[key + '_cserenap'];
                     const hasNote = e.data && e.data[key + '_note'];
                     const isToday = day.getFullYear() === today.getFullYear() && day.getMonth() === today.getMonth() && day.getDate() === today.getDate();
-                    const isTimelineFocus = day.getFullYear() === timelineFocus.getFullYear() && day.getMonth() === timelineFocus.getMonth() && day.getDate() === timelineFocus.getDate();
                     let valueClass = '';
                     if (value) {
                         if (!isNaN(parseFloat(value.replace(',','.')))) valueClass = 'has-sabi';
@@ -1688,15 +1689,11 @@
                     }
                     const markerLabel = `${isTuCserenap ? ' · Cserenap' : ''}${hasNote ? ' · Megjegyzés' : ''}`;
                     const markers = `${isTuCserenap ? '<span class="m-week-cserenap-dot" aria-hidden="true"></span>' : ''}${hasNote ? '<span class="m-week-note-triangle" aria-hidden="true"></span>' : ''}`;
-                    return `<div class="m-week-day ${valueClass} ${isToday ? 'today' : ''}" ${isTimelineFocus ? 'data-mobile-timeline-focus="true"' : ''} role="button" tabindex="0" onclick="openMobileDayEditor(${index}, '${key}', event)" onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openMobileDayEditor(${index}, '${key}', event); }" aria-label="${mobileWeekdayNames[day.getDay()]} ${day.getDate()}.${value ? ` · ${value}` : ''}${markerLabel}">${markers}<span class="m-week-date">${mobileWeekdayNames[day.getDay()]} ${day.getDate()}</span><span class="m-week-value ${valueClass}">${value}</span></div>`;
+                    return `<div class="m-week-day ${valueClass} ${isToday ? 'today' : ''}" aria-hidden="true">${markers}<span class="m-week-date">${mobileWeekdayNames[day.getDay()]} ${day.getDate()}</span><span class="m-week-value ${valueClass}">${value}</span></div>`;
                 }).join('');
 
-                return `<div class="m-card m-roster-card" onclick="openMobileUser(${index}, ${timelineFocus.getDate()})"><div class="m-roster-head"><div class="m-roster-name">${e.name}</div><div class="m-roster-remaining ${remaining <= 48 ? 'is-critical' : ''}"><span>Kivehető</span><b>${remaining}</b></div></div><div class="m-week-meta"><strong>${weekPeriod}</strong></div><div class="m-week-viewport"><div class="m-week-strip">${weekTimeline}</div></div></div>`;
+                return `<div class="m-card m-roster-card" onclick="openMobileUser(${index}, ${timelineFocus.getDate()})"><div class="m-roster-head"><div class="m-roster-name"><span class="m-roster-name-text">${e.name}</span><span class="m-roster-open-hint" title="Koppints a havi naptár megnyitásához" aria-hidden="true"><i class="fas fa-hand-pointer"></i></span></div><div class="m-roster-remaining ${remaining <= 48 ? 'is-critical' : ''}"><span>Kivehető</span><b>${remaining}</b></div></div><div class="m-week-meta"><strong>${weekPeriod}</strong></div><div class="m-week-viewport"><div class="m-week-strip">${weekTimeline}</div></div></div>`;
             }).join('');
-            requestAnimationFrame(() => {
-                centerMobileTimelinesOnFocus();
-                window.setTimeout(centerMobileTimelinesOnFocus, 80);
-            });
         }
 
         function updateMobileDetailSummary(emp, currentYear) {
@@ -1911,68 +1908,8 @@
             }, 500);
         });
 
-        // Minden névkártya saját, natív vízszintes görgetőt kap: a telefon kezeli a lendületet és a finom lassulást.
-        function centerMobileTimelinesOnFocus() {
-            document.querySelectorAll('.m-week-viewport').forEach(viewport => {
-                const focusedDay = viewport.querySelector('[data-mobile-timeline-focus="true"]');
-                if (!focusedDay) return;
-                const viewportRect = viewport.getBoundingClientRect();
-                const focusedRect = focusedDay.getBoundingClientRect();
-                const targetLeft = Math.max(0, viewport.scrollLeft + focusedRect.left - viewportRect.left - ((viewport.clientWidth - focusedDay.offsetWidth) / 2));
-                viewport.style.scrollBehavior = 'auto';
-                viewport.scrollLeft = targetLeft;
-                requestAnimationFrame(() => viewport.style.removeProperty('scroll-behavior'));
-            });
-        }
-
-        // A napcsík maga natívan gördül. Ez a kis őr csak azt akadályozza meg,
-        // hogy egy valódi húzás végén a névkártya vagy a nap véletlenül megnyíljon.
-        let mobileTimelineGesture = null;
-        const mobileEmployeeList = document.getElementById('m-emp-list');
-
-        function clearMobileTimelineGesture() {
-            if (!mobileTimelineGesture) return;
-            const { viewport, dragged } = mobileTimelineGesture;
-            mobileTimelineGesture = null;
-            if (dragged && viewport) {
-                viewport.dataset.mobileTimelineDragged = 'true';
-                window.setTimeout(() => { delete viewport.dataset.mobileTimelineDragged; }, 0);
-            }
-        }
-
-        mobileEmployeeList.addEventListener('pointerdown', function(event) {
-            if (!event.isPrimary) return;
-            const viewport = event.target.closest && event.target.closest('.m-week-viewport');
-            if (!viewport) return;
-            mobileTimelineGesture = {
-                viewport,
-                pointerId: event.pointerId,
-                startX: event.clientX,
-                startY: event.clientY,
-                dragged: false
-            };
-        }, { passive: true });
-
-        mobileEmployeeList.addEventListener('pointermove', function(event) {
-            if (!mobileTimelineGesture || event.pointerId !== mobileTimelineGesture.pointerId) return;
-            const movedX = Math.abs(event.clientX - mobileTimelineGesture.startX);
-            const movedY = Math.abs(event.clientY - mobileTimelineGesture.startY);
-            if (movedX > 7 && movedX > movedY) mobileTimelineGesture.dragged = true;
-        }, { passive: true });
-
-        mobileEmployeeList.addEventListener('click', function(event) {
-            const viewport = event.target.closest && event.target.closest('.m-week-viewport');
-            if (!viewport || viewport.dataset.mobileTimelineDragged !== 'true') return;
-            event.preventDefault();
-            event.stopImmediatePropagation();
-        }, true);
-
-        window.addEventListener('pointerup', clearMobileTimelineGesture, { passive: true });
-        window.addEventListener('pointercancel', clearMobileTimelineGesture, { passive: true });
-
-        // Minden névkártya saját, natív telefonos idővonalat használ.
-        // A böngésző kezeli a lendületet, az automatikus napra-igazítást pedig a CSS scroll-snap végzi.
-        // Nincs mesterséges pointer-fogás vagy JavaScript-alapú görgetés, ezért a húzás természetes marad.
+        // A mobilos főoldal heti sávja kizárólag vizuális jelző.
+        // A részletes, kattintható havi naptár a teljes névkártya megnyitásakor jelenik meg.
 
         // --- DUPLA KATTINTÁS (MODAL) LOGIKA ---
 
