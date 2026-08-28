@@ -362,7 +362,10 @@
             position: relative;
             isolation: isolate;
             color: #a78bfa;
-            background: linear-gradient(118deg, #60a5fa 0%, #a78bfa 45%, #f9a8d4 100%);
+            --active-shift-gradient: linear-gradient(118deg, #60a5fa 0%, #a78bfa 45%, #f9a8d4 100%);
+            --active-shift-shadow: rgba(167,139,250,.36);
+            background: var(--active-shift-gradient);
+            background-size: 220% 220%;
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -372,9 +375,16 @@
             letter-spacing: .015em;
             transform-origin: center;
             will-change: transform;
-            filter: none;
+            filter: drop-shadow(0 2px 5px var(--active-shift-shadow));
+            animation: activeShiftColorFlow 7.5s ease-in-out infinite alternate;
         }
-        .active-shift-drip { position: absolute; top: .73em; left: 50%; z-index: 2; width: .16em; height: .42em; border-radius: 999px; background: linear-gradient(180deg, #db2777, #6d28d9 58%, #2563eb); opacity: 0; pointer-events: none; transform: translate3d(-50%, 0, 0); will-change: transform, opacity; }
+        .active-shift-status[data-active-shift="A"] .active-shift-letter { --active-shift-gradient: linear-gradient(120deg, #5eead4 0%, #22c55e 42%, #a7f3d0 74%, #38bdf8 100%); --active-shift-shadow: rgba(34,197,94,.34); }
+        .active-shift-status[data-active-shift="B"] .active-shift-letter { --active-shift-gradient: linear-gradient(120deg, #fde047 0%, #f59e0b 34%, #fb7185 70%, #fdba74 100%); --active-shift-shadow: rgba(245,158,11,.36); }
+        .active-shift-status[data-active-shift="C"] .active-shift-letter { --active-shift-gradient: linear-gradient(120deg, #c4b5fd 0%, #818cf8 34%, #60a5fa 66%, #e879f9 100%); --active-shift-shadow: rgba(129,140,248,.38); }
+        .active-shift-status[data-active-shift="D"] .active-shift-letter { --active-shift-gradient: linear-gradient(120deg, #7dd3fc 0%, #2563eb 34%, #6366f1 65%, #c084fc 100%); --active-shift-shadow: rgba(99,102,241,.40); }
+        .active-shift-drip { position: absolute; top: .73em; left: 50%; z-index: 2; width: .16em; height: .42em; border-radius: 999px; background: var(--active-shift-gradient); opacity: 0; pointer-events: none; transform: translate3d(-50%, 0, 0); will-change: transform, opacity; }
+        @keyframes activeShiftColorFlow { 0% { background-position: 0% 48%; } 52% { background-position: 100% 54%; } 100% { background-position: 35% 100%; } }
+        @media (prefers-reduced-motion: reduce) { .active-shift-letter { animation: none; } }
 
         .device-info {
             font-size: 0.8rem; color: #64748b;
@@ -1719,6 +1729,7 @@
         if (now.getHours() < 6) shiftDate.setDate(shiftDate.getDate() - 1);
         const shifts = getShiftForDate(shiftDate);
         const activeCode = isDayShift ? shifts.day : shifts.night;
+        status.dataset.activeShift = activeCode;
         if (code.dataset.shiftCode !== activeCode) {
             code.dataset.shiftCode = activeCode;
             code.innerHTML = `<span class="active-shift-quote">"</span><span class="active-shift-letter">${activeCode}</span><span class="active-shift-quote">"</span>`;
@@ -1985,92 +1996,119 @@
     }
     /* ================================================================ */
 
-    // Csak az aktuális műszak betűjének 20 külön, egymást nem ismétlő mozgásmintája.
+    // Az aktuális műszak betűje önálló, változó idejű prémium mozgássorozatot kap.
+    // Minden minta csak transform/opacity értékeket használ, így telefonon is kímélő marad.
     const activeShiftMotionPatterns = [
-        [{ transform: 'translate3d(0,0,0)' }, { offset: .22, transform: 'translate3d(-8px,0,0) rotate(-6deg)' }, { offset: .46, transform: 'translate3d(8px,0,0) rotate(6deg)' }, { offset: .7, transform: 'translate3d(-5px,0,0)' }, { transform: 'translate3d(0,0,0)' }],
-        [{ transform: 'rotate(0)' }, { offset: .3, transform: 'rotate(-18deg)' }, { offset: .62, transform: 'rotate(18deg)' }, { transform: 'rotate(0)' }],
-        [{ transform: 'translate3d(0,0,0)' }, { offset: .38, transform: 'translate3d(0,-12px,0) scale(1.1)' }, { transform: 'translate3d(0,0,0)' }],
-        [{ transform: 'scale(1)' }, { offset: .32, transform: 'scale(1.16, .9)' }, { offset: .64, transform: 'scale(.92, 1.14)' }, { transform: 'scale(1)' }],
-        [{ transform: 'translate3d(0,0,0)' }, { offset: .25, transform: 'translate3d(-8px,-7px,0) rotate(-8deg)' }, { offset: .55, transform: 'translate3d(8px,7px,0) rotate(8deg)' }, { transform: 'translate3d(0,0,0)' }],
-        [{ transform: 'rotate(0)' }, { offset: .22, transform: 'rotate(-20deg) translate3d(-4px,0,0)' }, { offset: .5, transform: 'rotate(16deg) translate3d(4px,0,0)' }, { offset: .75, transform: 'rotate(-8deg)' }, { transform: 'rotate(0)' }],
-        [{ transform: 'translate3d(0,0,0)' }, { offset: .18, transform: 'translate3d(10px,0,0)' }, { offset: .36, transform: 'translate3d(-10px,0,0)' }, { offset: .54, transform: 'translate3d(7px,0,0)' }, { transform: 'translate3d(0,0,0)' }],
-        [{ transform: 'translate3d(0,0,0)' }, { offset: .34, transform: 'translate3d(0,9px,0) scale(1.12,.9)' }, { offset: .68, transform: 'translate3d(0,-4px,0) scale(.96,1.06)' }, { transform: 'translate3d(0,0,0)' }],
-        [{ transform: 'translate3d(0,0,0)' }, { offset: .28, transform: 'translate3d(-7px,-11px,0) rotate(-12deg)' }, { offset: .6, transform: 'translate3d(7px,2px,0) rotate(9deg)' }, { transform: 'translate3d(0,0,0)' }],
-        [{ transform: 'rotate(0) translate3d(0,0,0)' }, { offset: .25, transform: 'rotate(12deg) translate3d(7px,-4px,0)' }, { offset: .5, transform: 'rotate(0) translate3d(0,-8px,0)' }, { offset: .75, transform: 'rotate(-12deg) translate3d(-7px,-4px,0)' }, { transform: 'rotate(0) translate3d(0,0,0)' }],
-        [{ transform: 'translate3d(0,0,0)' }, { offset: .16, transform: 'translate3d(11px,0,0)' }, { offset: .34, transform: 'translate3d(-4px,0,0)' }, { offset: .54, transform: 'translate3d(8px,0,0)' }, { transform: 'translate3d(0,0,0)' }],
-        [{ transform: 'scale(1) rotate(0)' }, { offset: .35, transform: 'scale(1.15) rotate(-12deg)' }, { offset: .7, transform: 'scale(1.04) rotate(10deg)' }, { transform: 'scale(1) rotate(0)' }],
-        [{ transform: 'scale(1)' }, { offset: .26, transform: 'scale(1.18,.88) translate3d(0,5px,0)' }, { offset: .56, transform: 'scale(.9,1.14) translate3d(0,-6px,0)' }, { transform: 'scale(1)' }],
-        [{ transform: 'rotate(0)' }, { offset: .2, transform: 'rotate(-9deg) translate3d(-8px,0,0)' }, { offset: .4, transform: 'rotate(9deg) translate3d(8px,0,0)' }, { offset: .6, transform: 'rotate(-7deg) translate3d(-5px,0,0)' }, { transform: 'rotate(0)' }],
-        [{ transform: 'translate3d(0,0,0)' }, { offset: .24, transform: 'translate3d(7px,-10px,0) rotate(14deg)' }, { offset: .52, transform: 'translate3d(-7px,-10px,0) rotate(-14deg)' }, { transform: 'translate3d(0,0,0)' }],
-        [{ transform: 'translate3d(0,0,0)' }, { offset: .2, transform: 'translate3d(0,-9px,0)' }, { offset: .4, transform: 'translate3d(0,8px,0)' }, { offset: .6, transform: 'translate3d(0,-6px,0)' }, { transform: 'translate3d(0,0,0)' }],
-        [{ transform: 'skewX(0) rotate(0)' }, { offset: .3, transform: 'skewX(-20deg) rotate(-7deg)' }, { offset: .62, transform: 'skewX(19deg) rotate(7deg)' }, { transform: 'skewX(0) rotate(0)' }],
-        [{ transform: 'translate3d(0,0,0) rotate(0)' }, { offset: .3, transform: 'translate3d(-10px,0,0) rotate(-17deg)' }, { offset: .6, transform: 'translate3d(10px,0,0) rotate(17deg)' }, { transform: 'translate3d(0,0,0) rotate(0)' }],
-        [{ transform: 'translate3d(0,0,0) scale(1)' }, { offset: .32, transform: 'translate3d(0,9px,0) scale(1.14,.9)' }, { offset: .62, transform: 'translate3d(0,-11px,0) scale(.95,1.1)' }, { transform: 'translate3d(0,0,0) scale(1)' }],
-        [{ transform: 'translate3d(0,0,0)' }, { offset: .2, transform: 'translate3d(8px,-6px,0) rotate(8deg)' }, { offset: .4, transform: 'translate3d(-8px,-9px,0) rotate(-8deg)' }, { offset: .6, transform: 'translate3d(-9px,6px,0) rotate(7deg)' }, { offset: .8, transform: 'translate3d(9px,8px,0) rotate(-7deg)' }, { transform: 'translate3d(0,0,0)' }]
+        { duration: 980, easing: 'cubic-bezier(.32,.9,.48,1)', frames: [{ transform: 'translate3d(0,0,0)' }, { offset: .18, transform: 'translate3d(-9px,-2px,0) rotate(-9deg)' }, { offset: .36, transform: 'translate3d(10px,2px,0) rotate(9deg)' }, { offset: .56, transform: 'translate3d(-7px,-1px,0) rotate(-6deg)' }, { offset: .76, transform: 'translate3d(5px,1px,0) rotate(4deg)' }, { transform: 'translate3d(0,0,0)' }] },
+        { duration: 1320, easing: 'cubic-bezier(.24,.86,.32,1)', frames: [{ transform: 'translate3d(0,0,0) rotate(0)' }, { offset: .28, transform: 'translate3d(-11px,-13px,0) rotate(-18deg) scale(1.04)' }, { offset: .58, transform: 'translate3d(10px,-10px,0) rotate(16deg) scale(1.08)' }, { offset: .82, transform: 'translate3d(2px,3px,0) rotate(-5deg) scale(.98)' }, { transform: 'translate3d(0,0,0) rotate(0)' }] },
+        { duration: 1160, easing: 'cubic-bezier(.18,.82,.34,1.28)', frames: [{ transform: 'scale(1,1)' }, { offset: .22, transform: 'scale(1.28,.72) translate3d(0,5px,0)' }, { offset: .46, transform: 'scale(.82,1.22) translate3d(0,-14px,0)' }, { offset: .7, transform: 'scale(1.08,.96) translate3d(0,3px,0)' }, { transform: 'scale(1,1)' }] },
+        { duration: 1460, easing: 'cubic-bezier(.2,.78,.3,1)', frames: [{ transform: 'perspective(220px) rotateY(0deg) rotateZ(0deg)' }, { offset: .24, transform: 'perspective(220px) rotateY(150deg) rotateZ(44deg) scaleX(.28)' }, { offset: .5, transform: 'perspective(220px) rotateY(350deg) rotateZ(158deg) scaleX(1)' }, { offset: .76, transform: 'perspective(220px) rotateY(540deg) rotateZ(254deg) scaleX(.34)' }, { transform: 'perspective(220px) rotateY(720deg) rotateZ(360deg)' }] },
+        { duration: 1240, easing: 'cubic-bezier(.32,.02,.62,1)', frames: [{ transform: 'translate3d(0,0,0) rotate(0)' }, { offset: .16, transform: 'translate3d(8px,-9px,0) rotate(16deg)' }, { offset: .37, transform: 'translate3d(-12px,8px,0) rotate(-28deg)' }, { offset: .58, transform: 'translate3d(11px,12px,0) rotate(26deg)' }, { offset: .78, transform: 'translate3d(-4px,-4px,0) rotate(-8deg)' }, { transform: 'translate3d(0,0,0) rotate(0)' }] },
+        { duration: 1080, easing: 'cubic-bezier(.22,.72,.32,1)', frames: [{ transform: 'translate3d(0,0,0)' }, { offset: .18, transform: 'translate3d(13px,0,0) skewX(-16deg)' }, { offset: .42, transform: 'translate3d(-13px,0,0) skewX(18deg)' }, { offset: .64, transform: 'translate3d(9px,0,0) skewX(-10deg)' }, { transform: 'translate3d(0,0,0)' }] },
+        { duration: 1540, easing: 'cubic-bezier(.17,.83,.28,1)', frames: [{ transform: 'translate3d(0,0,0) rotate(0)' }, { offset: .18, transform: 'translate3d(0,-15px,0) rotate(11deg) scale(1.08)' }, { offset: .38, transform: 'translate3d(13px,-7px,0) rotate(30deg)' }, { offset: .58, transform: 'translate3d(0,5px,0) rotate(55deg)' }, { offset: .78, transform: 'translate3d(-8px,-3px,0) rotate(12deg)' }, { transform: 'translate3d(0,0,0) rotate(0)' }] },
+        { duration: 900, easing: 'cubic-bezier(.36,.9,.5,1)', frames: [{ transform: 'scale(1) rotate(0)' }, { offset: .16, transform: 'scale(.9,1.16) rotate(-8deg)' }, { offset: .34, transform: 'scale(1.18,.86) rotate(10deg)' }, { offset: .52, transform: 'scale(.92,1.12) rotate(-7deg)' }, { offset: .7, transform: 'scale(1.09,.94) rotate(4deg)' }, { transform: 'scale(1) rotate(0)' }] },
+        { duration: 1680, easing: 'cubic-bezier(.18,.78,.25,1)', frames: [{ transform: 'perspective(260px) translate3d(0,0,0) rotateX(0) rotateZ(0)' }, { offset: .22, transform: 'perspective(260px) translate3d(-8px,-8px,0) rotateX(52deg) rotateZ(-18deg)' }, { offset: .48, transform: 'perspective(260px) translate3d(11px,5px,0) rotateX(-42deg) rotateZ(26deg)' }, { offset: .72, transform: 'perspective(260px) translate3d(-5px,2px,0) rotateX(24deg) rotateZ(-10deg)' }, { transform: 'perspective(260px) translate3d(0,0,0) rotateX(0) rotateZ(0)' }] },
+        { duration: 1340, easing: 'cubic-bezier(.25,.84,.3,1)', frames: [{ transform: 'translate3d(0,0,0)' }, { offset: .2, transform: 'translate3d(-14px,0,0) rotate(-5deg)' }, { offset: .4, transform: 'translate3d(2px,-15px,0) rotate(3deg)' }, { offset: .6, transform: 'translate3d(14px,0,0) rotate(6deg)' }, { offset: .8, transform: 'translate3d(0,8px,0) rotate(-2deg)' }, { transform: 'translate3d(0,0,0)' }] },
+        { duration: 1210, easing: 'cubic-bezier(.2,.7,.32,1)', frames: [{ transform: 'rotate(0) translate3d(0,0,0)' }, { offset: .2, transform: 'rotate(-24deg) translate3d(-4px,2px,0)' }, { offset: .46, transform: 'rotate(23deg) translate3d(5px,1px,0)' }, { offset: .7, transform: 'rotate(-13deg) translate3d(-2px,0,0)' }, { transform: 'rotate(0) translate3d(0,0,0)' }] },
+        { duration: 1750, easing: 'cubic-bezier(.12,.76,.3,1)', frames: [{ transform: 'translate3d(0,0,0) scale(1)' }, { offset: .16, transform: 'translate3d(-10px,-4px,0) scale(1.06)' }, { offset: .34, transform: 'translate3d(13px,-13px,0) scale(.94)' }, { offset: .52, transform: 'translate3d(-14px,-12px,0) scale(1.1)' }, { offset: .72, transform: 'translate3d(8px,5px,0) scale(.98)' }, { offset: .88, transform: 'translate3d(-3px,1px,0) scale(1.03)' }, { transform: 'translate3d(0,0,0) scale(1)' }] },
+        { duration: 1120, easing: 'cubic-bezier(.26,.78,.38,1)', frames: [{ transform: 'translate3d(0,0,0) rotate(0)' }, { offset: .18, transform: 'translate3d(0,-10px,0) rotate(-15deg)' }, { offset: .38, transform: 'translate3d(0,7px,0) rotate(13deg)' }, { offset: .58, transform: 'translate3d(0,-6px,0) rotate(-9deg)' }, { offset: .78, transform: 'translate3d(0,3px,0) rotate(4deg)' }, { transform: 'translate3d(0,0,0) rotate(0)' }] },
+        { duration: 1480, easing: 'cubic-bezier(.22,.84,.32,1)', frames: [{ transform: 'perspective(240px) rotateY(0) translate3d(0,0,0)' }, { offset: .24, transform: 'perspective(240px) rotateY(-64deg) translate3d(-10px,-4px,0)' }, { offset: .5, transform: 'perspective(240px) rotateY(64deg) translate3d(10px,3px,0)' }, { offset: .74, transform: 'perspective(240px) rotateY(-28deg) translate3d(-4px,0,0)' }, { transform: 'perspective(240px) rotateY(0) translate3d(0,0,0)' }] },
+        { duration: 1060, easing: 'cubic-bezier(.28,.86,.42,1)', frames: [{ transform: 'translate3d(0,0,0) skewX(0)' }, { offset: .25, transform: 'translate3d(10px,-3px,0) skewX(-22deg) rotate(8deg)' }, { offset: .5, transform: 'translate3d(-10px,3px,0) skewX(22deg) rotate(-8deg)' }, { offset: .75, transform: 'translate3d(4px,-1px,0) skewX(-8deg) rotate(3deg)' }, { transform: 'translate3d(0,0,0) skewX(0)' }] }
     ];
     let activeShiftLastMotion = -1;
+    let activeShiftLetterAnimation = null;
+    let activeShiftMotionTimer = null;
 
     function playActiveShiftMelting(letter) {
         if (!letter) return;
         letter.querySelectorAll('.active-shift-drip').forEach(effect => effect.remove());
-        [-.28, 0, .28].forEach((offset, index) => {
+        [-.3, 0, .3].forEach((offset, index) => {
             const drip = document.createElement('span');
             drip.className = 'active-shift-drip';
             drip.style.marginLeft = `${offset}em`;
             letter.appendChild(drip);
             drip.animate([
-                { opacity: 0, transform: 'translate3d(-50%,0,0) scale(.55,.4)' },
-                { offset: .16, opacity: .95, transform: 'translate3d(-50%,4px,0) scale(1,1)' },
-                { opacity: 0, transform: `translate3d(-50%,${46 + index * 14}px,0) scale(.42,1.8)` }
-            ], { duration: 1050 + index * 90, delay: index * 70, easing: 'cubic-bezier(.2,.7,.35,1)', fill: 'both' });
-            setTimeout(() => drip.remove(), 1280 + index * 120);
+                { opacity: 0, transform: 'translate3d(-50%,0,0) scale(.5,.35)' },
+                { offset: .14, opacity: .9, transform: 'translate3d(-50%,5px,0) scale(1,1)' },
+                { offset: .58, opacity: .75, transform: `translate3d(-50%,${26 + index * 9}px,0) scale(.62,1.45)` },
+                { opacity: 0, transform: `translate3d(-50%,${56 + index * 15}px,0) scale(.3,2.1)` }
+            ], { duration: 1320 + index * 130, delay: index * 80, easing: 'cubic-bezier(.2,.72,.3,1)', fill: 'both' });
+            setTimeout(() => drip.remove(), 1700 + index * 150);
         });
+    }
+
+    function startActiveShiftAnimation(letter, frames, options) {
+        if (activeShiftLetterAnimation) activeShiftLetterAnimation.cancel();
+        activeShiftLetterAnimation = letter.animate(frames, { fill: 'none', ...options });
+        activeShiftLetterAnimation.finished.catch(() => {}).finally(() => { activeShiftLetterAnimation = null; });
+        return options.duration;
     }
 
     function playActiveShiftLetterMotion() {
         const letter = document.querySelector('#activeShiftCode .active-shift-letter');
-        if (!letter || typeof letter.animate !== 'function') return;
-        const spinMotionIndex = activeShiftMotionPatterns.length;
-        const fallMotionIndex = activeShiftMotionPatterns.length + 1;
-        const meltMotionIndex = activeShiftMotionPatterns.length + 2;
-        let motionIndex = Math.floor(Math.random() * (activeShiftMotionPatterns.length + 3));
-        while (motionIndex === activeShiftLastMotion) motionIndex = Math.floor(Math.random() * (activeShiftMotionPatterns.length + 3));
+        if (!letter || typeof letter.animate !== 'function' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return 0;
+        const fallMotionIndex = activeShiftMotionPatterns.length;
+        const meltMotionIndex = activeShiftMotionPatterns.length + 1;
+        const bounceDropMotionIndex = activeShiftMotionPatterns.length + 2;
+        const skyStampMotionIndex = activeShiftMotionPatterns.length + 3;
+        let motionIndex = Math.floor(Math.random() * (activeShiftMotionPatterns.length + 4));
+        while (motionIndex === activeShiftLastMotion) motionIndex = Math.floor(Math.random() * (activeShiftMotionPatterns.length + 4));
         activeShiftLastMotion = motionIndex;
-        letter.getAnimations().forEach(animation => animation.cancel());
-        if (motionIndex === spinMotionIndex) {
-            letter.animate([
-                { transform: 'perspective(260px) rotateY(0deg) rotateZ(0deg) scale(1)' },
-                { offset: .2, transform: 'perspective(260px) rotateY(150deg) rotateZ(90deg) scaleX(.2) scaleY(1.04)' },
-                { offset: .48, transform: 'perspective(260px) rotateY(350deg) rotateZ(205deg) scaleX(1) scaleY(.98)' },
-                { offset: .76, transform: 'perspective(260px) rotateY(570deg) rotateZ(330deg) scaleX(.3) scaleY(1.03)' },
-                { transform: 'perspective(260px) rotateY(720deg) rotateZ(420deg) scale(1)' }
-            ], { duration: 1260, easing: 'cubic-bezier(.22,.78,.28,1)', fill: 'none' });
-            return;
-        }
+
         if (motionIndex === fallMotionIndex) {
-            letter.animate([
+            return startActiveShiftAnimation(letter, [
                 { opacity: 1, transform: 'translate3d(0,0,0) rotate(0) scale(1)' },
-                { offset: .11, opacity: 1, transform: 'translate3d(4px,-6px,0) rotate(18deg) scale(1.04)' },
-                { offset: .29, opacity: 1, transform: 'translate3d(-10px,16vh,0) rotate(-118deg) scale(.98)' },
-                { offset: .43, opacity: 0, transform: 'translate3d(16px,92vh,0) rotate(650deg) scale(.78)' },
-                { offset: .47, opacity: 0, transform: 'translate3d(-12px,-96vh,0) rotate(-420deg) scale(.78)' },
-                { offset: .7, opacity: 1, transform: 'translate3d(8px,-19vh,0) rotate(-104deg) scale(.96)' },
-                { offset: .88, opacity: 1, transform: 'translate3d(-3px,4px,0) rotate(10deg) scale(1.03)' },
+                { offset: .1, opacity: 1, transform: 'translate3d(5px,-7px,0) rotate(20deg) scale(1.06)' },
+                { offset: .28, opacity: 1, transform: 'translate3d(-13px,19vh,0) rotate(-128deg) scale(.96)' },
+                { offset: .42, opacity: 0, transform: 'translate3d(18px,94vh,0) rotate(720deg) scale(.72)' },
+                { offset: .5, opacity: 0, transform: 'translate3d(-14px,-98vh,0) rotate(-440deg) scale(.72)' },
+                { offset: .72, opacity: 1, transform: 'translate3d(9px,-20vh,0) rotate(-112deg) scale(.96)' },
+                { offset: .88, opacity: 1, transform: 'translate3d(-3px,6px,0) rotate(12deg) scale(1.04)' },
                 { opacity: 1, transform: 'translate3d(0,0,0) rotate(0) scale(1)' }
-            ], { duration: 2280, easing: 'cubic-bezier(.28,.04,.7,.46)', fill: 'none' });
-            return;
+            ], { duration: 3340, easing: 'cubic-bezier(.25,.02,.68,.48)' });
         }
         if (motionIndex === meltMotionIndex) {
             playActiveShiftMelting(letter);
-            letter.animate([
+            return startActiveShiftAnimation(letter, [
                 { opacity: 1, transform: 'translate3d(0,0,0) scale(1,1)' },
-                { offset: .26, opacity: 1, transform: 'translate3d(0,4px,0) scale(1.18,.78)' },
-                { offset: .62, opacity: .8, transform: 'translate3d(0,18px,0) scale(1.48,.25)' },
-                { opacity: 0, transform: 'translate3d(0,74px,0) scale(.36,.08)' }
-            ], { duration: 1120, easing: 'cubic-bezier(.18,.72,.32,1)', fill: 'none' });
-            return;
+                { offset: .2, opacity: 1, transform: 'translate3d(0,4px,0) scale(1.18,.8)' },
+                { offset: .5, opacity: .86, transform: 'translate3d(0,17px,0) scale(1.42,.29)' },
+                { offset: .72, opacity: 0, transform: 'translate3d(0,64px,0) scale(.38,.08)' },
+                { offset: .86, opacity: 0, transform: 'translate3d(0,-19px,0) scale(.5,.35)' },
+                { opacity: 1, transform: 'translate3d(0,0,0) scale(1,1)' }
+            ], { duration: 2360, easing: 'cubic-bezier(.18,.72,.3,1)' });
         }
-        letter.animate(activeShiftMotionPatterns[motionIndex], { duration: 780, easing: 'ease-in-out', fill: 'none' });
+        if (motionIndex === bounceDropMotionIndex) {
+            return startActiveShiftAnimation(letter, [
+                { transform: 'translate3d(0,0,0) rotate(0) scale(1)' },
+                { offset: .18, transform: 'translate3d(10px,13vh,0) rotate(110deg) scale(.94)' },
+                { offset: .36, transform: 'translate3d(-15px,27vh,0) rotate(-220deg) scale(.86)' },
+                { offset: .5, transform: 'translate3d(13px,20vh,0) rotate(150deg) scale(.92)' },
+                { offset: .64, transform: 'translate3d(-8px,12vh,0) rotate(-92deg) scale(.97)' },
+                { offset: .8, transform: 'translate3d(4px,4px,0) rotate(18deg) scale(1.03)' },
+                { transform: 'translate3d(0,0,0) rotate(0) scale(1)' }
+            ], { duration: 2760, easing: 'cubic-bezier(.22,.64,.35,1)' });
+        }
+        if (motionIndex === skyStampMotionIndex) {
+            return startActiveShiftAnimation(letter, [
+                { opacity: 0, transform: 'translate3d(-7px,-72vh,0) rotate(-68deg) scale(.7)' },
+                { offset: .38, opacity: 1, transform: 'translate3d(5px,12px,0) rotate(16deg) scale(1.19,.78)' },
+                { offset: .56, opacity: 1, transform: 'translate3d(-3px,-8px,0) rotate(-8deg) scale(.96,1.09)' },
+                { offset: .76, opacity: 1, transform: 'translate3d(2px,3px,0) rotate(4deg) scale(1.03,.98)' },
+                { opacity: 1, transform: 'translate3d(0,0,0) rotate(0) scale(1)' }
+            ], { duration: 2460, easing: 'cubic-bezier(.18,.82,.3,1)' });
+        }
+
+        const pattern = activeShiftMotionPatterns[motionIndex];
+        return startActiveShiftAnimation(letter, pattern.frames, { duration: pattern.duration, easing: pattern.easing });
+    }
+
+    function scheduleActiveShiftLetterMotion() {
+        clearTimeout(activeShiftMotionTimer);
+        if (document.hidden) return;
+        const duration = playActiveShiftLetterMotion();
+        const pause = 900 + Math.floor(Math.random() * 2300);
+        activeShiftMotionTimer = setTimeout(scheduleActiveShiftLetterMotion, Math.max(2400, duration + pause));
     }
 
     // A másodpercenkénti teljes kezdőlap-újraépítés helyett célzott, takarékos frissítések.
@@ -2098,13 +2136,18 @@
     }
 
     updateInfo();
-    playActiveShiftLetterMotion();
-    setInterval(playActiveShiftLetterMotion, 2000);
+    scheduleActiveShiftLetterMotion();
     scheduleHomeInfoRefresh();
     scheduleCalendarRgbRefresh();
 
     window.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') updateInfo();
+        if (document.visibilityState === 'visible') {
+            updateInfo();
+            scheduleActiveShiftLetterMotion();
+        } else {
+            clearTimeout(activeShiftMotionTimer);
+            if (activeShiftLetterAnimation) activeShiftLetterAnimation.cancel();
+        }
     });
 
     function scheduleExactShiftStatusUpdate() {
