@@ -451,6 +451,10 @@ input.suggestions-active {
         border-radius: 8px; 
         font-family: sans-serif; font-size: 1.1rem; font-weight: 600;
         cursor: pointer;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-user-select: none;
+        user-select: none;
         position: relative;
         background: linear-gradient(145deg, #334155, #1e293b);
         border-top: 1px solid rgba(255,255,255,0.1); 
@@ -1172,6 +1176,7 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
     });
 
     generateAlphaKeys();
+    enableReliableMobileKeypad();
     
     document.addEventListener('click', function(e) {
         if(window.innerWidth < 1024) {
@@ -1184,6 +1189,30 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
         }
     });
 });
+
+// iOS-en a gyors egymás utáni érintéseknél a késleltetett click esemény
+// alkalmanként elveszhet. A telefonos billentyűzet ezért már az érintés
+// kezdetén rögzíti a karaktert, ugyanazzal a meglévő billentyű-funkcióval.
+function enableReliableMobileKeypad() {
+    const keyboard = document.getElementById('kbContainer');
+    if (!keyboard) return;
+
+    keyboard.querySelectorAll('.k-btn').forEach(key => {
+        if (key.dataset.fastTouchReady === 'true') return;
+        const legacyClickHandler = key.onclick;
+        if (typeof legacyClickHandler !== 'function') return;
+
+        key.dataset.fastTouchReady = 'true';
+        key.onclick = null;
+        key.removeAttribute('onclick');
+        key.addEventListener('pointerdown', event => {
+            if (event.pointerType === 'mouse' && event.button !== 0) return;
+            event.preventDefault();
+            event.stopPropagation();
+            legacyClickHandler.call(key, event);
+        }, { passive: false });
+    });
+}
 
 function feldolgoz(t){return t.split('\n').map(s=>s.replace(/"/g,'').trim()).filter(s=>s).slice(1).map(s=>s.split(';').map(e=>e.trim()));}
 
