@@ -99,6 +99,7 @@ input[type=text] {
 }
 .scan-btn:active { transform: scale(0.92); }
 .scan-btn svg { width: 28px; height: 28px; fill: white; }
+.manual-search-source-toggle { display: none; }
 
 /* --- KÉZI USB-SZKENNER (CSAK ASZTALI / LAPTOP NÉZETBEN) --- */
 .manual-scanner-control, .manual-scanner-welcome, .manual-scanner-pro-panel, .manual-scan-status, .manual-model-modal, .manual-guide-modal { display: none; }
@@ -125,8 +126,12 @@ input[type=text] {
     body.manual-scanner-mode .main-content { padding: 158px 30px 30px; align-items: stretch; overflow-y: auto; }
     body.manual-scanner-mode .input-wrapper { position: fixed; top: 16px; left: 24px; z-index: 200; width: min(560px, calc(100vw - 520px)); min-width: 330px; margin: 0; }
     body.manual-scanner-mode .input-wrapper .scan-btn { display: none; }
-    body.manual-scanner-mode #barcodeInput { width: 100%; min-height: 56px; padding: 14px 22px; border-color: rgba(52,211,153,.68); border-radius: 16px; background: rgba(15,23,42,.96); color: #f8fafc; box-shadow: 0 0 0 3px rgba(16,185,129,.12), 0 12px 30px rgba(0,0,0,.28); font-size: 1.08rem; text-align: left; }
+    body.manual-scanner-mode #barcodeInput { width: auto; flex: 1; min-height: 56px; padding: 14px 22px; border-color: rgba(52,211,153,.68); border-radius: 16px; background: rgba(15,23,42,.96); color: #f8fafc; box-shadow: 0 0 0 3px rgba(16,185,129,.12), 0 12px 30px rgba(0,0,0,.28); font-size: 1.08rem; text-align: left; }
     body.manual-scanner-mode #barcodeInput:focus { border-color: #34d399; box-shadow: 0 0 0 4px rgba(16,185,129,.2), 0 12px 30px rgba(0,0,0,.28); }
+    body.manual-scanner-mode .manual-search-source-toggle { min-width: 88px; display: inline-flex; align-items: center; justify-content: center; padding: 0 12px; border: 1px solid rgba(52,211,153,.58); border-radius: 15px; color: #d1fae5; background: rgba(6,78,59,.78); box-shadow: 0 8px 24px rgba(0,0,0,.25); cursor: pointer; font: inherit; font-size: .68rem; font-weight: 900; letter-spacing: .06em; transition: transform .2s ease, background .2s ease, border-color .2s ease; }
+    body.manual-scanner-mode .manual-search-source-toggle:hover { transform: translateY(-1px); border-color: #6ee7b7; }
+    body.manual-scanner-mode.manual-bank-search .manual-search-source-toggle { border-color: rgba(96,165,250,.7); color: #dbeafe; background: rgba(30,64,175,.78); }
+    body.manual-scanner-mode.manual-bank-search #barcodeInput { border-color: rgba(96,165,250,.72); box-shadow: 0 0 0 3px rgba(59,130,246,.14), 0 12px 30px rgba(0,0,0,.28); }
     body.manual-scanner-mode .filter-wrapper { position: fixed; top: 82px; left: 24px; z-index: 200; display: flex !important; width: min(560px, calc(100vw - 520px)); min-width: 330px; justify-content: flex-start; margin: 0; }
     body.manual-scanner-mode #modelFilter { min-height: 38px; padding: 8px 18px; border-color: rgba(96,165,250,.45); background: rgba(15,23,42,.94); color: #e2e8f0; }
     body.manual-scanner-mode #resultsWrapper { width: min(100%, 1120px); max-width: none; margin: auto; padding-bottom: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
@@ -158,6 +163,7 @@ input[type=text] {
     .manual-model-picker-button { flex: 1; padding: 9px 13px; text-align: left; }
     .manual-model-picker-button::before { content: '▦'; margin-right: 8px; color: #93c5fd; }
     .manual-model-picker-button.is-filtered { border-color: #60a5fa; color: #fff; background: linear-gradient(135deg, rgba(37,99,235,.92), rgba(30,64,175,.92)); }
+    body.manual-bank-search .manual-model-picker-button, body.manual-bank-search .manual-sound-control { opacity: .42; pointer-events: none; }
     .manual-guide-button { width: 40px; padding: 0; color: #bbf7d0; border-color: rgba(52,211,153,.42); font-size: 1rem; }
     .manual-model-picker-button:hover, .manual-guide-button:hover { transform: translateY(-1px); border-color: #93c5fd; }
     .manual-sound-control { display: inline-flex; align-items: center; gap: 7px; padding: 4px 7px 4px 10px; border: 1px solid rgba(148,163,184,.2); border-radius: 12px; background: rgba(15,23,42,.92); color: #94a3b8; font-size: .63rem; font-weight: 800; white-space: nowrap; }
@@ -173,6 +179,8 @@ input[type=text] {
     .manual-modal-close { width: 34px; height: 34px; border: 1px solid rgba(148,163,184,.24); border-radius: 10px; color: #cbd5e1; background: #1e293b; cursor: pointer; font-size: 1.1rem; }
     .manual-model-actions { display: flex; gap: 9px; padding: 12px 20px; border-bottom: 1px solid rgba(148,163,184,.12); }
     .manual-model-actions button { border: 0; border-radius: 9px; padding: 8px 11px; color: #bfdbfe; background: rgba(37,99,235,.2); cursor: pointer; font: inherit; font-size: .68rem; font-weight: 850; }
+    .manual-model-search { width: calc(100% - 40px); margin: 0 20px 2px; padding: 11px 13px; border: 1px solid rgba(96,165,250,.28); border-radius: 10px; color: #f8fafc; background: rgba(15,23,42,.76); outline: none; font: inherit; font-size: .8rem; }
+    .manual-model-search:focus { border-color: #60a5fa; box-shadow: 0 0 0 3px rgba(59,130,246,.14); }
     .manual-model-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; overflow: auto; padding: 16px 20px 20px; }
     .manual-model-option { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 10px; border: 1px solid rgba(148,163,184,.18); border-radius: 11px; color: #cbd5e1; background: rgba(30,41,59,.52); cursor: pointer; font-size: .72rem; font-weight: 750; }
     .manual-model-option:has(input:checked) { border-color: #60a5fa; color: #fff; background: rgba(37,99,235,.23); }
@@ -383,6 +391,7 @@ body.scanning-mode .scan-controls-container { display: flex; }
 
     <div class="input-wrapper">
         <input type="text" id="barcodeInput" placeholder="Scan Barcode-->" autocomplete="off">
+        <button id="manualSearchSourceToggle" class="manual-search-source-toggle" type="button" title="Keresési adatforrás váltása">MODELL</button>
         <button class="scan-btn" onclick="handleCameraButton()" title="Kamera indítása">
             <svg id="camIcon" viewBox="0 0 24 24">
                 <path d="M4 6h2v12H4zm14 0h2v12h-2zm-4 0h2v12h-2zm-4 0h2v12h-2zM2 4v16h20V4H2zm18 14H4V6h16v12z"/>
@@ -433,6 +442,7 @@ body.scanning-mode .scan-controls-container { display: flex; }
                 <button id="manualModelsSelectAll" type="button">Összes modell</button>
                 <button id="manualModelsClearAll" type="button">Szűrés törlése</button>
             </div>
+            <input id="manualModelSearch" class="manual-model-search" type="search" placeholder="Modellnév gyors keresése…" autocomplete="off" />
             <div id="manualModelOptions" class="manual-model-options"></div>
         </div>
     </div>
@@ -444,8 +454,8 @@ body.scanning-mode .scan-controls-container { display: flex; }
                 <li>Kapcsold be a <strong>Kézi szkenner</strong> módot laptopon. A beolvasómező végig fókuszban marad.</li>
                 <li>Csipogd be a tekercset. A rendszer automatikusan <strong>eltávolítja az első 4 és utolsó 3 karaktert</strong>, és csak a középső cikkszámra keres.</li>
                 <li>Nem kell angol billentyűzetre váltani: a beolvasó a fizikai billentyűkódot kezeli, ezért magyar kiosztással is működik.</li>
-                <li>A <strong>Modellek</strong> gombbal több modellt is kijelölhetsz egyszerre. Kijelölés nélkül minden modellben keres.</li>
-                <li>A találati kártya az <strong>ültetési adatokat</strong> (cikkszám, oldal, modell) mutatja, és azonos cikkszám + modell esetén mellé teszi a <strong>bankadatokat</strong> is.</li>
+                <li>A kereső melletti <strong>MODELL / BANK</strong> gombbal választasz adatforrást. MODELL módban az <strong>ultetes.csv</strong>, BANK módban a <strong>bank.csv</strong> saját adatai jelennek meg.</li>
+                <li>MODELL módban a <strong>Modellek</strong> gombbal több modellt is kijelölhetsz, a felugró ablakban pedig névrészletre is kereshetsz.</li>
                 <li>Aktív modell-szűrésnél a <strong>Találati hang</strong> kapcsolóval kérhetsz rövid sikeres vagy sikertelen visszajelzést.</li>
                 <li>Minden új csipogás azonnal a következő tekercs találatára vált; a képernyőhöz nem kell nyúlni.</li>
             </ol>
@@ -493,11 +503,13 @@ const sliderValueDisplay = document.getElementById('sliderValueDisplay');
 const modelFilter = document.getElementById('modelFilter'); // ÚJ: Szűrő változó
 const manualScannerToggle = document.getElementById('manualScannerToggle');
 const manualScannerState = document.getElementById('manualScannerState');
+const manualSearchSourceToggle = document.getElementById('manualSearchSourceToggle');
 const manualScannerProPanel = document.getElementById('manualScannerProPanel');
 const manualModelPickerButton = document.getElementById('manualModelPickerButton');
 const manualModelModal = document.getElementById('manualModelModal');
 const manualModelModalClose = document.getElementById('manualModelModalClose');
 const manualModelOptions = document.getElementById('manualModelOptions');
+const manualModelSearch = document.getElementById('manualModelSearch');
 const manualModelsSelectAll = document.getElementById('manualModelsSelectAll');
 const manualModelsClearAll = document.getElementById('manualModelsClearAll');
 const manualScannerSoundToggle = document.getElementById('manualScannerSoundToggle');
@@ -519,6 +531,7 @@ let manualScannerKeyBuffer = '';
 let manualScannerIdleTimer = null;
 let availableModels = [];
 const manualScannerSelectedModels = new Set();
+let manualSearchSource = localStorage.getItem('manualSearchSource') === 'bank' ? 'bank' : 'placement';
 const defaultBarcodePlaceholder = input.placeholder;
 
 if (manualScannerSoundToggle) {
@@ -561,10 +574,32 @@ function updateManualModelPicker() {
     if (manualScannerSoundToggle) manualScannerSoundToggle.disabled = !soundIsAvailable;
 }
 
+function updateManualSearchSourceUI() {
+    const isBankSearch = manualSearchSource === 'bank';
+    document.body.classList.toggle('manual-bank-search', isBankSearch && manualScannerEnabled);
+    if (manualSearchSourceToggle) {
+        manualSearchSourceToggle.textContent = isBankSearch ? 'BANK' : 'MODELL';
+        manualSearchSourceToggle.title = isBankSearch
+            ? 'Bank keresés aktív – kattintással modell keresésre vált'
+            : 'Modell keresés aktív – kattintással bank keresésre vált';
+    }
+    if (manualModelPickerButton) {
+        manualModelPickerButton.disabled = isBankSearch;
+        manualModelPickerButton.title = isBankSearch ? 'A modellszűrés csak MODELL keresésben használható' : 'Modellek szűrése';
+    }
+    if (isBankSearch && manualModelModal?.classList.contains('is-open')) setManualModelModal(false);
+}
+
 function renderManualModelOptions() {
     if (!manualModelOptions) return;
     manualModelOptions.innerHTML = '';
-    availableModels.forEach(model => {
+    const typedSearch = normalizeManualModelName(manualModelSearch?.value || '');
+    const visibleModels = availableModels.filter(model => model.includes(typedSearch));
+    if (!visibleModels.length) {
+        manualModelOptions.innerHTML = '<div style="grid-column:1 / -1;padding:16px;text-align:center;color:#94a3b8;font-size:.78rem;font-weight:700;">Nincs ilyen modell</div>';
+        return;
+    }
+    visibleModels.forEach(model => {
         const label = document.createElement('label');
         label.className = 'manual-model-option';
         const checkbox = document.createElement('input');
@@ -588,7 +623,11 @@ function setManualModelModal(open) {
         manualModelModal.classList.toggle('is-open', Boolean(open));
         manualModelModal.setAttribute('aria-hidden', String(!open));
     }
-    if (open) renderManualModelOptions();
+    if (open) {
+        if (manualModelSearch) manualModelSearch.value = '';
+        renderManualModelOptions();
+        requestAnimationFrame(() => manualModelSearch?.focus());
+    }
     else focusManualScannerInput();
 }
 
@@ -647,6 +686,7 @@ function setManualScannerMode(enabled) {
     manualScannerEnabled = nextState;
     manualScannerModelPickerOpen = false;
     document.body.classList.toggle('manual-scanner-mode', nextState);
+    updateManualSearchSourceUI();
     document.body.classList.remove('manual-scanner-has-result');
     clearTimeout(manualScannerIdleTimer);
     manualScannerKeyBuffer = '';
@@ -661,11 +701,23 @@ function setManualScannerMode(enabled) {
 }
 
 manualScannerToggle?.addEventListener('change', () => setManualScannerMode(manualScannerToggle.checked));
-manualModelPickerButton?.addEventListener('click', () => setManualModelModal(true));
+manualSearchSourceToggle?.addEventListener('click', () => {
+    manualSearchSource = manualSearchSource === 'bank' ? 'placement' : 'bank';
+    localStorage.setItem('manualSearchSource', manualSearchSource);
+    resultsWrapper.innerHTML = '';
+    document.body.classList.remove('manual-scanner-has-result');
+    updateManualSearchSourceUI();
+    updateManualScannerStatus(manualSearchSource === 'bank'
+        ? 'BANK keresés aktív · várakozás a következő beolvasásra'
+        : 'MODELL keresés aktív · várakozás a következő beolvasásra');
+    focusManualScannerInput();
+});
+manualModelPickerButton?.addEventListener('click', () => { if (manualSearchSource === 'placement') setManualModelModal(true); });
 manualModelModalClose?.addEventListener('click', () => setManualModelModal(false));
 manualModelModal?.addEventListener('click', event => { if (event.target === manualModelModal) setManualModelModal(false); });
 manualModelsSelectAll?.addEventListener('click', () => { availableModels.forEach(model => manualScannerSelectedModels.add(model)); saveManualModels(); updateManualModelPicker(); renderManualModelOptions(); });
 manualModelsClearAll?.addEventListener('click', () => { manualScannerSelectedModels.clear(); saveManualModels(); updateManualModelPicker(); renderManualModelOptions(); });
+manualModelSearch?.addEventListener('input', renderManualModelOptions);
 manualGuideButton?.addEventListener('click', () => setManualGuideModal(true));
 manualGuideClose?.addEventListener('click', () => setManualGuideModal(false));
 manualGuideModal?.addEventListener('click', event => { if (event.target === manualGuideModal) setManualGuideModal(false); });
@@ -922,32 +974,28 @@ function search(code, options = {}) {
     });
     const bankMatches = bankDB.filter(item => {
         const isMatch = lookupCodes.some(lookup => lookup.includes(item.id) || item.id.includes(lookup)) && item.id.length > 2;
-        return isMatch && (currentModel === 'ALL' || item.model === currentModel);
+        const isManualBankSearch = isManualSearch && manualSearchSource === 'bank';
+        return isMatch && (isManualBankSearch || currentModel === 'ALL' || item.model === currentModel);
     });
 
-    // Minden ültetési sor saját találat. A bankadatot a közös cikkszám kapcsolja hozzá,
-    // ezért eltérő modellnév-formátum mellett sem marad el a meglévő bankpozíció.
+    // Kézi módban a két keresés különálló: MODELL = ultetes.csv, BANK = bank.csv.
+    // A kártya mindig csak az aktív adatforrás saját adatait mutatja.
     const matches = isManualSearch
-        ? placementMatches.flatMap(placement => {
-            const sameIdBanks = bankDB.filter(bank => bank.id === placement.id);
-            return sameIdBanks.length
-                ? sameIdBanks.map(bank => ({ placement, bank }))
-                : [{ placement, bank: null }];
-        })
+        ? (manualSearchSource === 'bank' ? bankMatches : placementMatches)
         : bankMatches;
 
-    const shouldPlayManualSound = isManualSearch && manualScannerSelectedModels.size > 0 && Boolean(manualScannerSoundToggle?.checked);
+    const shouldPlayManualSound = isManualSearch && manualSearchSource === 'placement' && manualScannerSelectedModels.size > 0 && Boolean(manualScannerSoundToggle?.checked);
     const shouldPlaySound = !isManualSearch || shouldPlayManualSound;
 
     if (matches.length > 0) {
         if (shouldPlaySound) playSound(true, { manual: isManualSearch });
 
-        // Deduplikáció: egy adott cikkszámhoz tartozó azonos ültetés + bank kapcsolat csak egyszer látszik.
+        // Deduplikáció: azonos forrásadat csak egyszer látszik.
         let seen = new Set();
         let uniqueMatches = [];
         for (let m of matches) {
-            let stringifiedRow = isManualSearch
-                ? `${m.placement.id}|${m.placement.side}|${m.placement.model}|${m.placement.quantity}|${m.placement.lineName}|${m.bank?.gep || ''}|${m.bank?.poz || ''}`
+            let stringifiedRow = isManualSearch && manualSearchSource === 'placement'
+                ? `${m.id}|${m.side}|${m.model}|${m.quantity}|${m.lineName}`
                 : `${m.gep}|${m.poz}|${m.id}|${m.model}`;
             if (!seen.has(stringifiedRow)) {
                 seen.add(stringifiedRow);
@@ -958,8 +1006,8 @@ function search(code, options = {}) {
         uniqueMatches.forEach(m => {
             const card = document.createElement('div');
             card.className = `result-card${isManualSearch ? ' manual-result-card' : ''}`;
-            if (isManualSearch) {
-                const { placement, bank } = m;
+            if (isManualSearch && manualSearchSource === 'placement') {
+                const placement = m;
                 card.innerHTML = `
                     <div class="res-grid">
                         <div class="res-cell res-full">
@@ -982,44 +1030,26 @@ function search(code, options = {}) {
                             <span class="res-label">Gépsor</span>
                             <span class="res-value">${placement.lineName || '—'}</span>
                         </div>
-                        ${bank ? `
-                            <div class="res-cell">
-                                <span class="res-label">Bank / gép</span>
-                                <span class="res-value">${bank.gep}</span>
-                            </div>
-                            <div class="res-cell">
-                                <span class="res-label">Bank pozíció</span>
-                                <span class="res-value res-highlight">#${bank.poz}</span>
-                            </div>
-                            <div class="res-cell res-full">
-                                <span class="res-label">Bank modell</span>
-                                <span class="res-value" style="font-size:.85rem;">${bank.model || '—'}</span>
-                            </div>
-                        ` : `
-                            <div class="res-cell res-full">
-                                <span class="res-label">Bankadat</span>
-                                <span class="res-value" style="font-size:.85rem;color:#94a3b8;">Nincs egyező bankadat</span>
-                            </div>
-                        `}
                     </div>
                 `;
             } else {
+                const isManualBankSearch = isManualSearch && manualSearchSource === 'bank';
                 card.innerHTML = `
                 <div class="res-grid">
                     <div class="res-cell res-full">
-                        <span class="res-label">${isManualSearch ? 'Modell adat' : 'Modell'}</span>
+                        <span class="res-label">${isManualBankSearch ? 'Bank modell' : 'Modell'}</span>
                         <span class="res-value">${m.model}</span>
                     </div>
                     <div class="res-cell">
-                        <span class="res-label">${isManualSearch ? 'Bank / gép' : 'Gép'}</span>
+                        <span class="res-label">${isManualBankSearch ? 'Gép azonosítószám' : 'Gép'}</span>
                         <span class="res-value">${m.gep}</span>
                     </div>
                     <div class="res-cell">
-                        <span class="res-label">${isManualSearch ? 'Bank pozíció' : 'Pozíció'}</span>
+                        <span class="res-label">${isManualBankSearch ? 'Feeder lokáció' : 'Pozíció'}</span>
                         <span class="res-value res-highlight">#${m.poz}</span>
                     </div>
                     <div class="res-cell res-full">
-                        <span class="res-label">${isManualSearch ? 'Cikkszám / azonosító' : 'Azonosító (ID)'}</span>
+                        <span class="res-label">${isManualBankSearch ? 'Cikkszám' : 'Azonosító (ID)'}</span>
                         <span class="res-value" style="font-size:0.9rem;">${m.id}</span>
                     </div>
                 </div>
@@ -1031,7 +1061,7 @@ function search(code, options = {}) {
     } else {
         if (shouldPlaySound) playSound(false, { manual: isManualSearch });
         resultsWrapper.innerHTML = isManualSearch
-            ? `<div class="no-result">NINCS TALÁLAT<div style="margin-top:12px;color:#94a3b8;font-size:.8rem;font-weight:700;">Keresett azonosító: ${code}</div></div>`
+            ? `<div class="no-result">NINCS TALÁLAT<div style="margin-top:12px;color:#94a3b8;font-size:.8rem;font-weight:700;">${manualSearchSource === 'bank' ? 'BANK' : 'MODELL'} keresés · azonosító: ${code}</div></div>`
             : '<div class="no-result">NINCS A LISTÁBAN</div>';
         saveToHistory(code, false);
     }
