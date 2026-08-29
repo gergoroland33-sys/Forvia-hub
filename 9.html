@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="hu">
 <head>
@@ -540,6 +541,14 @@ function updateManualScannerStatus(message) {
     if (manualScanStatus) manualScanStatus.innerHTML = message;
 }
 
+function normalizeManualModelName(value) {
+    return String(value || '')
+        .replace(/^\uFEFF/, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLocaleUpperCase('hu-HU');
+}
+
 function updateManualModelPicker() {
     const selectedCount = manualScannerSelectedModels.size;
     if (manualModelPickerButton) {
@@ -807,21 +816,37 @@ async function loadBankCSV() {
 // A bank.csv-ben lévő adatbázist ez nem módosítja; az továbbra is a találatok forrása.
 async function loadManualScannerModels() {
     try {
-        const response = await fetch(encodeURI('ültetés.csv'));
-        if (!response.ok) throw new Error('ültetés.csv nem érhető el');
-        let data = await response.text();
+        // GitHub Pages kis- és nagybetűérzékeny. A gyakori névváltozatokat is
+        // elfogadjuk, de a kiválasztó minden esetben csak az ültetési fájlból épül fel.
+        const placementFileNames = ['ültetés.csv', 'Ültetés.csv', 'ultetes.csv', 'Ultetes.csv'];
+        let data = '';
+        for (const fileName of placementFileNames) {
+            const response = await fetch(encodeURI(fileName));
+            if (response.ok) {
+                data = await response.text();
+                break;
+            }
+        }
+        if (!data) throw new Error('ültetés.csv nem érhető el');
         data = data.replace(/"/g, '').replace(/\r/g, '');
 
         const uniqueModels = new Set();
-        data.split('\n').slice(1).forEach(line => {
-            const modelName = line.split(';')[1]?.trim(); // B oszlop: modellnév
-            if (modelName) uniqueModels.add(modelName.toUpperCase());
+        const lines = data.split('\n').filter(line => line.trim());
+        const delimiter = lines[0]?.includes(';') ? ';' : ',';
+        const firstRow = lines[0]?.split(delimiter) || [];
+        const hasHeader = /modell|model/i.test(firstRow[1] || '');
+        lines.slice(hasHeader ? 1 : 0).forEach(line => {
+            const modelName = normalizeManualModelName(line.split(delimiter)[1]); // B oszlop: modellnév
+            if (modelName) uniqueModels.add(modelName);
         });
 
         availableModels = [...uniqueModels].sort((first, second) => first.localeCompare(second, 'hu'));
         const savedManualModels = getSavedManualModels();
         manualScannerSelectedModels.clear();
-        savedManualModels.filter(model => availableModels.includes(model)).forEach(model => manualScannerSelectedModels.add(model));
+        savedManualModels
+            .map(normalizeManualModelName)
+            .filter(model => availableModels.includes(model))
+            .forEach(model => manualScannerSelectedModels.add(model));
         updateManualModelPicker();
     } catch (_) {
         // Ha a fájl átmenetileg még nem töltődött be, a kézi keresés továbbra is
@@ -882,7 +907,7 @@ function search(code, options = {}) {
     const matches = bankDB.filter(i => {
         const isMatch = lookupCodes.some(lookup => lookup.includes(i.id) || i.id.includes(lookup)) && i.id.length > 2;
         const isModelOk = isManualSearch
-            ? (manualScannerSelectedModels.size === 0 || manualScannerSelectedModels.has(i.model))
+            ? (manualScannerSelectedModels.size === 0 || manualScannerSelectedModels.has(normalizeManualModelName(i.model)))
             : (currentModel === 'ALL' || i.model === currentModel);
         return isMatch && isModelOk;
     });
