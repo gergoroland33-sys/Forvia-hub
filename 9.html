@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="hu">
 <head>
@@ -446,6 +445,7 @@ body.scanning-mode .scan-controls-container { display: flex; }
                 <li>Csipogd be a tekercset. A rendszer automatikusan <strong>eltávolítja az első 4 és utolsó 3 karaktert</strong>, és csak a középső cikkszámra keres.</li>
                 <li>Nem kell angol billentyűzetre váltani: a beolvasó a fizikai billentyűkódot kezeli, ezért magyar kiosztással is működik.</li>
                 <li>A <strong>Modellek</strong> gombbal több modellt is kijelölhetsz egyszerre. Kijelölés nélkül minden modellben keres.</li>
+                <li>A találati kártya az <strong>ültetési adatokat</strong> (cikkszám, oldal, modell) mutatja, és azonos cikkszám + modell esetén mellé teszi a <strong>bankadatokat</strong> is.</li>
                 <li>Aktív modell-szűrésnél a <strong>Találati hang</strong> kapcsolóval kérhetsz rövid sikeres vagy sikertelen visszajelzést.</li>
                 <li>Minden új csipogás azonnal a következő tekercs találatára vált; a képernyőhöz nem kell nyúlni.</li>
             </ol>
@@ -511,6 +511,7 @@ const manualScannerDesktopQuery = window.matchMedia('(min-width: 900px) and (hov
 let html5QrCode = null;
 let isCameraRunning = false;
 let bankDB = [];
+let placementDB = [];
 let cleanupInterval = null;
 let manualScannerEnabled = false;
 let manualScannerModelPickerOpen = false;
@@ -812,8 +813,9 @@ async function loadBankCSV() {
     }
 }
 
-// A kézi szkenner többmodelles szűrője kizárólag az ültetés.csv B oszlopából épül fel.
-// A bank.csv-ben lévő adatbázist ez nem módosítja; az továbbra is a találatok forrása.
+// A kézi szkenner találatai az ultetes.csv-ből érkeznek.
+// A bank.csv csak kiegészítő adat: ha ugyanahhoz a cikkszámhoz van bankegyezés,
+// a gép és pozíció ugyanazon a találati kártyán jelenik meg.
 async function loadManualScannerModels() {
     try {
         // GitHub Pages kis- és nagybetűérzékeny. A gyakori névváltozatokat is
@@ -831,13 +833,21 @@ async function loadManualScannerModels() {
         data = data.replace(/"/g, '').replace(/\r/g, '');
 
         const uniqueModels = new Set();
+        placementDB = [];
         const lines = data.split('\n').filter(line => line.trim());
         const delimiter = lines[0]?.includes(';') ? ';' : ',';
         const firstRow = lines[0]?.split(delimiter) || [];
-        const hasHeader = /modell|model/i.test(firstRow[1] || '');
+        const hasHeader = /modell|model/i.test(firstRow[2] || '');
         lines.slice(hasHeader ? 1 : 0).forEach(line => {
-            const modelName = normalizeManualModelName(line.split(delimiter)[1]); // B oszlop: modellnév
-            if (modelName) uniqueModels.add(modelName);
+            const columns = line.split(delimiter);
+            const id = String(columns[0] || '').trim().toUpperCase();
+            const side = String(columns[1] || '').trim().toUpperCase();
+            const modelName = normalizeManualModelName(columns[2]);
+            const quantity = String(columns[3] || '').trim();
+            const lineName = String(columns[4] || '').trim();
+            if (!id || !modelName) return;
+            uniqueModels.add(modelName);
+            placementDB.push({ id, side, model: modelName, quantity, lineName });
         });
 
         availableModels = [...uniqueModels].sort((first, second) => first.localeCompare(second, 'hu'));
@@ -852,6 +862,7 @@ async function loadManualScannerModels() {
         // Ha a fájl átmenetileg még nem töltődött be, a kézi keresés továbbra is
         // minden modellben működik; a kiválasztó a következő betöltéskor feltöltődik.
         availableModels = [];
+        placementDB = [];
         manualScannerSelectedModels.clear();
         updateManualModelPicker();
     }
@@ -904,13 +915,30 @@ function search(code, options = {}) {
     // Kézi módban a Pro panel több modelljének bármelyikében keresünk.
     const lookupCodes = (options.lookupCodes || [code]).filter(Boolean);
     const currentModel = modelFilter.value;
-    const matches = bankDB.filter(i => {
-        const isMatch = lookupCodes.some(lookup => lookup.includes(i.id) || i.id.includes(lookup)) && i.id.length > 2;
-        const isModelOk = isManualSearch
-            ? (manualScannerSelectedModels.size === 0 || manualScannerSelectedModels.has(normalizeManualModelName(i.model)))
-            : (currentModel === 'ALL' || i.model === currentModel);
+    const placementMatches = placementDB.filter(item => {
+        const isMatch = lookupCodes.some(lookup => lookup.includes(item.id) || item.id.includes(lookup)) && item.id.length > 2;
+        const isModelOk = manualScannerSelectedModels.size === 0 || manualScannerSelectedModels.has(normalizeManualModelName(item.model));
         return isMatch && isModelOk;
     });
+    const bankMatches = bankDB.filter(item => {
+        const isMatch = lookupCodes.some(lookup => lookup.includes(item.id) || item.id.includes(lookup)) && item.id.length > 2;
+        return isMatch && (currentModel === 'ALL' || item.model === currentModel);
+    });
+
+    // Minden ültetési sor saját találat. A hozzá illő bankadat (cikkszám és lehetőleg modell)
+    // ugyanarra a kártyára kerül; bankegyezés nélkül az ültetési találat akkor is látható marad.
+    const matches = isManualSearch
+        ? placementMatches.flatMap(placement => {
+            const sameIdBanks = bankDB.filter(bank => bank.id === placement.id);
+            const sameModelBanks = sameIdBanks.filter(bank => normalizeManualModelName(bank.model) === normalizeManualModelName(placement.model));
+            const relatedBanks = sameModelBanks.length
+                ? sameModelBanks
+                : sameIdBanks.filter(bank => !bank.model || normalizeManualModelName(bank.model) === 'BANK');
+            return relatedBanks.length
+                ? relatedBanks.map(bank => ({ placement, bank }))
+                : [{ placement, bank: null }];
+        })
+        : bankMatches;
 
     const shouldPlayManualSound = isManualSearch && manualScannerSelectedModels.size > 0 && Boolean(manualScannerSoundToggle?.checked);
     const shouldPlaySound = !isManualSearch || shouldPlayManualSound;
@@ -918,11 +946,13 @@ function search(code, options = {}) {
     if (matches.length > 0) {
         if (shouldPlaySound) playSound(true);
 
-        // Deduplikáció (Egyező sorok kiszűrése, hogy csak egyszer listázza)
+        // Deduplikáció: egy adott cikkszámhoz tartozó azonos ültetés + bank kapcsolat csak egyszer látszik.
         let seen = new Set();
         let uniqueMatches = [];
         for (let m of matches) {
-            let stringifiedRow = `${m.gep}|${m.poz}|${m.id}|${m.model}`;
+            let stringifiedRow = isManualSearch
+                ? `${m.placement.id}|${m.placement.side}|${m.placement.model}|${m.placement.quantity}|${m.placement.lineName}|${m.bank?.gep || ''}|${m.bank?.poz || ''}`
+                : `${m.gep}|${m.poz}|${m.id}|${m.model}`;
             if (!seen.has(stringifiedRow)) {
                 seen.add(stringifiedRow);
                 uniqueMatches.push(m);
@@ -932,7 +962,49 @@ function search(code, options = {}) {
         uniqueMatches.forEach(m => {
             const card = document.createElement('div');
             card.className = `result-card${isManualSearch ? ' manual-result-card' : ''}`;
-            card.innerHTML = `
+            if (isManualSearch) {
+                const { placement, bank } = m;
+                card.innerHTML = `
+                    <div class="res-grid">
+                        <div class="res-cell res-full">
+                            <span class="res-label">Modell</span>
+                            <span class="res-value">${placement.model}</span>
+                        </div>
+                        <div class="res-cell">
+                            <span class="res-label">Cikkszám</span>
+                            <span class="res-value">${placement.id}</span>
+                        </div>
+                        <div class="res-cell">
+                            <span class="res-label">Oldal</span>
+                            <span class="res-value res-highlight">${placement.side || '—'}</span>
+                        </div>
+                        <div class="res-cell">
+                            <span class="res-label">Beültetett mennyiség</span>
+                            <span class="res-value">${placement.quantity || '—'}</span>
+                        </div>
+                        <div class="res-cell">
+                            <span class="res-label">Gépsor</span>
+                            <span class="res-value">${placement.lineName || '—'}</span>
+                        </div>
+                        ${bank ? `
+                            <div class="res-cell">
+                                <span class="res-label">Bank / gép</span>
+                                <span class="res-value">${bank.gep}</span>
+                            </div>
+                            <div class="res-cell">
+                                <span class="res-label">Bank pozíció</span>
+                                <span class="res-value res-highlight">#${bank.poz}</span>
+                            </div>
+                        ` : `
+                            <div class="res-cell res-full">
+                                <span class="res-label">Bankadat</span>
+                                <span class="res-value" style="font-size:.85rem;color:#94a3b8;">Nincs egyező bankadat</span>
+                            </div>
+                        `}
+                    </div>
+                `;
+            } else {
+                card.innerHTML = `
                 <div class="res-grid">
                     <div class="res-cell res-full">
                         <span class="res-label">${isManualSearch ? 'Modell adat' : 'Modell'}</span>
@@ -951,7 +1023,8 @@ function search(code, options = {}) {
                         <span class="res-value" style="font-size:0.9rem;">${m.id}</span>
                     </div>
                 </div>
-            `;
+                `;
+            }
             resultsWrapper.appendChild(card);
         });
         saveToHistory(code, true);
