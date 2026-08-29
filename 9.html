@@ -925,17 +925,13 @@ function search(code, options = {}) {
         return isMatch && (currentModel === 'ALL' || item.model === currentModel);
     });
 
-    // Minden ültetési sor saját találat. A hozzá illő bankadat (cikkszám és lehetőleg modell)
-    // ugyanarra a kártyára kerül; bankegyezés nélkül az ültetési találat akkor is látható marad.
+    // Minden ültetési sor saját találat. A bankadatot a közös cikkszám kapcsolja hozzá,
+    // ezért eltérő modellnév-formátum mellett sem marad el a meglévő bankpozíció.
     const matches = isManualSearch
         ? placementMatches.flatMap(placement => {
             const sameIdBanks = bankDB.filter(bank => bank.id === placement.id);
-            const sameModelBanks = sameIdBanks.filter(bank => normalizeManualModelName(bank.model) === normalizeManualModelName(placement.model));
-            const relatedBanks = sameModelBanks.length
-                ? sameModelBanks
-                : sameIdBanks.filter(bank => !bank.model || normalizeManualModelName(bank.model) === 'BANK');
-            return relatedBanks.length
-                ? relatedBanks.map(bank => ({ placement, bank }))
+            return sameIdBanks.length
+                ? sameIdBanks.map(bank => ({ placement, bank }))
                 : [{ placement, bank: null }];
         })
         : bankMatches;
@@ -944,7 +940,7 @@ function search(code, options = {}) {
     const shouldPlaySound = !isManualSearch || shouldPlayManualSound;
 
     if (matches.length > 0) {
-        if (shouldPlaySound) playSound(true);
+        if (shouldPlaySound) playSound(true, { manual: isManualSearch });
 
         // Deduplikáció: egy adott cikkszámhoz tartozó azonos ültetés + bank kapcsolat csak egyszer látszik.
         let seen = new Set();
@@ -995,6 +991,10 @@ function search(code, options = {}) {
                                 <span class="res-label">Bank pozíció</span>
                                 <span class="res-value res-highlight">#${bank.poz}</span>
                             </div>
+                            <div class="res-cell res-full">
+                                <span class="res-label">Bank modell</span>
+                                <span class="res-value" style="font-size:.85rem;">${bank.model || '—'}</span>
+                            </div>
                         ` : `
                             <div class="res-cell res-full">
                                 <span class="res-label">Bankadat</span>
@@ -1029,7 +1029,7 @@ function search(code, options = {}) {
         });
         saveToHistory(code, true);
     } else {
-        if (shouldPlaySound) playSound(false);
+        if (shouldPlaySound) playSound(false, { manual: isManualSearch });
         resultsWrapper.innerHTML = isManualSearch
             ? `<div class="no-result">NINCS TALÁLAT<div style="margin-top:12px;color:#94a3b8;font-size:.8rem;font-weight:700;">Keresett azonosító: ${code}</div></div>`
             : '<div class="no-result">NINCS A LISTÁBAN</div>';
@@ -1123,9 +1123,47 @@ function cleanupUI() {
     readerDiv.style.display = 'none';
 }
 
-function playSound(ok) {
+function playManualFailureSound() {
+    // Hosszabb, határozott kétlépcsős hibahang; nem tölt le új hangfájlt.
+    try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) throw new Error('Web Audio nem támogatott');
+        const context = new AudioContextClass();
+        const now = context.currentTime;
+        const gain = context.createGain();
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.58, now + 0.025);
+        gain.gain.setValueAtTime(0.58, now + 0.46);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.72);
+        gain.connect(context.destination);
+
+        [180, 122].forEach((frequency, index) => {
+            const oscillator = context.createOscillator();
+            const startAt = now + (index * 0.34);
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(frequency, startAt);
+            oscillator.connect(gain);
+            oscillator.start(startAt);
+            oscillator.stop(startAt + 0.29);
+        });
+        setTimeout(() => context.close().catch(() => {}), 900);
+    } catch (_) {
+        const fallback = document.getElementById('sndError');
+        fallback.volume = 1;
+        fallback.currentTime = 0;
+        fallback.play().catch(()=>{});
+    }
+}
+
+function playSound(ok, options = {}) {
+    if (!ok && options.manual) {
+        playManualFailureSound();
+        return;
+    }
     const snd = document.getElementById(ok ? 'sndOk' : 'sndError');
-    snd.currentTime = 0; snd.play().catch(()=>{});
+    snd.volume = 1;
+    snd.currentTime = 0;
+    snd.play().catch(()=>{});
 }
 
 function saveToHistory(code, ok) {
