@@ -147,7 +147,6 @@ input[type=text] {
     .manual-scanner-focus-note { display: inline-flex; align-items: center; gap: 8px; margin-top: 4px; padding: 9px 13px; border-radius: 999px; color: #a7f3d0; background: rgba(16,185,129,.12); font-size: .75rem; font-weight: 800; }
     .manual-scanner-focus-note::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 5px rgba(52,211,153,.1); }
 
-    /* Kézi szkenner Pro vezérlőpult – kizárólag laptop/asztali kézi módban. */
     body.manual-scanner-mode .filter-wrapper { display: none !important; }
     .manual-scanner-pro-panel { display: none; }
     body.manual-scanner-mode .manual-scanner-pro-panel {
@@ -207,7 +206,6 @@ input[type=text] {
 #modelFilter:focus { border-color: var(--accent); }
 #modelFilter option { background: #0f172a; color: #f8fafc; font-weight: 700; }
 #modelFilter option:checked { background: #2563eb; color: #fff; }
-/* Aktív (világító) állapot, ha szűrés van érvényben */
 #modelFilter.active-filter { 
     background: linear-gradient(145deg, #3b82f6, #2563eb); color: white; border-color: #3b82f6; 
     box-shadow: 0 4px 0 #1e40af, 0 5px 15px rgba(59, 130, 246, 0.4); 
@@ -249,17 +247,13 @@ input[type=text] {
     padding: 8px 12px; margin-bottom: 6px; 
     background: rgba(255,255,255,0.03); border-radius: 8px; font-size: 0.85rem; 
     border-left: 3px solid #555;
-    cursor: pointer; /* ÚJ: Jelzi hogy kattintható */
+    cursor: pointer;
     transition: background 0.2s;
 }
 .h-item:active { background: rgba(255,255,255,0.1); }
 .h-ok { border-left-color: var(--ok-color); }
 .h-err { border-left-color: var(--err-color); }
 .h-time { font-size: 0.75rem; color: #64748b; font-weight: bold; white-space: nowrap; }
-
-/* ==========================================================================
-   FULL SCREEN SCAN MODE STYLES
-   ========================================================================== */
 
 #scanOverlay {
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -277,7 +271,6 @@ input[type=text] {
 .bl { bottom: -2px; left: -2px; border-top: 0; border-right: 0; border-bottom-left-radius: 12px; }
 .br { bottom: -2px; right: -2px; border-top: 0; border-left: 0; border-bottom-right-radius: 12px; }
 
-/* FEHÉR KERET TÖRLÉSE */
 #reader__scan_region, 
 #html5-qrcode-anchor-scan-region,
 div[id*="scan_region"],
@@ -286,21 +279,17 @@ div[id*="scan_region"],
     width: 0 !important; height: 0 !important;
 }
 
-/* --- VEZÉRLŐK KONTÉNERE (FULL WIDTH LAYOUT) --- */
 .scan-controls-container {
     position: fixed; 
     bottom: 30px; 
     left: 0; 
-    width: 100%; /* Teljes szélesség */
-    height: 0; /* Ne takarjon, a gyerekek abszolút pozicionáltak */
+    width: 100%;
+    height: 0;
     display: none; 
     z-index: 1000;
-    pointer-events: none; /* Átkattintható, csak a gombok aktívak */
+    pointer-events: none;
 }
 
-/* --- ELEMEK POZICIONÁLÁSA --- */
-
-/* 1. STOP GOMB -> BALRA LENT */
 body.scanning-mode .scan-btn.stop-btn {
     position: absolute;
     bottom: 0;
@@ -308,32 +297,27 @@ body.scanning-mode .scan-btn.stop-btn {
     background: var(--err-color);
     box-shadow: 0 0 20px var(--err-glow); 
     width: 70px; height: 70px; border-radius: 20px; 
-    pointer-events: auto; /* Ez legyen kattintható */
+    pointer-events: auto;
 }
 
-/* 2. SLIDER -> KÖZÉPRE LENT (A gombok közé) */
 body.scanning-mode .slider-wrapper {
-    /* Fontos: Scanning módban láthatónak kell lennie! */
     display: flex !important; 
-    
     position: absolute;
-    bottom: 0; /* Egy vonalban a gombbal */
+    bottom: 0;
     left: 50%;
-    transform: translateX(-50%); /* Pontosan középre igazítás */
-    
+    transform: translateX(-50%);
     background: rgba(30, 41, 59, 0.95); 
     box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
     border: 1px solid rgba(255, 255, 255, 0.2);
-    width: 200px; /* Kompakt szélesség */
+    width: 200px;
     margin: 0;
-    margin-bottom: 5px; /* Kicsit feljebb, hogy szép legyen */
+    margin-bottom: 5px;
     pointer-events: auto;
 }
 body.scanning-mode input[type=range]::-webkit-slider-thumb {
     box-shadow: 0 0 15px var(--accent); 
 }
 
-/* --- MŰKÖDÉSI OSZTÁLYOK --- */
 body.scanning-mode .header, 
 body.scanning-mode #resultsWrapper, 
 body.scanning-mode .footer-history,
@@ -453,7 +437,7 @@ body.scanning-mode .scan-controls-container { display: flex; }
             <ol>
                 <li>Kapcsold be a <strong>Kézi szkenner</strong> módot laptopon. A beolvasómező végig fókuszban marad.</li>
                 <li>Csipogd be a tekercset. A rendszer automatikusan <strong>eltávolítja az első 4 és utolsó 3 karaktert</strong>, és csak a középső cikkszámra keres.</li>
-                <li>Nem kell angol billentyűzetre váltani: a beolvasó a fizikai billentyűkódot kezeli, ezért magyar kiosztással is működik.</li>
+                <li>A beolvasó eredeti karakterei változtatás nélkül kerülnek feldolgozásra; nincs billentyűzetkiosztás szerinti átfordítás.</li>
                 <li>A kereső melletti <strong>MODELL / BANK</strong> gombbal választasz adatforrást. MODELL módban az <strong>ultetes.csv</strong>, BANK módban a <strong>bank.csv</strong> saját adatai jelennek meg.</li>
                 <li>MODELL módban a <strong>Modellek</strong> gombbal több modellt is kijelölhetsz, a felugró ablakban pedig névrészletre is kereshetsz.</li>
                 <li>Aktív modell-szűrésnél a <strong>Találati hang</strong> kapcsolóval kérhetsz rövid sikeres vagy sikertelen visszajelzést.</li>
@@ -485,9 +469,6 @@ body.scanning-mode .scan-controls-container { display: flex; }
 <audio id="sndError" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <script>
-/* ========================================================
-   LOGIKA
-   ======================================================== */
 const input = document.getElementById('barcodeInput');
 const resultsWrapper = document.getElementById('resultsWrapper');
 const historyList = document.getElementById('historyList');
@@ -500,11 +481,10 @@ const sliderContainer = document.getElementById('sliderContainer');
 const mainContent = document.querySelector('.main-content');
 const boxSizeSlider = document.getElementById('boxSizeSlider');
 const sliderValueDisplay = document.getElementById('sliderValueDisplay');
-const modelFilter = document.getElementById('modelFilter'); // ÚJ: Szűrő változó
+const modelFilter = document.getElementById('modelFilter');
 const manualScannerToggle = document.getElementById('manualScannerToggle');
 const manualScannerState = document.getElementById('manualScannerState');
 const manualSearchSourceToggle = document.getElementById('manualSearchSourceToggle');
-const manualScannerProPanel = document.getElementById('manualScannerProPanel');
 const manualModelPickerButton = document.getElementById('manualModelPickerButton');
 const manualModelModal = document.getElementById('manualModelModal');
 const manualModelModalClose = document.getElementById('manualModelModalClose');
@@ -627,8 +607,9 @@ function setManualModelModal(open) {
         if (manualModelSearch) manualModelSearch.value = '';
         renderManualModelOptions();
         requestAnimationFrame(() => manualModelSearch?.focus());
+    } else {
+        focusManualScannerInput();
     }
-    else focusManualScannerInput();
 }
 
 function setManualGuideModal(open) {
@@ -640,18 +621,14 @@ function setManualGuideModal(open) {
     if (!open) focusManualScannerInput();
 }
 
+/* CSAK KÉZI SZKENNER MÓD: az eredeti karaktert használja. */
 function getManualScannerCharacter(event) {
-    if (/^Key[A-Z]$/.test(event.code)) return event.code.slice(3);
-    if (/^Digit\d$/.test(event.code)) return event.code.slice(5);
-    if (/^Numpad\d$/.test(event.code)) return event.code.slice(6);
-    const codeMap = { Minus: '-', NumpadSubtract: '-', Period: '.', NumpadDecimal: '.', Slash: '/', NumpadDivide: '/', Equal: '=', NumpadAdd: '+' };
-    return codeMap[event.code] || '';
+    if (event.ctrlKey || event.altKey || event.metaKey) return '';
+    return event.key.length === 1 ? event.key : '';
 }
 
 function normalizeManualScannerCode(rawCode) {
     const compact = String(rawCode || '').toUpperCase().replace(/\s+/g, '');
-    // A tekercs egyedi előtagja és utótagja nem része a cikkszámnak:
-    // ABCDWXYZ789 → WXYZ
     return compact.length > 7 ? compact.slice(4, -3) : compact;
 }
 
@@ -664,7 +641,10 @@ function scheduleManualScannerFinish() {
 
 function finishManualScannerRead() {
     clearTimeout(manualScannerIdleTimer);
-    const rawCode = (manualScannerKeyBuffer || input.value || '').trim().toUpperCase();
+
+    /* Csak itt: a beolvasott eredeti érték nem kap kiosztás/karakter átalakítást. */
+    const rawCode = (manualScannerKeyBuffer || input.value || '').trim();
+
     manualScannerKeyBuffer = '';
     input.value = '';
     if (!rawCode) return;
@@ -750,7 +730,6 @@ manualScannerDesktopQuery.addEventListener?.('change', event => {
     if (!event.matches && manualScannerEnabled) setManualScannerMode(false);
 });
 
-// --- SLIDER LOGIKA ---
 const savedSize = localStorage.getItem('scanBoxSize');
 if(savedSize) {
     boxSizeSlider.value = savedSize;
@@ -788,10 +767,9 @@ async function init() {
         loadMsg.innerText = `Adatbázis kész: ${bankDB.length} tétel`;
         loadMsg.style.color = "#10b981";
 
-        // ÚJ: Szűrő lista feltöltése a betöltött modellekkel
         let uniqueModels = [...new Set(bankDB.map(i => i.model))].sort();
         uniqueModels.forEach(m => {
-            if(m !== "BANK") { // Ha van üres/BANK érték, azt kihagyhatjuk vagy meghagyhatjuk, ahogy jólesik.
+            if(m !== "BANK") {
                 let opt = document.createElement('option');
                 opt.value = m;
                 opt.innerText = m;
@@ -799,7 +777,6 @@ async function init() {
             }
         });
 
-        // ÚJ: Elmentett szűrő beállítása
         const savedModel = localStorage.getItem('selectedModel') || 'ALL';
         if (savedModel === 'ALL' || uniqueModels.includes(savedModel)) {
             modelFilter.value = savedModel;
@@ -811,7 +788,6 @@ async function init() {
     renderHistory(); 
 }
 
-// ÚJ: Szűrő gomb stílusának váltása és eseményfigyelő
 function updateFilterStyle() {
     if (modelFilter.value === 'ALL') {
         modelFilter.classList.remove('active-filter');
@@ -823,7 +799,6 @@ function updateFilterStyle() {
 modelFilter.addEventListener('change', () => {
     localStorage.setItem('selectedModel', modelFilter.value);
     updateFilterStyle();
-    // Ha van beírva/beolvasva adat, azonnal újrakeres a szűrővel
     if (input.value.trim().length > 2) {
         search(input.value.trim().toUpperCase());
     }
@@ -839,24 +814,18 @@ async function loadBankCSV() {
     try {
         const res = await fetch('bank.csv');
         let data = await res.text();
-        
-        // TISZTÍTÁS: Idézőjelek és rejtett Windows sortörések eltávolítása (Excel hibák megelőzése)
         data = data.replace(/"/g, '').replace(/\r/g, '');
-        
         const lines = data.split('\n');
 
         lines.slice(1).forEach(line => {
             const cols = line.split(';');
             if (cols.length < 2) return;
             
-            // Explicit A-B-C-D oszlop leképezés a kért sorrend alapján:
-            // JAVÍTÁS: A modelleket beolvasáskor azonnal nagybetűssé alakítjuk a .toUpperCase() függvénnyel
             bankDB.push({
-                gep: cols[0]?.trim() || "N/A",                   // A oszlop: Gép azonosító
-                poz: cols[1]?.trim() || "N/A",                   // B oszlop: Feeder azonosító
-                id: cols[2]?.trim().toUpperCase() || "",         // C oszlop: Cikkszám
-                model: cols[3]?.trim()?.toUpperCase() || "BANK"  // D oszlop: Modell (Minden fixen NAGYBETŰ)
-                // msd: cols[4]?.trim() || "N/A"                 // E oszlop: MSD (Kikommentezve, mert már nem használjuk)
+                gep: cols[0]?.trim() || "N/A",
+                poz: cols[1]?.trim() || "N/A",
+                id: cols[2]?.trim().toUpperCase() || "",
+                model: cols[3]?.trim()?.toUpperCase() || "BANK"
             });
         });
     } catch (e) { 
@@ -865,13 +834,8 @@ async function loadBankCSV() {
     }
 }
 
-// A kézi szkenner találatai az ultetes.csv-ből érkeznek.
-// A bank.csv csak kiegészítő adat: ha ugyanahhoz a cikkszámhoz van bankegyezés,
-// a gép és pozíció ugyanazon a találati kártyán jelenik meg.
 async function loadManualScannerModels() {
     try {
-        // GitHub Pages kis- és nagybetűérzékeny. A gyakori névváltozatokat is
-        // elfogadjuk, de a kiválasztó minden esetben csak az ültetési fájlból épül fel.
         const placementFileNames = ['ültetés.csv', 'Ültetés.csv', 'ultetes.csv', 'Ultetes.csv'];
         let data = '';
         for (const fileName of placementFileNames) {
@@ -911,8 +875,6 @@ async function loadManualScannerModels() {
             .forEach(model => manualScannerSelectedModels.add(model));
         updateManualModelPicker();
     } catch (_) {
-        // Ha a fájl átmenetileg még nem töltődött be, a kézi keresés továbbra is
-        // minden modellben működik; a kiválasztó a következő betöltéskor feltöltődik.
         availableModels = [];
         placementDB = [];
         manualScannerSelectedModels.clear();
@@ -939,8 +901,6 @@ input.addEventListener('keydown', event => {
 
     const character = getManualScannerCharacter(event);
     if (character) {
-        // A KeyboardEvent.code fizikai billentyűt jelent, ezért magyar kiosztásnál
-        // sem cserélődik fel például az Y és a Z egy USB-olvasó beolvasásakor.
         event.preventDefault();
         manualScannerKeyBuffer += character;
         input.value = manualScannerKeyBuffer;
@@ -953,7 +913,7 @@ input.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         const code = input.value.trim().toUpperCase();
         if (code) search(code);
-        input.value = code; // Megtartjuk a beírt szöveget, hogy ha szűrőt váltunk, lefusson újra
+        input.value = code;
         input.blur();
     }
 });
@@ -963,8 +923,6 @@ function search(code, options = {}) {
     const isManualSearch = Boolean(options.manual);
     if (isManualSearch) document.body.classList.add('manual-scanner-has-result');
     
-    // Normál nézetben változatlanul az eredeti, egy-modeles szűrő működik.
-    // Kézi módban a Pro panel több modelljének bármelyikében keresünk.
     const lookupCodes = (options.lookupCodes || [code]).filter(Boolean);
     const currentModel = modelFilter.value;
     const placementMatches = placementDB.filter(item => {
@@ -978,8 +936,6 @@ function search(code, options = {}) {
         return isMatch && (isManualBankSearch || currentModel === 'ALL' || item.model === currentModel);
     });
 
-    // Kézi módban a két keresés különálló: MODELL = ultetes.csv, BANK = bank.csv.
-    // A kártya mindig csak az aktív adatforrás saját adatait mutatja.
     const matches = isManualSearch
         ? (manualSearchSource === 'bank' ? bankMatches : placementMatches)
         : bankMatches;
@@ -990,7 +946,6 @@ function search(code, options = {}) {
     if (matches.length > 0) {
         if (shouldPlaySound) playSound(true, { manual: isManualSearch });
 
-        // Deduplikáció: azonos forrásadat csak egyszer látszik.
         let seen = new Set();
         let uniqueMatches = [];
         for (let m of matches) {
@@ -1154,7 +1109,6 @@ function cleanupUI() {
 }
 
 function playManualFailureSound() {
-    // Hosszabb, határozott kétlépcsős hibahang; nem tölt le új hangfájlt.
     try {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         if (!AudioContextClass) throw new Error('Web Audio nem támogatott');
