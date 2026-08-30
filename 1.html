@@ -936,6 +936,15 @@ input.suggestions-active {
   #printArea.matrix-print .matrix-status { font-size:8.6pt !important; padding:.85mm 1.25mm !important; }
   #printArea.matrix-print .matrix-status b { font-size:11.5pt !important; }
 }
+
+/* Felső gyorsműveletek: a MODELLEK gomb prémium, kompakt stílusához igazítva. */
+.top-action-row { display:flex; align-items:center; gap:8px; }
+.top-action-btn { appearance:none; display:inline-flex; align-items:center; gap:6px; border:1px solid rgba(191,219,254,.88); border-radius:8px; padding:7px 10px; color:#fff; background:linear-gradient(145deg,#38bdf8,#1d4ed8); box-shadow:0 3px 0 #1e3a8a,0 7px 16px rgba(37,99,235,.28),inset 0 1px rgba(255,255,255,.3); font-family:monospace; font-size:.68rem; font-weight:900; letter-spacing:.05em; cursor:pointer; transition:transform .16s ease,box-shadow .16s ease,filter .16s ease; }
+.top-action-btn:hover { transform:translateY(-1px); filter:brightness(1.1); box-shadow:0 5px 0 #1e3a8a,0 10px 20px rgba(37,99,235,.36),inset 0 1px rgba(255,255,255,.34); }
+.top-action-btn:active { transform:translateY(2px); box-shadow:0 1px 0 #1e3a8a,inset 0 4px 9px rgba(0,0,0,.25); }
+.top-action-btn.demand-action { border-color:rgba(167,243,208,.88); background:linear-gradient(145deg,#10b981,#047857); box-shadow:0 3px 0 #064e3b,0 7px 16px rgba(5,150,105,.26),inset 0 1px rgba(255,255,255,.3); }
+.top-action-btn.demand-action:hover { box-shadow:0 5px 0 #064e3b,0 10px 20px rgba(5,150,105,.34),inset 0 1px rgba(255,255,255,.34); }
+.top-action-icon { font-size:.9rem; line-height:1; }
 </style>
 </head>
 <body>
@@ -943,9 +952,14 @@ input.suggestions-active {
 <div class="top-bar">
     <div class="brand">FORVIA TERMINAL</div>
     <div style="display:flex; align-items:center; gap:15px;">
-        <button onclick="openSetupModal()" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text-secondary); border-radius: 6px; padding: 4px 10px; font-family: monospace; font-size: 0.75rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 5px;">
-            <span style="font-size: 0.9rem;">🖨️</span> SETUP SHEET GENERÁLÁS (KLIKK IDE)
-        </button>
+        <div class="top-action-row">
+            <button class="top-action-btn demand-action" type="button" onclick="openDemandLauncher()" title="Teljes modell alkatrészigényének kalkulálása">
+                <span class="top-action-icon">📦</span> ALKATRÉSZ IGÉNY
+            </button>
+            <button class="top-action-btn" type="button" onclick="openSetupModal()" title="Setup sheet generálása és nyomtatása">
+                <span class="top-action-icon">🖨️</span> SETUP SHEET
+            </button>
+        </div>
         <div class="date-display" id="dateText"></div>
     </div>
 </div>
@@ -995,6 +1009,19 @@ input.suggestions-active {
             <option value="">Adatbázis betöltése...</option>
         </select>
         <button class="btn-print" onclick="generateSetupSheet()">Generálás és Nyomtatás</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="demandLauncherModal" onclick="if(event.target===this) closeDemandLauncher()">
+    <div class="modal-content" style="max-width: 400px; padding: 20px; background: var(--bg-app);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+            <div style="color: white; font-weight: bold; font-family: monospace; font-size: 1.1rem;">ALKATRÉSZ IGÉNY</div>
+            <div class="modal-close" onclick="closeDemandLauncher()">✕</div>
+        </div>
+        <select id="demandModelSelect" class="setup-select">
+            <option value="">Adatbázis betöltése...</option>
+        </select>
+        <button class="btn-print" onclick="startDemandForSelectedModel()">Modell kiválasztása</button>
     </div>
 </div>
 
@@ -1443,6 +1470,39 @@ window.closeModelModal = function() {
     document.getElementById('modelModal').style.display = 'none';
 };
 
+
+window.openDemandLauncher = function() {
+    if(typeof provideFeedback === 'function') provideFeedback();
+
+    const models = Array.from(new Set(
+        ultetes
+            .map(row => String(row[2] || '').trim().toUpperCase())
+            .filter(Boolean)
+    )).sort((a, b) => a.localeCompare(b, 'hu'));
+
+    const select = document.getElementById('demandModelSelect');
+    select.innerHTML = '<option value="">Válassz modellt a listából...</option>';
+    models.forEach(model => {
+        const option = document.createElement('option');
+        option.value = model;
+        option.textContent = model;
+        select.appendChild(option);
+    });
+    document.getElementById('demandLauncherModal').style.display = 'flex';
+};
+
+window.closeDemandLauncher = function() {
+    if(typeof provideFeedback === 'function') provideFeedback();
+    document.getElementById('demandLauncherModal').style.display = 'none';
+};
+
+window.startDemandForSelectedModel = function() {
+    const model = document.getElementById('demandModelSelect').value;
+    if (!model) { alert('Kérlek, válassz ki egy modellt a listából!'); return; }
+    document.getElementById('demandLauncherModal').style.display = 'none';
+    window.openModelModal(model);
+    setTimeout(() => askDemandQuantity('all'), 0);
+};
 
 window.openSetupModal = function() {
     if(typeof provideFeedback === 'function') provideFeedback();
