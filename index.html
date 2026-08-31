@@ -95,6 +95,7 @@
 
         /* --- Görgethetőség beállítása laptopra --- */
         #home-screen {
+            --home-tint-rgb: 59, 130, 246;
             flex-grow: 1; display: flex; flex-direction: column;
             align-items: center; 
             text-align: center;
@@ -109,6 +110,15 @@
             overflow-y: auto; 
             padding-bottom: 60px;
         }
+        /* Az eredeti sötét alapon egy nagyon halvány, 24 órás napszak-árnyalat úszik. */
+        #home-screen::before {
+            content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+            background:
+                radial-gradient(ellipse at 86% 8%, rgba(var(--home-tint-rgb), .13), transparent 47%),
+                radial-gradient(ellipse at 14% 92%, rgba(var(--home-tint-rgb), .075), transparent 54%);
+            transition: background 300s linear;
+        }
+        #home-screen > * { position: relative; z-index: 1; }
         
         /* A TISZTA ÜVEG KÁRTYA (Animációk nélkül) */
         .glass-card {
@@ -455,7 +465,7 @@
             border-bottom: 1px solid var(--ticker-accent);
             background: var(--ticker-bg);
             box-shadow: 0 7px 22px rgba(0,0,0,.22);
-            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
             transition: transform .28s ease, opacity .28s ease, background .35s ease, border-color .35s ease;
             touch-action: manipulation;
             -webkit-user-select: none; user-select: none;
@@ -477,11 +487,15 @@
         .ticker-wrap.ticker-style-aurora { background: linear-gradient(110deg, var(--ticker-bg) 0%, #0e7490 28%, var(--ticker-accent) 50%, #6d28d9 73%, var(--ticker-bg) 100%); background-size: 260% 100%; box-shadow: 0 7px 25px rgba(14,116,144,.25); animation: tickerAurora 16s ease-in-out infinite alternate; }
         .ticker-wrap.ticker-style-royal { background: linear-gradient(105deg, rgba(255,255,255,.08), transparent 24%, rgba(255,255,255,.03) 52%, transparent 78%), linear-gradient(110deg, #111827, var(--ticker-bg), #312e81, var(--ticker-bg)); border-bottom-color: #c4b5fd; box-shadow: 0 7px 25px rgba(99,102,241,.24); }
         .ticker-wrap.ticker-style-carbon { background: linear-gradient(135deg, rgba(255,255,255,.07) 25%, transparent 25%) 0 0 / 9px 9px, linear-gradient(110deg, #111827, var(--ticker-bg), #020617); border-bottom-color: var(--ticker-accent); box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 7px 22px rgba(0,0,0,.30); }
+        .ticker-wrap.ticker-style-midnight { background: linear-gradient(105deg, rgba(255,255,255,.055), transparent 28%), linear-gradient(100deg, #020617, var(--ticker-bg), #172554, var(--ticker-bg)); border-bottom-color: #60a5fa; box-shadow: inset 0 1px rgba(255,255,255,.08), 0 7px 22px rgba(2,6,23,.42); }
+        .ticker-wrap.ticker-style-ocean { background: linear-gradient(100deg, #082f49, var(--ticker-bg), #0e7490, var(--ticker-bg)); border-bottom-color: #67e8f9; box-shadow: inset 0 1px rgba(255,255,255,.08), 0 7px 22px rgba(8,145,178,.19); }
+        .ticker-wrap.ticker-style-signal { background: repeating-linear-gradient(135deg, rgba(255,255,255,.035) 0 8px, transparent 8px 16px), linear-gradient(100deg, #111827, var(--ticker-bg), #312e81); border-bottom: 2px solid var(--ticker-accent); box-shadow: inset 0 1px rgba(255,255,255,.09), 0 7px 22px rgba(15,23,42,.35); }
         .ticker-move {
             display: inline-block; height: 43px; line-height: 43px; white-space: nowrap;
             /* A szöveg bal oldali kilépése után a következő kör azonnal jobbról indul. */
             padding-left: 100%; padding-right: 0; box-sizing: content-box;
             animation: ticker var(--ticker-speed) linear infinite;
+            will-change: transform; backface-visibility: hidden; -webkit-backface-visibility: hidden;
         }
         .ticker-item {
             display: inline-block; padding: 0 2rem; color: var(--ticker-text);
@@ -489,11 +503,23 @@
             text-transform: uppercase; letter-spacing: .09em;
             text-shadow: 0 0 14px var(--ticker-accent);
         }
+        .ticker-wrap.ticker-rgb-text .ticker-item {
+            color: transparent; text-shadow: none;
+            background: linear-gradient(100deg, #38bdf8 0%, #a78bfa 18%, #f472b6 36%, #facc15 54%, #34d399 72%, #38bdf8 100%);
+            background-size: 360% 100%; -webkit-background-clip: text; background-clip: text;
+            animation: tickerTextRgb 22s linear infinite;
+            will-change: background-position;
+        }
+        .ticker-wrap.is-paused, .ticker-wrap.is-paused .ticker-move, .ticker-wrap.is-paused .ticker-item { animation-play-state: paused !important; }
         @keyframes ticker {
             0% { transform: translate3d(0, 0, 0); }
             100% { transform: translate3d(-100%, 0, 0); }
         }
         @keyframes tickerAurora { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
+        @keyframes tickerTextRgb { from { background-position: 0% 50%; } to { background-position: 360% 50%; } }
+        @media (max-width: 1024px) {
+            .ticker-wrap { backdrop-filter: none; -webkit-backdrop-filter: none; }
+        }
         .ticker-admin-handle {
             position: fixed; top: env(safe-area-inset-top); right: 0; z-index: 1001;
             display: none; width: 88px; height: 43px; padding: 0; border: 0;
@@ -1216,8 +1242,21 @@
                         <option value="aurora">Aurora Flow</option>
                         <option value="royal">Royal Luxe</option>
                         <option value="carbon">Carbon Executive</option>
+                        <option value="midnight">Midnight Glass</option>
+                        <option value="ocean">Ocean Flow</option>
+                        <option value="signal">Royal Signal</option>
                     </select>
                 </div>
+            </div>
+            <div class="ticker-admin-grid">
+                <label class="ticker-admin-switch">
+                    <input id="tickerRgbTextInput" type="checkbox" />
+                    Automatikus RGB betűszín
+                </label>
+                <label class="ticker-admin-switch">
+                    <input id="tickerShowDateInput" type="checkbox" />
+                    Dátum megjelenítése
+                </label>
             </div>
             <div class="ticker-admin-grid">
                 <div class="ticker-admin-field">
@@ -1714,6 +1753,16 @@
         box.style.setProperty('--calendar-rgb', `${r}, ${g}, ${b}`);
     }
 
+    // A kezdőlap sötét alapja megmarad; csak egy halvány, napszakhoz kötött tónus változik rajta.
+    function updateHomeBackgroundTone(now) {
+        const home = document.getElementById('home-screen');
+        if (!home) return;
+        const dayFraction = (now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds()) / 86400;
+        const hue = dayFraction * 360;
+        const [r, g, b] = hslToRgb(hue, 72, 54);
+        home.style.setProperty('--home-tint-rgb', `${r}, ${g}, ${b}`);
+    }
+
     function updateActiveShiftStatus(now) {
         const status = document.getElementById('activeShiftStatus');
         const code = document.getElementById('activeShiftCode');
@@ -1793,18 +1842,23 @@
     function changeShiftYear(delta) {
         shiftCalCurrentYear += delta;
         renderShiftCalendar(shiftCalCurrentYear);
-        /* Ha a mai évre váltunk vissza, görgetés a mai napra */
-        if (shiftCalCurrentYear === new Date().getFullYear()) {
-            setTimeout(() => scrollShiftToToday(), 50);
-        } else {
-            /* Más évnél tetejére */
-            const body = document.getElementById('shiftCalendarBody');
-            if (body) body.scrollTop = 0;
-        }
+        /* Bármely évben az aktuális hónap/nap megfelelőjére ugrik, nem január tetejére. */
+        setTimeout(() => scrollShiftToCalendarAnchor(), 50);
     }
     
     function scrollShiftToToday() {
-        const todayEl = document.querySelector('#shiftCalendarBody .sm-day.today');
+        const actualYear = new Date().getFullYear();
+        if (shiftCalCurrentYear !== actualYear) {
+            shiftCalCurrentYear = actualYear;
+            renderShiftCalendar(shiftCalCurrentYear);
+            setTimeout(() => scrollShiftToCalendarAnchor(), 50);
+            return;
+        }
+        scrollShiftToCalendarAnchor();
+    }
+
+    function scrollShiftToCalendarAnchor() {
+        const todayEl = document.querySelector('#shiftCalendarBody .sm-day.calendar-anchor');
         const body = document.getElementById('shiftCalendarBody');
         if (todayEl && body) {
             const containerTop = body.getBoundingClientRect().top;
@@ -1864,6 +1918,7 @@
                 
                 let cls = 'sm-day';
                 if (isToday) cls += ' today';
+                if (m === today.getMonth() && d === today.getDate()) cls += ' calendar-anchor';
                 if (isWeekend) cls += ' weekend';
                 if (isHoliday) cls += ' holiday';
                 
@@ -2185,6 +2240,7 @@
     // A műszakváltást továbbra is a lentebb lévő pontos 06:00 / 18:00 időzítő kezeli.
     let homeInfoRefreshTimer = null;
     let calendarRgbRefreshTimer = null;
+    let homeBackgroundToneTimer = null;
 
     function scheduleHomeInfoRefresh() {
         clearTimeout(homeInfoRefreshTimer);
@@ -2205,10 +2261,19 @@
         }, delay);
     }
 
+    function scheduleHomeBackgroundTone() {
+        clearTimeout(homeBackgroundToneTimer);
+        updateHomeBackgroundTone(new Date());
+        const interval = 300000;
+        const delay = interval - (Date.now() % interval) + 30;
+        homeBackgroundToneTimer = setTimeout(scheduleHomeBackgroundTone, delay);
+    }
+
     updateInfo();
     scheduleActiveShiftLetterMotion();
     scheduleHomeInfoRefresh();
     scheduleCalendarRgbRefresh();
+    scheduleHomeBackgroundTone();
 
     window.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
@@ -2921,9 +2986,11 @@
             fontSize: '.78rem',
             backgroundColor: '#0F172A',
             textColor: '#FDE68A',
-            accentColor: '#3B82F6'
+            accentColor: '#3B82F6',
+            rgbText: false,
+            showDate: false
         };
-        const tickerStyles = ['solid', 'gradient', 'glass', 'neon', 'aurora', 'royal', 'carbon'];
+        const tickerStyles = ['solid', 'gradient', 'glass', 'neon', 'aurora', 'royal', 'carbon', 'midnight', 'ocean', 'signal'];
         const tickerSpeeds = [12, 20, 30, 45, 60, 90];
         const tickerPixelsPerSecond = { auto: 82, 12: 145, 20: 112, 30: 82, 45: 62, 60: 48, 90: 34 };
         const tickerFontSizes = ['.68rem', '.78rem', '.92rem', '1.06rem'];
@@ -2931,6 +2998,7 @@
         let tickerAuth = null;
         let tickerDb = null;
         let tickerHoldTimer = null;
+        let tickerDateTimer = null;
         let activePresenceModule = window.activePresenceModuleRequest === 'staff-pro' ? 'staff-pro' : 'home';
         let latestPresenceData = null;
         let analyticsDb = null;
@@ -2965,6 +3033,40 @@
         const isHexColor = value => /^#[0-9A-F]{6}$/i.test(String(value || '').trim());
         const normalHex = (value, fallback) => isHexColor(value) ? String(value).trim().toUpperCase() : fallback;
 
+        function formatTickerDate(now = new Date()) {
+            return `${now.getFullYear()}. ${String(now.getMonth() + 1).padStart(2, '0')}. ${String(now.getDate()).padStart(2, '0')}.`;
+        }
+
+        function getTickerDisplayText(data = tickerCurrent) {
+            const prefix = data.showDate ? `${formatTickerDate()} • ` : '';
+            const icon = data.showIcon && data.icon ? `${data.icon} ` : '';
+            return `${prefix}${icon}${data.text}`;
+        }
+
+        function updateTickerAriaLabel(ticker, displayedText) {
+            ticker.setAttribute('aria-label', tickerCurrent.enabled ? `Élő hírfolyam: ${displayedText}` : 'A hírfolyam ki van kapcsolva. Admin megnyitása: 3 másodperces nyomvatartás.');
+        }
+
+        function scheduleTickerDateRefresh() {
+            clearTimeout(tickerDateTimer);
+            if (!tickerCurrent.showDate) return;
+            const now = new Date();
+            const nextMidnight = new Date(now);
+            nextMidnight.setDate(nextMidnight.getDate() + 1);
+            nextMidnight.setHours(0, 0, 1, 0);
+            tickerDateTimer = setTimeout(() => {
+                const ticker = tickerEl('newsTicker');
+                const text = tickerEl('newsTickerText');
+                if (ticker && text && tickerCurrent.showDate) {
+                    const displayedText = getTickerDisplayText();
+                    text.textContent = displayedText;
+                    applyTickerSpeed();
+                    updateTickerAriaLabel(ticker, displayedText);
+                }
+                scheduleTickerDateRefresh();
+            }, Math.max(1000, nextMidnight.getTime() - Date.now()));
+        }
+
         function normalizeTicker(data) {
             const raw = data && typeof data === 'object' ? data : {};
             const icon = typeof raw.icon === 'string' ? raw.icon.trim().slice(0, 8) : tickerFallback.icon;
@@ -2978,7 +3080,9 @@
                 fontSize: tickerFontSizes.includes(raw.fontSize) ? raw.fontSize : tickerFallback.fontSize,
                 backgroundColor: normalHex(raw.backgroundColor, tickerFallback.backgroundColor),
                 textColor: normalHex(raw.textColor, tickerFallback.textColor),
-                accentColor: normalHex(raw.accentColor, tickerFallback.accentColor)
+                accentColor: normalHex(raw.accentColor, tickerFallback.accentColor),
+                rgbText: raw.rgbText === true,
+                showDate: raw.showDate === true
             };
         }
 
@@ -2992,14 +3096,18 @@
 
             ticker.className = `ticker-wrap ticker-style-${tickerCurrent.style}`;
             ticker.classList.toggle('is-hidden', !tickerCurrent.enabled);
+            ticker.classList.toggle('ticker-rgb-text', tickerCurrent.rgbText);
+            ticker.classList.toggle('is-paused', document.hidden);
             ticker.style.setProperty('--ticker-bg', tickerCurrent.backgroundColor);
             ticker.style.setProperty('--ticker-text', tickerCurrent.textColor);
             ticker.style.setProperty('--ticker-accent', tickerCurrent.accentColor);
             ticker.style.setProperty('--ticker-font-size', tickerCurrent.fontSize);
-            text.textContent = `${tickerCurrent.showIcon && tickerCurrent.icon ? `${tickerCurrent.icon} ` : ''}${tickerCurrent.text}`;
+            const displayedText = getTickerDisplayText();
+            text.textContent = displayedText;
             applyTickerSpeed();
+            scheduleTickerDateRefresh();
             handle.classList.toggle('visible', !tickerCurrent.enabled);
-            ticker.setAttribute('aria-label', tickerCurrent.enabled ? `Élő hírfolyam: ${text.textContent}` : 'A hírfolyam ki van kapcsolva. Admin megnyitása: 3 másodperces nyomvatartás.');
+            updateTickerAriaLabel(ticker, displayedText);
         }
 
         function applyTickerSpeed() {
@@ -3008,8 +3116,10 @@
             if (!ticker || !move) return;
             const pixelsPerSecond = tickerPixelsPerSecond[tickerCurrent.speed] || tickerPixelsPerSecond.auto;
             const duration = Math.max(4, Math.min(150, Math.round((move.scrollWidth / pixelsPerSecond) * 10) / 10));
-            ticker.style.setProperty('--ticker-speed', `${duration}s`);
-            /* A sebességválasztás előnézetben is azonnal, láthatóan érvényesüljön. */
+            const nextSpeed = `${duration}s`;
+            if (ticker.style.getPropertyValue('--ticker-speed') === nextSpeed) return;
+            ticker.style.setProperty('--ticker-speed', nextSpeed);
+            /* Csak tényleges hossz- vagy sebességváltozásnál indul újra a futás. */
             move.style.animation = 'none';
             void move.offsetWidth;
             move.style.animation = '';
@@ -3054,7 +3164,9 @@
                 fontSize: tickerEl('tickerFontSizeInput').value,
                 backgroundColor: tickerEl('tickerBackgroundHex').value,
                 textColor: tickerEl('tickerTextHex').value,
-                accentColor: tickerEl('tickerAccentHex').value
+                accentColor: tickerEl('tickerAccentHex').value,
+                rgbText: tickerEl('tickerRgbTextInput').checked,
+                showDate: tickerEl('tickerShowDateInput').checked
             });
         }
 
@@ -3066,6 +3178,8 @@
             tickerEl('tickerSpeedInput').value = String(tickerCurrent.speed);
             tickerEl('tickerFontSizeInput').value = tickerCurrent.fontSize;
             tickerEl('tickerEnabledInput').checked = tickerCurrent.enabled;
+            tickerEl('tickerRgbTextInput').checked = tickerCurrent.rgbText;
+            tickerEl('tickerShowDateInput').checked = tickerCurrent.showDate;
             updateColorPair('tickerBackgroundColor', 'tickerBackgroundHex', tickerCurrent.backgroundColor);
             updateColorPair('tickerTextColor', 'tickerTextHex', tickerCurrent.textColor);
             updateColorPair('tickerAccentColor', 'tickerAccentHex', tickerCurrent.accentColor);
@@ -3574,9 +3688,12 @@
             bindColorPair('tickerBackgroundColor', 'tickerBackgroundHex');
             bindColorPair('tickerTextColor', 'tickerTextHex');
             bindColorPair('tickerAccentColor', 'tickerAccentHex');
-            ['tickerTextInput', 'tickerIconInput', 'tickerShowIconInput', 'tickerStyleInput', 'tickerSpeedInput', 'tickerFontSizeInput', 'tickerEnabledInput'].forEach(id => {
+            ['tickerTextInput', 'tickerIconInput', 'tickerShowIconInput', 'tickerStyleInput', 'tickerSpeedInput', 'tickerFontSizeInput', 'tickerEnabledInput', 'tickerRgbTextInput', 'tickerShowDateInput'].forEach(id => {
                 tickerEl(id)?.addEventListener('input', previewTickerFromEditor);
                 tickerEl(id)?.addEventListener('change', previewTickerFromEditor);
+            });
+            document.addEventListener('visibilitychange', () => {
+                tickerEl('newsTicker')?.classList.toggle('is-paused', document.hidden);
             });
 
             try {
