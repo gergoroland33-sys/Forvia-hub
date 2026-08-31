@@ -195,11 +195,28 @@
     }
     function isWorkingDay(date) { return isWorkingDayFor(date, sysSettings); }
 
+    // A 18:00–másnap 06:00 közötti éjszakás műszak egyetlen műszaknap.
+    // Ezért éjfél és 05:59 között még az előző naptári naphoz tartozó beosztást használjuk.
+    function getOperationalShiftDate(baseDate) {
+        let d = baseDate ? new Date(baseDate.getTime()) : new Date();
+        if (d.getHours() < 6) d.setDate(d.getDate() - 1);
+        d.setHours(0, 0, 0, 0);
+        return d;
+    }
+
+    function isRemovedForDate(name, dateKey, cfg) {
+        const removalDate = cfg && cfg.removals ? cfg.removals[name] : null;
+        return typeof removalDate === 'string' && removalDate !== '' && removalDate <= dateKey;
+    }
+
     // Van-e egyaltalan dolgozo (aktiv nevsorban vagy belepokent)?
     function hasAnyWorker(cfg) {
         if (!cfg) return false;
-        if (cfg.roster && cfg.roster.length) return true;
-        if (cfg.joins && Object.keys(cfg.joins).length) return true;
+        const currentKey = getDateKey(getOperationalShiftDate());
+        if (uniqueNames(cfg.roster).some(function(nm) { return !isRemovedForDate(nm, currentKey, cfg); })) return true;
+        if (cfg.joins && Object.keys(cfg.joins).some(function(nm) {
+            return cfg.joins[nm] <= currentKey && !isRemovedForDate(nm, currentKey, cfg);
+        })) return true;
         if (cfg.pending && cfg.pending.length) return true;
         return false;
     }
@@ -278,10 +295,14 @@
             if (isWorkingDayFor(simDate, cfg)) {
                 let dateKey = getDateKey(simDate);
 
+                // Végleges törlés: a korábbi napok változatlanok maradnak, a törlés
+                // műszaknapjától viszont az illető kikerül a FIFO-sorból.
+                queue = queue.filter(function(nm) { return !isRemovedForDate(nm, dateKey, cfg); });
+
                 // 🆕 esedékes belépők a sor VÉGÉRE (a belépés napjától listázhatók,
                 // de csak miután az előttük állók mind sorra kerültek)
                 while (joinIdx < joinList.length && joinList[joinIdx].date <= dateKey) {
-                    if (queue.indexOf(joinList[joinIdx].name) === -1) queue.push(joinList[joinIdx].name);
+                    if (!isRemovedForDate(joinList[joinIdx].name, dateKey, cfg) && queue.indexOf(joinList[joinIdx].name) === -1) queue.push(joinList[joinIdx].name);
                     joinIdx++;
                 }
                 if (queue.length === 0) { simDate.setDate(simDate.getDate() + 1); continue; }
@@ -386,9 +407,7 @@
         const list = document.getElementById('upcomingList');
         hero.innerHTML = ''; list.innerHTML = '';
 
-        let today = new Date();
-        if (today.getHours() < 6) today.setDate(today.getDate() - 1);
-        today.setHours(0,0,0,0);
+        let today = getOperationalShiftDate();
 
         const headerHTML = `<div class="header-pill" onclick="openAdmin()">${sysSettings.shift} MŰSZAK BEOSZTÁS</div>`;
 
@@ -481,7 +500,7 @@
     // ==========================================
     let adminDraft = null; // 🛡️ munkamásolat: a panel ezen dolgozik, a Mentés írja vissza
 
-    function todayDateKey() { let t = new Date(); t.setHours(0,0,0,0); return getDateKey(t); }
+    function todayDateKey() { return getDateKey(getOperationalShiftDate()); }
 
     window.openAdmin = function() {
         let pin = prompt("Admin hitelesítés (PIN):");
@@ -490,6 +509,7 @@
         adminDraft = JSON.parse(JSON.stringify(sysSettings || {}));
         if (!adminDraft.roster) adminDraft.roster = [];
         if (!adminDraft.joins) adminDraft.joins = {};
+        if (!adminDraft.removals) adminDraft.removals = {};
         // 🧳 Örökölt "várakozó" bejegyzések átvétele belépőkké (a régi adat nem vész el)
         (adminDraft.pending || []).forEach(function(p) {
             if (p && p.name && adminDraft.roster.indexOf(p.name) === -1 && !adminDraft.joins[p.name]) {
@@ -539,9 +559,15 @@
     function renderAdminRoster() {
         let html = "";
         if (!adminDraft.roster) adminDraft.roster = [];
-        adminDraft.roster.forEach((name, i) => {
+        const activeRosterIndexes = adminDraft.roster
+            .map(function(name, index) { return { name: name, index: index }; })
+            .filter(function(item) { return !isRemovedForDate(item.name, todayDateKey(), adminDraft); });
+        window._visibleRosterIndexes = activeRosterIndexes.map(function(item) { return item.index; });
+        activeRosterIndexes.forEach(function(item, visibleIndex) {
+            const name = item.name;
+            const i = visibleIndex;
             // 🛡️ jelezzük, ha ugyanaz a név feljebb már szerepel
-            let dupe = adminDraft.roster.indexOf(name) !== i;
+            let dupe = activeRosterIndexes.findIndex(function(other) { return other.name === name; }) !== i;
             html += `
             <div class="admin-list-item">
                 <span style="font-weight:bold;">${name}${dupe ? ' <span style="color:#f87171; font-weight:600; font-size:0.75rem;">• kétszer szerepel</span>' : ''}</span>
@@ -577,21 +603,24 @@
     }
 
     window.moveWorker = function(index, direction) {
-        if (direction === -1 && index > 0) {
-            let temp = adminDraft.roster[index];
-            adminDraft.roster[index] = adminDraft.roster[index - 1];
-            adminDraft.roster[index - 1] = temp;
-        } else if (direction === 1 && index < adminDraft.roster.length - 1) {
-            let temp = adminDraft.roster[index];
-            adminDraft.roster[index] = adminDraft.roster[index + 1];
-            adminDraft.roster[index + 1] = temp;
+        const visibleIndexes = window._visibleRosterIndexes || [];
+        const targetVisibleIndex = index + direction;
+        if (targetVisibleIndex >= 0 && targetVisibleIndex < visibleIndexes.length) {
+            const actualIndex = visibleIndexes[index];
+            const targetActualIndex = visibleIndexes[targetVisibleIndex];
+            let temp = adminDraft.roster[actualIndex];
+            adminDraft.roster[actualIndex] = adminDraft.roster[targetActualIndex];
+            adminDraft.roster[targetActualIndex] = temp;
         }
         renderAdminRoster(); 
     };
 
     window.removeWorker = function(index) {
-        if(confirm(`Biztos törlöd ${adminDraft.roster[index]}-t a fő névsorból?`)) {
-            adminDraft.roster.splice(index, 1);
+        const actualIndex = (window._visibleRosterIndexes || [])[index];
+        const name = adminDraft.roster[actualIndex];
+        if(name && confirm(`Biztos törlöd ${name}-t a fő névsorból? A törlés a jelenlegi műszaknaptól érvényes, a korábbi beosztások változatlanok maradnak.`)) {
+            if (!adminDraft.removals) adminDraft.removals = {};
+            adminDraft.removals[name] = todayDateKey();
             renderAdminRoster();
         }
     };
@@ -654,6 +683,12 @@
             let clean = String(nm).trim();
             if (clean !== "" && cfg.roster.indexOf(clean) === -1) cleanJoins[clean] = cfg.joins[nm];
         });
+        let cleanRemovals = {};
+        Object.keys(cfg.removals || {}).forEach(function(nm) {
+            let clean = String(nm).trim();
+            let removedAt = String(cfg.removals[nm] || '');
+            if (clean !== "" && cfg.roster.indexOf(clean) !== -1 && /^\d{4}-\d{2}-\d{2}$/.test(removedAt)) cleanRemovals[clean] = removedAt;
+        });
 
         // A teljes settings csomópontot írjuk – az örökölt "pending" ezzel végleg eltűnik
         db.ref('settings').set({
@@ -661,7 +696,8 @@
             shiftStart: cfg.shiftStart,
             nameStart: cfg.nameStart,
             roster: cfg.roster,
-            joins: Object.keys(cleanJoins).length ? cleanJoins : null
+            joins: Object.keys(cleanJoins).length ? cleanJoins : null,
+            removals: Object.keys(cleanRemovals).length ? cleanRemovals : null
         }).then(() => {
             adminDraft = null;
             document.getElementById('adminPanel').style.display = 'none';
