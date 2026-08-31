@@ -356,16 +356,16 @@
         .instruction-highlight { color: var(--accent); font-weight: 600; }
         .active-shift-status { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0 .38rem; min-height: 1.6em; font-size: clamp(.78rem, 2.8vw, 1rem); }
         .active-shift-label, .active-shift-end { color: var(--text-dim); }
-        .active-shift-code { color: #fff; font-weight: 800; letter-spacing: .04em; }
+        .active-shift-code { color: #fff; font-weight: 800; letter-spacing: .04em; position: relative; display: inline-flex; align-items: center; }
         .active-shift-letter {
             display: inline-block;
             position: relative;
             isolation: isolate;
-            color: #a78bfa;
-            --active-shift-gradient: linear-gradient(118deg, #60a5fa 0%, #a78bfa 45%, #f9a8d4 100%);
-            --active-shift-shadow: rgba(167,139,250,.36);
+            color: #93c5fd;
+            --active-shift-gradient: linear-gradient(118deg, #60a5fa 0%, #22d3ee 18%, #34d399 36%, #fde047 54%, #fb7185 72%, #c084fc 88%, #60a5fa 100%);
+            --active-shift-shadow: rgba(96,165,250,.42);
             background: var(--active-shift-gradient);
-            background-size: 220% 220%;
+            background-size: 460% 460%;
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -374,16 +374,14 @@
             line-height: 1;
             letter-spacing: .015em;
             transform-origin: center;
-            will-change: transform;
+            will-change: transform, filter;
             filter: drop-shadow(0 2px 5px var(--active-shift-shadow));
-            animation: activeShiftColorFlow 7.5s ease-in-out infinite alternate;
+            animation: activeShiftColorFlow 16s ease-in-out infinite alternate, activeShiftDailySpectrum 86400s linear infinite;
         }
-        .active-shift-status[data-active-shift="A"] .active-shift-letter { --active-shift-gradient: linear-gradient(120deg, #5eead4 0%, #22c55e 42%, #a7f3d0 74%, #38bdf8 100%); --active-shift-shadow: rgba(34,197,94,.34); }
-        .active-shift-status[data-active-shift="B"] .active-shift-letter { --active-shift-gradient: linear-gradient(120deg, #fde047 0%, #f59e0b 34%, #fb7185 70%, #fdba74 100%); --active-shift-shadow: rgba(245,158,11,.36); }
-        .active-shift-status[data-active-shift="C"] .active-shift-letter { --active-shift-gradient: linear-gradient(120deg, #c4b5fd 0%, #818cf8 34%, #60a5fa 66%, #e879f9 100%); --active-shift-shadow: rgba(129,140,248,.38); }
-        .active-shift-status[data-active-shift="D"] .active-shift-letter { --active-shift-gradient: linear-gradient(120deg, #7dd3fc 0%, #2563eb 34%, #6366f1 65%, #c084fc 100%); --active-shift-shadow: rgba(99,102,241,.40); }
-        .active-shift-drip { position: absolute; top: .73em; left: 50%; z-index: 2; width: .16em; height: .42em; border-radius: 999px; background: var(--active-shift-gradient); opacity: 0; pointer-events: none; transform: translate3d(-50%, 0, 0); will-change: transform, opacity; }
-        @keyframes activeShiftColorFlow { 0% { background-position: 0% 48%; } 52% { background-position: 100% 54%; } 100% { background-position: 35% 100%; } }
+        .active-shift-transition-ghost { position: absolute; z-index: 3; left: 50%; top: 50%; pointer-events: none; transform: translate(-50%,-50%); }
+        .active-shift-code.is-shift-changing .active-shift-letter { z-index: 2; }
+        @keyframes activeShiftColorFlow { 0% { background-position: 0% 45%; } 52% { background-position: 100% 55%; } 100% { background-position: 32% 100%; } }
+        @keyframes activeShiftDailySpectrum { from { filter: hue-rotate(0deg) saturate(1.06) drop-shadow(0 2px 5px var(--active-shift-shadow)); } to { filter: hue-rotate(360deg) saturate(1.18) drop-shadow(0 2px 5px var(--active-shift-shadow)); } }
         @media (prefers-reduced-motion: reduce) { .active-shift-letter { animation: none; } }
 
         .device-info {
@@ -1730,9 +1728,16 @@
         const shifts = getShiftForDate(shiftDate);
         const activeCode = isDayShift ? shifts.day : shifts.night;
         status.dataset.activeShift = activeCode;
-        if (code.dataset.shiftCode !== activeCode) {
+        const previousActiveCode = code.dataset.shiftCode;
+        if (previousActiveCode !== activeCode) {
+            if (activeShiftLetterAnimation) activeShiftLetterAnimation.cancel();
             code.dataset.shiftCode = activeCode;
             code.innerHTML = `<span class="active-shift-quote">"</span><span class="active-shift-letter">${activeCode}</span><span class="active-shift-quote">"</span>`;
+            const letter = code.querySelector('.active-shift-letter');
+            syncActiveShiftColorPhase(letter, now);
+            if (previousActiveCode) playActiveShiftChangeTransition(code, letter, previousActiveCode);
+        } else {
+            syncActiveShiftColorPhase(code.querySelector('.active-shift-letter'), now);
         }
         end.textContent = isDayShift ? '• 18:00-ig' : '• 06:00-ig';
         status.classList.toggle('is-day', isDayShift);
@@ -2019,6 +2024,70 @@
     let activeShiftLetterAnimation = null;
     let activeShiftMotionTimer = null;
 
+    // A napi színkör valós időhöz kötött: újratöltés után is ugyanott folytatja a 24 órás átmenetet.
+    function syncActiveShiftColorPhase(letter, now = new Date()) {
+        if (!letter) return;
+        const elapsedSeconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds() + now.getMilliseconds() / 1000;
+        letter.style.animationDelay = `0s, -${elapsedSeconds.toFixed(3)}s`;
+    }
+
+    function playActiveShiftChangeTransition(code, letter, previousCode) {
+        if (!code || !letter || typeof letter.animate !== 'function' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const outgoing = document.createElement('span');
+        outgoing.className = 'active-shift-letter active-shift-transition-ghost';
+        outgoing.textContent = previousCode;
+        const computed = window.getComputedStyle(letter);
+        outgoing.style.animation = 'none';
+        outgoing.style.backgroundImage = computed.backgroundImage;
+        outgoing.style.backgroundSize = computed.backgroundSize;
+        outgoing.style.backgroundPosition = computed.backgroundPosition;
+        outgoing.style.filter = computed.filter;
+        code.appendChild(outgoing);
+        code.classList.add('is-shift-changing');
+
+        outgoing.animate([
+            { opacity: 1, transform: 'translate(-50%,-50%) scale(1) rotate(0deg)' },
+            { offset: .34, opacity: 1, transform: 'translate(-50%,-88%) scale(1.32) rotate(-28deg)' },
+            { opacity: 0, transform: 'translate(-50%,-160%) scale(.28) rotate(-110deg)' }
+        ], { duration: 1020, easing: 'cubic-bezier(.22,.86,.3,1)', fill: 'forwards' });
+
+        if (activeShiftLetterAnimation) activeShiftLetterAnimation.cancel();
+        activeShiftLetterAnimation = letter.animate([
+            { opacity: 0, transform: 'translate3d(0,-48px,0) rotate(54deg) scale(.2)' },
+            { offset: .56, opacity: 1, transform: 'translate3d(0,8px,0) rotate(-12deg) scale(1.25,.8)' },
+            { offset: .78, opacity: 1, transform: 'translate3d(0,-4px,0) rotate(7deg) scale(.94,1.08)' },
+            { opacity: 1, transform: 'translate3d(0,0,0) rotate(0) scale(1)' }
+        ], { duration: 1420, easing: 'cubic-bezier(.12,.86,.22,1)', fill: 'none' });
+        activeShiftLetterAnimation.finished.catch(() => {}).finally(() => { activeShiftLetterAnimation = null; });
+        setTimeout(() => { outgoing.remove(); code.classList.remove('is-shift-changing'); }, 1550);
+    }
+
+    // Kevesebb, de sokkal karakteresebb mozdulat: véletlen sorrendben futnak, ismétlés nélkül körönként.
+    const activeShiftPremiumMotionPatterns = [
+        { duration: 2260, easing: 'cubic-bezier(.15,.84,.24,1)', frames: [{ transform: 'translate3d(0,0,0) rotate(0) scale(1)' }, { offset: .18, transform: 'translate3d(-20px,-11px,0) rotate(-28deg) scale(1.11,.9)' }, { offset: .44, transform: 'translate3d(23px,6px,0) rotate(42deg) scale(.92,1.13)' }, { offset: .72, transform: 'translate3d(-11px,-4px,0) rotate(-16deg) scale(1.06,.96)' }, { transform: 'translate3d(0,0,0) rotate(0) scale(1)' }] },
+        { duration: 2550, easing: 'cubic-bezier(.18,.8,.24,1)', frames: [{ transform: 'perspective(280px) rotateX(0) rotateZ(0) scale(1)' }, { offset: .2, transform: 'perspective(280px) rotateX(68deg) rotateZ(-55deg) scale(1.05,.78)' }, { offset: .48, transform: 'perspective(280px) rotateX(-62deg) rotateZ(290deg) scale(.88,1.16)' }, { offset: .76, transform: 'perspective(280px) rotateX(24deg) rotateZ(676deg) scale(1.08,.92)' }, { transform: 'perspective(280px) rotateX(0) rotateZ(720deg) scale(1)' }] },
+        { duration: 2940, easing: 'cubic-bezier(.18,.69,.26,1)', frames: [{ transform: 'translate3d(0,0,0) rotate(0) scale(1)' }, { offset: .15, transform: 'translate3d(22px,10px,0) rotate(105deg) scale(.91)' }, { offset: .31, transform: 'translate3d(-25px,25vh,0) rotate(-205deg) scale(.82)' }, { offset: .48, transform: 'translate3d(22px,14vh,0) rotate(188deg) scale(.9)' }, { offset: .66, transform: 'translate3d(-14px,6vh,0) rotate(-84deg) scale(.98)' }, { offset: .82, transform: 'translate3d(5px,5px,0) rotate(17deg) scale(1.03)' }, { transform: 'translate3d(0,0,0) rotate(0) scale(1)' }] },
+        { duration: 2420, easing: 'cubic-bezier(.15,.86,.26,1)', frames: [{ opacity: 1, transform: 'translate3d(0,0,0) rotate(0) scale(1)' }, { offset: .17, opacity: 1, transform: 'translate3d(-12px,-17px,0) rotate(-35deg) scale(1.12)' }, { offset: .42, opacity: .96, transform: 'translate3d(18px,10px,0) rotate(210deg) scale(.62,1.25)' }, { offset: .64, opacity: 1, transform: 'translate3d(-8px,-8px,0) rotate(505deg) scale(1.18,.78)' }, { offset: .84, opacity: 1, transform: 'translate3d(3px,3px,0) rotate(690deg) scale(.97,1.03)' }, { opacity: 1, transform: 'translate3d(0,0,0) rotate(720deg) scale(1)' }] },
+        { duration: 3100, easing: 'cubic-bezier(.16,.72,.24,1)', frames: [{ opacity: 0, transform: 'translate3d(-18px,-78vh,0) rotate(-96deg) scale(.46)' }, { offset: .36, opacity: 1, transform: 'translate3d(8px,17px,0) rotate(18deg) scale(1.34,.68)' }, { offset: .56, opacity: 1, transform: 'translate3d(-6px,-13px,0) rotate(-12deg) scale(.9,1.15)' }, { offset: .78, opacity: 1, transform: 'translate3d(3px,5px,0) rotate(6deg) scale(1.05,.96)' }, { opacity: 1, transform: 'translate3d(0,0,0) rotate(0) scale(1)' }] },
+        { duration: 2780, easing: 'cubic-bezier(.12,.78,.26,1)', frames: [{ transform: 'translate3d(0,0,0) scale(1)' }, { offset: .15, transform: 'translate3d(-18px,0,0) rotate(-16deg) scale(1.1,.87)' }, { offset: .34, transform: 'translate3d(24px,-17px,0) rotate(30deg) scale(.76,1.32)' }, { offset: .54, transform: 'translate3d(-20px,13px,0) rotate(-39deg) scale(1.28,.72)' }, { offset: .76, transform: 'translate3d(10px,-4px,0) rotate(14deg) scale(.93,1.08)' }, { transform: 'translate3d(0,0,0) rotate(0) scale(1)' }] },
+        { duration: 3380, easing: 'cubic-bezier(.2,.03,.62,.62)', frames: [{ opacity: 1, transform: 'translate3d(0,0,0) rotate(0) scale(1)' }, { offset: .1, opacity: 1, transform: 'translate3d(7px,-8px,0) rotate(24deg) scale(1.08)' }, { offset: .3, opacity: 1, transform: 'translate3d(-17px,20vh,0) rotate(-138deg) scale(.95)' }, { offset: .45, opacity: 0, transform: 'translate3d(21px,92vh,0) rotate(720deg) scale(.68)' }, { offset: .54, opacity: 0, transform: 'translate3d(-15px,-95vh,0) rotate(-420deg) scale(.67)' }, { offset: .74, opacity: 1, transform: 'translate3d(10px,-19vh,0) rotate(-98deg) scale(.94)' }, { offset: .9, opacity: 1, transform: 'translate3d(-4px,7px,0) rotate(11deg) scale(1.04)' }, { opacity: 1, transform: 'translate3d(0,0,0) rotate(0) scale(1)' }] }
+    ];
+    let activeShiftMotionBag = [];
+    let activeShiftLastPremiumMotion = -1;
+
+    function playRandomActiveShiftLetterMotion() {
+        const letter = document.querySelector('#activeShiftCode .active-shift-letter');
+        if (!letter || typeof letter.animate !== 'function' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return 0;
+        if (!activeShiftMotionBag.length) {
+            activeShiftMotionBag = activeShiftPremiumMotionPatterns.map((_, index) => index).sort(() => Math.random() - .5);
+            if (activeShiftMotionBag[activeShiftMotionBag.length - 1] === activeShiftLastPremiumMotion) activeShiftMotionBag.unshift(activeShiftMotionBag.pop());
+        }
+        const index = activeShiftMotionBag.pop();
+        activeShiftLastPremiumMotion = index;
+        const pattern = activeShiftPremiumMotionPatterns[index];
+        return startActiveShiftAnimation(letter, pattern.frames, { duration: pattern.duration, easing: pattern.easing });
+    }
+
     function playActiveShiftMelting(letter) {
         if (!letter) return;
         letter.querySelectorAll('.active-shift-drip').forEach(effect => effect.remove());
@@ -2106,9 +2175,10 @@
     function scheduleActiveShiftLetterMotion() {
         clearTimeout(activeShiftMotionTimer);
         if (document.hidden) return;
-        const duration = playActiveShiftLetterMotion();
-        const pause = 900 + Math.floor(Math.random() * 2300);
-        activeShiftMotionTimer = setTimeout(scheduleActiveShiftLetterMotion, Math.max(2400, duration + pause));
+        const duration = playRandomActiveShiftLetterMotion();
+        // Nincs fix kétmásodperces ciklus: minden jelenet után más hosszúságú, nyugodt szünet jön.
+        const pause = 5200 + Math.floor(Math.random() * 9800);
+        activeShiftMotionTimer = setTimeout(scheduleActiveShiftLetterMotion, Math.max(6800, duration + pause));
     }
 
     // A másodpercenkénti teljes kezdőlap-újraépítés helyett célzott, takarékos frissítések.
