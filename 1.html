@@ -652,6 +652,12 @@ input.suggestions-active {
   #printArea.demand-print.demand-print-dense .demand-print-count { font-size:9.5pt; }
   #printArea.demand-print.demand-print-dense .demand-print-item div:last-child { font-size:6.4pt; }
 }
+/* A kártyás alkatrészigény-lista kap egy külön biztonsági zónát a nyomtató levágható szélein belül. */
+@media print {
+  #printArea.demand-print { width:calc(100% - 4mm) !important; max-width:calc(100% - 4mm) !important; margin:0 auto !important; }
+  #printArea.demand-print .demand-print-sheet { padding:.4mm 0 1.2mm !important; }
+  #printArea.demand-print .demand-print-item { overflow:visible !important; }
+}
 /* --- MODELLEK: ÖNÁLLÓ KERESŐ ÉS ÖSSZEHASONLÍTÓ --- */
 .models-btn { margin-left:8px; appearance:none; background:linear-gradient(135deg,rgba(76,29,149,.24),rgba(30,41,59,.48)); color:#e9d5ff; border:1px solid rgba(192,132,252,.7); border-radius:7px; padding:5px 10px; font-family:monospace; font-size:.7rem; font-weight:800; letter-spacing:.07em; cursor:pointer; transition:all .18s ease; box-shadow:inset 0 1px rgba(255,255,255,.08),0 3px 12px rgba(88,28,135,.16); }
 .models-btn:hover { background:rgba(126,34,206,.28); color:#fff; border-color:#e9d5ff; transform:translateY(-1px); box-shadow:0 6px 16px rgba(126,34,206,.22); }
@@ -940,10 +946,8 @@ input.suggestions-active {
 /* Felső gyorsműveletek: a MODELLEK gomb prémium, kompakt stílusához igazítva. */
 .top-action-row { display:flex; align-items:center; gap:8px; }
 .top-action-btn { appearance:none; display:inline-flex; align-items:center; gap:6px; border:1px solid rgba(191,219,254,.88); border-radius:8px; padding:7px 10px; color:#fff; background:linear-gradient(145deg,#38bdf8,#1d4ed8); box-shadow:0 3px 0 #1e3a8a,0 7px 16px rgba(37,99,235,.28),inset 0 1px rgba(255,255,255,.3); font-family:monospace; font-size:.68rem; font-weight:900; letter-spacing:.05em; cursor:pointer; transition:transform .16s ease,box-shadow .16s ease,filter .16s ease; }
-.top-action-btn:hover { transform:translateY(-1px); filter:brightness(1.1); box-shadow:0 5px 0 #1e3a8a,0 10px 20px rgba(37,99,235,.36),inset 0 1px rgba(255,255,255,.34); }
+.top-action-btn:hover { transform:translateY(-1px); background:linear-gradient(145deg,#7dd3fc,#2563eb); box-shadow:0 6px 0 #1e3a8a,0 13px 25px rgba(37,99,235,.52),inset 0 1px rgba(255,255,255,.38); }
 .top-action-btn:active { transform:translateY(2px); box-shadow:0 1px 0 #1e3a8a,inset 0 4px 9px rgba(0,0,0,.25); }
-.top-action-btn.demand-action { border-color:rgba(167,243,208,.88); background:linear-gradient(145deg,#10b981,#047857); box-shadow:0 3px 0 #064e3b,0 7px 16px rgba(5,150,105,.26),inset 0 1px rgba(255,255,255,.3); }
-.top-action-btn.demand-action:hover { box-shadow:0 5px 0 #064e3b,0 10px 20px rgba(5,150,105,.34),inset 0 1px rgba(255,255,255,.34); }
 .top-action-icon { font-size:.9rem; line-height:1; }
 </style>
 </head>
@@ -954,7 +958,7 @@ input.suggestions-active {
     <div style="display:flex; align-items:center; gap:15px;">
         <div class="top-action-row">
             <button class="top-action-btn demand-action" type="button" onclick="openDemandLauncher()" title="Teljes modell alkatrészigényének kalkulálása">
-                <span class="top-action-icon">📦</span> ALKATRÉSZ IGÉNY
+                <span class="top-action-icon"></span> ALKATRÉSZ IGÉNY
             </button>
             <button class="top-action-btn" type="button" onclick="openSetupModal()" title="Setup sheet generálása és nyomtatása">
                 <span class="top-action-icon">🖨️</span> SETUP SHEET
