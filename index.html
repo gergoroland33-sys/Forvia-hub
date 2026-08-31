@@ -3616,8 +3616,11 @@
             latestPresenceData = data && typeof data === 'object' ? data : null;
             analyticsPresenceDataInitialized = true;
             notifyAnalyticsPresenceChange();
+            /* Minden eszköz külön jelenléti munkamenetet ír. Ezeket összegezzük,
+               így ugyanazon bejelentkezés telefonon és laptopon is külön aktívként látszik. */
             const activeUsers = data && typeof data === 'object'
-                ? Object.values(data).filter(sessions => sessions && typeof sessions === 'object' && Object.keys(sessions).length > 0).length
+                ? Object.values(data).reduce((total, sessions) =>
+                    total + (sessions && typeof sessions === 'object' ? Object.keys(sessions).length : 0), 0)
                 : 0;
             const isStaffProOpen = data && typeof data === 'object' && Object.values(data).some(sessions =>
                 sessions && typeof sessions === 'object' && Object.values(sessions).some(session => session?.module === 'staff-pro')
