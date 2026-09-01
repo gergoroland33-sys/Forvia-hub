@@ -945,6 +945,7 @@ input.suggestions-active {
 
 /* Felső gyorsműveletek: a MODELLEK gomb prémium, kompakt stílusához igazítva. */
 .top-action-row { display:flex; align-items:center; gap:8px; }
+.top-action-row .models-btn { margin-left:0; }
 .top-action-btn { appearance:none; display:inline-flex; align-items:center; gap:6px; border:1px solid rgba(191,219,254,.88); border-radius:8px; padding:7px 10px; color:#fff; background:linear-gradient(145deg,#38bdf8,#1d4ed8); box-shadow:0 3px 0 #1e3a8a,0 7px 16px rgba(37,99,235,.28),inset 0 1px rgba(255,255,255,.3); font-family:monospace; font-size:.68rem; font-weight:900; letter-spacing:.05em; cursor:pointer; transition:transform .16s ease,box-shadow .16s ease,filter .16s ease; }
 .top-action-btn:hover { transform:translateY(-1px); background:linear-gradient(145deg,#7dd3fc,#2563eb); box-shadow:0 6px 0 #1e3a8a,0 13px 25px rgba(37,99,235,.52),inset 0 1px rgba(255,255,255,.38); }
 .top-action-btn:active { transform:translateY(2px); box-shadow:0 1px 0 #1e3a8a,inset 0 4px 9px rgba(0,0,0,.25); }
@@ -1077,6 +1078,8 @@ document.addEventListener("touchstart", function() {}, {passive: true});
 
 let bank=[],ultetes=[],idSet=new Set(),uniqueIdsArr=[],keresIdozito=null,searchHistory=JSON.parse(localStorage.getItem('searchHistory')||"[]");
 let searchFinalized = false;
+// Teljes cikkszám kártyáról vagy javaslatból történő választásakor csak pontos egyezést listázunk.
+let exactSelectedPartCode = null;
 let isNumericMode = true;
 let beultetesSzuro = 'BOTH'; 
 
@@ -1114,6 +1117,7 @@ function highlight(text, term) {
 
 window.clearSearch = function() {
     provideFeedback();
+    exactSelectedPartCode = null;
     const inp = document.getElementById('keres');
     inp.value = ''; 
     searchFinalized = false; 
@@ -1168,6 +1172,7 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
     
     inp.addEventListener('input',function(){
         const v=this.value.toUpperCase();
+        if(v.trim() !== exactSelectedPartCode) exactSelectedPartCode = null;
         clearBtn.style.display = v.length > 0 ? 'block' : 'none';
         
         const idle = document.getElementById('idleState');
@@ -1286,6 +1291,7 @@ function updateSuggest(v){
 
 window.selectSuggest=function(c){ 
     const i=document.getElementById('keres'); 
+    exactSelectedPartCode=String(c || '').trim().toUpperCase();
     i.value=c; 
     document.getElementById('suggest').style.display='none'; 
     i.classList.remove('suggestions-active');
@@ -1296,6 +1302,21 @@ window.selectSuggest=function(c){
 
     searchFinalized = false; 
     keres(c); 
+};
+
+window.selectExactBankPart=function(code){
+    const selectedCode=String(code || '').trim().toUpperCase();
+    if(!selectedCode) return;
+    const i=document.getElementById('keres');
+    exactSelectedPartCode=selectedCode;
+    i.value=selectedCode;
+    document.getElementById('suggest').style.display='none';
+    i.classList.remove('suggestions-active');
+    document.getElementById('clearBtn').style.display='block';
+    const idle = document.getElementById('idleState');
+    if(idle) idle.style.display = 'none';
+    searchFinalized = false;
+    keres(selectedCode);
 };
 
 function renderHistory(){
@@ -1312,12 +1333,13 @@ function renderHistory(){
 function keres(k){
     const e=document.getElementById('eredmeny');
     const idle = document.getElementById('idleState');
+    const exactPartSearch=exactSelectedPartCode===String(k || '').trim().toUpperCase();
     if(idle) idle.style.display = 'none'; 
     
     if(k.length<2)return;
     let h='';
     
-    let bT_raw = bank.filter(r=>r[2]&&r[2].toUpperCase().includes(k));
+    let bT_raw = bank.filter(r=>r[2]&&(exactPartSearch ? r[2].toUpperCase()===k : r[2].toUpperCase().includes(k)));
     
     if(bT_raw.length){
         let seenBank = new Set();
@@ -1339,7 +1361,7 @@ function keres(k){
         bT.forEach(r=>{
             const mc=getModelColor(r[3]);
             h+=`
-            <div class="card">
+            <div class="card clickable-card bank-result-card" data-bank-code="${r[2]}">
                 <div class="color-strip" style="background:${mc}"></div>
                 <div class="card-content">
                     <div class="data-row row-main"><span class="d-label">Cikkszám</span><span class="d-value">${r[2]}</span></div>
@@ -1351,7 +1373,7 @@ function keres(k){
         });
     }
     
-    let uT_raw = ultetes.filter(r=>r[0]&&r[0].toUpperCase().includes(k));
+    let uT_raw = ultetes.filter(r=>r[0]&&(exactPartSearch ? r[0].toUpperCase()===k : r[0].toUpperCase().includes(k)));
     
     if(uT_raw.length > 0){
         let seen = new Set();
@@ -1827,6 +1849,15 @@ function decorateBankResults() {
         if (item.classList.contains('header-bank')) { inBankSection = true; return; }
         if (item.classList.contains('header-ultetes')) { inBankSection = false; return; }
         if (!inBankSection || !item.classList.contains('card')) return;
+        if (item.dataset.bankCode && !item.dataset.bankCardReady) {
+            item.dataset.bankCardReady = 'true';
+            item.addEventListener('click', () => {
+                const partCode = String(item.dataset.bankCode || '').trim().toUpperCase();
+                if (!partCode) return;
+                if (typeof provideFeedback === 'function') provideFeedback();
+                window.selectExactBankPart(partCode);
+            });
+        }
         const rows = item.querySelectorAll('.data-row');
         if (rows[2]) rows[2].classList.add('bank-machine-row');
         if (rows[3]) {
@@ -1857,7 +1888,7 @@ function createTipsInterface() {
     const dialog = document.createElement('div');
     dialog.id = 'tipsModal';
     dialog.className = 'modal-overlay';
-    dialog.innerHTML = `<div class="modal-content tips-modal-content"><div class="modal-header"><div class="modal-title-wrap"><span class="modal-title">FORVIA TERMINÁL – TIPPEK</span><span class="modal-subtitle">Rövid használati útmutató</span></div><div class="modal-close" aria-label="Bezárás">✕</div></div><div class="modal-body"><p class="tips-intro">Minden fontos funkció egy helyen, hogy a keresés és a gyártási igénykalkuláció gyors legyen.</p><div class="tips-list"><div class="tip-item"><strong>Cikkszám keresése</strong> – írj be legalább 2 karaktert; a Feeder Bank és Beültetés találatai azonnal megjelennek.</div><div class="tip-item"><strong>Javaslatok és előzmények</strong> – a kereső alatt kattintható találati javaslatok és korábbi keresések segítenek.</div><div class="tip-item"><strong>TOP / BOT szűrés</strong> – a Beültetés résznél szűkítheted a listát TOP, BOT vagy mindkét oldalra.</div><div class="tip-item is-new"><span class="new-badge">NEW!</span><strong>Színes Feeder Bank adatok</strong> – a Gép kék, a Pozíció arany színű; a pozíciót a <strong>#</strong> jel vezeti be.</div><div class="tip-item is-new"><span class="new-badge">NEW!</span><strong>Modell alkatrészlista</strong> – kattints egy beültetési találatra: az alkatrészek ABC-sorrendben, panelenkénti beültetett darabszámmal jelennek meg.</div><div class="tip-item is-new"><span class="new-badge">NEW!</span><strong>Egyedi igénykalkuláció</strong> – kattints egy cikkszámra, add meg a gyártandó panelszámot, és máris látod a szükséges mennyiséget.</div><div class="tip-item is-new"><span class="new-badge">NEW!</span><strong>Teljes lista és nyomtatás</strong> – a <strong>TELJES LISTA</strong> minden cikkszám igényét kiszámolja; utána az <strong>A4 NYOMTATÁS</strong> gomb színes, nyomtatható összesítőt készít.</div><div class="tip-item"><strong>Setup Sheet</strong> – a felső menüből nyitható; modellhez tartozó feederpozíciók ellenőrzésére és nyomtatására használható.</div><div class="tip-item"><strong>Mobil használat</strong> – mobilon az alsó beépített billentyűzettel kereshetsz cikkszámot.</div></div><button class="tips-close-btn" type="button">BEZÁRÁS</button></div></div>`;
+    dialog.innerHTML = `<div class="modal-content tips-modal-content"><div class="modal-header"><div class="modal-title-wrap"><span class="modal-title">FORVIA TERMINÁL – TIPPEK</span><span class="modal-subtitle">Rövid használati útmutató</span></div><div class="modal-close" aria-label="Bezárás">✕</div></div><div class="modal-body"><p class="tips-intro">Minden fontos funkció egy helyen, hogy a keresés és a gyártási igénykalkuláció gyors legyen.</p><div class="tips-list"><div class="tip-item"><strong>Részleges cikkszám keresése</strong> – elég akár a cikkszám vége is, például <strong>00263</strong>; a Feeder Bank és Beültetés minden egyező találata megjelenik.</div><div class="tip-item is-new"><span class="new-badge">NEW!</span><strong>Bank-kártya gyors kiválasztás</strong> – részleges keresésnél kattints a kívánt Feeder Bank kártyára. A kereső a kártya teljes cikkszámára áll, így csak annak pontos adatai maradnak a listában.</div><div class="tip-item"><strong>Javaslatok és előzmények</strong> – a kereső alatt kattintható találati javaslatok és korábbi keresések segítenek.</div><div class="tip-item"><strong>TOP / BOT szűrés</strong> – a Beültetés résznél szűkítheted a listát TOP, BOT vagy mindkét oldalra.</div><div class="tip-item is-new"><span class="new-badge">NEW!</span><strong>Színes Feeder Bank adatok</strong> – a Gép kék, a Pozíció arany színű; a pozíciót a <strong>#</strong> jel vezeti be.</div><div class="tip-item is-new"><span class="new-badge">NEW!</span><strong>Modell alkatrészlista</strong> – kattints egy beültetési találatra: az alkatrészek ABC-sorrendben, panelenkénti beültetett darabszámmal jelennek meg.</div><div class="tip-item is-new"><span class="new-badge">NEW!</span><strong>Egyedi igénykalkuláció</strong> – kattints egy cikkszámra, add meg a gyártandó panelszámot, és máris látod a szükséges mennyiséget.</div><div class="tip-item is-new"><span class="new-badge">NEW!</span><strong>Teljes lista és nyomtatás</strong> – a <strong>TELJES LISTA</strong> minden cikkszám igényét kiszámolja; utána az <strong>A4 NYOMTATÁS</strong> gomb színes, nyomtatható összesítőt készít.</div><div class="tip-item"><strong>Setup Sheet</strong> – a felső menüből nyitható; modellhez tartozó feederpozíciók ellenőrzésére és nyomtatására használható.</div><div class="tip-item"><strong>Mobil használat</strong> – mobilon az alsó beépített billentyűzettel kereshetsz cikkszámot.</div></div><button class="tips-close-btn" type="button">BEZÁRÁS</button></div></div>`;
     document.body.appendChild(dialog);
     const close = () => { dialog.style.display = 'none'; };
     button.onclick = () => { if (typeof provideFeedback === 'function') provideFeedback(); dialog.style.display = 'flex'; };
@@ -1908,13 +1939,13 @@ function createModelsExplorer() {
     const selectedModels = new Set();
     const button = document.createElement('button');
     button.id = 'modelsExplorerButton';
-    button.className = 'models-btn';
+    button.className = 'top-action-btn models-btn';
     button.type = 'button';
-    button.textContent = 'MODELLEK';
-    const searchGroup = document.querySelector('.input-group');
-    if (searchGroup) {
-        searchGroup.classList.add('models-button-ready');
-        searchGroup.appendChild(button);
+    button.textContent = 'MODELL HASONLÍTÓ';
+    const topActionRow = document.querySelector('.top-action-row');
+    const demandButton = topActionRow && topActionRow.querySelector('.demand-action');
+    if (topActionRow && demandButton) {
+        topActionRow.insertBefore(button, demandButton);
     } else {
         cluster.appendChild(button);
     }
@@ -2047,7 +2078,7 @@ function createModelsExplorer() {
     if (tipsList) {
         const tip = document.createElement('div');
         tip.className = 'tip-item is-new';
-        tip.innerHTML = '<span class="new-badge">NEW!</span><strong>Modellek összehasonlítása</strong> – a felső <strong>MODELLEK</strong> gombbal válassz ki egy modellt a cikkszám-listájához, vagy legalább kettőt a közös és eltérő cikkszámok összevetéséhez.';
+        tip.innerHTML = '<span class="new-badge">NEW!</span><strong>Modell hasonlító</strong> – a felső <strong>MODELL HASONLÍTÓ</strong> gombbal válassz ki egy modellt a cikkszám-listájához, vagy legalább kettőt a közös és eltérő cikkszámok összevetéséhez.';
         tipsList.insertBefore(tip, tipsList.lastElementChild);
     }
 }
