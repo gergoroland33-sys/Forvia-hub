@@ -102,31 +102,32 @@
             flex-grow: 1; display: flex; flex-direction: column;
             align-items: center; 
             text-align: center;
-            /* Mély, sötét alap az élénk aurora-rétegekhez: a kártyák olvashatók maradnak. */
+            /* Mély, kontrasztos alap: a napszak színei a teljes háttérben is jobban érvényesülnek. */
             background: 
-                radial-gradient(ellipse at 50% -12%, rgba(148, 163, 184, 0.10), transparent 45%),
-                linear-gradient(160deg, #070b19 0%, #0c1430 48%, #080d20 100%);
+                radial-gradient(ellipse 105% 78% at 50% -16%, rgba(var(--home-aurora-a), .20), transparent 64%),
+                radial-gradient(ellipse 88% 66% at 52% 108%, rgba(var(--home-aurora-b), .14), transparent 72%),
+                linear-gradient(160deg, #050815 0%, #101a3d 49%, #060a1a 100%);
             
             padding: 20px; position: relative; width: 100%; height: 100%;
             overflow-y: auto; 
             padding-bottom: 60px;
         }
-        /* Három, napszakhoz kötött aurora-fény ad mélységet, nem folyamatos képkockás animáció. */
+        /* Három, napszakhoz kötött aurora-fény ad intenzív, de olvasható mélységet. */
         #home-screen::before {
             content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
             background:
-                radial-gradient(ellipse 72% 64% at 92% 2%, rgba(var(--home-aurora-a), .34), transparent 67%),
-                radial-gradient(ellipse 70% 62% at 4% 100%, rgba(var(--home-aurora-b), .29), transparent 68%),
-                radial-gradient(ellipse 58% 50% at 54% 52%, rgba(var(--home-aurora-c), .13), transparent 72%),
-                radial-gradient(ellipse 50% 40% at 82% 82%, rgba(var(--home-tint-rgb), .10), transparent 74%);
+                radial-gradient(ellipse 76% 68% at 94% 0%, rgba(var(--home-aurora-a), .56), transparent 68%),
+                radial-gradient(ellipse 74% 66% at 2% 102%, rgba(var(--home-aurora-b), .48), transparent 70%),
+                radial-gradient(ellipse 62% 54% at 53% 50%, rgba(var(--home-aurora-c), .25), transparent 74%),
+                radial-gradient(ellipse 54% 44% at 83% 82%, rgba(var(--home-tint-rgb), .20), transparent 75%);
             transition: background 300s cubic-bezier(.4, 0, .2, 1);
         }
-        /* Lágy, diagonális fényréteg és sötét szélek: prémiumabb térérzet a kártyák mögött. */
+        /* Diagonális prizmás fényréteg és sötét szélek: látványosabb térérzet a kártyák mögött. */
         #home-screen::after {
             content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
             background:
-                linear-gradient(118deg, transparent 12%, rgba(var(--home-aurora-b), .075) 42%, transparent 67%),
-                radial-gradient(ellipse 92% 75% at 50% 46%, transparent 42%, rgba(2, 6, 23, .28) 100%);
+                linear-gradient(118deg, transparent 8%, rgba(var(--home-aurora-b), .16) 39%, rgba(var(--home-aurora-c), .10) 52%, transparent 72%),
+                radial-gradient(ellipse 92% 76% at 50% 46%, transparent 38%, rgba(2, 6, 23, .34) 100%);
             transition: background 300s cubic-bezier(.4, 0, .2, 1);
         }
         /* Csak a fő kártya kerül a háttér-réteg fölé: a hírsáv megőrzi a felső, fixed pozícióját. */
