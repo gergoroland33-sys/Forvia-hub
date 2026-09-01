@@ -609,6 +609,17 @@ input.suggestions-active {
     #printArea.setup-print .setup-side.is-bot { background:#dbeafe !important; color:#1d4ed8 !important; }
     #printArea.setup-print .setup-side.is-unknown { background:#f1f5f9 !important; color:#475569 !important; }
     #printArea.setup-print .setup-check { width:14px; height:14px; margin:0 auto; border:1.2px solid #64748b; border-radius:2px; background:#fff !important; }
+    /* Nagy gép–oldal listák is egyetlen, álló A4-re kerülnek: legfeljebb három olvasható oszlop. */
+    #printArea.setup-print .setup-print-columns.columns-2 { gap:2.7mm; }
+    #printArea.setup-print .setup-print-columns.columns-2 .setup-print-table th { padding:1.3mm .9mm; font-size:6.8pt; }
+    #printArea.setup-print .setup-print-columns.columns-2 .setup-print-table td { padding:1.05mm .9mm; font-size:7.45pt; line-height:1.04; }
+    #printArea.setup-print .setup-print-columns.columns-2 .setup-side { font-size:6.2pt; }
+    #printArea.setup-print .setup-print-columns.columns-2 .setup-check { width:12px; height:12px; }
+    #printArea.setup-print .setup-print-columns.columns-3 { gap:1.8mm; }
+    #printArea.setup-print .setup-print-columns.columns-3 .setup-print-table th { padding:.85mm .45mm; font-size:5.9pt; }
+    #printArea.setup-print .setup-print-columns.columns-3 .setup-print-table td { padding:.58mm .45mm; font-size:6.7pt; line-height:1; }
+    #printArea.setup-print .setup-print-columns.columns-3 .setup-side { font-size:5.35pt; letter-spacing:0; }
+    #printArea.setup-print .setup-print-columns.columns-3 .setup-check { width:10px; height:10px; }
 }
 /* --- 2026 PRÉMIUM IGÉNYKALKULÁCIÓ – KIEGÉSZÍTÉS --- */
 #modelModal .modal-content { max-width: 640px; }
@@ -1666,14 +1677,15 @@ window.generateSetupSheet = function() {
                     return numA - numB;
                 });
                 const oldalNev = oldal === '100' ? '100-AS OLDAL' : '200-AS OLDAL';
-                const maxRowsPerPage = 64;
+                const maxRowsPerColumn = 60;
+                const maxRowsPerPage = maxRowsPerColumn * 3;
                 const pages = Array.from({ length: Math.ceil(setupItems.length / maxRowsPerPage) }, (_, index) => setupItems.slice(index * maxRowsPerPage, (index + 1) * maxRowsPerPage));
 
                 pages.forEach((pageItems, pageIndex) => {
-                    const columns = pageItems.length > 32 ? [pageItems.slice(0, 32), pageItems.slice(32)] : [pageItems];
+                    const columns = Array.from({ length: Math.ceil(pageItems.length / maxRowsPerColumn) }, (_, index) => pageItems.slice(index * maxRowsPerColumn, (index + 1) * maxRowsPerColumn));
                     const commonCount = pageItems.filter(item => item.isCommon).length;
                     const differentCount = pageItems.length - commonCount;
-                    const tableHTML = `<div class="setup-print-columns">${columns.map(column => `<table class="setup-print-table"><thead><tr><th style="width:21%">Pozíció</th><th style="width:45%">Cikkszám</th><th style="width:20%">Oldal</th><th style="width:14%">✓</th></tr></thead><tbody>${column.map(item => `<tr><td>${escapeSetupHtml(item.poz)}</td><td>${escapeSetupHtml(item.cikk)}</td><td class="setup-side ${item.sideClass}">${escapeSetupHtml(item.sideLabel)}</td><td><div class="setup-check"></div></td></tr>`).join('')}</tbody></table>`).join('')}</div>`;
+                    const tableHTML = `<div class="setup-print-columns columns-${columns.length}">${columns.map(column => `<table class="setup-print-table"><thead><tr><th style="width:21%">Pozíció</th><th style="width:45%">Cikkszám</th><th style="width:20%">Oldal</th><th style="width:14%">✓</th></tr></thead><tbody>${column.map(item => `<tr><td>${escapeSetupHtml(item.poz)}</td><td>${escapeSetupHtml(item.cikk)}</td><td class="setup-side ${item.sideClass}">${escapeSetupHtml(item.sideLabel)}</td><td><div class="setup-check"></div></td></tr>`).join('')}</tbody></table>`).join('')}</div>`;
                     const pageMarker = pages.length > 1 ? ` · ${pageIndex + 1}/${pages.length}. lap` : '';
                     html += `<div class="print-page"><div class="setup-print-header"><div><div class="setup-print-kicker">FORVIA · FEEDER ELLENŐRZŐ LAP</div><div class="setup-print-title">SETUP SHEET</div><div class="setup-print-model">${escapeSetupHtml(baseModelName)}</div></div><div class="setup-print-meta"><strong>${escapeSetupHtml(gep)}</strong><span>${oldalNev}${pageMarker}</span><span>${new Date().toLocaleDateString('hu-HU')}</span></div></div><div class="setup-print-summary">${pageItems.length} pozíció · <span style="color:#166534">${commonCount} TOP + BOT egyezés</span> · <span style="color:#b91c1c">${differentCount} eltérő / oldalfüggő adat</span></div>${tableHTML}</div>`;
                 });
