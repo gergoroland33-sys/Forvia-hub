@@ -114,7 +114,8 @@ border-radius: 8px; margin-bottom: 10px; border: 1px solid transparent;
 .ctrl-row:hover { border-color: rgba(255,255,255,0.1); }
 
 .role-label { font-weight: 700; font-size: 0.95rem; width: 50px; }
-.c-ins { color: #fbbf24; } .c-tech { color: #38bdf8; } .c-op { color: #4ade80; } .c-sv { color: #a855f7; } .c-gl { color: #ec4899; }
+.c-ins { color: #fbbf24; } .c-tech { color: #38bdf8; } .c-tech-aio { color: #fb923c; } .c-op { color: #4ade80; } .c-sv { color: #a855f7; } .c-gl { color: #ec4899; }
+.role-label.c-tech-aio { width:auto; font-size:.76rem; letter-spacing:.01em; white-space:nowrap; }
 
 .stepper-group { display: flex; align-items: center; gap: 10px; }
 
@@ -243,6 +244,17 @@ padding: 2px 5px; border-radius: 3px; margin-right: 6px; min-width: 32px; text-a
 }
 .ss-line { border-bottom: 1px dotted #64748b; flex-grow: 1; height: 14px; }
 
+/* NYOMTATÁSI KATEGÓRIAKÁRTYÁK – minden kategória külön, színes bal éllel */
+.pb-category-cards { padding: 10px; display: grid; gap: 7px; }
+.print-category-card { border: 1px solid #e2e8f0; border-left: 4px solid #475569; border-radius: 4px; padding: 6px 7px; background: #fff; -webkit-print-color-adjust: exact; }
+.pcc-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.pcc-role { font-size: 7pt; font-weight: 900; color: #334155; letter-spacing: .25px; }
+.pcc-count { font-size: 6.5pt; color: #64748b; font-weight: 700; }
+.pcc-workers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px 8px; }
+.pcc-name-row { display: flex; align-items: flex-end; gap: 6px; min-width: 0; }
+.pcc-role-tag { font-size: 6.5pt; font-weight: 800; background: #334155; color: #fff; padding: 2px 4px; border-radius: 3px; min-width: 30px; text-align: center; -webkit-print-color-adjust: exact; }
+.pcc-name-line { border-bottom: 1px dotted #64748b; min-height: 14px; flex: 1; min-width: 0; }
+
 /* MEGJEGYZÉS A NYOMTATÁSON (PRO VERZIÓ - TÚLCSORDULÁS ELLEN VÉDVE) */
 .print-remark {
 margin-top: 20px; border: 2px solid #ef4444; padding: 12px 15px;
@@ -369,7 +381,7 @@ while(data.length < 3) {
 const s = getShifts(d);
 // Ellenőrizzük, hogy a vizsgált nap egyezik-e a keresett célcsoporttal
 if(targetShifts.includes(s.d) || targetShifts.includes(s.n)) {
-data.push({ date: new Date(d), shifts: s, req: { d_sv:0, d_gl:0, d_ins:0, d_tech:0, d_op:0, n_sv:0, n_gl:0, n_ins:0, n_tech:0, n_op:0 } });
+data.push({ date: new Date(d), shifts: s, req: { d_sv:0, d_gl:0, d_ins:0, d_tech:0, d_tech_aio:0, d_op:0, n_sv:0, n_gl:0, n_ins:0, n_tech:0, n_tech_aio:0, n_op:0 } });
 }
 d.setDate(d.getDate()+1);
 }
@@ -414,6 +426,7 @@ ${renderInput(i, code, 'sv', 'SV', 'c-sv')}
 ${renderInput(i, code, 'gl', 'GL', 'c-gl')}
 ${renderInput(i, code, 'ins', 'INS', 'c-ins')}
 ${renderInput(i, code, 'tech', 'TECH', 'c-tech')}
+${renderInput(i, code, 'tech_aio', 'TECH AIO/ICT', 'c-tech-aio')}
 ${renderInput(i, code, 'op', 'OP', 'c-op')}
 </div>
 </div>`;
@@ -452,8 +465,8 @@ let hasData = false;
 
 data.forEach(day => {
 // Csak akkor mutatjuk, ha van igény BÁRMELYIK műszakban aznap
-const dSum = day.req.d_sv + day.req.d_gl + day.req.d_ins + day.req.d_tech + day.req.d_op;
-const nSum = day.req.n_sv + day.req.n_gl + day.req.n_ins + day.req.n_tech + day.req.n_op;
+const dSum = day.req.d_sv + day.req.d_gl + day.req.d_ins + day.req.d_tech + day.req.d_tech_aio + day.req.d_op;
+const nSum = day.req.n_sv + day.req.n_gl + day.req.n_ins + day.req.n_tech + day.req.n_tech_aio + day.req.n_op;
 
 if(dSum + nSum === 0) return;
 
@@ -464,8 +477,8 @@ const html = `
 <div class="pdb-date">${formatDate(day.date)}</div>
 
 <div class="print-flex-row">
-${renderPrintBox(day.shifts.d, 'Nappal', day.req.d_sv, day.req.d_gl, day.req.d_ins, day.req.d_tech, day.req.d_op)}
-${renderPrintBox(day.shifts.n, 'Éjjel', day.req.n_sv, day.req.n_gl, day.req.n_ins, day.req.n_tech, day.req.n_op)}
+${renderPrintBox(day.shifts.d, 'Nappal', day.req.d_sv, day.req.d_gl, day.req.d_ins, day.req.d_tech, day.req.d_tech_aio, day.req.d_op)}
+${renderPrintBox(day.shifts.n, 'Éjjel', day.req.n_sv, day.req.n_gl, day.req.n_ins, day.req.n_tech, day.req.n_tech_aio, day.req.n_op)}
 </div>
 </div>`;
 pc.insertAdjacentHTML('beforeend', html);
@@ -524,8 +537,8 @@ window.showTips = function() {
 alert('Alapból a program automatikusan a mai napból (06:00 előtt a tegnapiból) számolja a szokásos 3 napot.\n\nHa kivételesen más dátumból kell indulni, kattints bármelyik megjelenő dátumra, és válaszd ki a kívánt napot. A 3 nap újraszámolódik; a korábban megadott létszámok ilyenkor törlődnek.');
 }
 
-function renderPrintBox(letter, name, sv, gl, ins, tech, op) {
-const sum = sv + gl + ins + tech + op;
+function renderPrintBox(letter, name, sv, gl, ins, tech, techAio, op) {
+const sum = sv + gl + ins + tech + techAio + op;
 let color = '#333';
 if(letter==='A') color='#ef4444';
 if(letter==='B') color='#3b82f6';
@@ -550,15 +563,17 @@ if(sv) details.push(`${sv} SV`);
 if(gl) details.push(`${gl} GL`);
 if(op) details.push(`${op} OP`);
 if(tech) details.push(`${tech} TECH`);
+if(techAio) details.push(`${techAio} TECH AIO/ICT`);
 if(ins) details.push(`${ins} INS`);
 
-// Aláírás rács (Smart Grid)
-let signs = '';
-for(let k=0; k<sv; k++) signs += signSlot('SV');
-for(let k=0; k<gl; k++) signs += signSlot('GL');
-for(let k=0; k<op; k++) signs += signSlot('OP');
-for(let k=0; k<tech; k++) signs += signSlot('TECH');
-for(let k=0; k<ins; k++) signs += signSlot('INS');
+// Nyomtatásban kategóriánként egy kártya jelenik meg; több főhöz több névsor tartozik ugyanazon a kártyán.
+let categoryCards = '';
+if(sv) categoryCards += printCategoryCard('SV', sv, '#a855f7');
+if(gl) categoryCards += printCategoryCard('GL', gl, '#ec4899');
+if(op) categoryCards += printCategoryCard('OP', op, '#4ade80');
+if(tech) categoryCards += printCategoryCard('TECH', tech, '#38bdf8');
+if(techAio) categoryCards += printCategoryCard('TECH AIO/ICT', techAio, '#fb923c');
+if(ins) categoryCards += printCategoryCard('INS', ins, '#fbbf24');
 
 return `
 <div class="print-box" style="border-top: 4px solid ${color}">
@@ -572,9 +587,19 @@ return `
 <span class="pbs-value">${details.join(', ')} <span style="font-weight:normal">(${sum} fő)</span></span>
 </div>
 
-<div class="pb-signatures">
-${signs}
+<div class="pb-category-cards">
+${categoryCards}
 </div>
+</div>`;
+}
+
+function printCategoryCard(role, count, color) {
+let nameLines = '';
+for(let k = 0; k < count; k++) nameLines += `<div class="pcc-name-row"><span class="pcc-role-tag">${role}</span><div class="pcc-name-line"></div></div>`;
+return `
+<div class="print-category-card" style="border-left-color:${color}">
+<div class="pcc-head"><span class="pcc-role">${role}</span><span class="pcc-count">${count} fő</span></div>
+<div class="pcc-workers">${nameLines}</div>
 </div>`;
 }
 
