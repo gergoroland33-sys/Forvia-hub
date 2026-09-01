@@ -1575,9 +1575,9 @@ window.openSetupModal = function() {
     if(typeof provideFeedback === 'function') provideFeedback();
     
     let models = new Set();
-    ultetes.forEach(r => { 
-        if(r[2]) {
-            let mName = r[2].toUpperCase().replace(/[ \-_]*(TOP|BOT)$/i, '').trim();
+    bank.forEach(r => { 
+        if(r[3]) {
+            let mName = r[3].toUpperCase().replace(/[ \-_]*(TOP|BOT)$/i, '').trim();
             models.add(mName);
         }
     });
@@ -1608,23 +1608,6 @@ window.generateSetupSheet = function() {
         return match ? match[1].toUpperCase() : '';
     };
     const escapeSetupHtml = value => String(value == null ? '' : value).replace(/[&<>"']/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[character]);
-    const requiredParts = new Set();
-    const placementSidesByPart = new Map();
-
-    ultetes.forEach(r => {
-        if(r[2]) {
-            const mName = getBaseModelName(r[2]);
-            if (mName === baseModelName) {
-                const part = (r[0] || "").toUpperCase();
-                const side = getModelSide(r[2]);
-                if (!part) return;
-                requiredParts.add(part);
-                if (!placementSidesByPart.has(part)) placementSidesByPart.set(part, new Set());
-                if (side) placementSidesByPart.get(part).add(side);
-            }
-        }
-    });
-
     // Azonos gép + feeder lokáció + cikkszám csak akkor olvad össze, ha TOP és BOT oldalon is egyezik.
     // Az eltérő cikkszám vagy eltérő lokáció önálló sor marad, így a Setup Sheet nem rejti el a különbséget.
     const printData = {};
@@ -1634,12 +1617,9 @@ window.generateSetupSheet = function() {
         const bCikk = (r[2] || "").toUpperCase();
         const bModelRaw = (r[3] || "").toUpperCase();
         const bModelBase = getBaseModelName(bModelRaw);
-        if(bModelBase === baseModelName || requiredParts.has(bCikk)) {
+        if(bModelBase === baseModelName) {
             const oldal = bPoz.startsWith('2') ? '200' : '100';
             let side = getModelSide(bModelRaw);
-            const placementSides = placementSidesByPart.get(bCikk);
-            if (!side && placementSides && placementSides.size === 1) side = Array.from(placementSides)[0];
-            if (!side && placementSides && placementSides.size > 1) side = 'TOP + BOT';
             if (!side) side = 'NINCS JELÖLÉS';
 
             if(!printData[bGep]) printData[bGep] = { '100': [], '200': [] };
