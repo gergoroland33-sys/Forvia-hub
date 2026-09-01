@@ -207,6 +207,8 @@ input.suggestions-active {
 
 .clickable-card { cursor: pointer; }
 .clickable-card:active { transform: scale(0.98) translateY(0); box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: 0.1s; }
+.card-touch-hint { position:absolute; top:9px; right:10px; display:grid; place-items:center; width:22px; height:22px; border:1px solid rgba(125,211,252,.52); border-radius:50%; background:rgba(15,23,42,.72); color:#e0f2fe; font-size:.86rem; line-height:1; box-shadow:0 2px 8px rgba(14,165,233,.18); pointer-events:none; opacity:.9; }
+.clickable-card .card-content { padding-right:42px; }
 
 .color-strip { width: 6px; flex-shrink: 0; }
 .card-content { flex: 1; padding: 12px 15px; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
@@ -1363,6 +1365,7 @@ function keres(k){
             h+=`
             <div class="card clickable-card bank-result-card" data-bank-code="${r[2]}">
                 <div class="color-strip" style="background:${mc}"></div>
+                <span class="card-touch-hint" aria-hidden="true">☝</span>
                 <div class="card-content">
                     <div class="data-row row-main"><span class="d-label">Cikkszám</span><span class="d-value">${r[2]}</span></div>
                     <div class="data-row"><span class="d-label">Modell</span><span class="d-value">${r[3]}</span></div>
@@ -1416,6 +1419,7 @@ function keres(k){
                 h+=`
                 <div class="card clickable-card" onclick="openModelModal('${r[2]}')">
                     <div class="color-strip" style="background:${mc}"></div>
+                    <span class="card-touch-hint" aria-hidden="true">☝</span>
                     <div class="card-content">
                         <div class="data-row row-main"><span class="d-label">Cikkszám</span><span class="d-value">${r[0]}</span></div>
                         <div class="data-row"><span class="d-label">Modell</span><span class="d-value">${r[2]}</span></div>
@@ -1888,7 +1892,7 @@ function createTipsInterface() {
     const dialog = document.createElement('div');
     dialog.id = 'tipsModal';
     dialog.className = 'modal-overlay';
-    dialog.innerHTML = `<div class="modal-content tips-modal-content"><div class="modal-header"><div class="modal-title-wrap"><span class="modal-title">FORVIA TERMINÁL – TIPPEK</span><span class="modal-subtitle">Rövid használati útmutató</span></div><div class="modal-close" aria-label="Bezárás">✕</div></div><div class="modal-body"><p class="tips-intro">Minden fontos funkció egy helyen, hogy a keresés és a gyártási igénykalkuláció gyors legyen.</p><div class="tips-list"><div class="tip-item"><strong>Részleges cikkszám keresése</strong> – elég akár a cikkszám vége is, például <strong>00263</strong>; a Feeder Bank és Beültetés minden egyező találata megjelenik.</div><div class="tip-item is-new"><span class="new-badge">NEW!</span><strong>Bank-kártya gyors kiválasztás</strong> – részleges keresésnél kattints a kívánt Feeder Bank kártyára. A kereső a kártya teljes cikkszámára áll, így csak annak pontos adatai maradnak a listában.</div><div class="tip-item"><strong>Javaslatok és előzmények</strong> – a kereső alatt kattintható találati javaslatok és korábbi keresések segítenek.</div><div class="tip-item"><strong>TOP / BOT szűrés</strong> – a Beültetés résznél szűkítheted a listát TOP, BOT vagy mindkét oldalra.</div><div class="tip-item is-new"><span class="new-badge">NEW!</span><strong>Színes Feeder Bank adatok</strong> – a Gép kék, a Pozíció arany színű; a pozíciót a <strong>#</strong> jel vezeti be.</div><div class="tip-item is-new"><span class="new-badge">NEW!</span><strong>Modell alkatrészlista</strong> – kattints egy beültetési találatra: az alkatrészek ABC-sorrendben, panelenkénti beültetett darabszámmal jelennek meg.</div><div class="tip-item is-new"><span class="new-badge">NEW!</span><strong>Egyedi igénykalkuláció</strong> – kattints egy cikkszámra, add meg a gyártandó panelszámot, és máris látod a szükséges mennyiséget.</div><div class="tip-item is-new"><span class="new-badge">NEW!</span><strong>Teljes lista és nyomtatás</strong> – a <strong>TELJES LISTA</strong> minden cikkszám igényét kiszámolja; utána az <strong>A4 NYOMTATÁS</strong> gomb színes, nyomtatható összesítőt készít.</div><div class="tip-item"><strong>Setup Sheet</strong> – a felső menüből nyitható; modellhez tartozó feederpozíciók ellenőrzésére és nyomtatására használható.</div><div class="tip-item"><strong>Mobil használat</strong> – mobilon az alsó beépített billentyűzettel kereshetsz cikkszámot.</div></div><button class="tips-close-btn" type="button">BEZÁRÁS</button></div></div>`;
+    dialog.innerHTML = `<div class="modal-content tips-modal-content"><div class="modal-header"><div class="modal-title-wrap"><span class="modal-title">FORVIA TERMINÁL – TIPPEK</span><span class="modal-subtitle">Aktuális funkciók röviden</span></div><div class="modal-close" aria-label="Bezárás">✕</div></div><div class="modal-body"><p class="tips-intro">A kereséstől a modell-összehasonlításig minden fő funkció itt található röviden.</p><div class="tips-list"><div class="tip-item"><strong>Részleges cikkszám keresése</strong> – legalább 2 karakter elég, akár csak a cikkszám vége is: például <strong>00263</strong>. A Feeder Bank és Beültetés minden egyező találata megjelenik.</div><div class="tip-item is-new"><span class="new-badge">NEW!</span><strong>Érinthető találati kártyák</strong> – a ☝ ikon jelzi a kattintható kártyát. A Feeder Bank kártyája pontos cikkszámra szűkít; a Beültetés kártyája a kiválasztott modell teljes alkatrészlistáját nyitja meg.</div><div class="tip-item"><strong>Javaslatok és előzmények</strong> – gépeléskor legfeljebb 8 gyors javaslat jelenik meg; az utolsó 5 pontos keresésed pedig egy érintéssel újraindítható.</div><div class="tip-item"><strong>Feeder Bank adatok</strong> – minden találatnál látható a cikkszám, modell, gép és pozíció. A gép kék, a pozíció arany jelölést kap.</div><div class="tip-item"><strong>Beültetés és TOP / BOT szűrés</strong> – cikkszámhoz tartozó modell, oldal és darab/panel adatokat mutat. A szűrővel TOP, BOT vagy mindkét oldal jeleníthető meg.</div><div class="tip-item"><strong>Modell alkatrészlista és igénykalkuláció</strong> – Beültetés kártyáról nyitva egy modell összes alkatrésze látható darab/panel értékkel; cikkszámra vagy a teljes listára is kérhetsz gyártási mennyiség-számítást.</div><div class="tip-item"><strong>Alkatrész igény</strong> – felül válassz modellt, majd add meg a gyártandó panelszámot. A rendszer a teljes modellhez kiszámítja az igényt; az eredmény A4 formátumban nyomtatható.</div><div class="tip-item is-new tip-model-compare"><span class="new-badge">NEW!</span><strong>Modell hasonlító</strong> – egy modellnél a teljes cikkszám-listát, több modellnél a közös cikkszámokat, eltéréseket és darabszám-különbségeket mutatja. A lista gyorsan szűrhető és nyomtatható.</div><div class="tip-item"><strong>Setup Sheet</strong> – kiválasztott modellhez feederpozíció-listát készít ellenőrzéshez és nyomtatáshoz.</div><div class="tip-item"><strong>Mobil használat</strong> – a beépített szám- és betűbillentyűzetből gyorsan kereshetsz; az ABC / szám mód, törlés és Enter is elérhető.</div></div><button class="tips-close-btn" type="button">BEZÁRÁS</button></div></div>`;
     document.body.appendChild(dialog);
     const close = () => { dialog.style.display = 'none'; };
     button.onclick = () => { if (typeof provideFeedback === 'function') provideFeedback(); dialog.style.display = 'flex'; };
@@ -2075,9 +2079,9 @@ function createModelsExplorer() {
     dialog.addEventListener('click', event => { if (event.target === dialog || event.target.classList.contains('modal-close')) dialog.style.display = 'none'; });
 
     const tipsList = document.querySelector('#tipsModal .tips-list');
-    if (tipsList) {
+    if (tipsList && !tipsList.querySelector('.tip-model-compare')) {
         const tip = document.createElement('div');
-        tip.className = 'tip-item is-new';
+        tip.className = 'tip-item is-new tip-model-compare';
         tip.innerHTML = '<span class="new-badge">NEW!</span><strong>Modell hasonlító</strong> – a felső <strong>MODELL HASONLÍTÓ</strong> gombbal válassz ki egy modellt a cikkszám-listájához, vagy legalább kettőt a közös és eltérő cikkszámok összevetéséhez.';
         tipsList.insertBefore(tip, tipsList.lastElementChild);
     }
