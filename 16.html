@@ -244,17 +244,6 @@ padding: 2px 5px; border-radius: 3px; margin-right: 6px; min-width: 32px; text-a
 }
 .ss-line { border-bottom: 1px dotted #64748b; flex-grow: 1; height: 14px; }
 
-/* NYOMTATÁSI KATEGÓRIAKÁRTYÁK – minden kategória külön, színes bal éllel */
-.pb-category-cards { padding: 10px; display: grid; gap: 7px; }
-.print-category-card { border: 1px solid #e2e8f0; border-left: 4px solid #475569; border-radius: 4px; padding: 6px 7px; background: #fff; -webkit-print-color-adjust: exact; }
-.pcc-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-.pcc-role { font-size: 7pt; font-weight: 900; color: #334155; letter-spacing: .25px; }
-.pcc-count { font-size: 6.5pt; color: #64748b; font-weight: 700; }
-.pcc-workers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px 8px; }
-.pcc-name-row { display: flex; align-items: flex-end; gap: 6px; min-width: 0; }
-.pcc-role-tag { font-size: 6.5pt; font-weight: 800; background: #334155; color: #fff; padding: 2px 4px; border-radius: 3px; min-width: 30px; text-align: center; -webkit-print-color-adjust: exact; }
-.pcc-name-line { border-bottom: 1px dotted #64748b; min-height: 14px; flex: 1; min-width: 0; }
-
 /* MEGJEGYZÉS A NYOMTATÁSON (PRO VERZIÓ - TÚLCSORDULÁS ELLEN VÉDVE) */
 .print-remark {
 margin-top: 20px; border: 2px solid #ef4444; padding: 12px 15px;
@@ -334,9 +323,6 @@ Dokumentum típusa: igénylés
 <div id="print-remark-text" class="pr-text"></div>
 </div>
 
-<div style="margin-top:auto; padding-top:20px; border-top:1px solid #e2e8f0; text-align:center; font-size:8pt; color:#94a3b8;">
-Dátum: ...................................
-</div>
 </div>
 </div>
 
@@ -563,17 +549,17 @@ if(sv) details.push(`${sv} SV`);
 if(gl) details.push(`${gl} GL`);
 if(op) details.push(`${op} OP`);
 if(tech) details.push(`${tech} TECH`);
-if(techAio) details.push(`${techAio} TECH AIO/ICT`);
+if(techAio) details.push(`${techAio} TECH/ICT`);
 if(ins) details.push(`${ins} INS`);
 
-// Nyomtatásban kategóriánként egy kártya jelenik meg; több főhöz több névsor tartozik ugyanazon a kártyán.
-let categoryCards = '';
-if(sv) categoryCards += printCategoryCard('SV', sv, '#a855f7');
-if(gl) categoryCards += printCategoryCard('GL', gl, '#ec4899');
-if(op) categoryCards += printCategoryCard('OP', op, '#4ade80');
-if(tech) categoryCards += printCategoryCard('TECH', tech, '#38bdf8');
-if(techAio) categoryCards += printCategoryCard('TECH AIO/ICT', techAio, '#fb923c');
-if(ins) categoryCards += printCategoryCard('INS', ins, '#fbbf24');
+// Aláírás rács (Smart Grid)
+let signs = '';
+for(let k=0; k<sv; k++) signs += signSlot('SV');
+for(let k=0; k<gl; k++) signs += signSlot('GL');
+for(let k=0; k<op; k++) signs += signSlot('OP');
+for(let k=0; k<tech; k++) signs += signSlot('TECH');
+for(let k=0; k<techAio; k++) signs += signSlot('TECH/ICT');
+for(let k=0; k<ins; k++) signs += signSlot('INS');
 
 return `
 <div class="print-box" style="border-top: 4px solid ${color}">
@@ -587,19 +573,9 @@ return `
 <span class="pbs-value">${details.join(', ')} <span style="font-weight:normal">(${sum} fő)</span></span>
 </div>
 
-<div class="pb-category-cards">
-${categoryCards}
+<div class="pb-signatures">
+${signs}
 </div>
-</div>`;
-}
-
-function printCategoryCard(role, count, color) {
-let nameLines = '';
-for(let k = 0; k < count; k++) nameLines += `<div class="pcc-name-row"><span class="pcc-role-tag">${role}</span><div class="pcc-name-line"></div></div>`;
-return `
-<div class="print-category-card" style="border-left-color:${color}">
-<div class="pcc-head"><span class="pcc-role">${role}</span><span class="pcc-count">${count} fő</span></div>
-<div class="pcc-workers">${nameLines}</div>
 </div>`;
 }
 
