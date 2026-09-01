@@ -3078,13 +3078,16 @@
         const normalHex = (value, fallback) => isHexColor(value) ? String(value).trim().toUpperCase() : fallback;
 
         function formatTickerDate(now = new Date()) {
-            return `${now.getFullYear()}. ${String(now.getMonth() + 1).padStart(2, '0')}. ${String(now.getDate()).padStart(2, '0')}.`;
+            const months = ['Január', 'Február', 'Március', 'Április', 'Május', 'Június', 'Július', 'Augusztus', 'Szeptember', 'Október', 'November', 'December'];
+            const weekdays = ['Vasárnap', 'Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat'];
+            return `${now.getFullYear()}.${months[now.getMonth()]}.${String(now.getDate()).padStart(2, '0')}.${weekdays[now.getDay()]}`;
         }
 
         function getTickerDisplayText(data = tickerCurrent) {
-            const prefix = data.showDate ? `${formatTickerDate()} • ` : '';
-            const icon = data.showIcon && data.icon ? `${data.icon} ` : '';
-            return `${prefix}${icon}${data.text}`;
+            const message = String(data.text || '').trim();
+            const date = data.showDate ? formatTickerDate() : '';
+            const messageWithIcon = message ? `${data.showIcon && data.icon ? `${data.icon} ` : ''}${message}` : '';
+            return [date, messageWithIcon].filter(Boolean).join(' • ');
         }
 
         function updateTickerAriaLabel(ticker, displayedText) {
