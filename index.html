@@ -3117,9 +3117,10 @@
         function normalizeTicker(data) {
             const raw = data && typeof data === 'object' ? data : {};
             const icon = typeof raw.icon === 'string' ? raw.icon.trim().slice(0, 8) : tickerFallback.icon;
+            const showDate = raw.showDate === true;
             return {
                 enabled: raw.enabled !== false,
-                text: typeof raw.text === 'string' && raw.text.trim() ? raw.text.trim().slice(0, 400) : tickerFallback.text,
+                text: typeof raw.text === 'string' && raw.text.trim() ? raw.text.trim().slice(0, 400) : (showDate ? '' : tickerFallback.text),
                 icon,
                 showIcon: raw.showIcon !== false && Boolean(icon),
                 style: tickerStyles.includes(raw.style) ? raw.style : tickerFallback.style,
@@ -3129,7 +3130,7 @@
                 textColor: normalHex(raw.textColor, tickerFallback.textColor),
                 accentColor: normalHex(raw.accentColor, tickerFallback.accentColor),
                 rgbText: raw.rgbText === true,
-                showDate: raw.showDate === true
+                showDate
             };
         }
 
@@ -3308,7 +3309,7 @@
             }
             const rawText = tickerEl('tickerTextInput').value.trim();
             const next = getTickerEditorValues();
-            if (next.enabled && !rawText) {
+            if (next.enabled && !rawText && !next.showDate) {
                 setTickerStatus('tickerAdminEditorStatus', 'Bekapcsolt hírfolyamhoz adj meg üzenetet.', 'error');
                 return;
             }
