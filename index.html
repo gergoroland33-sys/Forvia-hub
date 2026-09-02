@@ -99,36 +99,40 @@
             --home-aurora-a: 59, 130, 246;
             --home-aurora-b: 139, 92, 246;
             --home-aurora-c: 34, 211, 238;
+            --home-aurora-d: 251, 146, 60;
+            --home-accent-rgb: 96, 165, 250;
             flex-grow: 1; display: flex; flex-direction: column;
             align-items: center; 
             text-align: center;
             /* Mély, kontrasztos alap: a napszak színei a teljes háttérben is jobban érvényesülnek. */
             background: 
-                radial-gradient(ellipse 105% 78% at 50% -16%, rgba(var(--home-aurora-a), .20), transparent 64%),
-                radial-gradient(ellipse 88% 66% at 52% 108%, rgba(var(--home-aurora-b), .14), transparent 72%),
-                linear-gradient(160deg, #050815 0%, #101a3d 49%, #060a1a 100%);
+                radial-gradient(ellipse 108% 84% at 46% -20%, rgba(var(--home-aurora-a), .25), transparent 65%),
+                radial-gradient(ellipse 98% 74% at 58% 112%, rgba(var(--home-aurora-b), .20), transparent 72%),
+                radial-gradient(ellipse 70% 62% at 100% 54%, rgba(var(--home-aurora-d), .13), transparent 70%),
+                linear-gradient(155deg, #040713 0%, #0d1732 48%, #050817 100%);
             
             padding: 20px; position: relative; width: 100%; height: 100%;
             overflow-y: auto; 
             padding-bottom: 60px;
         }
-        /* Három, napszakhoz kötött aurora-fény ad intenzív, de olvasható mélységet. */
+        /* Négy egymásba érő, napszakhoz kötött aurora-fény: a színek találkozása adja a mélységet. */
         #home-screen::before {
             content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
             background:
-                radial-gradient(ellipse 76% 68% at 94% 0%, rgba(var(--home-aurora-a), .56), transparent 68%),
-                radial-gradient(ellipse 74% 66% at 2% 102%, rgba(var(--home-aurora-b), .48), transparent 70%),
-                radial-gradient(ellipse 62% 54% at 53% 50%, rgba(var(--home-aurora-c), .25), transparent 74%),
-                radial-gradient(ellipse 54% 44% at 83% 82%, rgba(var(--home-tint-rgb), .20), transparent 75%);
-            transition: background 300s cubic-bezier(.4, 0, .2, 1);
+                radial-gradient(ellipse 82% 72% at 96% -6%, rgba(var(--home-aurora-a), .62), transparent 66%),
+                radial-gradient(ellipse 80% 72% at -8% 104%, rgba(var(--home-aurora-b), .56), transparent 68%),
+                radial-gradient(ellipse 66% 58% at 50% 47%, rgba(var(--home-aurora-c), .35), transparent 72%),
+                radial-gradient(ellipse 72% 62% at 92% 86%, rgba(var(--home-aurora-d), .28), transparent 70%),
+                radial-gradient(ellipse 46% 48% at 22% 18%, rgba(var(--home-tint-rgb), .18), transparent 76%);
+            transition: background 88s cubic-bezier(.35, 0, .18, 1);
         }
         /* Diagonális prizmás fényréteg és sötét szélek: látványosabb térérzet a kártyák mögött. */
         #home-screen::after {
             content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
             background:
-                linear-gradient(118deg, transparent 8%, rgba(var(--home-aurora-b), .16) 39%, rgba(var(--home-aurora-c), .10) 52%, transparent 72%),
-                radial-gradient(ellipse 92% 76% at 50% 46%, transparent 38%, rgba(2, 6, 23, .34) 100%);
-            transition: background 300s cubic-bezier(.4, 0, .2, 1);
+                linear-gradient(112deg, transparent 6%, rgba(var(--home-aurora-a), .12) 27%, rgba(var(--home-aurora-c), .18) 48%, rgba(var(--home-aurora-d), .12) 66%, transparent 92%),
+                radial-gradient(ellipse 96% 80% at 50% 46%, transparent 34%, rgba(2, 6, 23, .38) 100%);
+            transition: background 88s cubic-bezier(.35, 0, .18, 1);
         }
         /* Csak a fő kártya kerül a háttér-réteg fölé: a hírsáv megőrzi a felső, fixed pozícióját. */
         #home-screen > #main-card { position: relative; z-index: 1; }
@@ -385,8 +389,8 @@
             position: relative;
             isolation: isolate;
             color: #93c5fd;
-            --active-shift-gradient: linear-gradient(118deg, #60a5fa 0%, #22d3ee 18%, #34d399 36%, #fde047 54%, #fb7185 72%, #c084fc 88%, #60a5fa 100%);
-            --active-shift-shadow: rgba(96,165,250,.42);
+            --active-shift-gradient: linear-gradient(118deg, rgb(var(--home-aurora-a)) 0%, rgb(var(--home-aurora-c)) 31%, rgb(var(--home-aurora-d)) 55%, rgb(var(--home-aurora-b)) 78%, rgb(var(--home-aurora-a)) 100%);
+            --active-shift-shadow: rgba(var(--home-accent-rgb), .48);
             background: var(--active-shift-gradient);
             background-size: 460% 460%;
             -webkit-background-clip: text;
@@ -399,7 +403,7 @@
             transform-origin: center;
             will-change: transform, filter;
             filter: drop-shadow(0 2px 5px var(--active-shift-shadow));
-            animation: activeShiftColorFlow 16s ease-in-out infinite alternate, activeShiftDailySpectrum 86400s linear infinite;
+            animation: activeShiftColorFlow 16s ease-in-out infinite alternate;
         }
         .active-shift-transition-ghost { position: absolute; z-index: 3; left: 50%; top: 50%; pointer-events: none; transform: translate(-50%,-50%); }
         .active-shift-code.is-shift-changing .active-shift-letter { z-index: 2; }
@@ -544,8 +548,9 @@
         .calendar-box.electric-blue.dynamic-rgb {
             border-color: rgb(var(--calendar-rgb, 96,165,250));
             border-left-color: rgb(var(--calendar-rgb, 96,165,250));
-            box-shadow: 0 4px 20px rgba(0,0,0,.25);
-            transition: border-color 5s linear, box-shadow .35s ease;
+            border-top-color: rgb(var(--calendar-rgb, 96,165,250));
+            box-shadow: 0 4px 20px rgba(var(--calendar-rgb, 96,165,250), .22), inset 0 1px 0 rgba(var(--calendar-rgb, 96,165,250), .15), 0 4px 20px rgba(0,0,0,.25);
+            transition: border-color 70s cubic-bezier(.35, 0, .18, 1), box-shadow 70s cubic-bezier(.35, 0, .18, 1);
         }
 
         /* Csak a hírfolyam admin felületének stílusai. */
@@ -1750,32 +1755,27 @@
     function updateCalendarRgbTone(now) {
         const box = document.getElementById('calendar-widget');
         if (!box || !box.classList.contains('electric-blue') || box.classList.contains('type-workday')) return;
-
-        const minute = now.getHours() * 60 + now.getMinutes();
-        let hue;
-        if (minute < 360) hue = 238;                         // mély éjszakai indigó
-        else if (minute < 540) hue = 238 - ((minute - 360) / 180) * 36; // hajnal: indigó → cián
-        else if (minute < 1020) hue = 202;                   // nappali királykék / cián
-        else if (minute < 1260) hue = 202 + ((minute - 1020) / 240) * 43; // esti kék → lila
-        else hue = 245;                                      // késő esti ibolya-kék
-
-        // A másodpercek is beleszámítanak, ezért a teljes RGB-kör óránként, folyamatosan úszik át.
-        hue = ((now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600) / 24) * 360;
-        const [r, g, b] = hslToRgb(hue, 86, 62);
+        const colors = getHomeAuroraColors(now);
+        const [r, g, b] = colors[3];
         box.classList.add('dynamic-rgb');
         box.style.setProperty('--calendar-rgb', `${r}, ${g}, ${b}`);
     }
 
-    // Prémium, 24 órás aurora-paletta. Tudatos napszak-színek, nem egyszerű RGB-kör.
+    // Közös, 24 órás aurora-paletta: a háttér, a középső eseménykártya és a műszakbetű ebből azonos pillanatnyi színvilágot kap.
     const homeAuroraPalette = [
-        { minute: 0,    colors: [[48, 88, 190], [104, 58, 188], [236, 72, 153]] },  // éjfél: királykék, lila, pink
-        { minute: 330,  colors: [[75, 72, 205], [168, 85, 247], [244, 114, 182]] }, // hajnal előtt: indigó, ibolya
-        { minute: 450,  colors: [[139, 92, 246], [236, 72, 153], [251, 146, 60]] }, // hajnal: lila, magenta, borostyán
-        { minute: 600,  colors: [[14, 165, 233], [34, 211, 238], [99, 102, 241]] }, // délelőtt: cián, égkék
-        { minute: 900,  colors: [[6, 182, 212], [16, 185, 129], [59, 130, 246]] },  // délután: türkiz, smaragd
-        { minute: 1080, colors: [[236, 72, 153], [139, 92, 246], [251, 146, 60]] }, // naplemente: pink, lila, arany
-        { minute: 1260, colors: [[99, 102, 241], [168, 85, 247], [236, 72, 153]] }, // este: indigó, ibolya
-        { minute: 1440, colors: [[48, 88, 190], [104, 58, 188], [236, 72, 153]] }
+        { minute: 0,    colors: [[38, 74, 176], [85, 53, 184], [30, 129, 204], [221, 80, 171]] },
+        { minute: 120,  colors: [[48, 69, 188], [112, 60, 204], [37, 162, 205], [199, 92, 213]] },
+        { minute: 270,  colors: [[74, 63, 207], [156, 77, 232], [73, 163, 224], [238, 111, 181]] },
+        { minute: 390,  colors: [[129, 84, 226], [224, 89, 184], [244, 126, 87], [250, 185, 71]] },
+        { minute: 480,  colors: [[244, 124, 80], [251, 183, 71], [50, 191, 220], [116, 217, 194]] },
+        { minute: 600,  colors: [[23, 166, 233], [45, 211, 231], [77, 142, 241], [90, 221, 198]] },
+        { minute: 720,  colors: [[33, 183, 222], [36, 211, 177], [72, 151, 241], [149, 225, 183]] },
+        { minute: 870,  colors: [[12, 181, 204], [33, 188, 151], [48, 127, 226], [102, 211, 176]] },
+        { minute: 990,  colors: [[35, 145, 220], [82, 112, 225], [181, 88, 208], [243, 130, 94]] },
+        { minute: 1110, colors: [[236, 88, 151], [167, 79, 226], [247, 142, 76], [250, 193, 77]] },
+        { minute: 1230, colors: [[113, 81, 215], [121, 73, 202], [226, 81, 173], [74, 152, 229]] },
+        { minute: 1350, colors: [[53, 77, 191], [92, 57, 187], [79, 107, 223], [205, 83, 191]] },
+        { minute: 1440, colors: [[38, 74, 176], [85, 53, 184], [30, 129, 204], [221, 80, 171]] }
     ];
 
     function getHomeAuroraColors(now) {
@@ -1804,7 +1804,9 @@
         home.style.setProperty('--home-aurora-a', colors[0].join(', '));
         home.style.setProperty('--home-aurora-b', colors[1].join(', '));
         home.style.setProperty('--home-aurora-c', colors[2].join(', '));
-        home.style.setProperty('--home-tint-rgb', colors[0].join(', '));
+        home.style.setProperty('--home-aurora-d', colors[3].join(', '));
+        home.style.setProperty('--home-tint-rgb', colors[2].join(', '));
+        home.style.setProperty('--home-accent-rgb', colors[3].join(', '));
     }
 
     function updateActiveShiftStatus(now) {
@@ -2127,7 +2129,7 @@
     function syncActiveShiftColorPhase(letter, now = new Date()) {
         if (!letter) return;
         const elapsedSeconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds() + now.getMilliseconds() / 1000;
-        letter.style.animationDelay = `0s, -${elapsedSeconds.toFixed(3)}s`;
+        letter.style.animationDelay = '0s';
     }
 
     function playActiveShiftChangeTransition(code, letter, previousCode) {
@@ -2297,7 +2299,7 @@
 
     function scheduleCalendarRgbRefresh() {
         clearTimeout(calendarRgbRefreshTimer);
-        const interval = 15000;
+        const interval = 60000;
         const delay = interval - (Date.now() % interval) + 20;
         calendarRgbRefreshTimer = setTimeout(() => {
             updateCalendarRgbTone(new Date());
@@ -2308,7 +2310,7 @@
     function scheduleHomeBackgroundTone() {
         clearTimeout(homeBackgroundToneTimer);
         updateHomeBackgroundTone(new Date());
-        const interval = 300000;
+        const interval = 60000;
         const delay = interval - (Date.now() % interval) + 30;
         homeBackgroundToneTimer = setTimeout(scheduleHomeBackgroundTone, delay);
     }
