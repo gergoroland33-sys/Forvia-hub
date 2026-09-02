@@ -101,37 +101,37 @@
             --home-aurora-c: 43, 202, 224;
             --home-aurora-d: 238, 86, 174;
             --home-accent-rgb: 238, 86, 174;
+            --horizon-y: 112%;
+            --horizon-core-alpha: .12; --horizon-side-alpha: .05; --horizon-mist-alpha: .04;
             flex-grow: 1; display: flex; flex-direction: column;
             align-items: center; 
             text-align: center;
-            /* Mély, kontrasztos alap: a napszak színei a teljes háttérben is jobban érvényesülnek. */
+            /* Cinematic Horizon: egyetlen széles, összefüggő fényöv — nem szétszórt foltok. */
             background: 
-                radial-gradient(ellipse 108% 84% at 46% -20%, rgba(var(--home-aurora-a), .29), transparent 65%),
-                radial-gradient(ellipse 98% 74% at 58% 112%, rgba(var(--home-aurora-b), .24), transparent 72%),
-                radial-gradient(ellipse 70% 62% at 100% 54%, rgba(var(--home-aurora-d), .16), transparent 70%),
-                linear-gradient(155deg, #040713 0%, #0d1732 48%, #050817 100%);
+                radial-gradient(ellipse 128% 52% at 50% var(--horizon-y), rgba(var(--home-aurora-d), var(--horizon-core-alpha)) 0%, rgba(var(--home-aurora-b), var(--horizon-side-alpha)) 38%, transparent 75%),
+                linear-gradient(180deg, #010208 0%, #07132b 48%, #010208 100%);
             
             padding: 20px; position: relative; width: 100%; height: 100%;
             overflow-y: auto; 
             padding-bottom: 60px;
+            transition: background 88s cubic-bezier(.35, 0, .18, 1);
         }
-        /* Négy egymásba érő, napszakhoz kötött aurora-fény: a színek találkozása adja a mélységet. */
+        /* Három, egymást fedő színréteg ugyanazon horizont mentén: ettől látható a színkeveredés. */
         #home-screen::before {
             content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
             background:
-                radial-gradient(ellipse 82% 72% at 96% -6%, rgba(var(--home-aurora-a), .68), transparent 66%),
-                radial-gradient(ellipse 80% 72% at -8% 104%, rgba(var(--home-aurora-b), .61), transparent 68%),
-                radial-gradient(ellipse 66% 58% at 50% 47%, rgba(var(--home-aurora-c), .43), transparent 72%),
-                radial-gradient(ellipse 72% 62% at 92% 86%, rgba(var(--home-aurora-d), .35), transparent 70%),
-                radial-gradient(ellipse 46% 48% at 22% 18%, rgba(var(--home-tint-rgb), .24), transparent 76%);
+                radial-gradient(ellipse 74% 52% at 18% var(--horizon-y), rgba(var(--home-aurora-a), var(--horizon-side-alpha)) 0%, transparent 71%),
+                radial-gradient(ellipse 86% 58% at 50% var(--horizon-y), rgba(var(--home-aurora-c), var(--horizon-core-alpha)) 0%, rgba(var(--home-aurora-b), var(--horizon-side-alpha)) 45%, transparent 75%),
+                radial-gradient(ellipse 74% 52% at 82% var(--horizon-y), rgba(var(--home-aurora-d), var(--horizon-side-alpha)) 0%, transparent 71%),
+                linear-gradient(100deg, transparent 0%, rgba(var(--home-aurora-a), var(--horizon-mist-alpha)) 21%, rgba(var(--home-aurora-b), var(--horizon-side-alpha)) 42%, rgba(var(--home-aurora-c), var(--horizon-core-alpha)) 53%, rgba(var(--home-aurora-d), var(--horizon-side-alpha)) 68%, transparent 100%);
             transition: background 88s cubic-bezier(.35, 0, .18, 1);
         }
-        /* Diagonális prizmás fényréteg és sötét szélek: látványosabb térérzet a kártyák mögött. */
+        /* Finom ködfátyol és erős sötét vignetta, hogy a kártya minden helyzetben olvasható maradjon. */
         #home-screen::after {
             content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
             background:
-                linear-gradient(112deg, transparent 6%, rgba(var(--home-aurora-a), .16) 27%, rgba(var(--home-aurora-c), .23) 48%, rgba(var(--home-aurora-d), .17) 66%, transparent 92%),
-                radial-gradient(ellipse 96% 80% at 50% 46%, transparent 34%, rgba(2, 6, 23, .38) 100%);
+                linear-gradient(180deg, rgba(0,0,0,.20) 0%, transparent 32%, transparent 66%, rgba(0,0,0,.26) 100%),
+                radial-gradient(ellipse 108% 92% at 50% 50%, transparent 28%, rgba(0, 1, 8, .58) 100%);
             transition: background 88s cubic-bezier(.35, 0, .18, 1);
         }
         /* Csak a fő kártya kerül a háttér-réteg fölé: a hírsáv megőrzi a felső, fixed pozícióját. */
@@ -390,7 +390,6 @@
             isolation: isolate;
             color: #93c5fd;
             --active-shift-gradient: linear-gradient(118deg, rgb(var(--home-aurora-a)) 0%, rgb(var(--home-aurora-c)) 31%, rgb(var(--home-aurora-d)) 55%, rgb(var(--home-aurora-b)) 78%, rgb(var(--home-aurora-a)) 100%);
-            --active-shift-shadow: rgba(var(--home-accent-rgb), .48);
             background: var(--active-shift-gradient);
             background-size: 460% 460%;
             -webkit-background-clip: text;
@@ -401,8 +400,8 @@
             line-height: 1;
             letter-spacing: .015em;
             transform-origin: center;
-            will-change: transform, filter;
-            filter: drop-shadow(0 2px 5px var(--active-shift-shadow));
+            will-change: transform;
+            filter: none;
             animation: activeShiftColorFlow 16s ease-in-out infinite alternate;
         }
         .active-shift-transition-ghost { position: absolute; z-index: 3; left: 50%; top: 50%; pointer-events: none; transform: translate(-50%,-50%); }
@@ -1761,22 +1760,41 @@
         box.style.setProperty('--calendar-rgb', `${r}, ${g}, ${b}`);
     }
 
-    // Közös, 24 órás aurora-paletta: a háttér, a középső eseménykártya és a műszakbetű ebből azonos pillanatnyi színvilágot kap.
+    // Cinematic Horizon 24 órás paletta: minden időszak egyetlen, egymásba olvadó égi jelenet.
     const homeAuroraPalette = [
-        { minute: 0,    colors: [[35, 69, 178], [99, 55, 194], [31, 134, 211], [218, 75, 177]] },
-        { minute: 120,  colors: [[47, 66, 193], [132, 62, 216], [42, 161, 211], [222, 83, 198]] },
-        { minute: 270,  colors: [[82, 67, 215], [181, 79, 235], [74, 171, 232], [245, 111, 190]] },
-        { minute: 390,  colors: [[137, 79, 224], [231, 87, 189], [245, 127, 89], [252, 188, 71]] },
-        { minute: 480,  colors: [[244, 116, 81], [250, 181, 65], [48, 193, 222], [197, 81, 203]] },
-        { minute: 600,  colors: [[20, 170, 232], [50, 208, 228], [72, 126, 237], [184, 86, 211]] },
-        { minute: 720,  colors: [[31, 187, 222], [44, 213, 185], [66, 133, 242], [173, 86, 211]] },
-        { minute: 870,  colors: [[12, 177, 205], [45, 165, 213], [91, 91, 222], [220, 91, 175]] },
-        { minute: 990,  colors: [[39, 135, 221], [91, 82, 220], [188, 80, 211], [245, 118, 93]] },
-        { minute: 1110, colors: [[232, 76, 153], [167, 72, 222], [245, 132, 80], [250, 194, 70]] },
-        { minute: 1230, colors: [[96, 72, 211], [129, 62, 202], [225, 77, 178], [62, 145, 228]] },
-        { minute: 1350, colors: [[45, 69, 187], [100, 52, 194], [69, 111, 224], [206, 77, 187]] },
-        { minute: 1440, colors: [[35, 69, 178], [99, 55, 194], [31, 134, 211], [218, 75, 177]] }
+        { minute: 0,    colors: [[4, 10, 29], [7, 17, 48], [6, 33, 73], [10, 48, 99]] },
+        { minute: 120,  colors: [[5, 12, 35], [9, 21, 58], [8, 43, 89], [13, 60, 119]] },
+        { minute: 270,  colors: [[18, 24, 79], [39, 27, 106], [32, 67, 140], [68, 54, 149]] },
+        { minute: 330,  colors: [[74, 35, 143], [163, 48, 171], [237, 84, 127], [250, 157, 75]] },
+        { minute: 390,  colors: [[156, 50, 191], [239, 79, 151], [251, 115, 88], [253, 193, 71]] },
+        { minute: 480,  colors: [[42, 120, 193], [29, 191, 211], [78, 142, 237], [123, 193, 237]] },
+        { minute: 600,  colors: [[28, 157, 218], [39, 205, 224], [72, 136, 242], [134, 182, 245]] },
+        { minute: 720,  colors: [[31, 173, 222], [51, 212, 226], [82, 151, 246], [164, 198, 255]] },
+        { minute: 840,  colors: [[25, 151, 214], [60, 151, 226], [118, 98, 225], [201, 125, 229]] },
+        { minute: 960,  colors: [[52, 104, 200], [111, 73, 213], [195, 75, 201], [244, 127, 109]] },
+        { minute: 1080, colors: [[153, 50, 181], [235, 72, 153], [249, 112, 88], [253, 190, 68]] },
+        { minute: 1140, colors: [[91, 35, 143], [167, 52, 166], [222, 74, 125], [98, 98, 203]] },
+        { minute: 1230, colors: [[25, 26, 82], [34, 36, 114], [25, 68, 144], [38, 90, 177]] },
+        { minute: 1350, colors: [[7, 14, 42], [11, 25, 69], [9, 48, 99], [15, 61, 127]] },
+        { minute: 1440, colors: [[4, 10, 29], [7, 17, 48], [6, 33, 73], [10, 48, 99]] }
     ];
+
+    function getHorizonState(now) {
+        const minute = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+        const sunrise = 330;
+        const sunset = 1140;
+        if (minute < sunrise || minute > sunset) {
+            return { y: '112%', coreAlpha: '.10', sideAlpha: '.035', mistAlpha: '.018' };
+        }
+        const daylightProgress = (minute - sunrise) / (sunset - sunrise);
+        const elevation = Math.sin(Math.PI * daylightProgress);
+        return {
+            y: `${112 - elevation * 122}%`,
+            coreAlpha: (0.12 + elevation * 0.62).toFixed(3),
+            sideAlpha: (0.06 + elevation * 0.42).toFixed(3),
+            mistAlpha: (0.025 + elevation * 0.21).toFixed(3)
+        };
+    }
 
     function getHomeAuroraColors(now) {
         const minute = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
@@ -1807,6 +1825,11 @@
         home.style.setProperty('--home-aurora-d', colors[3].join(', '));
         home.style.setProperty('--home-tint-rgb', colors[2].join(', '));
         home.style.setProperty('--home-accent-rgb', colors[3].join(', '));
+        const horizon = getHorizonState(now);
+        home.style.setProperty('--horizon-y', horizon.y);
+        home.style.setProperty('--horizon-core-alpha', horizon.coreAlpha);
+        home.style.setProperty('--horizon-side-alpha', horizon.sideAlpha);
+        home.style.setProperty('--horizon-mist-alpha', horizon.mistAlpha);
     }
 
     function updateActiveShiftStatus(now) {
