@@ -109,6 +109,12 @@
                 <div style="font-size:0.75rem; color:var(--text-dim); margin-top:8px;">Minden módosításnál frissül – mentés előtt látod, mi lesz a beosztás.</div>
             </div>
 
+            <div class="admin-section">
+                <h3>Év végi elosztás ellenőrzése</h3>
+                <div class="admin-list" id="yearForecast"></div>
+                <div style="font-size:0.75rem; color:var(--text-dim); margin-top:8px;">Csak ellenőrzés: a mai műszaknaptól december 31-ig számol, nem módosítja a FIFO-sorrendet.</div>
+            </div>
+
             <button class="btn-save" onclick="saveAdminSettings()">Mentés a Felhőbe</button>
             <button class="btn-close" onclick="closeAdmin()">Mégsem</button>
         </div>
@@ -181,7 +187,8 @@
         return Math.floor((utc1 - utc2) / 86400000);
     }
 
-    function isWorkingDayFor(date, cfg) {
+    function getScheduledShiftTypeFor(date, cfg) {
+        if (!cfg || !cfg.shiftStart || !cfg.shift) return null;
         let startObj = parseLocalDate(cfg.shiftStart);
         let totalDays = getDaysDiffUTC(date, startObj);
         let cycleIdx = ((totalDays % 12) + 12) % 12;
@@ -191,9 +198,39 @@
         else if (cycleIdx <= 5) { nap = "D"; ej = "C"; }
         else if (cycleIdx <= 8) { nap = "A"; ej = "B"; }
         else { nap = "C"; ej = "D"; }
-        return (cfg.shift === nap || cfg.shift === ej);
+        if (cfg.shift === nap) return "day";
+        if (cfg.shift === ej) return "night";
+        return null;
     }
+
+    function isWorkingDayFor(date, cfg) { return !!getScheduledShiftTypeFor(date, cfg); }
     function isWorkingDay(date) { return isWorkingDayFor(date, sysSettings); }
+
+    // A beosztás dátuma és a kijelzés időablaka külön fogalom:
+    // nappal 06:00–18:00, éjjel 18:00–másnap 06:00. A név csak ebben az ablakban látszik aktuálisként.
+    function getCurrentShiftState(now, cfg) {
+        if (!cfg) return { active: false, state: "rest" };
+        const current = new Date(now.getTime()); current.setHours(0, 0, 0, 0);
+        const minutes = now.getHours() * 60 + now.getMinutes();
+
+        if (minutes < 360) {
+            const previous = new Date(current.getTime()); previous.setDate(previous.getDate() - 1);
+            if (getScheduledShiftTypeFor(previous, cfg) === "night") return { active: true, date: previous, type: "night" };
+        }
+
+        const todayType = getScheduledShiftTypeFor(current, cfg);
+        if (todayType === "day") {
+            if (minutes >= 360 && minutes < 1080) return { active: true, date: current, type: "day" };
+            return { active: false, state: minutes < 360 ? "before-start" : "ended", date: current, type: "day" };
+        }
+        if (todayType === "night") {
+            if (minutes >= 1080) return { active: true, date: current, type: "night" };
+            return { active: false, state: "before-start", date: current, type: "night" };
+        }
+        return { active: false, state: "rest", date: current, type: null };
+    }
+
+    function shiftHoursLabel(type) { return type === "night" ? "18:00–06:00" : "06:00–18:00"; }
 
     // A 18:00–másnap 06:00 közötti éjszakás műszak egyetlen műszaknap.
     // Ezért éjfél és 05:59 között még az előző naptári naphoz tartozó beosztást használjuk.
@@ -232,7 +269,8 @@
         return out;
     }
 
-    // 🛡️ VÉDELEM: egy név csak EGYSZER szerepelhet a rotációban (üres/szóközös nevek kiesnek)
+    // 🛡️ VÉDELEM: egy belső dolgozóazonosító csak egyszer szerepelhet a rotációban.
+    // A régi adatoknál maga a név az azonosító, az új belépőknél külön belső azonosító van.
     function uniqueNames(arr) {
         let out = [];
         (arr || []).forEach(function(nm) {
@@ -243,7 +281,35 @@
         return out;
     }
 
-    function computeScheduleFor(cfg, absMap) {
+    function getWorkerLabel(workerId, cfg) {
+        if (workerId === "-" || workerId === "Nincs több!" || workerId === undefined || workerId === null) return String(workerId || "-");
+        const mapped = cfg && cfg.workerNames && typeof cfg.workerNames[workerId] === "string" ? cfg.workerNames[workerId] : workerId;
+        return String(mapped).trim() || String(workerId);
+    }
+
+    function escapeHtml(value) {
+        return String(value === undefined || value === null ? "" : value).replace(/[&<>'\"]/g, function(char) {
+            return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char];
+        });
+    }
+
+    function inlineArgument(value) {
+        return JSON.stringify(String(value === undefined || value === null ? "" : value)).replace(/'/g, "\\u0027").replace(/</g, "\\u003c");
+    }
+
+    function makeWorkerId() {
+        return "worker_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+    }
+
+    function hasActiveWorkerWithLabel(cfg, label, dateKey) {
+        const wanted = String(label).trim().toLocaleLowerCase("hu-HU");
+        const ids = uniqueNames([].concat(cfg.roster || [], Object.keys(cfg.joins || {})));
+        return ids.some(function(id) {
+            return !isRemovedForDate(id, dateKey, cfg) && getWorkerLabel(id, cfg).toLocaleLowerCase("hu-HU") === wanted;
+        });
+    }
+
+    function computeScheduleFor(cfg, absMap, endDateOverride) {
         let schedule = {};
         if (!cfg || !cfg.nameStart || !cfg.shiftStart) return schedule;
 
@@ -287,8 +353,8 @@
         let simDate = parseLocalDate(cfg.nameStart);
         simDate.setHours(0,0,0,0);
         
-        let endDate = new Date();
-        endDate.setDate(endDate.getDate() + 45); 
+        let endDate = endDateOverride ? new Date(endDateOverride.getTime()) : new Date();
+        if (!endDateOverride) endDate.setDate(endDate.getDate() + 45);
         endDate.setHours(0,0,0,0);
 
         while (simDate <= endDate) {
@@ -390,7 +456,8 @@
     // ==========================================
     window.markAbsent = function(dateKey, name) {
         if(!name || name === "Nincs több!" || name === "-") return;
-        if(confirm(`Szeretnéd jelezni, hogy ${name} hiányzik ezen a napon?\n\nA rendszer automatikusan behívja a következőt, ${name} pedig átkerül a következő munkanapra.`)) {
+        const label = getWorkerLabel(name, sysSettings);
+        if(confirm(`Szeretnéd jelezni, hogy ${label} hiányzik ezen a napon?\n\nA rendszer automatikusan behívja a következőt, ${label} pedig átkerül a következő munkanapra.`)) {
             db.ref(`absences/${dateKey}/${name}`).set(true);
         }
     };
@@ -407,7 +474,9 @@
         const list = document.getElementById('upcomingList');
         hero.innerHTML = ''; list.innerHTML = '';
 
-        let today = getOperationalShiftDate();
+        const now = new Date();
+        const shiftState = getCurrentShiftState(now, sysSettings);
+        const calendarToday = new Date(now.getTime()); calendarToday.setHours(0, 0, 0, 0);
 
         const headerHTML = `<div class="header-pill" onclick="openAdmin()">${sysSettings.shift} MŰSZAK BEOSZTÁS</div>`;
 
@@ -422,57 +491,73 @@
             return;
         }
 
-        if (!isWorkingDay(today)) {
+        // A két aktuális név kizárólag a saját műszak valós időablakában jelenhet meg.
+        if (!shiftState.active) {
+            let message = "Pihenőnap";
+            let detail = "Ma nincs szemétkihordás.";
+            if (shiftState.state === "before-start") {
+                message = "A mai műszak még nem kezdődött el";
+                detail = `Kezdés: ${shiftState.type === "night" ? "18:00" : "06:00"}. A két név a műszakkezdéskor jelenik meg.`;
+            } else if (shiftState.state === "ended") {
+                message = "A mai műszak véget ért";
+                detail = "A következő három műszak beosztása alább látható.";
+            }
             hero.innerHTML = `${headerHTML}
-                <div style="text-align: center; margin-top: 50px; opacity: 0.7;">
-                    <div style="font-size: 3rem; margin-bottom: 10px; filter: grayscale(100%);">😴</div>
-                    <h2 style="color:white; font-weight: 600;">Pihenőnap</h2>
-                    <p style="color:var(--text-dim)">Ma nincs szemétkihordás.</p>
+                <div style="text-align: center; margin-top: 50px; opacity: 0.78;">
+                    <div style="font-size: 3rem; margin-bottom: 10px; filter: grayscale(100%);">${shiftState.state === "rest" ? "😴" : "⏱️"}</div>
+                    <h2 style="color:white; font-weight: 600;">${message}</h2>
+                    <p style="color:var(--text-dim)">${detail}</p>
                 </div>`;
-            fillUpcomingList(today, list); return;
+
+            const includeToday = shiftState.state !== "ended";
+            const listStart = includeToday ? calendarToday : new Date(calendarToday.getFullYear(), calendarToday.getMonth(), calendarToday.getDate() + 1);
+            fillUpcomingList(listStart, list, 3, includeToday);
+            return;
         }
 
+        let today = shiftState.date;
         let dateKey = getDateKey(today);
         let workers = computedSchedule[dateKey] || ["-", "-"];
         let dailyAbs = absences[dateKey] || {};
         let todayStr = today.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric', weekday: 'long' });
 
         let absHTML = Object.keys(dailyAbs).length > 0 ? 
-            `<div class="absent-row">Hiányzik: ${Object.keys(dailyAbs).map(n => `<span class="absent-pill" onclick="undoAbsent('${dateKey}', '${n}')" title="Koppints a visszavonáshoz">${n} ↩</span>`).join('')}</div>` : '';
+            `<div class="absent-row">Hiányzik: ${Object.keys(dailyAbs).map(n => `<span class="absent-pill" onclick='undoAbsent(${inlineArgument(dateKey)}, ${inlineArgument(n)})' title="Koppints a visszavonáshoz">${escapeHtml(getWorkerLabel(n, sysSettings))} ↩</span>`).join('')}</div>` : '';
 
         hero.innerHTML = `
             ${headerHTML}
             <div class="today-card">
-                <div class="today-label">Mai Műszak</div>
+                <div class="today-label">Aktuális Műszak • ${shiftHoursLabel(shiftState.type)}</div>
                 <div class="today-date">${todayStr}</div>
                 ${absHTML}
                 <div class="pill-container">
-                    <div class="worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dateKey}', '${workers[0]}')">${workers[0]}</div>
+                    <div class="worker-pill" title="Koppints a hiányzás jelzéséhez" onclick='markAbsent(${inlineArgument(dateKey)}, ${inlineArgument(workers[0])})'>${escapeHtml(getWorkerLabel(workers[0], sysSettings))}</div>
                     <span style="font-size: 1.5rem; color:var(--text-dim); font-weight:300;">&</span>
-                    <div class="worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dateKey}', '${workers[1]}')">${workers[1]}</div>
+                    <div class="worker-pill" title="Koppints a hiányzás jelzéséhez" onclick='markAbsent(${inlineArgument(dateKey)}, ${inlineArgument(workers[1])})'>${escapeHtml(getWorkerLabel(workers[1], sysSettings))}</div>
                 </div>
                 <div class="instruction-text">(Koppints a névre a hiányzás jelzéséhez)</div>
             </div>`;
 
-        fillUpcomingList(today, list);
+        fillUpcomingList(today, list, 3, false);
     }
 
-    function fillUpcomingList(startDate, container) {
+    function fillUpcomingList(startDate, container, maxItems, includeStart) {
         let count = 0;
         let iterDate = new Date(startDate);
-        iterDate.setDate(iterDate.getDate() + 1);
+        if (!includeStart) iterDate.setDate(iterDate.getDate() + 1);
 
-        while(count < 10 && iterDate.getTime() < startDate.getTime() + 45 * 86400000) {
+        while(count < (maxItems || 3) && iterDate.getTime() < startDate.getTime() + 45 * 86400000) {
             if(isWorkingDay(iterDate)) {
                 let dKey = getDateKey(iterDate);
                 let workers = computedSchedule[dKey] || ["-", "-"];
                 let dailyAbs = absences[dKey] || {};
+                let shiftType = getScheduledShiftTypeFor(iterDate, sysSettings);
                 
                 let dayShort = iterDate.toLocaleDateString('hu-HU', { weekday: 'short' });
                 let dateFull = iterDate.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric' });
 
                 let absHTML = Object.keys(dailyAbs).length > 0 ? 
-                    `<div class="absent-row" style="justify-content:flex-end; font-size:0.75rem; margin:0; margin-top:5px;">${Object.keys(dailyAbs).map(n => `<span class="absent-pill" onclick="undoAbsent('${dKey}', '${n}')" style="padding:2px 8px;">${n} ↩</span>`).join('')}</div>` : '';
+                    `<div class="absent-row" style="justify-content:flex-end; font-size:0.75rem; margin:0; margin-top:5px;">${Object.keys(dailyAbs).map(n => `<span class="absent-pill" onclick='undoAbsent(${inlineArgument(dKey)}, ${inlineArgument(n)})' style="padding:2px 8px;">${escapeHtml(getWorkerLabel(n, sysSettings))} ↩</span>`).join('')}</div>` : '';
 
                 container.innerHTML += `
                     <div class="list-card">
@@ -480,10 +565,11 @@
                             <div>
                                 <span style="background:rgba(6,182,212,0.1); color:var(--accent); font-weight:700; font-size:0.8rem; padding:4px 8px; border-radius:6px;">${dayShort}</span>
                                 <span class="lc-date-text" style="margin-left:8px;">${dateFull}</span>
+                                <span style="margin-left:6px; color:var(--text-dim); font-size:0.72rem;">${shiftHoursLabel(shiftType)}</span>
                             </div>
                             <div class="lc-pills">
-                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dKey}', '${workers[0]}')">${workers[0]}</div>
-                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick="markAbsent('${dKey}', '${workers[1]}')">${workers[1]}</div>
+                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick='markAbsent(${inlineArgument(dKey)}, ${inlineArgument(workers[0])})'>${escapeHtml(getWorkerLabel(workers[0], sysSettings))}</div>
+                                <div class="lc-worker-pill" title="Koppints a hiányzás jelzéséhez" onclick='markAbsent(${inlineArgument(dKey)}, ${inlineArgument(workers[1])})'>${escapeHtml(getWorkerLabel(workers[1], sysSettings))}</div>
                             </div>
                         </div>
                         ${absHTML}
@@ -510,6 +596,7 @@
         if (!adminDraft.roster) adminDraft.roster = [];
         if (!adminDraft.joins) adminDraft.joins = {};
         if (!adminDraft.removals) adminDraft.removals = {};
+        if (!adminDraft.workerNames) adminDraft.workerNames = {};
         // 🧳 Örökölt "várakozó" bejegyzések átvétele belépőkké (a régi adat nem vész el)
         (adminDraft.pending || []).forEach(function(p) {
             if (p && p.name && adminDraft.roster.indexOf(p.name) === -1 && !adminDraft.joins[p.name]) {
@@ -550,11 +637,44 @@
             if (keys[i] < tk) continue;
             let d = parseLocalDate(keys[i]);
             let lab = d.toLocaleDateString('hu-HU', { month: 'short', day: 'numeric', weekday: 'short' });
-            html += `<div class="admin-list-item"><span style="color:var(--text-dim);">${lab}</span><span style="font-weight:bold;">${sch[keys[i]].join(" & ")}</span></div>`;
+            html += `<div class="admin-list-item"><span style="color:var(--text-dim);">${lab}</span><span style="font-weight:bold;">${sch[keys[i]].map(function(id) { return escapeHtml(getWorkerLabel(id, adminDraft)); }).join(" & ")}</span></div>`;
             shown++;
         }
         document.getElementById('adminPreview').innerHTML = html || "<div style='padding:15px; color:var(--text-dim); text-align:center;'>Nincs megjeleníthető munkanap.</div>";
+        renderYearForecast();
     };
+
+    function renderYearForecast() {
+        const target = document.getElementById('yearForecast');
+        if (!target || !adminDraft) return;
+        const cfg = draftConfig();
+        const startKey = todayDateKey();
+        const endDate = new Date(new Date().getFullYear(), 11, 31);
+        const schedule = computeScheduleFor(cfg, absences, endDate);
+        const ids = uniqueNames([].concat(cfg.roster || [], Object.keys(cfg.joins || []))).filter(function(id) {
+            return !isRemovedForDate(id, startKey, cfg);
+        });
+        const totals = {};
+        ids.forEach(function(id) { totals[id] = 0; });
+        Object.keys(schedule).forEach(function(dateKey) {
+            if (dateKey < startKey || dateKey > getDateKey(endDate)) return;
+            schedule[dateKey].forEach(function(id) {
+                if (id !== "-" && Object.prototype.hasOwnProperty.call(totals, id)) totals[id]++;
+            });
+        });
+        const rows = ids.map(function(id) { return { id: id, label: getWorkerLabel(id, cfg), total: totals[id] || 0 }; })
+            .sort(function(a, b) { return a.label.localeCompare(b.label, "hu"); });
+        if (!rows.length) {
+            target.innerHTML = "<div style='padding:15px; color:var(--text-dim); text-align:center;'>Nincs aktív dolgozó.</div>";
+            return;
+        }
+        const values = rows.map(function(row) { return row.total; });
+        const min = Math.min.apply(null, values), max = Math.max.apply(null, values);
+        const difference = max - min;
+        const summary = difference <= 1 ? "Kiegyensúlyozott FIFO-előrejelzés" : `Eltérés: ${difference} alkalom (hiányzás vagy belépési dátum is okozhatja)`;
+        target.innerHTML = `<div style="padding:10px 15px; color:${difference <= 1 ? 'var(--accent)' : '#fbbf24'}; font-size:0.78rem; font-weight:700; border-bottom:1px solid #222;">${summary}</div>` +
+            rows.map(function(row) { return `<div class="admin-list-item"><span>${escapeHtml(row.label)}</span><span style="font-weight:800; color:var(--accent);">${row.total} alkalom</span></div>`; }).join("");
+    }
 
     function renderAdminRoster() {
         let html = "";
@@ -565,12 +685,13 @@
         window._visibleRosterIndexes = activeRosterIndexes.map(function(item) { return item.index; });
         activeRosterIndexes.forEach(function(item, visibleIndex) {
             const name = item.name;
+            const label = getWorkerLabel(name, adminDraft);
             const i = visibleIndex;
-            // 🛡️ jelezzük, ha ugyanaz a név feljebb már szerepel
-            let dupe = activeRosterIndexes.findIndex(function(other) { return other.name === name; }) !== i;
+            // 🛡️ jelezzük, ha ugyanaz a látható név feljebb már szerepel
+            let dupe = activeRosterIndexes.findIndex(function(other) { return getWorkerLabel(other.name, adminDraft) === label; }) !== i;
             html += `
             <div class="admin-list-item">
-                <span style="font-weight:bold;">${name}${dupe ? ' <span style="color:#f87171; font-weight:600; font-size:0.75rem;">• kétszer szerepel</span>' : ''}</span>
+                <span style="font-weight:bold;">${escapeHtml(label)}${dupe ? ' <span style="color:#f87171; font-weight:600; font-size:0.75rem;">• kétszer szerepel</span>' : ''}</span>
                 <div style="display:flex; gap:5px;">
                     <button class="btn-action" title="Fel" onclick="moveWorker(${i}, -1)">▲</button>
                     <button class="btn-action" title="Le" onclick="moveWorker(${i}, 1)">▼</button>
@@ -591,7 +712,7 @@
             let lab = d.toLocaleDateString('hu-HU', { month: 'short', day: 'numeric' });
             html += `
             <div class="admin-list-item">
-                <span style="color:var(--accent);">⏳ ${nm} <span style="color:var(--text-dim); font-size:0.75rem;">• sor végén, belépett: ${lab}</span></span>
+                <span style="color:var(--accent);">⏳ ${escapeHtml(getWorkerLabel(nm, adminDraft))} <span style="color:var(--text-dim); font-size:0.75rem;">• sor végén, belépett: ${lab}</span></span>
                 <div style="display:flex; gap:5px;">
                     <button class="btn-action btn-delete" title="Törlés" onclick="removeJoinAt(${i})">✖</button>
                 </div>
@@ -618,7 +739,8 @@
     window.removeWorker = function(index) {
         const actualIndex = (window._visibleRosterIndexes || [])[index];
         const name = adminDraft.roster[actualIndex];
-        if(name && confirm(`Biztos törlöd ${name}-t a fő névsorból? A törlés a jelenlegi műszaknaptól érvényes, a korábbi beosztások változatlanok maradnak.`)) {
+        const label = getWorkerLabel(name, adminDraft);
+        if(name && confirm(`Biztos törlöd ${label}-t a fő névsorból? A törlés a jelenlegi műszaknaptól érvényes, a korábbi beosztások változatlanok maradnak.`)) {
             if (!adminDraft.removals) adminDraft.removals = {};
             adminDraft.removals[name] = todayDateKey();
             renderAdminRoster();
@@ -628,7 +750,7 @@
     window.removeJoinAt = function(i) {
         let nm = (window._joinOrder || [])[i];
         if (!nm) return;
-        if (confirm(`Biztos törlöd ${nm}-t?`)) {
+        if (confirm(`Biztos törlöd ${getWorkerLabel(nm, adminDraft)}-t?`)) {
             delete adminDraft.joins[nm];
             renderAdminRoster();
         }
@@ -654,18 +776,24 @@
         
         if(!adminDraft.roster) adminDraft.roster = [];
         if(!adminDraft.joins) adminDraft.joins = {};
+        if(!adminDraft.workerNames) adminDraft.workerNames = {};
 
-        // 🛡️ VÉDELEM: ugyanaz a név nem vehető fel kétszer
-        if (adminDraft.roster.indexOf(name) !== -1 || adminDraft.joins[name]) {
-            alert(name + " már szerepel a névsorban.");
+        // Az aktív, azonos nevű dolgozót továbbra sem vesszük fel kétszer.
+        // A korábban törölt azonos nevű személy viszont új, belső azonosítót kap:
+        // így az új belépő a mai műszaknaptól a sor végére lép, a régi előzmények sértetlenek.
+        if (hasActiveWorkerWithLabel(adminDraft, name, todayDateKey())) {
+            alert(name + " már aktívan szerepel a névsorban.");
             return;
         }
 
+        const workerId = makeWorkerId();
+        adminDraft.workerNames[workerId] = name;
+
         // Ha a névsor teljesen üres, ő az első – egyébként a sor végére lép be MA
         if (adminDraft.roster.length === 0 && Object.keys(adminDraft.joins).length === 0) {
-            adminDraft.roster.push(name);
+            adminDraft.roster.push(workerId);
         } else {
-            adminDraft.joins[name] = todayDateKey();
+            adminDraft.joins[workerId] = todayDateKey();
         }
         
         document.getElementById('newWorkerName').value = "";
@@ -689,6 +817,13 @@
             let removedAt = String(cfg.removals[nm] || '');
             if (clean !== "" && cfg.roster.indexOf(clean) !== -1 && /^\d{4}-\d{2}-\d{2}$/.test(removedAt)) cleanRemovals[clean] = removedAt;
         });
+        let cleanWorkerNames = {};
+        const referencedWorkerIds = uniqueNames([].concat(cfg.roster, Object.keys(cleanJoins), Object.keys(cleanRemovals)));
+        referencedWorkerIds.forEach(function(id) {
+            if (cfg.workerNames && typeof cfg.workerNames[id] === 'string' && cfg.workerNames[id].trim() !== '') {
+                cleanWorkerNames[id] = cfg.workerNames[id].trim();
+            }
+        });
 
         // A teljes settings csomópontot írjuk – az örökölt "pending" ezzel végleg eltűnik
         db.ref('settings').set({
@@ -697,7 +832,8 @@
             nameStart: cfg.nameStart,
             roster: cfg.roster,
             joins: Object.keys(cleanJoins).length ? cleanJoins : null,
-            removals: Object.keys(cleanRemovals).length ? cleanRemovals : null
+            removals: Object.keys(cleanRemovals).length ? cleanRemovals : null,
+            workerNames: Object.keys(cleanWorkerNames).length ? cleanWorkerNames : null
         }).then(() => {
             adminDraft = null;
             document.getElementById('adminPanel').style.display = 'none';
