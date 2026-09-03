@@ -57,18 +57,28 @@
         }
         window.loadDesktopAdminAssets = () => {
             if (window.isMobileMaskOnly()) return Promise.resolve(false);
-            return Promise.all([
+            // A két segéd-adatfájl csak az admin kényelmét szolgálja. Egyik
+            // hiánya nem akadályozhatja meg a Firestore-os JIG adatbázis élő
+            // betöltését.
+            return Promise.allSettled([
                 loadDeferredAdminAsset('barcode-master', 'mobile-admin-assets/barcode-master-data.js', 'barcodeMasterDb'),
                 loadDeferredAdminAsset('jig-master', 'mobile-admin-assets/jig-master-data.js', 'jigMasterDb')
-            ]).then(() => true);
+            ]).then(results => {
+                results.forEach((result, index) => {
+                    if (result.status === 'rejected') {
+                        console.warn('Admin segéd-adatfájl betöltési hiba:', index === 0 ? 'barcode-master' : 'jig-master', result.reason);
+                    }
+                });
+                return results.every(result => result.status === 'fulfilled');
+            });
         };
         window.enableDesktopAdminExtras = () => {
             if (!window.isAdmin || window.isMobileMaskOnly()) return Promise.resolve(false);
-            return window.loadDesktopAdminAssets().then(() => {
+            return window.loadDesktopAdminAssets().then(allAssetsLoaded => {
                 if (typeof window.startJigDataListener === 'function') window.startJigDataListener();
                 if (typeof window.autoMergeBarcodes === 'function') window.autoMergeBarcodes();
                 if (typeof window.renderJigUI === 'function') window.renderJigUI();
-                return true;
+                return allAssetsLoaded;
             }).catch(error => {
                 console.error('Admin kiegészítő adatok betöltési hiba:', error);
                 return false;
@@ -964,7 +974,7 @@
                     <button class="btn btn-primary" onclick="openJigModal()"><i class="fas fa-plus"></i> Új JIG</button>
                     <button class="btn btn-outline" style="border-color: var(--success); color: var(--success);" onclick="exportJigCSV()"><i class="fas fa-file-csv"></i> CSV Export</button>
                     <button class="btn" style="background:#0d9488; border:none;" onclick="openJigCsvImport()"><i class="fas fa-file-import"></i> CSV Import</button>
-                    <button class="btn" style="background:#b45309; border:none; display:none;" onclick="importMissingJigs()"><i class="fas fa-file-excel"></i> Excel Import</button>
+                    <button class="btn" style="background:#b45309; border:none;" onclick="importMissingJigs()"><i class="fas fa-file-excel"></i> Excel Import</button>
                 </div>
                 <div class="opt-preview-stats" id="jigStatsRow" style="margin-bottom: 15px;"></div>
                 <div class="table-container">
