@@ -102,7 +102,7 @@ input[type=text] {
 .manual-search-source-toggle { display: none; }
 
 /* --- KÉZI USB-SZKENNER (CSAK ASZTALI / LAPTOP NÉZETBEN) --- */
-.manual-scanner-control, .manual-scanner-welcome, .manual-scanner-pro-panel, .manual-scan-status, .manual-model-modal, .manual-guide-modal { display: none; }
+.manual-scanner-control, .manual-scanner-welcome, .manual-scanner-pro-panel, .manual-scan-status, .manual-model-modal, .manual-guide-modal, .manual-scan-log-modal { display: none; }
 @media (min-width: 900px) and (hover: hover) and (pointer: fine) {
     .manual-scanner-control {
         width: min(100%, 500px); display: flex; align-items: center; justify-content: space-between; gap: 14px;
@@ -137,8 +137,23 @@ input[type=text] {
     body.manual-scanner-mode #resultsWrapper { width: min(100%, 1120px); max-width: none; margin: auto; padding-bottom: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     body.manual-scanner-mode .manual-scanner-control { position: fixed; top: 16px; right: 24px; z-index: 200; width: min(420px, calc(100vw - 48px)); margin: 0; background: rgba(15,23,42,.94); backdrop-filter: blur(12px); box-shadow: 0 10px 30px rgba(0,0,0,.3); }
     body.manual-scanner-mode .manual-scanner-state { color: #6ee7b7; }
+    .manual-scan-log-button { border: 1px solid rgba(96,165,250,.36); border-radius: 10px; padding: 7px 9px; color: #dbeafe; background: rgba(30,64,175,.35); cursor: pointer; font: inherit; font-size: .62rem; font-weight: 900; letter-spacing: .04em; white-space: nowrap; transition: transform .2s ease, border-color .2s ease, background .2s ease; }
+    .manual-scan-log-button:hover { transform: translateY(-1px); border-color: #93c5fd; background: rgba(37,99,235,.58); }
+    .manual-scan-log-count { display: inline-grid; min-width: 16px; height: 16px; place-items: center; margin-left: 4px; border-radius: 999px; color: #0f172a; background: #bfdbfe; font-size: .58rem; }
     body.manual-scanner-mode .result-card { margin-bottom: 0; }
     body.manual-scanner-mode .no-result { grid-column: 1 / -1; min-height: calc(100dvh - 180px); display: grid; place-items: center; margin: 0; }
+    body.manual-scanner-mode.manual-model-scan-outcome #resultsWrapper { width: min(100%, 1380px); display: block; }
+    .manual-scan-outcome { min-height: calc(100dvh - 190px); display: grid; place-content: center; justify-items: center; gap: clamp(13px, 2.1vh, 24px); padding: clamp(24px, 4vw, 62px); border: 2px solid rgba(52,211,153,.76); border-radius: 30px; color: #ecfdf5; background: radial-gradient(ellipse at 50% 5%, rgba(52,211,153,.28), transparent 42%), linear-gradient(145deg, rgba(6,78,59,.94), rgba(15,23,42,.96) 65%); box-shadow: 0 0 0 5px rgba(16,185,129,.1), inset 0 1px 0 rgba(255,255,255,.16), 0 22px 70px rgba(0,0,0,.32); text-align: center; overflow: auto; }
+    .manual-scan-outcome.is-failure { border-color: rgba(248,113,113,.9); color: #fff1f2; background: radial-gradient(ellipse at 50% 5%, rgba(248,113,113,.29), transparent 42%), linear-gradient(145deg, rgba(127,29,29,.94), rgba(15,23,42,.97) 65%); box-shadow: 0 0 0 5px rgba(239,68,68,.1), inset 0 1px 0 rgba(255,255,255,.14), 0 22px 70px rgba(0,0,0,.32); }
+    .manual-scan-outcome.is-duplicate { border-color: rgba(250,204,21,.94); color: #fefce8; background: radial-gradient(ellipse at 50% 5%, rgba(250,204,21,.3), transparent 42%), linear-gradient(145deg, rgba(113,63,18,.95), rgba(15,23,42,.97) 65%); box-shadow: 0 0 0 5px rgba(250,204,21,.12), inset 0 1px 0 rgba(255,255,255,.16), 0 22px 70px rgba(0,0,0,.32); }
+    .manual-scan-outcome.is-flashing { animation: manualScanOutcomeFlash .78s ease-in-out 3; }
+    @keyframes manualScanOutcomeFlash { 0%, 100% { filter: brightness(1); transform: scale(1); } 45% { filter: brightness(1.42); transform: scale(1.008); } }
+    .manual-scan-outcome-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 13px; border: 1px solid currentColor; border-radius: 999px; font-size: clamp(.72rem, 1.2vw, .92rem); font-weight: 950; letter-spacing: .12em; }
+    .manual-scan-outcome h2 { max-width: 100%; margin: 0; font-size: clamp(2rem, 6vw, 5.8rem); line-height: .96; letter-spacing: .035em; overflow-wrap: anywhere; }
+    .manual-scan-outcome-models { width: min(100%, 1120px); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); gap: 12px; }
+    .manual-scan-outcome-model { min-width: 0; padding: clamp(15px, 2.4vw, 25px); border: 1px solid rgba(255,255,255,.24); border-radius: 18px; color: #fff; background: rgba(2,6,23,.32); font-size: clamp(1.1rem, 2.8vw, 2.35rem); font-weight: 900; line-height: 1.13; overflow-wrap: anywhere; }
+    .manual-scan-outcome-meta { max-width: 100%; color: rgba(255,255,255,.82); font-size: clamp(.78rem, 1.35vw, 1rem); font-weight: 750; overflow-wrap: anywhere; }
+    .manual-scan-outcome-duplicate { padding: 10px 14px; border-radius: 12px; color: #422006; background: #fde047; font-size: clamp(.9rem, 1.8vw, 1.3rem); font-weight: 950; }
     body.manual-scanner-mode .manual-scanner-welcome { width: min(100%, 860px); min-height: calc(100dvh - 190px); margin: auto; display: grid; place-content: center; justify-items: center; gap: 14px; padding: 36px; border: 1px solid rgba(52,211,153,.22); border-radius: 28px; background: radial-gradient(circle at top, rgba(16,185,129,.12), transparent 46%), rgba(15,23,42,.48); text-align: center; box-shadow: inset 0 1px 0 rgba(255,255,255,.04); }
     body.manual-scanner-mode.manual-scanner-has-result .manual-scanner-welcome { display: none; }
     .manual-scanner-welcome-icon { width: 70px; height: 70px; display: grid; place-items: center; border: 1px solid rgba(52,211,153,.38); border-radius: 22px; color: #6ee7b7; background: rgba(16,185,129,.1); font-size: 2rem; box-shadow: 0 0 28px rgba(16,185,129,.12); }
@@ -191,6 +206,22 @@ input[type=text] {
     .manual-guide-card ol { margin: 0; padding-left: 22px; line-height: 1.65; font-size: .85rem; }
     .manual-guide-card li + li { margin-top: 8px; }
     .manual-guide-close { display: block; margin: 18px 0 0 auto; border: 0; border-radius: 10px; padding: 10px 13px; color: #052e16; background: #6ee7b7; cursor: pointer; font: inherit; font-weight: 900; }
+    .manual-scan-log-modal.is-open { position: fixed; inset: 0; z-index: 520; display: grid; place-items: center; padding: 24px; background: rgba(2,6,23,.74); backdrop-filter: blur(7px); }
+    .manual-scan-log-card { width: min(980px, 100%); max-height: min(760px, calc(100dvh - 48px)); display: flex; flex-direction: column; overflow: hidden; border: 1px solid rgba(96,165,250,.34); border-radius: 22px; background: #101a2d; box-shadow: 0 24px 70px rgba(0,0,0,.52); }
+    .manual-scan-log-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 17px 20px; border-bottom: 1px solid rgba(148,163,184,.16); }
+    .manual-scan-log-title { color: #f8fafc; font-size: 1rem; font-weight: 900; letter-spacing: .04em; }
+    .manual-scan-log-actions { display: flex; gap: 8px; }
+    .manual-scan-log-clear, .manual-scan-log-close { border: 1px solid rgba(148,163,184,.25); border-radius: 9px; padding: 8px 11px; color: #e2e8f0; background: #1e293b; cursor: pointer; font: inherit; font-size: .7rem; font-weight: 850; }
+    .manual-scan-log-clear { border-color: rgba(248,113,113,.42); color: #fecaca; background: rgba(127,29,29,.52); }
+    .manual-scan-log-list { overflow: auto; padding: 12px 20px 20px; }
+    .manual-scan-log-item { display: grid; grid-template-columns: 52px 150px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(148,163,184,.12); color: #e2e8f0; font-size: .78rem; }
+    .manual-scan-log-item.is-ok { border-left: 3px solid #34d399; padding-left: 10px; }
+    .manual-scan-log-item.is-fail { border-left: 3px solid #f87171; padding-left: 10px; }
+    .manual-scan-log-order { color: #93c5fd; font-weight: 950; }
+    .manual-scan-log-time { color: #94a3b8; font-variant-numeric: tabular-nums; }
+    .manual-scan-log-code { min-width: 0; color: #f8fafc; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 800; overflow-wrap: anywhere; }
+    .manual-scan-log-result { padding: 5px 8px; border-radius: 999px; color: #052e16; background: #86efac; font-size: .64rem; font-weight: 950; }
+    .manual-scan-log-item.is-fail .manual-scan-log-result { color: #450a0a; background: #fca5a5; }
     @media (min-width: 1400px) { body.manual-scanner-mode #resultsWrapper { width: min(100%, 1320px); grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 }
 
@@ -395,6 +426,7 @@ body.scanning-mode .scan-controls-container { display: flex; }
             <span class="manual-scanner-title">Kézi szkenner</span>
             <span class="manual-scanner-help">USB olvasóhoz · kéz nélküli, automatikus keresés</span>
         </div>
+        <button id="manualScanLogButton" class="manual-scan-log-button" type="button" title="Csipogási napló megnyitása">CSIPOGÁS LOG <span id="manualScanLogCount" class="manual-scan-log-count">0</span></button>
         <span id="manualScannerState" class="manual-scanner-state">KIKAPCSOLVA</span>
         <label class="manual-scanner-switch" title="Kézi USB-szkenner mód be- vagy kikapcsolása">
             <input id="manualScannerToggle" type="checkbox" role="switch" aria-label="Kézi szkenner mód" />
@@ -440,8 +472,10 @@ body.scanning-mode .scan-controls-container { display: flex; }
                 <li>A beolvasó eredeti karakterei változtatás nélkül kerülnek feldolgozásra; nincs billentyűzetkiosztás szerinti átfordítás.</li>
                 <li>A kereső melletti <strong>MODELL / BANK</strong> gombbal választasz adatforrást. MODELL módban az <strong>ultetes.csv</strong>, BANK módban a <strong>bank.csv</strong> saját adatai jelennek meg.</li>
                 <li>MODELL módban a <strong>Modellek</strong> gombbal több modellt is kijelölhetsz, a felugró ablakban pedig névrészletre is kereshetsz.</li>
-                <li>Aktív modell-szűrésnél a <strong>Találati hang</strong> kapcsolóval kérhetsz rövid sikeres vagy sikertelen visszajelzést.</li>
-                <li>Minden új csipogás azonnal a következő tekercs találatára vált; a képernyőhöz nem kell nyúlni.</li>
+                <li>Aktív modell-szűrésnél a <strong>Találati hang</strong> kapcsolóval hangos sikeres vagy sikertelen visszajelzést kapsz.</li>
+                <li>Találatkor a kijelölt modellek teljes képernyőn, zölden jelennek meg; ismételt cikkszámnál sárga jelzés mutatja az eddigi darabszámot.</li>
+                <li>A <strong>CSIPOGÁS LOG</strong> minden tekercs teljes egyedi azonosítóját, időpontját és sorrendjét megőrzi, amíg ki nem tisztítod.</li>
+                <li>Minden új csipogás azonnal megszakítja az előző hangot és a következő tekercs találatára vált; a képernyőhöz nem kell nyúlni.</li>
             </ol>
             <button id="manualGuideClose" class="manual-guide-close" type="button">Értem, folytatom</button>
         </div>
@@ -452,6 +486,19 @@ body.scanning-mode .scan-controls-container { display: flex; }
         <h2>Kézi szkenner készen áll</h2>
         <p>Olvasd be egymás után a tekercseket. A keresőmező fókuszban van, minden beolvasás után automatikusan fogadja a következő cikkszámot.</p>
         <span class="manual-scanner-focus-note">Várakozás a következő beolvasásra</span>
+    </div>
+
+    <div id="manualScanLogModal" class="manual-scan-log-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="manualScanLogTitle">
+        <div class="manual-scan-log-card">
+            <div class="manual-scan-log-header">
+                <span id="manualScanLogTitle" class="manual-scan-log-title">Csipogás log · beolvasási sorrend</span>
+                <div class="manual-scan-log-actions">
+                    <button id="manualScanLogClear" class="manual-scan-log-clear" type="button">Tisztítás</button>
+                    <button id="manualScanLogClose" class="manual-scan-log-close" type="button" aria-label="Csipogás log bezárása">Bezárás</button>
+                </div>
+            </div>
+            <div id="manualScanLogList" class="manual-scan-log-list"></div>
+        </div>
     </div>
 
     <div id="resultsWrapper"></div>
@@ -498,6 +545,12 @@ const manualScanStatus = document.getElementById('manualScanStatus');
 const manualGuideButton = document.getElementById('manualGuideButton');
 const manualGuideModal = document.getElementById('manualGuideModal');
 const manualGuideClose = document.getElementById('manualGuideClose');
+const manualScanLogButton = document.getElementById('manualScanLogButton');
+const manualScanLogCount = document.getElementById('manualScanLogCount');
+const manualScanLogModal = document.getElementById('manualScanLogModal');
+const manualScanLogList = document.getElementById('manualScanLogList');
+const manualScanLogClear = document.getElementById('manualScanLogClear');
+const manualScanLogClose = document.getElementById('manualScanLogClose');
 const manualScannerDesktopQuery = window.matchMedia('(min-width: 900px) and (hover: hover) and (pointer: fine)');
 
 let html5QrCode = null;
@@ -509,14 +562,20 @@ let manualScannerEnabled = false;
 let manualScannerModelPickerOpen = false;
 let manualScannerKeyBuffer = '';
 let manualScannerIdleTimer = null;
+let manualScannerLogOpen = false;
+let activeManualSoundStop = null;
 let availableModels = [];
 const manualScannerSelectedModels = new Set();
 let manualSearchSource = localStorage.getItem('manualSearchSource') === 'bank' ? 'bank' : 'placement';
 const defaultBarcodePlaceholder = input.placeholder;
+const MANUAL_SCAN_LOG_KEY = 'manualScannerScanLogV1';
+const MANUAL_SCAN_LOG_SEQUENCE_KEY = 'manualScannerScanLogSequenceV1';
 
 if (manualScannerSoundToggle) {
     manualScannerSoundToggle.checked = localStorage.getItem('manualScannerSoundEnabled') !== 'false';
 }
+
+updateManualScanLogCount();
 
 function getSavedManualModels() {
     try {
@@ -529,6 +588,92 @@ function getSavedManualModels() {
 
 function saveManualModels() {
     localStorage.setItem('manualScannerSelectedModels', JSON.stringify([...manualScannerSelectedModels]));
+}
+
+function escapeManualHtml(value) {
+    return String(value === undefined || value === null ? '' : value).replace(/[&<>"']/g, character => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[character]));
+}
+
+function getManualScanLog() {
+    try {
+        const entries = JSON.parse(localStorage.getItem(MANUAL_SCAN_LOG_KEY) || '[]');
+        return Array.isArray(entries) ? entries : [];
+    } catch (_) {
+        return [];
+    }
+}
+
+function updateManualScanLogCount() {
+    if (manualScanLogCount) manualScanLogCount.textContent = String(getManualScanLog().length);
+}
+
+function renderManualScanLog() {
+    if (!manualScanLogList) return;
+    const entries = getManualScanLog();
+    manualScanLogList.innerHTML = '';
+    if (!entries.length) {
+        manualScanLogList.innerHTML = '<div style="padding:34px 12px;text-align:center;color:#94a3b8;font-size:.84rem;font-weight:700;">A csipogási napló még üres.</div>';
+        updateManualScanLogCount();
+        return;
+    }
+    entries.forEach(entry => {
+        const row = document.createElement('div');
+        row.className = `manual-scan-log-item ${entry.ok ? 'is-ok' : 'is-fail'}`;
+        const when = new Date(entry.timestamp);
+        const time = Number.isNaN(when.getTime()) ? '—' : when.toLocaleString('hu-HU', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        row.innerHTML = `<span class="manual-scan-log-order">#${escapeManualHtml(entry.sequence)}</span><span class="manual-scan-log-time">${escapeManualHtml(time)}</span><span class="manual-scan-log-code"></span><span class="manual-scan-log-result">${entry.ok ? 'TALÁLAT' : 'NINCS TALÁLAT'}</span>`;
+        row.querySelector('.manual-scan-log-code').textContent = entry.rawCode || '—';
+        manualScanLogList.appendChild(row);
+    });
+    updateManualScanLogCount();
+}
+
+function addManualScanLog(rawCode, lookupCode, ok, models) {
+    const entries = getManualScanLog();
+    const nextSequence = Number(localStorage.getItem(MANUAL_SCAN_LOG_SEQUENCE_KEY) || '0') + 1;
+    const occurrence = entries.filter(entry => entry.lookupCode === lookupCode).length + 1;
+    entries.push({ sequence: nextSequence, timestamp: new Date().toISOString(), rawCode, lookupCode, ok: Boolean(ok), models: Array.isArray(models) ? models : [] });
+    localStorage.setItem(MANUAL_SCAN_LOG_KEY, JSON.stringify(entries.slice(-1000)));
+    localStorage.setItem(MANUAL_SCAN_LOG_SEQUENCE_KEY, String(nextSequence));
+    updateManualScanLogCount();
+    if (manualScannerLogOpen) renderManualScanLog();
+    return occurrence;
+}
+
+function setManualScanLogModal(open) {
+    manualScannerLogOpen = Boolean(open);
+    manualScannerModelPickerOpen = Boolean(open);
+    if (manualScanLogModal) {
+        manualScanLogModal.classList.toggle('is-open', Boolean(open));
+        manualScanLogModal.setAttribute('aria-hidden', String(!open));
+    }
+    if (open) renderManualScanLog();
+    else focusManualScannerInput();
+}
+
+function clearManualScanLog() {
+    if (!confirm('Biztosan törlöd a teljes csipogási naplót?')) return;
+    localStorage.removeItem(MANUAL_SCAN_LOG_KEY);
+    localStorage.removeItem(MANUAL_SCAN_LOG_SEQUENCE_KEY);
+    renderManualScanLog();
+}
+
+function renderManualScanOutcome(ok, rawCode, lookupCode, models, occurrence) {
+    const duplicate = ok && occurrence > 1;
+    const stateClass = ok ? (duplicate ? 'is-duplicate' : 'is-success') : 'is-failure';
+    const title = ok ? (duplicate ? 'ISMÉTELT CIKKSZÁM' : 'TALÁLAT') : 'NINCS TALÁLAT';
+    const badge = ok ? (duplicate ? '⚠ ISMÉTELT BEOLVASÁS' : '✓ TALÁLAT') : '× NINCS TALÁLAT';
+    const safeModels = [...new Set(models.filter(Boolean))];
+    document.body.classList.add('manual-model-scan-outcome');
+    resultsWrapper.innerHTML = `<section class="manual-scan-outcome ${stateClass} is-flashing" aria-live="assertive">
+        <span class="manual-scan-outcome-badge">${badge}</span>
+        <h2>${title}</h2>
+        ${duplicate ? `<div class="manual-scan-outcome-duplicate">Ezt a cikkszámot már ${occurrence - 1}× becsipogtad · most ${occurrence}. alkalom</div>` : ''}
+        ${ok ? `<div class="manual-scan-outcome-models">${safeModels.map(model => `<div class="manual-scan-outcome-model">${escapeManualHtml(model)}</div>`).join('')}</div>` : ''}
+        <div class="manual-scan-outcome-meta">Teljes tekercsazonosító: <strong>${escapeManualHtml(rawCode)}</strong><br>Keresett cikkszám: <strong>${escapeManualHtml(lookupCode)}</strong></div>
+    </section>`;
 }
 
 function updateManualScannerStatus(message) {
@@ -635,7 +780,8 @@ function normalizeManualScannerCode(rawCode) {
 function scheduleManualScannerFinish() {
     clearTimeout(manualScannerIdleTimer);
     if (manualScannerKeyBuffer.length >= 7) {
-        manualScannerIdleTimer = setTimeout(finishManualScannerRead, 220);
+        // Az Enter-t küldő USB-olvasó azonnal feldolgozódik; Enter nélkül ez a rövid tartalékidő zárja le a csipogást.
+        manualScannerIdleTimer = setTimeout(finishManualScannerRead, 130);
     }
 }
 
@@ -667,14 +813,16 @@ function setManualScannerMode(enabled) {
     manualScannerModelPickerOpen = false;
     document.body.classList.toggle('manual-scanner-mode', nextState);
     updateManualSearchSourceUI();
-    document.body.classList.remove('manual-scanner-has-result');
+    document.body.classList.remove('manual-scanner-has-result', 'manual-model-scan-outcome');
     clearTimeout(manualScannerIdleTimer);
     manualScannerKeyBuffer = '';
+    stopActiveManualScannerSound();
     if (manualScannerToggle) manualScannerToggle.checked = nextState;
     if (manualScannerState) manualScannerState.textContent = nextState ? 'AKTÍV · FÓKUSZBAN' : 'KIKAPCSOLVA';
     input.placeholder = nextState ? 'Következő cikkszám beolvasása…' : defaultBarcodePlaceholder;
     if (nextState) {
         input.value = '';
+        updateManualScanLogCount();
         updateManualScannerStatus('Készen áll · várakozás a következő beolvasásra');
         focusManualScannerInput();
     }
@@ -685,7 +833,7 @@ manualSearchSourceToggle?.addEventListener('click', () => {
     manualSearchSource = manualSearchSource === 'bank' ? 'placement' : 'bank';
     localStorage.setItem('manualSearchSource', manualSearchSource);
     resultsWrapper.innerHTML = '';
-    document.body.classList.remove('manual-scanner-has-result');
+    document.body.classList.remove('manual-scanner-has-result', 'manual-model-scan-outcome');
     updateManualSearchSourceUI();
     updateManualScannerStatus(manualSearchSource === 'bank'
         ? 'BANK keresés aktív · várakozás a következő beolvasásra'
@@ -701,6 +849,10 @@ manualModelSearch?.addEventListener('input', renderManualModelOptions);
 manualGuideButton?.addEventListener('click', () => setManualGuideModal(true));
 manualGuideClose?.addEventListener('click', () => setManualGuideModal(false));
 manualGuideModal?.addEventListener('click', event => { if (event.target === manualGuideModal) setManualGuideModal(false); });
+manualScanLogButton?.addEventListener('click', () => setManualScanLogModal(true));
+manualScanLogClose?.addEventListener('click', () => setManualScanLogModal(false));
+manualScanLogClear?.addEventListener('click', clearManualScanLog);
+manualScanLogModal?.addEventListener('click', event => { if (event.target === manualScanLogModal) setManualScanLogModal(false); });
 manualScannerSoundToggle?.addEventListener('change', () => localStorage.setItem('manualScannerSoundEnabled', String(manualScannerSoundToggle.checked)));
 input.addEventListener('blur', () => {
     if (manualScannerEnabled) setTimeout(focusManualScannerInput, 0);
@@ -724,6 +876,7 @@ document.addEventListener('keydown', event => {
     if (event.key === 'Escape') {
         if (manualGuideModal?.classList.contains('is-open')) setManualGuideModal(false);
         else if (manualModelModal?.classList.contains('is-open')) setManualModelModal(false);
+        else if (manualScanLogModal?.classList.contains('is-open')) setManualScanLogModal(false);
     }
 });
 manualScannerDesktopQuery.addEventListener?.('change', event => {
@@ -922,6 +1075,8 @@ function search(code, options = {}) {
     resultsWrapper.innerHTML = '';
     const isManualSearch = Boolean(options.manual);
     if (isManualSearch) document.body.classList.add('manual-scanner-has-result');
+    const isManualFilteredModelScan = isManualSearch && manualSearchSource === 'placement' && manualScannerSelectedModels.size > 0 && Boolean(options.rawCode);
+    if (!isManualFilteredModelScan) document.body.classList.remove('manual-model-scan-outcome');
     
     const lookupCodes = (options.lookupCodes || [code]).filter(Boolean);
     const currentModel = modelFilter.value;
@@ -956,6 +1111,19 @@ function search(code, options = {}) {
                 seen.add(stringifiedRow);
                 uniqueMatches.push(m);
             }
+        }
+
+        const matchedModels = isManualSearch && manualSearchSource === 'placement'
+            ? [...new Set(uniqueMatches.map(match => String(match.model || '').trim()).filter(Boolean))]
+            : [];
+        const occurrence = isManualSearch && options.rawCode
+            ? addManualScanLog(options.rawCode, code, true, matchedModels)
+            : 0;
+
+        if (isManualFilteredModelScan) {
+            renderManualScanOutcome(true, options.rawCode, code, matchedModels, occurrence);
+            saveToHistory(code, true);
+            return;
         }
 
         uniqueMatches.forEach(m => {
@@ -1015,6 +1183,14 @@ function search(code, options = {}) {
         saveToHistory(code, true);
     } else {
         if (shouldPlaySound) playSound(false, { manual: isManualSearch });
+        const occurrence = isManualSearch && options.rawCode
+            ? addManualScanLog(options.rawCode, code, false, [])
+            : 0;
+        if (isManualFilteredModelScan) {
+            renderManualScanOutcome(false, options.rawCode, code, [], occurrence);
+            saveToHistory(code, false);
+            return;
+        }
         resultsWrapper.innerHTML = isManualSearch
             ? `<div class="no-result">NINCS TALÁLAT<div style="margin-top:12px;color:#94a3b8;font-size:.8rem;font-weight:700;">${manualSearchSource === 'bank' ? 'BANK' : 'MODELL'} keresés · azonosító: ${code}</div></div>`
             : '<div class="no-result">NINCS A LISTÁBAN</div>';
@@ -1108,7 +1284,21 @@ function cleanupUI() {
     readerDiv.style.display = 'none';
 }
 
-function playManualFailureSound() {
+function stopActiveManualScannerSound() {
+    if (typeof activeManualSoundStop === 'function') {
+        activeManualSoundStop();
+        activeManualSoundStop = null;
+    }
+    ['sndOk', 'sndError'].forEach(id => {
+        const audio = document.getElementById(id);
+        if (!audio) return;
+        audio.pause();
+        audio.currentTime = 0;
+    });
+}
+
+function playManualScannerSound(ok) {
+    stopActiveManualScannerSound();
     try {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         if (!AudioContextClass) throw new Error('Web Audio nem támogatott');
@@ -1116,23 +1306,38 @@ function playManualFailureSound() {
         const now = context.currentTime;
         const gain = context.createGain();
         gain.gain.setValueAtTime(0.0001, now);
-        gain.gain.exponentialRampToValueAtTime(0.58, now + 0.025);
-        gain.gain.setValueAtTime(0.58, now + 0.46);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.72);
+        gain.gain.exponentialRampToValueAtTime(ok ? 0.78 : 0.88, now + 0.02);
+        gain.gain.setValueAtTime(ok ? 0.78 : 0.88, now + (ok ? 0.78 : 0.96));
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + (ok ? 1.08 : 1.28));
         gain.connect(context.destination);
 
-        [180, 122].forEach((frequency, index) => {
+        const sequence = ok ? [640, 840, 1080] : [260, 176, 118];
+        const toneLength = ok ? 0.27 : 0.32;
+        const toneGap = ok ? 0.31 : 0.39;
+        const oscillators = [];
+        sequence.forEach((frequency, index) => {
             const oscillator = context.createOscillator();
-            const startAt = now + (index * 0.34);
-            oscillator.type = 'sawtooth';
+            const startAt = now + (index * toneGap);
+            oscillator.type = ok ? 'square' : 'sawtooth';
             oscillator.frequency.setValueAtTime(frequency, startAt);
             oscillator.connect(gain);
             oscillator.start(startAt);
-            oscillator.stop(startAt + 0.29);
+            oscillator.stop(startAt + toneLength);
+            oscillators.push(oscillator);
         });
-        setTimeout(() => context.close().catch(() => {}), 900);
+        let stopped = false;
+        activeManualSoundStop = () => {
+            if (stopped) return;
+            stopped = true;
+            oscillators.forEach(oscillator => { try { oscillator.stop(); } catch (_) {} });
+            context.close().catch(() => {});
+        };
+        const ownStop = activeManualSoundStop;
+        setTimeout(() => {
+            if (activeManualSoundStop === ownStop) ownStop();
+        }, ok ? 1180 : 1380);
     } catch (_) {
-        const fallback = document.getElementById('sndError');
+        const fallback = document.getElementById(ok ? 'sndOk' : 'sndError');
         fallback.volume = 1;
         fallback.currentTime = 0;
         fallback.play().catch(()=>{});
@@ -1140,8 +1345,8 @@ function playManualFailureSound() {
 }
 
 function playSound(ok, options = {}) {
-    if (!ok && options.manual) {
-        playManualFailureSound();
+    if (options.manual) {
+        playManualScannerSound(ok);
         return;
     }
     const snd = document.getElementById(ok ? 'sndOk' : 'sndError');
