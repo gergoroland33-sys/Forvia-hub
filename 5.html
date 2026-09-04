@@ -784,6 +784,8 @@
         @media print {
             .print-sheet {
                 width: 124mm !important;
+                /* Minden szekrény a teljes, biztonságosan nyomtatható A4
+                   magasságot használja. */
                 height: 270mm !important;
                 margin: 0 auto !important;
                 padding: 2.5mm 4mm 2mm !important;
@@ -795,11 +797,13 @@
                 break-after: page !important;
                 page-break-after: always !important;
                 overflow: hidden !important;
+                display: flex !important;
+                flex-direction: column !important;
             }
             .print-sheet:last-child { break-after: auto !important; page-break-after: auto !important; }
-            .print-sheet-head { display: flex !important; align-items: center !important; justify-content: center !important; padding: 0 1mm 2.4mm !important; border-bottom: 0.45mm solid #0f172a !important; text-align: center !important; }
+            .print-sheet-head { display: flex !important; flex: 0 0 auto !important; align-items: center !important; justify-content: center !important; padding: 0 1mm 2.4mm !important; border-bottom: 0.45mm solid #0f172a !important; text-align: center !important; }
             .print-sheet-title { color: #0f172a !important; font-size: 19pt !important; line-height: 1 !important; font-weight: 900 !important; letter-spacing: 0.8pt !important; text-transform: uppercase !important; text-align: center !important; }
-            .print-slot-grid { display: grid !important; grid-template-columns: 1fr !important; align-content: start !important; }
+            .print-slot-grid { display: grid !important; flex: 1 1 auto !important; min-height: 0 !important; grid-template-columns: 1fr !important; grid-template-rows: repeat(var(--print-slot-count), minmax(0, 1fr)) !important; align-content: stretch !important; }
             .print-slot-card { display: grid !important; grid-template-columns: 28mm 64mm !important; align-items: center !important; justify-content: center !important; column-gap: 4mm !important; box-sizing: border-box !important; color: #111827 !important; text-align: center !important; border: 0.25mm solid #cbd5e1 !important; border-left: 1.25mm solid #0f172a !important; border-radius: 1.8mm !important; background: #f8fafc !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             .print-slot-card.is-filled { background: #ffffff !important; border-left-color: #0f766e !important; }
             .print-slot-card.is-empty { background: #f1f5f9 !important; border-left-color: #94a3b8 !important; }
@@ -809,13 +813,21 @@
             .print-item-id { display: block !important; width: 100% !important; color: #111827 !important; font-weight: 900 !important; letter-spacing: 0.2pt !important; line-height: 1 !important; text-align: center !important; overflow-wrap: anywhere !important; }
             .print-empty-text { display: block !important; width: 100% !important; color: #64748b !important; font-style: italic !important; font-weight: 700 !important; text-align: center !important; }
             .print-density-roomy .print-slot-grid { gap: 1.4mm !important; padding-top: 2.7mm !important; }
-            .print-density-roomy .print-slot-card { min-height: 11.1mm !important; padding: 1.3mm 4mm !important; }
-            .print-density-roomy .print-shelf-number { font-size: 16.5pt !important; }
-            .print-density-roomy .print-item-id, .print-density-roomy .print-empty-text { font-size: 16.5pt !important; }
-            .print-density-dense .print-slot-grid { gap: 0.7mm !important; padding-top: 2.2mm !important; }
-            .print-density-dense .print-slot-card { min-height: 6.25mm !important; padding: 0.7mm 3.2mm !important; }
-            .print-density-dense .print-shelf-number { font-size: 11.75pt !important; }
-            .print-density-dense .print-item-id, .print-density-dense .print-empty-text { font-size: 11.75pt !important; }
+            .print-density-roomy .print-slot-card { min-height: 0 !important; height: auto !important; padding: 1.3mm 4mm !important; }
+            .print-density-roomy .print-shelf-badge { line-height: 1 !important; }
+            .print-density-roomy .print-shelf-number { font-size: 18pt !important; }
+            .print-density-roomy .print-item-id, .print-density-roomy .print-empty-text { font-size: 18pt !important; line-height: 1 !important; }
+            /* A nagy szekrényeknél a polcok száma a JavaScriptből érkezik.
+               A rács minden sort automatikusan eloszt az egyetlen A4 lapon,
+               ezért egy sor sem csúszhat a lap alá, a teljes lapmagasság
+               pedig olvashatóbb kártyákra használható fel. */
+            .print-density-dense { height: 270mm !important; }
+            .print-density-dense .print-sheet-head { flex: 0 0 auto !important; padding-bottom: 1.4mm !important; }
+            .print-density-dense .print-slot-grid { flex: 1 1 auto !important; min-height: 0 !important; grid-template-rows: repeat(var(--print-slot-count), minmax(0, 1fr)) !important; gap: 0.45mm !important; padding-top: 1.4mm !important; }
+            .print-density-dense .print-slot-card { min-height: 0 !important; height: auto !important; padding: 0.25mm 3.2mm !important; }
+            .print-density-dense .print-shelf-badge { line-height: 1 !important; }
+            .print-density-dense .print-shelf-number { font-size: 12.25pt !important; }
+            .print-density-dense .print-item-id, .print-density-dense .print-empty-text { font-size: 12.25pt !important; line-height: 1 !important; }
         }
 
         /* =====================================================================
@@ -1876,7 +1888,7 @@
             slotsHtml += `<div class="print-slot-card ${item && item.maszk ? 'is-filled' : 'is-empty'}"><span class="print-shelf-badge"><span class="print-shelf-label">Polc</span><span class="print-shelf-number">${shelf}</span></span>${content}</div>`;
         }
 
-        return `<section class="print-sheet ${densityClass}"><header class="print-sheet-head"><div class="print-sheet-title">${printEscape(config.name)}</div></header><div class="print-slot-grid">${slotsHtml}</div></section>`;
+        return `<section class="print-sheet ${densityClass}" style="--print-slot-count:${slotCount};"><header class="print-sheet-head"><div class="print-sheet-title">${printEscape(config.name)}</div></header><div class="print-slot-grid">${slotsHtml}</div></section>`;
     }
 
     window.setPrintCabinetSelection = function(shouldSelect) {
