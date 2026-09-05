@@ -95,44 +95,68 @@
 
         /* --- Görgethetőség beállítása laptopra --- */
         #home-screen {
-            --home-tint-rgb: 59, 130, 246;
-            --home-aurora-a: 50, 100, 224;
-            --home-aurora-b: 150, 72, 218;
-            --home-aurora-c: 43, 202, 224;
-            --home-aurora-d: 238, 86, 174;
-            --home-accent-rgb: 238, 86, 174;
+            --home-tint-rgb: 70, 126, 242;
+            --home-aurora-a: 42, 108, 214;
+            --home-aurora-b: 20, 204, 214;
+            --home-aurora-c: 112, 70, 230;
+            --home-aurora-d: 239, 87, 185;
+            --home-aurora-e: 26, 202, 175;
+            --home-aurora-f: 251, 171, 78;
+            --home-accent-rgb: 239, 87, 185;
             --horizon-y: 112%;
             --horizon-core-alpha: .12; --horizon-side-alpha: .05; --horizon-mist-alpha: .04;
+            --home-layer-strong: .34; --home-layer-medium: .27; --home-layer-soft: .18; --home-layer-ground: .23;
             flex-grow: 1; display: flex; flex-direction: column;
             align-items: center; 
             text-align: center;
-            /* Cinematic Horizon: egyetlen széles, összefüggő fényöv — nem szétszórt foltok. */
+            /* Többrétegű, összefolyó égbolt: a színek nem váltják, hanem keverik egymást. */
             background: 
-                radial-gradient(ellipse 128% 52% at 50% var(--horizon-y), rgba(var(--home-aurora-d), var(--horizon-core-alpha)) 0%, rgba(var(--home-aurora-b), var(--horizon-side-alpha)) 38%, transparent 75%),
-                linear-gradient(180deg, #010208 0%, #07132b 48%, #010208 100%);
+                radial-gradient(ellipse 94% 70% at 4% calc(var(--horizon-y) + 22%), rgba(var(--home-aurora-f), var(--home-layer-medium)) 0%, transparent 71%),
+                radial-gradient(ellipse 108% 74% at 102% calc(var(--horizon-y) + 4%), rgba(var(--home-aurora-c), var(--home-layer-strong)) 0%, transparent 72%),
+                radial-gradient(ellipse 132% 72% at 50% var(--horizon-y), rgba(var(--home-aurora-d), var(--home-layer-medium)) 0%, rgba(var(--home-aurora-a), var(--home-layer-soft)) 47%, transparent 77%),
+                linear-gradient(180deg, #010208 0%, rgb(5, 14, 39) 47%, #010208 100%);
             
             padding: 20px; position: relative; width: 100%; height: 100%;
             overflow-y: auto; 
             padding-bottom: 60px;
             transition: background 88s cubic-bezier(.35, 0, .18, 1);
         }
-        /* Három, egymást fedő színréteg ugyanazon horizont mentén: ettől látható a színkeveredés. */
+        /* Hat egymásba olvadó színfelhő, széles átfedéssel: ebből lesz a gazdag, folyékony hatás. */
         #home-screen::before {
             content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
             background:
-                radial-gradient(ellipse 74% 52% at 18% var(--horizon-y), rgba(var(--home-aurora-a), var(--horizon-side-alpha)) 0%, transparent 71%),
-                radial-gradient(ellipse 86% 58% at 50% var(--horizon-y), rgba(var(--home-aurora-c), var(--horizon-core-alpha)) 0%, rgba(var(--home-aurora-b), var(--horizon-side-alpha)) 45%, transparent 75%),
-                radial-gradient(ellipse 74% 52% at 82% var(--horizon-y), rgba(var(--home-aurora-d), var(--horizon-side-alpha)) 0%, transparent 71%),
-                linear-gradient(100deg, transparent 0%, rgba(var(--home-aurora-a), var(--horizon-mist-alpha)) 21%, rgba(var(--home-aurora-b), var(--horizon-side-alpha)) 42%, rgba(var(--home-aurora-c), var(--horizon-core-alpha)) 53%, rgba(var(--home-aurora-d), var(--horizon-side-alpha)) 68%, transparent 100%);
+                radial-gradient(ellipse 82% 68% at -10% calc(var(--horizon-y) + 9%), rgba(var(--home-aurora-a), var(--home-layer-strong)) 0%, transparent 73%),
+                radial-gradient(ellipse 76% 62% at 20% calc(var(--horizon-y) - 10%), rgba(var(--home-aurora-b), var(--home-layer-medium)) 0%, transparent 72%),
+                radial-gradient(ellipse 84% 70% at 48% calc(var(--horizon-y) + 5%), rgba(var(--home-aurora-c), var(--home-layer-strong)) 0%, transparent 74%),
+                radial-gradient(ellipse 76% 64% at 76% calc(var(--horizon-y) - 6%), rgba(var(--home-aurora-d), var(--home-layer-medium)) 0%, transparent 72%),
+                radial-gradient(ellipse 84% 68% at 104% calc(var(--horizon-y) + 12%), rgba(var(--home-aurora-e), var(--home-layer-strong)) 0%, transparent 74%),
+                linear-gradient(106deg, transparent 0%, rgba(var(--home-aurora-a), var(--horizon-mist-alpha)) 12%, rgba(var(--home-aurora-b), var(--home-layer-soft)) 31%, rgba(var(--home-aurora-c), var(--home-layer-ground)) 49%, rgba(var(--home-aurora-d), var(--home-layer-soft)) 66%, rgba(var(--home-aurora-e), var(--horizon-mist-alpha)) 86%, transparent 100%);
             transition: background 88s cubic-bezier(.35, 0, .18, 1);
         }
-        /* Finom ködfátyol és erős sötét vignetta, hogy a kártya minden helyzetben olvasható maradjon. */
+        /* Puha filmszerű árnyalás: a keveredés élénk marad, de a kártyák olvashatók. */
         #home-screen::after {
             content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
             background:
-                linear-gradient(180deg, rgba(0,0,0,.20) 0%, transparent 32%, transparent 66%, rgba(0,0,0,.26) 100%),
-                radial-gradient(ellipse 108% 92% at 50% 50%, transparent 28%, rgba(0, 1, 8, .58) 100%);
+                linear-gradient(180deg, rgba(0,0,0,.17) 0%, transparent 28%, transparent 69%, rgba(0,0,0,.22) 100%),
+                radial-gradient(ellipse 108% 92% at 50% 50%, transparent 24%, rgba(0, 1, 8, .40) 100%);
             transition: background 88s cubic-bezier(.35, 0, .18, 1);
+        }
+        /* Éjszakai égbolt: csak a valódi napnyugta után, finom és ritka csillagokkal. */
+        .home-sky-stars {
+            position: absolute; inset: 0; z-index: 0; pointer-events: none;
+            opacity: var(--home-stars-opacity, 0);
+            background-image:
+                radial-gradient(circle at 8% 17%, rgba(255,255,255,.92) 0 1px, transparent 1.45px),
+                radial-gradient(circle at 21% 42%, rgba(191,219,254,.78) 0 1px, transparent 1.35px),
+                radial-gradient(circle at 36% 11%, rgba(255,255,255,.82) 0 .9px, transparent 1.3px),
+                radial-gradient(circle at 52% 28%, rgba(196,181,253,.9) 0 1.15px, transparent 1.55px),
+                radial-gradient(circle at 67% 14%, rgba(224,242,254,.84) 0 .9px, transparent 1.3px),
+                radial-gradient(circle at 81% 37%, rgba(255,255,255,.74) 0 1px, transparent 1.4px),
+                radial-gradient(circle at 92% 19%, rgba(219,234,254,.88) 0 .85px, transparent 1.25px),
+                radial-gradient(circle at 14% 69%, rgba(216,180,254,.58) 0 .8px, transparent 1.2px),
+                radial-gradient(circle at 43% 72%, rgba(255,255,255,.64) 0 .85px, transparent 1.25px),
+                radial-gradient(circle at 73% 66%, rgba(191,219,254,.66) 0 .9px, transparent 1.3px);
+            transition: opacity 88s cubic-bezier(.35, 0, .18, 1);
         }
         /* Csak a fő kártya kerül a háttér-réteg fölé: a hírsáv megőrzi a felső, fixed pozícióját. */
         #home-screen > #main-card { position: relative; z-index: 1; }
@@ -406,6 +430,12 @@
         }
         .active-shift-transition-ghost { position: absolute; z-index: 3; left: 50%; top: 50%; pointer-events: none; transform: translate(-50%,-50%); }
         .active-shift-code.is-shift-changing .active-shift-letter { z-index: 2; }
+        /* Sötét égbolton is éles marad: világos, de nem neon műszakbetű. */
+        #home-screen.is-night-sky .active-shift-letter {
+            --active-shift-gradient: linear-gradient(118deg, #f8fafc 0%, #bfdbfe 26%, #c4b5fd 52%, #f0abfc 72%, #dbeafe 100%);
+            -webkit-text-stroke: .5px rgba(2, 6, 23, .9);
+            text-shadow: 0 1px 0 rgba(255,255,255,.35), 0 2px 3px rgba(0,0,0,.94);
+        }
         @keyframes activeShiftColorFlow { 0% { background-position: 0% 45%; } 52% { background-position: 100% 55%; } 100% { background-position: 32% 100%; } }
         @keyframes activeShiftDailySpectrum { from { filter: hue-rotate(0deg) saturate(1.06) drop-shadow(0 2px 5px var(--active-shift-shadow)); } to { filter: hue-rotate(360deg) saturate(1.18) drop-shadow(0 2px 5px var(--active-shift-shadow)); } }
         @media (prefers-reduced-motion: reduce) { .active-shift-letter { animation: none; } }
@@ -420,7 +450,7 @@
         }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
+
         /* ============================================================
            ÚJ: LAPTOP-OPTIMALIZÁCIÓ — alacsony viewportokra (kompakt nézet)
            Sok laptopon nem fér ki minden — kompaktabb spacing, méretek.
@@ -1147,6 +1177,7 @@
 </div>
 
 <div id="home-screen">
+    <div class="home-sky-stars" aria-hidden="true"></div>
     <div id="main-card" class="glass-card">
         <div id="activeUsersCard" class="active-users-card" role="status" aria-live="polite" aria-label="Aktív felhasználók betöltése">
             <svg class="active-users-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
@@ -1760,50 +1791,102 @@
         box.style.setProperty('--calendar-rgb', `${r}, ${g}, ${b}`);
     }
 
-    // Cinematic Horizon 24 órás paletta: minden időszak egyetlen, egymásba olvadó égi jelenet.
-    const homeAuroraPalette = [
-        { minute: 0,    colors: [[4, 10, 29], [7, 17, 48], [6, 33, 73], [10, 48, 99]] },
-        { minute: 120,  colors: [[5, 12, 35], [9, 21, 58], [8, 43, 89], [13, 60, 119]] },
-        { minute: 270,  colors: [[18, 24, 79], [39, 27, 106], [32, 67, 140], [68, 54, 149]] },
-        { minute: 330,  colors: [[74, 35, 143], [163, 48, 171], [237, 84, 127], [250, 157, 75]] },
-        { minute: 390,  colors: [[156, 50, 191], [239, 79, 151], [251, 115, 88], [253, 193, 71]] },
-        { minute: 480,  colors: [[42, 120, 193], [29, 191, 211], [78, 142, 237], [123, 193, 237]] },
-        { minute: 600,  colors: [[28, 157, 218], [39, 205, 224], [72, 136, 242], [134, 182, 245]] },
-        { minute: 720,  colors: [[31, 173, 222], [51, 212, 226], [82, 151, 246], [164, 198, 255]] },
-        { minute: 840,  colors: [[25, 151, 214], [60, 151, 226], [118, 98, 225], [201, 125, 229]] },
-        { minute: 960,  colors: [[52, 104, 200], [111, 73, 213], [195, 75, 201], [244, 127, 109]] },
-        { minute: 1080, colors: [[153, 50, 181], [235, 72, 153], [249, 112, 88], [253, 190, 68]] },
-        { minute: 1140, colors: [[91, 35, 143], [167, 52, 166], [222, 74, 125], [98, 98, 203]] },
-        { minute: 1230, colors: [[25, 26, 82], [34, 36, 114], [25, 68, 144], [38, 90, 177]] },
-        { minute: 1350, colors: [[7, 14, 42], [11, 25, 69], [9, 48, 99], [15, 61, 127]] },
-        { minute: 1440, colors: [[4, 10, 29], [7, 17, 48], [6, 33, 73], [10, 48, 99]] }
-    ];
+    // Valódi napciklus. A telephely egyetlen helyen átírható; jelenleg Budapest
+    // koordinátái adják a magyarországi alapértéket.
+    const homeSunLocation = Object.freeze({ latitude: 47.4979, longitude: 19.0402, label: 'Budapest' });
+    let cachedHomeSolarDay = null;
 
-    function getHorizonState(now) {
+    function clampHomeMinute(value) { return Math.max(0, Math.min(1440, value)); }
+    function homeDegreesToRadians(value) { return value * Math.PI / 180; }
+    function homeRadiansToDegrees(value) { return value * 180 / Math.PI; }
+    function homeNormalizeDegrees(value) { return ((value % 360) + 360) % 360; }
+
+    function calculateHomeSunEventMinutes(date, isSunrise) {
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const day = date.getDate();
+        const dayOfYear = Math.floor((Date.UTC(year, month, day) - Date.UTC(year, 0, 0)) / 86400000);
+        const longitudeHour = homeSunLocation.longitude / 15;
+        const approximateTime = dayOfYear + ((isSunrise ? 6 : 18) - longitudeHour) / 24;
+        const meanAnomaly = (0.9856 * approximateTime) - 3.289;
+        const sunLongitude = homeNormalizeDegrees(meanAnomaly + (1.916 * Math.sin(homeDegreesToRadians(meanAnomaly))) + (0.020 * Math.sin(homeDegreesToRadians(2 * meanAnomaly))) + 282.634);
+        let rightAscension = homeNormalizeDegrees(homeRadiansToDegrees(Math.atan(0.91764 * Math.tan(homeDegreesToRadians(sunLongitude)))));
+        rightAscension += Math.floor(sunLongitude / 90) * 90 - Math.floor(rightAscension / 90) * 90;
+        rightAscension /= 15;
+        const sinDeclination = 0.39782 * Math.sin(homeDegreesToRadians(sunLongitude));
+        const cosDeclination = Math.cos(Math.asin(sinDeclination));
+        const cosLocalHour = (Math.cos(homeDegreesToRadians(90.833)) - (sinDeclination * Math.sin(homeDegreesToRadians(homeSunLocation.latitude)))) / (cosDeclination * Math.cos(homeDegreesToRadians(homeSunLocation.latitude)));
+        if (cosLocalHour > 1 || cosLocalHour < -1) return null;
+        let localHourAngle = isSunrise ? 360 - homeRadiansToDegrees(Math.acos(cosLocalHour)) : homeRadiansToDegrees(Math.acos(cosLocalHour));
+        localHourAngle /= 15;
+        let universalTime = localHourAngle + rightAscension - (0.06571 * approximateTime) - 6.622 - longitudeHour;
+        universalTime = ((universalTime % 24) + 24) % 24;
+        const localMoment = new Date(Date.UTC(year, month, day) + universalTime * 60 * 60 * 1000);
+        return localMoment.getHours() * 60 + localMoment.getMinutes() + localMoment.getSeconds() / 60;
+    }
+
+    function getHomeSolarDay(now) {
+        const cacheKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+        if (cachedHomeSolarDay && cachedHomeSolarDay.key === cacheKey) return cachedHomeSolarDay;
+        const sunriseMinutes = calculateHomeSunEventMinutes(now, true);
+        const sunsetMinutes = calculateHomeSunEventMinutes(now, false);
+        cachedHomeSolarDay = {
+            key: cacheKey,
+            sunriseMinutes: sunriseMinutes == null ? 330 : sunriseMinutes,
+            sunsetMinutes: sunsetMinutes == null ? 1140 : sunsetMinutes
+        };
+        return cachedHomeSolarDay;
+    }
+
+    function getHomeHorizonState(now) {
         const minute = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
-        const sunrise = 330;
-        const sunset = 1140;
-        if (minute < sunrise || minute > sunset) {
-            return { y: '112%', coreAlpha: '.10', sideAlpha: '.035', mistAlpha: '.018' };
+        const solar = getHomeSolarDay(now);
+        const dawnStart = clampHomeMinute(solar.sunriseMinutes - 115);
+        const duskEnd = clampHomeMinute(solar.sunsetMinutes + 115);
+        const isNight = minute < dawnStart || minute > duskEnd;
+        let starsOpacity = isNight ? .68 : 0;
+        if (minute >= dawnStart && minute < solar.sunriseMinutes) starsOpacity = .68 * (1 - ((minute - dawnStart) / Math.max(1, solar.sunriseMinutes - dawnStart)));
+        if (minute > solar.sunsetMinutes && minute <= duskEnd) starsOpacity = .68 * ((minute - solar.sunsetMinutes) / Math.max(1, duskEnd - solar.sunsetMinutes));
+        if (minute < solar.sunriseMinutes || minute > solar.sunsetMinutes) {
+            return { y: '112%', coreAlpha: '.105', sideAlpha: '.038', mistAlpha: '.018', starsOpacity: starsOpacity.toFixed(3), isNight };
         }
-        const daylightProgress = (minute - sunrise) / (sunset - sunrise);
+        const daylightProgress = (minute - solar.sunriseMinutes) / Math.max(1, solar.sunsetMinutes - solar.sunriseMinutes);
         const elevation = Math.sin(Math.PI * daylightProgress);
         return {
             y: `${112 - elevation * 122}%`,
-            coreAlpha: (0.12 + elevation * 0.62).toFixed(3),
-            sideAlpha: (0.06 + elevation * 0.42).toFixed(3),
-            mistAlpha: (0.025 + elevation * 0.21).toFixed(3)
+            coreAlpha: (0.13 + elevation * 0.61).toFixed(3),
+            sideAlpha: (0.06 + elevation * 0.40).toFixed(3),
+            mistAlpha: (0.028 + elevation * 0.20).toFixed(3),
+            starsOpacity: starsOpacity.toFixed(3),
+            isNight: false
         };
     }
 
+    // A színpontok naponta a tényleges napkelte és napnyugta köré rendeződnek.
     function getHomeAuroraColors(now) {
         const minute = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
-        let from = homeAuroraPalette[0];
-        let to = homeAuroraPalette[homeAuroraPalette.length - 1];
-        for (let i = 0; i < homeAuroraPalette.length - 1; i++) {
-            if (minute >= homeAuroraPalette[i].minute && minute <= homeAuroraPalette[i + 1].minute) {
-                from = homeAuroraPalette[i];
-                to = homeAuroraPalette[i + 1];
+        const solar = getHomeSolarDay(now);
+        const sunrise = solar.sunriseMinutes;
+        const sunset = solar.sunsetMinutes;
+        const solarNoon = (sunrise + sunset) / 2;
+        const palette = [
+            { minute: 0, colors: [[1,3,10],[5,11,29],[12,20,61],[34,42,106],[8,45,82],[48,35,102]] },
+            { minute: clampHomeMinute(sunrise - 115), colors: [[1,3,10],[5,11,29],[12,20,61],[34,42,106],[8,45,82],[48,35,102]] },
+            { minute: clampHomeMinute(sunrise - 32), colors: [[18,16,61],[72,31,133],[159,48,179],[231,83,151],[41,95,163],[230,137,85]] },
+            { minute: clampHomeMinute(sunrise + 48), colors: [[67,42,170],[205,61,190],[255,112,157],[255,181,91],[37,176,203],[249,111,99]] },
+            { minute: clampHomeMinute(sunrise + 145), colors: [[27,124,214],[15,205,214],[113,92,239],[239,105,185],[38,191,176],[250,193,104]] },
+            { minute: solarNoon, colors: [[20,145,221],[16,211,214],[112,76,235],[242,98,189],[24,198,170],[250,184,91]] },
+            { minute: clampHomeMinute(sunset - 108), colors: [[26,115,211],[34,183,218],[132,63,229],[238,74,185],[34,173,171],[251,141,85]] },
+            { minute: clampHomeMinute(sunset + 24), colors: [[72,31,151],[186,47,190],[244,76,161],[252,134,95],[43,98,170],[246,185,84]] },
+            { minute: clampHomeMinute(sunset + 118), colors: [[8,14,44],[24,26,94],[57,40,136],[143,51,137],[11,70,104],[89,54,128]] },
+            { minute: 1440, colors: [[1,3,10],[5,11,29],[12,20,61],[34,42,106],[8,45,82],[48,35,102]] }
+        ].sort((a, b) => a.minute - b.minute);
+        let from = palette[0];
+        let to = palette[palette.length - 1];
+        for (let i = 0; i < palette.length - 1; i++) {
+            if (minute >= palette[i].minute && minute <= palette[i + 1].minute) {
+                from = palette[i];
+                to = palette[i + 1];
                 break;
             }
         }
@@ -1823,13 +1906,22 @@
         home.style.setProperty('--home-aurora-b', colors[1].join(', '));
         home.style.setProperty('--home-aurora-c', colors[2].join(', '));
         home.style.setProperty('--home-aurora-d', colors[3].join(', '));
+        home.style.setProperty('--home-aurora-e', colors[4].join(', '));
+        home.style.setProperty('--home-aurora-f', colors[5].join(', '));
         home.style.setProperty('--home-tint-rgb', colors[2].join(', '));
         home.style.setProperty('--home-accent-rgb', colors[3].join(', '));
-        const horizon = getHorizonState(now);
+        const horizon = getHomeHorizonState(now);
         home.style.setProperty('--horizon-y', horizon.y);
         home.style.setProperty('--horizon-core-alpha', horizon.coreAlpha);
         home.style.setProperty('--horizon-side-alpha', horizon.sideAlpha);
         home.style.setProperty('--horizon-mist-alpha', horizon.mistAlpha);
+        home.style.setProperty('--home-stars-opacity', horizon.starsOpacity);
+        const daylightPower = horizon.isNight ? .12 : Math.max(.30, Math.min(.55, Number(horizon.coreAlpha) * .72));
+        home.style.setProperty('--home-layer-strong', (horizon.isNight ? .13 : daylightPower * .84).toFixed(3));
+        home.style.setProperty('--home-layer-medium', (horizon.isNight ? .095 : daylightPower * .68).toFixed(3));
+        home.style.setProperty('--home-layer-soft', (horizon.isNight ? .055 : daylightPower * .43).toFixed(3));
+        home.style.setProperty('--home-layer-ground', (horizon.isNight ? .08 : daylightPower * .56).toFixed(3));
+        home.classList.toggle('is-night-sky', horizon.isNight);
     }
 
     function updateActiveShiftStatus(now) {
@@ -2190,11 +2282,11 @@
     const activeShiftPremiumMotionPatterns = [
         { duration: 2260, easing: 'cubic-bezier(.15,.84,.24,1)', frames: [{ transform: 'translate3d(0,0,0) rotate(0) scale(1)' }, { offset: .18, transform: 'translate3d(-20px,-11px,0) rotate(-28deg) scale(1.11,.9)' }, { offset: .44, transform: 'translate3d(23px,6px,0) rotate(42deg) scale(.92,1.13)' }, { offset: .72, transform: 'translate3d(-11px,-4px,0) rotate(-16deg) scale(1.06,.96)' }, { transform: 'translate3d(0,0,0) rotate(0) scale(1)' }] },
         { duration: 2550, easing: 'cubic-bezier(.18,.8,.24,1)', frames: [{ transform: 'perspective(280px) rotateX(0) rotateZ(0) scale(1)' }, { offset: .2, transform: 'perspective(280px) rotateX(68deg) rotateZ(-55deg) scale(1.05,.78)' }, { offset: .48, transform: 'perspective(280px) rotateX(-62deg) rotateZ(290deg) scale(.88,1.16)' }, { offset: .76, transform: 'perspective(280px) rotateX(24deg) rotateZ(676deg) scale(1.08,.92)' }, { transform: 'perspective(280px) rotateX(0) rotateZ(720deg) scale(1)' }] },
-        { duration: 2940, easing: 'cubic-bezier(.18,.69,.26,1)', frames: [{ transform: 'translate3d(0,0,0) rotate(0) scale(1)' }, { offset: .15, transform: 'translate3d(22px,10px,0) rotate(105deg) scale(.91)' }, { offset: .31, transform: 'translate3d(-25px,25vh,0) rotate(-205deg) scale(.82)' }, { offset: .48, transform: 'translate3d(22px,14vh,0) rotate(188deg) scale(.9)' }, { offset: .66, transform: 'translate3d(-14px,6vh,0) rotate(-84deg) scale(.98)' }, { offset: .82, transform: 'translate3d(5px,5px,0) rotate(17deg) scale(1.03)' }, { transform: 'translate3d(0,0,0) rotate(0) scale(1)' }] },
+        { duration: 2940, easing: 'cubic-bezier(.18,.69,.26,1)', frames: [{ transform: 'translate3d(0,0,0) rotate(0) scale(1,1)' }, { offset: .15, transform: 'translate3d(20px,8px,0) rotate(105deg) scale(.9,1.1)' }, { offset: .31, transform: 'translate3d(-26px,18px,0) rotate(-205deg) scale(.57,1.62)' }, { offset: .48, transform: 'translate3d(21px,-12px,0) rotate(188deg) scale(1.42,.62)' }, { offset: .66, transform: 'translate3d(-16px,10px,0) rotate(-84deg) scale(.83,1.24)' }, { offset: .82, transform: 'translate3d(5px,3px,0) rotate(17deg) scale(1.05,.97)' }, { transform: 'translate3d(0,0,0) rotate(0) scale(1,1)' }] },
         { duration: 2420, easing: 'cubic-bezier(.15,.86,.26,1)', frames: [{ opacity: 1, transform: 'translate3d(0,0,0) rotate(0) scale(1)' }, { offset: .17, opacity: 1, transform: 'translate3d(-12px,-17px,0) rotate(-35deg) scale(1.12)' }, { offset: .42, opacity: .96, transform: 'translate3d(18px,10px,0) rotate(210deg) scale(.62,1.25)' }, { offset: .64, opacity: 1, transform: 'translate3d(-8px,-8px,0) rotate(505deg) scale(1.18,.78)' }, { offset: .84, opacity: 1, transform: 'translate3d(3px,3px,0) rotate(690deg) scale(.97,1.03)' }, { opacity: 1, transform: 'translate3d(0,0,0) rotate(720deg) scale(1)' }] },
-        { duration: 3100, easing: 'cubic-bezier(.16,.72,.24,1)', frames: [{ opacity: 0, transform: 'translate3d(-18px,-78vh,0) rotate(-96deg) scale(.46)' }, { offset: .36, opacity: 1, transform: 'translate3d(8px,17px,0) rotate(18deg) scale(1.34,.68)' }, { offset: .56, opacity: 1, transform: 'translate3d(-6px,-13px,0) rotate(-12deg) scale(.9,1.15)' }, { offset: .78, opacity: 1, transform: 'translate3d(3px,5px,0) rotate(6deg) scale(1.05,.96)' }, { opacity: 1, transform: 'translate3d(0,0,0) rotate(0) scale(1)' }] },
+        { duration: 3100, easing: 'cubic-bezier(.16,.72,.24,1)', frames: [{ opacity: 1, transform: 'translate3d(0,0,0) rotate(0) scale(1,1)' }, { offset: .18, opacity: 1, transform: 'translate3d(-18px,-15px,0) rotate(-96deg) scale(.52,1.48)' }, { offset: .4, opacity: 1, transform: 'translate3d(15px,17px,0) rotate(156deg) scale(1.42,.64)' }, { offset: .61, opacity: 1, transform: 'translate3d(-9px,-12px,0) rotate(-42deg) scale(.88,1.17)' }, { offset: .8, opacity: 1, transform: 'translate3d(4px,5px,0) rotate(9deg) scale(1.06,.95)' }, { opacity: 1, transform: 'translate3d(0,0,0) rotate(0) scale(1,1)' }] },
         { duration: 2780, easing: 'cubic-bezier(.12,.78,.26,1)', frames: [{ transform: 'translate3d(0,0,0) scale(1)' }, { offset: .15, transform: 'translate3d(-18px,0,0) rotate(-16deg) scale(1.1,.87)' }, { offset: .34, transform: 'translate3d(24px,-17px,0) rotate(30deg) scale(.76,1.32)' }, { offset: .54, transform: 'translate3d(-20px,13px,0) rotate(-39deg) scale(1.28,.72)' }, { offset: .76, transform: 'translate3d(10px,-4px,0) rotate(14deg) scale(.93,1.08)' }, { transform: 'translate3d(0,0,0) rotate(0) scale(1)' }] },
-        { duration: 3380, easing: 'cubic-bezier(.2,.03,.62,.62)', frames: [{ opacity: 1, transform: 'translate3d(0,0,0) rotate(0) scale(1)' }, { offset: .1, opacity: 1, transform: 'translate3d(7px,-8px,0) rotate(24deg) scale(1.08)' }, { offset: .3, opacity: 1, transform: 'translate3d(-17px,20vh,0) rotate(-138deg) scale(.95)' }, { offset: .45, opacity: 0, transform: 'translate3d(21px,92vh,0) rotate(720deg) scale(.68)' }, { offset: .54, opacity: 0, transform: 'translate3d(-15px,-95vh,0) rotate(-420deg) scale(.67)' }, { offset: .74, opacity: 1, transform: 'translate3d(10px,-19vh,0) rotate(-98deg) scale(.94)' }, { offset: .9, opacity: 1, transform: 'translate3d(-4px,7px,0) rotate(11deg) scale(1.04)' }, { opacity: 1, transform: 'translate3d(0,0,0) rotate(0) scale(1)' }] }
+        { duration: 3380, easing: 'cubic-bezier(.2,.03,.62,.62)', frames: [{ opacity: 1, transform: 'perspective(300px) translate3d(0,0,0) rotate(0) scale(1,1)' }, { offset: .1, opacity: 1, transform: 'perspective(300px) translate3d(8px,-8px,0) rotate(24deg) scale(1.1,.92)' }, { offset: .27, opacity: 1, transform: 'perspective(300px) translate3d(-23px,15px,0) rotate(-138deg) scale(.61,1.5)' }, { offset: .46, opacity: 1, transform: 'perspective(300px) translate3d(24px,-18px,0) rotate(360deg) scale(1.46,.57)' }, { offset: .64, opacity: 1, transform: 'perspective(300px) translate3d(-16px,12px,0) rotate(-160deg) scale(.74,1.32)' }, { offset: .81, opacity: 1, transform: 'perspective(300px) translate3d(9px,-6px,0) rotate(42deg) scale(1.14,.9)' }, { opacity: 1, transform: 'perspective(300px) translate3d(0,0,0) rotate(0) scale(1,1)' }] }
     ];
     let activeShiftMotionBag = [];
     let activeShiftLastPremiumMotion = -1;
@@ -2252,13 +2344,13 @@
             return startActiveShiftAnimation(letter, [
                 { opacity: 1, transform: 'translate3d(0,0,0) rotate(0) scale(1)' },
                 { offset: .1, opacity: 1, transform: 'translate3d(5px,-7px,0) rotate(20deg) scale(1.06)' },
-                { offset: .28, opacity: 1, transform: 'translate3d(-13px,19vh,0) rotate(-128deg) scale(.96)' },
-                { offset: .42, opacity: 0, transform: 'translate3d(18px,94vh,0) rotate(720deg) scale(.72)' },
-                { offset: .5, opacity: 0, transform: 'translate3d(-14px,-98vh,0) rotate(-440deg) scale(.72)' },
-                { offset: .72, opacity: 1, transform: 'translate3d(9px,-20vh,0) rotate(-112deg) scale(.96)' },
+                { offset: .28, opacity: 1, transform: 'translate3d(-22px,18px,0) rotate(-128deg) scale(.58,1.52)' },
+                { offset: .44, opacity: 1, transform: 'translate3d(25px,-15px,0) rotate(320deg) scale(1.48,.6)' },
+                { offset: .62, opacity: 1, transform: 'translate3d(-13px,11px,0) rotate(-112deg) scale(.76,1.3)' },
+                { offset: .76, opacity: 1, transform: 'translate3d(9px,-7px,0) rotate(42deg) scale(1.11,.92)' },
                 { offset: .88, opacity: 1, transform: 'translate3d(-3px,6px,0) rotate(12deg) scale(1.04)' },
                 { opacity: 1, transform: 'translate3d(0,0,0) rotate(0) scale(1)' }
-            ], { duration: 3340, easing: 'cubic-bezier(.25,.02,.68,.48)' });
+            ], { duration: 2820, easing: 'cubic-bezier(.25,.02,.68,.48)' });
         }
         if (motionIndex === meltMotionIndex) {
             playActiveShiftMelting(letter);
@@ -2274,17 +2366,17 @@
         if (motionIndex === bounceDropMotionIndex) {
             return startActiveShiftAnimation(letter, [
                 { transform: 'translate3d(0,0,0) rotate(0) scale(1)' },
-                { offset: .18, transform: 'translate3d(10px,13vh,0) rotate(110deg) scale(.94)' },
-                { offset: .36, transform: 'translate3d(-15px,27vh,0) rotate(-220deg) scale(.86)' },
-                { offset: .5, transform: 'translate3d(13px,20vh,0) rotate(150deg) scale(.92)' },
-                { offset: .64, transform: 'translate3d(-8px,12vh,0) rotate(-92deg) scale(.97)' },
+                { offset: .18, transform: 'translate3d(18px,12px,0) rotate(110deg) scale(.72,1.34)' },
+                { offset: .36, transform: 'translate3d(-24px,-17px,0) rotate(-220deg) scale(1.42,.63)' },
+                { offset: .5, transform: 'translate3d(18px,15px,0) rotate(150deg) scale(.68,1.45)' },
+                { offset: .64, transform: 'translate3d(-11px,-9px,0) rotate(-92deg) scale(1.16,.86)' },
                 { offset: .8, transform: 'translate3d(4px,4px,0) rotate(18deg) scale(1.03)' },
                 { transform: 'translate3d(0,0,0) rotate(0) scale(1)' }
             ], { duration: 2760, easing: 'cubic-bezier(.22,.64,.35,1)' });
         }
         if (motionIndex === skyStampMotionIndex) {
             return startActiveShiftAnimation(letter, [
-                { opacity: 0, transform: 'translate3d(-7px,-72vh,0) rotate(-68deg) scale(.7)' },
+                { opacity: 1, transform: 'translate3d(-18px,-18px,0) rotate(-68deg) scale(.48,1.42)' },
                 { offset: .38, opacity: 1, transform: 'translate3d(5px,12px,0) rotate(16deg) scale(1.19,.78)' },
                 { offset: .56, opacity: 1, transform: 'translate3d(-3px,-8px,0) rotate(-8deg) scale(.96,1.09)' },
                 { offset: .76, opacity: 1, transform: 'translate3d(2px,3px,0) rotate(4deg) scale(1.03,.98)' },
