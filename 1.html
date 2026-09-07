@@ -1216,10 +1216,13 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
         
         if(window.innerWidth >= 1024) scheduleSuggest(v);
         
+        // Telefonon a két karakteres, nagyon széles találat ne a következő
+        // billentyűleütés közben kezdje el felépíteni a kártyákat.
+        const searchDelay=window.innerWidth < 1024 ? 700 : 350;
         keresIdozito=setTimeout(()=>{
             const currentValue=inp.value.toUpperCase();
             if(revision===searchRevision && currentValue===v) keres(v);
-        },350);
+        },searchDelay);
     };
     window.processSearchInput=handleSearchInput;
     inp.addEventListener('input',handleSearchInput);
@@ -1758,6 +1761,13 @@ function enterKey() {
     if(inp.value.length > 0) {
         searchFinalized = true;
         inp.classList.add('search-ready');
+        if(inp.value.length >= 2) {
+            // Enter esetén a kezelő egyértelműen lezárta a gépelést, ezért a
+            // mobilos várakozás nélkül is azonnal megjelenhet a találat.
+            clearTimeout(keresIdozito);
+            searchRevision++;
+            keres(inp.value.toUpperCase());
+        }
     }
 }
 
