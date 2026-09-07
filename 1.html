@@ -1084,6 +1084,9 @@ input.suggestions-active {
 document.addEventListener("touchstart", function() {}, {passive: true});
 
 let bank=[],ultetes=[],idSet=new Set(),uniqueIdsArr=[],keresIdozito=null,searchHistory=JSON.parse(localStorage.getItem('searchHistory')||"[]");
+// A keresési mező kizárólag ebből az előkészített, változatlan tartalmú nézetből dolgozik.
+// Így gépelés közben nem kell minden sor minden mezőjét újra nagybetűssé alakítani.
+let bankSearchIndex=[],ultetesSearchIndex=[],searchRevision=0,suggestFrame=null,suggestValue='';
 let searchFinalized = false;
 // Teljes cikkszám kártyáról vagy javaslatból történő választásakor csak pontos egyezést listázunk.
 let exactSelectedPartCode = null;
@@ -1094,6 +1097,8 @@ window.setBeultetesSzuro = function(val) {
     if(typeof provideFeedback === 'function') provideFeedback(); 
     beultetesSzuro = val;
     const inp = document.getElementById('keres');
+    clearTimeout(keresIdozito);
+    searchRevision++;
     keres(inp.value.toUpperCase()); 
 };
 
@@ -1127,6 +1132,8 @@ window.clearSearch = function() {
     exactSelectedPartCode = null;
     const inp = document.getElementById('keres');
     inp.value = ''; 
+    clearTimeout(keresIdozito);
+    searchRevision++;
     searchFinalized = false; 
     inp.classList.remove('search-ready'); 
     inp.classList.remove('suggestions-active');
@@ -1152,6 +1159,14 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
     bank.forEach(r=>r[2]&&idSet.add(r[2].toUpperCase()));
     ultetes.forEach(r=>r[0]&&idSet.add(r[0].toUpperCase()));
     uniqueIdsArr=Array.from(idSet);
+    bankSearchIndex=bank.map(row=>{
+        const normalizedRow=row.map(value=>String(value||'').toUpperCase());
+        return { row:normalizedRow, code:normalizedRow[2]||'' };
+    }).filter(entry=>entry.code);
+    ultetesSearchIndex=ultetes.map(row=>{
+        const normalizedRow=row.map(value=>String(value||'').toUpperCase());
+        return { row:normalizedRow, code:normalizedRow[0]||'' };
+    }).filter(entry=>entry.code);
     
     const inp=document.getElementById('keres');
     const clearBtn = document.getElementById('clearBtn');
@@ -1177,8 +1192,10 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
     renderHistory(); 
     calculateStats(); 
     
-    inp.addEventListener('input',function(){
-        const v=this.value.toUpperCase();
+    const handleSearchInput=function(){
+        const v=inp.value.toUpperCase();
+        const revision=++searchRevision;
+        clearTimeout(keresIdozito);
         if(v.trim() !== exactSelectedPartCode) exactSelectedPartCode = null;
         clearBtn.style.display = v.length > 0 ? 'block' : 'none';
         
@@ -1187,21 +1204,25 @@ Promise.all([fetch('bank.csv').then(r=>r.text()),fetch('ultetes.csv').then(r=>r.
 
         if(v.length === 0) {
             searchFinalized = false;
-            this.classList.remove('suggestions-active');
+            inp.classList.remove('suggestions-active');
         }
         
         if(v.length<2){ 
             document.getElementById('suggest').style.display='none'; 
             document.getElementById('eredmeny').innerHTML=''; 
-            this.classList.remove('suggestions-active');
+            inp.classList.remove('suggestions-active');
             return;
         }
         
-        if(window.innerWidth >= 1024) updateSuggest(v);
+        if(window.innerWidth >= 1024) scheduleSuggest(v);
         
-        clearTimeout(keresIdozito); 
-        keresIdozito=setTimeout(()=>keres(v),350);
-    });
+        keresIdozito=setTimeout(()=>{
+            const currentValue=inp.value.toUpperCase();
+            if(revision===searchRevision && currentValue===v) keres(v);
+        },350);
+    };
+    window.processSearchInput=handleSearchInput;
+    inp.addEventListener('input',handleSearchInput);
 
     inp.addEventListener('blur', function() {
         setTimeout(() => {
@@ -1296,8 +1317,22 @@ function updateSuggest(v){
     }
 }
 
+// Gyors gépelésnél legfeljebb képernyőfrissítésenként egyszer rajzoljuk újra a
+// javaslatokat. A lista és a találati szabályok változatlanok maradnak.
+function scheduleSuggest(v){
+    suggestValue=v;
+    if(suggestFrame!==null) return;
+    suggestFrame=requestAnimationFrame(()=>{
+        suggestFrame=null;
+        const currentValue=document.getElementById('keres').value.toUpperCase();
+        if(currentValue.length>=2 && currentValue===suggestValue) updateSuggest(currentValue);
+    });
+}
+
 window.selectSuggest=function(c){ 
     const i=document.getElementById('keres'); 
+    clearTimeout(keresIdozito);
+    searchRevision++;
     exactSelectedPartCode=String(c || '').trim().toUpperCase();
     i.value=c; 
     document.getElementById('suggest').style.display='none'; 
@@ -1315,6 +1350,8 @@ window.selectExactBankPart=function(code){
     const selectedCode=String(code || '').trim().toUpperCase();
     if(!selectedCode) return;
     const i=document.getElementById('keres');
+    clearTimeout(keresIdozito);
+    searchRevision++;
     exactSelectedPartCode=selectedCode;
     i.value=selectedCode;
     document.getElementById('suggest').style.display='none';
@@ -1346,14 +1383,14 @@ function keres(k){
     if(k.length<2)return;
     let h='';
     
-    let bT_raw = bank.filter(r=>r[2]&&(exactPartSearch ? r[2].toUpperCase()===k : r[2].toUpperCase().includes(k)));
+    let bT_raw = bankSearchIndex.filter(entry=>exactPartSearch ? entry.code===k : entry.code.includes(k));
     
     if(bT_raw.length){
         let seenBank = new Set();
         let bT_dedup = [];
         
-        for(let r of bT_raw) {
-            let upperRow = r.map(x => (x || "").toUpperCase());
+        for(let entry of bT_raw) {
+            let upperRow = entry.row;
             let stringifiedRow = upperRow.join('|'); 
             
             if(!seenBank.has(stringifiedRow)) {
@@ -1384,13 +1421,13 @@ function keres(k){
         });
     }
     
-    let uT_raw = ultetes.filter(r=>r[0]&&(exactPartSearch ? r[0].toUpperCase()===k : r[0].toUpperCase().includes(k)));
+    let uT_raw = ultetesSearchIndex.filter(entry=>exactPartSearch ? entry.code===k : entry.code.includes(k));
     
     if(uT_raw.length > 0){
         let seen = new Set();
         let uT_dedup = [];
-        for(let r of uT_raw) {
-            let upperRow = r.map(x => (x || "").toUpperCase());
+        for(let entry of uT_raw) {
+            let upperRow = entry.row;
             let stringifiedRow = upperRow.join('|'); 
             
             if(!seen.has(stringifiedRow)) {
@@ -1450,6 +1487,7 @@ function keres(k){
     }
     
     e.innerHTML=h||`<div style="text-align:center; padding:30px; color:#64748b;">Nincs találat: "${k}"</div>`;
+    decorateBankResults();
 }
 
 window.openModelModal = function(modelName) {
@@ -1908,7 +1946,8 @@ function createTipsInterface() {
 }
 
 createTipsInterface();
-new MutationObserver(decorateBankResults).observe(document.getElementById('eredmeny'), { childList: true });
+// A kereső közvetlenül a kirajzolás után készíti elő a Bank-kártyákat.
+// Ez ugyanazt a működést adja, de a MutationObserver plusz feldolgozási köre nélkül.
 
 window.openModelModal = function(modelName) {
     if (typeof provideFeedback === 'function') provideFeedback();
@@ -2098,9 +2137,7 @@ function createModelsExplorer() {
 createModelsExplorer();
 
 function triggerSearch() {
-    const inp = document.getElementById('keres');
-    const event = new Event('input', { bubbles: true, cancelable: true });
-    inp.dispatchEvent(event);
+    if(typeof window.processSearchInput === 'function') window.processSearchInput();
 }
 </script>
 </body>
