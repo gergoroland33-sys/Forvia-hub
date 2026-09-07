@@ -38,7 +38,7 @@
   const value=(row,field)=>{const found=aliases[field].find(name=>Object.prototype.hasOwnProperty.call(row,name));return found?row[found]:''};
   const makeBank=rows=>rows.map(row=>({machine:value(row,'machine'),location:value(row,'location'),part:value(row,'part'),model:value(row,'model')})).filter(row=>row.machine&&row.location&&row.part&&row.model);
   const makePlacement=rows=>rows.map(row=>({part:value(row,'part'),side:value(row,'side').toUpperCase(),model:value(row,'model'),count:Number(String(value(row,'count')).replace(',','.'))||0})).filter(row=>row.part&&row.model);
-  const readRelative=async(kind)=>{const fileName=kind==='bank'?'bank.csv':'ultetes.csv';const response=await fetch(fileName);if(!response.ok)throw new Error(`${fileName} nem tölthető be (${response.status}).`);const rows=parseCsv(await response.text());const data=kind==='bank'?makeBank(rows):makePlacement(rows);if(!data.length)throw new Error(`${fileName} nem tartalmaz érvényes adatot.`);return data};
+  const readRelative=async(kind)=>{const fileName=kind==='bank'?'bank.csv':'ultetes.csv';const response=await fetch(fileName,{cache:'no-store'});if(!response.ok)throw new Error(`${fileName} nem tölthető be (${response.status}).`);const rows=parseCsv(await response.text());const data=kind==='bank'?makeBank(rows):makePlacement(rows);if(!data.length)throw new Error(`${fileName} nem tartalmaz érvényes adatot.`);return data};
   const unique=items=>[...new Set(items.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'hu'));
   const positionKey=row=>`${row.machine}|${row.location}`;
   let modelNames=[];
