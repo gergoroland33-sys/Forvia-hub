@@ -121,14 +121,31 @@
         @keyframes pulseBell { 0% {box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5);} 70% {box-shadow: 0 0 0 6px rgba(220, 38, 38, 0);} 100% {box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);} }
         
         .notification-popup {
-            display: none; position: absolute; top: 120%; right: 0; width: 320px;
-            background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            border: 2px solid var(--border); z-index: 1001; padding: 15px; cursor: default;
+            display: none; position: absolute; top: 120%; right: 0; width: min(410px, calc(100vw - 30px));
+            max-height: min(68dvh, 650px); background: white; border-radius: 14px; overflow: hidden;
+            box-shadow: 0 16px 42px rgba(15,23,42,0.24); border: 2px solid var(--border); z-index: 1001; cursor: default;
         }
-        .notif-title { font-weight: 900; font-size: 0.95rem; margin-bottom: 12px; color: var(--primary-dark); border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; text-transform: uppercase;}
-        .notif-shift-group { margin-bottom: 12px; }
-        .notif-shift-header { font-size: 0.75rem; color: #94a3b8; font-weight: 900; text-transform: uppercase; margin-bottom: 6px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 4px; }
-        .notif-item { font-size: 0.85rem; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; font-weight: 700;}
+        .notif-header { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:13px 14px 11px; border-bottom:2px solid #eef2f7; background:linear-gradient(135deg,#f8fbff,#eef6ff); }
+        .notif-title { font-weight:900; font-size:.84rem; color:var(--primary-dark); text-transform:uppercase; letter-spacing:.05em; }
+        .notif-clear { border:1px solid #fecaca; border-radius:8px; background:#fff1f2; color:#be123c; padding:7px 9px; font:inherit; font-size:.67rem; font-weight:900; cursor:pointer; white-space:nowrap; transition:transform .16s ease, background .16s ease; }
+        .notif-clear:hover { background:#ffe4e6; }
+        .notif-clear:active { transform:scale(.96); }
+        .notif-content { overflow-y:auto; max-height:calc(min(68dvh, 650px) - 58px); padding:10px; overscroll-behavior:contain; }
+        .notif-day-card { margin-bottom:10px; overflow:hidden; border:1px solid #dbe7f5; border-radius:11px; background:#fff; box-shadow:0 3px 10px rgba(15,23,42,.05); }
+        .notif-day-card:last-child { margin-bottom:0; }
+        .notif-day-header { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 10px; color:#123b6d; background:linear-gradient(100deg,#eaf4ff,#f7fbff); border-bottom:1px solid #dbeafe; }
+        .notif-day-date { font-size:.76rem; font-weight:900; line-height:1.25; }
+        .notif-day-total { flex:0 0 auto; padding:3px 7px; border-radius:999px; color:#1d4ed8; background:#dbeafe; font-size:.61rem; font-weight:900; }
+        .notif-day-body { padding:8px; }
+        .notif-shift-group { margin-bottom:7px; padding:8px; border:1px solid #edf2f7; border-radius:8px; background:#fbfdff; }
+        .notif-shift-group:last-child { margin-bottom:0; }
+        .notif-shift-header { display:flex; align-items:center; justify-content:space-between; gap:8px; color:#64748b; font-size:.68rem; font-weight:900; text-transform:uppercase; letter-spacing:.03em; }
+        .notif-shift-lines { color:#94a3b8; font-size:.6rem; white-space:nowrap; }
+        .notif-metrics { display:flex; flex-wrap:wrap; gap:6px; margin-top:7px; }
+        .notif-item { display:inline-flex; align-items:center; gap:5px; margin:0; padding:5px 7px; border-radius:7px; font-size:.69rem; font-weight:900; }
+        .notif-item.disable { color:#b91c1c; background:#fff1f2; }
+        .notif-item.enable { color:#047857; background:#ecfdf5; }
+        .notif-empty { padding:22px 12px; color:#94a3b8; text-align:center; font-size:.78rem; font-weight:800; line-height:1.5; }
 
         /* --- MODERN SEGMENTED CONTROL (VÁLTÓKAPCSOLÓ PRÉMIUM IPARI VERZIÓ - LÁGYÍTVA) --- */
         .nav-tabs {
@@ -338,8 +355,9 @@
                 position: fixed;
                 top: 55px;
                 right: 15px;
-                width: 320px;
-                max-width: calc(100vw - 30px);
+                width: calc(100vw - 30px);
+                max-width: 410px;
+                max-height: calc(100dvh - 75px);
                 transform: none;
             }
 
@@ -420,8 +438,11 @@
                     <span id="bellBadge" class="bell-badge">0</span>
                 </button>
                 <div id="notificationPopup" class="notification-popup">
-                    <div class="notif-title">Új Események</div>
-                    <div id="notifContent">Nincs új esemény.</div>
+                    <div class="notif-header">
+                        <div class="notif-title">Értesítési előzmények</div>
+                        <button type="button" class="notif-clear" onclick="clearNotificationHistory()" title="Csak ezen az eszközön üríti az értesítési nézetet">🗑 Kiürítés</button>
+                    </div>
+                    <div id="notifContent" class="notif-content">Értesítések betöltése…</div>
                 </div>
             </div>
 
@@ -645,6 +666,7 @@
         let mainChart = null; 
         
         let unseenEvents = []; 
+        let notificationEvents = []; // Teljes, dátumozott értesítési előzmény – megnyitáskor nem ürül.
         let lastUnseenCount = 0;
 
         if (!localStorage.getItem('smt_last_seen')) {
@@ -691,17 +713,20 @@
                 
                 onValue(ref(db, 'smt_logs'), (snapshot) => {
                     const logsData = snapshot.val() || {};
-                    unseenEvents = []; 
-                    
                     const lastSeenStr = localStorage.getItem('smt_last_seen');
                     const lastSeenTime = lastSeenStr ? new Date(lastSeenStr).getTime() : 0;
+                    const clearedBeforeStr = localStorage.getItem('smt_notification_cleared_before');
+                    const clearedBeforeTime = clearedBeforeStr ? new Date(clearedBeforeStr).getTime() : 0;
 
-                    Object.values(logsData).forEach(lineLogs => {
-                        Object.values(lineLogs).forEach(log => {
+                    unseenEvents = [];
+                    notificationEvents = [];
+                    Object.entries(logsData).forEach(([line, lineLogs]) => {
+                        Object.values(lineLogs || {}).forEach(log => {
                             const logTime = new Date(log.timestamp).getTime();
-                            if (logTime > lastSeenTime) {
-                                unseenEvents.push(log);
-                            }
+                            if (!Number.isFinite(logTime)) return;
+                            const notification = { ...log, _line: line };
+                            if (logTime > clearedBeforeTime) notificationEvents.push(notification);
+                            if (logTime > lastSeenTime) unseenEvents.push(notification);
                         });
                     });
                     updateBellUI();
@@ -714,67 +739,94 @@
                 document.getElementById("statusDot").className = "status-dot offline";
             });
 
+        function notificationDateKey(timestamp) {
+            const date = new Date(timestamp);
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        function notificationDateLabel(timestamp) {
+            return new Date(timestamp).toLocaleDateString('hu-HU', {
+                year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+            });
+        }
+
+        function renderNotificationHistory() {
+            const popupContent = document.getElementById('notifContent');
+            if (!popupContent) return;
+            if (!notificationEvents.length) {
+                popupContent.innerHTML = '<div class="notif-empty">Nincs megjeleníthető értesítés.<br><small>Az ürítés nem törli a mentett eseménynaplót.</small></div>';
+                return;
+            }
+
+            const days = new Map();
+            notificationEvents.forEach(log => {
+                const dayKey = notificationDateKey(log.timestamp);
+                if (!days.has(dayKey)) days.set(dayKey, { timestamp: log.timestamp, events: [], shifts: new Map() });
+                const day = days.get(dayKey);
+                day.events.push(log);
+                const shift = getShiftInfo(log.timestamp);
+                if (!day.shifts.has(shift)) day.shifts.set(shift, { disable: 0, enable: 0, lines: new Set() });
+                const summary = day.shifts.get(shift);
+                if (log.type === 'DISABLE') summary.disable++;
+                if (log.type === 'ENABLE') summary.enable++;
+                if (log._line) summary.lines.add(log._line);
+            });
+
+            popupContent.innerHTML = [...days.entries()]
+                .sort(([newer], [older]) => older.localeCompare(newer))
+                .map(([, day]) => {
+                    const shiftCards = [...day.shifts.entries()].map(([shift, summary]) => `
+                        <div class="notif-shift-group">
+                            <div class="notif-shift-header"><span>${shift}</span><span class="notif-shift-lines">${[...summary.lines].sort().join(' · ') || 'Gépsor'}</span></div>
+                            <div class="notif-metrics">
+                                ${summary.disable ? `<span class="notif-item disable">🛑 ${summary.disable} szár kikapcsolva</span>` : ''}
+                                ${summary.enable ? `<span class="notif-item enable">✅ ${summary.enable} szár visszakapcsolva</span>` : ''}
+                            </div>
+                        </div>`).join('');
+                    return `<section class="notif-day-card">
+                        <div class="notif-day-header"><span class="notif-day-date">📅 ${notificationDateLabel(day.timestamp)}</span><span class="notif-day-total">${day.events.length} esemény</span></div>
+                        <div class="notif-day-body">${shiftCards}</div>
+                    </section>`;
+                }).join('');
+        }
+
         window.updateBellUI = function() {
             const totalUnseen = unseenEvents.length;
             const badge = document.getElementById('bellBadge');
-            const popupContent = document.getElementById('notifContent');
-            const bellBtn = document.getElementById('mainBellBtn'); // Az animációhoz
-            
-            if (totalUnseen > 0) {
-                // Csak a vibráció maradt, a hangot kivettük
-                if (totalUnseen > lastUnseenCount) {
-                    if (navigator.vibrate) {
-                        navigator.vibrate([200, 100, 200]);
-                    }
-                }
-                lastUnseenCount = totalUnseen;
-
-                bellBtn.classList.add('animating'); // Bekapcsolja a harang vibrálást
-                badge.style.display = 'flex';
-                badge.innerText = totalUnseen > 99 ? '99+' : totalUnseen;
-                
-                let shiftSummary = {};
-                unseenEvents.forEach(log => {
-                    const shift = getShiftInfo(log.timestamp);
-                    if (!shiftSummary[shift]) shiftSummary[shift] = { disable: 0, enable: 0 };
-                    if (log.type === 'DISABLE') shiftSummary[shift].disable++;
-                    if (log.type === 'ENABLE') shiftSummary[shift].enable++;
-                });
-
-                let html = '';
-                for (let shift in shiftSummary) {
-                    html += `<div class="notif-shift-group">
-                                <div class="notif-shift-header">${shift}</div>`;
-                    if (shiftSummary[shift].disable > 0) {
-                        html += `<div class="notif-item">🛑 ${shiftSummary[shift].disable} szár leállítva</div>`;
-                    }
-                    if (shiftSummary[shift].enable > 0) {
-                        html += `<div class="notif-item">✅ ${shiftSummary[shift].enable} szár újra aktív</div>`;
-                    }
-                    html += `</div>`;
-                }
-                
-                popupContent.innerHTML = html;
-            } else {
-                bellBtn.classList.remove('animating'); // Kikapcsolja a harang vibrálást
-                badge.style.display = 'none';
-                popupContent.innerHTML = '<div style="text-align:center; padding: 10px; color: #94a3b8; font-weight:bold;">Nincs új esemény.</div>';
-            }
+            const bellBtn = document.getElementById('mainBellBtn');
+            if (totalUnseen > lastUnseenCount && navigator.vibrate) navigator.vibrate([200, 100, 200]);
+            lastUnseenCount = totalUnseen;
+            bellBtn.classList.toggle('animating', totalUnseen > 0);
+            badge.style.display = totalUnseen > 0 ? 'flex' : 'none';
+            if (totalUnseen > 0) badge.innerText = totalUnseen > 99 ? '99+' : totalUnseen;
+            renderNotificationHistory();
         }
 
         window.toggleNotificationPopup = function() {
             const popup = document.getElementById('notificationPopup');
             if (popup.style.display === 'block') {
                 popup.style.display = 'none';
-                updateBellUI(); 
-            } else {
-                popup.style.display = 'block';
-                localStorage.setItem('smt_last_seen', new Date().toISOString());
-                unseenEvents = []; 
-                lastUnseenCount = 0; // <-- ÚJ RÉSZ: Érték nullázása olvasás után
-                document.getElementById('bellBadge').style.display = 'none';
-                document.getElementById('mainBellBtn').classList.remove('animating'); // Azonnal leáll az animáció
+                return;
             }
+            popup.style.display = 'block';
+            // A megnyitás csak "olvasottnak" jelöli az újakat; az előzményeket nem törli.
+            localStorage.setItem('smt_last_seen', new Date().toISOString());
+            unseenEvents = [];
+            lastUnseenCount = 0;
+            updateBellUI();
+        }
+
+        window.clearNotificationHistory = function() {
+            if (!notificationEvents.length) return;
+            const approved = confirm('Csak ezen az eszközön üríted az értesítési nézetet. A Firebase-ben tárolt eseménynapló és minden mentés megmarad. Folytatod?');
+            if (!approved) return;
+            const now = new Date().toISOString();
+            localStorage.setItem('smt_notification_cleared_before', now);
+            localStorage.setItem('smt_last_seen', now);
+            notificationEvents = [];
+            unseenEvents = [];
+            lastUnseenCount = 0;
+            updateBellUI();
         }
 
         document.addEventListener('click', function(event) {
@@ -796,10 +848,6 @@
             if(tabName === 'monitor') renderDashboard(); 
             if(tabName === 'history') {
                 loadHistoryData();
-                localStorage.setItem('smt_last_seen', new Date().toISOString());
-                unseenEvents = []; 
-                lastUnseenCount = 0; // <-- ÚJ RÉSZ: Érték nullázása olvasás után
-                updateBellUI();
             }
         }
 
