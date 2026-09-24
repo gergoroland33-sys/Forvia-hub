@@ -740,12 +740,15 @@
             });
 
         function notificationDateKey(timestamp) {
-            const date = new Date(timestamp);
+            const date = getShiftLogicalDate(timestamp);
+            if (!date) return 'ismeretlen-datum';
             return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
         }
 
         function notificationDateLabel(timestamp) {
-            return new Date(timestamp).toLocaleDateString('hu-HU', {
+            const date = getShiftLogicalDate(timestamp);
+            if (!date) return 'Ismeretlen dátum';
+            return date.toLocaleDateString('hu-HU', {
                 year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
             });
         }
@@ -784,7 +787,7 @@
                             </div>
                         </div>`).join('');
                     return `<section class="notif-day-card">
-                        <div class="notif-day-header"><span class="notif-day-date">📅 ${notificationDateLabel(day.timestamp)}</span><span class="notif-day-total">${day.events.length} esemény</span></div>
+                        <div class="notif-day-header"><span class="notif-day-date">📅 ${notificationDateLabel(day.timestamp)} · Műszak kezdőnapja</span><span class="notif-day-total">${day.events.length} esemény</span></div>
                         <div class="notif-day-body">${shiftCards}</div>
                     </section>`;
                 }).join('');
@@ -930,19 +933,23 @@
             });
         }
 
+        function getShiftLogicalDate(timestamp) {
+            if (!timestamp) return null;
+            const sourceDate = new Date(timestamp);
+            if (!Number.isFinite(sourceDate.getTime())) return null;
+            const logicalDate = new Date(sourceDate);
+            // Az éjszakás műszak 18:00-kor indul és másnap 06:00-ig tart.
+            // Éjfél után ezért még az előző műszakkezdési naphoz tartozik.
+            if (sourceDate.getHours() < 6) logicalDate.setDate(logicalDate.getDate() - 1);
+            return logicalDate;
+        }
+
         function getShiftInfo(timestamp) {
-            if (!timestamp) return "Ismeretlen műszak";
             const d = new Date(timestamp);
-            let logicalDate = new Date(d);
+            const logicalDate = getShiftLogicalDate(timestamp);
+            if (!logicalDate || !Number.isFinite(d.getTime())) return "Ismeretlen műszak";
             const hour = d.getHours();
-            
-            let isNight = false;
-            if (hour >= 18) {
-                isNight = true;
-            } else if (hour < 6) {
-                isNight = true;
-                logicalDate.setDate(logicalDate.getDate() - 1);
-            }
+            const isNight = hour >= 18 || hour < 6;
             
             const utcLogical = Date.UTC(logicalDate.getFullYear(), logicalDate.getMonth(), logicalDate.getDate());
             const utcAnchor = Date.UTC(2026, 3, 9); 
