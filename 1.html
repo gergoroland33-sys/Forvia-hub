@@ -207,6 +207,11 @@ input.suggestions-active {
 
 .clickable-card { cursor: pointer; }
 .clickable-card:active { transform: scale(0.98) translateY(0); box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: 0.1s; }
+.bank-result-card { position:relative; }
+.bank-result-card::after { content:'Készlet megnyitása + cikkszám másolása'; position:absolute; left:13px; bottom:7px; color:#93c5fd; font-size:.57rem; font-weight:800; letter-spacing:.035em; opacity:.72; pointer-events:none; }
+.bank-result-card .card-content { padding-bottom:24px; }
+.bank-clipboard-toast { position:fixed; left:50%; bottom:24px; z-index:9999; max-width:calc(100vw - 32px); padding:10px 14px; border:1px solid rgba(110,231,183,.54); border-radius:10px; background:rgba(6,24,36,.96); color:#d1fae5; box-shadow:0 12px 32px rgba(0,0,0,.36); font-size:.76rem; font-weight:800; transform:translate(-50%,16px); opacity:0; pointer-events:none; transition:opacity .18s ease,transform .18s ease; }
+.bank-clipboard-toast.visible { opacity:1; transform:translate(-50%,0); }
 .card-touch-hint { position:absolute; top:5px; right:6px; width:34px; height:34px; pointer-events:none; }
 .bank-result-card:not(.has-touch-hint) .card-touch-hint { display:none; }
 .bank-result-card:not(.has-touch-hint) .card-content { padding-right:15px; }
@@ -1900,6 +1905,70 @@ function printDemandSheet() {
     window.print();
 }
 
+/* --- Feeder Bank készletnyitás: cikkszám másolása és a belső készletlap megnyitása. --- */
+const BANK_STOCK_PAGE_URL = 'https://cheweb.ngc.hu.corp/wh4_datas/WH4-keszletnyilvantartas/pda/Cikkszam-keszlet.php';
+let bankClipboardToastTimer = null;
+
+function showBankClipboardToast(message, isError = false) {
+    let toast = document.getElementById('bankClipboardToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'bankClipboardToast';
+        toast.className = 'bank-clipboard-toast';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.style.borderColor = isError ? 'rgba(252,165,165,.62)' : '';
+    toast.style.color = isError ? '#fecaca' : '';
+    toast.classList.add('visible');
+    clearTimeout(bankClipboardToastTimer);
+    bankClipboardToastTimer = setTimeout(() => toast.classList.remove('visible'), 2800);
+}
+
+function copyBankPartCode(partCode) {
+    const legacyCopy = () => {
+        const helper = document.createElement('textarea');
+        helper.value = partCode;
+        helper.setAttribute('readonly', '');
+        helper.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;';
+        document.body.appendChild(helper);
+        helper.select();
+        let copied = false;
+        try { copied = document.execCommand('copy'); } catch (error) { copied = false; }
+        document.body.removeChild(helper);
+        return copied;
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(partCode)
+            .then(() => showBankClipboardToast(`Cikkszám másolva: ${partCode} · A készletlap új lapon megnyílt.`))
+            .catch(() => {
+                const copied = legacyCopy();
+                showBankClipboardToast(
+                    copied
+                        ? `Cikkszám másolva: ${partCode} · A készletlap új lapon megnyílt.`
+                        : `A készletlap megnyílt, de a másolást a böngésző letiltotta.`,
+                    !copied
+                );
+            });
+        return;
+    }
+
+    const copied = legacyCopy();
+    showBankClipboardToast(
+        copied
+            ? `Cikkszám másolva: ${partCode} · A készletlap új lapon megnyílt.`
+            : `A készletlap megnyílt, de a másolást a böngésző letiltotta.`,
+        !copied
+    );
+}
+
+function openBankStockPage(partCode) {
+    const stockWindow = window.open(BANK_STOCK_PAGE_URL, '_blank', 'noopener');
+    if (stockWindow) stockWindow.opener = null;
+    copyBankPartCode(partCode);
+}
+
 /* --- Kezelési súgó és Feeder Bank mezőkiemelés – hozzáadott funkciók. --- */
 function decorateBankResults() {
     const resultArea = document.getElementById('eredmeny');
@@ -1915,6 +1984,8 @@ function decorateBankResults() {
                 const partCode = String(item.dataset.bankCode || '').trim().toUpperCase();
                 if (!partCode) return;
                 if (typeof provideFeedback === 'function') provideFeedback();
+                openBankStockPage(partCode);
+                // Az eredeti viselkedés is megmarad: a Hub rögtön erre az egy cikkszámra szűkül.
                 window.selectExactBankPart(partCode);
             });
         }
