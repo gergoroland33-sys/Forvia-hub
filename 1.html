@@ -209,6 +209,15 @@ input.suggestions-active {
 .clickable-card:active { transform: scale(0.98) translateY(0); box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: 0.1s; }
 .bank-clipboard-toast { position:fixed; left:50%; bottom:24px; z-index:9999; max-width:calc(100vw - 32px); padding:10px 14px; border:1px solid rgba(110,231,183,.54); border-radius:10px; background:rgba(6,24,36,.96); color:#d1fae5; box-shadow:0 12px 32px rgba(0,0,0,.36); font-size:.76rem; font-weight:800; transform:translate(-50%,16px); opacity:0; pointer-events:none; transition:opacity .18s ease,transform .18s ease; }
 .bank-clipboard-toast.visible { opacity:1; transform:translate(-50%,0); }
+.bank-stock-tab { display:none; }
+@media screen and (max-width:700px) {
+    /* Telefonon a külön fül indítja a készletnyitást; maga a kártya a régi szűrést tartja meg. */
+    .bank-result-card { overflow:visible; margin-right:48px; }
+    .bank-stock-tab { position:absolute; z-index:4; top:50%; right:-44px; display:flex; align-items:center; justify-content:center; width:44px; height:66px; padding:0; transform:translateY(-50%); border:1px solid rgba(96,165,250,.8); border-left:0; border-radius:0 12px 12px 0; color:#dbeafe; background:linear-gradient(145deg,#164a72,#0b2948); box-shadow:8px 5px 16px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.16); touch-action:manipulation; }
+    .bank-stock-tab::before { content:''; position:absolute; left:0; top:13px; bottom:13px; width:1px; background:rgba(147,197,253,.34); }
+    .bank-stock-tab svg { width:22px; height:22px; filter:drop-shadow(0 2px 4px rgba(0,0,0,.38)); }
+    .bank-stock-tab:active { background:#2563a7; transform:translateY(-50%) scale(.94); }
+}
 .card-touch-hint { position:absolute; top:5px; right:6px; width:34px; height:34px; pointer-events:none; }
 .bank-result-card:not(.has-touch-hint) .card-touch-hint { display:none; }
 .bank-result-card:not(.has-touch-hint) .card-content { padding-right:15px; }
@@ -1966,6 +1975,10 @@ function openBankStockPage(partCode) {
     copyBankPartCode(partCode);
 }
 
+function isPhoneBankView() {
+    return window.matchMedia && window.matchMedia('(max-width: 700px)').matches;
+}
+
 /* --- Kezelési súgó és Feeder Bank mezőkiemelés – hozzáadott funkciók. --- */
 function decorateBankResults() {
     const resultArea = document.getElementById('eredmeny');
@@ -1981,10 +1994,32 @@ function decorateBankResults() {
                 const partCode = String(item.dataset.bankCode || '').trim().toUpperCase();
                 if (!partCode) return;
                 if (typeof provideFeedback === 'function') provideFeedback();
+                // Telefonon a teljes, már megszokott kártya kizárólag pontos szűrésre szolgál.
+                if (isPhoneBankView()) {
+                    window.selectExactBankPart(partCode);
+                    return;
+                }
+                // Asztali nézetben a korábbi, kibővített működés marad.
                 openBankStockPage(partCode);
-                // Az eredeti viselkedés is megmarad: a Hub rögtön erre az egy cikkszámra szűkül.
                 window.selectExactBankPart(partCode);
             });
+        }
+        if (item.dataset.bankCode && !item.querySelector('.bank-stock-tab')) {
+            const stockButton = document.createElement('button');
+            stockButton.type = 'button';
+            stockButton.className = 'bank-stock-tab';
+            stockButton.setAttribute('aria-label', 'Cikkszám másolása és készlet megnyitása');
+            stockButton.title = 'Készlet megnyitása';
+            stockButton.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="M4 7.5 12 12l8-4.5M12 12v9"/><path d="M8 5.25 16 9.75"/></svg>';
+            stockButton.addEventListener('click', event => {
+                event.preventDefault();
+                event.stopPropagation();
+                const partCode = String(item.dataset.bankCode || '').trim().toUpperCase();
+                if (!partCode) return;
+                if (typeof provideFeedback === 'function') provideFeedback();
+                openBankStockPage(partCode);
+            });
+            item.appendChild(stockButton);
         }
         const rows = item.querySelectorAll('.data-row');
         if (rows[2]) rows[2].classList.add('bank-machine-row');
