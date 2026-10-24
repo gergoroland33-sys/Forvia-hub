@@ -75,6 +75,24 @@
         .header-action-today { background:linear-gradient(135deg,#172554,#1d4ed8 58%,#0e7490); color:#fff; border-color:rgba(96,165,250,.58); }
         .header-action-note { background:linear-gradient(135deg,#422006,#a16207 58%,#92400e); color:#fff; border-color:rgba(251,191,36,.5); }
         .header-action-exchange { background:linear-gradient(135deg,#450a0a,#b91c1c 58%,#9f1239); color:#fff; border-color:rgba(248,113,113,.52); }
+        /* Asztali gyors kitöltés: kizárólag a mátrix napi celláihoz. */
+        .desktop-quick-fill { position:relative; display:flex; align-items:center; gap:3px; min-width:max-content; padding:3px 4px 3px 6px; border:1px solid rgba(71,85,105,.74); border-radius:9px; background:rgba(15,23,42,.86); box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 3px 9px rgba(2,6,23,.18); }
+        .desktop-quick-fill-label { padding-right:2px; color:#94a3b8; font-size:8px; line-height:1; font-weight:900; letter-spacing:.07em; text-transform:uppercase; white-space:nowrap; }
+        .quick-fill-choice { display:inline-flex; align-items:center; justify-content:center; min-height:25px; padding:0 6px; border:1px solid #475569; border-radius:6px; background:#0f172a; color:#cbd5e1; font-size:9px; font-weight:900; letter-spacing:.025em; transition:transform .14s ease,background .14s ease,border-color .14s ease,box-shadow .14s ease,color .14s ease; white-space:nowrap; }
+        .quick-fill-choice:hover { transform:translateY(-1px); border-color:#64748b; background:#1e293b; color:#fff; }
+        .quick-fill-choice:active { transform:translateY(1px) scale(.97); }
+        .quick-fill-choice.is-active { color:#fff; border-color:#6ee7b7; background:#059669; box-shadow:0 0 0 1px rgba(16,185,129,.22),0 3px 8px rgba(5,150,105,.22),inset 0 1px 0 rgba(255,255,255,.18); }
+        .quick-fill-choice[data-quick-code="BÁ"].is-active { border-color:#fdba74; background:#ea580c; box-shadow:0 0 0 1px rgba(234,88,12,.20),0 3px 8px rgba(234,88,12,.20),inset 0 1px 0 rgba(255,255,255,.18); }
+        .quick-fill-choice[data-quick-code="TU"].is-active { border-color:#93c5fd; background:#2563eb; box-shadow:0 0 0 1px rgba(37,99,235,.20),0 3px 8px rgba(37,99,235,.20),inset 0 1px 0 rgba(255,255,255,.18); }
+        .quick-fill-choice[data-quick-code="KÉ"].is-active { border-color:#fde68a; background:#d97706; box-shadow:0 0 0 1px rgba(217,119,6,.20),0 3px 8px rgba(217,119,6,.20),inset 0 1px 0 rgba(255,255,255,.18); }
+        .quick-fill-hours-wrap { display:flex; align-items:center; height:25px; padding:0 3px; border:1px solid #475569; border-radius:6px; background:#020617; color:#94a3b8; font-size:8px; font-weight:900; }
+        .quick-fill-hours { width:29px; height:23px; padding:0; border:0; outline:none; background:transparent; color:#e2e8f0; font-size:10px; font-weight:900; text-align:center; font-variant-numeric:tabular-nums; }
+        .quick-fill-hours:focus { color:#fff; }
+        .quick-fill-hours-wrap:focus-within { border-color:#6ee7b7; box-shadow:0 0 0 1px rgba(16,185,129,.18); }
+        .desktop-quick-fill-status { position:absolute; top:calc(100% + 7px); left:0; z-index:90; min-width:max-content; max-width:270px; padding:6px 8px; border:1px solid rgba(253,186,116,.72); border-radius:7px; background:#431407; color:#ffedd5; font-size:9px; font-weight:800; line-height:1.25; box-shadow:0 7px 18px rgba(2,6,23,.38); opacity:0; pointer-events:none; transform:translateY(-3px); transition:opacity .16s ease,transform .16s ease; }
+        .desktop-quick-fill-status.is-visible { opacity:1; transform:translateY(0); }
+        body.staffpro-quick-fill-active .matrix-table .input-cell:not(.quota-input) { cursor:copy; }
+        @media (max-width: 768px) { .desktop-quick-fill { display:none !important; } }
         .today-base { position: relative; z-index: 5; font-weight: 900 !important; }
         .today-A:not(.cell-S):not(.cell-BA):not(.cell-IG):not(.cell-TU):not(.cell-KE) { background-color: rgba(239, 68, 68, 0.13) !important; }
         .today-A { border-left: 3px solid #ef4444 !important; border-right: 3px solid #ef4444 !important; }
@@ -333,6 +351,17 @@
         </div>
         <div class="flex items-center justify-between w-full gap-2 overflow-x-auto pb-1">
             <div id="sync" class="bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded-full text-[9px] font-black border border-emerald-500/20 whitespace-nowrap">ONLINE</div>
+            <div id="desktopQuickFill" class="desktop-quick-fill" aria-label="Gyors kitöltés asztali nézetben">
+                <span class="desktop-quick-fill-label">Gyors</span>
+                <button id="quickFillLeave" type="button" data-quick-code="LEAVE" class="quick-fill-choice" onclick="setDesktopQuickFill('LEAVE', this)" aria-pressed="false" title="Szabadságóra kijelölése a kattintott napi cellákba">
+                    <span>SZABI</span>
+                </button>
+                <label class="quick-fill-hours-wrap" title="Szabadság óraszáma"><input id="quickFillHours" class="quick-fill-hours" type="number" value="12" min="0.5" max="99" step="0.5" inputmode="decimal" aria-label="Szabadság óraszáma" oninput="syncDesktopQuickFillHours()"><span>Ó</span></label>
+                <button type="button" data-quick-code="BÁ" class="quick-fill-choice" onclick="setDesktopQuickFill('BÁ', this)" aria-pressed="false" title="Betegállomány kijelölése a kattintott napi cellákba">BÁ</button>
+                <button type="button" data-quick-code="TU" class="quick-fill-choice" onclick="setDesktopQuickFill('TU', this)" aria-pressed="false" title="Túlóra kijelölése a kattintott napi cellákba">TU</button>
+                <button type="button" data-quick-code="KÉ" class="quick-fill-choice" onclick="setDesktopQuickFill('KÉ', this)" aria-pressed="false" title="Késés kijelölése a kattintott napi cellákba">KÉ</button>
+                <span id="desktopQuickFillStatus" class="desktop-quick-fill-status" aria-live="polite"></span>
+            </div>
             <div class="flex items-center gap-2">
                 <div class="flex items-center bg-slate-900/80 border border-slate-700/50 rounded-lg p-0.5">
                     <button onclick="changeYear(-1)" class="p-2 text-blue-400 hover:text-white"><i class="fas fa-angle-double-left text-xs"></i></button>
@@ -551,6 +580,11 @@
                     <p class="mt-1">A <b>mai nap oszlopa</b> a kijelölt műszak színével keretezve és halványan aláfestve jelenik meg, így könnyen beazonosítható.</p>
                     <p class="mt-1">Kattintáskor a kiválasztott cella erős, pulzáló <b>piros szaggatott keretet</b> kap; a hozzá tartozó sor és oszlop finom piros vezetővonallal jelölődik. Ez segíti a pontos adatbevitelt.</p>
                     <p class="mt-1">A <b>KIVEHETŐ</b> érték <b>48 óra vagy az alatt</b> pirosra vált és pulzálással is figyelmeztet a fogyó keretre.</p>
+                </div>
+
+                <div>
+                    <h4 class="text-cyan-300 font-black text-sm uppercase mb-1">Gyors kitöltés – asztali nézet</h4>
+                    <p>A felső sáv rövid <b>GYORS</b> paneljén válaszd ki a <b>SZABI</b>, <b>BÁ</b>, <b>TU</b> vagy <b>KÉ</b> gombot, majd kattints a kívánt napi cellákra. A SZABI mellett lévő kis mezőben állítható az óraszám (alapérték: <b>12 óra</b>). Az aktív gomb ugyanazt a színt kapja, mint a táblázat cellája. Ugyanarra a gombra ismét kattintva – vagy <b>Esc</b>-pel – kikapcsol a gyors kitöltés. <b>Megjegyzéshez vagy Túlóra opciókhoz előbb kapcsold ki a gyorsgombot.</b></p>
                 </div>
 
                 <div>
@@ -2601,6 +2635,122 @@
                 const destination = nextInput(activeInput, event.key);
                 if (destination) revealAndFocus(destination);
             }, true);
+        })();
+    </script>
+    <!-- Asztali gyors kitöltés: a meglévő update() mentési és stíluslogikáját használja. -->
+    <script>
+        (function () {
+            let activeDesktopQuickFill = '';
+
+            function isDesktopQuickFillAvailable() {
+                return window.matchMedia('(min-width: 769px)').matches;
+            }
+
+            function getQuickFillHours() {
+                const input = document.getElementById('quickFillHours');
+                if (!input) return '12';
+                const raw = String(input.value || '').trim().replace(',', '.');
+                let numeric = Number(raw);
+                if (!Number.isFinite(numeric) || numeric < 0.5) numeric = 12;
+                numeric = Math.min(99, Math.round(numeric * 2) / 2);
+                const value = String(numeric).replace('.', ',');
+                input.value = String(numeric);
+                return value;
+            }
+
+            function getQuickFillValue() {
+                return activeDesktopQuickFill === 'LEAVE' ? getQuickFillHours() : activeDesktopQuickFill;
+            }
+
+            function updateDesktopQuickFillUi() {
+                const panel = document.getElementById('desktopQuickFill');
+                const status = document.getElementById('desktopQuickFillStatus');
+                document.querySelectorAll('.quick-fill-choice[data-quick-code]').forEach(function (button) {
+                    const isActive = button.dataset.quickCode === activeDesktopQuickFill;
+                    button.classList.toggle('is-active', isActive);
+                    button.setAttribute('aria-pressed', String(isActive));
+                });
+                if (panel) panel.classList.toggle('is-active', Boolean(activeDesktopQuickFill));
+                document.body.classList.toggle('staffpro-quick-fill-active', Boolean(activeDesktopQuickFill));
+                if (status && !activeDesktopQuickFill) {
+                    status.textContent = '';
+                    status.classList.remove('is-visible');
+                }
+            }
+
+            let quickFillNoticeTimer = null;
+
+            window.syncDesktopQuickFillHours = function () {
+                getQuickFillHours();
+            };
+
+            function showQuickFillNotice(message) {
+                const status = document.getElementById('desktopQuickFillStatus');
+                if (!status) return;
+                clearTimeout(quickFillNoticeTimer);
+                status.textContent = message;
+                status.classList.add('is-visible');
+                quickFillNoticeTimer = setTimeout(function () {
+                    status.classList.remove('is-visible');
+                }, 3600);
+            }
+
+            window.setDesktopQuickFill = function (code) {
+                if (!isDesktopQuickFillAvailable()) return;
+                activeDesktopQuickFill = activeDesktopQuickFill === code ? '' : code;
+                window.syncDesktopQuickFillHours();
+                updateDesktopQuickFillUi();
+                const status = document.getElementById('desktopQuickFillStatus');
+                if (status) status.classList.remove('is-visible');
+            };
+
+            function applyDesktopQuickFill(input) {
+                const cell = input && input.closest ? input.closest('td') : null;
+                const row = input && input.closest ? input.closest('tr') : null;
+                const day = cell ? cell.cellIndex - 2 : 0;
+                if (!activeDesktopQuickFill || !cell || !row || day < 1) return false;
+                const employeeId = Number(row.getAttribute('data-id'));
+                const dateKey = `${date.getFullYear()}-${date.getMonth() + 1}-${day}`;
+                const value = getQuickFillValue();
+                if (!Number.isFinite(employeeId) || !value) return false;
+                input.value = value;
+                update(employeeId, dateKey, value, input);
+                return true;
+            }
+
+            document.addEventListener('click', function (event) {
+                if (!isDesktopQuickFillAvailable() || !activeDesktopQuickFill) return;
+                const input = event.target && event.target.closest ? event.target.closest('.input-cell:not(.quota-input)') : null;
+                if (!input) return;
+                event.preventDefault();
+                event.stopPropagation();
+                applyDesktopQuickFill(input);
+            }, true);
+
+            document.addEventListener('dblclick', function (event) {
+                if (!isDesktopQuickFillAvailable() || !activeDesktopQuickFill) return;
+                const input = event.target && event.target.closest ? event.target.closest('.input-cell:not(.quota-input)') : null;
+                if (!input) return;
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                showQuickFillNotice('Megjegyzéshez vagy Túlóra opciókhoz előbb kapcsold ki a gyorsgombot.');
+            }, true);
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key !== 'Escape' || !activeDesktopQuickFill) return;
+                activeDesktopQuickFill = '';
+                updateDesktopQuickFillUi();
+            });
+
+            window.addEventListener('resize', function () {
+                if (!isDesktopQuickFillAvailable() && activeDesktopQuickFill) {
+                    activeDesktopQuickFill = '';
+                    updateDesktopQuickFillUi();
+                }
+            }, { passive: true });
+
+            window.syncDesktopQuickFillHours();
+            updateDesktopQuickFillUi();
         })();
     </script>
 </body>
