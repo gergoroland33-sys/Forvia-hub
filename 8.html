@@ -92,6 +92,15 @@
         .desktop-quick-fill-status { position:absolute; top:calc(100% + 7px); left:0; z-index:90; min-width:max-content; max-width:270px; padding:6px 8px; border:1px solid rgba(253,186,116,.72); border-radius:7px; background:#431407; color:#ffedd5; font-size:9px; font-weight:800; line-height:1.25; box-shadow:0 7px 18px rgba(2,6,23,.38); opacity:0; pointer-events:none; transform:translateY(-3px); transition:opacity .16s ease,transform .16s ease; }
         .desktop-quick-fill-status.is-visible { opacity:1; transform:translateY(0); }
         body.staffpro-quick-fill-active .matrix-table .input-cell:not(.quota-input) { cursor:copy; }
+        body.staffpro-quick-fill-painting .matrix-table .input-cell:not(.quota-input) { cursor:crosshair; }
+        .matrix-table td.quick-fill-preview { box-shadow:inset 0 0 0 2px rgba(255,255,255,.38), inset 0 0 14px rgba(255,255,255,.10) !important; }
+        .quick-fill-feedback { position:fixed; right:18px; bottom:18px; z-index:250; display:flex; align-items:center; gap:10px; max-width:calc(100vw - 36px); padding:10px 11px 10px 13px; border:1px solid rgba(96,165,250,.44); border-radius:11px; background:linear-gradient(135deg,rgba(15,23,42,.98),rgba(30,41,59,.97)); color:#e2e8f0; box-shadow:0 12px 32px rgba(2,6,23,.46), inset 0 1px 0 rgba(255,255,255,.07); opacity:0; pointer-events:none; transform:translateY(10px); transition:opacity .18s ease,transform .18s ease; }
+        .quick-fill-feedback.is-visible { opacity:1; pointer-events:auto; transform:translateY(0); }
+        .quick-fill-feedback-text { font-size:10px; font-weight:800; line-height:1.3; }
+        .quick-fill-feedback-text b { display:block; color:#bfdbfe; font-size:9px; letter-spacing:.06em; text-transform:uppercase; }
+        .quick-fill-undo { min-height:29px; padding:0 9px; border:1px solid rgba(147,197,253,.58); border-radius:7px; background:#1d4ed8; color:#fff; font-size:9px; font-weight:900; letter-spacing:.05em; text-transform:uppercase; transition:transform .14s ease,background .14s ease; }
+        .quick-fill-undo:hover { background:#2563eb; }
+        .quick-fill-undo:active { transform:scale(.95); }
         @media (max-width: 768px) { .desktop-quick-fill { display:none !important; } }
         .today-base { position: relative; z-index: 5; font-weight: 900 !important; }
         .today-A:not(.cell-S):not(.cell-BA):not(.cell-IG):not(.cell-TU):not(.cell-KE) { background-color: rgba(239, 68, 68, 0.13) !important; }
@@ -2719,6 +2728,7 @@
             }
 
             document.addEventListener('click', function (event) {
+                if (window.__staffProDragQuickFill && window.__staffProDragQuickFill.suppressClick) return;
                 if (!isDesktopQuickFillAvailable() || !activeDesktopQuickFill) return;
                 const input = event.target && event.target.closest ? event.target.closest('.input-cell:not(.quota-input)') : null;
                 if (!input) return;
@@ -2751,6 +2761,150 @@
 
             window.syncDesktopQuickFillHours();
             updateDesktopQuickFillUi();
+        })();
+    </script>
+    <!-- Asztali gyorskitolto festo mod: huzaskor elonezet, felengedeskor egyetlen mentes. -->
+    <script>
+        (function () {
+            let paint = null;
+            let lastBatch = null;
+            let undoTimer = null;
+            window.__staffProDragQuickFill = window.__staffProDragQuickFill || { suppressClick: false };
+
+            function activeCode() { const button = document.querySelector('.quick-fill-choice.is-active'); return button ? button.dataset.quickCode : ''; }
+            function isDesktop() { return window.matchMedia('(min-width: 769px)').matches; }
+            function leaveHours() {
+                const field = document.getElementById('quickFillHours');
+                let value = Number(String(field && field.value || '12').replace(',', '.'));
+                if (!Number.isFinite(value) || value < .5) value = 12;
+                value = Math.min(99, Math.round(value * 2) / 2);
+                if (field) field.value = String(value);
+                return String(value).replace('.', ',');
+            }
+            function valueFor(code) { return code === 'LEAVE' ? leaveHours() : code; }
+            function labelFor(code, value) { return code === 'LEAVE' ? `SZABI ${value} ORA` : code; }
+            function contextFor(input) {
+                const cell = input && input.closest ? input.closest('td') : null;
+                const row = input && input.closest ? input.closest('tr') : null;
+                const day = cell ? cell.cellIndex - 2 : 0;
+                const employeeId = row ? Number(row.getAttribute('data-id')) : NaN;
+                if (!cell || !row || day < 1 || !Number.isFinite(employeeId)) return null;
+                return { input: input, cell: cell, employeeId: employeeId, key: `${date.getFullYear()}-${date.getMonth() + 1}-${day}` };
+            }
+            function inputUnderPointer(event) { const el = document.elementFromPoint(event.clientX, event.clientY); return el && el.closest ? el.closest('.input-cell:not(.quota-input)') : null; }
+            function cellClass(value) {
+                if (value && !isNaN(parseFloat(String(value).replace(',', '.')))) return 'cell-S';
+                if (value === `B${String.fromCharCode(193)}`) return 'cell-BA';
+                if (value === 'IG') return 'cell-IG';
+                if (value === 'TU') return 'cell-TU';
+                return String(value).startsWith(`K${String.fromCharCode(201)}`) ? 'cell-KE' : '';
+            }
+            function paintCell(context) {
+                if (!context || !paint) return;
+                const marker = `${context.employeeId}|${context.key}`;
+                if (paint.changes.has(marker)) return;
+                const emp = employees.find(function (item) { return item.id == context.employeeId; });
+                if (!emp) return;
+                emp.data = emp.data || {};
+                const exchangeKey = context.key + '_cserenap';
+                paint.changes.set(marker, { employeeId: context.employeeId, key: context.key, hadValue: Object.prototype.hasOwnProperty.call(emp.data, context.key), value: emp.data[context.key], hadExchange: Object.prototype.hasOwnProperty.call(emp.data, exchangeKey), exchange: emp.data[exchangeKey] });
+                emp.data[context.key] = paint.value;
+                if (paint.value !== 'TU') delete emp.data[exchangeKey];
+                context.input.value = paint.value;
+                context.cell.className = context.cell.className.replace(/cell-\S+/g, '').trim();
+                const cls = cellClass(paint.value);
+                if (cls) context.cell.classList.add(cls);
+                context.cell.classList.add('quick-fill-preview');
+                const remaining = document.getElementById(`rem-${context.employeeId}`);
+                if (remaining) remaining.innerText = getEmpQuota(emp, date.getFullYear()) - getYearlyUsed(emp, date.getFullYear());
+            }
+            function feedback() {
+                let el = document.getElementById('quickFillFeedback');
+                if (el) return el;
+                el = document.createElement('div');
+                el.id = 'quickFillFeedback';
+                el.className = 'quick-fill-feedback';
+                el.innerHTML = '<span class="quick-fill-feedback-text" id="quickFillFeedbackText"></span><button type="button" class="quick-fill-undo" id="quickFillUndo">Visszavon&aacute;s</button>';
+                document.body.appendChild(el);
+                el.querySelector('#quickFillUndo').addEventListener('click', undoLastBatch);
+                return el;
+            }
+            function showFeedback(title, detail, canUndo) {
+                const el = feedback(); const text = el.querySelector('#quickFillFeedbackText'); const undo = el.querySelector('#quickFillUndo');
+                clearTimeout(undoTimer);
+                text.innerHTML = `<b>${title}</b>${detail}`;
+                undo.hidden = !canUndo;
+                el.classList.add('is-visible');
+                undoTimer = setTimeout(function () { el.classList.remove('is-visible'); if (canUndo) lastBatch = null; }, canUndo ? 8000 : 3200);
+            }
+            function finishPaint(event) {
+                if (!paint || (event && event.pointerId !== paint.pointerId)) return;
+                if (event) paintCell(contextFor(inputUnderPointer(event)));
+                const session = paint;
+                paint = null;
+                document.body.classList.remove('staffpro-quick-fill-painting');
+                try { session.origin.releasePointerCapture(session.pointerId); } catch (error) {}
+                const changes = Array.from(session.changes.values());
+                if (changes.length) {
+                    lastBatch = changes;
+                    save();
+                    render();
+                    showFeedback(`${changes.length} cella kit&ouml;ltve`, `${session.label} &middot; mentve`, true);
+                }
+                setTimeout(function () { window.__staffProDragQuickFill.suppressClick = false; }, 0);
+            }
+            function undoLastBatch() {
+                if (!lastBatch) return;
+                lastBatch.slice().reverse().forEach(function (change) {
+                    const emp = employees.find(function (item) { return item.id == change.employeeId; });
+                    if (!emp) return;
+                    emp.data = emp.data || {};
+                    const exchangeKey = change.key + '_cserenap';
+                    if (change.hadValue) emp.data[change.key] = change.value; else delete emp.data[change.key];
+                    if (change.hadExchange) emp.data[exchangeKey] = change.exchange; else delete emp.data[exchangeKey];
+                });
+                lastBatch = null;
+                clearTimeout(undoTimer);
+                save();
+                render();
+                showFeedback('Gyors kit&ouml;lt&eacute;s visszavonva', 'Az utolso huzas eredeti ertekei visszaalltak.', false);
+            }
+            document.addEventListener('pointerdown', function (event) {
+                const code = activeCode();
+                if (!isDesktop() || !code || event.button !== 0) return;
+                const input = event.target && event.target.closest ? event.target.closest('.input-cell:not(.quota-input)') : null;
+                const context = contextFor(input);
+                if (!context) return;
+                event.preventDefault(); event.stopPropagation();
+                const value = valueFor(code);
+                paint = { pointerId: event.pointerId, origin: input, value: value, label: labelFor(code, value), changes: new Map() };
+                window.__staffProDragQuickFill.suppressClick = true;
+                document.body.classList.add('staffpro-quick-fill-painting');
+                try { input.setPointerCapture(event.pointerId); } catch (error) {}
+                paintCell(context);
+            }, true);
+            document.addEventListener('pointermove', function (event) {
+                if (!paint || event.pointerId !== paint.pointerId) return;
+                paintCell(contextFor(inputUnderPointer(event)));
+                event.preventDefault();
+            }, true);
+            document.addEventListener('pointerup', finishPaint, true);
+            document.addEventListener('pointercancel', finishPaint, true);
+            document.addEventListener('keydown', function (event) {
+                const active = document.activeElement;
+                const typing = active && active.matches && active.matches('input, textarea, [contenteditable="true"]');
+                if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z' && lastBatch && !typing) { event.preventDefault(); undoLastBatch(); }
+            });
+        })();
+    </script>
+    <script>
+        (function () {
+            const heading = Array.from(document.querySelectorAll('#tips-modal h4')).find(function (element) { return element.textContent.indexOf('Gyors kit') !== -1; });
+            const paragraph = heading && heading.parentElement ? heading.parentElement.querySelector('p') : null;
+            if (paragraph && !paragraph.dataset.dragPaintTip) {
+                paragraph.dataset.dragPaintTip = 'true';
+                paragraph.insertAdjacentHTML('beforeend', ' <b>Bal gombot lenyomva tartva t&ouml;bb cell&aacute;n is &aacute;th&uacute;zhatod az &eacute;rt&eacute;ket; felenged&eacute;skor egyetlen ment&eacute;s t&ouml;rt&eacute;nik, majd 8 m&aacute;sodpercig el&eacute;rhet&#337; a Visszavon&aacute;s.</b>');
+            }
         })();
     </script>
 </body>
