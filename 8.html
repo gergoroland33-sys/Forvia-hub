@@ -2977,5 +2977,236 @@
             if (unit) unit.innerHTML = '&#211;RA';
         })();
     </script>
+    <!-- Ertesitesi kozpont: csak az asztali fejl%C3%A9c uj kiegeszitese. -->
+    <style id="staff-notification-center-style">
+        #staffNotificationCenter { position:relative; z-index:140; }
+        #staffNotificationBell { position:relative; display:inline-flex; align-items:center; gap:6px; min-height:30px; padding:0 9px; border:1px solid rgba(71,85,105,.72); border-radius:9px; background:linear-gradient(135deg,rgba(30,41,59,.92),rgba(15,23,42,.94)); color:#cbd5e1; font-size:9px; font-weight:900; letter-spacing:.065em; text-transform:uppercase; box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 3px 9px rgba(2,6,23,.20); transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease,color .16s ease; }
+        #staffNotificationBell:hover { transform:translateY(-1px); border-color:#60a5fa; color:#f8fafc; box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 7px 16px rgba(2,6,23,.30); }
+        #staffNotificationBell:active { transform:translateY(1px) scale(.97); }
+        #staffNotificationBell i { color:#93c5fd; font-size:12px; }
+        #staffNotificationBell .staff-notification-dot { position:absolute; top:4px; right:5px; width:6px; height:6px; border:1px solid #0f172a; border-radius:999px; background:#64748b; box-shadow:0 0 0 2px rgba(100,116,139,.15); transition:background .18s ease,box-shadow .18s ease; }
+        #staffNotificationBell.is-enabled .staff-notification-dot { background:#34d399; box-shadow:0 0 0 2px rgba(52,211,153,.16),0 0 9px rgba(52,211,153,.82); }
+        #staffNotificationCenter.is-open #staffNotificationBell { border-color:#60a5fa; color:#fff; background:linear-gradient(135deg,#172554,#1e3a8a); box-shadow:0 0 0 2px rgba(59,130,246,.15),0 8px 18px rgba(2,6,23,.36); }
+        #staffNotificationPanel { position:absolute; top:calc(100% + 9px); left:0; width:min(370px,calc(100vw - 32px)); padding:12px; border:1px solid rgba(96,165,250,.34); border-radius:15px; background:linear-gradient(145deg,rgba(30,41,59,.985),rgba(2,6,23,.985)); box-shadow:0 20px 50px rgba(2,6,23,.55),inset 0 1px 0 rgba(255,255,255,.08); opacity:0; pointer-events:none; transform:translateY(-6px) scale(.98); transform-origin:top left; transition:opacity .17s ease,transform .17s ease; }
+        #staffNotificationCenter.is-open #staffNotificationPanel { opacity:1; pointer-events:auto; transform:translateY(0) scale(1); }
+        .staff-notification-title { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding-bottom:10px; border-bottom:1px solid rgba(148,163,184,.16); }
+        .staff-notification-title strong { display:block; color:#f8fafc; font-size:12px; font-weight:950; letter-spacing:.035em; }
+        .staff-notification-title span { display:block; margin-top:3px; color:#94a3b8; font-size:8px; font-weight:800; letter-spacing:.075em; text-transform:uppercase; }
+        .staff-notification-device { padding:4px 6px; border:1px solid rgba(96,165,250,.32); border-radius:999px; background:rgba(30,64,175,.18); color:#bfdbfe; font-size:7px; font-weight:900; letter-spacing:.055em; text-transform:uppercase; white-space:nowrap; }
+        .staff-notification-master { display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%; margin:10px 0; padding:10px 11px; border:1px solid rgba(16,185,129,.34); border-radius:11px; background:linear-gradient(135deg,rgba(6,78,59,.38),rgba(15,23,42,.52)); color:#d1fae5; text-align:left; transition:filter .16s ease,transform .16s ease,border-color .16s ease; }
+        .staff-notification-master:hover { filter:brightness(1.12); transform:translateY(-1px); }
+        .staff-notification-master.is-off { border-color:rgba(100,116,139,.42); background:rgba(15,23,42,.48); color:#cbd5e1; }
+        .staff-notification-master-copy b { display:block; font-size:10px; font-weight:950; letter-spacing:.04em; }
+        .staff-notification-master-copy small { display:block; margin-top:3px; color:#94a3b8; font-size:8px; font-weight:700; line-height:1.3; }
+        .staff-notification-switch { position:relative; flex:0 0 auto; width:31px; height:18px; border:1px solid rgba(148,163,184,.46); border-radius:999px; background:#334155; transition:background .16s ease,border-color .16s ease; }
+        .staff-notification-switch::after { content:''; position:absolute; top:3px; left:3px; width:10px; height:10px; border-radius:999px; background:#e2e8f0; box-shadow:0 1px 3px rgba(0,0,0,.36); transition:transform .16s ease; }
+        .staff-notification-master:not(.is-off) .staff-notification-switch { border-color:#6ee7b7; background:#059669; }
+        .staff-notification-master:not(.is-off) .staff-notification-switch::after { transform:translateX(13px); background:#fff; }
+        .staff-notification-options { display:grid; gap:6px; }
+        .staff-notification-option { display:flex; align-items:center; gap:8px; padding:8px 9px; border:1px solid rgba(71,85,105,.42); border-radius:10px; background:rgba(15,23,42,.42); }
+        .staff-notification-option.is-muted { opacity:.5; }
+        .staff-notification-option-copy { min-width:0; flex:1; }
+        .staff-notification-option-copy b { display:block; color:#e2e8f0; font-size:9px; font-weight:900; }
+        .staff-notification-option-copy small { display:block; margin-top:2px; color:#94a3b8; font-size:8px; font-weight:700; line-height:1.28; }
+        .staff-notification-option-toggle { width:27px; height:21px; border:1px solid rgba(100,116,139,.55); border-radius:7px; background:#1e293b; color:#94a3b8; font-size:10px; font-weight:950; transition:background .16s ease,border-color .16s ease,color .16s ease; }
+        .staff-notification-option-toggle.is-on { border-color:rgba(96,165,250,.70); background:#1d4ed8; color:#fff; box-shadow:0 0 0 2px rgba(59,130,246,.12); }
+        .staff-notification-threshold { width:43px; height:24px; padding:0 3px; border:1px solid rgba(217,119,6,.48); border-radius:7px; outline:0; background:rgba(120,53,15,.18); color:#fde68a; font-size:9px; font-weight:950; text-align:center; }
+        .staff-notification-threshold:focus { border-color:#fbbf24; box-shadow:0 0 0 2px rgba(251,191,36,.12); }
+        .staff-notification-threshold::-webkit-outer-spin-button, .staff-notification-threshold::-webkit-inner-spin-button { margin:0; -webkit-appearance:none; }
+        .staff-notification-threshold { appearance:textfield; -moz-appearance:textfield; }
+        .staff-notification-actions { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:9px; padding-top:9px; border-top:1px solid rgba(148,163,184,.14); }
+        .staff-notification-test { padding:7px 9px; border:1px solid rgba(147,197,253,.54); border-radius:8px; background:linear-gradient(135deg,#1d4ed8,#2563eb); color:#fff; font-size:8px; font-weight:950; letter-spacing:.055em; text-transform:uppercase; transition:transform .15s ease,filter .15s ease; }
+        .staff-notification-test:hover { filter:brightness(1.12); transform:translateY(-1px); }
+        .staff-notification-test:active { transform:scale(.96); }
+        .staff-notification-status { max-width:190px; color:#94a3b8; font-size:8px; font-weight:700; line-height:1.3; text-align:right; }
+        .staff-notification-toast { position:fixed; right:18px; bottom:18px; z-index:350; max-width:330px; padding:11px 13px; border:1px solid rgba(96,165,250,.50); border-radius:12px; background:linear-gradient(135deg,rgba(30,41,59,.985),rgba(2,6,23,.985)); color:#e2e8f0; box-shadow:0 16px 40px rgba(2,6,23,.50); font-size:10px; font-weight:800; line-height:1.4; opacity:0; pointer-events:none; transform:translateY(10px); transition:opacity .18s ease,transform .18s ease; }
+        .staff-notification-toast.is-visible { opacity:1; transform:translateY(0); }
+        .staff-notification-toast b { display:block; margin-bottom:2px; color:#bfdbfe; font-size:9px; letter-spacing:.07em; text-transform:uppercase; }
+    </style>
+    <script>
+        (function () {
+            const storageKey = 'fv_staffpro_notifications_v1';
+            const sentKey = 'fv_staffpro_notifications_sent_v1';
+            const defaults = { enabled:false, monthlySummary:true, upcomingLeave:true, lowBalance:true, lowBalanceThreshold:48 };
+            let settings = readJson(storageKey, defaults);
+            let sent = readJson(sentKey, {});
+            let toastTimer = null;
+
+            function readJson(key, fallback) { try { return Object.assign({}, fallback, JSON.parse(localStorage.getItem(key) || '{}')); } catch (error) { return Object.assign({}, fallback); } }
+            function persist() { localStorage.setItem(storageKey, JSON.stringify(settings)); }
+            function persistSent() { localStorage.setItem(sentKey, JSON.stringify(sent)); }
+            function todayKey(now) { return `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`; }
+            function getValue(value) { const number = Number(String(value == null ? '' : value).replace(',', '.')); return Number.isFinite(number) && number > 0 ? number : 0; }
+            function escapeText(value) { return String(value == null ? '' : value); }
+
+            function monthlySummary(now) {
+                const prefix = `${now.getFullYear()}-${now.getMonth()+1}-`;
+                const people = []; let hours = 0;
+                (employees || []).forEach(function (employee) {
+                    let employeeHours = 0;
+                    Object.entries(employee.data || {}).forEach(function (entry) { if (entry[0].startsWith(prefix) && /^\d{4}-\d{1,2}-\d{1,2}$/.test(entry[0])) employeeHours += getValue(entry[1]); });
+                    if (employeeHours) { people.push(employee.name || 'Nevtelen dolgozo'); hours += employeeHours; }
+                });
+                return { people:people, hours:hours };
+            }
+            function upcomingSummary(now) {
+                const dates = [];
+                for (let index = 1; index <= 3; index++) { const target = new Date(now.getFullYear(), now.getMonth(), now.getDate() + index); dates.push(`${target.getFullYear()}-${target.getMonth()+1}-${target.getDate()}`); }
+                const people = []; let hours = 0;
+                (employees || []).forEach(function (employee) {
+                    let employeeHours = 0;
+                    dates.forEach(function (dateKey) { employeeHours += getValue((employee.data || {})[dateKey]); });
+                    if (employeeHours) { people.push(employee.name || 'Nevtelen dolgozo'); hours += employeeHours; }
+                });
+                return { people:people, hours:hours };
+            }
+            function lowBalanceSummary(now) {
+                const people = (employees || []).filter(function (employee) { return getEmpQuota(employee, now.getFullYear()) - getYearlyUsed(employee, now.getFullYear()) <= Number(settings.lowBalanceThreshold || 48); });
+                return people;
+            }
+            function toast(title, body) {
+                let element = document.getElementById('staffNotificationToast');
+                if (!element) { element = document.createElement('div'); element.id = 'staffNotificationToast'; element.className = 'staff-notification-toast'; element.innerHTML = '<b></b><span></span>'; document.body.appendChild(element); }
+                element.querySelector('b').textContent = title;
+                element.querySelector('span').textContent = body;
+                clearTimeout(toastTimer); element.classList.add('is-visible');
+                toastTimer = setTimeout(function () { element.classList.remove('is-visible'); }, 6200);
+            }
+            function systemNotice(title, body, tag) {
+                toast(title, body);
+                if (!settings.enabled || !('Notification' in window) || Notification.permission !== 'granted') return;
+                try { new Notification(title, { body:body, tag:tag, renotify:false }); } catch (error) { console.warn('Ertesitesi hiba:', error); }
+            }
+            function emitOnce(key, title, body) {
+                if (sent[key]) return;
+                sent[key] = Date.now(); persistSent(); systemNotice(title, body, key);
+            }
+            function checkScheduledNotifications() {
+                if (window.__staffProShiftNotifications || !settings.enabled || !Array.isArray(employees) || !employees.length) return;
+                const now = new Date(); const day = todayKey(now);
+                if (settings.monthlySummary && now.getDate() === 1) { const summary = monthlySummary(now); emitOnce(`month:${now.getFullYear()}-${now.getMonth()+1}:${currentShift}`, 'Havi szabadsagok', summary.people.length ? `${currentShift} muszak: ${summary.people.length} fo, osszesen ${summary.hours} ora elore rogzitve erre a honapra.` : `${currentShift} muszak: erre a honapra meg nincs elore rogzitett szabadsag.`); }
+                if (settings.upcomingLeave) { const summary = upcomingSummary(now); if (summary.people.length) emitOnce(`upcoming:${day}:${currentShift}`, 'Kozelgo szabadsag', `${currentShift} muszak: ${summary.people.length} fo erintett a kovetkezo 3 napban (${summary.hours} ora).`); }
+                if (settings.lowBalance) { const people = lowBalanceSummary(now); if (people.length) emitOnce(`quota:${day}:${currentShift}:${settings.lowBalanceThreshold}`, 'Alacsony szabadsagkeret', `${currentShift} muszak: ${people.length} dolgozo a ${settings.lowBalanceThreshold} oras hatar alatt vagy azon van.`); }
+            }
+            async function enableNotifications() {
+                if (!('Notification' in window)) { toast('Ertesitesek', 'Ezen a bongeszon nem erheto el a rendszerertesites.'); return false; }
+                if (Notification.permission === 'granted') return true;
+                if (Notification.permission === 'denied') { toast('Ertesitesek', 'A bongeszo jelenleg tiltja az engedelyt. A cimsor melletti beallitasokban engedelyezheted.'); return false; }
+                try { return await Notification.requestPermission() === 'granted'; } catch (error) { toast('Ertesitesek', 'Az engedely kerese most nem sikerult.'); return false; }
+            }
+            function insertTips() {
+                const list = document.querySelector('#tips-modal .overflow-y-auto');
+                if (!list || list.querySelector('[data-notification-tip]')) return;
+                list.insertAdjacentHTML('beforeend', '<div data-notification-tip><h4 class="text-blue-400 font-black text-sm uppercase mb-1 flex items-center gap-2"><i class="fas fa-bell"></i> &Eacute;rtes&iacute;t&eacute;sek</h4><p>A fels&#337; s&aacute;v <b>&Eacute;rtes&iacute;t&eacute;sek</b> harangj&aacute;n eszk&ouml;z&ouml;nk&eacute;nt kapcsolhat&oacute;k a b&ouml;ng&eacute;sz&#337;s jelz&eacute;sek. K&uuml;l&ouml;n bekapcsolhat&oacute; a h&oacute;nap els&#337; napi szabads&aacute;g-&ouml;sszes&iacute;t&#337;, a k&ouml;vetkez&#337; 3 nap el&#337;re r&ouml;gz&iacute;tett szabads&aacute;ga &eacute;s az &aacute;ll&iacute;that&oacute; alacsony szabads&aacute;gkeret jelz&eacute;se. A <b>Teszt jelz&eacute;s</b> gombbal azonnal ellen&#337;rizheted az enged&eacute;lyt. Jelz&eacute;s csak megnyitott Staff Pro mellett ellen&#337;rizhet&#337;.</p></div>');
+            }
+            function createCenter() {
+                const host = document.querySelector('.desktop-header > div:first-child > div:first-child');
+                if (!host || document.getElementById('staffNotificationCenter')) return;
+                const center = document.createElement('div');
+                center.id = 'staffNotificationCenter';
+                center.innerHTML = '<button id="staffNotificationBell" type="button" aria-expanded="false" title="&Eacute;rtes&iacute;t&eacute;sek be&aacute;ll&iacute;t&aacute;sa"><i class="fas fa-bell" aria-hidden="true"></i><span>&Eacute;rtes&iacute;t&eacute;sek</span><span class="staff-notification-dot" aria-hidden="true"></span></button><section id="staffNotificationPanel" aria-label="&Eacute;rtes&iacute;t&eacute;si be&aacute;ll&iacute;t&aacute;sok"><div class="staff-notification-title"><div><strong>&Eacute;rtes&iacute;t&eacute;sek</strong><span>Eszk&ouml;z&ouml;nk&eacute;nti be&aacute;ll&iacute;t&aacute;s</span></div><span class="staff-notification-device">Ez az eszk&ouml;z</span></div><button id="staffNotificationMaster" type="button" class="staff-notification-master"><span class="staff-notification-master-copy"><b>Felugr&oacute; jelz&eacute;sek</b><small>B&ouml;ng&eacute;sz&#337;enged&eacute;llyel m&#369;k&ouml;dnek.</small></span><span class="staff-notification-switch" aria-hidden="true"></span></button><div id="staffNotificationOptions" class="staff-notification-options"><div class="staff-notification-option"><span class="staff-notification-option-copy"><b>Havi szabads&aacute;g-&ouml;sszes&iacute;t&#337;</b><small>Minden h&oacute;nap els&#337; napj&aacute;n.</small></span><button type="button" class="staff-notification-option-toggle" data-notification-toggle="monthlySummary" aria-label="Havi &ouml;sszes&iacute;t&#337; kapcsol&aacute;sa"></button></div><div class="staff-notification-option"><span class="staff-notification-option-copy"><b>K&ouml;zelg&#337; szabads&aacute;g</b><small>El&#337;re r&ouml;gz&iacute;tett napok a k&ouml;vetkez&#337; 3 napban.</small></span><button type="button" class="staff-notification-option-toggle" data-notification-toggle="upcomingLeave" aria-label="K&ouml;zelg&#337; szabads&aacute;g kapcsol&aacute;sa"></button></div><div class="staff-notification-option"><span class="staff-notification-option-copy"><b>Alacsony szabads&aacute;gkeret</b><small>A megadott &oacute;rahat&aacute;r alatt vagy azon.</small></span><input id="staffNotificationThreshold" class="staff-notification-threshold" type="number" min="0" max="999" step="1" aria-label="Figyelmeztet&eacute;si &oacute;rahat&aacute;r"><button type="button" class="staff-notification-option-toggle" data-notification-toggle="lowBalance" aria-label="Alacsony szabads&aacute;gkeret kapcsol&aacute;sa"></button></div></div><div class="staff-notification-actions"><button id="staffNotificationTest" type="button" class="staff-notification-test">Teszt jelz&eacute;s</button><span id="staffNotificationStatus" class="staff-notification-status"></span></div></section>';
+                host.appendChild(center);
+                const bell = center.querySelector('#staffNotificationBell');
+                const panel = center.querySelector('#staffNotificationPanel');
+                const master = center.querySelector('#staffNotificationMaster');
+                const options = center.querySelector('#staffNotificationOptions');
+                const threshold = center.querySelector('#staffNotificationThreshold');
+                const status = center.querySelector('#staffNotificationStatus');
+                function renderCenter() {
+                    bell.classList.toggle('is-enabled', Boolean(settings.enabled));
+                    master.classList.toggle('is-off', !settings.enabled);
+                    master.setAttribute('aria-pressed', String(Boolean(settings.enabled)));
+                    options.querySelectorAll('[data-notification-toggle]').forEach(function (button) { const key = button.dataset.notificationToggle; button.classList.toggle('is-on', Boolean(settings[key])); button.textContent = settings[key] ? 'BE' : 'KI'; button.setAttribute('aria-pressed', String(Boolean(settings[key]))); button.closest('.staff-notification-option').classList.toggle('is-muted', !settings.enabled); });
+                    threshold.value = settings.lowBalanceThreshold;
+                    const support = 'Notification' in window;
+                    status.textContent = settings.enabled ? 'Aktiv ezen az eszkozon.' : (support ? 'Kapcsold be az engedelyhez.' : 'A bongeszo nem tamogatja.');
+                }
+                bell.addEventListener('click', function () { const opened = center.classList.toggle('is-open'); bell.setAttribute('aria-expanded', String(opened)); });
+                master.addEventListener('click', async function () { if (!settings.enabled) { settings.enabled = await enableNotifications(); } else { settings.enabled = false; } persist(); renderCenter(); if (settings.enabled) { toast('Ertesitesek aktivak', 'A valasztott jelzesek ezen az eszkozon fognak megjelenni.'); checkScheduledNotifications(); } });
+                options.addEventListener('click', function (event) { const button = event.target.closest('[data-notification-toggle]'); if (!button) return; const key = button.dataset.notificationToggle; settings[key] = !settings[key]; persist(); renderCenter(); });
+                threshold.addEventListener('change', function () { let value = Number(threshold.value); if (!Number.isFinite(value)) value = 48; settings.lowBalanceThreshold = Math.max(0, Math.min(999, Math.round(value))); persist(); renderCenter(); });
+                center.querySelector('#staffNotificationTest').addEventListener('click', async function () { if (!settings.enabled) { const granted = await enableNotifications(); settings.enabled = granted; persist(); renderCenter(); if (!granted) return; } systemNotice('Forvia Staff Pro', 'A tesztjelzes sikeresen mukodik ezen az eszkozon.', 'staffpro-test'); });
+                document.addEventListener('click', function (event) { if (!center.contains(event.target)) { center.classList.remove('is-open'); bell.setAttribute('aria-expanded', 'false'); } });
+                document.addEventListener('keydown', function (event) { if (event.key === 'Escape') { center.classList.remove('is-open'); bell.setAttribute('aria-expanded', 'false'); } });
+                renderCenter();
+            }
+            createCenter(); insertTips();
+            window.addEventListener('focus', checkScheduledNotifications);
+            document.addEventListener('visibilitychange', function () { if (!document.hidden) checkScheduledNotifications(); });
+            setTimeout(checkScheduledNotifications, 2600);
+            setInterval(checkScheduledNotifications, 60000);
+        })();
+    </script>
+    <style id="staff-notification-shift-scope-style">
+        .staff-notification-shift-scope { margin:9px 0; padding:9px; border:1px solid rgba(125,211,252,.25); border-radius:10px; background:rgba(8,47,73,.18); }
+        .staff-notification-shift-scope-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px; }
+        .staff-notification-shift-scope-head b { color:#bae6fd; font-size:9px; font-weight:950; letter-spacing:.05em; text-transform:uppercase; }
+        .staff-notification-shift-scope-head span { color:#94a3b8; font-size:8px; font-weight:800; }
+        .staff-notification-shifts { display:grid; grid-template-columns:repeat(4,1fr); gap:5px; }
+        .staff-notification-shift { min-height:27px; border:1px solid rgba(100,116,139,.5); border-radius:7px; background:rgba(15,23,42,.62); color:#94a3b8; font-size:10px; font-weight:950; transition:transform .14s ease,background .14s ease,color .14s ease,border-color .14s ease,box-shadow .14s ease; }
+        .staff-notification-shift:hover { transform:translateY(-1px); color:#f8fafc; border-color:#60a5fa; }
+        .staff-notification-shift.is-selected { color:#fff; border-color:#7dd3fc; background:linear-gradient(135deg,#075985,#0284c7); box-shadow:0 0 0 2px rgba(14,165,233,.13),0 4px 9px rgba(2,132,199,.24); }
+    </style>
+    <script>
+        (function () {
+            window.__staffProShiftNotifications = true;
+            const storageKey = 'fv_staffpro_notifications_v1';
+            const sentKey = 'fv_staffpro_notifications_sent_v1';
+            const defaults = { enabled:false, monthlySummary:true, upcomingLeave:true, lowBalance:true, lowBalanceThreshold:48, shifts:[currentShift] };
+            let settings = readJson(storageKey, defaults);
+            let sent = readJson(sentKey, {});
+            let checking = false;
+            let toastTimer = null;
+
+            function readJson(key, fallback) { try { return Object.assign({}, fallback, JSON.parse(localStorage.getItem(key) || '{}')); } catch (error) { return Object.assign({}, fallback); } }
+            function persist() { localStorage.setItem(storageKey, JSON.stringify(settings)); }
+            function persistSent() { localStorage.setItem(sentKey, JSON.stringify(sent)); }
+            function selectedShifts() { const selected = Array.isArray(settings.shifts) ? settings.shifts.filter(function (shift) { return ['A','B','C','D'].includes(shift); }) : []; return selected.length ? selected : [currentShift]; }
+            function todayKey(now) { return `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`; }
+            function getValue(value) { const number = Number(String(value == null ? '' : value).replace(',', '.')); return Number.isFinite(number) && number > 0 ? number : 0; }
+            function monthlySummary(list, now) { const prefix = `${now.getFullYear()}-${now.getMonth()+1}-`; let people = 0; let hours = 0; (list || []).forEach(function (employee) { let employeeHours = 0; Object.entries(employee.data || {}).forEach(function (entry) { if (entry[0].startsWith(prefix) && /^\d{4}-\d{1,2}-\d{1,2}$/.test(entry[0])) employeeHours += getValue(entry[1]); }); if (employeeHours) { people++; hours += employeeHours; } }); return { people:people, hours:hours }; }
+            function upcomingSummary(list, now) { const dates = []; for (let index = 1; index <= 3; index++) { const target = new Date(now.getFullYear(), now.getMonth(), now.getDate() + index); dates.push(`${target.getFullYear()}-${target.getMonth()+1}-${target.getDate()}`); } let people = 0; let hours = 0; (list || []).forEach(function (employee) { let employeeHours = 0; dates.forEach(function (dateKey) { employeeHours += getValue((employee.data || {})[dateKey]); }); if (employeeHours) { people++; hours += employeeHours; } }); return { people:people, hours:hours }; }
+            function lowBalanceSummary(list, now) { return (list || []).filter(function (employee) { return getEmpQuota(employee, now.getFullYear()) - getYearlyUsed(employee, now.getFullYear()) <= Number(settings.lowBalanceThreshold || 48); }); }
+            async function readShift(shift) { if (shift === currentShift && Array.isArray(employees) && employees.length) return employees; const snapshot = await db.ref(`shift_${shift}`).once('value'); const data = snapshot.val(); return Array.isArray(data) ? data.filter(function (employee) { return employee != null; }) : []; }
+            function toast(title, body) { let element = document.getElementById('staffNotificationToast'); if (!element) { element = document.createElement('div'); element.id = 'staffNotificationToast'; element.className = 'staff-notification-toast'; element.innerHTML = '<b></b><span></span>'; document.body.appendChild(element); } element.querySelector('b').textContent = title; element.querySelector('span').textContent = body; clearTimeout(toastTimer); element.classList.add('is-visible'); toastTimer = setTimeout(function () { element.classList.remove('is-visible'); }, 6200); }
+            function systemNotice(title, body, tag) { toast(title, body); if (!settings.enabled || !('Notification' in window) || Notification.permission !== 'granted') return; try { new Notification(title, { body:body, tag:tag, renotify:false }); } catch (error) { console.warn('Ertesitesi hiba:', error); } }
+            function emitOnce(key, title, body) { if (sent[key]) return; sent[key] = Date.now(); persistSent(); systemNotice(title, body, key); }
+            async function checkScheduledNotifications() {
+                if (checking || !settings.enabled || !auth.currentUser) return;
+                checking = true;
+                try {
+                    const now = new Date(); const day = todayKey(now);
+                    for (const shift of selectedShifts()) {
+                        const list = await readShift(shift);
+                        if (settings.monthlySummary && now.getDate() === 1) { const summary = monthlySummary(list, now); emitOnce(`month:${now.getFullYear()}-${now.getMonth()+1}:${shift}`, 'Havi szabadsagok', summary.people ? `${shift} muszak: ${summary.people} fo, osszesen ${summary.hours} ora elore rogzitve erre a honapra.` : `${shift} muszak: erre a honapra meg nincs elore rogzitett szabadsag.`); }
+                        if (settings.upcomingLeave) { const summary = upcomingSummary(list, now); if (summary.people) emitOnce(`upcoming:${day}:${shift}`, 'Kozelgo szabadsag', `${shift} muszak: ${summary.people} fo erintett a kovetkezo 3 napban (${summary.hours} ora).`); }
+                        if (settings.lowBalance) { const people = lowBalanceSummary(list, now); if (people.length) emitOnce(`quota:${day}:${shift}:${settings.lowBalanceThreshold}`, 'Alacsony szabadsagkeret', `${shift} muszak: ${people.length} dolgozo a ${settings.lowBalanceThreshold} oras hatar alatt vagy azon van.`); }
+                    }
+                } catch (error) { console.warn('Muszakszintu ertesitesi olvasasi hiba:', error); }
+                finally { checking = false; }
+            }
+            async function enableNotifications() { if (!('Notification' in window)) { toast('Ertesitesek', 'Ezen a bongeszon nem erheto el a rendszerertesites.'); return false; } if (Notification.permission === 'granted') return true; if (Notification.permission === 'denied') { toast('Ertesitesek', 'A bongeszo jelenleg tiltja az engedelyt.'); return false; } try { return await Notification.requestPermission() === 'granted'; } catch (error) { return false; } }
+            function updateTip() { const tip = document.querySelector('[data-notification-tip]'); if (!tip) return; tip.innerHTML = '<h4 class="text-blue-400 font-black text-sm uppercase mb-1 flex items-center gap-2"><i class="fas fa-bell"></i> &Eacute;rtes&iacute;t&eacute;sek</h4><p>A fels&#337; s&aacute;v <b>&Eacute;rtes&iacute;t&eacute;sek</b> harangj&aacute;n v&aacute;laszd ki, melyik <b>A / B / C / D m&#369;szak</b> jelz&eacute;seit szeretn&eacute;d megkapni; egyszerre t&ouml;bb is kijel&ouml;lhet&#337;. A h&oacute;nap els&#337; napi &ouml;sszes&iacute;t&#337;, a k&ouml;vetkez&#337; 3 nap el&#337;re r&ouml;gz&iacute;tett szabads&aacute;ga &eacute;s az &aacute;ll&iacute;that&oacute; alacsony szabads&aacute;gkeret mind a kijel&ouml;lt m&#369;szakok saj&aacute;t adataib&oacute;l k&eacute;sz&uuml;l. A <b>Teszt jelz&eacute;s</b> gombbal azonnal ellen&#337;rizheted az enged&eacute;lyt. Jelz&eacute;s csak megnyitott Staff Pro mellett ellen&#337;rizhet&#337;.</p>'; }
+            function createCenter() {
+                const host = document.querySelector('.desktop-header > div:first-child > div:first-child'); if (!host) return;
+                const old = document.getElementById('staffNotificationCenter'); if (old) old.remove();
+                const center = document.createElement('div'); center.id = 'staffNotificationCenter';
+                center.innerHTML = '<button id="staffNotificationBell" type="button" aria-expanded="false" title="&Eacute;rtes&iacute;t&eacute;sek be&aacute;ll&iacute;t&aacute;sa"><i class="fas fa-bell" aria-hidden="true"></i><span>&Eacute;rtes&iacute;t&eacute;sek</span><span class="staff-notification-dot" aria-hidden="true"></span></button><section id="staffNotificationPanel" aria-label="&Eacute;rtes&iacute;t&eacute;si be&aacute;ll&iacute;t&aacute;sok"><div class="staff-notification-title"><div><strong>&Eacute;rtes&iacute;t&eacute;sek</strong><span>Eszk&ouml;z&ouml;nk&eacute;nti be&aacute;ll&iacute;t&aacute;s</span></div><span class="staff-notification-device">Ez az eszk&ouml;z</span></div><button id="staffNotificationMaster" type="button" class="staff-notification-master"><span class="staff-notification-master-copy"><b>Felugr&oacute; jelz&eacute;sek</b><small>B&ouml;ng&eacute;sz&#337;enged&eacute;llyel m&#369;k&ouml;dnek.</small></span><span class="staff-notification-switch" aria-hidden="true"></span></button><div class="staff-notification-shift-scope"><div class="staff-notification-shift-scope-head"><b>Kijel&ouml;lt m&#369;szakok</b><span>T&ouml;bb is v&aacute;laszthat&oacute;</span></div><div id="staffNotificationShifts" class="staff-notification-shifts"><button type="button" class="staff-notification-shift" data-notification-shift="A">A</button><button type="button" class="staff-notification-shift" data-notification-shift="B">B</button><button type="button" class="staff-notification-shift" data-notification-shift="C">C</button><button type="button" class="staff-notification-shift" data-notification-shift="D">D</button></div></div><div id="staffNotificationOptions" class="staff-notification-options"><div class="staff-notification-option"><span class="staff-notification-option-copy"><b>Havi szabads&aacute;g-&ouml;sszes&iacute;t&#337;</b><small>Minden h&oacute;nap els&#337; napj&aacute;n.</small></span><button type="button" class="staff-notification-option-toggle" data-notification-toggle="monthlySummary"></button></div><div class="staff-notification-option"><span class="staff-notification-option-copy"><b>K&ouml;zelg&#337; szabads&aacute;g</b><small>El&#337;re r&ouml;gz&iacute;tett napok a k&ouml;vetkez&#337; 3 napban.</small></span><button type="button" class="staff-notification-option-toggle" data-notification-toggle="upcomingLeave"></button></div><div class="staff-notification-option"><span class="staff-notification-option-copy"><b>Alacsony szabads&aacute;gkeret</b><small>A megadott &oacute;rahat&aacute;r alatt vagy azon.</small></span><input id="staffNotificationThreshold" class="staff-notification-threshold" type="number" min="0" max="999" step="1"><button type="button" class="staff-notification-option-toggle" data-notification-toggle="lowBalance"></button></div></div><div class="staff-notification-actions"><button id="staffNotificationTest" type="button" class="staff-notification-test">Teszt jelz&eacute;s</button><span id="staffNotificationStatus" class="staff-notification-status"></span></div></section>';
+                host.appendChild(center);
+                const bell = center.querySelector('#staffNotificationBell'); const master = center.querySelector('#staffNotificationMaster'); const options = center.querySelector('#staffNotificationOptions'); const threshold = center.querySelector('#staffNotificationThreshold'); const status = center.querySelector('#staffNotificationStatus'); const shifts = center.querySelector('#staffNotificationShifts');
+                function renderCenter() { bell.classList.toggle('is-enabled', Boolean(settings.enabled)); master.classList.toggle('is-off', !settings.enabled); master.setAttribute('aria-pressed', String(Boolean(settings.enabled))); options.querySelectorAll('[data-notification-toggle]').forEach(function (button) { const key = button.dataset.notificationToggle; button.classList.toggle('is-on', Boolean(settings[key])); button.textContent = settings[key] ? 'BE' : 'KI'; button.setAttribute('aria-pressed', String(Boolean(settings[key]))); button.closest('.staff-notification-option').classList.toggle('is-muted', !settings.enabled); }); shifts.querySelectorAll('[data-notification-shift]').forEach(function (button) { const selected = selectedShifts().includes(button.dataset.notificationShift); button.classList.toggle('is-selected', selected); button.setAttribute('aria-pressed', String(selected)); }); threshold.value = settings.lowBalanceThreshold; status.textContent = settings.enabled ? `${selectedShifts().join(', ')} muszak aktiv.` : ('Notification' in window ? 'Kapcsold be az engedelyhez.' : 'A bongeszo nem tamogatja.'); }
+                bell.addEventListener('click', function () { const open = center.classList.toggle('is-open'); bell.setAttribute('aria-expanded', String(open)); });
+                master.addEventListener('click', async function () { settings.enabled = settings.enabled ? false : await enableNotifications(); persist(); renderCenter(); if (settings.enabled) { toast('Ertesitesek aktivak', `${selectedShifts().join(', ')} muszak jelzesei aktivak ezen az eszkozon.`); checkScheduledNotifications(); } });
+                shifts.addEventListener('click', function (event) { const button = event.target.closest('[data-notification-shift]'); if (!button) return; const shift = button.dataset.notificationShift; const next = selectedShifts(); const index = next.indexOf(shift); if (index >= 0) { if (next.length === 1) { toast('Muszak kivalasztas', 'Legalabb egy muszakot hagyj kijelolve.'); return; } next.splice(index, 1); } else next.push(shift); settings.shifts = ['A','B','C','D'].filter(function (item) { return next.includes(item); }); persist(); renderCenter(); });
+                options.addEventListener('click', function (event) { const button = event.target.closest('[data-notification-toggle]'); if (!button) return; const key = button.dataset.notificationToggle; settings[key] = !settings[key]; persist(); renderCenter(); });
+                threshold.addEventListener('change', function () { let value = Number(threshold.value); if (!Number.isFinite(value)) value = 48; settings.lowBalanceThreshold = Math.max(0, Math.min(999, Math.round(value))); persist(); renderCenter(); });
+                center.querySelector('#staffNotificationTest').addEventListener('click', async function () { if (!settings.enabled) { settings.enabled = await enableNotifications(); persist(); renderCenter(); if (!settings.enabled) return; } systemNotice('Forvia Staff Pro', `${selectedShifts().join(', ')} muszak tesztjelzese sikeresen mukodik ezen az eszkozon.`, 'staffpro-test'); });
+                document.addEventListener('click', function (event) { if (!center.contains(event.target)) { center.classList.remove('is-open'); bell.setAttribute('aria-expanded', 'false'); } }); document.addEventListener('keydown', function (event) { if (event.key === 'Escape') { center.classList.remove('is-open'); bell.setAttribute('aria-expanded', 'false'); } });
+                renderCenter();
+            }
+            createCenter(); updateTip();
+            window.addEventListener('focus', checkScheduledNotifications); document.addEventListener('visibilitychange', function () { if (!document.hidden) checkScheduledNotifications(); }); setTimeout(checkScheduledNotifications, 2200); setInterval(checkScheduledNotifications, 60000);
+        })();
+    </script>
 </body>
 </html>
