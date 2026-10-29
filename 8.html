@@ -3169,7 +3169,7 @@
             function lowBalanceSummary(list, now) { return (list || []).filter(function (employee) { return getEmpQuota(employee, now.getFullYear()) - getYearlyUsed(employee, now.getFullYear()) <= Number(settings.lowBalanceThreshold || 48); }); }
             async function readShift(shift) { if (shift === currentShift && Array.isArray(employees) && employees.length) return employees; const snapshot = await db.ref(`shift_${shift}`).once('value'); const data = snapshot.val(); return Array.isArray(data) ? data.filter(function (employee) { return employee != null; }) : []; }
             function toast(title, body) { let element = document.getElementById('staffNotificationToast'); if (!element) { element = document.createElement('div'); element.id = 'staffNotificationToast'; element.className = 'staff-notification-toast'; element.innerHTML = '<b></b><span></span>'; document.body.appendChild(element); } element.querySelector('b').textContent = title; element.querySelector('span').textContent = body; clearTimeout(toastTimer); element.classList.add('is-visible'); toastTimer = setTimeout(function () { element.classList.remove('is-visible'); }, 6200); }
-            function systemNotice(title, body, tag) { toast(title, body); if (!settings.enabled || !('Notification' in window) || Notification.permission !== 'granted') return; try { new Notification(title, { body:body, tag:tag, renotify:false }); } catch (error) { console.warn('Ertesitesi hiba:', error); } }
+            function systemNotice(title, body, tag) { if (!settings.enabled) return; if (!document.hidden && typeof window.showStaffProNotification === 'function') { window.showStaffProNotification(title, body, tag); return; } if (!('Notification' in window) || Notification.permission !== 'granted') return; try { new Notification(title, { body:body, tag:tag, renotify:false }); } catch (error) { console.warn('Ertesitesi hiba:', error); } }
             function emitOnce(key, title, body) { if (sent[key]) return; sent[key] = Date.now(); persistSent(); systemNotice(title, body, key); }
             async function checkScheduledNotifications() {
                 if (checking || !settings.enabled || !auth.currentUser) return;
@@ -3206,6 +3206,56 @@
             }
             createCenter(); updateTip();
             window.addEventListener('focus', checkScheduledNotifications); document.addEventListener('visibilitychange', function () { if (!document.hidden) checkScheduledNotifications(); }); setTimeout(checkScheduledNotifications, 2200); setInterval(checkScheduledNotifications, 60000);
+        })();
+    </script>
+    <!-- Oldalon beluli, reszletes Staff Pro ertesites. -->
+    <style id="staff-pro-notification-popup-style">
+        #staffProNotificationLayer { position:fixed; top:16px; right:18px; z-index:520; width:min(420px,calc(100vw - 36px)); pointer-events:none; }
+        .staff-pro-notification-card { position:relative; overflow:hidden; display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:11px; align-items:start; padding:13px; border:1px solid rgba(125,211,252,.62); border-radius:16px; background:linear-gradient(135deg,rgba(15,23,42,.985),rgba(30,41,59,.985) 54%,rgba(8,47,73,.985)); box-shadow:0 22px 58px rgba(2,6,23,.58),inset 0 1px 0 rgba(255,255,255,.11); color:#f8fafc; pointer-events:auto; opacity:0; transform:translate3d(26px,-10px,0) scale(.96); transition:opacity .22s ease,transform .22s cubic-bezier(.2,.8,.25,1); }
+        .staff-pro-notification-card.is-visible { opacity:1; transform:translate3d(0,0,0) scale(1); }
+        .staff-pro-notification-card::before { content:''; position:absolute; inset:0 0 auto; height:2px; background:linear-gradient(90deg,#38bdf8,#818cf8,#34d399); box-shadow:0 0 14px rgba(56,189,248,.72); }
+        .staff-pro-notification-icon { display:grid; place-items:center; width:35px; height:35px; border:1px solid rgba(125,211,252,.48); border-radius:11px; background:linear-gradient(135deg,rgba(30,64,175,.78),rgba(8,145,178,.52)); color:#e0f2fe; box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 5px 12px rgba(8,145,178,.18); }
+        .staff-pro-notification-icon i { font-size:15px; animation:staffProBellRing 1.2s cubic-bezier(.2,.8,.3,1) both; }
+        @keyframes staffProBellRing { 0%,100% { transform:rotate(0); } 18% { transform:rotate(-16deg) scale(1.12); } 38% { transform:rotate(14deg); } 55% { transform:rotate(-8deg); } 70% { transform:rotate(5deg); } }
+        .staff-pro-notification-copy { min-width:0; }
+        .staff-pro-notification-eyebrow { display:flex; align-items:center; gap:6px; color:#93c5fd; font-size:8px; font-weight:950; letter-spacing:.105em; text-transform:uppercase; }
+        .staff-pro-notification-eyebrow::before { content:''; width:6px; height:6px; border-radius:999px; background:#34d399; box-shadow:0 0 9px rgba(52,211,153,.88); }
+        .staff-pro-notification-copy h3 { margin:4px 0 3px; color:#fff; font-size:13px; font-weight:950; line-height:1.15; }
+        .staff-pro-notification-copy p { margin:0; color:#cbd5e1; font-size:10px; font-weight:700; line-height:1.42; }
+        .staff-pro-notification-meta { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+        .staff-pro-notification-chip { padding:3px 6px; border:1px solid rgba(96,165,250,.38); border-radius:999px; background:rgba(30,64,175,.24); color:#bfdbfe; font-size:8px; font-weight:900; }
+        .staff-pro-notification-actions { display:flex; align-items:center; gap:6px; margin-top:9px; }
+        .staff-pro-notification-settings { border:0; padding:0; background:transparent; color:#7dd3fc; font-size:8px; font-weight:950; letter-spacing:.055em; text-transform:uppercase; transition:color .15s ease; }
+        .staff-pro-notification-settings:hover { color:#fff; }
+        .staff-pro-notification-close { display:grid; place-items:center; width:24px; height:24px; border:1px solid rgba(148,163,184,.30); border-radius:8px; background:rgba(15,23,42,.48); color:#94a3b8; font-size:13px; line-height:1; transition:background .15s ease,color .15s ease,transform .15s ease; }
+        .staff-pro-notification-close:hover { background:rgba(239,68,68,.18); color:#fecaca; }
+        .staff-pro-notification-close:active { transform:scale(.92); }
+        .staff-pro-notification-progress { position:absolute; right:0; bottom:0; left:0; height:3px; background:rgba(255,255,255,.08); }
+        .staff-pro-notification-progress::after { content:''; display:block; width:100%; height:100%; transform-origin:left; background:linear-gradient(90deg,#38bdf8,#818cf8); animation:staffProNoticeTimer 14s linear forwards; }
+        @keyframes staffProNoticeTimer { to { transform:scaleX(0); } }
+    </style>
+    <script>
+        (function () {
+            let dismissTimer = null;
+            function layer() { let node = document.getElementById('staffProNotificationLayer'); if (!node) { node = document.createElement('div'); node.id = 'staffProNotificationLayer'; node.setAttribute('aria-live', 'polite'); node.setAttribute('aria-atomic', 'true'); document.body.appendChild(node); } return node; }
+            function closeCard(card) { if (!card) return; card.classList.remove('is-visible'); setTimeout(function () { card.remove(); }, 230); }
+            window.showStaffProNotification = function (title, body, tag) {
+                const host = layer(); host.querySelectorAll('.staff-pro-notification-card').forEach(closeCard); clearTimeout(dismissTimer);
+                const shift = /^([A-D])\s+muszak/i.exec(String(body || ''));
+                const card = document.createElement('article'); card.className = 'staff-pro-notification-card'; card.setAttribute('role', 'status');
+                card.innerHTML = '<div class="staff-pro-notification-icon"><i class="fas fa-bell" aria-hidden="true"></i></div><div class="staff-pro-notification-copy"><div class="staff-pro-notification-eyebrow">&Eacute;l&#337; &eacute;rtes&iacute;t&eacute;s</div><h3></h3><p></p><div class="staff-pro-notification-meta"></div><div class="staff-pro-notification-actions"><button type="button" class="staff-pro-notification-settings">&Eacute;rtes&iacute;t&eacute;sek be&aacute;ll&iacute;t&aacute;sa</button></div></div><button type="button" class="staff-pro-notification-close" aria-label="Bez&aacute;r&aacute;s">&times;</button><div class="staff-pro-notification-progress" aria-hidden="true"></div>';
+                card.querySelector('h3').textContent = title;
+                card.querySelector('p').textContent = body;
+                const meta = card.querySelector('.staff-pro-notification-meta');
+                if (shift) { const chip = document.createElement('span'); chip.className = 'staff-pro-notification-chip'; chip.textContent = `Műszak: ${shift[1]}`; meta.appendChild(chip); }
+                const time = document.createElement('span'); time.className = 'staff-pro-notification-chip'; time.textContent = new Date().toLocaleTimeString('hu-HU', { hour:'2-digit', minute:'2-digit' }); meta.appendChild(time);
+                host.appendChild(card); requestAnimationFrame(function () { card.classList.add('is-visible'); });
+                card.querySelector('.staff-pro-notification-close').addEventListener('click', function () { clearTimeout(dismissTimer); closeCard(card); });
+                card.querySelector('.staff-pro-notification-settings').addEventListener('click', function () { const center = document.getElementById('staffNotificationCenter'); const bell = document.getElementById('staffNotificationBell'); if (center && bell) { center.classList.add('is-open'); bell.setAttribute('aria-expanded', 'true'); } closeCard(card); });
+                card.addEventListener('mouseenter', function () { clearTimeout(dismissTimer); });
+                card.addEventListener('mouseleave', function () { dismissTimer = setTimeout(function () { closeCard(card); }, 5500); });
+                dismissTimer = setTimeout(function () { closeCard(card); }, 14000);
+            };
         })();
     </script>
 </body>
