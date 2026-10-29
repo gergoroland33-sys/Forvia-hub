@@ -2907,5 +2907,75 @@
             }
         })();
     </script>
+    <!-- Gyors kitoltes: csak a laptopos vezerlo vizualis finomitasa. -->
+    <style id="quick-fill-polish">
+        #desktopQuickFill { gap:4px; padding:4px 5px 4px 6px; border-color:rgba(100,116,139,.64); border-radius:12px; background:linear-gradient(135deg,rgba(30,41,59,.96),rgba(15,23,42,.94)); box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 5px 14px rgba(2,6,23,.24); }
+        #desktopQuickFill .desktop-quick-fill-label { display:inline-flex; align-items:center; gap:4px; padding:0 3px 0 1px; color:#cbd5e1; font-weight:950; }
+        #desktopQuickFill .desktop-quick-fill-label::before { content:''; width:5px; height:5px; border-radius:999px; background:#64748b; box-shadow:0 0 0 3px rgba(100,116,139,.12); transition:background .16s ease,box-shadow .16s ease; }
+        #desktopQuickFill.is-active .desktop-quick-fill-label { color:#f8fafc; }
+        #desktopQuickFill.is-active .desktop-quick-fill-label::before { background:#34d399; box-shadow:0 0 0 3px rgba(52,211,153,.14),0 0 9px rgba(52,211,153,.76); }
+        #desktopQuickFill .quick-fill-choice { min-height:27px; padding:0 7px; border-radius:8px; font-weight:950; letter-spacing:.035em; }
+        #desktopQuickFill .quick-fill-choice:hover { transform:translateY(-1px); filter:brightness(1.12); }
+        #desktopQuickFill .quick-fill-choice:nth-of-type(1) { color:#6ee7b7; border-color:rgba(16,185,129,.5); background:rgba(5,150,105,.13); }
+        #desktopQuickFill .quick-fill-choice:nth-of-type(2) { color:#fdba74; border-color:rgba(234,88,12,.5); background:rgba(234,88,12,.12); }
+        #desktopQuickFill .quick-fill-choice:nth-of-type(3) { color:#93c5fd; border-color:rgba(37,99,235,.52); background:rgba(37,99,235,.14); }
+        #desktopQuickFill .quick-fill-choice:nth-of-type(4) { color:#fde68a; border-color:rgba(217,119,6,.54); background:rgba(217,119,6,.14); }
+        #desktopQuickFill .quick-fill-choice.is-active { color:#fff; border-color:#6ee7b7; background:linear-gradient(135deg,#047857,#10b981); box-shadow:0 0 0 2px rgba(16,185,129,.15),0 5px 12px rgba(5,150,105,.30),inset 0 1px 0 rgba(255,255,255,.24); }
+        #desktopQuickFill .quick-fill-choice:nth-of-type(2).is-active { border-color:#fdba74; background:linear-gradient(135deg,#c2410c,#ea580c); box-shadow:0 0 0 2px rgba(234,88,12,.14),0 5px 12px rgba(234,88,12,.28),inset 0 1px 0 rgba(255,255,255,.24); }
+        #desktopQuickFill .quick-fill-choice:nth-of-type(3).is-active { border-color:#93c5fd; background:linear-gradient(135deg,#1d4ed8,#2563eb); box-shadow:0 0 0 2px rgba(37,99,235,.14),0 5px 12px rgba(37,99,235,.28),inset 0 1px 0 rgba(255,255,255,.24); }
+        #desktopQuickFill .quick-fill-choice:nth-of-type(4).is-active { border-color:#fde68a; background:linear-gradient(135deg,#b45309,#d97706); box-shadow:0 0 0 2px rgba(217,119,6,.14),0 5px 12px rgba(217,119,6,.28),inset 0 1px 0 rgba(255,255,255,.24); }
+        #desktopQuickFill .quick-fill-hour-stepper { display:flex; align-items:center; height:27px; overflow:hidden; border:1px solid rgba(16,185,129,.46); border-radius:8px; background:rgba(6,78,59,.16); color:#a7f3d0; }
+        #desktopQuickFill .quick-fill-hours-step { width:20px; height:25px; border:0; background:rgba(16,185,129,.10); color:#a7f3d0; font-size:14px; font-weight:900; line-height:1; transition:background .14s ease,color .14s ease,transform .14s ease; }
+        #desktopQuickFill .quick-fill-hours-step:hover { background:rgba(16,185,129,.28); color:#fff; }
+        #desktopQuickFill .quick-fill-hours-step:active { transform:scale(.9); }
+        #desktopQuickFill .quick-fill-hours { width:31px; height:25px; padding:0; appearance:textfield; -moz-appearance:textfield; color:#ecfdf5; font-weight:950; }
+        #desktopQuickFill .quick-fill-hours::-webkit-outer-spin-button, #desktopQuickFill .quick-fill-hours::-webkit-inner-spin-button { margin:0; -webkit-appearance:none; }
+        #desktopQuickFill .quick-fill-hours:focus { background:rgba(16,185,129,.12); color:#fff; }
+        #desktopQuickFill .quick-fill-hours-unit { padding-right:5px; color:#6ee7b7; font-size:8px; font-weight:950; letter-spacing:.04em; }
+    </style>
+    <script>
+        (function () {
+            const panel = document.getElementById('desktopQuickFill');
+            const input = document.getElementById('quickFillHours');
+            const oldWrap = input && input.closest('.quick-fill-hours-wrap');
+            if (!panel || !input || !oldWrap || document.getElementById('quickFillHourStepper')) return;
+
+            const stepper = document.createElement('div');
+            stepper.id = 'quickFillHourStepper';
+            stepper.className = 'quick-fill-hour-stepper';
+            stepper.title = 'Szabadsag oraszame: feloras leptetes vagy kozvetlen beiras';
+            const lower = document.createElement('button');
+            lower.type = 'button'; lower.className = 'quick-fill-hours-step'; lower.setAttribute('aria-label', 'Fel oraval kevesebb'); lower.innerHTML = '&minus;';
+            const unit = document.createElement('span');
+            unit.className = 'quick-fill-hours-unit'; unit.textContent = 'ORA';
+            const raise = document.createElement('button');
+            raise.type = 'button'; raise.className = 'quick-fill-hours-step'; raise.setAttribute('aria-label', 'Fel oraval tobb'); raise.innerHTML = '&plus;';
+            oldWrap.replaceWith(stepper);
+            stepper.append(lower, input, unit, raise);
+
+            window.adjustDesktopQuickFillHours = function (delta) {
+                let value = Number(String(input.value || '12').replace(',', '.'));
+                if (!Number.isFinite(value)) value = 12;
+                value = Math.max(.5, Math.min(99, Math.round((value + delta) * 2) / 2));
+                input.value = String(value);
+                window.syncDesktopQuickFillHours();
+                input.focus({ preventScroll: true });
+            };
+            lower.addEventListener('click', function () { window.adjustDesktopQuickFillHours(-.5); });
+            raise.addEventListener('click', function () { window.adjustDesktopQuickFillHours(.5); });
+        })();
+    </script>
+    <script>
+        (function () {
+            const stepper = document.getElementById('quickFillHourStepper');
+            if (!stepper) return;
+            stepper.title = 'Szabads\u00e1g \u00f3rasz\u00e1ma: f\u00e9l\u00f3r\u00e1s l\u00e9ptet\u00e9s vagy k\u00f6zvetlen be\u00edr\u00e1s';
+            const buttons = stepper.querySelectorAll('.quick-fill-hours-step');
+            if (buttons[0]) buttons[0].setAttribute('aria-label', 'F\u00e9l \u00f3r\u00e1val kevesebb');
+            if (buttons[1]) buttons[1].setAttribute('aria-label', 'F\u00e9l \u00f3r\u00e1val t\u00f6bb');
+            const unit = stepper.querySelector('.quick-fill-hours-unit');
+            if (unit) unit.innerHTML = '&#211;RA';
+        })();
+    </script>
 </body>
 </html>
