@@ -328,6 +328,47 @@
             .table-container { position: static !important; overflow: visible !important; height: auto !important; }
             footer, #mobile-app-container { display: none !important; } 
         }
+
+        /* Csak az asztali idővezérlő kap új külsőt; a meglévő léptetőfunkciók változatlanok. */
+        .period-control {
+            display: inline-flex;
+            align-items: center;
+            min-height: 42px;
+            overflow: hidden;
+            border: 1px solid rgba(96, 165, 250, .30);
+            border-radius: 12px;
+            background: linear-gradient(145deg, rgba(15,23,42,.94), rgba(24,39,68,.88));
+            box-shadow: 0 8px 20px rgba(2,6,23,.24), inset 0 1px 0 rgba(255,255,255,.05);
+        }
+        .period-control-btn {
+            width: 32px;
+            height: 40px;
+            border: 0;
+            color: #60a5fa;
+            background: transparent;
+            cursor: pointer;
+            transition: background .16s ease, color .16s ease, transform .16s ease;
+        }
+        .period-control-btn:hover { color: #fff; background: rgba(37,99,235,.26); }
+        .period-control-btn:active { transform: scale(.89); }
+        .period-control-label {
+            display: grid;
+            min-width: 72px;
+            height: 40px;
+            padding: 0 10px;
+            place-items: center;
+            border-left: 1px solid rgba(96,165,250,.13);
+            border-right: 1px solid rgba(96,165,250,.13);
+            color: #bfdbfe;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .10em;
+            text-transform: uppercase;
+            text-shadow: 0 0 14px rgba(96,165,250,.20);
+        }
+        .period-control.month .period-control-label { min-width: 126px; color: #e0f2fe; }
+        .period-control.month { border-color: rgba(56,189,248,.38); }
+
     </style>
 </head>
 <body class="pb-0">
@@ -358,7 +399,7 @@
                 </div>
             </div>
         </div>
-        <div class="flex items-center justify-between w-full gap-2 overflow-x-auto pb-1">
+        <div class="desktop-toolbar flex items-center justify-between w-full gap-2">
             <div id="sync" class="bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded-full text-[9px] font-black border border-emerald-500/20 whitespace-nowrap">ONLINE</div>
             <div id="desktopQuickFill" class="desktop-quick-fill" aria-label="Gyors kitöltés asztali nézetben">
                 <span class="desktop-quick-fill-label">Gyors</span>
@@ -371,16 +412,16 @@
                 <button type="button" data-quick-code="KÉ" class="quick-fill-choice" onclick="setDesktopQuickFill('KÉ', this)" aria-pressed="false" title="Késés kijelölése a kattintott napi cellákba">KÉ</button>
                 <span id="desktopQuickFillStatus" class="desktop-quick-fill-status" aria-live="polite"></span>
             </div>
-            <div class="flex items-center gap-2">
-                <div class="flex items-center bg-slate-900/80 border border-slate-700/50 rounded-lg p-0.5">
-                    <button onclick="changeYear(-1)" class="p-2 text-blue-400 hover:text-white"><i class="fas fa-angle-double-left text-xs"></i></button>
-                    <span id="yearDisp" class="font-black text-xs uppercase w-12 text-center text-blue-400 tracking-widest"></span>
-                    <button onclick="changeYear(1)" class="p-2 text-blue-400 hover:text-white"><i class="fas fa-angle-double-right text-xs"></i></button>
+            <div class="flex items-center gap-2" aria-label="Időpont léptetése">
+                <div class="period-control year" title="Év léptetése">
+                    <button type="button" onclick="changeYear(-1)" class="period-control-btn" aria-label="Előző év"><i class="fas fa-angle-double-left text-[11px]"></i></button>
+                    <span id="yearDisp" class="period-control-label"></span>
+                    <button type="button" onclick="changeYear(1)" class="period-control-btn" aria-label="Következő év"><i class="fas fa-angle-double-right text-[11px]"></i></button>
                 </div>
-                <div class="flex items-center bg-slate-900/80 border border-slate-700/50 rounded-lg p-0.5">
-                    <button onclick="changeMonth(-1)" class="p-2 text-blue-400 hover:text-white"><i class="fas fa-chevron-left text-xs"></i></button>
-                    <span id="monthDisp" class="font-black text-xs uppercase w-20 text-center text-blue-400 tracking-widest">Jan</span>
-                    <button onclick="changeMonth(1)" class="p-2 text-blue-400 hover:text-white"><i class="fas fa-chevron-right text-xs"></i></button>
+                <div class="period-control month" title="Hónap léptetése">
+                    <button type="button" onclick="changeMonth(-1)" class="period-control-btn" aria-label="Előző hónap"><i class="fas fa-chevron-left text-[10px]"></i></button>
+                    <span id="monthDisp" class="period-control-label">Jan</span>
+                    <button type="button" onclick="changeMonth(1)" class="period-control-btn" aria-label="Következő hónap"><i class="fas fa-chevron-right text-[10px]"></i></button>
                 </div>
             </div>
             <button onclick="jumpToToday()" class="header-action-btn header-action-today px-3 py-1.5 text-[10px] font-black uppercase tracking-[.1em] whitespace-nowrap flex items-center gap-1.5">
@@ -717,6 +758,7 @@
         const monthNames = ["Január", "Február", "Március", "Április", "Május", "Június", "Július", "Augusztus", "Szeptember", "Október", "November", "December"];
         const dayNamesShort = ["V", "H", "K", "Sze", "Cs", "P", "Szo"];
         const shiftCycleAnchorDate = new Date(Date.UTC(2026, 0, 9));
+
 
         // A 3.html műszaknaptárával azonos, 12 napos ciklus. Csak a táblázat vizuális jelöléséhez használjuk.
         function getShiftCyclePhase(dateObj, shiftId) {
@@ -2932,6 +2974,75 @@
         #desktopQuickFill .quick-fill-hours::-webkit-outer-spin-button, #desktopQuickFill .quick-fill-hours::-webkit-inner-spin-button { margin:0; -webkit-appearance:none; }
         #desktopQuickFill .quick-fill-hours:focus { background:rgba(16,185,129,.12); color:#fff; }
         #desktopQuickFill .quick-fill-hours-unit { padding-right:5px; color:#6ee7b7; font-size:8px; font-weight:950; letter-spacing:.04em; }
+    </style>
+    <!-- Laptopos szélesség-optimalizálás: egy sorban maradó, kisebb kezelőszervek + teljes szélességű mátrix. -->
+    <style id="desktop-width-fit">
+        @media (min-width: 769px) {
+            .desktop-toolbar {
+                flex-wrap: nowrap !important;
+                gap: clamp(3px, .45vw, 8px) !important;
+                overflow: visible !important;
+                min-width: 0;
+            }
+            .desktop-toolbar > * { flex: 0 0 auto; min-width: 0; }
+            .desktop-toolbar .ml-auto { margin-left: auto; }
+
+            /* A mátrix nem szélesebb a rendelkezésre álló laptop-kijelzőnél. */
+            .table-container { overflow-x: hidden !important; }
+            .matrix-table { width: 100% !important; min-width: 0 !important; table-layout: fixed !important; }
+            .matrix-table thead th { width: auto !important; min-width: 0 !important; }
+            .desktop-main {
+                --matrix-name-width: clamp(132px, 8vw, 150px);
+                --matrix-metric-width: clamp(48px, 3.15vw, 60px);
+            }
+            .matrix-table .name-col {
+                width: var(--matrix-name-width) !important;
+                min-width: var(--matrix-name-width) !important;
+                max-width: var(--matrix-name-width) !important;
+            }
+            .matrix-table .sticky-quota {
+                left: var(--matrix-name-width) !important;
+                width: var(--matrix-metric-width) !important;
+                min-width: var(--matrix-metric-width) !important;
+                max-width: var(--matrix-metric-width) !important;
+            }
+            .matrix-table .sticky-rem {
+                left: calc(var(--matrix-name-width) + var(--matrix-metric-width)) !important;
+                width: var(--matrix-metric-width) !important;
+                min-width: var(--matrix-metric-width) !important;
+                max-width: var(--matrix-metric-width) !important;
+            }
+            .matrix-table .name-col .break-words {
+                overflow-wrap: normal !important;
+                word-break: normal !important;
+                hyphens: none !important;
+            }
+        }
+        @media (max-width: 1920px) and (min-width: 769px) {
+            .desktop-header { padding: 7px 8px !important; gap: 6px !important; }
+            #sync { padding: 5px 7px !important; font-size: 8px !important; }
+            #desktopQuickFill { gap: 3px !important; padding: 3px 4px !important; border-radius: 10px !important; }
+            #desktopQuickFill .desktop-quick-fill-label { display: none !important; }
+            #desktopQuickFill .quick-fill-choice { min-height: 24px !important; padding: 0 5px !important; font-size: 8px !important; border-radius: 7px !important; }
+            #desktopQuickFill .quick-fill-hour-stepper { height: 24px !important; border-radius: 7px !important; }
+            #desktopQuickFill .quick-fill-hours-step { width: 17px !important; height: 22px !important; font-size: 12px !important; }
+            #desktopQuickFill .quick-fill-hours { width: 26px !important; height: 22px !important; font-size: 11px !important; }
+            #desktopQuickFill .quick-fill-hours-unit { padding-right: 3px !important; font-size: 7px !important; }
+            .period-control { min-height: 34px !important; border-radius: 10px !important; }
+            .period-control-btn, .period-control-label { height: 32px !important; }
+            .period-control-btn { width: 26px !important; }
+            .period-control-label { min-width: 54px !important; padding: 0 6px !important; font-size: 10px !important; }
+            .period-control.month .period-control-label { min-width: 96px !important; }
+            .header-action-btn { padding: 7px 9px !important; border-radius: 9px !important; }
+            .shift-visibility-control { padding: 4px 6px 4px 7px !important; font-size: 8px !important; }
+        }
+        @media (max-width: 1320px) and (min-width: 769px) {
+            .desktop-toolbar .header-action-btn > span,
+            .desktop-toolbar .shift-visibility-control > span:not(.shift-visibility-switch) { display: none !important; }
+            .desktop-toolbar .header-action-btn { gap: 0 !important; min-width: 34px; justify-content: center; }
+            .desktop-toolbar .ml-auto { gap: 4px !important; }
+            .desktop-toolbar .ml-auto > button { padding: 7px 9px !important; }
+        }
     </style>
     <script>
         (function () {
