@@ -369,6 +369,36 @@
         .period-control.month .period-control-label { min-width: 126px; color: #e0f2fe; }
         .period-control.month { border-color: rgba(56,189,248,.38); }
 
+        /* Szabadság-kifutási előrejelzés: csak akkor jelenik meg, ha valódi tervezési kockázat van. */
+        .leave-forecast-button { display:inline-flex; align-items:center; gap:6px; min-height:32px; padding:0 10px; border:1px solid rgba(100,116,139,.58); border-radius:9px; background:linear-gradient(135deg,rgba(51,65,85,.54),rgba(15,23,42,.76)); color:#cbd5e1; box-shadow:inset 0 1px 0 rgba(255,255,255,.055),0 5px 15px rgba(2,6,23,.16); font-size:10px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; transition:transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease, color .18s ease; }
+        .leave-forecast-button:hover { transform:translateY(-1px); border-color:#94a3b8; color:#f8fafc; background:linear-gradient(135deg,rgba(71,85,105,.68),rgba(15,23,42,.88)); box-shadow:0 7px 19px rgba(2,6,23,.30); }
+        .leave-forecast-button.is-warning { border-color:rgba(251,146,60,.58); background:linear-gradient(135deg,rgba(120,53,15,.48),rgba(67,20,7,.72)); color:#fed7aa; box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 5px 15px rgba(67,20,7,.22); }
+        .leave-forecast-button.is-warning:hover { border-color:#fdba74; background:linear-gradient(135deg,rgba(154,52,18,.72),rgba(92,28,8,.88)); box-shadow:0 7px 19px rgba(124,45,18,.34); }
+        .leave-forecast-button.is-critical { color:#fee2e2; border-color:rgba(248,113,113,.84); background:linear-gradient(135deg,rgba(127,29,29,.84),rgba(69,10,10,.93)); animation:leave-forecast-pulse 1.65s ease-in-out infinite; }
+        .leave-forecast-count { display:grid; min-width:17px; height:17px; padding:0 4px; place-items:center; border-radius:999px; background:rgba(2,6,23,.62); color:inherit; font-size:9px; line-height:1; box-shadow:inset 0 0 0 1px rgba(255,255,255,.12); }
+        @keyframes leave-forecast-pulse { 0%,100% { box-shadow:0 0 0 0 rgba(248,113,113,0), inset 0 1px 0 rgba(255,255,255,.1); } 50% { box-shadow:0 0 0 4px rgba(248,113,113,.14), 0 0 18px rgba(239,68,68,.35), inset 0 1px 0 rgba(255,255,255,.1); } }
+        .leave-forecast-modal-card { width:min(760px,calc(100vw - 28px)); max-height:min(82vh,760px); }
+        .leave-forecast-summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:0 0 14px; }
+        .leave-forecast-summary-item { padding:10px; border:1px solid rgba(71,85,105,.62); border-radius:10px; background:linear-gradient(145deg,rgba(30,41,59,.75),rgba(15,23,42,.68)); }
+        .leave-forecast-summary-item strong { display:block; color:#f8fafc; font-size:18px; line-height:1.1; }
+        .leave-forecast-summary-item span { display:block; margin-top:4px; color:#94a3b8; font-size:9px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
+        .leave-forecast-item { border:1px solid rgba(71,85,105,.55); border-left:4px solid #f59e0b; border-radius:12px; background:linear-gradient(135deg,rgba(30,41,59,.76),rgba(15,23,42,.80)); overflow:hidden; }
+        .leave-forecast-item.is-critical { border-left-color:#ef4444; }
+        .leave-forecast-item-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:11px 12px 9px; }
+        .leave-forecast-item-name { color:#f8fafc; font-size:13px; font-weight:900; letter-spacing:.02em; text-transform:uppercase; }
+        .leave-forecast-badge { flex:0 0 auto; padding:4px 7px; border-radius:999px; color:#fed7aa; background:rgba(245,158,11,.14); font-size:9px; font-weight:900; letter-spacing:.07em; text-transform:uppercase; }
+        .leave-forecast-item.is-critical .leave-forecast-badge { color:#fecaca; background:rgba(239,68,68,.16); }
+        .leave-forecast-evidence { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); border-top:1px solid rgba(71,85,105,.5); background:rgba(2,6,23,.25); }
+        .leave-forecast-evidence div { min-width:0; padding:9px 10px; border-right:1px solid rgba(71,85,105,.42); }
+        .leave-forecast-evidence div:last-child { border-right:0; }
+        .leave-forecast-evidence span { display:block; color:#64748b; font-size:8px; font-weight:900; letter-spacing:.07em; text-transform:uppercase; }
+        .leave-forecast-evidence strong { display:block; margin-top:4px; color:#e2e8f0; font-size:12px; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .leave-forecast-advice { margin:0; padding:9px 12px 11px; color:#cbd5e1; font-size:11px; font-weight:700; line-height:1.45; }
+        .leave-forecast-advice b { color:#fff7ed; }
+        .leave-forecast-item.is-critical .leave-forecast-advice b { color:#fecaca; }
+        @media (max-width:1600px) and (min-width:769px) { .leave-forecast-label { display:none; } .leave-forecast-button { min-width:34px; justify-content:center; padding:0 7px; gap:4px; } }
+        @media (max-width:768px) { .leave-forecast-summary { grid-template-columns:1fr; } .leave-forecast-evidence { grid-template-columns:repeat(2,minmax(0,1fr)); } .leave-forecast-evidence div:nth-child(2) { border-right:0; } .leave-forecast-evidence div:nth-child(-n+2) { border-bottom:1px solid rgba(71,85,105,.42); } }
+
     </style>
 </head>
 <body class="pb-0">
@@ -435,6 +465,9 @@
             </div>
             <div class="flex gap-1">
                 <!-- ÚJ, SZOLIDABB FUNKCIÓ GOMBOK -->
+                <button id="leaveForecastButton" onclick="openLeaveForecast()" type="button" class="leave-forecast-button" title="Szabadság-kifutási előrejelzés" aria-label="Szabadság-kifutási előrejelzés">
+                    <i class="fas fa-exclamation text-[10px]"></i><span class="leave-forecast-label">Keret-terv</span><span id="leaveForecastCount" class="leave-forecast-count">0</span>
+                </button>
                 <button onclick="openFilterModal('note')" title="Jelölt (Megjegyzések szűrése az adott évre)" class="header-action-btn header-action-note px-2.5 py-1.5 flex items-center gap-1.5"><i class="fas fa-exclamation-triangle text-[10px]"></i> <span class="hidden md:inline text-[9px] font-black uppercase tracking-widest">Jelölt</span></button>
                 <button onclick="openFilterModal('cserenap')" title="Cserenapok (Szűrés az adott évre)" class="header-action-btn header-action-exchange px-2.5 py-1.5 flex items-center gap-1.5"><i class="fas fa-circle text-[8px] animate-pulse"></i> <span class="hidden md:inline text-[9px] font-black uppercase tracking-widest">Cserenap</span></button>
                 <!-- RÉGI GOMBOK -->
@@ -596,6 +629,20 @@
         </div>
     </div>
 
+    <!-- Szabadság-kifutási előrejelzés: kizárólag az aktuális műszak meglévő adatait olvassa. -->
+    <div id="leave-forecast-modal" class="hidden fixed inset-0 z-[135] flex items-center justify-center bg-black/75 backdrop-blur-sm transition-opacity no-select" role="dialog" aria-modal="true" aria-labelledby="leave-forecast-title">
+        <div class="leave-forecast-modal-card bg-slate-900 border border-slate-700 rounded-2xl p-5 shadow-[0_0_44px_rgba(0,0,0,.82)] transform scale-95 transition-transform flex flex-col">
+            <div class="flex justify-between items-start gap-4 mb-3 border-b border-slate-800 pb-3">
+                <div>
+                    <h3 id="leave-forecast-title" class="text-white font-black text-lg uppercase tracking-wide flex items-center gap-2"><i class="fas fa-exclamation text-orange-300"></i> Szabadság-kifutási terv</h3>
+                    <p id="leave-forecast-subtitle" class="mt-1 text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
+                </div>
+                <button onclick="closeLeaveForecast()" type="button" class="text-slate-400 hover:text-white transition-colors text-xl bg-slate-800 hover:bg-red-500 w-8 h-8 rounded-lg flex items-center justify-center shadow-lg border border-slate-700 hover:border-red-500" aria-label="Előrejelzés bezárása" title="Bezárás"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="leave-forecast-content" class="overflow-y-auto pr-1 space-y-2 flex-grow modal-scrollbar"></div>
+        </div>
+    </div>
+
     <!-- SÚGÓ / TIPPEK ABLAK -->
     <div id="tips-modal" class="hidden fixed inset-0 z-[130] flex items-center justify-center bg-black/70 backdrop-blur-sm transition-opacity no-select">
         <div class="bg-slate-900 border border-slate-700 rounded-2xl p-5 shadow-[0_0_40px_rgba(0,0,0,0.8)] w-full max-w-3xl mx-4 transform scale-95 transition-transform flex flex-col max-h-[85vh]">
@@ -660,6 +707,11 @@
                 <div>
                     <h4 class="text-blue-400 font-black text-sm uppercase mb-1 flex items-center gap-2"><i class="fas fa-filter"></i> Jelölt / Cserenap szűrők</h4>
                     <p>A sárga <b>Jelölt</b> gomb az adott év összes megjegyzését, a piros <b>Cserenap</b> gomb az összes cserenap-jóváírást listázza ki időrendben. Egy találatra kattintva a rendszer a megfelelő cellára ugrik, azt erős piros <b>KIVÁLASZTVA</b> jelzéssel kiemeli; a jelölés a következő cellakattintásig marad látható.</p>
+                </div>
+
+                <div>
+                    <h4 class="text-orange-300 font-black text-sm uppercase mb-1 flex items-center gap-2"><i class="fas fa-exclamation"></i> Keret-terv előrejelzés</h4>
+                    <p>A fejlécben a <b>Keret-terv</b> gomb csak akkor jelenik meg, ha az aktív műszakban valakinek a fennmaradó szabadsága már nehezen, vagy egyáltalán nem adható ki év végéig. A részletező lista az éves keretet, a már kiírt és a hátralévő órákat, valamint a még üres <b>12 órás</b> nappalos/éjszakás műszakok kapacitását mutatja. A pirosan pulzáló jelzés azt jelenti, hogy az összes üres hátralévő műszak mellett sem férne bele a teljes keret. Az előrejelzés csak olvas, nem módosít és nem tilt le adatbevitelt.</p>
                 </div>
 
                 <div>
@@ -850,6 +902,127 @@
             ];
             return [...fixed, ...moving];
         }
+
+        // --- SZABADSÁG-KIFUTÁSI ELŐREJELZÉS ---
+        // Kizárólag olvassa a már tárolt kereteket és napi bejegyzéseket. A 12 napos ciklusban
+        // minden nappalos és éjszakás nap 12 órás, tervezhető műszak; a pihenőnap nem számít bele.
+        const LEAVE_FORECAST_SHIFT_HOURS = 12;
+        const LEAVE_FORECAST_WARNING_PRESSURE = 0.65;
+
+        function leaveForecastDayKey(day) {
+            return `${day.getFullYear()}-${day.getMonth() + 1}-${day.getDate()}`;
+        }
+
+        function leaveForecastEscape(value) {
+            return String(value == null ? '' : value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+        }
+
+        function getLeaveForecastRisks() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const year = today.getFullYear();
+            const yearEnd = new Date(year, 11, 31);
+            const daysLeft = Math.max(1, Math.floor((yearEnd - today) / 86400000) + 1);
+            const weeksLeft = Math.max(1, Math.ceil(daysLeft / 7));
+
+            const risks = employees.map(emp => {
+                const quota = getEmpQuota(emp, year);
+                const used = getYearlyUsed(emp, year);
+                const remaining = Math.max(0, quota - used);
+                let availableShifts = 0;
+
+                for (let cursor = new Date(today); cursor <= yearEnd; cursor.setDate(cursor.getDate() + 1)) {
+                    const phase = getShiftCyclePhase(cursor, currentShift);
+                    const isWorkShift = phase.className === 'shift-cycle-day' || phase.className === 'shift-cycle-night';
+                    const existingValue = emp.data && emp.data[leaveForecastDayKey(cursor)];
+                    if (isWorkShift && !String(existingValue || '').trim()) availableShifts++;
+                }
+
+                const capacity = availableShifts * LEAVE_FORECAST_SHIFT_HOURS;
+                const requiredShifts = Math.ceil(remaining / LEAVE_FORECAST_SHIFT_HOURS);
+                const pressure = remaining > 0 ? (capacity > 0 ? remaining / capacity : Infinity) : 0;
+                const severity = remaining > capacity ? 'critical' : (remaining > 0 && pressure >= LEAVE_FORECAST_WARNING_PRESSURE ? 'warning' : 'ok');
+                return {
+                    emp, quota, used, remaining, availableShifts, capacity, requiredShifts, pressure, daysLeft, weeksLeft,
+                    weeklyHours: Math.ceil((remaining / weeksLeft) * 2) / 2,
+                    deficit: Math.max(0, remaining - capacity), severity
+                };
+            }).filter(item => item.severity !== 'ok');
+
+            return risks.sort((a, b) => {
+                const severityOrder = { critical: 0, warning: 1 };
+                return severityOrder[a.severity] - severityOrder[b.severity] || b.pressure - a.pressure || b.remaining - a.remaining;
+            });
+        }
+
+        function updateLeaveForecastButton() {
+            const button = document.getElementById('leaveForecastButton');
+            const count = document.getElementById('leaveForecastCount');
+            if (!button || !count) return;
+            const risks = getLeaveForecastRisks();
+            const criticalCount = risks.filter(item => item.severity === 'critical').length;
+            button.classList.toggle('is-warning', risks.length > 0 && criticalCount === 0);
+            button.classList.toggle('is-critical', criticalCount > 0);
+            count.textContent = String(risks.length);
+            button.title = risks.length
+                ? `${risks.length} szabadság-kifutási figyelmeztetés${criticalCount ? `, ebből ${criticalCount} sürgős` : ''}`
+                : 'Nincs szabadság-kifutási figyelmeztetés';
+        }
+
+        window.openLeaveForecast = function() {
+            const risks = getLeaveForecastRisks();
+            const modal = document.getElementById('leave-forecast-modal');
+            const content = document.getElementById('leave-forecast-content');
+            const subtitle = document.getElementById('leave-forecast-subtitle');
+            if (!modal || !content || !subtitle) return;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const yearEnd = new Date(today.getFullYear(), 11, 31);
+            const dateLabel = `${today.getFullYear()}. ${monthNames[today.getMonth()]} ${today.getDate()}. – ${yearEnd.getFullYear()}. december 31.`;
+            subtitle.textContent = `${currentShift} műszak • ${dateLabel} • csak a még üres, tervezhető műszakok alapján`;
+
+            if (!risks.length) {
+                content.innerHTML = `<div class="text-center text-emerald-300 py-10 font-bold"><i class="fas fa-check-circle text-4xl mb-3 block"></i>Jelenleg nincs szabadság-kifutási kockázat ebben a műszakban.</div>`;
+            } else {
+                const criticalCount = risks.filter(item => item.severity === 'critical').length;
+                const warningCount = risks.length - criticalCount;
+                content.innerHTML = `
+                    <div class="leave-forecast-summary">
+                        <div class="leave-forecast-summary-item"><strong>${risks.length}</strong><span>Érintett kolléga</span></div>
+                        <div class="leave-forecast-summary-item"><strong>${criticalCount}</strong><span>Sürgős kockázat</span></div>
+                        <div class="leave-forecast-summary-item"><strong>${warningCount}</strong><span>Tervezést igényel</span></div>
+                    </div>
+                    <p class="mb-3 text-[11px] leading-relaxed text-slate-400">A rendszer az éves keretből levonja a már rögzített szabadságórákat, majd a mai naptól év végéig megszámolja az aktív műszak még üres nappalos és éjszakás, <b class="text-slate-300">12 órás</b> műszakait. Nem módosít adatot és nem tilt le beírást.</p>
+                    ${risks.map(item => {
+                        const isCritical = item.severity === 'critical';
+                        const pressurePercent = Number.isFinite(item.pressure) ? Math.round(item.pressure * 100) : 100;
+                        const advice = isCritical
+                            ? `<b>${item.deficit} óra már nem fér be.</b> Még az összes hátralévő üres műszak kiírásával sem fogyhatna el teljesen az éves keret.`
+                            : `<b>Még beférhet, de az üres hátralévő műszakok ${pressurePercent}%-át</b> szabadságra kell használni. Javaslat: átlagosan legalább ${item.weeklyHours} óra / hét ütemezése.`;
+                        return `<article class="leave-forecast-item${isCritical ? ' is-critical' : ''}">
+                            <div class="leave-forecast-item-head"><div><div class="leave-forecast-item-name">${leaveForecastEscape(item.emp.name)}</div><div class="mt-1 text-[10px] font-bold text-slate-400">${isCritical ? 'Azonnali egyeztetés szükséges' : 'Érdemes most elkezdeni az ütemezést'}</div></div><span class="leave-forecast-badge">${isCritical ? 'Nem fér bele' : 'Figyelendő'}</span></div>
+                            <div class="leave-forecast-evidence">
+                                <div><span>Éves keret</span><strong>${item.quota} óra</strong></div>
+                                <div><span>Már kiírva</span><strong>${item.used} óra</strong></div>
+                                <div><span>Hátralévő</span><strong>${item.remaining} óra</strong></div>
+                                <div><span>Üres műszak-kapacitás</span><strong>${item.availableShifts} × 12 = ${item.capacity} óra</strong></div>
+                            </div>
+                            <p class="leave-forecast-advice">${advice} <span class="text-slate-500">(${item.requiredShifts} teljes műszaknyi szabadság szükséges.)</span></p>
+                        </article>`;
+                    }).join('')}`;
+            }
+
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.firstElementChild.classList.remove('scale-95'), 10);
+        };
+
+        window.closeLeaveForecast = function() {
+            const modal = document.getElementById('leave-forecast-modal');
+            if (!modal) return;
+            modal.firstElementChild.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 150);
+        };
 
         // --- ALAP FUNKCIÓK ---
 
@@ -1085,6 +1258,7 @@
                 }
                 return row + "</tr>";
             }).join('');
+            updateLeaveForecastButton();
             
             if(mSelectedUserIndex > -1) renderMobileCalendar(); 
         }
