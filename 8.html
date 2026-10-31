@@ -370,14 +370,25 @@
         .period-control.month { border-color: rgba(56,189,248,.38); }
 
         /* Szabadság-kifutási előrejelzés: csak akkor jelenik meg, ha valódi tervezési kockázat van. */
-        .leave-forecast-button { display:inline-flex; align-items:center; gap:6px; min-height:32px; padding:0 10px; border:1px solid rgba(100,116,139,.58); border-radius:9px; background:linear-gradient(135deg,rgba(51,65,85,.54),rgba(15,23,42,.76)); color:#cbd5e1; box-shadow:inset 0 1px 0 rgba(255,255,255,.055),0 5px 15px rgba(2,6,23,.16); font-size:10px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; transition:transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease, color .18s ease; }
-        .leave-forecast-button:hover { transform:translateY(-1px); border-color:#94a3b8; color:#f8fafc; background:linear-gradient(135deg,rgba(71,85,105,.68),rgba(15,23,42,.88)); box-shadow:0 7px 19px rgba(2,6,23,.30); }
-        .leave-forecast-button.is-warning { border-color:rgba(251,146,60,.58); background:linear-gradient(135deg,rgba(120,53,15,.48),rgba(67,20,7,.72)); color:#fed7aa; box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 5px 15px rgba(67,20,7,.22); }
-        .leave-forecast-button.is-warning:hover { border-color:#fdba74; background:linear-gradient(135deg,rgba(154,52,18,.72),rgba(92,28,8,.88)); box-shadow:0 7px 19px rgba(124,45,18,.34); }
-        .leave-forecast-button.is-critical { color:#fee2e2; border-color:rgba(248,113,113,.84); background:linear-gradient(135deg,rgba(127,29,29,.84),rgba(69,10,10,.93)); animation:leave-forecast-pulse 1.65s ease-in-out infinite; }
-        .leave-forecast-count { display:grid; min-width:17px; height:17px; padding:0 4px; place-items:center; border-radius:999px; background:rgba(2,6,23,.62); color:inherit; font-size:9px; line-height:1; box-shadow:inset 0 0 0 1px rgba(255,255,255,.12); }
-        @keyframes leave-forecast-pulse { 0%,100% { box-shadow:0 0 0 0 rgba(248,113,113,0), inset 0 1px 0 rgba(255,255,255,.1); } 50% { box-shadow:0 0 0 4px rgba(248,113,113,.14), 0 0 18px rgba(239,68,68,.35), inset 0 1px 0 rgba(255,255,255,.1); } }
-        .leave-forecast-modal-card { width:min(760px,calc(100vw - 28px)); max-height:min(82vh,760px); }
+        .leave-forecast-button { position:relative; isolation:isolate; display:inline-flex; align-items:center; gap:7px; min-height:34px; padding:0 10px 0 6px; border:1px solid rgba(100,116,139,.68); border-radius:10px; background:linear-gradient(135deg,rgba(30,41,59,.98),rgba(15,23,42,.98)); color:#cbd5e1; box-shadow:inset 0 1px 0 rgba(255,255,255,.09),inset 0 -1px 0 rgba(2,6,23,.65),0 5px 15px rgba(2,6,23,.20); font-size:10px; font-weight:950; letter-spacing:.09em; text-transform:uppercase; transition:transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease, color .18s ease; }
+        .leave-forecast-button::before { content:''; position:absolute; z-index:-1; inset:2px; border-radius:7px; background:linear-gradient(110deg,rgba(148,163,184,.11),transparent 36%,rgba(59,130,246,.10)); opacity:.85; transition:opacity .18s ease,background .18s ease; }
+        .leave-forecast-button > i { display:grid; width:22px; height:22px; place-items:center; border:1px solid rgba(148,163,184,.48); border-radius:7px; background:linear-gradient(145deg,rgba(71,85,105,.62),rgba(30,41,59,.92)); color:#e2e8f0; font-size:9px; line-height:1; box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 2px 6px rgba(2,6,23,.34); transition:background .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease; }
+        .leave-forecast-button:hover { transform:translateY(-1px); border-color:#cbd5e1; color:#f8fafc; box-shadow:inset 0 1px 0 rgba(255,255,255,.11),0 8px 19px rgba(2,6,23,.38); }
+        .leave-forecast-button:hover::before { opacity:1; }
+        .leave-forecast-button.is-warning { border-color:#fb923c; background:linear-gradient(135deg,rgba(105,45,8,.99),rgba(48,22,8,.99)); color:#fff7ed; box-shadow:inset 0 1px 0 rgba(255,255,255,.15),inset 3px 0 0 #fbbf24,0 0 0 1px rgba(251,146,60,.20),0 8px 24px rgba(180,83,9,.42); animation:leave-forecast-warning-beacon 1.5s ease-in-out infinite; }
+        .leave-forecast-button.is-warning::before { background:linear-gradient(105deg,rgba(251,146,60,.18),transparent 48%,rgba(253,186,116,.07)); }
+        .leave-forecast-button.is-warning > i { border-color:#fed7aa; background:linear-gradient(145deg,#d97706,#92400e); color:#fff; box-shadow:inset 0 1px 0 rgba(255,255,255,.30),0 0 15px rgba(251,146,60,.62); animation:leave-forecast-icon-warning 1.5s ease-in-out infinite; }
+        .leave-forecast-button.is-critical { color:#fff1f2; border-color:#fb7185; background:linear-gradient(135deg,rgba(93,15,29,.98),rgba(45,8,15,.99)); box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 3px 0 0 #ef4444,0 0 0 1px rgba(239,68,68,.18),0 8px 24px rgba(127,29,29,.44); animation:leave-forecast-critical-beacon 1.35s ease-in-out infinite; }
+        .leave-forecast-button.is-critical::before { background:linear-gradient(105deg,rgba(251,113,133,.22),transparent 50%,rgba(239,68,68,.08)); }
+        .leave-forecast-button.is-critical > i { border-color:#fda4af; background:linear-gradient(145deg,#dc2626,#7f1d1d); color:#fff; box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 14px rgba(239,68,68,.62); animation:leave-forecast-icon-alarm 1.35s ease-in-out infinite; }
+        .leave-forecast-count { display:grid; min-width:18px; height:18px; padding:0 5px; place-items:center; border:1px solid rgba(148,163,184,.38); border-radius:999px; background:rgba(2,6,23,.68); color:#cbd5e1; font-size:9px; line-height:1; box-shadow:inset 0 1px 0 rgba(255,255,255,.08); transition:background .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease; }
+        .leave-forecast-button.is-warning .leave-forecast-count { border-color:rgba(251,146,60,.75); background:rgba(124,45,18,.60); color:#ffedd5; }
+        .leave-forecast-button.is-critical .leave-forecast-count { border-color:#fda4af; background:#b91c1c; color:#fff; box-shadow:0 0 12px rgba(239,68,68,.52),inset 0 1px 0 rgba(255,255,255,.18); }
+        @keyframes leave-forecast-warning-beacon { 0%,100% { box-shadow:inset 0 1px 0 rgba(255,255,255,.15),inset 3px 0 0 #fbbf24,0 0 0 1px rgba(251,146,60,.20),0 8px 24px rgba(180,83,9,.42); } 50% { box-shadow:inset 0 1px 0 rgba(255,255,255,.22),inset 3px 0 0 #fde68a,0 0 0 4px rgba(251,146,60,.20),0 0 28px rgba(251,146,60,.55); } }
+        @keyframes leave-forecast-critical-beacon { 0%,100% { box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 3px 0 0 #ef4444,0 0 0 1px rgba(239,68,68,.18),0 8px 24px rgba(127,29,29,.44); } 50% { box-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset 3px 0 0 #fb7185,0 0 0 4px rgba(239,68,68,.20),0 0 30px rgba(239,68,68,.56); } }
+        @keyframes leave-forecast-icon-alarm { 0%,100% { transform:scale(1); } 45% { transform:scale(1.12); } 60% { transform:scale(.96); } }
+        @keyframes leave-forecast-icon-warning { 0%,100% { transform:scale(1); } 45% { transform:scale(1.10); } 60% { transform:scale(.96); } }
+        .leave-forecast-modal-card { width:min(760px,calc(100vw - 28px)); max-height:min(82vh,760px); overflow:hidden; }
         .leave-forecast-summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:0 0 14px; }
         .leave-forecast-summary-item { padding:10px; border:1px solid rgba(71,85,105,.62); border-radius:10px; background:linear-gradient(145deg,rgba(30,41,59,.75),rgba(15,23,42,.68)); }
         .leave-forecast-summary-item strong { display:block; color:#f8fafc; font-size:18px; line-height:1.1; }
@@ -397,7 +408,15 @@
         .leave-forecast-advice b { color:#fff7ed; }
         .leave-forecast-item.is-critical .leave-forecast-advice b { color:#fecaca; }
         @media (max-width:1600px) and (min-width:769px) { .leave-forecast-label { display:none; } .leave-forecast-button { min-width:34px; justify-content:center; padding:0 7px; gap:4px; } }
-        @media (max-width:768px) { .leave-forecast-summary { grid-template-columns:1fr; } .leave-forecast-evidence { grid-template-columns:repeat(2,minmax(0,1fr)); } .leave-forecast-evidence div:nth-child(2) { border-right:0; } .leave-forecast-evidence div:nth-child(-n+2) { border-bottom:1px solid rgba(71,85,105,.42); } }
+        .m-leave-forecast-info { position:relative; display:grid; width:34px; height:34px; place-items:center; border:1px solid rgba(96,165,250,.55); border-radius:11px; background:linear-gradient(145deg,rgba(30,58,138,.64),rgba(15,23,42,.96)); color:#dbeafe; box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 4px 12px rgba(2,6,23,.30); transition:transform .18s ease,background .18s ease,border-color .18s ease,box-shadow .18s ease; }
+        .m-leave-forecast-info > i { font-size:15px; }
+        .m-leave-forecast-info:active { transform:scale(.93); }
+        .m-leave-forecast-info .m-leave-forecast-count { position:absolute; top:-5px; right:-5px; display:grid; min-width:16px; height:16px; padding:0 4px; place-items:center; border:1px solid #0f172a; border-radius:999px; background:#475569; color:#fff; font-size:8px; font-weight:950; box-shadow:0 2px 6px rgba(2,6,23,.42); }
+        .m-leave-forecast-info.is-warning { border-color:#fb923c; background:linear-gradient(145deg,#9a4e0b,#451d08); color:#fff7ed; box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 0 3px rgba(251,146,60,.12),0 0 20px rgba(245,158,11,.42); animation:leave-forecast-warning-beacon 1.5s ease-in-out infinite; }
+        .m-leave-forecast-info.is-warning .m-leave-forecast-count { background:#d97706; }
+        .m-leave-forecast-info.is-critical { border-color:#fda4af; background:linear-gradient(145deg,#991b1b,#450a0a); color:#fff1f2; box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 0 3px rgba(239,68,68,.14),0 0 22px rgba(239,68,68,.52); animation:leave-forecast-critical-beacon 1.35s ease-in-out infinite; }
+        .m-leave-forecast-info.is-critical .m-leave-forecast-count { background:#dc2626; }
+        @media (max-width:768px) { .leave-forecast-modal-card { width:calc(100vw - 20px); max-height:calc(100dvh - 20px); padding:16px; } #leave-forecast-content { min-height:0; } .leave-forecast-summary { grid-template-columns:1fr; } .leave-forecast-evidence { grid-template-columns:repeat(2,minmax(0,1fr)); } .leave-forecast-evidence div:nth-child(2) { border-right:0; } .leave-forecast-evidence div:nth-child(-n+2) { border-bottom:1px solid rgba(71,85,105,.42); } }
 
     </style>
 </head>
@@ -457,6 +476,9 @@
             <button onclick="jumpToToday()" class="header-action-btn header-action-today px-3 py-1.5 text-[10px] font-black uppercase tracking-[.1em] whitespace-nowrap flex items-center gap-1.5">
                 <i class="fas fa-calendar-day text-[11px]"></i> <span class="hidden md:inline">MA</span>
             </button>
+            <button id="leaveForecastButton" data-leave-forecast-trigger onclick="openLeaveForecast()" type="button" class="leave-forecast-button" title="Szabadság-kifutási előrejelzés" aria-label="Szabadság-kifutási előrejelzés">
+                <i class="fas fa-exclamation text-[10px]"></i><span class="leave-forecast-label">Keret-terv</span><span id="leaveForecastCount" data-leave-forecast-count class="leave-forecast-count">0</span>
+            </button>
             <div class="ml-auto flex items-center gap-2">
                 <button onclick="toggleMatrixShiftCycles()" id="matrix-shift-visibility" type="button" class="shift-visibility-control" aria-pressed="true" aria-label="Műszakjelölések megjelenítése" title="Műszakjelölések ki- és bekapcsolása"><span class="hidden lg:inline">Műszakok</span><span class="shift-visibility-switch" aria-hidden="true"></span></button>
                 <div class="rounded-xl border border-blue-300/35 bg-slate-950/70 p-1 shadow-lg shadow-blue-950/30">
@@ -465,9 +487,6 @@
             </div>
             <div class="flex gap-1">
                 <!-- ÚJ, SZOLIDABB FUNKCIÓ GOMBOK -->
-                <button id="leaveForecastButton" onclick="openLeaveForecast()" type="button" class="leave-forecast-button" title="Szabadság-kifutási előrejelzés" aria-label="Szabadság-kifutási előrejelzés">
-                    <i class="fas fa-exclamation text-[10px]"></i><span class="leave-forecast-label">Keret-terv</span><span id="leaveForecastCount" class="leave-forecast-count">0</span>
-                </button>
                 <button onclick="openFilterModal('note')" title="Jelölt (Megjegyzések szűrése az adott évre)" class="header-action-btn header-action-note px-2.5 py-1.5 flex items-center gap-1.5"><i class="fas fa-exclamation-triangle text-[10px]"></i> <span class="hidden md:inline text-[9px] font-black uppercase tracking-widest">Jelölt</span></button>
                 <button onclick="openFilterModal('cserenap')" title="Cserenapok (Szűrés az adott évre)" class="header-action-btn header-action-exchange px-2.5 py-1.5 flex items-center gap-1.5"><i class="fas fa-circle text-[8px] animate-pulse"></i> <span class="hidden md:inline text-[9px] font-black uppercase tracking-widest">Cserenap</span></button>
                 <!-- RÉGI GOMBOK -->
@@ -510,6 +529,7 @@
                 <div class="flex justify-between items-center mb-4">
                     <span class="text-blue-500 font-black text-2xl tracking-tighter">FORVIA</span>
                     <div class="flex items-center gap-2">
+                        <button id="mLeaveForecastButton" data-leave-forecast-trigger onclick="openLeaveForecast()" type="button" class="m-leave-forecast-info" title="Szabadság-kifutási terv" aria-label="Szabadság-kifutási terv"><i class="fas fa-info"></i><span data-leave-forecast-count class="m-leave-forecast-count">0</span></button>
                         <button onclick="openFilterModal('note')" class="m-filter-btn m-filter-note" title="Jelölt">
                             <i class="fas fa-exclamation-triangle text-yellow-500 text-[10px]"></i>
                             <span class="text-yellow-500 text-[9px] font-black uppercase tracking-widest">Jelölt</span>
@@ -956,17 +976,25 @@
         }
 
         function updateLeaveForecastButton() {
-            const button = document.getElementById('leaveForecastButton');
-            const count = document.getElementById('leaveForecastCount');
-            if (!button || !count) return;
             const risks = getLeaveForecastRisks();
             const criticalCount = risks.filter(item => item.severity === 'critical').length;
-            button.classList.toggle('is-warning', risks.length > 0 && criticalCount === 0);
-            button.classList.toggle('is-critical', criticalCount > 0);
-            count.textContent = String(risks.length);
-            button.title = risks.length
+            const accessibleLabel = criticalCount > 0
+                ? `Sürgős szabadság-kifutási figyelmeztetés: ${criticalCount} érintett`
+                : (risks.length > 0 ? `Szabadság-kifutási figyelmeztetés: ${risks.length} érintett` : 'Szabadság-kifutási terv: nincs kockázat');
+            const title = risks.length
                 ? `${risks.length} szabadság-kifutási figyelmeztetés${criticalCount ? `, ebből ${criticalCount} sürgős` : ''}`
                 : 'Nincs szabadság-kifutási figyelmeztetés';
+
+            document.querySelectorAll('[data-leave-forecast-trigger]').forEach(button => {
+                const count = button.querySelector('[data-leave-forecast-count]');
+                const label = button.querySelector('.leave-forecast-label');
+                button.classList.toggle('is-warning', risks.length > 0 && criticalCount === 0);
+                button.classList.toggle('is-critical', criticalCount > 0);
+                if (count) count.textContent = String(risks.length);
+                if (label) label.textContent = criticalCount > 0 ? 'Sürgős' : (risks.length > 0 ? 'Figyelem' : 'Keret-terv');
+                button.setAttribute('aria-label', accessibleLabel);
+                button.title = title;
+            });
         }
 
         window.openLeaveForecast = function() {
@@ -1083,6 +1111,7 @@
                     }
                     initSortable();
                 }
+                updateLeaveForecastButton();
             }
             return loadedSuccessfully;
         }
