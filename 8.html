@@ -498,10 +498,10 @@
                     <span class="week-indicator-label">Hét</span>
                     <strong id="weekIndicatorValue" class="week-indicator-value">–</strong>
                 </div>
+                <button onclick="jumpToToday()" class="header-action-btn header-action-today px-3 py-1.5 text-[10px] font-black uppercase tracking-[.1em] whitespace-nowrap flex items-center gap-1.5">
+                    <i class="fas fa-calendar-day text-[11px]"></i> <span class="hidden md:inline">MA</span>
+                </button>
             </div>
-            <button onclick="jumpToToday()" class="header-action-btn header-action-today px-3 py-1.5 text-[10px] font-black uppercase tracking-[.1em] whitespace-nowrap flex items-center gap-1.5">
-                <i class="fas fa-calendar-day text-[11px]"></i> <span class="hidden md:inline">MA</span>
-            </button>
             <button id="leaveForecastButton" data-leave-forecast-trigger onclick="openLeaveForecast()" type="button" class="leave-forecast-button" title="Szabadság-kifutási előrejelzés" aria-label="Szabadság-kifutási előrejelzés">
                 <i class="fas fa-exclamation text-[10px]"></i><span class="leave-forecast-label">Keret-terv</span><span id="leaveForecastCount" data-leave-forecast-count class="leave-forecast-count">0</span>
             </button>
@@ -2889,6 +2889,247 @@
             caret-color: #fff;
         }
     </style>
+    <!-- Kizárólag vizuális, asztali "Industrial Control Deck" réteg: nincs benne működési vagy adatkezelési módosítás. -->
+    <style id="industrial-control-deck">
+        @media (min-width: 769px) {
+            .desktop-header {
+                position: relative;
+                isolation: isolate;
+                background:
+                    radial-gradient(ellipse 46% 120% at 52% -38%, rgba(37, 99, 235, .18), transparent 72%),
+                    linear-gradient(180deg, #111a2d 0%, #0b1324 100%) !important;
+                border-bottom-color: rgba(71, 85, 105, .78) !important;
+                box-shadow: 0 12px 28px rgba(2, 6, 23, .36), inset 0 1px 0 rgba(255, 255, 255, .055) !important;
+            }
+            .desktop-header::after {
+                content: '';
+                position: absolute;
+                z-index: -1;
+                right: 10px;
+                bottom: -1px;
+                left: 10px;
+                height: 1px;
+                background: linear-gradient(90deg, transparent, rgba(96, 165, 250, .52) 20%, rgba(45, 212, 191, .26) 52%, rgba(96, 165, 250, .52) 80%, transparent);
+                pointer-events: none;
+            }
+            .desktop-header > div:first-child > div:last-child {
+                background: linear-gradient(145deg, rgba(30, 41, 59, .92), rgba(10, 18, 33, .94)) !important;
+                border-color: rgba(100, 116, 139, .55) !important;
+                border-radius: 11px !important;
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 5px 15px rgba(2, 6, 23, .22);
+            }
+            .tips-btn {
+                border: 1px solid rgba(100, 116, 139, .46);
+                background: linear-gradient(145deg, rgba(30, 41, 59, .66), rgba(15, 23, 42, .84));
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, .055), 0 4px 12px rgba(2, 6, 23, .18);
+                transition: color .18s ease, border-color .18s ease, transform .18s ease, background .18s ease;
+            }
+            .tips-btn:hover { border-color: rgba(96, 165, 250, .62); background: rgba(30, 58, 138, .26); transform: translateY(-1px); }
+            #sync {
+                position: relative;
+                padding-left: 16px !important;
+                background: linear-gradient(90deg, rgba(5, 150, 105, .19), rgba(15, 23, 42, .32));
+                box-shadow: inset 0 1px 0 rgba(167, 243, 208, .08);
+            }
+            #sync::before {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 7px;
+                width: 5px;
+                height: 5px;
+                border-radius: 50%;
+                background: #34d399;
+                box-shadow: 0 0 0 3px rgba(52, 211, 153, .12), 0 0 9px rgba(52, 211, 153, .8);
+                transform: translateY(-50%);
+            }
+            #desktopQuickFill {
+                position: relative;
+                overflow: visible;
+                border-color: rgba(45, 212, 191, .33) !important;
+                background: linear-gradient(135deg, rgba(15, 50, 58, .62), rgba(15, 23, 42, .88) 48%, rgba(30, 41, 59, .88)) !important;
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 6px 16px rgba(2, 6, 23, .2);
+            }
+            #desktopQuickFill::before {
+                content: '';
+                position: absolute;
+                top: 7px;
+                bottom: 7px;
+                left: -1px;
+                width: 2px;
+                border-radius: 999px;
+                background: linear-gradient(#5eead4, #2563eb);
+                box-shadow: 0 0 12px rgba(45, 212, 191, .5);
+            }
+            #desktopQuickFill .quick-fill-choice,
+            #desktopQuickFill .quick-fill-hour-stepper {
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, .055), 0 2px 5px rgba(2, 6, 23, .18);
+            }
+            .period-control,
+            .week-indicator {
+                background: linear-gradient(145deg, rgba(30, 58, 138, .22), rgba(15, 23, 42, .83)) !important;
+                border-color: rgba(96, 165, 250, .38) !important;
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 5px 14px rgba(2, 6, 23, .2);
+            }
+            .period-control-btn:hover { background: rgba(59, 130, 246, .18) !important; color: #dbeafe !important; }
+            .week-indicator-value { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .13), 0 0 10px rgba(59, 130, 246, .2) !important; }
+            .header-action-btn,
+            .leave-forecast-button,
+            #view-toggle,
+            .desktop-toolbar > .flex.gap-1 > button:not(.header-action-btn) {
+                border: 1px solid rgba(191, 219, 254, .18);
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 5px 13px rgba(2, 6, 23, .24);
+                transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
+            }
+            .header-action-btn:hover,
+            .leave-forecast-button:hover,
+            #view-toggle:hover,
+            .desktop-toolbar > .flex.gap-1 > button:not(.header-action-btn):hover {
+                transform: translateY(-1px);
+                filter: brightness(1.08);
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15), 0 8px 18px rgba(2, 6, 23, .34);
+            }
+            .desktop-main { background: radial-gradient(ellipse 68% 72% at 52% 0%, rgba(30, 58, 138, .13), transparent 66%), #101827 !important; }
+            .table-container { box-shadow: inset 0 1px 0 rgba(148, 163, 184, .13), 0 18px 36px rgba(2, 6, 23, .22) !important; }
+            .matrix-table thead th { background: linear-gradient(180deg, #263348 0%, #1c293b 100%); }
+            .matrix-table thead th.name-col,
+            .matrix-table thead th.sticky-quota,
+            .matrix-table thead th.sticky-rem { background: linear-gradient(180deg, #26364e 0%, #1d2a3d 100%) !important; }
+            .matrix-table .name-col { background: linear-gradient(90deg, #202d40 0%, #1e293b 80%) !important; box-shadow: 5px 0 13px rgba(2, 6, 23, .31) !important; }
+            .matrix-table .sticky-quota,
+            .matrix-table .sticky-rem { background: linear-gradient(180deg, #223047, #1e293b) !important; }
+            /* Sor-fókusz: a kitöltött naptárcellákhoz nem nyúl, csak a személyzeti sávot vezeti. */
+            .matrix-table tbody tr:not(.row-highlight) > .name-col,
+            .matrix-table tbody tr:not(.row-highlight) > .sticky-quota,
+            .matrix-table tbody tr:not(.row-highlight) > .sticky-rem {
+                transition: background .18s ease, box-shadow .18s ease, color .18s ease;
+            }
+            .matrix-table tbody tr:not(.row-highlight):hover .name-col {
+                position: sticky;
+                background: linear-gradient(90deg, #315078 0%, #273c59 52%, #223149 100%) !important;
+                color: #f8fafc !important;
+                box-shadow: inset 3px 0 0 #60a5fa, inset 0 1px 0 rgba(191, 219, 254, .22), inset 0 -1px 0 rgba(96, 165, 250, .16), 7px 0 18px rgba(2, 6, 23, .42) !important;
+            }
+            .matrix-table tbody tr:not(.row-highlight):hover .name-col::after {
+                content: '';
+                position: absolute;
+                z-index: 4;
+                top: 7px;
+                bottom: 7px;
+                left: 0;
+                width: 3px;
+                border-radius: 0 999px 999px 0;
+                background: linear-gradient(#bae6fd, #3b82f6);
+                box-shadow: 0 0 12px rgba(96, 165, 250, .84);
+                pointer-events: none;
+            }
+            .matrix-table tbody tr:not(.row-highlight):hover .name-col .break-words {
+                color: #ffffff !important;
+                text-shadow: 0 1px 7px rgba(147, 197, 253, .28);
+            }
+            .matrix-table tbody tr:not(.row-highlight):hover .sticky-quota,
+            .matrix-table tbody tr:not(.row-highlight):hover .sticky-rem:not(.rem-warning) {
+                background: linear-gradient(180deg, #2b425f, #243750) !important;
+                box-shadow: inset 0 1px 0 rgba(191, 219, 254, .16), inset 0 -1px 0 rgba(96, 165, 250, .13) !important;
+            }
+            .matrix-table td .input-cell:focus { box-shadow: inset 0 0 0 2px rgba(147, 197, 253, .95), inset 0 0 18px rgba(37, 99, 235, .38), 0 0 16px rgba(59, 130, 246, .35) !important; }
+        }
+
+        /* Valódi vezérlőpult-kompozíció széles laptopokon: ugyanazok az elemek, új térbeli hierarchiában. */
+        @media (min-width: 1280px) {
+            .desktop-header {
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr);
+                gap: 8px !important;
+                padding: 8px 10px !important;
+            }
+            .desktop-header > div:first-child {
+                min-height: 42px;
+                padding: 0 3px 7px;
+                border-bottom: 1px solid rgba(71, 85, 105, .42);
+            }
+            .desktop-header > div:first-child > div:first-child {
+                gap: 12px !important;
+            }
+            .desktop-header > div:first-child > div:last-child {
+                padding: 4px !important;
+                border-radius: 13px !important;
+            }
+            .desktop-toolbar {
+                position: relative;
+                display: grid !important;
+                grid-template-columns: max-content max-content minmax(258px, 1fr) max-content max-content max-content;
+                align-items: center;
+                justify-content: initial !important;
+                gap: clamp(5px, .45vw, 10px) !important;
+                min-height: 48px;
+                padding: 5px 6px !important;
+                border: 1px solid rgba(71, 85, 105, .56);
+                border-radius: 14px;
+                background: linear-gradient(102deg, rgba(15, 23, 42, .78), rgba(30, 41, 59, .86) 48%, rgba(15, 23, 42, .8));
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 9px 20px rgba(2, 6, 23, .24);
+            }
+            .desktop-toolbar > div[aria-label="Időpont léptetése"] {
+                justify-self: center;
+                justify-content: center;
+                min-width: 0;
+            }
+            .desktop-toolbar .ml-auto {
+                margin-left: 0 !important;
+                justify-self: end;
+            }
+            .desktop-toolbar > .flex.gap-1 {
+                justify-self: end;
+                padding-left: clamp(4px, .55vw, 10px);
+                border-left: 1px solid rgba(100, 116, 139, .38);
+            }
+            #sync { justify-self: start; }
+            #desktopQuickFill { justify-self: start; }
+            .desktop-toolbar > div[aria-label="Időpont léptetése"] .header-action-today,
+            .desktop-toolbar > .leave-forecast-button { justify-self: center; }
+        }
+        @media (min-width: 769px) and (hover: hover) {
+            .matrix-table thead th.staffpro-hover-date {
+                color: #f8fafc !important;
+                text-shadow: 0 0 9px rgba(191, 219, 254, .74);
+                box-shadow: inset 0 2px 0 #93c5fd, inset 0 -2px 0 #38bdf8, inset 1px 0 0 rgba(147, 197, 253, .78), inset -1px 0 0 rgba(147, 197, 253, .78), 0 0 14px rgba(59, 130, 246, .32) !important;
+            }
+        }
+    </style>
+    <script>
+        /* Asztali pásztázáskor a dolgozó sorához tartozó napfejlécet is követi. */
+        (function () {
+            const table = document.getElementById('mainTable');
+            if (!table || table.dataset.staffproDateHoverBound === '1') return;
+            table.dataset.staffproDateHoverBound = '1';
+            let activeHeader = null;
+
+            function clearActiveHeader() {
+                if (activeHeader) activeHeader.classList.remove('staffpro-hover-date');
+                activeHeader = null;
+            }
+
+            function setActiveHeaderFor(cell) {
+                if (!cell || cell.cellIndex < 3) {
+                    clearActiveHeader();
+                    return;
+                }
+                const nextHeader = table.tHead && table.tHead.rows[0] && table.tHead.rows[0].cells[cell.cellIndex];
+                if (!nextHeader || nextHeader === activeHeader) return;
+                clearActiveHeader();
+                nextHeader.classList.add('staffpro-hover-date');
+                activeHeader = nextHeader;
+            }
+
+            table.addEventListener('pointerover', function (event) {
+                if (!window.matchMedia('(hover: hover)').matches) return;
+                const cell = event.target.closest('td');
+                if (!cell || !table.contains(cell)) return;
+                setActiveHeaderFor(cell);
+            });
+            table.addEventListener('pointerleave', clearActiveHeader);
+        })();
+    </script>
     <script>
         (function () {
             let persistentTarget = null;
