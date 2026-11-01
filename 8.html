@@ -389,6 +389,23 @@
         @keyframes leave-forecast-icon-alarm { 0%,100% { transform:scale(1); } 45% { transform:scale(1.12); } 60% { transform:scale(.96); } }
         @keyframes leave-forecast-icon-warning { 0%,100% { transform:scale(1); } 45% { transform:scale(1.10); } 60% { transform:scale(.96); } }
         .leave-forecast-modal-card { width:min(760px,calc(100vw - 28px)); max-height:min(82vh,760px); overflow:hidden; }
+        .leave-forecast-settings-toggle { display:grid; width:32px; height:32px; place-items:center; border:1px solid rgba(96,165,250,.38); border-radius:9px; background:rgba(30,41,59,.68); color:#93c5fd; transition:transform .18s ease,background .18s ease,border-color .18s ease,color .18s ease; }
+        .leave-forecast-settings-toggle:hover, .leave-forecast-settings-toggle.is-open { border-color:#60a5fa; background:rgba(37,99,235,.22); color:#eff6ff; box-shadow:0 0 0 3px rgba(59,130,246,.12); }
+        .leave-forecast-settings-toggle:active { transform:scale(.92) rotate(24deg); }
+        .leave-forecast-settings { margin:0 0 12px; padding:12px; border:1px solid rgba(59,130,246,.28); border-radius:12px; background:linear-gradient(135deg,rgba(30,58,138,.18),rgba(15,23,42,.58)); box-shadow:inset 0 1px 0 rgba(255,255,255,.06); }
+        .leave-forecast-settings-top { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+        .leave-forecast-settings-title { color:#dbeafe; font-size:10px; font-weight:950; letter-spacing:.10em; text-transform:uppercase; }
+        .leave-forecast-setting-value { min-width:44px; padding:4px 7px; border:1px solid rgba(96,165,250,.38); border-radius:7px; color:#fff; background:rgba(2,6,23,.42); font-size:12px; font-weight:950; text-align:center; }
+        .leave-forecast-range { width:100%; height:6px; margin:14px 0 9px; appearance:none; -webkit-appearance:none; border-radius:999px; outline:none; background:linear-gradient(90deg,#f59e0b 0 var(--leave-forecast-range-progress,37.5%),rgba(100,116,139,.48) var(--leave-forecast-range-progress,37.5%) 100%); box-shadow:inset 0 1px 2px rgba(2,6,23,.7); }
+        .leave-forecast-range::-webkit-slider-thumb { width:20px; height:20px; appearance:none; -webkit-appearance:none; border:2px solid #fef3c7; border-radius:50%; background:radial-gradient(circle at 35% 30%,#fef3c7 0 10%,#f59e0b 13% 58%,#92400e 62%); box-shadow:0 0 0 4px rgba(245,158,11,.16),0 4px 10px rgba(2,6,23,.42); cursor:pointer; }
+        .leave-forecast-range::-moz-range-thumb { width:16px; height:16px; border:2px solid #fef3c7; border-radius:50%; background:#f59e0b; box-shadow:0 0 0 4px rgba(245,158,11,.16),0 4px 10px rgba(2,6,23,.42); cursor:pointer; }
+        .leave-forecast-range-scale { display:flex; justify-content:space-between; color:#64748b; font-size:8px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; }
+        .leave-forecast-setting-description { margin:10px 0 0; color:#cbd5e1; font-size:10px; font-weight:700; line-height:1.45; }
+        .leave-forecast-setting-description b { color:#fde68a; }
+        .leave-forecast-setting-status { min-height:14px; margin-top:7px; color:#64748b; font-size:9px; font-weight:800; }
+        .leave-forecast-setting-status.is-saving { color:#bfdbfe; }
+        .leave-forecast-setting-status.is-saved { color:#86efac; }
+        .leave-forecast-setting-status.is-error { color:#fda4af; }
         .leave-forecast-summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:0 0 14px; }
         .leave-forecast-summary-item { padding:10px; border:1px solid rgba(71,85,105,.62); border-radius:10px; background:linear-gradient(145deg,rgba(30,41,59,.75),rgba(15,23,42,.68)); }
         .leave-forecast-summary-item strong { display:block; color:#f8fafc; font-size:18px; line-height:1.1; }
@@ -657,8 +674,21 @@
                     <h3 id="leave-forecast-title" class="text-white font-black text-lg uppercase tracking-wide flex items-center gap-2"><i class="fas fa-exclamation text-orange-300"></i> Szabadság-kifutási terv</h3>
                     <p id="leave-forecast-subtitle" class="mt-1 text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
                 </div>
-                <button onclick="closeLeaveForecast()" type="button" class="text-slate-400 hover:text-white transition-colors text-xl bg-slate-800 hover:bg-red-500 w-8 h-8 rounded-lg flex items-center justify-center shadow-lg border border-slate-700 hover:border-red-500" aria-label="Előrejelzés bezárása" title="Bezárás"><i class="fas fa-times"></i></button>
+                <div class="flex items-center gap-2">
+                    <button id="leaveForecastSettingsToggle" onclick="toggleLeaveForecastSettings()" type="button" class="leave-forecast-settings-toggle" aria-label="Előrejelzés beállításai" aria-expanded="false" title="Figyelmeztetés érzékenysége"><i class="fas fa-cog"></i></button>
+                    <button onclick="closeLeaveForecast()" type="button" class="text-slate-400 hover:text-white transition-colors text-xl bg-slate-800 hover:bg-red-500 w-8 h-8 rounded-lg flex items-center justify-center shadow-lg border border-slate-700 hover:border-red-500" aria-label="Előrejelzés bezárása" title="Bezárás"><i class="fas fa-times"></i></button>
+                </div>
             </div>
+            <section id="leaveForecastSettings" class="leave-forecast-settings hidden" aria-label="Figyelmeztetés érzékenységének beállítása">
+                <div class="leave-forecast-settings-top">
+                    <span class="leave-forecast-settings-title">Figyelmeztetés érzékenysége</span>
+                    <strong id="leaveForecastSettingValue" class="leave-forecast-setting-value">65%</strong>
+                </div>
+                <input id="leaveForecastSensitivity" class="leave-forecast-range" type="range" min="50" max="90" step="5" value="65" oninput="previewLeaveForecastSensitivity(this.value)" onchange="saveLeaveForecastSensitivity(this.value)" aria-label="Figyelmeztetési küszöb százalékban">
+                <div class="leave-forecast-range-scale"><span>Korai jelzés</span><span>Kiegyensúlyozott</span><span>Késői jelzés</span></div>
+                <p id="leaveForecastSettingDescription" class="leave-forecast-setting-description"></p>
+                <div id="leaveForecastSettingStatus" class="leave-forecast-setting-status" aria-live="polite"></div>
+            </section>
             <div id="leave-forecast-content" class="overflow-y-auto pr-1 space-y-2 flex-grow modal-scrollbar"></div>
         </div>
     </div>
@@ -927,7 +957,106 @@
         // Kizárólag olvassa a már tárolt kereteket és napi bejegyzéseket. A 12 napos ciklusban
         // minden nappalos és éjszakás nap 12 órás, tervezhető műszak; a pihenőnap nem számít bele.
         const LEAVE_FORECAST_SHIFT_HOURS = 12;
-        const LEAVE_FORECAST_WARNING_PRESSURE = 0.65;
+        const LEAVE_FORECAST_DEFAULT_WARNING_PRESSURE = 0.65;
+        let leaveForecastWarningPressure = LEAVE_FORECAST_DEFAULT_WARNING_PRESSURE;
+        let leaveForecastSettingsRef = null;
+        let leaveForecastSettingsListener = null;
+
+        function normalizeLeaveForecastPressure(value) {
+            const numeric = Number(value);
+            if (!Number.isFinite(numeric)) return LEAVE_FORECAST_DEFAULT_WARNING_PRESSURE;
+            return Math.max(.50, Math.min(.90, Math.round(numeric * 20) / 20));
+        }
+
+        function getLeaveForecastSettingPath(shift = currentShift) {
+            return `staffProSettings/leaveForecast/${shift}`;
+        }
+
+        function setLeaveForecastSettingStatus(text = '', type = '') {
+            const status = document.getElementById('leaveForecastSettingStatus');
+            if (!status) return;
+            status.textContent = text;
+            status.className = `leave-forecast-setting-status${type ? ` is-${type}` : ''}`;
+        }
+
+        function getLeaveForecastSensitivityCopy(pressure = leaveForecastWarningPressure) {
+            const percent = Math.round(pressure * 100);
+            if (percent <= 55) return `<b>Korai, óvatos jelzés.</b> A rendszer már akkor figyelmeztet, ha a fennmaradó szabadság az üres műszakkapacitás ${percent}%-át eléri.`;
+            if (percent <= 70) return `<b>Kiegyensúlyozott beállítás.</b> A rendszer ${percent}%-os kapacitásigénynél jelez, így marad idő az ütemezésre.`;
+            if (percent <= 80) return `<b>Későbbi, fókuszált jelzés.</b> A rendszer csak akkor figyelmeztet, ha már az üres műszakkapacitás ${percent}%-ára szükség lenne.`;
+            return `<b>Nagyon késői jelzés.</b> A rendszer csak közvetlenül a telítődés előtt, ${percent}%-os kapacitásigénynél figyelmeztet.`;
+        }
+
+        function syncLeaveForecastSettingsUi() {
+            const percent = Math.round(leaveForecastWarningPressure * 100);
+            const range = document.getElementById('leaveForecastSensitivity');
+            const value = document.getElementById('leaveForecastSettingValue');
+            const description = document.getElementById('leaveForecastSettingDescription');
+            if (range) {
+                range.value = String(percent);
+                range.style.setProperty('--leave-forecast-range-progress', `${((percent - 50) / 40) * 100}%`);
+            }
+            if (value) value.textContent = `${percent}%`;
+            if (description) description.innerHTML = `${getLeaveForecastSensitivityCopy()} <span class="text-slate-500">A piros „Sürgős” állapotot ez nem változtatja meg.</span>`;
+        }
+
+        function subscribeLeaveForecastSettings() {
+            if (!db || !currentShift) return;
+            if (leaveForecastSettingsRef && leaveForecastSettingsListener) leaveForecastSettingsRef.off('value', leaveForecastSettingsListener);
+            leaveForecastSettingsRef = db.ref(getLeaveForecastSettingPath());
+            leaveForecastSettingsListener = snapshot => {
+                const stored = snapshot.val();
+                const next = stored && typeof stored === 'object' ? stored.warningPressure : stored;
+                leaveForecastWarningPressure = normalizeLeaveForecastPressure(next);
+                syncLeaveForecastSettingsUi();
+                updateLeaveForecastButton();
+                const modal = document.getElementById('leave-forecast-modal');
+                if (modal && !modal.classList.contains('hidden')) window.openLeaveForecast();
+            };
+            leaveForecastSettingsRef.on('value', leaveForecastSettingsListener, error => {
+                console.error('Keret-terv beállítás olvasási hiba:', error);
+                setLeaveForecastSettingStatus('A közös beállítás most nem érhető el. Az alapérték aktív.', 'error');
+            });
+        }
+
+        window.toggleLeaveForecastSettings = function() {
+            const panel = document.getElementById('leaveForecastSettings');
+            const button = document.getElementById('leaveForecastSettingsToggle');
+            if (!panel || !button) return;
+            const willOpen = panel.classList.contains('hidden');
+            panel.classList.toggle('hidden', !willOpen);
+            button.classList.toggle('is-open', willOpen);
+            button.setAttribute('aria-expanded', String(willOpen));
+            if (willOpen) {
+                syncLeaveForecastSettingsUi();
+                setLeaveForecastSettingStatus(`Műszakonként közös beállítás · ${currentShift} műszak`, '');
+            }
+        };
+
+        window.previewLeaveForecastSensitivity = function(value) {
+            leaveForecastWarningPressure = normalizeLeaveForecastPressure(Number(value) / 100);
+            syncLeaveForecastSettingsUi();
+            updateLeaveForecastButton();
+            const modal = document.getElementById('leave-forecast-modal');
+            if (modal && !modal.classList.contains('hidden')) window.openLeaveForecast();
+        };
+
+        window.saveLeaveForecastSensitivity = async function(value) {
+            leaveForecastWarningPressure = normalizeLeaveForecastPressure(Number(value) / 100);
+            syncLeaveForecastSettingsUi();
+            updateLeaveForecastButton();
+            setLeaveForecastSettingStatus('Mentés folyamatban…', 'saving');
+            try {
+                await db.ref(getLeaveForecastSettingPath()).set({
+                    warningPressure: leaveForecastWarningPressure,
+                    updatedAt: firebase.database.ServerValue.TIMESTAMP
+                });
+                setLeaveForecastSettingStatus(`Mentve · ${currentShift} műszak · minden eszközön szinkronban`, 'saved');
+            } catch (error) {
+                console.error('Keret-terv beállítás mentési hiba:', error);
+                setLeaveForecastSettingStatus('A mentés nem sikerült. A beállítás ezen az oldalon marad aktív.', 'error');
+            }
+        };
 
         function leaveForecastDayKey(day) {
             return `${day.getFullYear()}-${day.getMonth() + 1}-${day.getDate()}`;
@@ -961,7 +1090,7 @@
                 const capacity = availableShifts * LEAVE_FORECAST_SHIFT_HOURS;
                 const requiredShifts = Math.ceil(remaining / LEAVE_FORECAST_SHIFT_HOURS);
                 const pressure = remaining > 0 ? (capacity > 0 ? remaining / capacity : Infinity) : 0;
-                const severity = remaining > capacity ? 'critical' : (remaining > 0 && pressure >= LEAVE_FORECAST_WARNING_PRESSURE ? 'warning' : 'ok');
+                const severity = remaining > capacity ? 'critical' : (remaining > 0 && pressure >= leaveForecastWarningPressure ? 'warning' : 'ok');
                 return {
                     emp, quota, used, remaining, availableShifts, capacity, requiredShifts, pressure, daysLeft, weeksLeft,
                     weeklyHours: Math.ceil((remaining / weeksLeft) * 2) / 2,
@@ -1061,6 +1190,7 @@
             employees = []; 
             render(); 
             currentShift = s; localStorage.setItem('fv_shift_final', s);
+            subscribeLeaveForecastSettings();
             
             document.querySelectorAll('.shift-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`btn-shift-${s}`).classList.add('active');
