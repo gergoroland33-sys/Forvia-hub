@@ -369,6 +369,11 @@
         .period-control.month .period-control-label { min-width: 126px; color: #e0f2fe; }
         .period-control.month { border-color: rgba(56,189,248,.38); }
 
+        /* Aktuális ISO-hét: a dátumvezérlő része, nem különálló statisztika. */
+        .week-indicator { display:inline-flex; align-items:center; gap:6px; min-height:40px; padding:0 10px; border:1px solid rgba(96,165,250,.34); border-radius:11px; background:linear-gradient(135deg,rgba(30,58,138,.22),rgba(15,23,42,.76)); color:#bfdbfe; box-shadow:inset 0 1px 0 rgba(255,255,255,.075),0 4px 12px rgba(2,6,23,.16); }
+        .week-indicator-label { color:#94a3b8; font-size:8px; font-weight:950; letter-spacing:.10em; text-transform:uppercase; }
+        .week-indicator-value { display:grid; min-width:23px; height:23px; place-items:center; border:1px solid rgba(96,165,250,.40); border-radius:7px; background:rgba(37,99,235,.22); color:#eff6ff; font-size:11px; font-weight:950; line-height:1; box-shadow:inset 0 1px 0 rgba(255,255,255,.10); }
+
         /* Szabadság-kifutási előrejelzés: csak akkor jelenik meg, ha valódi tervezési kockázat van. */
         .leave-forecast-button { position:relative; isolation:isolate; display:inline-flex; align-items:center; gap:7px; min-height:34px; padding:0 10px 0 6px; border:1px solid rgba(100,116,139,.68); border-radius:10px; background:linear-gradient(135deg,rgba(30,41,59,.98),rgba(15,23,42,.98)); color:#cbd5e1; box-shadow:inset 0 1px 0 rgba(255,255,255,.09),inset 0 -1px 0 rgba(2,6,23,.65),0 5px 15px rgba(2,6,23,.20); font-size:10px; font-weight:950; letter-spacing:.09em; text-transform:uppercase; transition:transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease, color .18s ease; }
         .leave-forecast-button::before { content:''; position:absolute; z-index:-1; inset:2px; border-radius:7px; background:linear-gradient(110deg,rgba(148,163,184,.11),transparent 36%,rgba(59,130,246,.10)); opacity:.85; transition:opacity .18s ease,background .18s ease; }
@@ -488,6 +493,10 @@
                     <button type="button" onclick="changeMonth(-1)" class="period-control-btn" aria-label="Előző hónap"><i class="fas fa-chevron-left text-[10px]"></i></button>
                     <span id="monthDisp" class="period-control-label">Jan</span>
                     <button type="button" onclick="changeMonth(1)" class="period-control-btn" aria-label="Következő hónap"><i class="fas fa-chevron-right text-[10px]"></i></button>
+                </div>
+                <div id="weekIndicator" class="week-indicator" role="status" aria-live="polite" title="Aktuális ISO-naptári hét">
+                    <span class="week-indicator-label">Hét</span>
+                    <strong id="weekIndicatorValue" class="week-indicator-value">–</strong>
                 </div>
             </div>
             <button onclick="jumpToToday()" class="header-action-btn header-action-today px-3 py-1.5 text-[10px] font-black uppercase tracking-[.1em] whitespace-nowrap flex items-center gap-1.5">
@@ -860,6 +869,38 @@
         const monthNames = ["Január", "Február", "Március", "Április", "Május", "Június", "Július", "Augusztus", "Szeptember", "Október", "November", "December"];
         const dayNamesShort = ["V", "H", "K", "Sze", "Cs", "P", "Szo"];
         const shiftCycleAnchorDate = new Date(Date.UTC(2026, 0, 9));
+        let weekIndicatorTimer = null;
+
+        // Magyarországon az ISO-hét hétfőn 00:00-kor vált; ez a számítás az éves határnál is helyes marad.
+        function getIsoWeekNumber(value = new Date()) {
+            const utcDate = new Date(Date.UTC(value.getFullYear(), value.getMonth(), value.getDate()));
+            const isoDay = utcDate.getUTCDay() || 7;
+            utcDate.setUTCDate(utcDate.getUTCDate() + 4 - isoDay);
+            const yearStart = new Date(Date.UTC(utcDate.getUTCFullYear(), 0, 1));
+            return Math.ceil((((utcDate - yearStart) / 86400000) + 1) / 7);
+        }
+
+        function updateCurrentWeekIndicator() {
+            const indicator = document.getElementById('weekIndicator');
+            const value = document.getElementById('weekIndicatorValue');
+            if (!indicator || !value) return;
+            const now = new Date();
+            const weekNumber = getIsoWeekNumber(now);
+            value.textContent = String(weekNumber);
+            indicator.title = `Aktuális ISO-naptári hét: ${weekNumber}. hét`;
+            indicator.setAttribute('aria-label', `Aktuális hét: ${weekNumber}. hét`);
+        }
+
+        function scheduleCurrentWeekIndicator() {
+            clearTimeout(weekIndicatorTimer);
+            updateCurrentWeekIndicator();
+            const now = new Date();
+            const nextMonday = new Date(now);
+            const daysUntilMonday = ((8 - now.getDay()) % 7) || 7;
+            nextMonday.setDate(now.getDate() + daysUntilMonday);
+            nextMonday.setHours(0, 0, 0, 80);
+            weekIndicatorTimer = setTimeout(scheduleCurrentWeekIndicator, Math.max(1000, nextMonday.getTime() - Date.now()));
+        }
 
 
         // A 3.html műszaknaptárával azonos, 12 napos ciklus. Csak a táblázat vizuális jelöléséhez használjuk.
@@ -2774,6 +2815,7 @@
         }
 
         window.addEventListener('load', () => {
+            scheduleCurrentWeekIndicator();
             updateMatrixShiftCycleVisibility();
             startInitialDataLoad();
         });
@@ -3366,6 +3408,9 @@
             .period-control-btn { width: 26px !important; }
             .period-control-label { min-width: 54px !important; padding: 0 6px !important; font-size: 10px !important; }
             .period-control.month .period-control-label { min-width: 96px !important; }
+            .week-indicator { min-height:32px !important; gap:4px !important; padding:0 7px !important; border-radius:9px !important; }
+            .week-indicator-label { font-size:7px !important; }
+            .week-indicator-value { min-width:20px !important; height:20px !important; font-size:10px !important; border-radius:6px !important; }
             .header-action-btn { padding: 7px 9px !important; border-radius: 9px !important; }
             .shift-visibility-control { padding: 4px 6px 4px 7px !important; font-size: 8px !important; }
         }
@@ -3375,6 +3420,26 @@
             .desktop-toolbar .header-action-btn { gap: 0 !important; min-width: 34px; justify-content: center; }
             .desktop-toolbar .ml-auto { gap: 4px !important; }
             .desktop-toolbar .ml-auto > button { padding: 7px 9px !important; }
+        }
+
+        /* Asztali alapnézet: a böngésző nagyítását nem írjuk felül, csak a saját
+           felület kap egy biztonságos, kb. 80%-os sűrűséget. Mobilhoz nem nyúl. */
+        @media (min-width: 769px) {
+            header.desktop-header { padding: 6px 8px !important; gap: 5px !important; }
+            footer.desktop-footer { padding: 6px 8px !important; }
+
+            .desktop-main .matrix-table th,
+            .desktop-main .matrix-table td { height: 36px !important; }
+            .desktop-main .matrix-table thead th { height: 34px !important; }
+            .desktop-main .matrix-table th { font-size: 9px !important; }
+            .desktop-main .matrix-table .input-cell { font-size: 14px !important; }
+            .desktop-main .matrix-table .quota-input { font-size: 13px !important; }
+            .desktop-main .matrix-table tbody .sticky-rem { font-size: 13px !important; }
+            .desktop-main .matrix-table .name-col .break-words { font-size: 11px !important; }
+            .desktop-main .shift-cycle-chip { height: 9px !important; font-size: 7px !important; }
+            .desktop-main .matrix-table thead th.shift-cycle-day,
+            .desktop-main .matrix-table thead th.shift-cycle-night,
+            .desktop-main .matrix-table thead th.shift-cycle-rest { padding-top: 10px !important; }
         }
     </style>
     <script>
