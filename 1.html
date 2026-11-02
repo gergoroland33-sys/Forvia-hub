@@ -3093,9 +3093,9 @@
         let analyticsAlertAudioContext = null;
         let analyticsRecentLimit = 30;
         let analyticsRenderFrame = null;
-        /* Élő jelenlét: csak az előtérben látható Hub számít aktívnak.
-           A szerveres időbélyeg 90 másodpercenként frissül; 4 perc után a
-           kapcsolatvédelmi tartalék miatt a munkamenet akkor is kiesik. */
+        /* Élő jelenlét: csak az előtérben látható ÉS fókuszban levő Hub
+           számít aktívnak. A szerveres időbélyeg 90 másodpercenként frissül;
+           4 perc után a kapcsolatvédelmi tartalék miatt kiesik. */
         const PRESENCE_HEARTBEAT_INTERVAL_MS = 90 * 1000;
         const PRESENCE_STALE_AFTER_MS = 4 * 60 * 1000;
         const PRESENCE_STALE_RECHECK_MS = 30 * 1000;
@@ -3128,6 +3128,7 @@
                mert egy korábbi Hub hálózati újracsatlakozáskor megújulhat. */
             const lastSeenAt = Number(session.lastSeenAt);
             return session.visible === true
+                && session.focused === true
                 && Number.isFinite(lastSeenAt)
                 && lastSeenAt > 0
                 && lastSeenAt <= now + 60 * 1000
@@ -3760,13 +3761,15 @@
                 let presenceWriteInFlight = false;
                 let presenceRefreshQueued = false;
                 let queuedPresenceInitialWrite = false;
+                let queuedPresenceState = null;
 
-                const refreshPresence = async (isInitialWrite = false) => {
+                const refreshPresence = async (isInitialWrite = false, state = {}) => {
                     if (presenceWriteInFlight) {
                         /* Ha a lap közben háttérbe vagy előtérbe kerül,
                            az új állapot biztosan kiíródik az aktuális írás után. */
                         presenceRefreshQueued = true;
                         queuedPresenceInitialWrite ||= isInitialWrite;
+                        queuedPresenceState = { ...(queuedPresenceState || {}), ...state };
                         return;
                     }
                     presenceWriteInFlight = true;
@@ -3774,7 +3777,8 @@
                         lastSeenAt: serverTimestamp(),
                         module: activePresenceModule,
                         device: getAnalyticsDeviceClass(),
-                        visible: document.visibilityState === 'visible'
+                        visible: typeof state.visible === 'boolean' ? state.visible : document.visibilityState === 'visible',
+                        focused: typeof state.focused === 'boolean' ? state.focused : document.hasFocus()
                     };
                     try {
                         if (isInitialWrite) {
@@ -3788,9 +3792,11 @@
                         presenceWriteInFlight = false;
                         if (presenceRefreshQueued) {
                             const nextInitialWrite = queuedPresenceInitialWrite;
+                            const nextState = queuedPresenceState || {};
                             presenceRefreshQueued = false;
                             queuedPresenceInitialWrite = false;
-                            void refreshPresence(nextInitialWrite);
+                            queuedPresenceState = null;
+                            void refreshPresence(nextInitialWrite, nextState);
                         }
                     }
                 };
@@ -3811,7 +3817,7 @@
                 });
                 clearInterval(analyticsHeartbeatTimer);
                 analyticsHeartbeatTimer = setInterval(() => {
-                    if (document.visibilityState === 'visible') void refreshPresence();
+                    if (document.visibilityState === 'visible' && document.hasFocus()) void refreshPresence();
                 }, PRESENCE_HEARTBEAT_INTERVAL_MS);
                 clearInterval(presenceStaleRecheckTimer);
                 presenceStaleRecheckTimer = setInterval(() => {
@@ -3820,8 +3826,13 @@
                 document.addEventListener('visibilitychange', () => {
                     /* Háttérbe kerüléskor azonnal kiesik; visszatéréskor
                        azonnal újra aktívnak jelenti magát. */
-                    void refreshPresence();
+                    void refreshPresence(false, {
+                        visible: document.visibilityState === 'visible',
+                        focused: document.hasFocus()
+                    });
                 });
+                window.addEventListener('focus', () => { void refreshPresence(false, { focused: true }); });
+                window.addEventListener('blur', () => { void refreshPresence(false, { focused: false }); });
                 onValue(presenceRoot, snapshot => renderActiveUsers(snapshot.val()), error => {
                     console.error('Aktív felhasználók olvasási hiba:', error);
                     card.classList.add('is-unavailable');
