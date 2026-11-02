@@ -3124,9 +3124,10 @@
 
         function isFreshPresenceSession(session, now = getPresenceNow()) {
             if (!session || typeof session !== 'object') return false;
-            /* A connectedAt visszafelé kompatibilis tartalék: a következő
-               frissítés már minden élő munkamenethez lastSeenAt mezőt ír. */
-            const lastSeenAt = Number(session.lastSeenAt || session.connectedAt);
+            /* Csak az új, rendszeresen frissülő jelzés igazolhat élő
+               munkamenetet. A régi connectedAt nem használható erre,
+               mert egy korábbi Hub hálózati újracsatlakozáskor megújulhat. */
+            const lastSeenAt = Number(session.lastSeenAt);
             return Number.isFinite(lastSeenAt)
                 && lastSeenAt > 0
                 && lastSeenAt <= now + 60 * 1000
