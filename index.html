@@ -3178,6 +3178,14 @@
         let analyticsAlertAudioContext = null;
         let analyticsRecentLimit = 30;
         let analyticsRenderFrame = null;
+        /* Élő jelenlét: csak az előtérben látható ÉS fókuszban levő Hub
+           számít aktívnak. A szerveres időbélyeg 90 másodpercenként frissül;
+           4 perc után a kapcsolatvédelmi tartalék miatt kiesik. */
+        const PRESENCE_HEARTBEAT_INTERVAL_MS = 90 * 1000;
+        const PRESENCE_STALE_AFTER_MS = 4 * 60 * 1000;
+        const PRESENCE_STALE_RECHECK_MS = 30 * 1000;
+        let presenceStaleRecheckTimer = null;
+        let presenceServerTimeOffset = 0;
 
         const analyticsModuleNames = {
             home: 'Kezdőlap',
@@ -3193,6 +3201,36 @@
         const tickerEl = id => document.getElementById(id);
         const isHexColor = value => /^#[0-9A-F]{6}$/i.test(String(value || '').trim());
         const normalHex = (value, fallback) => isHexColor(value) ? String(value).trim().toUpperCase() : fallback;
+
+        function getPresenceNow() {
+            return Date.now() + presenceServerTimeOffset;
+        }
+
+        function isFreshPresenceSession(session, now = getPresenceNow()) {
+            if (!session || typeof session !== 'object') return false;
+            /* Csak az új, rendszeresen frissülő jelzés igazolhat élő
+               munkamenetet. A régi connectedAt nem használható erre,
+               mert egy korábbi Hub hálózati újracsatlakozáskor megújulhat. */
+            const lastSeenAt = Number(session.lastSeenAt);
+            return session.visible === true
+                && session.focused === true
+                && Number.isFinite(lastSeenAt)
+                && lastSeenAt > 0
+                && lastSeenAt <= now + 60 * 1000
+                && now - lastSeenAt <= PRESENCE_STALE_AFTER_MS;
+        }
+
+        function getFreshPresenceSessions(data = latestPresenceData, now = getPresenceNow()) {
+            if (!data || typeof data !== 'object') return [];
+            const sessions = [];
+            Object.values(data).forEach(userSessions => {
+                if (!userSessions || typeof userSessions !== 'object') return;
+                Object.values(userSessions).forEach(session => {
+                    if (isFreshPresenceSession(session, now)) sessions.push(session);
+                });
+            });
+            return sessions;
+        }
 
         function formatTickerDate(now = new Date()) {
             const months = ['Január', 'Február', 'Március', 'Április', 'Május', 'Június', 'Július', 'Augusztus', 'Szeptember', 'Október', 'November', 'December'];
@@ -3540,14 +3578,9 @@
 
         function getLiveModuleCounts() {
             const counts = new Map();
-            if (!latestPresenceData || typeof latestPresenceData !== 'object') return counts;
-            Object.values(latestPresenceData).forEach(sessions => {
-                if (!sessions || typeof sessions !== 'object') return;
-                Object.values(sessions).forEach(session => {
-                    if (!session || typeof session !== 'object') return;
-                    const module = normalizeAnalyticsModule(session.module);
-                    counts.set(module, (counts.get(module) || 0) + 1);
-                });
+            getFreshPresenceSessions().forEach(session => {
+                const module = normalizeAnalyticsModule(session.module);
+                counts.set(module, (counts.get(module) || 0) + 1);
             });
             return counts;
         }
@@ -3555,10 +3588,11 @@
         function getAnalyticsPresenceSnapshot(data = latestPresenceData) {
             const sessions = new Map();
             if (!data || typeof data !== 'object') return sessions;
+            const now = getPresenceNow();
             Object.entries(data).forEach(([uid, userSessions]) => {
                 if (!userSessions || typeof userSessions !== 'object') return;
                 Object.entries(userSessions).forEach(([sessionId, session]) => {
-                    if (!session || typeof session !== 'object') return;
+                    if (!isFreshPresenceSession(session, now)) return;
                     sessions.set(`${uid}/${sessionId}`, normalizeAnalyticsModule(session.module));
                 });
             });
@@ -3781,14 +3815,11 @@
             analyticsPresenceDataInitialized = true;
             notifyAnalyticsPresenceChange();
             /* Minden eszköz külön jelenléti munkamenetet ír. Ezeket összegezzük,
-               így ugyanazon bejelentkezés telefonon és laptopon is külön aktívként látszik. */
-            const activeUsers = data && typeof data === 'object'
-                ? Object.values(data).reduce((total, sessions) =>
-                    total + (sessions && typeof sessions === 'object' ? Object.keys(sessions).length : 0), 0)
-                : 0;
-            const isStaffProOpen = data && typeof data === 'object' && Object.values(data).some(sessions =>
-                sessions && typeof sessions === 'object' && Object.values(sessions).some(session => session?.module === 'staff-pro')
-            );
+               így ugyanazon bejelentkezés telefonon és laptopon is külön aktívként látszik.
+               Csak a friss, időbélyeggel igazolt munkamenetek számítanak bele. */
+            const freshSessions = getFreshPresenceSessions(latestPresenceData);
+            const activeUsers = freshSessions.length;
+            const isStaffProOpen = freshSessions.some(session => session.module === 'staff-pro');
             count.textContent = String(activeUsers);
             count.classList.toggle('is-staff-pro-active', isStaffProOpen);
             card.classList.remove('is-unavailable');
@@ -3816,20 +3847,81 @@
                 const presenceRoot = ref(presenceDb, 'hub/presence');
                 const presenceSessionId = createPresenceSessionId();
                 const presenceRef = ref(presenceDb, `hub/presence/${uid}/${presenceSessionId}`);
+                let presenceWriteInFlight = false;
+                let presenceRefreshQueued = false;
+                let queuedPresenceInitialWrite = false;
+                let queuedPresenceState = null;
+
+                const refreshPresence = async (isInitialWrite = false, state = {}) => {
+                    if (presenceWriteInFlight) {
+                        /* Ha a lap közben háttérbe vagy előtérbe kerül,
+                           az új állapot biztosan kiíródik az aktuális írás után. */
+                        presenceRefreshQueued = true;
+                        queuedPresenceInitialWrite ||= isInitialWrite;
+                        queuedPresenceState = { ...(queuedPresenceState || {}), ...state };
+                        return;
+                    }
+                    presenceWriteInFlight = true;
+                    const payload = {
+                        lastSeenAt: serverTimestamp(),
+                        module: activePresenceModule,
+                        device: getAnalyticsDeviceClass(),
+                        visible: typeof state.visible === 'boolean' ? state.visible : document.visibilityState === 'visible',
+                        focused: typeof state.focused === 'boolean' ? state.focused : document.hasFocus()
+                    };
+                    try {
+                        if (isInitialWrite) {
+                            await set(presenceRef, { connectedAt: serverTimestamp(), ...payload });
+                        } else {
+                            await update(presenceRef, payload);
+                        }
+                    } catch (error) {
+                        console.error('Aktív felhasználók jelenléti frissítési hiba:', error);
+                    } finally {
+                        presenceWriteInFlight = false;
+                        if (presenceRefreshQueued) {
+                            const nextInitialWrite = queuedPresenceInitialWrite;
+                            const nextState = queuedPresenceState || {};
+                            presenceRefreshQueued = false;
+                            queuedPresenceInitialWrite = false;
+                            queuedPresenceState = null;
+                            void refreshPresence(nextInitialWrite, nextState);
+                        }
+                    }
+                };
+
                 window.setActivePresenceModule = async function(module) {
                     activePresenceModule = normalizeAnalyticsModule(module);
                     window.activePresenceModuleRequest = activePresenceModule;
-                    if (!presenceRef) return;
-                    try {
-                        await set(presenceRef, { connectedAt: serverTimestamp(), module: activePresenceModule, device: getAnalyticsDeviceClass() });
-                    } catch (error) {
-                        console.error('Aktív felhasználók modulállapot hiba:', error);
-                    }
+                    await refreshPresence();
                 };
                 /* Ha a modul az anonim Firebase-belépés közben nyílt meg, az aktuális állapotot most biztosan kiírjuk. */
-                await window.setActivePresenceModule(window.activePresenceModuleRequest || activePresenceModule);
+                activePresenceModule = normalizeAnalyticsModule(window.activePresenceModuleRequest || activePresenceModule);
+                window.activePresenceModuleRequest = activePresenceModule;
+                await refreshPresence(true);
+                onValue(ref(presenceDb, '.info/serverTimeOffset'), snapshot => {
+                    const offset = Number(snapshot.val());
+                    presenceServerTimeOffset = Number.isFinite(offset) ? offset : 0;
+                    if (latestPresenceData) renderActiveUsers(latestPresenceData);
+                });
                 clearInterval(analyticsHeartbeatTimer);
-                analyticsHeartbeatTimer = null;
+                analyticsHeartbeatTimer = setInterval(() => {
+                    if (document.visibilityState === 'visible' && document.hasFocus()) void refreshPresence();
+                }, PRESENCE_HEARTBEAT_INTERVAL_MS);
+                clearInterval(presenceStaleRecheckTimer);
+                presenceStaleRecheckTimer = setInterval(() => {
+                    if (latestPresenceData) renderActiveUsers(latestPresenceData);
+                }, PRESENCE_STALE_RECHECK_MS);
+                document.addEventListener('visibilitychange', () => {
+                    /* Háttérbe kerüléskor azonnal kiesik; visszatéréskor
+                       azonnal újra aktívnak jelenti magát. */
+                    void refreshPresence(false, {
+                        visible: document.visibilityState === 'visible',
+                        focused: document.hasFocus()
+                    });
+                });
+                window.addEventListener('focus', () => { void refreshPresence(false, { focused: true }); });
+                window.addEventListener('blur', () => { void refreshPresence(false, { focused: false }); });
                 onValue(presenceRoot, snapshot => renderActiveUsers(snapshot.val()), error => {
                     console.error('Aktív felhasználók olvasási hiba:', error);
                     card.classList.add('is-unavailable');
@@ -3838,7 +3930,7 @@
                     if (!snapshot.val()) return;
                     try {
                         await onDisconnect(presenceRef).remove();
-                        await set(presenceRef, { connectedAt: serverTimestamp(), module: activePresenceModule, device: getAnalyticsDeviceClass() });
+                        await refreshPresence(true);
                     } catch (error) {
                         console.error('Aktív felhasználók jelenléti hiba:', error);
                         card.classList.add('is-unavailable');
