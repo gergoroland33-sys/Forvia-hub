@@ -1449,6 +1449,7 @@
     };
 
     const calendarEvents = [
+        { date: "2026-01-01", name: "Újév", type: "holiday", shiftDay: "C", shiftNight: "D" },
         { date: "2026-03-15", name: "Nemzeti Ünnep (Vasárnap)", type: "holiday", shiftDay: "C", shiftNight: "D" },
         { date: "2026-04-03", name: "Nagypéntek", type: "holiday", shiftDay: "A", shiftNight: "B" },
         { date: "2026-04-05", name: "Húsvétvasárnap", type: "holiday", shiftDay: "A", shiftNight: "B" },
@@ -1457,13 +1458,8 @@
         { date: "2026-05-24", name: "Pünkösdvasárnap", type: "holiday", shiftDay: "C", shiftNight: "D" },
         { date: "2026-05-25", name: "Pünkösdhétfő", type: "holiday", shiftDay: "C", shiftNight: "D" },
         { date: "2026-08-20", name: "Államalapítás Ünnepe", type: "holiday", shiftDay: "B", shiftNight: "A" },
-        { date: "2026-08-21", name: "Pihenőnap (Hosszú hétvége)", type: "holiday", shiftDay: "B", shiftNight: "A" },
-        /* ITT HOZZÁADTUK A MŰSZAKOKAT A SZOMBATI MUNKANAPOKHOZ IS */
-        { date: "2026-08-29", name: "SZOMBATI MUNKANAP (Aug. 21 helyett)", type: "workday", shiftDay: "C", shiftNight: "D" },
         { date: "2026-10-23", name: "1956-os Forradalom (Péntek)", type: "holiday", shiftDay: "D", shiftNight: "C" },
         { date: "2026-11-01", name: "Mindenszentek (Vasárnap)", type: "holiday", shiftDay: "B", shiftNight: "A" },
-        /* ITT HOZZÁADTUK A MŰSZAKOKAT A SZOMBATI MUNKANAPOKHOZ IS */
-        { date: "2026-12-12", name: "SZOMBATI MUNKANAP (Dec. 24 helyett)", type: "workday", shiftDay: "A", shiftNight: "B" },
         { date: "2026-12-24", name: "Szenteste (Pihenőnap)", type: "holiday", shiftDay: "A", shiftNight: "B" },
         { date: "2026-12-25", name: "Karácsony", type: "holiday", shiftDay: "A", shiftNight: "B" },
         { date: "2026-12-26", name: "Karácsony", type: "holiday", shiftDay: "C", shiftNight: "D" }
@@ -1522,7 +1518,6 @@
             "08-20": "Államalapítás Ünnepe",
             "10-23": "1956-os Forradalom",
             "11-01": "Mindenszentek",
-            "12-24": "Szenteste",
             "12-25": "Karácsony",
             "12-26": "Karácsony"
         };
@@ -1651,9 +1646,6 @@
                 });
             }
             
-            /* ÚJ: Bridge days (pihenőnap + szombati munkanap) */
-            const bridges = getBridgeDaysForYear(y, holidays);
-            events.push(...bridges);
         }
         
         events.sort((a, b) => new Date(a.date) - new Date(b.date));
