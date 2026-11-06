@@ -449,6 +449,9 @@
         .leave-forecast-advice { margin:0; padding:9px 12px 11px; color:#cbd5e1; font-size:11px; font-weight:700; line-height:1.45; }
         .leave-forecast-advice b { color:#fff7ed; }
         .leave-forecast-item.is-critical .leave-forecast-advice b { color:#fecaca; }
+        /* A szükséges műszakszám a vezetői döntés fő adata: külön, mégis a tanács részeként olvasható. */
+        .leave-forecast-required { display:inline-flex; align-items:center; margin-top:7px; padding:4px 7px; border:1px solid rgba(251,191,36,.50); border-radius:7px; background:rgba(120,53,15,.28); color:#fef3c7; font-size:10px; font-weight:950; line-height:1.3; letter-spacing:.015em; box-shadow:inset 0 1px 0 rgba(255,255,255,.08); }
+        .leave-forecast-item.is-critical .leave-forecast-required { border-color:rgba(251,113,133,.58); background:rgba(127,29,29,.30); color:#ffe4e6; }
         @media (max-width:1600px) and (min-width:769px) { .leave-forecast-label { display:none; } .leave-forecast-button { min-width:34px; justify-content:center; padding:0 7px; gap:4px; } }
         .m-leave-forecast-info { position:relative; display:grid; width:34px; height:34px; place-items:center; border:1px solid rgba(96,165,250,.55); border-radius:11px; background:linear-gradient(145deg,rgba(30,58,138,.64),rgba(15,23,42,.96)); color:#dbeafe; box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 4px 12px rgba(2,6,23,.30); transition:transform .18s ease,background .18s ease,border-color .18s ease,box-shadow .18s ease; }
         .m-leave-forecast-info > i { font-size:15px; }
@@ -808,7 +811,7 @@
                 <div id="leaveForecastSettingStatus" class="leave-forecast-setting-status" aria-live="polite"></div>
             </section>
             <div class="leave-forecast-settings-summary" aria-live="polite">
-                <div class="leave-forecast-settings-summary-main"><span>Figyelembe vett üres műszak</span><strong id="leaveForecastCalculatedShifts">–</strong><em>× 12 órás műszak</em></div>
+                <div class="leave-forecast-settings-summary-main"><span>Hátralévő aktív műszak</span><strong id="leaveForecastCalculatedShifts">–</strong><em>× 12 órás műszak</em></div>
                 <div class="leave-forecast-settings-summary-side"><span>Vizsgált dolgozó</span><strong id="leaveForecastCalculatedEmployees">–</strong></div>
                 <div class="leave-forecast-settings-summary-side"><span>Kiadhatóhoz szükséges</span><strong id="leaveForecastRequiredShifts">–</strong></div>
             </div>
@@ -1162,18 +1165,20 @@
             const today = getLeaveForecastToday();
             const targetEnd = getLeaveForecastTargetEnd(today);
             const year = today.getFullYear();
+            // Ez a szám kizárólag az aktuális műszak naptárának hátralévő, tényleges
+            // nappalos/éjszakás műszaknapjait jelenti. Nem szorozzuk fel a dolgozók
+            // számával: egy műszaknap csak egyszer szerepelhet a tervben.
             let availableShifts = 0;
-            let requiredShifts = 0;
-            employees.forEach(emp => {
+            for (let cursor = new Date(today); cursor <= targetEnd; cursor.setDate(cursor.getDate() + 1)) {
+                const phase = getShiftCyclePhase(cursor, currentShift);
+                const isWorkShift = phase.className === 'shift-cycle-day' || phase.className === 'shift-cycle-night';
+                if (isWorkShift) availableShifts++;
+            }
+            // A már rögzített szabadságot továbbra is dolgozónként vonjuk le.
+            const requiredShifts = employees.reduce((sum, emp) => {
                 const remaining = Math.max(0, getEmpQuota(emp, year) - getYearlyUsed(emp, year));
-                requiredShifts += Math.ceil(remaining / LEAVE_FORECAST_SHIFT_HOURS);
-                for (let cursor = new Date(today); cursor <= targetEnd; cursor.setDate(cursor.getDate() + 1)) {
-                    const phase = getShiftCyclePhase(cursor, currentShift);
-                    const isWorkShift = phase.className === 'shift-cycle-day' || phase.className === 'shift-cycle-night';
-                    const existingValue = emp.data && emp.data[leaveForecastDayKey(cursor)];
-                    if (isWorkShift && !String(existingValue || '').trim()) availableShifts++;
-                }
-            });
+                return sum + Math.ceil(remaining / LEAVE_FORECAST_SHIFT_HOURS);
+            }, 0);
             return { today, targetEnd, employees: employees.length, availableShifts, requiredShifts };
         }
 
@@ -1186,7 +1191,7 @@
             if (available) available.textContent = String(metrics.availableShifts);
             if (employeeCount) employeeCount.textContent = `${metrics.employees} fő`;
             if (required) required.textContent = `${metrics.requiredShifts} műszak`;
-            if (caption) caption.textContent = `${formatLeaveForecastDate(metrics.today)} – ${formatLeaveForecastDate(metrics.targetEnd)} · összes, még üres 12 órás nappalos és éjszakás műszak az aktív ${currentShift} műszakban.`;
+            if (caption) caption.textContent = `${formatLeaveForecastDate(metrics.today)} – ${formatLeaveForecastDate(metrics.targetEnd)} · az aktív ${currentShift} műszak hátralévő, tervezhető 12 órás nappalos és éjszakás műszaknapjai. A dolgozók már rögzített szabadsága az egyéni ajánlásból továbbra is levonódik.`;
         }
 
         function getLeaveForecastSettingPath(shift = currentShift) {
@@ -1436,7 +1441,7 @@
                                 <div><span>Hátralévő</span><strong>${item.remaining} óra</strong></div>
                                 <div><span>Üres műszak-kapacitás</span><strong>${item.availableShifts} × 12 = ${item.capacity} óra</strong></div>
                             </div>
-                            <p class="leave-forecast-advice">${advice} <span class="text-slate-500">(${item.requiredShifts} teljes műszaknyi szabadság szükséges.)</span></p>
+                            <p class="leave-forecast-advice">${advice} <span class="leave-forecast-required">(${item.requiredShifts} teljes, 12 órás műszaknyi szabadság szükséges.)</span></p>
                         </article>`;
                     }).join('')}`;
             }
@@ -4142,6 +4147,23 @@
             .desktop-main .matrix-table thead th.shift-cycle-day,
             .desktop-main .matrix-table thead th.shift-cycle-night,
             .desktop-main .matrix-table thead th.shift-cycle-rest { padding-top: 10px !important; }
+        }
+
+        /* A felső kezelősávban a meglévő elemek azonos, visszafogott térközt kapnak.
+           Csak széles laptopon érvényes: a kisebb nézet meglévő tömörítése változatlan. */
+        @media (min-width: 1280px) {
+            .desktop-toolbar {
+                grid-template-columns: max-content max-content max-content max-content minmax(0, 1fr) max-content !important;
+                justify-content: start !important;
+                column-gap: clamp(8px, .55vw, 11px) !important;
+            }
+            .desktop-toolbar > div[aria-label="Időpont léptetése"],
+            .desktop-toolbar > .leave-forecast-button,
+            .desktop-toolbar > .flex.gap-1 {
+                justify-self: start !important;
+            }
+            .desktop-toolbar .ml-auto { margin-left: 0 !important; justify-self: end !important; }
+            .desktop-toolbar > .flex.gap-1 { justify-self: end !important; }
         }
 
     </style>
