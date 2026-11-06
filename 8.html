@@ -397,6 +397,7 @@
         .leave-forecast-settings-toggle { display:grid; width:32px; height:32px; place-items:center; border:1px solid rgba(96,165,250,.38); border-radius:9px; background:rgba(30,41,59,.68); color:#93c5fd; transition:transform .18s ease,background .18s ease,border-color .18s ease,color .18s ease; }
         .leave-forecast-settings-toggle:hover, .leave-forecast-settings-toggle.is-open { border-color:#60a5fa; background:rgba(37,99,235,.22); color:#eff6ff; box-shadow:0 0 0 3px rgba(59,130,246,.12); }
         .leave-forecast-settings-toggle:active { transform:scale(.92) rotate(24deg); }
+        .leave-forecast-settings-modal-card { width:min(510px,calc(100vw - 28px)); max-height:min(86vh,700px); overflow:auto; }
         .leave-forecast-settings { margin:0 0 12px; padding:12px; border:1px solid rgba(59,130,246,.28); border-radius:12px; background:linear-gradient(135deg,rgba(30,58,138,.18),rgba(15,23,42,.58)); box-shadow:inset 0 1px 0 rgba(255,255,255,.06); }
         .leave-forecast-settings-top { display:flex; align-items:center; justify-content:space-between; gap:12px; }
         .leave-forecast-settings-title { color:#dbeafe; font-size:10px; font-weight:950; letter-spacing:.10em; text-transform:uppercase; }
@@ -407,6 +408,25 @@
         .leave-forecast-range-scale { display:flex; justify-content:space-between; color:#64748b; font-size:8px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; }
         .leave-forecast-setting-description { margin:10px 0 0; color:#cbd5e1; font-size:10px; font-weight:700; line-height:1.45; }
         .leave-forecast-setting-description b { color:#fde68a; }
+        .leave-forecast-target { margin:12px 0 0; padding:11px; border:1px solid rgba(96,165,250,.22); border-radius:10px; background:rgba(2,6,23,.24); }
+        .leave-forecast-target-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+        .leave-forecast-target-label { color:#dbeafe; font-size:9px; font-weight:950; letter-spacing:.09em; text-transform:uppercase; }
+        .leave-forecast-target-value { color:#86efac; font-size:9px; font-weight:900; text-align:right; }
+        .leave-forecast-target-control { display:flex; align-items:center; gap:8px; margin-top:8px; }
+        .leave-forecast-target-date { min-width:0; flex:1; height:32px; box-sizing:border-box; border:1px solid rgba(96,165,250,.38); border-radius:8px; outline:none; background:rgba(15,23,42,.86); color:#f8fafc; padding:0 8px; font:800 11px Inter,system-ui,sans-serif; color-scheme:dark; }
+        .leave-forecast-target-date:focus { border-color:#60a5fa; box-shadow:0 0 0 3px rgba(59,130,246,.14); }
+        .leave-forecast-target-reset { height:32px; flex:0 0 auto; border:1px solid rgba(96,165,250,.42); border-radius:8px; background:rgba(30,64,175,.20); color:#bfdbfe; padding:0 9px; font-size:9px; font-weight:950; letter-spacing:.05em; text-transform:uppercase; transition:background .16s ease,border-color .16s ease,transform .16s ease; }
+        .leave-forecast-target-reset:hover { border-color:#93c5fd; background:rgba(37,99,235,.34); color:#fff; }
+        .leave-forecast-target-reset:active { transform:scale(.95); }
+        .leave-forecast-target-note { margin:7px 0 0; color:#94a3b8; font-size:9px; font-weight:700; line-height:1.4; }
+        .leave-forecast-settings-summary { display:grid; grid-template-columns:1.1fr .9fr; gap:8px; margin:12px 0 0; }
+        .leave-forecast-settings-summary-main { grid-row:span 2; display:flex; flex-direction:column; justify-content:center; min-height:104px; padding:14px; border:1px solid rgba(52,211,153,.42); border-radius:12px; background:linear-gradient(135deg,rgba(6,78,59,.34),rgba(15,23,42,.72)); box-shadow:inset 0 1px 0 rgba(255,255,255,.07); }
+        .leave-forecast-settings-summary-main span,.leave-forecast-settings-summary-side span { color:#94a3b8; font-size:8px; font-weight:950; letter-spacing:.08em; text-transform:uppercase; }
+        .leave-forecast-settings-summary-main strong { margin-top:5px; color:#ecfdf5; font-size:25px; font-weight:950; letter-spacing:-.04em; line-height:1; }
+        .leave-forecast-settings-summary-main em { margin-top:4px; color:#86efac; font-size:10px; font-style:normal; font-weight:900; }
+        .leave-forecast-settings-summary-side { display:flex; min-width:0; flex-direction:column; justify-content:center; padding:10px 11px; border:1px solid rgba(71,85,105,.55); border-radius:10px; background:rgba(2,6,23,.32); }
+        .leave-forecast-settings-summary-side strong { margin-top:3px; color:#f8fafc; font-size:16px; font-weight:950; line-height:1.08; }
+        .leave-forecast-settings-summary-caption { margin:9px 0 0; color:#94a3b8; font-size:9px; font-weight:700; line-height:1.45; }
         .leave-forecast-setting-status { min-height:14px; margin-top:7px; color:#64748b; font-size:9px; font-weight:800; }
         .leave-forecast-setting-status.is-saving { color:#bfdbfe; }
         .leave-forecast-setting-status.is-saved { color:#86efac; }
@@ -438,7 +458,7 @@
         .m-leave-forecast-info.is-warning .m-leave-forecast-count { background:#d97706; }
         .m-leave-forecast-info.is-critical { border-color:#fda4af; background:linear-gradient(145deg,#991b1b,#450a0a); color:#fff1f2; box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 0 3px rgba(239,68,68,.14),0 0 22px rgba(239,68,68,.52); animation:leave-forecast-critical-beacon 1.35s ease-in-out infinite; }
         .m-leave-forecast-info.is-critical .m-leave-forecast-count { background:#dc2626; }
-        @media (max-width:768px) { .leave-forecast-modal-card { width:calc(100vw - 20px); max-height:calc(100dvh - 20px); padding:16px; } #leave-forecast-content { min-height:0; } .leave-forecast-summary { grid-template-columns:1fr; } .leave-forecast-evidence { grid-template-columns:repeat(2,minmax(0,1fr)); } .leave-forecast-evidence div:nth-child(2) { border-right:0; } .leave-forecast-evidence div:nth-child(-n+2) { border-bottom:1px solid rgba(71,85,105,.42); } }
+        @media (max-width:768px) { .leave-forecast-modal-card { width:calc(100vw - 20px); max-height:calc(100dvh - 20px); padding:16px; } .leave-forecast-settings-modal-card { width:calc(100vw - 20px); max-height:calc(100dvh - 20px); padding:16px; } #leave-forecast-content { min-height:0; } .leave-forecast-summary { grid-template-columns:1fr; } .leave-forecast-evidence { grid-template-columns:repeat(2,minmax(0,1fr)); } .leave-forecast-evidence div:nth-child(2) { border-right:0; } .leave-forecast-evidence div:nth-child(-n+2) { border-bottom:1px solid rgba(71,85,105,.42); } }
 
         /* Személyes adatlap: csak olvasó, vezetői szabadság-egyensúly betekintő. */
         .staff-balance-info-button { display:grid; width:34px; height:34px; place-items:center; border:1px solid rgba(96,165,250,.58); border-radius:10px; background:linear-gradient(145deg,rgba(30,58,138,.72),rgba(15,23,42,.96)); color:#dbeafe; box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 4px 11px rgba(2,6,23,.28); transition:transform .18s ease,background .18s ease,border-color .18s ease,color .18s ease; }
@@ -752,7 +772,21 @@
                     <button onclick="closeLeaveForecast()" type="button" class="text-slate-400 hover:text-white transition-colors text-xl bg-slate-800 hover:bg-red-500 w-8 h-8 rounded-lg flex items-center justify-center shadow-lg border border-slate-700 hover:border-red-500" aria-label="Előrejelzés bezárása" title="Bezárás"><i class="fas fa-times"></i></button>
                 </div>
             </div>
-            <section id="leaveForecastSettings" class="leave-forecast-settings hidden" aria-label="Figyelmeztetés érzékenységének beállítása">
+            <div id="leave-forecast-content" class="overflow-y-auto pr-1 space-y-2 flex-grow modal-scrollbar"></div>
+        </div>
+    </div>
+
+    <!-- A Keret-terv beállításai külön ablakban maradnak, hogy állítás közben ne takarja dolgozólista a vezérlőket. -->
+    <div id="leave-forecast-settings-modal" class="hidden fixed inset-0 z-[137] flex items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity no-select" role="dialog" aria-modal="true" aria-labelledby="leave-forecast-settings-title" onclick="if(event.target===this) closeLeaveForecastSettings()">
+        <div class="leave-forecast-settings-modal-card bg-slate-900 border border-blue-400/35 rounded-2xl p-5 shadow-[0_0_48px_rgba(0,0,0,.86)] transform scale-95 transition-transform">
+            <div class="flex justify-between items-start gap-4 mb-4 border-b border-slate-800 pb-3">
+                <div>
+                    <h3 id="leave-forecast-settings-title" class="text-white font-black text-lg uppercase tracking-wide flex items-center gap-2"><i class="fas fa-cog text-blue-300"></i> Keret-terv beállításai</h3>
+                    <p class="mt-1 text-[10px] text-slate-400 font-bold uppercase tracking-widest">Csak az előrejelzés módosul, mentett adat nem</p>
+                </div>
+                <button onclick="closeLeaveForecastSettings()" type="button" class="text-slate-400 hover:text-white transition-colors text-xl bg-slate-800 hover:bg-red-500 w-8 h-8 rounded-lg flex items-center justify-center shadow-lg border border-slate-700 hover:border-red-500" aria-label="Keret-terv beállítások bezárása" title="Bezárás"><i class="fas fa-times"></i></button>
+            </div>
+            <section id="leaveForecastSettings" class="leave-forecast-settings" aria-label="Figyelmeztetés érzékenységének beállítása">
                 <div class="leave-forecast-settings-top">
                     <span class="leave-forecast-settings-title">Figyelmeztetés érzékenysége</span>
                     <strong id="leaveForecastSettingValue" class="leave-forecast-setting-value">65%</strong>
@@ -760,9 +794,25 @@
                 <input id="leaveForecastSensitivity" class="leave-forecast-range" type="range" min="25" max="90" step="5" value="65" oninput="previewLeaveForecastSensitivity(this.value)" onchange="saveLeaveForecastSensitivity(this.value)" aria-label="Figyelmeztetési küszöb százalékban">
                 <div class="leave-forecast-range-scale"><span>Nagyon korai</span><span>Kiegyensúlyozott</span><span>Késői jelzés</span></div>
                 <p id="leaveForecastSettingDescription" class="leave-forecast-setting-description"></p>
+                <div class="leave-forecast-target">
+                    <div class="leave-forecast-target-head">
+                        <span class="leave-forecast-target-label">Tervezési célidőpont</span>
+                        <strong id="leaveForecastTargetValue" class="leave-forecast-target-value">Év vége (alap)</strong>
+                    </div>
+                    <div class="leave-forecast-target-control">
+                        <input id="leaveForecastTargetDate" class="leave-forecast-target-date" type="date" oninput="previewLeaveForecastTargetDate(this.value)" onchange="saveLeaveForecastTargetDate(this.value)" aria-label="Keret-terv célidőpontja">
+                        <button onclick="resetLeaveForecastTargetDate()" type="button" class="leave-forecast-target-reset" title="Visszaállítás az év végére">Év vége</button>
+                    </div>
+                    <p id="leaveForecastTargetNote" class="leave-forecast-target-note">Alapértékben a rendszer december 31-ig számol.</p>
+                </div>
                 <div id="leaveForecastSettingStatus" class="leave-forecast-setting-status" aria-live="polite"></div>
             </section>
-            <div id="leave-forecast-content" class="overflow-y-auto pr-1 space-y-2 flex-grow modal-scrollbar"></div>
+            <div class="leave-forecast-settings-summary" aria-live="polite">
+                <div class="leave-forecast-settings-summary-main"><span>Figyelembe vett üres műszak</span><strong id="leaveForecastCalculatedShifts">–</strong><em>× 12 órás műszak</em></div>
+                <div class="leave-forecast-settings-summary-side"><span>Vizsgált dolgozó</span><strong id="leaveForecastCalculatedEmployees">–</strong></div>
+                <div class="leave-forecast-settings-summary-side"><span>Kiadhatóhoz szükséges</span><strong id="leaveForecastRequiredShifts">–</strong></div>
+            </div>
+            <p id="leaveForecastCalculationCaption" class="leave-forecast-settings-summary-caption">A számítás a kiválasztott időtáv üres, nappalos és éjszakás műszakait összesíti.</p>
         </div>
     </div>
 
@@ -1064,6 +1114,8 @@
         const LEAVE_FORECAST_SHIFT_HOURS = 12;
         const LEAVE_FORECAST_DEFAULT_WARNING_PRESSURE = 0.65;
         let leaveForecastWarningPressure = LEAVE_FORECAST_DEFAULT_WARNING_PRESSURE;
+        // Üres érték = az adott naptári év vége. A dátum csak az előrejelzés végét módosítja.
+        let leaveForecastTargetDate = '';
         let leaveForecastSettingsRef = null;
         let leaveForecastSettingsListener = null;
 
@@ -1071,6 +1123,70 @@
             const numeric = Number(value);
             if (!Number.isFinite(numeric)) return LEAVE_FORECAST_DEFAULT_WARNING_PRESSURE;
             return Math.max(.25, Math.min(.90, Math.round(numeric * 20) / 20));
+        }
+
+        function getLeaveForecastToday() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return today;
+        }
+
+        function leaveForecastIsoDate(day) {
+            return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+        }
+
+        function leaveForecastDateFromIso(value) {
+            const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (!match) return null;
+            const candidate = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+            return candidate.getFullYear() === Number(match[1]) && candidate.getMonth() === Number(match[2]) - 1 && candidate.getDate() === Number(match[3]) ? candidate : null;
+        }
+
+        function normalizeLeaveForecastTargetDate(value, today = getLeaveForecastToday()) {
+            const candidate = leaveForecastDateFromIso(value);
+            const yearEnd = new Date(today.getFullYear(), 11, 31);
+            if (!candidate || candidate.getFullYear() !== today.getFullYear() || candidate < today || candidate >= yearEnd) return '';
+            return leaveForecastIsoDate(candidate);
+        }
+
+        function getLeaveForecastTargetEnd(today = getLeaveForecastToday()) {
+            const custom = leaveForecastDateFromIso(normalizeLeaveForecastTargetDate(leaveForecastTargetDate, today));
+            return custom || new Date(today.getFullYear(), 11, 31);
+        }
+
+        function formatLeaveForecastDate(day) {
+            return `${day.getFullYear()}. ${monthNames[day.getMonth()]} ${day.getDate()}.`;
+        }
+
+        function getLeaveForecastSettingsMetrics() {
+            const today = getLeaveForecastToday();
+            const targetEnd = getLeaveForecastTargetEnd(today);
+            const year = today.getFullYear();
+            let availableShifts = 0;
+            let requiredShifts = 0;
+            employees.forEach(emp => {
+                const remaining = Math.max(0, getEmpQuota(emp, year) - getYearlyUsed(emp, year));
+                requiredShifts += Math.ceil(remaining / LEAVE_FORECAST_SHIFT_HOURS);
+                for (let cursor = new Date(today); cursor <= targetEnd; cursor.setDate(cursor.getDate() + 1)) {
+                    const phase = getShiftCyclePhase(cursor, currentShift);
+                    const isWorkShift = phase.className === 'shift-cycle-day' || phase.className === 'shift-cycle-night';
+                    const existingValue = emp.data && emp.data[leaveForecastDayKey(cursor)];
+                    if (isWorkShift && !String(existingValue || '').trim()) availableShifts++;
+                }
+            });
+            return { today, targetEnd, employees: employees.length, availableShifts, requiredShifts };
+        }
+
+        function syncLeaveForecastSettingsMetrics() {
+            const metrics = getLeaveForecastSettingsMetrics();
+            const available = document.getElementById('leaveForecastCalculatedShifts');
+            const employeeCount = document.getElementById('leaveForecastCalculatedEmployees');
+            const required = document.getElementById('leaveForecastRequiredShifts');
+            const caption = document.getElementById('leaveForecastCalculationCaption');
+            if (available) available.textContent = String(metrics.availableShifts);
+            if (employeeCount) employeeCount.textContent = `${metrics.employees} fő`;
+            if (required) required.textContent = `${metrics.requiredShifts} műszak`;
+            if (caption) caption.textContent = `${formatLeaveForecastDate(metrics.today)} – ${formatLeaveForecastDate(metrics.targetEnd)} · összes, még üres 12 órás nappalos és éjszakás műszak az aktív ${currentShift} műszakban.`;
         }
 
         function getLeaveForecastSettingPath(shift = currentShift) {
@@ -1098,12 +1214,29 @@
             const range = document.getElementById('leaveForecastSensitivity');
             const value = document.getElementById('leaveForecastSettingValue');
             const description = document.getElementById('leaveForecastSettingDescription');
+            const targetInput = document.getElementById('leaveForecastTargetDate');
+            const targetValue = document.getElementById('leaveForecastTargetValue');
+            const targetNote = document.getElementById('leaveForecastTargetNote');
+            const today = getLeaveForecastToday();
+            const yearEnd = new Date(today.getFullYear(), 11, 31);
+            const targetEnd = getLeaveForecastTargetEnd(today);
+            const hasCustomTarget = Boolean(normalizeLeaveForecastTargetDate(leaveForecastTargetDate, today));
             if (range) {
                 range.value = String(percent);
                 range.style.setProperty('--leave-forecast-range-progress', `${((percent - 25) / 65) * 100}%`);
             }
             if (value) value.textContent = `${percent}%`;
             if (description) description.innerHTML = `${getLeaveForecastSensitivityCopy()} <span class="text-slate-500">A piros „Sürgős” állapotot ez nem változtatja meg.</span>`;
+            if (targetInput) {
+                targetInput.min = leaveForecastIsoDate(today);
+                targetInput.max = leaveForecastIsoDate(yearEnd);
+                targetInput.value = leaveForecastIsoDate(targetEnd);
+            }
+            if (targetValue) targetValue.textContent = hasCustomTarget ? `Egyedi: ${formatLeaveForecastDate(targetEnd)}` : 'Év vége (alap)';
+            if (targetNote) targetNote.textContent = hasCustomTarget
+                ? `A terv a mai naptól ${formatLeaveForecastDate(targetEnd)} napjáig vizsgálja az üres, tervezhető műszakokat.`
+                : `Alapérték: a rendszer a mai naptól ${formatLeaveForecastDate(yearEnd)} napjáig számol.`;
+            syncLeaveForecastSettingsMetrics();
         }
 
         function subscribeLeaveForecastSettings() {
@@ -1113,7 +1246,9 @@
             leaveForecastSettingsListener = snapshot => {
                 const stored = snapshot.val();
                 const next = stored && typeof stored === 'object' ? stored.warningPressure : stored;
+                const nextTarget = stored && typeof stored === 'object' ? stored.targetDate : '';
                 leaveForecastWarningPressure = normalizeLeaveForecastPressure(next);
+                leaveForecastTargetDate = normalizeLeaveForecastTargetDate(nextTarget);
                 syncLeaveForecastSettingsUi();
                 updateLeaveForecastButton();
                 const modal = document.getElementById('leave-forecast-modal');
@@ -1126,17 +1261,26 @@
         }
 
         window.toggleLeaveForecastSettings = function() {
-            const panel = document.getElementById('leaveForecastSettings');
+            const modal = document.getElementById('leave-forecast-settings-modal');
             const button = document.getElementById('leaveForecastSettingsToggle');
-            if (!panel || !button) return;
-            const willOpen = panel.classList.contains('hidden');
-            panel.classList.toggle('hidden', !willOpen);
-            button.classList.toggle('is-open', willOpen);
-            button.setAttribute('aria-expanded', String(willOpen));
-            if (willOpen) {
-                syncLeaveForecastSettingsUi();
-                setLeaveForecastSettingStatus(`Műszakonként közös beállítás · ${currentShift} műszak`, '');
-            }
+            if (!modal || !button) return;
+            if (!modal.classList.contains('hidden')) { window.closeLeaveForecastSettings(); return; }
+            syncLeaveForecastSettingsUi();
+            syncLeaveForecastSettingsMetrics();
+            setLeaveForecastSettingStatus(`Műszakonként közös beállítás · ${currentShift} műszak`, '');
+            modal.classList.remove('hidden');
+            button.classList.add('is-open');
+            button.setAttribute('aria-expanded', 'true');
+            setTimeout(() => modal.firstElementChild.classList.remove('scale-95'), 10);
+        };
+
+        window.closeLeaveForecastSettings = function() {
+            const modal = document.getElementById('leave-forecast-settings-modal');
+            const button = document.getElementById('leaveForecastSettingsToggle');
+            if (!modal) return;
+            modal.firstElementChild.classList.add('scale-95');
+            if (button) { button.classList.remove('is-open'); button.setAttribute('aria-expanded', 'false'); }
+            setTimeout(() => modal.classList.add('hidden'), 150);
         };
 
         window.previewLeaveForecastSensitivity = function(value) {
@@ -1147,14 +1291,14 @@
             if (modal && !modal.classList.contains('hidden')) window.openLeaveForecast();
         };
 
-        window.saveLeaveForecastSensitivity = async function(value) {
-            leaveForecastWarningPressure = normalizeLeaveForecastPressure(Number(value) / 100);
+        async function saveLeaveForecastSettings() {
             syncLeaveForecastSettingsUi();
             updateLeaveForecastButton();
             setLeaveForecastSettingStatus('Mentés folyamatban…', 'saving');
             try {
                 await db.ref(getLeaveForecastSettingPath()).set({
                     warningPressure: leaveForecastWarningPressure,
+                    targetDate: leaveForecastTargetDate,
                     updatedAt: firebase.database.ServerValue.TIMESTAMP
                 });
                 setLeaveForecastSettingStatus(`Mentve · ${currentShift} műszak · minden eszközön szinkronban`, 'saved');
@@ -1162,6 +1306,29 @@
                 console.error('Keret-terv beállítás mentési hiba:', error);
                 setLeaveForecastSettingStatus('A mentés nem sikerült. A beállítás ezen az oldalon marad aktív.', 'error');
             }
+        }
+
+        window.saveLeaveForecastSensitivity = async function(value) {
+            leaveForecastWarningPressure = normalizeLeaveForecastPressure(Number(value) / 100);
+            return saveLeaveForecastSettings();
+        };
+
+        window.previewLeaveForecastTargetDate = function(value) {
+            leaveForecastTargetDate = normalizeLeaveForecastTargetDate(value);
+            syncLeaveForecastSettingsUi();
+            updateLeaveForecastButton();
+            const modal = document.getElementById('leave-forecast-modal');
+            if (modal && !modal.classList.contains('hidden')) window.openLeaveForecast();
+        };
+
+        window.saveLeaveForecastTargetDate = async function(value) {
+            leaveForecastTargetDate = normalizeLeaveForecastTargetDate(value);
+            return saveLeaveForecastSettings();
+        };
+
+        window.resetLeaveForecastTargetDate = function() {
+            leaveForecastTargetDate = '';
+            return saveLeaveForecastSettings();
         };
 
         function leaveForecastDayKey(day) {
@@ -1173,11 +1340,10 @@
         }
 
         function getLeaveForecastRisks() {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
+            const today = getLeaveForecastToday();
             const year = today.getFullYear();
-            const yearEnd = new Date(year, 11, 31);
-            const daysLeft = Math.max(1, Math.floor((yearEnd - today) / 86400000) + 1);
+            const targetEnd = getLeaveForecastTargetEnd(today);
+            const daysLeft = Math.max(1, Math.floor((targetEnd - today) / 86400000) + 1);
             const weeksLeft = Math.max(1, Math.ceil(daysLeft / 7));
 
             const risks = employees.map(emp => {
@@ -1186,7 +1352,7 @@
                 const remaining = Math.max(0, quota - used);
                 let availableShifts = 0;
 
-                for (let cursor = new Date(today); cursor <= yearEnd; cursor.setDate(cursor.getDate() + 1)) {
+                for (let cursor = new Date(today); cursor <= targetEnd; cursor.setDate(cursor.getDate() + 1)) {
                     const phase = getShiftCyclePhase(cursor, currentShift);
                     const isWorkShift = phase.className === 'shift-cycle-day' || phase.className === 'shift-cycle-night';
                     const existingValue = emp.data && emp.data[leaveForecastDayKey(cursor)];
@@ -1198,7 +1364,7 @@
                 const pressure = remaining > 0 ? (capacity > 0 ? remaining / capacity : Infinity) : 0;
                 const severity = remaining > capacity ? 'critical' : (remaining > 0 && pressure >= leaveForecastWarningPressure ? 'warning' : 'ok');
                 return {
-                    emp, quota, used, remaining, availableShifts, capacity, requiredShifts, pressure, daysLeft, weeksLeft,
+                    emp, quota, used, remaining, availableShifts, capacity, requiredShifts, pressure, daysLeft, weeksLeft, targetEnd,
                     weeklyHours: Math.ceil((remaining / weeksLeft) * 2) / 2,
                     deficit: Math.max(0, remaining - capacity), severity
                 };
@@ -1239,10 +1405,9 @@
             const subtitle = document.getElementById('leave-forecast-subtitle');
             if (!modal || !content || !subtitle) return;
 
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const yearEnd = new Date(today.getFullYear(), 11, 31);
-            const dateLabel = `${today.getFullYear()}. ${monthNames[today.getMonth()]} ${today.getDate()}. – ${yearEnd.getFullYear()}. december 31.`;
+            const today = getLeaveForecastToday();
+            const targetEnd = getLeaveForecastTargetEnd(today);
+            const dateLabel = `${formatLeaveForecastDate(today)} – ${formatLeaveForecastDate(targetEnd)}`;
             subtitle.textContent = `${currentShift} műszak • ${dateLabel} • csak a még üres, tervezhető műszakok alapján`;
 
             if (!risks.length) {
@@ -1256,7 +1421,7 @@
                         <div class="leave-forecast-summary-item"><strong>${criticalCount}</strong><span>Sürgős kockázat</span></div>
                         <div class="leave-forecast-summary-item"><strong>${warningCount}</strong><span>Tervezést igényel</span></div>
                     </div>
-                    <p class="mb-3 text-[11px] leading-relaxed text-slate-400">A rendszer az éves keretből levonja a már rögzített szabadságórákat, majd a mai naptól év végéig megszámolja az aktív műszak még üres nappalos és éjszakás, <b class="text-slate-300">12 órás</b> műszakait. Nem módosít adatot és nem tilt le beírást.</p>
+                    <p class="mb-3 text-[11px] leading-relaxed text-slate-400">A rendszer az éves keretből levonja a már rögzített szabadságórákat, majd a mai naptól a beállított célidőpontig megszámolja az aktív műszak még üres nappalos és éjszakás, <b class="text-slate-300">12 órás</b> műszakait. Nem módosít adatot és nem tilt le beírást.</p>
                     ${risks.map(item => {
                         const isCritical = item.severity === 'critical';
                         const pressurePercent = Number.isFinite(item.pressure) ? Math.round(item.pressure * 100) : 100;
@@ -1283,6 +1448,7 @@
         window.closeLeaveForecast = function() {
             const modal = document.getElementById('leave-forecast-modal');
             if (!modal) return;
+            window.closeLeaveForecastSettings();
             modal.firstElementChild.classList.add('scale-95');
             setTimeout(() => modal.classList.add('hidden'), 150);
         };
