@@ -309,15 +309,33 @@
             transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         
-        /* --- FINOMÍTOTT KIRÁLYKÉK (Lágyabb átmenet, mélyebb glow) --- */
+        /* --- KÖVETKEZŐ ÜNNEP: KIRÁLYKÉK, ÜVEGES KIEMELÉS --- */
         .calendar-box.electric-blue {
-            border-left-color: #60a5fa;
-            /* Mélyebb, harmonikusabb glow két rétegben */
-            box-shadow: 
-                0 4px 20px rgba(0,0,0,0.25), 
-                -2px 0 18px rgba(96, 165, 250, 0.32),
-                inset 0 0 30px rgba(59, 130, 246, 0.04);
+            border: 2px solid rgba(147, 197, 253, 0.90);
+            border-left: 5px solid #60a5fa;
+            background:
+                radial-gradient(120% 105% at 8% 0%, rgba(96, 165, 250, 0.28), transparent 48%),
+                radial-gradient(90% 130% at 100% 100%, rgba(37, 99, 235, 0.20), transparent 58%),
+                linear-gradient(135deg, rgba(30, 64, 175, 0.34), rgba(15, 23, 42, 0.74) 48%, rgba(30, 41, 59, 0.60));
+            backdrop-filter: blur(15px) saturate(135%);
+            -webkit-backdrop-filter: blur(15px) saturate(135%);
+            box-shadow:
+                0 10px 26px rgba(2, 6, 23, 0.34),
+                0 0 0 1px rgba(191, 219, 254, 0.36),
+                -4px 0 25px rgba(96, 165, 250, 0.48),
+                inset 0 1px 0 rgba(255, 255, 255, 0.18),
+                inset 0 -1px 0 rgba(37, 99, 235, 0.24);
         }
+        .calendar-box.electric-blue::before {
+            content: '';
+            position: absolute;
+            inset: 1px;
+            border-radius: 14px;
+            pointer-events: none;
+            background: linear-gradient(118deg, rgba(255,255,255,0.15), transparent 28%, transparent 72%, rgba(96,165,250,0.11));
+            opacity: 0.82;
+        }
+        .calendar-box.electric-blue > * { position: relative; z-index: 1; }
         
         .calendar-box:active {
             transform: scale(0.97);
@@ -573,13 +591,27 @@
         }
         .ticker-admin-handle.visible { display: block; }
 
-        /* A közelgő események kártyáján csak a keret vált teljes RGB-színekre. */
+        /* A közelgő ünnep kártyáján a keret és az üveges belső ugyanazt az RGB-színt követi. */
         .calendar-box.electric-blue.dynamic-rgb {
+            border-width: 2px;
+            border-left-width: 5px;
             border-color: rgb(var(--calendar-rgb, 96,165,250));
             border-left-color: rgb(var(--calendar-rgb, 96,165,250));
             border-top-color: rgb(var(--calendar-rgb, 96,165,250));
-            box-shadow: 0 4px 20px rgba(var(--calendar-rgb, 96,165,250), .22), inset 0 1px 0 rgba(var(--calendar-rgb, 96,165,250), .15), 0 4px 20px rgba(0,0,0,.25);
-            transition: border-color 70s cubic-bezier(.35, 0, .18, 1), box-shadow 70s cubic-bezier(.35, 0, .18, 1);
+            background:
+                radial-gradient(120% 105% at 8% 0%, rgba(var(--calendar-rgb, 96,165,250), 0.34), transparent 48%),
+                radial-gradient(90% 130% at 100% 100%, rgba(var(--calendar-rgb, 96,165,250), 0.20), transparent 58%),
+                linear-gradient(135deg, rgba(var(--calendar-rgb, 96,165,250), 0.28), rgba(15, 23, 42, 0.74) 48%, rgba(30, 41, 59, 0.60));
+            box-shadow:
+                0 10px 26px rgba(2, 6, 23, .34),
+                0 0 0 1px rgba(var(--calendar-rgb, 96,165,250), .60),
+                -4px 0 25px rgba(var(--calendar-rgb, 96,165,250), .62),
+                inset 0 1px 0 rgba(255,255,255,.18),
+                inset 0 -1px 0 rgba(var(--calendar-rgb, 96,165,250), .26);
+            transition: border-color 70s cubic-bezier(.35, 0, .18, 1), background 70s cubic-bezier(.35, 0, .18, 1), box-shadow 70s cubic-bezier(.35, 0, .18, 1);
+        }
+        .calendar-box.electric-blue.dynamic-rgb::before {
+            background: linear-gradient(118deg, rgba(255,255,255,0.15), transparent 28%, transparent 72%, rgba(var(--calendar-rgb, 96,165,250),0.16));
         }
 
         /* Csak a hírfolyam admin felületének stílusai. */
