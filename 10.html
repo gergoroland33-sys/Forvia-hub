@@ -58,10 +58,37 @@
         .btn-save { background: var(--primary); color: white; width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 1rem;}
         .btn-close { background: transparent; color: var(--text-dim); width: 100%; padding: 12px; border: 1px solid #333; border-radius: 8px; cursor: pointer; }
 
+        /* JELENLÉT / HIÁNYZÁS KAPCSOLÓ – csak a hiányzás rögzítését vezérli. */
+        .presence-toggle { position:absolute; top:18px; right:18px; display:inline-flex; align-items:center; gap:8px; min-height:34px; padding:5px 9px 5px 7px; border:1px solid rgba(148,163,184,.30); border-radius:999px; color:#e2e8f0; background:rgba(24,24,27,.72); box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 5px 16px rgba(0,0,0,.22); cursor:pointer; transition:transform .18s ease,background .18s ease,border-color .18s ease,box-shadow .18s ease; }
+        .presence-toggle:hover { transform:translateY(-1px); }
+        .presence-toggle:active { transform:translateY(1px) scale(.97); }
+        .presence-toggle-label { font-size:.62rem; font-weight:900; letter-spacing:.075em; text-transform:uppercase; }
+        .presence-toggle-state { min-width:25px; font-size:.62rem; font-weight:950; letter-spacing:.04em; text-align:left; }
+        .presence-toggle-track { position:relative; width:29px; height:16px; flex:0 0 auto; border:1px solid rgba(255,255,255,.18); border-radius:999px; background:#3f3f46; transition:background .18s ease,border-color .18s ease; }
+        .presence-toggle-track::after { content:''; position:absolute; top:2px; left:2px; width:10px; height:10px; border-radius:50%; background:#e4e4e7; box-shadow:0 1px 4px rgba(0,0,0,.42); transition:transform .18s cubic-bezier(.34,1.56,.64,1),background .18s ease; }
+        .presence-toggle.is-on { border-color:rgba(16,185,129,.56); background:linear-gradient(135deg,rgba(6,78,59,.82),rgba(20,83,45,.60)); color:#d1fae5; }
+        .presence-toggle.is-on .presence-toggle-track { border-color:rgba(110,231,183,.64); background:#059669; }
+        .presence-toggle.is-on .presence-toggle-track::after { transform:translateX(13px); background:#ecfdf5; }
+        .presence-toggle.is-off { border-color:rgba(248,113,113,.54); background:linear-gradient(135deg,rgba(69,10,10,.82),rgba(69,10,10,.52)); color:#fee2e2; }
+        .presence-toggle.is-off .presence-toggle-track { border-color:rgba(252,165,165,.60); background:#b91c1c; }
+
+        .presence-modal { display:none; position:fixed; inset:0; z-index:160; align-items:center; justify-content:center; padding:20px; background:rgba(9,9,11,.80); backdrop-filter:blur(8px); }
+        .presence-modal.open { display:flex; }
+        .presence-modal-card { width:min(100%,360px); padding:22px; border:1px solid rgba(139,92,246,.55); border-radius:18px; background:linear-gradient(145deg,#27272a,#18181b); box-shadow:0 24px 64px rgba(0,0,0,.58),inset 0 1px 0 rgba(255,255,255,.10); }
+        .presence-modal-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+        .presence-modal-title { margin:0; color:#fff; font-size:1rem; font-weight:850; letter-spacing:.02em; }
+        .presence-modal-copy { margin:7px 0 16px; color:var(--text-dim); font-size:.8rem; line-height:1.48; }
+        .presence-modal-close { width:30px; height:30px; border:1px solid rgba(255,255,255,.10); border-radius:9px; color:#a1a1aa; background:rgba(255,255,255,.05); cursor:pointer; font-size:1rem; }
+        .presence-password { width:100%; padding:12px; border:1px solid rgba(161,161,170,.34); border-radius:10px; outline:none; color:#fff; background:#09090b; font:inherit; transition:border-color .18s ease,box-shadow .18s ease; }
+        .presence-password:focus { border-color:#8b5cf6; box-shadow:0 0 0 3px rgba(139,92,246,.16); }
+        .presence-confirm { width:100%; margin-top:10px; padding:12px; border:0; border-radius:10px; color:#fff; background:linear-gradient(135deg,#7c3aed,#8b5cf6); font:800 .8rem inherit; letter-spacing:.06em; text-transform:uppercase; cursor:pointer; }
+        .presence-password-error { min-height:16px; margin:8px 0 0; color:#fca5a5; font-size:.72rem; font-weight:700; }
+
         /* MOBIL: a névkártyák mindig azonos, kiszámítható rácsban maradnak.
            A hosszú név a saját kártyáján törik, nem tolja szét a másik dolgozó helyét. */
         @media (max-width: 680px) {
             .hero-section { padding: 74px 14px 14px; justify-content: center; }
+            .presence-toggle { top:15px; right:14px; min-height:31px; padding:4px 8px 4px 6px; }
             .today-card { width: min(100%, 440px); max-width: none; padding: 0 2px; }
             .today-date { margin-bottom: 12px; font-size: 1rem; }
             .pill-container {
@@ -152,6 +179,20 @@
         </div>
     </div>
 
+    <!-- Jelenlét kapcsoló: minden állapotváltáshoz külön jelszavas megerősítés kell. -->
+    <div id="presenceToggleModal" class="presence-modal" role="dialog" aria-modal="true" aria-labelledby="presenceToggleTitle" onclick="if(event.target===this) closePresenceToggle()">
+        <div class="presence-modal-card">
+            <div class="presence-modal-head">
+                <h2 id="presenceToggleTitle" class="presence-modal-title">Jelenlét kapcsoló</h2>
+                <button type="button" class="presence-modal-close" onclick="closePresenceToggle()" aria-label="Bezárás">✕</button>
+            </div>
+            <p id="presenceToggleCopy" class="presence-modal-copy">A hiányzás jelzésének állapotát módosítod.</p>
+            <input id="presenceTogglePassword" class="presence-password" type="password" autocomplete="off" placeholder="Jelszó" aria-label="Jelenlét kapcsoló jelszava" onkeydown="if(event.key==='Enter') confirmPresenceToggle()">
+            <button id="presenceToggleConfirm" type="button" class="presence-confirm" onclick="confirmPresenceToggle()">Állapot módosítása</button>
+            <div id="presenceToggleError" class="presence-password-error" aria-live="polite"></div>
+        </div>
+    </div>
+
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
 
@@ -182,7 +223,7 @@
             settingsRef.set({
                 shift: "C", shiftStart: "2025-07-31", nameStart: "2025-02-14",
                 roster: "Laci,Jani,Patrik,Zsuzsa,Peti,Barbi,Reni,Böbe,Martina,Kriszti,Dani".split(","),
-                pending: []
+                pending: [], absenceEnabled: true
             });
         }
     }).catch(err => {
@@ -486,8 +527,53 @@
     // ==========================================
     // ⚡ INTERAKTÍV AKCIÓK
     // ==========================================
+    function isAbsenceEnabled() {
+        // A korábbi mentésekben nincs ilyen mező: azoknál megmarad az eredeti, bekapcsolt működés.
+        return !sysSettings || sysSettings.absenceEnabled !== false;
+    }
+
+    function presenceToggleButtonHtml() {
+        const enabled = isAbsenceEnabled();
+        return `<button type="button" class="presence-toggle ${enabled ? 'is-on' : 'is-off'}" onclick="openPresenceToggle()" aria-label="Jelenlét kapcsoló: hiányzás jelzése ${enabled ? 'bekapcsolva' : 'kikapcsolva'}" title="Hiányzás jelzésének ${enabled ? 'kikapcsolása' : 'bekapcsolása'} — jelszó szükséges"><span class="presence-toggle-label">Jelenlét</span><span class="presence-toggle-track" aria-hidden="true"></span><span class="presence-toggle-state">${enabled ? 'ON' : 'OFF'}</span></button>`;
+    }
+
+    window.openPresenceToggle = function() {
+        const modal = document.getElementById('presenceToggleModal');
+        const enabled = isAbsenceEnabled();
+        document.getElementById('presenceToggleTitle').textContent = enabled ? 'Hiányzás jelzés kikapcsolása' : 'Hiányzás jelzés bekapcsolása';
+        document.getElementById('presenceToggleCopy').textContent = enabled
+            ? 'Kikapcsolva a névekre kattintás nem rögzíthet és nem vonhat vissza hiányzást.'
+            : 'Bekapcsolva a névekre kattintva ismét rögzíthető és visszavonható a hiányzás.';
+        document.getElementById('presenceToggleConfirm').textContent = enabled ? 'Kikapcsolás jelszóval' : 'Bekapcsolás jelszóval';
+        document.getElementById('presenceTogglePassword').value = '';
+        document.getElementById('presenceToggleError').textContent = '';
+        modal.classList.add('open');
+        setTimeout(() => document.getElementById('presenceTogglePassword').focus(), 30);
+    };
+
+    window.closePresenceToggle = function() {
+        document.getElementById('presenceToggleModal').classList.remove('open');
+    };
+
+    window.confirmPresenceToggle = function() {
+        const password = document.getElementById('presenceTogglePassword').value;
+        const error = document.getElementById('presenceToggleError');
+        if (password !== 'peti') {
+            error.textContent = 'Hibás jelszó. Az állapot nem változott.';
+            document.getElementById('presenceTogglePassword').select();
+            return;
+        }
+        const nextState = !isAbsenceEnabled();
+        db.ref('settings/absenceEnabled').set(nextState).then(() => {
+            window.closePresenceToggle();
+        }).catch(() => {
+            error.textContent = 'A mentés most nem sikerült. Próbáld újra.';
+        });
+    };
+
     window.markAbsent = function(dateKey, name) {
         if(!name || name === "Nincs több!" || name === "-") return;
+        if(!isAbsenceEnabled()) { alert('A hiányzás jelzése jelenleg ki van kapcsolva.'); return; }
         const label = getWorkerLabel(name, sysSettings);
         if(confirm(`Szeretnéd jelezni, hogy ${label} hiányzik ezen a napon?\n\nA rendszer automatikusan behívja a következőt, ${label} pedig átkerül a következő munkanapra.`)) {
             db.ref(`absences/${dateKey}/${name}`).set(true);
@@ -495,6 +581,7 @@
     };
 
     window.undoAbsent = function(dateKey, name) {
+        if(!isAbsenceEnabled()) { alert('A hiányzás jelzése jelenleg ki van kapcsolva.'); return; }
         db.ref(`absences/${dateKey}/${name}`).set(null);
     };
 
@@ -510,7 +597,7 @@
         const shiftState = getCurrentShiftState(now, sysSettings);
         const calendarToday = new Date(now.getTime()); calendarToday.setHours(0, 0, 0, 0);
 
-        const headerHTML = `<div class="header-pill" onclick="openAdmin()">${sysSettings.shift} MŰSZAK BEOSZTÁS</div>`;
+        const headerHTML = `<div class="header-pill" onclick="openAdmin()">${sysSettings.shift} MŰSZAK BEOSZTÁS</div>${presenceToggleButtonHtml()}`;
 
         // Ha üres az aktív lista
         if (!hasAnyWorker(sysSettings)) {
@@ -567,7 +654,7 @@
                     <span style="font-size: 1.5rem; color:var(--text-dim); font-weight:300;">&</span>
                     <div class="worker-pill" title="Koppints a hiányzás jelzéséhez" onclick='markAbsent(${inlineArgument(dateKey)}, ${inlineArgument(workers[1])})'>${escapeHtml(getWorkerLabel(workers[1], sysSettings))}</div>
                 </div>
-                <div class="instruction-text">(Koppints a névre a hiányzás jelzéséhez)</div>
+                <div class="instruction-text">${isAbsenceEnabled() ? '(Koppints a névre a hiányzás jelzéséhez)' : '(A hiányzás jelzése jelenleg ki van kapcsolva)'}</div>
             </div>`;
 
         fillUpcomingList(today, list, 3, false);
@@ -863,6 +950,7 @@
             shiftStart: cfg.shiftStart,
             nameStart: cfg.nameStart,
             roster: cfg.roster,
+            absenceEnabled: cfg.absenceEnabled !== false,
             joins: Object.keys(cleanJoins).length ? cleanJoins : null,
             removals: Object.keys(cleanRemovals).length ? cleanRemovals : null,
             workerNames: Object.keys(cleanWorkerNames).length ? cleanWorkerNames : null
