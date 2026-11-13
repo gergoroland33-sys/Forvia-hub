@@ -3324,17 +3324,8 @@
         function getRecentOtherPresenceActivities(data = latestPresenceActivityData) {
             const storedEvents = !data || typeof data !== 'object' ? [] : Object.entries(data)
                 .map(([eventId, event]) => ({ eventId, ...(event && typeof event === 'object' ? event : {}) }));
-            /* Ha egy új előzmény-írásra a Firebase szabálya még nem adna jogot,
-               a már biztosan működő élő jelenléti ágból azonnal látszik a másik
-               jelenleg nyitott munkamenet belépési ideje. */
-            const liveSessionEvents = getAllPresenceSessions().map(session => ({
-                eventId: `live-${session.uid}-${session.sessionId}`,
-                uid: session.uid,
-                sessionId: session.sessionId,
-                openedAt: Number(session.connectedAt) || Number(session.lastSeenAt)
-            }));
             const uniqueEvents = new Map();
-            [...storedEvents, ...liveSessionEvents].forEach(event => {
+            storedEvents.forEach(event => {
                 /* A jelenlegi böngésző-munkamenethez tartozó teljes anonim UID kimarad. */
                 if (!event.uid || event.uid === currentPresenceUid) return;
                 if (!Number.isFinite(Number(event.openedAt)) || Number(event.openedAt) <= 0) return;
