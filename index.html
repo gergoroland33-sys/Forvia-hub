@@ -3193,7 +3193,7 @@
     <!-- Firebase Realtime Database hírfolyam + hitelesített admin vezérlőpult. -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue, set, update, push, query, orderByChild, startAt, limitToLast, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, set, update, push, query, orderByChild, startAt, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         import { getAuth, browserSessionPersistence, setPersistence, signInWithEmailAndPassword, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const tickerFirebaseConfig = {
@@ -3258,9 +3258,9 @@
         let presenceDetailsTickTimer = null;
         let currentPresenceUid = null;
         let currentPresenceSessionId = null;
-        let latestPresenceActivityData = null;
-        let presenceActivityUnsubscribe = null;
         let lastPresenceActivityRecordAt = 0;
+        const PRESENCE_LOCAL_HISTORY_KEY = 'forviaHubRecentOtherPresenceSessionsV1';
+        const PRESENCE_OWN_UIDS_KEY = 'forviaHubKnownOwnPresenceUidsV1';
 
         const analyticsModuleNames = {
             home: 'Kezdőlap',
@@ -3315,21 +3315,83 @@
                 if (uid === '_activity') return;
                 if (!userSessions || typeof userSessions !== 'object') return;
                 Object.entries(userSessions).forEach(([sessionId, session]) => {
+                    if (sessionId === '_activity') return;
                     if (session && typeof session === 'object') sessions.push({ ...session, uid, sessionId });
                 });
             });
             return sessions;
         }
 
-        function getRecentOtherPresenceActivities(data = latestPresenceActivityData) {
-            const storedEvents = !data || typeof data !== 'object' ? [] : Object.entries(data)
-                .map(([eventId, event]) => ({ eventId, ...(event && typeof event === 'object' ? event : {}) }));
+        function readPresenceLocalStorage(key, fallback) {
+            try {
+                const value = JSON.parse(localStorage.getItem(key) || '');
+                return value && typeof value === 'object' ? value : fallback;
+            } catch (_) {
+                return fallback;
+            }
+        }
+
+        function getKnownOwnPresenceUids() {
+            const values = readPresenceLocalStorage(PRESENCE_OWN_UIDS_KEY, []);
+            return new Set(Array.isArray(values) ? values.filter(value => typeof value === 'string' && value) : []);
+        }
+
+        function rememberOwnPresenceUid(uid) {
+            if (!uid) return;
+            const knownUids = Array.from(getKnownOwnPresenceUids());
+            if (!knownUids.includes(uid)) {
+                knownUids.push(uid);
+                try { localStorage.setItem(PRESENCE_OWN_UIDS_KEY, JSON.stringify(knownUids.slice(-12))); } catch (_) {}
+            }
+        }
+
+        function getLocalObservedPresenceActivities() {
+            const values = readPresenceLocalStorage(PRESENCE_LOCAL_HISTORY_KEY, []);
+            return Array.isArray(values) ? values.filter(event => event && typeof event === 'object') : [];
+        }
+
+        function captureOtherPresenceSessions(data = latestPresenceData) {
+            if (!currentPresenceUid) return;
+            const ownUids = getKnownOwnPresenceUids();
+            const history = getLocalObservedPresenceActivities();
+            const knownSessions = new Set(history.map(event => `${event.uid || ''}/${event.sessionId || ''}`));
+            let changed = false;
+            getAllPresenceSessions(data).forEach(session => {
+                if (!session.uid || ownUids.has(session.uid)) return;
+                const sessionKey = `${session.uid}/${session.sessionId}`;
+                const openedAt = Number(session.connectedAt) || Number(session.lastSeenAt);
+                if (knownSessions.has(sessionKey) || !Number.isFinite(openedAt) || openedAt <= 0) return;
+                history.push({ uid: session.uid, sessionId: session.sessionId, openedAt });
+                knownSessions.add(sessionKey);
+                changed = true;
+            });
+            if (changed) {
+                try {
+                    history.sort((a, b) => Number(b.openedAt) - Number(a.openedAt));
+                    localStorage.setItem(PRESENCE_LOCAL_HISTORY_KEY, JSON.stringify(history.slice(0, 60)));
+                } catch (_) {}
+            }
+        }
+
+        function getRecentOtherPresenceActivities(data = latestPresenceData) {
+            const storedEvents = !data || typeof data !== 'object' ? [] : Object.entries(data).flatMap(([uid, userSessions]) => {
+                const userActivities = userSessions && typeof userSessions === 'object' ? userSessions._activity : null;
+                if (!userActivities || typeof userActivities !== 'object') return [];
+                return Object.entries(userActivities).map(([eventId, event]) => ({
+                    eventId,
+                    ownerUid: uid,
+                    ...(event && typeof event === 'object' ? event : {})
+                }));
+            });
             const uniqueEvents = new Map();
-            storedEvents.forEach(event => {
+            const ownUids = getKnownOwnPresenceUids();
+            [...storedEvents, ...getLocalObservedPresenceActivities()].forEach(event => {
+                const sourceUid = event.subjectUid || event.uid || event.ownerUid;
+                const sourceSessionId = event.subjectSessionId || event.sessionId || event.eventId;
                 /* A jelenlegi böngésző-munkamenethez tartozó teljes anonim UID kimarad. */
-                if (!event.uid || event.uid === currentPresenceUid) return;
+                if (!sourceUid || ownUids.has(sourceUid)) return;
                 if (!Number.isFinite(Number(event.openedAt)) || Number(event.openedAt) <= 0) return;
-                const identity = `${event.uid}/${event.sessionId || event.eventId}`;
+                const identity = `${sourceUid}/${sourceSessionId}`;
                 const current = uniqueEvents.get(identity);
                 if (!current || Number(event.openedAt) > Number(current.openedAt)) uniqueEvents.set(identity, event);
             });
@@ -4024,6 +4086,7 @@
             const count = tickerEl('activeUsersCount');
             if (!card || !count) return;
             latestPresenceData = data && typeof data === 'object' ? data : null;
+            captureOtherPresenceSessions(latestPresenceData);
             analyticsPresenceDataInitialized = true;
             notifyAnalyticsPresenceChange();
             /* Minden eszköz külön jelenléti munkamenetet ír. Ezeket összegezzük,
@@ -4074,26 +4137,14 @@
                 if (!uid) throw new Error('Nincs anonim jelenléti azonosító.');
 
                 currentPresenceUid = uid;
+                rememberOwnPresenceUid(uid);
                 const presenceRoot = ref(presenceDb, 'hub/presence');
                 const presenceSessionId = createPresenceSessionId();
                 currentPresenceSessionId = presenceSessionId;
                 const presenceRef = ref(presenceDb, `hub/presence/${uid}/${presenceSessionId}`);
-                /* A már működő jelenléti ág fenntartott, az élő sessionöktől elkülönített
-                   részében marad a rövid előzmény. Így nem kell új Firebase-engedélyág. */
-                const presenceActivityRoot = ref(presenceDb, 'hub/presence/_activity');
-                presenceActivityUnsubscribe?.();
-                presenceActivityUnsubscribe = onValue(
-                    query(presenceActivityRoot, orderByChild('openedAt'), limitToLast(30)),
-                    snapshot => {
-                        latestPresenceActivityData = snapshot.val();
-                        renderPresenceDetails();
-                    },
-                    error => {
-                        latestPresenceActivityData = null;
-                        console.warn('Jelenléti belépési előzmény olvasási hiba:', error);
-                        renderPresenceDetails();
-                    }
-                );
+                /* Az előzmény a saját, már engedélyezett jelenléti UID-ághoz kerül.
+                   A közös jelenléti olvasásból így minden másik munkamenet eseménye látszik. */
+                const presenceActivityRoot = ref(presenceDb, `hub/presence/${uid}/_activity`);
                 let presenceWriteInFlight = false;
                 let presenceRefreshQueued = false;
                 let queuedPresenceInitialWrite = false;
@@ -4130,6 +4181,8 @@
                             void recordPresenceSessionActivity(presenceActivityRoot, {
                                 uid,
                                 sessionId: presenceSessionId,
+                                subjectUid: uid,
+                                subjectSessionId: presenceSessionId,
                                 module: activePresenceModule,
                                 device: getAnalyticsDeviceClass()
                             }, forceActivityRecord);
@@ -4185,7 +4238,10 @@
                 });
                 window.addEventListener('focus', () => { void refreshPresence(false, { focused: true }, true); });
                 window.addEventListener('blur', () => { void refreshPresence(false, { focused: false }); });
-                onValue(presenceRoot, snapshot => renderActiveUsers(snapshot.val()), error => {
+                onValue(presenceRoot, snapshot => {
+                    const presenceData = snapshot.val();
+                    renderActiveUsers(presenceData);
+                }, error => {
                     console.error('Aktív felhasználók olvasási hiba:', error);
                     card.classList.add('is-unavailable');
                 });
