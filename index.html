@@ -214,56 +214,13 @@
             color: #bbf7d0; background: rgba(15, 23, 42, .54);
             box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 8px 22px rgba(0,0,0,.16);
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            cursor: pointer; user-select: none; z-index: 12;
-            transition: border-color .18s ease, background .18s ease, transform .18s ease, box-shadow .18s ease;
+            pointer-events: none; user-select: none;
         }
-        @media (hover: hover) {
-            .active-users-card:hover {
-                background: rgba(20, 83, 45, .42);
-                border-color: rgba(134, 239, 172, .48);
-                box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 10px 24px rgba(0,0,0,.24), 0 0 18px rgba(74,222,128,.10);
-            }
-        }
-        .active-users-card:active { transform: scale(.96); }
-        .active-users-card:focus-visible { outline: 2px solid #86efac; outline-offset: 3px; }
         .active-users-icon { width: 16px; height: 16px; fill: currentColor; }
         .active-users-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 10px rgba(74,222,128,.85); }
         .active-users-count { min-width: 8px; color: #f8fafc; font-size: .78rem; font-weight: 900; font-variant-numeric: tabular-nums; }
         .active-users-count.is-staff-pro-active { color: #f87171; text-shadow: 0 0 10px rgba(248,113,113,.38); }
         .active-users-card.is-unavailable { opacity: .48; }
-        .active-users-card.is-details-open { background: rgba(20, 83, 45, .44); border-color: rgba(134,239,172,.60); }
-
-        /* Az online számláló saját, kizárólag kattintásra megjelenő információs kártyája. */
-        .active-users-popover {
-            position: absolute; top: 52px; left: 5px; z-index: 13;
-            width: min(330px, calc(100% - 10px));
-            padding: 13px; border: 1px solid rgba(110,231,183,.34); border-radius: 15px;
-            color: #e2e8f0; background: linear-gradient(145deg, rgba(8,35,47,.97), rgba(15,23,42,.98));
-            box-shadow: 0 18px 42px rgba(0,0,0,.42), inset 0 1px rgba(255,255,255,.08);
-            backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-            transform: translateY(-6px) scale(.98); opacity: 0; pointer-events: none;
-            transition: opacity .18s ease, transform .18s ease;
-        }
-        .active-users-popover.visible { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
-        .active-users-popover-title { display: flex; align-items: center; justify-content: space-between; gap: 9px; margin-bottom: 9px; }
-        .active-users-popover-title strong { color: #ecfdf5; font-size: .76rem; letter-spacing: .08em; text-transform: uppercase; }
-        .active-users-live-badge { display: inline-flex; align-items: center; gap: 5px; color: #bbf7d0; font-size: .62rem; font-weight: 900; letter-spacing: .06em; }
-        .active-users-live-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 8px rgba(74,222,128,.85); }
-        .active-users-stat { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid rgba(148,163,184,.13); }
-        .active-users-stat:first-of-type { border-top: 0; }
-        .active-users-stat-label { color: #94a3b8; font-size: .69rem; line-height: 1.35; text-transform: uppercase; letter-spacing: .055em; font-weight: 800; }
-        .active-users-stat-value { max-width: 62%; color: #f8fafc; font-size: .78rem; font-weight: 800; line-height: 1.35; text-align: right; font-variant-numeric: tabular-nums; }
-        .active-users-stat-value.ok { color: #86efac; }
-        .active-users-stat-value.muted { color: #cbd5e1; }
-        .active-users-recent-title { margin: 12px 0 6px; color: #bbf7d0; font-size: .66rem; font-weight: 900; letter-spacing: .075em; text-transform: uppercase; }
-        .active-users-recent-list { display: grid; gap: 6px; }
-        .active-users-recent-time { display: block; padding: 9px 10px; border: 1px solid rgba(110,231,183,.13); border-radius: 9px; background: rgba(2, 12, 26, .34); color: #f8fafc; font-size: .73rem; font-weight: 850; font-variant-numeric: tabular-nums; text-align: center; }
-        .active-users-recent-empty { padding: 9px; border: 1px dashed rgba(148,163,184,.22); border-radius: 9px; color: #94a3b8; font-size: .67rem; line-height: 1.35; }
-        .active-users-popover-note { margin-top: 5px; padding-top: 9px; border-top: 1px dashed rgba(148,163,184,.18); color: #94a3b8; font-size: .64rem; line-height: 1.38; }
-        @media (max-width: 480px) {
-            .active-users-popover { width: min(315px, calc(100vw - 50px)); }
-            .active-users-stat-value { max-width: 59%; }
-        }
 
         .welcome-title {
             font-size: 2.2rem; font-weight: 800; margin: 0;
@@ -1254,12 +1211,11 @@
 <div id="home-screen">
     <div class="home-sky-stars" aria-hidden="true"></div>
     <div id="main-card" class="glass-card">
-        <div id="activeUsersCard" class="active-users-card" role="button" tabindex="0" aria-live="polite" aria-haspopup="dialog" aria-expanded="false" aria-controls="activeUsersPopover" aria-label="Aktív munkamenetek statisztikája. Betöltés folyamatban.">
+        <div id="activeUsersCard" class="active-users-card" role="status" aria-live="polite" aria-label="Aktív felhasználók betöltése">
             <svg class="active-users-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
             <span class="active-users-dot" aria-hidden="true"></span>
             <span id="activeUsersCount" class="active-users-count">–</span>
         </div>
-        <div id="activeUsersPopover" class="active-users-popover" role="dialog" aria-label="Élő jelenléti statisztika" aria-hidden="true"></div>
         <div class="share-card-btn" onclick="shareApp(this)" title="App megosztása">
             <svg class="share-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
@@ -3254,13 +3210,6 @@
         const PRESENCE_STALE_RECHECK_MS = 30 * 1000;
         let presenceStaleRecheckTimer = null;
         let presenceServerTimeOffset = 0;
-        let presenceDetailsOpen = false;
-        let presenceDetailsTickTimer = null;
-        let currentPresenceUid = null;
-        let currentPresenceSessionId = null;
-        let lastPresenceActivityRecordAt = 0;
-        const PRESENCE_LOCAL_HISTORY_KEY = 'forviaHubRecentOtherPresenceSessionsV1';
-        const PRESENCE_OWN_UIDS_KEY = 'forviaHubKnownOwnPresenceUidsV1';
 
         const analyticsModuleNames = {
             home: 'Kezdőlap',
@@ -3305,205 +3254,6 @@
                 });
             });
             return sessions;
-        }
-
-        function getAllPresenceSessions(data = latestPresenceData) {
-            if (!data || typeof data !== 'object') return [];
-            const sessions = [];
-            Object.entries(data).forEach(([uid, userSessions]) => {
-                /* Ez a fenntartott ág a rövid belépési előzményé, nem élő munkamenet. */
-                if (uid === '_activity') return;
-                if (!userSessions || typeof userSessions !== 'object') return;
-                Object.entries(userSessions).forEach(([sessionId, session]) => {
-                    if (sessionId === '_activity') return;
-                    if (session && typeof session === 'object') sessions.push({ ...session, uid, sessionId });
-                });
-            });
-            return sessions;
-        }
-
-        function readPresenceLocalStorage(key, fallback) {
-            try {
-                const value = JSON.parse(localStorage.getItem(key) || '');
-                return value && typeof value === 'object' ? value : fallback;
-            } catch (_) {
-                return fallback;
-            }
-        }
-
-        function getKnownOwnPresenceUids() {
-            const values = readPresenceLocalStorage(PRESENCE_OWN_UIDS_KEY, []);
-            return new Set(Array.isArray(values) ? values.filter(value => typeof value === 'string' && value) : []);
-        }
-
-        function rememberOwnPresenceUid(uid) {
-            if (!uid) return;
-            const knownUids = Array.from(getKnownOwnPresenceUids());
-            if (!knownUids.includes(uid)) {
-                knownUids.push(uid);
-                try { localStorage.setItem(PRESENCE_OWN_UIDS_KEY, JSON.stringify(knownUids.slice(-12))); } catch (_) {}
-            }
-        }
-
-        function getLocalObservedPresenceActivities() {
-            const values = readPresenceLocalStorage(PRESENCE_LOCAL_HISTORY_KEY, []);
-            return Array.isArray(values) ? values.filter(event => event && typeof event === 'object') : [];
-        }
-
-        function captureOtherPresenceSessions(data = latestPresenceData) {
-            if (!currentPresenceUid) return;
-            const ownUids = getKnownOwnPresenceUids();
-            const history = getLocalObservedPresenceActivities();
-            const knownSessions = new Set(history.map(event => `${event.uid || ''}/${event.sessionId || ''}`));
-            let changed = false;
-            getAllPresenceSessions(data).forEach(session => {
-                if (!session.uid || ownUids.has(session.uid)) return;
-                const sessionKey = `${session.uid}/${session.sessionId}`;
-                const openedAt = Number(session.connectedAt) || Number(session.lastSeenAt);
-                if (knownSessions.has(sessionKey) || !Number.isFinite(openedAt) || openedAt <= 0) return;
-                history.push({ uid: session.uid, sessionId: session.sessionId, openedAt });
-                knownSessions.add(sessionKey);
-                changed = true;
-            });
-            if (changed) {
-                try {
-                    history.sort((a, b) => Number(b.openedAt) - Number(a.openedAt));
-                    localStorage.setItem(PRESENCE_LOCAL_HISTORY_KEY, JSON.stringify(history.slice(0, 60)));
-                } catch (_) {}
-            }
-        }
-
-        function getRecentOtherPresenceActivities(data = latestPresenceData) {
-            const storedEvents = !data || typeof data !== 'object' ? [] : Object.entries(data).flatMap(([uid, userSessions]) => {
-                const userActivities = userSessions && typeof userSessions === 'object' ? userSessions._activity : null;
-                if (!userActivities || typeof userActivities !== 'object') return [];
-                return Object.entries(userActivities).map(([eventId, event]) => ({
-                    eventId,
-                    ownerUid: uid,
-                    ...(event && typeof event === 'object' ? event : {})
-                }));
-            });
-            const uniqueEvents = new Map();
-            const ownUids = getKnownOwnPresenceUids();
-            [...storedEvents, ...getLocalObservedPresenceActivities()].forEach(event => {
-                const sourceUid = event.subjectUid || event.uid || event.ownerUid;
-                const sourceSessionId = event.subjectSessionId || event.sessionId || event.eventId;
-                /* A jelenlegi böngésző-munkamenethez tartozó teljes anonim UID kimarad. */
-                if (!sourceUid || ownUids.has(sourceUid)) return;
-                if (!Number.isFinite(Number(event.openedAt)) || Number(event.openedAt) <= 0) return;
-                const identity = `${sourceUid}/${sourceSessionId}`;
-                const current = uniqueEvents.get(identity);
-                if (!current || Number(event.openedAt) > Number(current.openedAt)) uniqueEvents.set(identity, event);
-            });
-            return Array.from(uniqueEvents.values())
-                .sort((a, b) => Number(b.openedAt) - Number(a.openedAt))
-                .slice(0, 5);
-        }
-
-        function escapePresenceHtml(value) {
-            return String(value == null ? '' : value).replace(/[&<>"']/g, character => ({
-                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-            })[character]);
-        }
-
-        function formatPresenceDateTime(timestamp) {
-            const numericTimestamp = Number(timestamp);
-            if (!Number.isFinite(numericTimestamp) || numericTimestamp <= 0) return 'Nincs adat';
-            const value = new Date(numericTimestamp);
-            const now = new Date(getPresenceNow());
-            const sameDay = value.getFullYear() === now.getFullYear()
-                && value.getMonth() === now.getMonth()
-                && value.getDate() === now.getDate();
-            const time = value.toLocaleTimeString('hu-HU', {
-                hour: '2-digit', minute: '2-digit', second: '2-digit'
-            });
-            return sameDay
-                ? `Ma, ${time}`
-                : `${value.toLocaleDateString('hu-HU')} ${time}`;
-        }
-
-        function formatPresenceAge(timestamp) {
-            const numericTimestamp = Number(timestamp);
-            if (!Number.isFinite(numericTimestamp) || numericTimestamp <= 0) return 'Nincs adat';
-            const elapsedSeconds = Math.max(0, Math.floor((getPresenceNow() - numericTimestamp) / 1000));
-            if (elapsedSeconds < 5) return 'Éppen most';
-            if (elapsedSeconds < 60) return `${elapsedSeconds} másodperce`;
-            const elapsedMinutes = Math.floor(elapsedSeconds / 60);
-            if (elapsedMinutes < 60) return `${elapsedMinutes} perce`;
-            const elapsedHours = Math.floor(elapsedMinutes / 60);
-            if (elapsedHours < 24) return `${elapsedHours} órája`;
-            return `${Math.floor(elapsedHours / 24)} napja`;
-        }
-
-        function renderPresenceDetails() {
-            const popover = tickerEl('activeUsersPopover');
-            if (!popover) return;
-            const freshSessions = getFreshPresenceSessions();
-            const activeCount = freshSessions.length;
-            const statusText = activeCount > 0
-                ? `Aktív - ${activeCount} friss munkamenet`
-                : 'Nincs jelenleg aktív munkamenet';
-            const statusClass = activeCount > 0 ? 'ok' : 'muted';
-            const recentActivities = getRecentOtherPresenceActivities();
-            const recentActivitiesHtml = recentActivities.length
-                ? recentActivities.map(activity => `<time class="active-users-recent-time" datetime="${new Date(Number(activity.openedAt)).toISOString()}">${formatPresenceDateTime(activity.openedAt)}</time>`).join('')
-                : '<div class="active-users-recent-empty">Még nincs rögzített másik belépés.</div>';
-            popover.innerHTML = `
-                <div class="active-users-popover-title">
-                    <strong>Élő jelenléti statisztika</strong>
-                    <span class="active-users-live-badge">REALTIME</span>
-                </div>
-                <div class="active-users-stat">
-                    <span class="active-users-stat-label">Jelenleg aktív<br>munkamenetek</span>
-                    <strong class="active-users-stat-value ${statusClass}">${activeCount} db</strong>
-                </div>
-                <div class="active-users-stat">
-                    <span class="active-users-stat-label">Jelenléti állapot</span>
-                    <strong class="active-users-stat-value ${statusClass}">${statusText}</strong>
-                </div>
-                <div class="active-users-recent-title">Utolsó 5 másik belépés</div>
-                <div class="active-users-recent-list">${recentActivitiesHtml}</div>
-                `;
-        }
-
-        function setPresenceDetailsOpen(open) {
-            const card = tickerEl('activeUsersCard');
-            const popover = tickerEl('activeUsersPopover');
-            if (!card || !popover) return;
-            presenceDetailsOpen = Boolean(open);
-            card.classList.toggle('is-details-open', presenceDetailsOpen);
-            card.setAttribute('aria-expanded', String(presenceDetailsOpen));
-            popover.classList.toggle('visible', presenceDetailsOpen);
-            popover.setAttribute('aria-hidden', String(!presenceDetailsOpen));
-            clearInterval(presenceDetailsTickTimer);
-            presenceDetailsTickTimer = null;
-            if (presenceDetailsOpen) {
-                renderPresenceDetails();
-                presenceDetailsTickTimer = setInterval(renderPresenceDetails, 1000);
-            }
-        }
-
-        function initPresenceDetailsCard() {
-            const card = tickerEl('activeUsersCard');
-            const popover = tickerEl('activeUsersPopover');
-            if (!card || !popover || card.dataset.detailsReady === 'true') return;
-            card.dataset.detailsReady = 'true';
-            card.addEventListener('click', event => {
-                event.stopPropagation();
-                setPresenceDetailsOpen(!presenceDetailsOpen);
-            });
-            card.addEventListener('keydown', event => {
-                if (event.key !== 'Enter' && event.key !== ' ') return;
-                event.preventDefault();
-                setPresenceDetailsOpen(!presenceDetailsOpen);
-            });
-            document.addEventListener('pointerdown', event => {
-                if (!presenceDetailsOpen || card.contains(event.target) || popover.contains(event.target)) return;
-                setPresenceDetailsOpen(false);
-            });
-            document.addEventListener('keydown', event => {
-                if (event.key === 'Escape' && presenceDetailsOpen) setPresenceDetailsOpen(false);
-            });
         }
 
         function formatTickerDate(now = new Date()) {
@@ -4086,7 +3836,6 @@
             const count = tickerEl('activeUsersCount');
             if (!card || !count) return;
             latestPresenceData = data && typeof data === 'object' ? data : null;
-            captureOtherPresenceSessions(latestPresenceData);
             analyticsPresenceDataInitialized = true;
             notifyAnalyticsPresenceChange();
             /* Minden eszköz külön jelenléti munkamenetet ír. Ezeket összegezzük,
@@ -4098,8 +3847,7 @@
             count.textContent = String(activeUsers);
             count.classList.toggle('is-staff-pro-active', isStaffProOpen);
             card.classList.remove('is-unavailable');
-            card.setAttribute('aria-label', `Aktív munkamenetek: ${activeUsers}. Kattintásra részletes jelenléti statisztika.`);
-            renderPresenceDetails();
+            card.setAttribute('aria-label', `Aktív felhasználók: ${activeUsers}`);
             scheduleHubAnalyticsRender();
         }
 
@@ -4107,26 +3855,10 @@
             return window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
         }
 
-        async function recordPresenceSessionActivity(activityRoot, details, force = false) {
-            /* Valós belépés / visszatérés kerül be: az időzített 90 mp-es jel és
-               a modulváltás sosem. Rövid fókuszváltások nem duplázzák a listát. */
-            const now = Date.now();
-            if (!force && now - lastPresenceActivityRecordAt < PRESENCE_STALE_AFTER_MS) return;
-            lastPresenceActivityRecordAt = now;
-            try {
-                await push(activityRoot, { ...details, openedAt: serverTimestamp() });
-            } catch (error) {
-                /* Az élő számláló ettől függetlenül változatlanul működik. */
-                lastPresenceActivityRecordAt = 0;
-                console.warn('Jelenléti belépési előzmény írási hiba:', error);
-            }
-        }
-
         async function initActiveUsers() {
             const card = tickerEl('activeUsersCard');
             const count = tickerEl('activeUsersCount');
             if (!card || !count) return;
-            initPresenceDetailsCard();
             try {
                 const presenceApp = initializeApp(tickerFirebaseConfig, 'forviaHubPresence');
                 const presenceDb = getDatabase(presenceApp);
@@ -4136,30 +3868,20 @@
                 const uid = presenceAuth.currentUser?.uid;
                 if (!uid) throw new Error('Nincs anonim jelenléti azonosító.');
 
-                currentPresenceUid = uid;
-                rememberOwnPresenceUid(uid);
                 const presenceRoot = ref(presenceDb, 'hub/presence');
                 const presenceSessionId = createPresenceSessionId();
-                currentPresenceSessionId = presenceSessionId;
                 const presenceRef = ref(presenceDb, `hub/presence/${uid}/${presenceSessionId}`);
-                /* Az előzmény a saját, már engedélyezett jelenléti UID-ághoz kerül.
-                   A közös jelenléti olvasásból így minden másik munkamenet eseménye látszik. */
-                const presenceActivityRoot = ref(presenceDb, `hub/presence/${uid}/_activity`);
                 let presenceWriteInFlight = false;
                 let presenceRefreshQueued = false;
                 let queuedPresenceInitialWrite = false;
-                let queuedPresenceActivityRecord = false;
-                let queuedPresenceForceActivityRecord = false;
                 let queuedPresenceState = null;
 
-                const refreshPresence = async (isInitialWrite = false, state = {}, recordActivity = false, forceActivityRecord = false) => {
+                const refreshPresence = async (isInitialWrite = false, state = {}) => {
                     if (presenceWriteInFlight) {
                         /* Ha a lap közben háttérbe vagy előtérbe kerül,
                            az új állapot biztosan kiíródik az aktuális írás után. */
                         presenceRefreshQueued = true;
                         queuedPresenceInitialWrite ||= isInitialWrite;
-                        queuedPresenceActivityRecord ||= recordActivity;
-                        queuedPresenceForceActivityRecord ||= forceActivityRecord;
                         queuedPresenceState = { ...(queuedPresenceState || {}), ...state };
                         return;
                     }
@@ -4177,16 +3899,6 @@
                         } else {
                             await update(presenceRef, payload);
                         }
-                        if (recordActivity) {
-                            void recordPresenceSessionActivity(presenceActivityRoot, {
-                                uid,
-                                sessionId: presenceSessionId,
-                                subjectUid: uid,
-                                subjectSessionId: presenceSessionId,
-                                module: activePresenceModule,
-                                device: getAnalyticsDeviceClass()
-                            }, forceActivityRecord);
-                        }
                     } catch (error) {
                         console.error('Aktív felhasználók jelenléti frissítési hiba:', error);
                     } finally {
@@ -4194,14 +3906,10 @@
                         if (presenceRefreshQueued) {
                             const nextInitialWrite = queuedPresenceInitialWrite;
                             const nextState = queuedPresenceState || {};
-                            const nextActivityRecord = queuedPresenceActivityRecord;
-                            const nextForceActivityRecord = queuedPresenceForceActivityRecord;
                             presenceRefreshQueued = false;
                             queuedPresenceInitialWrite = false;
-                            queuedPresenceActivityRecord = false;
-                            queuedPresenceForceActivityRecord = false;
                             queuedPresenceState = null;
-                            void refreshPresence(nextInitialWrite, nextState, nextActivityRecord, nextForceActivityRecord);
+                            void refreshPresence(nextInitialWrite, nextState);
                         }
                     }
                 };
@@ -4214,7 +3922,7 @@
                 /* Ha a modul az anonim Firebase-belépés közben nyílt meg, az aktuális állapotot most biztosan kiírjuk. */
                 activePresenceModule = normalizeAnalyticsModule(window.activePresenceModuleRequest || activePresenceModule);
                 window.activePresenceModuleRequest = activePresenceModule;
-                await refreshPresence(true, {}, true, true);
+                await refreshPresence(true);
                 onValue(ref(presenceDb, '.info/serverTimeOffset'), snapshot => {
                     const offset = Number(snapshot.val());
                     presenceServerTimeOffset = Number.isFinite(offset) ? offset : 0;
@@ -4234,14 +3942,11 @@
                     void refreshPresence(false, {
                         visible: document.visibilityState === 'visible',
                         focused: document.hasFocus()
-                    }, document.visibilityState === 'visible');
+                    });
                 });
-                window.addEventListener('focus', () => { void refreshPresence(false, { focused: true }, true); });
+                window.addEventListener('focus', () => { void refreshPresence(false, { focused: true }); });
                 window.addEventListener('blur', () => { void refreshPresence(false, { focused: false }); });
-                onValue(presenceRoot, snapshot => {
-                    const presenceData = snapshot.val();
-                    renderActiveUsers(presenceData);
-                }, error => {
+                onValue(presenceRoot, snapshot => renderActiveUsers(snapshot.val()), error => {
                     console.error('Aktív felhasználók olvasási hiba:', error);
                     card.classList.add('is-unavailable');
                 });
