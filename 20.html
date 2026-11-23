@@ -356,8 +356,8 @@
       </div>
       <div class="status success" id="status" aria-live="polite">137 PSA betöltve. Jelöld ki a használni kívánt PWB ID-ket.</div>
       <section class="help-panel" id="helpPanel" hidden="" aria-label="Használati leírás">
-        <div class="help-head"><i>i</i> Használati útmutató · Yamaha PSA Setup Sheet</div>
-        <div class="help-body">
+        <div class="help-head" id="helpHead"><i>i</i> Használati útmutató · Yamaha PSA Setup Sheet</div>
+        <div class="help-body" id="helpBody">
           <p class="help-path"><b>Éles Yamaha programok helye</b><code>C:\lisa\SHARE\mdata\pattern</code>Itt találhatók a gyártásban használt Yamaha-programok és PSA fájlok.</p>
           <ol class="help-steps">
             <li><b>Betöltés:</b> húzd be a PSA fájlokat, vagy válaszd a <b>PSA fájlok</b> / <b>Teljes mappa</b> gombot.</li>
@@ -430,6 +430,8 @@
       const clearButton = document.getElementById('clearButton');
       const helpButton = document.getElementById('helpButton');
       const helpPanel = document.getElementById('helpPanel');
+      const helpHead = document.getElementById('helpHead');
+      const helpBody = document.getElementById('helpBody');
       const exportHtmlButton = document.getElementById('exportHtmlButton');
       const preloadedSelector = document.getElementById('preloadedSelector');
       const preloadedModelList = document.getElementById('preloadedModelList');
@@ -782,6 +784,18 @@
         return partLocations;
       }
 
+      function setPreloadedHelp() {
+        helpHead.innerHTML = '<i>i</i> Használati útmutató · Előre betöltött Setup Sheet';
+        helpBody.innerHTML = `<p class="help-path"><b>Önálló, előre betöltött munkalap</b>Ez a fájl rögzített PSA-kat tartalmaz. Nem kell és nem is lehet új PSA-fájlt betölteni; a munkát közvetlenül a rendelkezésre álló PWB ID-k kiválasztásával kezdheted.</p>
+          <ol class="help-steps">
+            <li><b>PWB ID-k kiválasztása:</b> jelöld ki azokat a modelleket, amelyekkel dolgozni szeretnél.</li>
+            <li><b>Setup sheet elkészítése:</b> a gomb megnyomása után csak a kijelölt PWB ID-k közös, összevont setup sheetje jelenik meg.</li>
+            <li><b>HONNAN → HOVA:</b> több kiválasztott PWB ID esetén jelöld ki a kiinduló és a cél-PWB ID-ket. A terv minden közös cikkszámot megmutat.</li>
+            <li><b>Nyomtatás:</b> külön nyomtatható a setup sheet, a Honnan → Hova terv, vagy a kettő együtt PDF-be.</li>
+            <li><b>Más program szükséges?</b> Nyisd meg az eredeti HTML-generátort, és abból készíts új, megfelelő PSA-kat tartalmazó munkalapot.</li>
+          </ol>`;
+      }
+
       function loadPreloadedModels(rawModels) {
         const restored = rawModels.map((model, index) => {
           const entries = Array.isArray(model.entries) ? model.entries : [];
@@ -803,6 +817,7 @@
         setButtonsDisabled(transferPrintButtons, true);
         setButtonsDisabled(allPrintButtons, true);
         renderPreloadedSelector(restored);
+        setPreloadedHelp();
         setStatus('A fix PSA-k betöltve vannak. A munka megkezdéséhez jelölj ki egy vagy több PWB ID-t.', 'success');
         document.body.classList.add('preloaded-mode');
       }
