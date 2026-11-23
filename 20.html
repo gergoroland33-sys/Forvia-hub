@@ -105,6 +105,7 @@
     .preloaded-search input::placeholder { color: #8294ad; font-weight: 600; }
     .preloaded-model-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; max-height: 230px; overflow: auto; padding: 2px; }
     .preloaded-option { display: flex; align-items: center; gap: 9px; min-height: 44px; padding: 8px 10px; border: 1px solid #ceddf1; border-radius: 9px; color: #284d78; background: white; font-size: .76rem; font-weight: 800; cursor: pointer; overflow-wrap: anywhere; transition: .15s ease; }
+    .preloaded-option[hidden] { display: none !important; }
     .preloaded-option:hover { border-color: #6291dc; background: #f2f7ff; transform: translateY(-1px); }
     .preloaded-option input { flex: 0 0 auto; accent-color: var(--blue); }
     .preloaded-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
@@ -309,6 +310,13 @@
       .bottom-print-bar { align-items: stretch; flex-direction: column; }
       .bottom-print-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .bottom-print-actions button { min-width: 0; padding: 0 7px; font-size: .68rem; }
+    }
+
+    @media (max-width: 700px) {
+      body.preloaded-mode .app { padding-top: 140px; }
+      body.preloaded-mode .sticky-control-bar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; top: 5px; width: calc(100% - 10px); min-height: 110px; padding: 6px; overflow: hidden; border-radius: 12px; }
+      body.preloaded-mode .sticky-brand { display: none; }
+      body.preloaded-mode .sticky-button { width: 100%; min-width: 0; min-height: 45px; padding: 4px 5px; font-size: .61rem; line-height: 1.1; white-space: normal; }
     }
 
     @page { size: A4 portrait; margin: 8mm; }
@@ -900,10 +908,17 @@
       }
 
       function filterPreloadedModels() {
-        const query = preloadedSearchInput.value.trim().toLocaleLowerCase('hu');
+        const query = preloadedSearchInput.value.trim().toLocaleLowerCase('hu-HU');
+        let visibleCount = 0;
         preloadedModelList.querySelectorAll('.preloaded-option').forEach(option => {
-          option.hidden = query && !option.textContent.toLocaleLowerCase('hu').includes(query);
+          const matches = !query || option.textContent.toLocaleLowerCase('hu-HU').includes(query);
+          option.hidden = !matches;
+          if (matches) visibleCount += 1;
         });
+        const selectedCount = document.querySelectorAll('input[name="preloadedModel"]:checked').length;
+        preloadedCount.textContent = query
+          ? `${visibleCount} találat · ${selectedCount} kijelölve`
+          : `${selectedCount} PWB ID kijelölve`;
       }
 
       function updatePreloadedSelection() {
@@ -1028,7 +1043,7 @@
       transferPanel.addEventListener('change', updateTransferControls);
       buildTransferButton.addEventListener('click', renderTransferPlan);
       preloadedModelList.addEventListener('change', updatePreloadedSelection);
-      preloadedSearchInput.addEventListener('input', filterPreloadedModels);
+      ['input', 'keyup', 'search', 'change'].forEach(eventName => preloadedSearchInput.addEventListener(eventName, filterPreloadedModels));
       selectAllPreloadedButton.addEventListener('click', () => {
         document.querySelectorAll('input[name="preloadedModel"]').forEach(input => { input.checked = true; });
         updatePreloadedSelection();
