@@ -728,57 +728,7 @@
             font-size: 1.3rem; margin: 0; letter-spacing: 1px; font-weight: 700;
         }
 
-        .sidebar { width: 304px; }
         .nav-list { padding: 20px; flex-grow: 1; overflow-y: auto; }
-        .nav-list::before {
-            content: "☰  A három vonalat megfogva rendezd át a menüpontokat";
-            display: block; margin: 0 2px 14px; color: #94a3b8;
-            font-size: .70rem; font-weight: 700; line-height: 1.35;
-            letter-spacing: .03em; text-align: center;
-        }
-        .nav-item { position: relative; gap: 8px; will-change: transform; transition: transform .22s cubic-bezier(.2,.9,.25,1), background .16s ease, opacity .16s ease; }
-        .nav-item > i { flex: 0 0 30px; }
-        .nav-drag-handle {
-            appearance: none; -webkit-appearance: none; border: 1px solid rgba(148,163,184,.15); outline: 0;
-            margin-left: auto; width: 31px; min-width: 31px; height: 38px;
-            display: inline-flex; align-items: center; justify-content: center;
-            border-radius: 11px; background: linear-gradient(145deg, rgba(148,163,184,.12), rgba(15,23,42,.20));
-            color: #bfdbfe; cursor: grab; touch-action: none; overflow: hidden; position: relative;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 5px 14px rgba(2,6,23,.13);
-            transition: background .2s ease, border-color .2s ease, transform .2s cubic-bezier(.2,.9,.3,1), box-shadow .2s ease;
-        }
-        .nav-drag-handle::before { content:""; position:absolute; inset:0; background:linear-gradient(115deg, transparent 24%, rgba(191,219,254,.18) 48%, transparent 72%); transform:translateX(-135%); transition:transform .5s ease; }
-        .nav-drag-handle:hover, .nav-drag-handle:focus-visible { background: linear-gradient(145deg, rgba(59,130,246,.36), rgba(30,58,138,.29)); border-color: rgba(125,211,252,.48); box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 8px 20px rgba(37,99,235,.22); transform: translateY(-1px) scale(1.035); }
-        .nav-drag-handle:hover::before, .nav-drag-handle:focus-visible::before { transform:translateX(135%); }
-        .nav-drag-handle:active { cursor: grabbing; transform: scale(.92); }
-        .drag-grip-bars { width: 13px; height: 14px; display:flex; flex-direction:column; justify-content:space-between; position:relative; z-index:1; }
-        .drag-grip-bars i { display:block; height:2px; border-radius:999px; background:linear-gradient(90deg, rgba(186,230,253,.62), #e0f2fe, rgba(186,230,253,.62)); box-shadow:0 1px 4px rgba(56,189,248,.32); transition:transform .2s ease, width .2s ease; }
-        .drag-grip-bars i:nth-child(1), .drag-grip-bars i:nth-child(3) { width:9px; align-self:center; }
-        .nav-drag-handle:hover .drag-grip-bars i:nth-child(1) { transform:translateX(2px); width:12px; }
-        .nav-drag-handle:hover .drag-grip-bars i:nth-child(2) { transform:translateX(-2px); }
-        .nav-drag-handle:hover .drag-grip-bars i:nth-child(3) { transform:translateX(2px); width:12px; }
-        .nav-item.reorder-dragging { opacity: .18; pointer-events: none; transform: scale(.975); }
-        .nav-drop-indicator {
-            min-height: 58px; box-sizing: border-box; border-radius: 12px; margin: 5px 0 10px;
-            position:relative; overflow:hidden; animation: reorderArrival .26s cubic-bezier(.2,1.1,.35,1);
-        }
-        .nav-drop-preview { min-height:58px; box-sizing:border-box; display:flex; align-items:center; gap:8px; padding:14px 15px; border-radius:12px; color:rgba(241,245,249,.88); font-weight:500; background:linear-gradient(115deg, rgba(30,41,59,.68), rgba(30,58,138,.42), rgba(30,41,59,.64)); border:1px solid rgba(125,211,252,.30); box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 8px 20px rgba(2,6,23,.18); filter:saturate(.9); }
-        .nav-drop-preview > i { width:30px; flex:0 0 30px; font-style:normal; text-align:center; font-size:1.2rem; }
-        .nav-drop-preview::after { content:""; position:absolute; inset:0; pointer-events:none; background:linear-gradient(105deg, transparent 25%, rgba(191,219,254,.12) 49%, transparent 72%); animation:reorderShimmer 1.15s ease-in-out infinite; }
-        .nav-drop-preview .nav-drag-handle { margin-left:auto; opacity:.58; transform:scale(.92); }
-        .nav-drag-ghost {
-            position: fixed; z-index: 2200; pointer-events: none; margin: 0 !important;
-            display: flex; align-items: center; min-height: 52px; box-sizing: border-box;
-            border: 1px solid rgba(96,165,250,.58); border-radius: 12px;
-            background: linear-gradient(135deg, rgba(30,41,59,.97), rgba(30,58,138,.86));
-            color: #f8fafc; box-shadow: 0 18px 38px rgba(2,6,23,.55), 0 0 0 1px rgba(191,219,254,.12) inset;
-            opacity: .94; filter: saturate(1.08); will-change: transform; transform-origin: center;
-        }
-        .nav-drag-ghost .nav-drag-handle { opacity: .9; }
-        .nav-drag-ghost.reorder-ghost-out { opacity: 0; transition: opacity .13s ease; }
-        @keyframes reorderArrival { from { opacity:0; transform:scale(.965) translateY(-5px); } to { opacity:1; transform:scale(1) translateY(0); } }
-        @keyframes reorderShimmer { 0%,100% { transform:translateX(-120%); } 54% { transform:translateX(120%); } }
-        body.nav-reordering, body.nav-reordering * { user-select: none !important; -webkit-user-select: none !important; }
 
         .nav-item {
             display: flex; align-items: center; padding: 14px 15px;
@@ -2981,161 +2931,169 @@
 
     document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
 
-    // --- MENÜSORREND: HÁROMVONALAS, ÉLŐ BESZÚRÁSI HELYES ÁTRENDEZÉS ---
-    (function () {
+    // --- HOZZÁADOTT BIZTONSÁGOS DRAG & DROP FUNKCIÓ (KATTINTÁS BARÁT, JAVÍTOTT) ---
+    (function() {
         const nav = document.querySelector('.nav-list');
         if (!nav) return;
+        
+        // CSS dinamikus betöltése
+        const style = document.createElement('style');
+        style.innerHTML = `
+            .nav-item { cursor: grab; -webkit-user-drag: element; }
+            .nav-item:active { cursor: grabbing; }
+            /* PIROS: a felvett modul - "ezt húzom" */
+            .nav-item.mobile-dragging { 
+                opacity: 1 !important; 
+                background: rgba(239, 68, 68, 0.25) !important; 
+                color: white !important;
+                border: 1px solid rgba(239, 68, 68, 0.7) !important; 
+                box-shadow: 0 0 18px rgba(239, 68, 68, 0.45), inset 3px 0 0 var(--danger) !important;
+                transform: scale(0.985);
+            }
+            /* ZÖLD: a célhely - "ide fog beülni" */
+            .nav-item.drag-over-target { 
+                background: rgba(16, 185, 129, 0.3) !important; 
+                color: white !important;
+                border: 1px solid rgba(16, 185, 129, 0.75) !important;
+                box-shadow: 0 0 18px rgba(16, 185, 129, 0.5), inset 3px 0 0 var(--success) !important;
+                transform: scale(1.015);
+            }
+            /* Smooth átmenet a színváltáshoz */
+            .nav-item.mobile-dragging, .nav-item.drag-over-target {
+                transition: background 0.2s ease, border 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, color 0.2s ease;
+            }
+        `;
+        document.head.appendChild(style);
 
-        const storageKey = 'fv_nav_order';
-        const indicator = document.createElement('div');
-        indicator.className = 'nav-drop-indicator';
-        indicator.setAttribute('aria-hidden', 'true');
-        let dragged = null;
-        let ghost = null;
-        let moved = false;
-        let startPoint = null;
-        let pointerPoint = null;
-        let pointerOffset = null;
-        let ghostFrame = 0;
+        let dragEl = null;
 
-        function menuItems() {
-            return Array.from(nav.querySelectorAll(':scope > .nav-item'));
-        }
-        function keyFor(item) {
-            return item.dataset.navKey || item.getAttribute('onclick') || item.textContent.trim();
-        }
-        function saveOrder() {
-            localStorage.setItem(storageKey, JSON.stringify(menuItems().map(keyFor)));
-        }
-        function loadOrder() {
-            let saved;
-            try { saved = JSON.parse(localStorage.getItem(storageKey) || '[]'); } catch (_) { saved = []; }
-            if (!Array.isArray(saved)) return;
-            saved.forEach(key => {
-                const item = menuItems().find(candidate => keyFor(candidate) === key);
+        // Sorrend visszatöltése
+        const savedOrder = JSON.parse(localStorage.getItem('fv_nav_order'));
+        if (savedOrder) {
+            const items = Array.from(nav.children);
+            savedOrder.forEach(text => {
+                const item = items.find(i => i.innerText.trim() === text);
                 if (item) nav.appendChild(item);
             });
         }
-        function clearVisuals() {
-            indicator.remove();
-            menuItems().forEach(item => item.classList.remove('reorder-dragging'));
-            document.body.classList.remove('nav-reordering');
-        }
-        function removeGhost() {
-            if (!ghost) return;
-            const oldGhost = ghost;
-            ghost = null;
-            oldGhost.classList.add('reorder-ghost-out');
-            window.setTimeout(() => oldGhost.remove(), 150);
-        }
-        function paintGhost() {
-            ghostFrame = 0;
-            if (!ghost || !pointerPoint || !pointerOffset) return;
-            ghost.style.transform = `translate3d(${Math.round(pointerPoint.x - pointerOffset.x)}px, ${Math.round(pointerPoint.y - pointerOffset.y)}px, 0) rotate(.35deg)`;
-        }
-        function queueGhost(clientX, clientY) {
-            pointerPoint = { x: clientX, y: clientY };
-            if (!ghostFrame) ghostFrame = requestAnimationFrame(paintGhost);
-        }
-        function createGhost(item, event) {
-            const rect = item.getBoundingClientRect();
-            ghost = item.cloneNode(true);
-            ghost.className = 'nav-drag-ghost';
-            ghost.setAttribute('aria-hidden', 'true');
-            ghost.querySelectorAll('button').forEach(button => button.tabIndex = -1);
-            ghost.style.width = `${Math.round(rect.width)}px`;
-            document.body.appendChild(ghost);
-            pointerOffset = { x: event.clientX - rect.left, y: event.clientY - rect.top };
-            queueGhost(event.clientX, event.clientY);
-        }
-        function setDropPreview(item) {
-            const preview = item.cloneNode(true);
-            preview.classList.remove('nav-item', 'reorder-dragging');
-            preview.classList.add('nav-drop-preview');
-            preview.setAttribute('aria-hidden', 'true');
-            preview.querySelectorAll('button').forEach(button => { button.disabled = true; button.tabIndex = -1; });
-            indicator.replaceChildren(preview);
-        }
-        function updateTarget(clientY) {
-            const candidates = menuItems().filter(item => item !== dragged);
-            let before = null;
-            for (const item of candidates) {
-                const rect = item.getBoundingClientRect();
-                if (clientY < rect.top + rect.height / 2) { before = item; break; }
-            }
-            const prior = new Map(candidates.map(item => [item, item.getBoundingClientRect().top]));
-            if (before) nav.insertBefore(indicator, before);
-            else nav.appendChild(indicator);
-            candidates.forEach(item => {
-                const delta = prior.get(item) - item.getBoundingClientRect().top;
-                if (!delta) return;
-                item.style.transition = 'none';
-                item.style.transform = `translateY(${Math.round(delta)}px)`;
-                requestAnimationFrame(() => {
-                    item.style.transition = '';
-                    item.style.transform = '';
-                });
-            });
-        }
-        function begin(event, item) {
-            if (event.button !== undefined && event.button !== 0) return;
-            event.preventDefault();
-            event.stopPropagation();
-            dragged = item;
-            moved = false;
-            startPoint = { x: event.clientX, y: event.clientY };
-            dragged.classList.add('reorder-dragging');
-            document.body.classList.add('nav-reordering');
-            try { event.currentTarget.setPointerCapture(event.pointerId); } catch (_) {}
-            createGhost(item, event);
-            setDropPreview(item);
-            updateTarget(event.clientY);
-            if (navigator.vibrate) navigator.vibrate(18);
-        }
-        function move(event) {
-            if (!dragged) return;
-            event.preventDefault();
-            queueGhost(event.clientX, event.clientY);
-            if (!moved && Math.hypot(event.clientX - startPoint.x, event.clientY - startPoint.y) < 4) return;
-            moved = true;
-            updateTarget(event.clientY);
-        }
-        function finish(event) {
-            if (!dragged) return;
-            event.preventDefault();
-            const wasMoved = moved;
-            if (wasMoved && indicator.parentNode === nav) nav.insertBefore(dragged, indicator);
-            clearVisuals();
-            removeGhost();
-            dragged = null;
-            startPoint = null;
-            if (wasMoved) saveOrder();
-        }
-        function cancel() {
-            if (!dragged) return;
-            clearVisuals();
-            removeGhost();
-            dragged = null;
-            startPoint = null;
-        }
 
-        loadOrder();
-        menuItems().forEach(item => {
-            item.dataset.navKey = keyFor(item);
-            const handle = document.createElement('button');
-            handle.type = 'button';
-            handle.className = 'nav-drag-handle';
-            handle.setAttribute('aria-label', `${item.textContent.trim()} átrendezése`);
-            handle.title = 'Fogd meg és húzd: menüpont átrendezése';
-            handle.innerHTML = '<span class="drag-grip-bars" aria-hidden="true"><i></i><i></i><i></i></span>';
-            handle.addEventListener('click', event => { event.preventDefault(); event.stopPropagation(); });
-            handle.addEventListener('pointerdown', event => begin(event, item));
-            handle.addEventListener('pointermove', move, { passive: false });
-            handle.addEventListener('pointerup', finish, { passive: false });
-            handle.addEventListener('pointercancel', cancel);
-            item.appendChild(handle);
+        Array.from(nav.children).forEach(item => {
+            item.setAttribute('draggable', 'true');
+            
+            // Asztali események (Egér)
+            item.addEventListener('dragstart', function(e) {
+                dragEl = this;
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', this.innerHTML);
+                setTimeout(() => this.classList.add('mobile-dragging'), 0);
+            });
+            
+            item.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                // ZÖLD: ezt a modult célozzuk - csak ezen legyen a zöld
+                if (dragEl && this !== dragEl) {
+                    Array.from(nav.children).forEach(i => {
+                        if (i !== this && i !== dragEl) i.classList.remove('drag-over-target');
+                    });
+                    this.classList.add('drag-over-target');
+                }
+            });
+            
+            item.addEventListener('dragleave', function(e) {
+                this.classList.remove('drag-over-target');
+            });
+            
+            item.addEventListener('drop', function(e) {
+                e.stopPropagation();
+                this.classList.remove('drag-over-target');
+                if (dragEl && dragEl !== this) {
+                    const rect = this.getBoundingClientRect();
+                    const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+                    nav.insertBefore(dragEl, next && this.nextSibling ? this.nextSibling : this);
+                    saveOrder();
+                }
+                return false;
+            });
+            
+            item.addEventListener('dragend', function(e) {
+                this.classList.remove('mobile-dragging');
+                Array.from(nav.children).forEach(i => {
+                    i.classList.remove('drag-over-target');
+                    i.classList.remove('mobile-dragging'); // Biztosíték
+                });
+                dragEl = null;
+            });
+
+            // Mobil események (Védett logika a kattintás érdekében)
+            let pressTimer;
+            let isDragging = false;
+
+            item.addEventListener('touchstart', function(e) {
+                if(e.touches.length > 1) return;
+                isDragging = false;
+                dragEl = this;
+                // Hosszan nyomás aktiválja a húzást (MÓDOSÍTVA: 800ms)
+                pressTimer = setTimeout(() => {
+                    isDragging = true;
+                    dragEl.classList.add('mobile-dragging');
+                    if(navigator.vibrate) navigator.vibrate(50);
+                }, 800); 
+            }, {passive: true});
+
+            item.addEventListener('touchmove', function(e) {
+                if (!isDragging) {
+                    clearTimeout(pressTimer); 
+                    return;
+                }
+                e.preventDefault(); 
+                const touch = e.touches[0];
+                const target = document.elementFromPoint(touch.clientX, touch.clientY);
+                
+                if (target) {
+                    const dropTarget = target.closest('.nav-item');
+                    if (dropTarget && dropTarget !== dragEl) {
+                        const rect = dropTarget.getBoundingClientRect();
+                        const next = (touch.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+                        nav.insertBefore(dragEl, next && dropTarget.nextSibling ? dropTarget.nextSibling : dropTarget);
+                        // ZÖLD: a célmodul kiemelése - csak ő kap zöldet, a többiről levesszük
+                        Array.from(nav.children).forEach(i => {
+                            if (i !== dropTarget && i !== dragEl) i.classList.remove('drag-over-target');
+                        });
+                        dropTarget.classList.add('drag-over-target');
+                    }
+                }
+            }, {passive: false});
+
+            item.addEventListener('touchend', function(e) {
+                clearTimeout(pressTimer);
+                if (isDragging) {
+                    // Tisztítás: eltávolítjuk a piros ÉS zöld formázást is mindenről
+                    Array.from(nav.children).forEach(i => {
+                        i.classList.remove('mobile-dragging');
+                        i.classList.remove('drag-over-target');
+                    });
+                    if (dragEl) dragEl.classList.remove('mobile-dragging');
+                    saveOrder();
+                    
+                    // Késleltetjük az isDragging kikapcsolását, hogy a click eventet blokkolja
+                    setTimeout(() => { isDragging = false; dragEl = null; }, 100);
+                }
+            });
+            
+            item.addEventListener('click', function(e) {
+                if (isDragging) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }, true);
         });
-    })();</script>
+
+        function saveOrder() {
+            const order = Array.from(nav.children).map(i => i.innerText.trim());
+            localStorage.setItem('fv_nav_order', JSON.stringify(order));
+        }
+    })();
+</script>
     <!-- HOME/FRISSÍTÉS DINAMIKUS VEZÉRLŐ: kizárólag hozzáadott funkció -->
     <style>
         .refresh-fab.home-fab {
