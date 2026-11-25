@@ -3597,7 +3597,17 @@ window.importMissingJigs = function(){
 .cabinet-map-slot.is-target { position:relative; z-index:1; background:#f6c84d; border:2px solid #fff3a0; color:#291900; box-shadow:0 0 12px #ffd65b; animation:cabinet-map-pulse 1.1s ease-in-out infinite alternate; }
 @keyframes cabinet-map-pulse { from { box-shadow:0 0 3px #ffd65b; } to { box-shadow:0 0 16px 4px #ffd65b; } }
 @media (prefers-reduced-motion: reduce) { .cabinet-map-slot.is-target { animation:none; outline:2px solid #fff3a0; } }
-@media (max-width:800px) { .cabinet-map-grid { grid-template-columns:1fr; } .cabinet-map-slot { font-size:10px; } .cabinet-map-dialog { padding:14px; } }
+@media (max-width:800px) {
+  .cabinet-map-overlay { padding:10px; }
+  .cabinet-map-dialog { padding:14px; max-height:92vh; }
+  .cabinet-map-heading { flex-wrap:wrap; }
+  .cabinet-map-heading h2 { font-size:1.1rem; }
+  .cabinet-map-grid { grid-template-columns:1fr; }
+  .cabinet-map-overlay.has-target .cabinet-map-cabinet:not(.is-target) { display:none; }
+  .cabinet-map-cabinet { padding:12px; }
+  .cabinet-map-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(36px,1fr)); gap:5px; margin:8px 0; }
+  .cabinet-map-slot { min-width:0; height:39px; font-size:12px; }
+}
 </style>
 <div id="cabinetMapOverlay" class="cabinet-map-overlay" hidden>
   <section class="cabinet-map-dialog" role="dialog" aria-modal="true" aria-labelledby="cabinetMapTitle">
@@ -3617,7 +3627,8 @@ function openCabinetMap(item) {
         const title = document.createElement('h3'); title.textContent = cab.name; panel.appendChild(title);
         const count = cab.end - cab.start + 1;
         const split = Math.ceil(count / 2);
-        [[cab.start, cab.start + split - 1], [cab.start + split, cab.end]].forEach(([start, end]) => {
+        [[cab.start, cab.start + split - 1], [cab.start + split, cab.end]].forEach(([start, end], rowIndex) => {
+            const rowLabel = document.createElement('div'); rowLabel.textContent = rowIndex === 0 ? 'Felső sor' : 'Alsó sor'; rowLabel.style.cssText = 'font-size:11px;color:#b9ccde;margin-top:7px'; panel.appendChild(rowLabel);
             const row = document.createElement('div'); row.className = 'cabinet-map-row';
             for (let number = start; number <= end; number++) {
                 const slot = document.createElement('div'); slot.className = 'cabinet-map-slot'; slot.textContent = number;
@@ -3632,6 +3643,7 @@ function openCabinetMap(item) {
         });
         grid.appendChild(panel);
     });
+    overlay.classList.toggle('has-target', found);
     if (!found) document.getElementById('cabinetMapTarget').append(' — A hely nem szerepel a szekrénykiosztásban.');
     overlay.hidden = false; document.getElementById('cabinetMapClose').focus();
 }
