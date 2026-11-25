@@ -467,6 +467,43 @@ header {
         print-color-adjust: exact;
     }
 }
+/* Korszerű kezelőfelület — a nyomtatott lap változatlan marad. */
+@media screen {
+    header { background: linear-gradient(120deg, #101d36, #172b46 65%, #143c4c); border-bottom: 1px solid #38536c; box-shadow: 0 10px 32px #020b1c80; padding: .55rem 1rem; gap: .5rem 1rem; }
+    .logo-area h1 { letter-spacing: -.035em; font-weight: 900; }
+    .logo-area p { color: #b0c3d6; line-height: 1.5; }
+    .toolbar { gap: .4rem; }
+    .control-group { background: #0a172aaa; border: 1px solid #42607a; border-radius: 10px; padding: .25rem .4rem; gap: .3rem; box-shadow: inset 0 1px #ffffff12, 0 4px 12px #0002; }
+    .control-group label { color: #c4d4e4; font-size: .72rem; letter-spacing: .02em; }
+    .select-orientation, #saved-projects, #save-project, .btn-image-action, .stroke-btn {
+        font-family: inherit; font-size: .8rem; font-weight: 700; color: #f3f8ff;
+        background: linear-gradient(180deg, #3b5573, #243a55); border: 1px solid #7692ad;
+        border-radius: 8px; min-height: 30px; padding: .3rem .55rem; cursor: pointer;
+        box-shadow: inset 0 1px #ffffff33, 0 3px 0 #101e32, 0 5px 10px #0003;
+        transition: transform .16s ease, filter .16s ease, box-shadow .16s ease;
+    }
+    #saved-projects { max-width: 200px; }
+    #saved-projects option, .select-orientation option { background: #1e293b; color: white; }
+    #save-project { background: linear-gradient(180deg, #348f8c, #176763); border-color: #77c9c1; }
+    #delete-project { min-width: 30px; min-height: 30px; padding: .25rem .5rem; border: 1px solid #f59a9a; border-radius: 8px; background: linear-gradient(#d84c4c, #a62430); color: white; font-weight: 900; cursor: pointer; box-shadow: inset 0 1px #ffffff55, 0 3px 0 #591621; }
+    #delete-project:disabled { opacity: .45; cursor: default; }
+    .btn-print { font-family: inherit; min-height: 34px; padding: .35rem .75rem; color: #071c34; background: linear-gradient(180deg, #91e2ff, #32b9e8); border: 1px solid #b6edff; border-radius: 9px; font-weight: 900; box-shadow: inset 0 1px #fff9, 0 3px 0 #147ca8, 0 5px 12px #020d2099; }
+    .stroke-btn { min-width: 29px; padding: .25rem .4rem; }
+    .color-swatches { gap: .2rem; }
+    .swatch, .color-picker-wrapper { width: 24px; height: 24px; }
+    .stroke-btn.active { color: #06233b; background: linear-gradient(180deg, #9be8ff, #39bceb); border-color: #c4f3ff; }
+    .swatch { border-radius: 9px; box-shadow: inset 0 1px 3px #ffffff55, 0 2px 5px #0007; }
+    .swatch.active { box-shadow: 0 0 0 2px #93e5ff, 0 3px 8px #0007; }
+    .select-orientation:hover, #saved-projects:hover, #save-project:hover, .btn-image-action:hover, .stroke-btn:hover, .btn-print:hover { filter: brightness(1.14); transform: translateY(-2px); }
+    .select-orientation:active, #save-project:active, .btn-image-action:active, .stroke-btn:active, .btn-print:active { transform: translateY(1px); }
+    .toolbar :focus-visible { outline: 3px solid #b1edff; outline-offset: 3px; }
+    @media (max-width: 700px) {
+        header { padding: .45rem; gap: .35rem; max-height: 38vh; overflow-y: auto; }
+        .toolbar { gap: .3rem; }
+        .control-group { flex-wrap: wrap; padding: .25rem .35rem; }
+        .logo-area p { font-size: .64rem; }
+    }
+}
 </style>
 </head>
 <body class="mode-landscape">
@@ -531,6 +568,12 @@ header {
         </div>
 
         <!-- NYOMTATÁS -->
+        <div class="control-group">
+            <label for="saved-projects">Mentett projektek</label>
+            <select id="saved-projects" aria-label="Mentett projekt betöltése"><option value="">Projekt betöltése…</option></select>
+            <button type="button" id="delete-project" title="Kiválasztott projekt törlése" aria-label="Kiválasztott projekt törlése" disabled>✕</button>
+            <button type="button" id="save-project">Projekt mentése</button>
+        </div>
         <button class="btn-print" onclick="window.print()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
             Nyomtatás
@@ -1122,6 +1165,86 @@ document.addEventListener('pointerdown', (e) => {
         imageContainer.classList.remove('selected');
     }
 });
+
+// Az opcionálisan mentett projektek ebben a böngészőben tárolódnak.
+const projectStorageKey = 'pro-nyomtatas-szerkeszto-projektek-v1';
+const projectSelect = document.getElementById('saved-projects');
+const deleteProjectButton = document.getElementById('delete-project');
+function readProjects() {
+    const value = localStorage.getItem(projectStorageKey);
+    const projects = value ? JSON.parse(value) : [];
+    if (!Array.isArray(projects)) throw new Error('Hibás projekttároló');
+    return projects;
+}
+function refreshProjects() {
+    const projects = readProjects();
+    projectSelect.replaceChildren(new Option('Projekt betöltése…', ''));
+    projects.forEach((project, index) => projectSelect.add(new Option(project.name, String(index))));
+    deleteProjectButton.disabled = true;
+}
+document.getElementById('save-project').addEventListener('click', () => {
+    const requestedName = prompt('Add meg a projekt mentési nevét:');
+    if (requestedName === null) return;
+    const name = requestedName.trim();
+    if (!name) { alert('Adj meg egy nevet a mentéshez.'); return; }
+    try {
+        const projects = readProjects();
+        const index = projects.findIndex(project => project.name === name);
+        if (index !== -1 && !confirm('Már létezik ilyen nevű projekt. Felülírod?')) return;
+        const project = {
+            name, html: editor.innerHTML, orientation: orientationSelect.value,
+            fill: customFill.value, stroke: customStroke.value,
+            strokeWidth: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--stroke-width'), 10) || 0,
+            image: imageVisible ? { src: imageEl.src, left: imageContainer.style.left, top: imageContainer.style.top, width: imageContainer.style.width, height: imageContainer.style.height } : null
+        };
+        if (index === -1) projects.push(project); else projects[index] = project;
+        localStorage.setItem(projectStorageKey, JSON.stringify(projects));
+        refreshProjects();
+        projectSelect.value = String(index === -1 ? projects.length - 1 : index);
+        deleteProjectButton.disabled = false;
+        alert('A projekt elmentve ebben a böngészőben.');
+    } catch (error) { alert('A mentés nem sikerült. Ellenőrizd a böngésző tárhelyét; egy nagy kép túl sok helyet foglalhat.'); }
+});
+projectSelect.addEventListener('change', () => {
+    deleteProjectButton.disabled = projectSelect.value === '';
+    if (projectSelect.value === '') return;
+    try {
+        const project = readProjects()[Number(projectSelect.value)];
+        if (!project) throw new Error('A projekt nem található');
+        editor.innerHTML = project.html;
+        orientationSelect.value = project.orientation;
+        handleOrientationChange();
+        setFillColor(project.fill);
+        setStrokeColor(project.stroke);
+        setStrokeWidth(project.strokeWidth);
+        imageEl.onload = null;
+        imageVisible = Boolean(project.image);
+        imageContainer.classList.toggle('has-image', imageVisible);
+        imageContainer.classList.remove('selected');
+        removeImageBtn.style.display = imageVisible ? 'inline-flex' : 'none';
+        imageInput.value = '';
+        if (imageVisible) {
+            for (const key of ['left', 'top', 'width', 'height']) imageContainer.style[key] = project.image[key];
+            imageEl.src = project.image.src;
+        } else imageEl.src = '';
+        updateEditorPosition();
+        autoFitText();
+    } catch (error) { alert('A projekt betöltése nem sikerült.'); }
+});
+deleteProjectButton.addEventListener('click', () => {
+    if (projectSelect.value === '') return;
+    try {
+        const projects = readProjects();
+        const index = Number(projectSelect.value);
+        const project = projects[index];
+        if (!project) throw new Error('A projekt nem található');
+        if (!confirm(`Biztosan törlöd ezt a mentett projektet: „${project.name}”?`)) return;
+        projects.splice(index, 1);
+        localStorage.setItem(projectStorageKey, JSON.stringify(projects));
+        refreshProjects();
+    } catch (error) { alert('A projekt törlése nem sikerült.'); }
+});
+try { refreshProjects(); } catch (error) { console.warn('A mentett projektek nem érhetők el.', error); }
 
 /* === EREDETI - KEZDŐÁLLAPOT MEGHÍVÁSOK - VÁLTOZATLAN === */
 handleOrientationChange();
