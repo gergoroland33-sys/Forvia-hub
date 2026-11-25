@@ -3598,15 +3598,18 @@ window.importMissingJigs = function(){
 @keyframes cabinet-map-pulse { from { box-shadow:0 0 3px #ffd65b; } to { box-shadow:0 0 16px 4px #ffd65b; } }
 @media (prefers-reduced-motion: reduce) { .cabinet-map-slot.is-target { animation:none; outline:2px solid #fff3a0; } }
 @media (max-width:800px) {
-  .cabinet-map-overlay { padding:10px; }
-  .cabinet-map-dialog { padding:14px; max-height:92vh; }
-  .cabinet-map-heading { flex-wrap:wrap; }
-  .cabinet-map-heading h2 { font-size:1.1rem; }
   .cabinet-map-grid { grid-template-columns:1fr; }
   .cabinet-map-overlay.has-target .cabinet-map-cabinet:not(.is-target) { display:none; }
-  .cabinet-map-cabinet { padding:12px; }
-  .cabinet-map-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(36px,1fr)); gap:5px; margin:8px 0; }
-  .cabinet-map-slot { min-width:0; height:39px; font-size:12px; }
+  .cabinet-map-slot { font-size:10px; }
+  .cabinet-map-dialog { padding:14px; }
+  .public-results { width:calc(100% - 24px); grid-template-columns:minmax(0,1fr); gap:12px; }
+  .p-card { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; align-items:start; padding:16px; }
+  .p-card-info { min-width:0; overflow-wrap:anywhere; }
+  .p-card-info h2 { font-size:clamp(19px,6vw,26px); overflow-wrap:anywhere; }
+  .p-card-info p { max-width:100%; overflow-wrap:anywhere; }
+  .p-card-loc .cab { font-size:12px; }
+  .p-card-loc .shelf { font-size:19px; padding:5px 9px; white-space:nowrap; }
+  .p-card .cabinet-map-open { grid-column:1 / -1; width:100%; margin:0; }
 }
 </style>
 <div id="cabinetMapOverlay" class="cabinet-map-overlay" hidden>
@@ -3627,8 +3630,7 @@ function openCabinetMap(item) {
         const title = document.createElement('h3'); title.textContent = cab.name; panel.appendChild(title);
         const count = cab.end - cab.start + 1;
         const split = Math.ceil(count / 2);
-        [[cab.start, cab.start + split - 1], [cab.start + split, cab.end]].forEach(([start, end], rowIndex) => {
-            const rowLabel = document.createElement('div'); rowLabel.textContent = rowIndex === 0 ? 'Felső sor' : 'Alsó sor'; rowLabel.style.cssText = 'font-size:11px;color:#b9ccde;margin-top:7px'; panel.appendChild(rowLabel);
+        [[cab.start, cab.start + split - 1], [cab.start + split, cab.end]].forEach(([start, end]) => {
             const row = document.createElement('div'); row.className = 'cabinet-map-row';
             for (let number = start; number <= end; number++) {
                 const slot = document.createElement('div'); slot.className = 'cabinet-map-slot'; slot.textContent = number;
