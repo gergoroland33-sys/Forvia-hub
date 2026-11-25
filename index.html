@@ -4007,9 +4007,10 @@
 .nav-item .hub-favorite-star[aria-pressed="true"] { color:#e9c96c; opacity:1; }
 .nav-item .hub-favorite-star[aria-pressed="true"]::before { content:'★'; }
 .nav-item .hub-favorite-star:hover, .nav-item .hub-favorite-star:focus-visible { background:rgba(255,255,255,.1); opacity:1; }
-#home-screen > .hub-favorites { position:absolute; z-index:2; top:calc(44px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%); display:flex; flex-wrap:nowrap; align-items:center; gap:4px; width:min(calc(100% - 20px), 520px); height:42px; margin:0; padding:1px 2px; overflow-x:auto; overflow-y:hidden; overscroll-behavior-inline:contain; scrollbar-width:thin; }
+#home-screen > .hub-favorites { position:fixed; z-index:999; left:50%; transform:translateX(-50%); display:flex; flex-wrap:nowrap; align-items:center; gap:4px; width:min(calc(100% - 20px), 520px); height:var(--favorite-size, 36px); margin:0; padding:0 2px; overflow-x:auto; overflow-y:hidden; overscroll-behavior-inline:contain; scrollbar-width:none; }
+#home-screen > .hub-favorites::-webkit-scrollbar { display:none; }
 #home-screen > .hub-favorites[hidden] { display:none; }
-.hub-favorite-shortcut { display:grid; place-items:center; flex:0 0 40px; width:40px; height:40px; padding:0; border:1px solid rgba(148,190,234,.3); border-radius:12px; background:rgba(25,40,65,.78); color:white; font-size:21px; cursor:pointer; box-shadow:0 4px 12px #0004; }
+.hub-favorite-shortcut { display:grid; place-items:center; flex:0 0 var(--favorite-size, 36px); width:var(--favorite-size, 36px); height:var(--favorite-size, 36px); padding:0; border:1px solid rgba(148,190,234,.3); border-radius:10px; background:rgba(25,40,65,.78); color:white; font-size:calc(var(--favorite-size, 36px) * .52); cursor:pointer; }
 .hub-favorite-shortcut:first-child { margin-left:auto; }
 .hub-favorite-shortcut:last-child { margin-right:auto; }
 .hub-favorite-shortcut:hover, .hub-favorite-shortcut:focus-visible { background:#294664; outline:2px solid #93c5fd; outline-offset:2px; }
@@ -4028,6 +4029,19 @@
     }).filter(entry => entry.key);
     let favorites = [];
     try { const saved = JSON.parse(localStorage.getItem(storageKey) || '[]'); if (Array.isArray(saved)) favorites = saved.filter(value => typeof value === 'string'); } catch (_) {}
+    const positionFavorites = () => {
+        if (bar.hidden) return;
+        const card = document.getElementById('main-card');
+        const ticker = document.getElementById('newsTicker');
+        if (!card || !ticker) return;
+        const tickerRect = ticker.getBoundingClientRect();
+        const cardRect = card.getBoundingClientRect();
+        const top = Math.max(0, tickerRect.bottom);
+        const gap = Math.max(0, cardRect.top - top);
+        const size = Math.min(40, gap);
+        bar.style.setProperty('--favorite-size', `${size}px`);
+        bar.style.top = `${top + (gap - size) / 2}px`;
+    };
     const render = () => {
         bar.replaceChildren();
         entries.forEach(entry => {
@@ -4046,6 +4060,7 @@
             bar.appendChild(button);
         });
         bar.hidden = !bar.childElementCount;
+        requestAnimationFrame(positionFavorites);
     };
     entries.forEach(entry => {
         const button = document.createElement('button'); button.type = 'button'; button.className = 'hub-favorite-star';
@@ -4060,6 +4075,14 @@
         entry.star = button; entry.item.appendChild(button);
     });
     render();
+    window.addEventListener('resize', positionFavorites);
+    window.addEventListener('scroll', positionFavorites, true);
+    window.addEventListener('load', positionFavorites);
+    if (window.ResizeObserver) {
+        const observer = new ResizeObserver(positionFavorites);
+        observer.observe(document.getElementById('main-card'));
+        observer.observe(document.getElementById('home-screen'));
+    }
 })();
 </script>
 </body>
