@@ -1631,6 +1631,14 @@
             </div>`;
         });
         
+        container.querySelectorAll('.p-card').forEach((card, index) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'cabinet-map-open';
+            button.textContent = '⌖ Megmutatás a szekrénytérképen';
+            button.addEventListener('click', () => openCabinetMap(results[index]));
+            card.appendChild(button);
+        });
         document.getElementById('publicSearchInput').blur(); 
     }
 
@@ -3568,6 +3576,68 @@ window.importMissingJigs = function(){
         function(){ jigSeedList(missing, 'Excel Import folyamatban...', 'JIG-ek beírása az adatbázisba.'); }
     );
 };
+</script>
+<style>
+.cabinet-map-open { margin:12px 0 0; padding:10px 14px; border:1px solid #58bde9; border-radius:10px; background:linear-gradient(135deg,#125da5,#138a9a); color:white; font-weight:800; cursor:pointer; }
+.cabinet-map-open:hover { filter:brightness(1.16); }
+.cabinet-map-overlay { position:fixed; inset:0; z-index:99999; display:grid; place-items:center; padding:16px; background:#061021d9; }
+.cabinet-map-overlay[hidden] { display:none; }
+.cabinet-map-dialog { width:min(1500px,100%); max-height:95vh; overflow:auto; color:#eaf5ff; background:#101e33; border:1px solid #42627e; border-radius:20px; box-shadow:0 24px 70px #0009; padding:20px; }
+.cabinet-map-heading { display:flex; align-items:start; justify-content:space-between; gap:16px; }
+.cabinet-map-heading h2 { margin:0 0 6px; font-size:1.35rem; }
+.cabinet-map-heading p { color:#b9ccde; margin:0; line-height:1.5; }
+.cabinet-map-close { border:1px solid #7c9bb4; border-radius:9px; padding:8px 13px; color:white; background:#263d56; cursor:pointer; font-weight:800; }
+.cabinet-map-target { margin:16px 0; padding:12px 15px; border:1px solid #5ee3c4; border-radius:12px; background:#123c3a; color:#dcfff5; font-weight:800; }
+.cabinet-map-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.cabinet-map-cabinet { background:#1a2f49; border:1px solid #4d6d8a; border-radius:12px; padding:10px; min-width:0; }
+.cabinet-map-cabinet.is-target { border:2px solid #5ee3c4; }
+.cabinet-map-cabinet h3 { margin:0 0 8px; font-size:.9rem; color:#e7f3ff; }
+.cabinet-map-row { display:flex; gap:2px; margin:5px 0; }
+.cabinet-map-slot { display:grid; place-items:center; flex:1 1 0; min-width:0; height:36px; border:1px solid #728ba2; border-radius:4px; background:#304c66; color:#e6f2ff; font-size:clamp(8px,.75vw,12px); font-weight:700; }
+.cabinet-map-slot.is-target { position:relative; z-index:1; background:#f6c84d; border:2px solid #fff3a0; color:#291900; box-shadow:0 0 12px #ffd65b; animation:cabinet-map-pulse 1.1s ease-in-out infinite alternate; }
+@keyframes cabinet-map-pulse { from { box-shadow:0 0 3px #ffd65b; } to { box-shadow:0 0 16px 4px #ffd65b; } }
+@media (prefers-reduced-motion: reduce) { .cabinet-map-slot.is-target { animation:none; outline:2px solid #fff3a0; } }
+@media (max-width:800px) { .cabinet-map-grid { grid-template-columns:1fr; } .cabinet-map-slot { font-size:10px; } .cabinet-map-dialog { padding:14px; } }
+</style>
+<div id="cabinetMapOverlay" class="cabinet-map-overlay" hidden>
+  <section class="cabinet-map-dialog" role="dialog" aria-modal="true" aria-labelledby="cabinetMapTitle">
+    <div class="cabinet-map-heading"><div><h2 id="cabinetMapTitle">Virtuális szekrénytérkép</h2><p>A szekrények számozása felül, majd alul, balról jobbra halad.</p></div><button type="button" class="cabinet-map-close" id="cabinetMapClose">Bezárás ✕</button></div>
+    <div class="cabinet-map-target" id="cabinetMapTarget"></div><div class="cabinet-map-grid" id="cabinetMapGrid"></div>
+  </section>
+</div>
+<script>
+function openCabinetMap(item) {
+    const overlay = document.getElementById('cabinetMapOverlay');
+    const grid = document.getElementById('cabinetMapGrid');
+    document.getElementById('cabinetMapTarget').textContent = `${item.maszk} · ${item.szekreny} · ${item.polc}. polc`;
+    grid.replaceChildren();
+    let found = false;
+    window.cabinetsConfig.forEach(cab => {
+        const panel = document.createElement('section'); panel.className = 'cabinet-map-cabinet';
+        const title = document.createElement('h3'); title.textContent = cab.name; panel.appendChild(title);
+        const count = cab.end - cab.start + 1;
+        const split = Math.ceil(count / 2);
+        [[cab.start, cab.start + split - 1], [cab.start + split, cab.end]].forEach(([start, end]) => {
+            const row = document.createElement('div'); row.className = 'cabinet-map-row';
+            for (let number = start; number <= end; number++) {
+                const slot = document.createElement('div'); slot.className = 'cabinet-map-slot'; slot.textContent = number;
+                slot.title = `${cab.name} · ${number}. polc`;
+                if (cab.name === item.szekreny && Number(item.polc) === number) {
+                    found = true; panel.classList.add('is-target'); slot.classList.add('is-target');
+                    slot.setAttribute('aria-label', `Keresett hely: ${cab.name}, ${number}. polc`);
+                }
+                row.appendChild(slot);
+            }
+            panel.appendChild(row);
+        });
+        grid.appendChild(panel);
+    });
+    if (!found) document.getElementById('cabinetMapTarget').append(' — A hely nem szerepel a szekrénykiosztásban.');
+    overlay.hidden = false; document.getElementById('cabinetMapClose').focus();
+}
+document.getElementById('cabinetMapClose').addEventListener('click', () => { document.getElementById('cabinetMapOverlay').hidden = true; });
+document.getElementById('cabinetMapOverlay').addEventListener('click', event => { if (event.target.id === 'cabinetMapOverlay') event.currentTarget.hidden = true; });
+document.addEventListener('keydown', event => { if (event.key === 'Escape') document.getElementById('cabinetMapOverlay').hidden = true; });
 </script>
 </body>
 </html>
