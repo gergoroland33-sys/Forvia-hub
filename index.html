@@ -1210,6 +1210,7 @@
 
 <div id="home-screen">
     <div class="home-sky-stars" aria-hidden="true"></div>
+    <div class="test-color-aurora" aria-hidden="true"><div class="test-color-clouds"></div></div>
     <div id="hubFavorites" class="hub-favorites" aria-label="Kedvenc modulok" hidden></div>
     <div id="main-card" class="glass-card">
         <div id="activeUsersCard" class="active-users-card" role="status" aria-live="polite" aria-label="Aktív felhasználók betöltése">
@@ -4007,13 +4008,16 @@
 .nav-item .hub-favorite-star[aria-pressed="true"] { color:#e9c96c; opacity:1; }
 .nav-item .hub-favorite-star[aria-pressed="true"]::before { content:'★'; }
 .nav-item .hub-favorite-star:hover, .nav-item .hub-favorite-star:focus-visible { background:rgba(255,255,255,.1); opacity:1; }
-#home-screen > .hub-favorites { position:fixed; z-index:999; left:50%; transform:translateX(-50%); display:flex; flex-wrap:nowrap; align-items:center; gap:4px; width:min(calc(100% - 20px), 520px); height:var(--favorite-size, 36px); margin:0; padding:0 2px; overflow-x:auto; overflow-y:hidden; overscroll-behavior-inline:contain; scrollbar-width:none; }
+#home-screen.has-hub-favorites { padding-top:calc(92px + env(safe-area-inset-top)); }
+#home-screen > .hub-favorites { position:fixed; z-index:999; left:50%; transform:translateX(-50%); display:flex; flex-wrap:nowrap; align-items:center; gap:10px; width:min(calc(100% - 20px), 520px); height:var(--favorite-size, 36px); margin:0; padding:0 2px; overflow-x:auto; overflow-y:hidden; overscroll-behavior-inline:contain; scrollbar-width:none; visibility:hidden; }
 #home-screen > .hub-favorites::-webkit-scrollbar { display:none; }
 #home-screen > .hub-favorites[hidden] { display:none; }
 .hub-favorite-shortcut { display:grid; place-items:center; flex:0 0 var(--favorite-size, 36px); width:var(--favorite-size, 36px); height:var(--favorite-size, 36px); padding:0; border:1px solid rgba(148,190,234,.3); border-radius:10px; background:rgba(25,40,65,.78); color:white; font-size:calc(var(--favorite-size, 36px) * .52); cursor:pointer; }
 .hub-favorite-shortcut:first-child { margin-left:auto; }
 .hub-favorite-shortcut:last-child { margin-right:auto; }
-.hub-favorite-shortcut:hover, .hub-favorite-shortcut:focus-visible { background:#294664; outline:2px solid #93c5fd; outline-offset:2px; }
+.hub-favorite-shortcut { transition:transform .18s ease; }
+.hub-favorite-shortcut:hover, .hub-favorite-shortcut:focus-visible { transform:scale(1.06); }
+.hub-favorite-shortcut:focus-visible { outline:2px solid #93c5fd; outline-offset:-2px; }
 </style>
 <script>
 (() => {
@@ -4038,9 +4042,11 @@
         const cardRect = card.getBoundingClientRect();
         const top = Math.max(0, tickerRect.bottom);
         const gap = Math.max(0, cardRect.top - top);
-        const size = Math.min(40, gap);
+        if (gap < 36) { bar.style.visibility = 'hidden'; return; }
+        const size = Math.min(40, gap - 4);
         bar.style.setProperty('--favorite-size', `${size}px`);
         bar.style.top = `${top + (gap - size) / 2}px`;
+        bar.style.visibility = 'visible';
     };
     const render = () => {
         bar.replaceChildren();
@@ -4060,6 +4066,7 @@
             bar.appendChild(button);
         });
         bar.hidden = !bar.childElementCount;
+        document.getElementById('home-screen').classList.toggle('has-hub-favorites', !bar.hidden);
         requestAnimationFrame(positionFavorites);
     };
     entries.forEach(entry => {
@@ -4083,6 +4090,63 @@
         observer.observe(document.getElementById('main-card'));
         observer.observe(document.getElementById('home-screen'));
     }
+})();
+</script>
+<style>
+/* Különálló színpróba: a főoldal meglévő funkcióit nem módosítja. */
+#home-screen > .test-color-aurora {
+    position: absolute; inset: 0; z-index: 0; overflow: hidden;
+    pointer-events: none; background: #070212;
+}
+.test-color-clouds {
+    position: absolute; inset: -20%;
+    background:
+        radial-gradient(ellipse 48% 47% at 22% 28%, rgba(34,13,246,.92), transparent 70%),
+        radial-gradient(ellipse 46% 48% at 77% 22%, rgba(232,0,89,.77), transparent 72%),
+        radial-gradient(ellipse 52% 50% at 73% 76%, rgba(121,0,250,.87), transparent 72%),
+        radial-gradient(ellipse 46% 47% at 18% 82%, rgba(224,0,37,.72), transparent 73%),
+        radial-gradient(ellipse 35% 38% at 50% 52%, rgba(22,8,148,.82), transparent 75%),
+        #070212;
+    animation: test-aurora-drift 24s ease-in-out infinite alternate;
+    will-change: transform;
+}
+.test-color-aurora::after {
+    content:''; position:absolute; inset:0;
+    background: radial-gradient(ellipse 55% 55% at 50% 52%, rgba(3,5,20,.66), transparent 100%), linear-gradient(180deg, rgba(0,0,10,.22), transparent 35%, rgba(0,0,10,.25));
+}
+#home-screen #calendar-widget, #home-screen #calendar-widget.electric-blue.dynamic-rgb {
+    background:linear-gradient(145deg, rgba(30,64,175,.18), rgba(15,23,42,.78) 35%, rgba(30,41,59,.6));
+    border:1px solid rgba(101,176,255,.85);
+    border-left:4px solid #83c6ff;
+    box-shadow:0 0 10px rgba(20,103,255,.3);
+}
+#home-screen #calendar-widget::before { background:linear-gradient(118deg, rgba(255,255,255,.16), transparent 45%, rgba(105,190,255,.14)); }
+#home-screen .active-shift-letter, #home-screen.is-night-sky .active-shift-letter {
+    --active-shift-gradient:linear-gradient(118deg, #c5d5ff, #edbdff, #ffd0df, #c8c5ff, #c5d5ff);
+    -webkit-text-stroke: 1px #000;
+    paint-order: stroke fill;
+    text-shadow: none;
+}
+@keyframes hub-icon-glint { 0%,100% { filter:none; } 35% { filter:brightness(1.5) drop-shadow(0 0 8px #a5dcff); } }
+.hub-icon-glint { animation:hub-icon-glint .65s ease-out; }
+@media (hover:hover) { .nav-item:hover > i, .share-card-btn:hover svg { filter:brightness(1.5) drop-shadow(0 0 8px #a5dcff); } }
+@keyframes test-aurora-drift {
+    0% { transform: translate3d(-3%, -2%, 0) rotate(-4deg) scale(1); }
+    50% { transform: translate3d(3%, 1%, 0) rotate(3deg) scale(1.08); }
+    100% { transform: translate3d(-1%, 3%, 0) rotate(-2deg) scale(1.03); }
+}
+@media (prefers-reduced-motion: reduce) { .test-color-clouds { animation: none; } }
+</style>
+<script>
+(() => {
+    document.addEventListener('pointerdown', event => {
+        const target = event.target.closest('.nav-item, .share-card-btn');
+        if (!target) return;
+        const icon = target.querySelector('i, svg');
+        if (!icon) return;
+        icon.classList.remove('hub-icon-glint'); void icon.offsetWidth; icon.classList.add('hub-icon-glint');
+        icon.addEventListener('animationend', () => icon.classList.remove('hub-icon-glint'), { once:true });
+    }, { passive:true });
 })();
 </script>
 </body>
